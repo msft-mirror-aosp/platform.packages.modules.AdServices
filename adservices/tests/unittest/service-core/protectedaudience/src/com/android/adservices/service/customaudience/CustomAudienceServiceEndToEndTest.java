@@ -30,12 +30,12 @@ import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponse;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponseString;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.ACTIVATION_TIME;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.DB_PARTIAL_CUSTOM_AUDIENCE_1;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.DB_PARTIAL_CUSTOM_AUDIENCE_2;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.LEAVE_CA_1;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.LEAVE_CA_2;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CA_1;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CA_2;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CUSTOM_AUDIENCE_1;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CUSTOM_AUDIENCE_2;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.ScheduleUpdateTestCallback;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.UPDATE_ID;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.VALID_BIDDING_SIGNALS;
@@ -50,7 +50,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.spy;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -104,6 +103,7 @@ import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
@@ -124,7 +124,6 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 import com.android.adservices.testutils.FetchCustomAudienceTestSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -152,8 +151,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 @SpyStatic(ScheduleCustomAudienceUpdateJobService.class)
 @MockStatic(BackgroundFetchJob.class)
 public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedMockitoTestCase {
@@ -255,6 +254,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     private CustomAudienceQuantityChecker mCustomAudienceQuantityChecker;
     private CustomAudienceValidator mCustomAudienceValidator;
 
+    private ScheduleCustomAudienceUpdateStrategy mStrategy;
+
     private static final Flags COMMON_FLAGS_WITH_FILTERS_ENABLED =
             new CustomAudienceServiceE2ETestFlags() {
                 @Override
@@ -305,6 +306,14 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 EnrollmentDao.getInstance(),
                                 mAdServicesLoggerMock));
 
+        mStrategy =
+                ScheduleCustomAudienceUpdateStrategyFactory.createStrategy(
+                        mCustomAudienceDao,
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mMockFlags.getFledgeScheduleCustomAudienceMinDelayMinsOverride(),
+                        false);
+
         mService =
                 new CustomAudienceServiceImpl(
                         mContext,
@@ -321,6 +330,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -363,7 +373,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED),
-                        mCustomAudienceQuantityChecker);
+                        mCustomAudienceQuantityChecker,
+                        mStrategy,
+                        mAdServicesLoggerMock);
     }
 
     @Test
@@ -398,6 +410,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                        mMockDebugFlags,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -1247,6 +1260,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                        mMockDebugFlags,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -1532,9 +1546,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
@@ -1643,7 +1657,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithAuctionServerRequestFlagsEnabled),
-                        mCustomAudienceQuantityChecker);
+                        mCustomAudienceQuantityChecker,
+                        mStrategy,
+                        mAdServicesLoggerMock);
 
         // Wire the mock web server
         String responsePayload =
@@ -1694,9 +1710,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
@@ -1811,7 +1827,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithSellerConfigurationFlagEnabled),
-                        mCustomAudienceQuantityChecker);
+                        mCustomAudienceQuantityChecker,
+                        mStrategy,
+                        mAdServicesLoggerMock);
 
         // Wire the mock web server
         String responsePayload =
@@ -1863,9 +1881,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
@@ -1992,9 +2010,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch1 = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback1 = new ScheduleUpdateTestCallback(resultLatch1);
@@ -2009,9 +2027,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch2 = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback2 = new ScheduleUpdateTestCallback(resultLatch2);
@@ -2125,9 +2143,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch1 = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback1 = new ScheduleUpdateTestCallback(resultLatch1);
@@ -2214,7 +2232,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithCAQuantityCheckerFlags),
                         new CustomAudienceQuantityChecker(
-                                mCustomAudienceDao, flagsWithCAQuantityCheckerFlags));
+                                mCustomAudienceDao, flagsWithCAQuantityCheckerFlags),
+                        mStrategy,
+                        mAdServicesLoggerMock);
 
         // Wire the mock web server
         String responsePayload =
@@ -2259,9 +2279,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch1 = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback1 = new ScheduleUpdateTestCallback(resultLatch1);
@@ -2347,7 +2367,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithCAQuantityCheckerFlags),
                         new CustomAudienceQuantityChecker(
-                                mCustomAudienceDao, flagsWithCAQuantityCheckerFlags));
+                                mCustomAudienceDao, flagsWithCAQuantityCheckerFlags),
+                        mStrategy,
+                        mAdServicesLoggerMock);
 
         // Wire the mock web server
         String responsePayload =
@@ -2398,9 +2420,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
@@ -2498,9 +2520,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_2)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
                         .build();
         CountDownLatch resultLatch1 = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback1 = new ScheduleUpdateTestCallback(resultLatch1);
@@ -2655,7 +2677,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1)))
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1)))
                         .build();
         CountDownLatch resultLatch = new CountDownLatch(1);
         ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
@@ -2758,7 +2780,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 negativeDelayForTest,
                                 List.of(
                                         DBPartialCustomAudience.getPartialCustomAudience(
-                                                PARTIAL_CUSTOM_AUDIENCE_1),
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
                                         DBPartialCustomAudience.getPartialCustomAudience(
                                                 invalidPartialCustomAudience2)))
                         .build();
@@ -3045,7 +3067,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     public void testOverrideCustomAudienceRemoteInfoSuccess() throws Exception {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME)
+                                .setDeviceDevOptionsEnabled(true)
+                                .build());
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         callAddOverride(
@@ -3067,7 +3091,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
             throws Exception {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME)
+                                .setDeviceDevOptionsEnabled(true)
+                                .build());
         doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         callAddOverride(
@@ -3089,7 +3115,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
             throws Exception {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME)
+                                .setDeviceDevOptionsEnabled(true)
+                                .build());
         // Bypass the permission check since it's enforced before the package name check
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
@@ -3149,7 +3177,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     public void testRemoveCustomAudienceRemoteInfoOverrideSuccess() throws Exception {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME)
+                                .setDeviceDevOptionsEnabled(true)
+                                .build());
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride =
@@ -3181,7 +3211,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
             throws Exception {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME)
+                                .setDeviceDevOptionsEnabled(true)
+                                .build());
         doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride =
@@ -3216,7 +3248,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder(incorrectPackageName)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
         // Bypass the permission check since it's enforced before the package name check
@@ -3291,7 +3323,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     public void testResetAllCustomAudienceRemoteOverridesSuccess() throws Exception {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME)
+                                .setDeviceDevOptionsEnabled(true)
+                                .build());
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride1 =
@@ -3340,7 +3374,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
             throws Exception {
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME)
+                                .setDeviceDevOptionsEnabled(true)
+                                .build());
         doReturn(true).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
 
         DBCustomAudienceOverride dbCustomAudienceOverride1 =
@@ -3392,7 +3428,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
                         DevContext.builder(incorrectPackageName)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
         doReturn(false).when(mConsentManagerMock).isFledgeConsentRevokedForApp(any());
         // Bypass the permission check since it's enforced before the package name check
@@ -3532,96 +3568,74 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
 
-        Throttler.destroyExistingThrottler();
-        try {
-            CustomAudienceServiceImpl customAudienceService =
-                    mService =
-                            new CustomAudienceServiceImpl(
-                                    mContext,
-                                    new CustomAudienceImpl(
-                                            mCustomAudienceDao,
-                                            mCustomAudienceQuantityCheckerMock,
-                                            mCustomAudienceValidatorMock,
-                                            CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                            flagsWithLowRateLimit),
-                                    new FledgeAuthorizationFilter(
-                                            mContext.getPackageManager(),
-                                            EnrollmentDao.getInstance(),
-                                            mAdServicesLoggerMock),
-                                    mConsentManagerMock,
-                                    mDevContextFilter,
-                                    MoreExecutors.newDirectExecutorService(),
-                                    mAdServicesLoggerMock,
-                                    mAppImportanceFilter,
-                                    flagsWithLowRateLimit,
-                                    CallingAppUidSupplierProcessImpl.create(),
-                                    new CustomAudienceServiceFilter(
-                                            mContext,
-                                            mFledgeConsentFilterMock,
-                                            flagsWithLowRateLimit,
-                                            mAppImportanceFilter,
-                                            new FledgeAuthorizationFilter(
-                                                    mContext.getPackageManager(),
-                                                    EnrollmentDao.getInstance(),
-                                                    mAdServicesLoggerMock),
-                                            new FledgeAllowListsFilter(
-                                                    flagsWithLowRateLimit, mAdServicesLoggerMock),
-                                            new FledgeApiThrottleFilter(
-                                                    Throttler.getInstance(flagsWithLowRateLimit),
-                                                    mAdServicesLoggerMock)),
-                                    new AdFilteringFeatureFactory(
-                                            mAppInstallDao,
-                                            mFrequencyCapDao,
-                                            flagsWithLowRateLimit));
+        CustomAudienceServiceImpl customAudienceService =
+                mService =
+                        new CustomAudienceServiceImpl(
+                                mContext,
+                                new CustomAudienceImpl(
+                                        mCustomAudienceDao,
+                                        mCustomAudienceQuantityCheckerMock,
+                                        mCustomAudienceValidatorMock,
+                                        CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                                        flagsWithLowRateLimit),
+                                new FledgeAuthorizationFilter(
+                                        mContext.getPackageManager(),
+                                        EnrollmentDao.getInstance(),
+                                        mAdServicesLoggerMock),
+                                mConsentManagerMock,
+                                mDevContextFilter,
+                                MoreExecutors.newDirectExecutorService(),
+                                mAdServicesLoggerMock,
+                                mAppImportanceFilter,
+                                flagsWithLowRateLimit,
+                                mMockDebugFlags,
+                                CallingAppUidSupplierProcessImpl.create(),
+                                new CustomAudienceServiceFilter(
+                                        mContext,
+                                        mFledgeConsentFilterMock,
+                                        flagsWithLowRateLimit,
+                                        mAppImportanceFilter,
+                                        new FledgeAuthorizationFilter(
+                                                mContext.getPackageManager(),
+                                                EnrollmentDao.getInstance(),
+                                                mAdServicesLoggerMock),
+                                        new FledgeAllowListsFilter(
+                                                flagsWithLowRateLimit, mAdServicesLoggerMock),
+                                        new FledgeApiThrottleFilter(
+                                                Throttler.newInstance(flagsWithLowRateLimit),
+                                                mAdServicesLoggerMock)),
+                                new AdFilteringFeatureFactory(
+                                        mAppInstallDao, mFrequencyCapDao, flagsWithLowRateLimit));
 
-            // The first call should succeed
-            ResultCapturingCallback callbackFirstCall = new ResultCapturingCallback();
-            customAudienceService.joinCustomAudience(
-                    CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callbackFirstCall);
+        // The first call should succeed
+        ResultCapturingCallback callbackFirstCall = new ResultCapturingCallback();
+        customAudienceService.joinCustomAudience(
+                CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callbackFirstCall);
 
-            // The immediate subsequent call should be throttled
-            ResultCapturingCallback callbackSubsequentCall = new ResultCapturingCallback();
-            customAudienceService.joinCustomAudience(
-                    CUSTOM_AUDIENCE_PK1_1,
-                    CustomAudienceFixture.VALID_OWNER,
-                    callbackSubsequentCall);
+        // The immediate subsequent call should be throttled
+        ResultCapturingCallback callbackSubsequentCall = new ResultCapturingCallback();
+        customAudienceService.joinCustomAudience(
+                CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callbackSubsequentCall);
 
-            assertWithMessage("First callback success")
-                    .that(callbackFirstCall.isSuccess())
-                    .isTrue();
-            assertWithMessage("Inserted CA")
-                    .that(
-                            mCustomAudienceDao.getCustomAudienceByPrimaryKey(
-                                    CustomAudienceFixture.VALID_OWNER,
-                                    CommonFixture.VALID_BUYER_1,
-                                    VALID_NAME))
-                    .isEqualTo(DB_CUSTOM_AUDIENCE_PK1_1);
+        assertWithMessage("First callback success").that(callbackFirstCall.isSuccess()).isTrue();
+        assertWithMessage("Inserted CA")
+                .that(
+                        mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                                CustomAudienceFixture.VALID_OWNER,
+                                CommonFixture.VALID_BUYER_1,
+                                VALID_NAME))
+                .isEqualTo(DB_CUSTOM_AUDIENCE_PK1_1);
 
-            assertWithMessage("Second callback success")
-                    .that(callbackSubsequentCall.isSuccess())
-                    .isFalse();
-            assertWithMessage("Second callback exception")
-                    .that(callbackSubsequentCall.getException())
-                    .isInstanceOf(LimitExceededException.class);
-            assertWithMessage("Second callback exception")
-                    .that(callbackSubsequentCall.getException())
-                    .hasMessageThat()
-                    .isEqualTo(AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE);
-        } finally {
-            resetThrottlerToNoRateLimits();
-        }
-    }
-
-    /**
-     * Given Throttler is singleton, & shared across tests, this method should be invoked after
-     * tests that impose restrictive rate limits.
-     */
-    private void resetThrottlerToNoRateLimits() {
-        Throttler.destroyExistingThrottler();
-        final float noRateLimit = -1;
-        Flags mockNoRateLimitFlags = mock(Flags.class);
-        doReturn(noRateLimit).when(mockNoRateLimitFlags).getSdkRequestPermitsPerSecond();
-        Throttler.getInstance(mockNoRateLimitFlags);
+        assertWithMessage("Second callback success")
+                .that(callbackSubsequentCall.isSuccess())
+                .isFalse();
+        assertWithMessage("Second callback exception")
+                .that(callbackSubsequentCall.getException())
+                .isInstanceOf(LimitExceededException.class);
+        assertWithMessage("Second callback exception")
+                .that(callbackSubsequentCall.getException())
+                .hasMessageThat()
+                .isEqualTo(AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE);
     }
 
     private void verifyFCapFiltersNotNull(DBCustomAudience dbCustomAudience) {
@@ -3756,6 +3770,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         flags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,

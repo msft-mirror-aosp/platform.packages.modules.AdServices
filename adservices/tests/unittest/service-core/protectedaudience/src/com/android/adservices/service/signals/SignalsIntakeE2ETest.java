@@ -177,7 +177,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mUpdateProcessorSelector = new UpdateProcessorSelector();
-        mEncoderPersistenceDao = EncoderPersistenceDao.getInstance(mSpyContext);
+        mEncoderPersistenceDao = EncoderPersistenceDao.getInstance();
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
                         mEncoderPersistenceDao,
@@ -189,7 +189,12 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         mAdServicesLoggerMock,
                         mFakeFlags);
         mUpdateEncoderEventHandler =
-                new UpdateEncoderEventHandler(mEncoderEndpointsDao, mEncoderLogicHandler);
+                new UpdateEncoderEventHandler(
+                        mEncoderEndpointsDao,
+                        mEncoderLogicHandler,
+                        mSpyContext,
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        /* isCompletionBroadcastEnabled= */ false);
         int oversubscriptionBytesLimit =
                 mFakeFlags.getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes();
         mSignalEvictionController =
@@ -254,6 +259,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         AdServicesExecutors.getBackgroundExecutor(),
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mProtectedSignalsServiceFilter,
                         mEnrollmentDao,

@@ -17,8 +17,6 @@
 package com.android.adservices.service;
 
 import static com.android.adservices.service.DeviceConfigFlagsHelper.getDeviceConfigFlag;
-import static com.android.adservices.service.FlagsConstants.KEY_ADEXT_READ_TIMEOUT_MS;
-import static com.android.adservices.service.FlagsConstants.KEY_ADEXT_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODULE_JOB_POLICY;
@@ -69,6 +67,13 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGR
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_REQUIRED_NETWORK_TYPE;
@@ -81,6 +86,9 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTR
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -90,14 +98,19 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_DEBUG_SIGNAL;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
@@ -107,15 +120,35 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVEN
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_MAX_SOURCES_PER_CLICK;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED;
@@ -298,6 +331,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getTopicsEpochJobBatteryConstraintLoggingEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED,
+                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED);
+    }
+
+    @Override
     public boolean getTopicsDisablePlaintextResponse() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE,
@@ -377,6 +417,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING,
                 TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING);
+    }
+
+    @Override
+    public boolean getTopicsCleanDBWhenEpochJobSettingsChanged() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED,
+                TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED);
     }
 
     @Override
@@ -508,6 +555,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getCobaltEnableApiCallResponseLogging() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COBALT__ENABLE_API_CALL_RESPONSE_LOGGING,
+                COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY);
+    }
+
+    @Override
     @SuppressWarnings("AvoidSystemPropertiesUsage")
     // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public long getMaintenanceJobPeriodMs() {
@@ -543,6 +597,13 @@ public final class PhFlags implements Flags {
         }
 
         return maintenanceJobFlexMs;
+    }
+
+    @Override
+    public boolean getDeveloperModeFeatureEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_DEVELOPER_MODE_FEATURE_ENABLED,
+                DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED);
     }
 
     @Override
@@ -1390,6 +1451,15 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
+        return getFledgeScheduleCustomAudienceUpdateEnabled()
+                && getDeviceConfigFlag(
+                        FlagsConstants
+                                .KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS,
+                        FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS);
+    }
+
+    @Override
     public long getFledgeScheduleCustomAudienceUpdateJobPeriodMs() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS,
@@ -1814,19 +1884,6 @@ public final class PhFlags implements Flags {
                                 /* name= */ FlagsConstants
                                         .KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
                                 defaultValue));
-    }
-
-    @Override
-    @SuppressWarnings("AvoidSystemPropertiesUsage")
-    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
-    public boolean getMeasurementRollbackDeletionREnabled() {
-        String flagName = FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
-        return !getGlobalKillSwitch()
-                && !getLegacyMeasurementKillSwitch()
-                && SystemProperties.getBoolean(
-                        getSystemPropertyName(flagName),
-                        /* def= */ getDeviceConfigFlag(
-                                flagName, MEASUREMENT_ROLLBACK_DELETION_R_ENABLED));
     }
 
     @Override
@@ -2639,6 +2696,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeGetAdSelectionDataDeserializeOnlyAdRenderIds() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS,
+                FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS);
+    }
+
+    @Override
     public boolean getFledgeAuctionServerMultiCloudEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
@@ -3030,13 +3094,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getRvcPostOtaNotifAgeCheck() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK,
-                DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK);
-    }
-
-    @Override
     public int getConsentSourceOfTruth() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH, DEFAULT_CONSENT_SOURCE_OF_TRUTH);
@@ -3148,6 +3205,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S,
                 FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S);
+    }
+
+    @Override
+    public boolean getMeasurementEnableAggregatableNamedBudgets() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS,
+                MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS);
     }
 
     @Override
@@ -3414,6 +3478,27 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableMinReportLifespanForUninstall() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL,
+                MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL);
+    }
+
+    @Override
+    public long getMeasurementMinReportLifespanForUninstallSeconds() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS,
+                MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS);
+    }
+
+    @Override
+    public boolean getMeasurementEnableInstallAttributionOnS() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S,
+                MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S);
+    }
+
+    @Override
     public boolean getMeasurementEnableNavigationReportingOriginCheck() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK,
@@ -3439,6 +3524,19 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH,
                 MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH);
+    }
+
+    @Override
+    public int getMeasurementMaxLengthPerBudgetName() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME, MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME);
+    }
+
+    @Override
+    public int getMeasurementMaxNamedBudgetsPerSourceRegistration() {
+        return getDeviceConfigFlag(
+                KEY_MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION,
+                MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION);
     }
 
     @Override
@@ -3493,6 +3591,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getMeasurementMaxFilteringIdMaxBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES,
+                MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+    }
+
+    @Override
     public boolean getMeasurementEnableFlexibleContributionFiltering() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING,
@@ -3506,7 +3611,7 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public void dump(@NonNull PrintWriter writer, @Nullable String[] args) {
+    public void dump(PrintWriter writer, @Nullable String[] args) {
         writer.println("\t" + FlagsConstants.KEY_PAS_UX_ENABLED + " = " + getPasUxEnabled());
         writer.println(
                 "\t"
@@ -3520,21 +3625,6 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getEnableAdServicesSystemApi());
         writer.println("\t" + FlagsConstants.KEY_U18_UX_ENABLED + " = " + getU18UxEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_RVC_POST_OTA_NOTIF_AGE_CHECK
-                        + " = "
-                        + getRvcPostOtaNotifAgeCheck());
-        writer.println(
-                "\t"
-                        + DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE
-                        + " = "
-                        + getConsentNotificationActivityDebugMode());
-        writer.println(
-                "\t"
-                        + DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE
-                        + " = "
-                        + getConsentNotifiedDebugMode());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_CONSENT_NOTIFICATION_RESET_TOKEN
@@ -3868,11 +3958,6 @@ public final class PhFlags implements Flags {
                         + getMeasurementAggregateFallbackReportingJobPeriodMs());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED
-                        + " = "
-                        + getMeasurementNullAggregateReportEnabled());
-        writer.println(
-                "\t"
                         + FlagsConstants
                                 .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME
                         + " = "
@@ -3967,6 +4052,16 @@ public final class PhFlags implements Flags {
                         + getMeasurementEnableReinstallReattribution());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL
+                        + " = "
+                        + getMeasurementEnableMinReportLifespanForUninstall());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S
+                        + " = "
+                        + getMeasurementEnableInstallAttributionOnS());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS
                         + " = "
                         + getMeasurementDataExpiryWindowMs());
@@ -4045,6 +4140,11 @@ public final class PhFlags implements Flags {
                         + " = "
                         + getAdservicesVersionMappings());
 
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS
+                        + " = "
+                        + getMeasurementEnableAggregatableNamedBudgets());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA
@@ -4275,6 +4375,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW
                         + " = "
                         + getMeasurementMaxReinstallReattributionWindowSeconds());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS
+                        + " = "
+                        + getMeasurementMinReportLifespanForUninstallSeconds());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_MIN_REPORTING_ORIGIN_UPDATE_WINDOW
@@ -4516,6 +4621,36 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING
                         + " = "
                         + getMeasurementEnableFlexibleContributionFiltering());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING
+                        + " = "
+                        + getMeasurementEnableAggregateDebugReporting());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW
+                        + " = "
+                        + getMeasurementAdrBudgetOriginXPublisherXWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW
+                        + " = "
+                        + getMeasurementAdrBudgetPublisherXWindow());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MS
+                        + " = "
+                        + getMeasurementAdrBudgetWindowLengthMillis());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE
+                        + " = "
+                        + getMeasurementMaxAdrCountPerSource());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS
+                        + " = "
+                        + getMeasurementEnableBothSideDebugKeysInReports());
 
         writer.println("==== AdServices PH Flags Dump FLEDGE related flags: ====");
         writer.println(
@@ -5057,6 +5192,12 @@ public final class PhFlags implements Flags {
                         + getFledgeScheduleCustomAudienceUpdateEnabled());
         writer.println(
                 "\t"
+                        + FlagsConstants
+                                .KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS
+                        + " = "
+                        + getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS
                         + " = "
                         + getFledgeScheduleCustomAudienceUpdateJobPeriodMs());
@@ -5318,27 +5459,12 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA
                         + " = "
                         + getEnableAppsearchConsentData());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA
-                        + " = "
-                        + getEnableAdExtServiceConsentData());
 
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY
-                        + " = "
-                        + getEnableAdExtServiceDebugProxy());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_ENABLE_U18_APPSEARCH_MIGRATION
                         + " = "
                         + getEnableU18AppsearchMigration());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_ENABLE_MIGRATION_FROM_ADEXT_SERVICE
-                        + " = "
-                        + getEnableMigrationFromAdExtService());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED
@@ -5637,6 +5763,16 @@ public final class PhFlags implements Flags {
                         + getMeasurementMaxAttributionScopesPerSource());
         writer.println(
                 "\t"
+                        + KEY_MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME
+                        + " = "
+                        + getMeasurementMaxLengthPerBudgetName());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION
+                        + " = "
+                        + getMeasurementMaxNamedBudgetsPerSourceRegistration());
+        writer.println(
+                "\t"
                         + KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION
                         + " = "
                         + getMeasurementAttributionScopeMaxInfoGainNavigation());
@@ -5660,10 +5796,159 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME
                         + " = "
                         + getMeasurementEnableFakeReportTriggerTime());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH
+                        + " = "
+                        + getMeasurementApiDeleteRegistrationsKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH
+                        + " = "
+                        + getMeasurementApiRegisterSourcesKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH
+                        + " = "
+                        + getMeasurementApiRegisterSourceKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH
+                        + " = "
+                        + getMeasurementApiRegisterTriggerKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH
+                        + " = "
+                        + getMeasurementApiRegisterWebSourceKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH
+                        + " = "
+                        + getMeasurementApiRegisterWebTriggerKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_API_STATUS_KILL_SWITCH
+                        + " = "
+                        + getMeasurementApiStatusKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST
+                        + " = "
+                        + getMeasurementDebugJoinKeyEnrollmentAllowlist());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH
+                        + " = "
+                        + getMeasurementDebugReportingFallbackJobKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS
+                        + " = "
+                        + getMeasurementDebugReportingFallbackJobPeriodMs());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK
+                        + " = "
+                        + getMsmtEnableApiStatusAllowListCheck());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT
+                        + " = "
+                        + getMeasurementEnableUpdateTriggerHeaderLimit());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES
+                        + " = "
+                        + getEnforceForegroundStatusForMeasurementRegisterSources());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENABLED
+                        + " = "
+                        + getMeasurementIsClickDeduplicationEnabled());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_IS_CLICK_DEDUPLICATION_ENFORCED
+                        + " = "
+                        + getMeasurementIsClickDeduplicationEnforced());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_IS_CLICK_VERIFIED_BY_INPUT_EVENT
+                        + " = "
+                        + getMeasurementIsClickVerifiedByInputEvent());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH
+                        + " = "
+                        + getMeasurementJobAggregateFallbackReportingKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH
+                        + " = "
+                        + getMeasurementJobAggregateReportingKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH
+                        + " = "
+                        + getMeasurementJobAttributionKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH
+                        + " = "
+                        + getMeasurementJobDeleteExpiredKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH
+                        + " = "
+                        + getMeasurementJobDeleteUninstalledKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH
+                        + " = "
+                        + getMeasurementJobEventFallbackReportingKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH
+                        + " = "
+                        + getMeasurementJobEventReportingKillSwitch());
+        writer.println("\t" + KEY_MEASUREMENT_KILL_SWITCH + " = " + getMeasurementEnabled());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES
+                        + " = "
+                        + getMeasurementMaxFilteringIdMaxBytes());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_MAX_SOURCES_PER_CLICK
+                        + " = "
+                        + getMeasurementMaxSourcesPerClick());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH
+                        + " = "
+                        + getMeasurementReceiverDeletePackagesKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH
+                        + " = "
+                        + getMeasurementReceiverInstallAttributionKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_THROW_UNKNOWN_EXCEPTION_SAMPLING_RATE
+                        + " = "
+                        + getMeasurementThrowUnknownExceptionSamplingRate());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH
+                        + " = "
+                        + getMeasurementVerboseDebugReportingFallbackJobKillSwitch());
+        writer.println(
+                "\t"
+                        + KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS
+                        + " = "
+                        + getMeasurementVerboseDebugReportingFallbackJobPeriodMs());
         writer.println("\t" + KEY_APPSEARCH_WRITE_TIMEOUT_MS + " = " + getAppSearchWriteTimeout());
         writer.println("\t" + KEY_APPSEARCH_READ_TIMEOUT_MS + " = " + getAppSearchReadTimeout());
-        writer.println("\t" + KEY_ADEXT_WRITE_TIMEOUT_MS + " = " + getAdExtWriteTimeoutMs());
-        writer.println("\t" + KEY_ADEXT_READ_TIMEOUT_MS + " = " + getAdExtReadTimeoutMs());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED
@@ -5830,6 +6115,25 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED
                         + " = "
                         + getFledgeJsScriptResultCodeMetricsEnabled());
+        writer.println("\t" + FlagsConstants.KEY_EEA_PAS_UX_ENABLED + " = " + getEeaPasUxEnabled());
+        writer.println("\t" + FlagsConstants.KEY_AD_ID_CACHE_TTL_MS + " = " + getAdIdCacheTtlMs());
+        writer.println(
+                "\t" + FlagsConstants.KEY_GA_UX_FEATURE_ENABLED + " = " + getGaUxFeatureEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED
+                        + " = "
+                        + getRecordManualInteractionEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED
+                        + " = "
+                        + getToggleSpeedBumpEnabled());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED
+                        + " = "
+                        + getUiDialogFragmentEnabled());
     }
 
     @VisibleForTesting
@@ -5865,35 +6169,10 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnableAdExtServiceConsentData() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA,
-                ENABLE_ADEXT_SERVICE_CONSENT_DATA);
-    }
-
-    @Override
     public boolean getEnableU18AppsearchMigration() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ENABLE_U18_APPSEARCH_MIGRATION,
                 DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION);
-    }
-
-    @Override
-    public boolean getEnableMigrationFromAdExtService() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_ENABLE_MIGRATION_FROM_ADEXT_SERVICE,
-                ENABLE_MIGRATION_FROM_ADEXT_SERVICE);
-    }
-
-    @Override
-    @SuppressWarnings("AvoidSystemPropertiesUsage")
-    // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
-    public boolean getEnableAdExtServiceDebugProxy() {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY),
-                getDeviceConfigFlag(
-                        FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY,
-                        DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY));
     }
 
     @Override
@@ -5987,20 +6266,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getEnableRvcUx() {
-        return getEnableAdServicesSystemApi()
-                && getDeviceConfigFlag(FlagsConstants.KEY_RVC_UX_ENABLED, DEFAULT_RVC_UX_ENABLED);
-    }
-
-    @Override
-    public boolean getEnableRvcPostOtaNotification() {
-        return getEnableAdServicesSystemApi()
-                && getDeviceConfigFlag(
-                        FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
-                        DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED);
-    }
-
-    @Override
     public boolean getEnableBackCompatInit() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ENABLE_BACK_COMPAT_INIT, DEFAULT_ENABLE_BACK_COMPAT_INIT);
@@ -6045,10 +6310,6 @@ public final class PhFlags implements Flags {
                 FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED,
                 getRecordManualInteractionEnabled());
         uxMap.put(FlagsConstants.KEY_GA_UX_FEATURE_ENABLED, getGaUxFeatureEnabled());
-        uxMap.put(FlagsConstants.KEY_RVC_UX_ENABLED, getEnableRvcUx());
-        uxMap.put(
-                FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED,
-                getEnableRvcPostOtaNotification());
         uxMap.put(
                 FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED, getUiOtaStringsFeatureEnabled());
         uxMap.put(
@@ -6061,9 +6322,6 @@ public final class PhFlags implements Flags {
         uxMap.put(
                 DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
                 getConsentNotificationDebugMode());
-        uxMap.put(
-                DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
-                getConsentNotificationActivityDebugMode());
         uxMap.put(FlagsConstants.KEY_U18_UX_ENABLED, getU18UxEnabled());
         uxMap.put(
                 FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK,
@@ -6641,13 +6899,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementNullAggregateReportEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED,
-                MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED);
-    }
-
-    @Override
     public float getMeasurementNullAggReportRateInclSourceRegistrationTime() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME,
@@ -6699,6 +6950,48 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableAggregateDebugReporting() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING,
+                MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING);
+    }
+
+    @Override
+    public int getMeasurementAdrBudgetOriginXPublisherXWindow() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW,
+                MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW);
+    }
+
+    @Override
+    public int getMeasurementAdrBudgetPublisherXWindow() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW,
+                MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW);
+    }
+
+    @Override
+    public long getMeasurementAdrBudgetWindowLengthMillis() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MS,
+                MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS);
+    }
+
+    @Override
+    public int getMeasurementMaxAdrCountPerSource() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE,
+                MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE);
+    }
+
+    @Override
+    public boolean getMeasurementEnableBothSideDebugKeysInReports() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS,
+                MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS);
+    }
+
+    @Override
     public long getMeasurementReportingJobServiceBatchWindowMillis() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS,
@@ -6717,20 +7010,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_APIS,
                 DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS);
-    }
-
-    @Override
-    public boolean getEnableAdservicesApiEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_ENABLE_ADSERVICES_API_ENABLED,
-                DEFAULT_ENABLE_ADSERVICES_API_ENABLED);
-    }
-
-    @Override
-    public boolean getAdservicesEnablementCheckEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_ADSERVICES_ENABLEMENT_CHECK_ENABLED,
-                DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED);
     }
 
     @Override
@@ -6759,16 +7038,6 @@ public final class PhFlags implements Flags {
     public int getAppSearchReadTimeout() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS, DEFAULT_APPSEARCH_READ_TIMEOUT_MS);
-    }
-
-    @Override
-    public int getAdExtWriteTimeoutMs() {
-        return getDeviceConfigFlag(KEY_ADEXT_WRITE_TIMEOUT_MS, DEFAULT_ADEXT_WRITE_TIMEOUT_MS);
-    }
-
-    @Override
-    public int getAdExtReadTimeoutMs() {
-        return getDeviceConfigFlag(KEY_ADEXT_READ_TIMEOUT_MS, DEFAULT_ADEXT_READ_TIMEOUT_MS);
     }
 
     @Override
@@ -7148,5 +7417,59 @@ public final class PhFlags implements Flags {
     public long getAdIdCacheTtlMs() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_AD_ID_CACHE_TTL_MS, DEFAULT_ADID_CACHE_TTL_MS);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyService() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_SERVICE,
+                DEFAULT_ENABLE_PACKAGE_DENY_SERVICE);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyMdd() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_MDD,
+                DEFAULT_ENABLE_PACKAGE_DENY_MDD);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyJobOnPackageAdd() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD,
+                DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyBgJob() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_BG_JOB,
+                DEFAULT_ENABLE_PACKAGE_DENY_BG_JOB);
+    }
+
+    @Override
+    public boolean getEnablePackageDenyJobOnMddDownload() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD,
+                DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD);
+    }
+
+    @Override
+    public String getMddPackageDenyRegistryManifestFileUrl() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL,
+                DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL);
+    }
+
+    @Override
+    public boolean getConsentNotificationDebugMode() {
+        return DebugFlags.getInstance().getConsentNotificationDebugMode();
+    }
+
+    @Override
+    public boolean getEnableAtomicFileDatastoreBatchUpdateApi() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API,
+                DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API);
     }
 }

@@ -19,7 +19,6 @@ package android.adservices.common;
 import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
 import android.annotation.NonNull;
-import android.annotation.SystemApi;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -35,7 +34,6 @@ import java.util.Objects;
  *
  * @hide
  */
-@SystemApi
 @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
 public final class AdServicesModuleUserChoice implements Parcelable {
 
@@ -63,15 +61,37 @@ public final class AdServicesModuleUserChoice implements Parcelable {
 
     @ModuleUserChoiceCode private int mUserChoice;
 
-    private AdServicesModuleUserChoice(@NonNull Parcel in) {
-
+    private AdServicesModuleUserChoice(Parcel in) {
+        Objects.requireNonNull(in, "Parcel is null");
         mModule = in.readInt();
         mUserChoice = in.readInt();
     }
 
-    private AdServicesModuleUserChoice(int module, int userChoice) {
-        this.mModule = module;
-        this.mUserChoice = userChoice;
+    /**
+     * Constructor for a user choice.
+     *
+     * @param module desired module
+     * @param userChoice desired user choice
+     */
+    public AdServicesModuleUserChoice(
+            @Module.ModuleCode int module, @ModuleUserChoiceCode int userChoice) {
+        this.mModule = Module.validate(module);
+        this.mUserChoice = validate(userChoice);
+    }
+
+    /**
+     * Validates a user choice. For this function doesn't alter the input and just returns it back,
+     * if not valid fails with {@link IllegalArgumentException}.
+     *
+     * @param userChoice user choice to validate
+     * @return user choice
+     */
+    @ModuleUserChoiceCode
+    private static int validate(@ModuleUserChoiceCode int userChoice) {
+        return switch (userChoice) {
+            case USER_CHOICE_UNKNOWN, USER_CHOICE_OPTED_IN, USER_CHOICE_OPTED_OUT -> userChoice;
+            default -> throw new IllegalArgumentException("Invalid User Choice:" + userChoice);
+        };
     }
 
     @NonNull
@@ -79,7 +99,6 @@ public final class AdServicesModuleUserChoice implements Parcelable {
             new Creator<>() {
                 @Override
                 public AdServicesModuleUserChoice createFromParcel(Parcel in) {
-                    Objects.requireNonNull(in);
                     return new AdServicesModuleUserChoice(in);
                 }
 
@@ -89,70 +108,25 @@ public final class AdServicesModuleUserChoice implements Parcelable {
                 }
             };
 
-    /**
-     * Describe the kinds of special objects contained in this Parcelable instance's marshaled
-     * representation. For example, if the object will include a file descriptor in the output of
-     * {@link #writeToParcel(Parcel, int)}, the return value of this method must include the {@link
-     * #CONTENTS_FILE_DESCRIPTOR} bit.
-     *
-     * @return a bitmask indicating the set of special object types marshaled by this Parcelable
-     *     object instance.
-     */
     @Override
     public int describeContents() {
         return 0;
     }
 
-    /**
-     * Flatten this object in to a Parcel.
-     *
-     * @param dest The Parcel in which the object should be written.
-     * @param flags Additional flags about how the object should be written. May be 0 or {@link
-     *     #PARCELABLE_WRITE_RETURN_VALUE}.
-     */
     @Override
     public void writeToParcel(@NonNull Parcel dest, int flags) {
-        Objects.requireNonNull(dest);
+        Objects.requireNonNull(dest, "Parcel is null");
         dest.writeInt(mModule);
         dest.writeInt(mUserChoice);
     }
 
     /** Gets the name of current module */
-    public int getModule() {
+    public @Module.ModuleCode int getModule() {
         return mModule;
     }
 
     /** Gets the user opted in/out choice of current module */
-    public int getUserChoice() {
+    public @ModuleUserChoiceCode int getUserChoice() {
         return mUserChoice;
-    }
-
-    public static final class Builder {
-        @Module.ModuleCode private int mModule;
-
-        @ModuleUserChoiceCode private int mUserChoice;
-
-        public Builder() {}
-
-        /** Sets the AdServices module. */
-        @NonNull
-        public AdServicesModuleUserChoice.Builder setModule(@Module.ModuleCode int module) {
-            this.mModule = module;
-            return this;
-        }
-
-        /** Sets the AdServices moduleState. */
-        @NonNull
-        public AdServicesModuleUserChoice.Builder setUserChoice(
-                @ModuleUserChoiceCode int userChoice) {
-            this.mUserChoice = userChoice;
-            return this;
-        }
-
-        /** Builds a {@link AdServicesModuleUserChoice} instance. */
-        @NonNull
-        public AdServicesModuleUserChoice build() {
-            return new AdServicesModuleUserChoice(this.mModule, this.mUserChoice);
-        }
     }
 }

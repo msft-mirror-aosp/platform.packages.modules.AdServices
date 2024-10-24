@@ -21,14 +21,12 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.ActJniUtility;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -57,9 +55,6 @@ public class AnonymousCountingTokensTest {
     private ClientParameters mClientParameters;
     private Transcript mTranscript;
     private AnonymousCountingTokens mAnonymousCountingTokens;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() throws IOException {

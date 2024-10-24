@@ -201,7 +201,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mUpdateProcessorSelector = new UpdateProcessorSelector();
-        mEncoderPersistenceDao = EncoderPersistenceDao.getInstance(mSpyContext);
+        mEncoderPersistenceDao = EncoderPersistenceDao.getInstance();
 
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(mBackgroundExecutorService, 2000, 2000, 10000);
@@ -217,7 +217,12 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mAdServicesLoggerMock,
                         mFakeFlags);
         mUpdateEncoderEventHandler =
-                new UpdateEncoderEventHandler(mEncoderEndpointsDao, mEncoderLogicHandler);
+                new UpdateEncoderEventHandler(
+                        mEncoderEndpointsDao,
+                        mEncoderLogicHandler,
+                        mSpyContext,
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        /* isCompletionBroadcastEnabled= */ false);
         mSignalEvictionController = new SignalEvictionController(ImmutableList.of(), 0, 0);
         mUpdateProcessingOrchestrator =
                 new UpdateProcessingOrchestrator(
@@ -267,6 +272,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         AdServicesExecutors.getBackgroundExecutor(),
                         mAdServicesLoggerImplMock,
                         mFlagsWithProtectedSignalsAndEncodingEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mProtectedSignalsServiceFilter,
                         mEnrollmentDao,

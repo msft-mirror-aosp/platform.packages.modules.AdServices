@@ -75,7 +75,6 @@ import java.util.List;
 import java.util.concurrent.Executor;
 
 /** Mobile Data Download Factory. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class MobileDataDownloadFactory {
     private static MobileDataDownload sSingletonMdd;
@@ -89,7 +88,7 @@ public class MobileDataDownloadFactory {
     private static final String UI_OTA_RESOURCES_MANIFEST_ID = "UiOtaResourcesManifestId";
     private static final String ENROLLMENT_PROTO_MANIFEST_ID = "EnrollmentProtoManifestId";
     private static final String COBALT_REGISTRY_MANIFEST_ID = "CobaltRegistryManifestId";
-
+    private static final String DENY_PACKAGE_MANIFEST_ID = "DenyPackageManifestId";
     private static final int MAX_ADB_LOGCAT_SIZE = 4000;
 
     /** Returns a singleton of MobileDataDownload for the whole PPAPI app. */
@@ -143,6 +142,9 @@ public class MobileDataDownloadFactory {
                                                 flags, fileStorage, fileDownloader))
                                 .addFileGroupPopulator(
                                         getCobaltRegistryManifestPopulator(
+                                                flags, fileStorage, fileDownloader))
+                                .addFileGroupPopulator(
+                                        getDenyPackageManifestPopulator(
                                                 flags, fileStorage, fileDownloader))
                                 .setLoggerOptional(getMddLogger(flags))
                                 .setFlagsOptional(Optional.of(MddFlags.getInstance()));
@@ -231,6 +233,7 @@ public class MobileDataDownloadFactory {
 
     private static DownloadMetadataStore getDownloadMetadataStore() {
         Context context = ApplicationContextSingleton.get();
+        @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
         SharedPreferences sharedPrefs =
                 context.getSharedPreferences(MDD_METADATA_SHARED_PREFERENCES, Context.MODE_PRIVATE);
         DownloadMetadataStore downloadMetadataStore =
@@ -523,6 +526,55 @@ public class MobileDataDownloadFactory {
                             }
                         })
                 .setEnabledSupplier(flags::getCobaltRegistryOutOfBandUpdateEnabled)
+                .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
+                .setFileDownloader(() -> fileDownloader)
+                .setFileStorage(fileStorage)
+                .setManifestFileFlagSupplier(() -> manifestFileFlag)
+                .setManifestConfigParser(manifestConfigFileParser)
+                .setMetadataStore(
+                        SharedPreferencesManifestFileMetadata.createFromContext(
+                                context, /*InstanceId*/
+                                Optional.absent(),
+                                AdServicesExecutors.getBackgroundExecutor()))
+                // TODO(b/239265537): Enable dedup using etag.
+                .setDedupDownloadWithEtag(false)
+                // TODO(b/243829623): use proper Logger.
+                .setLogger(
+                        new Logger() {
+                            @Override
+                            public void log(MessageLite event, int eventCode) {
+                                // A no-op logger.
+                            }
+                        })
+                .build();
+    }
+
+    @VisibleForTesting
+    static ManifestFileGroupPopulator getDenyPackageManifestPopulator(
+            Flags flags, SynchronousFileStorage fileStorage, FileDownloader fileDownloader) {
+        ManifestFileFlag manifestFileFlag =
+                ManifestFileFlag.newBuilder()
+                        .setManifestId(DENY_PACKAGE_MANIFEST_ID)
+                        .setManifestFileUrl(flags.getMddPackageDenyRegistryManifestFileUrl())
+                        .build();
+
+        ManifestConfigFileParser manifestConfigFileParser =
+                new ManifestConfigFileParser(
+                        fileStorage, AdServicesExecutors.getBackgroundExecutor());
+
+        Context context = ApplicationContextSingleton.get();
+
+        return ManifestFileGroupPopulator.builder()
+                .setContext(context)
+                .setEnabledSupplier(
+                        () -> {
+                            if (flags.getGaUxFeatureEnabled()) {
+                                return isAnyConsentGiven(flags);
+                            } else {
+                                return ConsentManager.getInstance().getConsent().isGiven();
+                            }
+                        })
+                .setEnabledSupplier(flags::getEnablePackageDenyMdd)
                 .setBackgroundExecutor(AdServicesExecutors.getBackgroundExecutor())
                 .setFileDownloader(() -> fileDownloader)
                 .setFileStorage(fileStorage)

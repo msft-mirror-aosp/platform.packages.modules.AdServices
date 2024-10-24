@@ -45,7 +45,7 @@ public final class NoOpShellCommandTest extends ShellCommandTestCase<NoOpShellCo
         int expectedCommand = ShellCommandStats.COMMAND_ECHO;
         NoOpShellCommand command =
                 new NoOpShellCommand(commandName, expectedCommand, debugFlagName);
-        expect.withMessage("getCommandHel").that(command.getCommandName()).isEqualTo(commandName);
+        expect.withMessage("getCommandName").that(command.getCommandName()).isEqualTo(commandName);
     }
 
     @Test
@@ -55,6 +55,6 @@ public final class NoOpShellCommandTest extends ShellCommandTestCase<NoOpShellCo
         int expectedCommand = ShellCommandStats.COMMAND_ECHO;
         NoOpShellCommand command =
                 new NoOpShellCommand(commandName, expectedCommand, debugFlagName);
-        expect.withMessage("getCommandHel").that(command.getCommandHelp()).isEqualTo("");
+        expect.withMessage("getCommandHelp").that(command.getCommandHelp()).isEqualTo("");
     }
 }

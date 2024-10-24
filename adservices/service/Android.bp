@@ -44,13 +44,14 @@ java_sdk_library {
         "com.google.errorprone.annotations",
     ],
     libs: [
-        "framework-configinfrastructure",
+        "framework-configinfrastructure.stubs.module_lib",
         "framework-adservices.impl",
         // Workaround for b/262282035. Needed to access the SdkSandboxManagerLocal.
         "service-sdksandbox.impl",
     ],
     static_libs: [
         "adservices-shared-storage",
+        "adservices-shared-system-common",
         "modules-utils-backgroundthread",
         "modules-utils-preconditions",
         "modules-utils-shell-command-handler",

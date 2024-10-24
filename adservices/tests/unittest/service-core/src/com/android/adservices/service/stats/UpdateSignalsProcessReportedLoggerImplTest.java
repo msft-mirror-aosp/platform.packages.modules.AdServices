@@ -22,8 +22,6 @@ import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UN
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_UNSET;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -94,19 +92,19 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .logUpdateSignalsProcessReportedStats(argumentCaptor.capture());
 
         UpdateSignalsProcessReportedStats stats = argumentCaptor.getValue();
-        assertThat(stats.getUpdateSignalsProcessLatencyMillis())
+        expect.that(stats.getUpdateSignalsProcessLatencyMillis())
                 .isEqualTo(TEST_UPDATE_SIGNALS_PROCESS_LATENCY_MILLIS);
-        assertThat(stats.getAdservicesApiStatusCode()).isEqualTo(TEST_ADSERVICES_API_STATUS_CODE);
-        assertThat(stats.getSignalsWrittenCount()).isEqualTo(TEST_SIGNALS_WRITTEN_COUNT);
-        assertThat(stats.getKeysStoredCount()).isEqualTo(TEST_KEYS_STORED_COUNT);
-        assertThat(stats.getValuesStoredCount()).isEqualTo(TEST_VALUES_STORED_COUNT);
-        assertThat(stats.getEvictionRulesCount()).isEqualTo(TEST_EVICTION_RULES_COUNT);
-        assertThat(stats.getPerBuyerSignalSize()).isEqualTo(TEST_BUCKETED_PER_BUYER_SIGNAL_SIZE);
-        assertThat(stats.getMeanRawProtectedSignalsSizeBytes())
+        expect.that(stats.getAdservicesApiStatusCode()).isEqualTo(TEST_ADSERVICES_API_STATUS_CODE);
+        expect.that(stats.getSignalsWrittenCount()).isEqualTo(TEST_SIGNALS_WRITTEN_COUNT);
+        expect.that(stats.getKeysStoredCount()).isEqualTo(TEST_KEYS_STORED_COUNT);
+        expect.that(stats.getValuesStoredCount()).isEqualTo(TEST_VALUES_STORED_COUNT);
+        expect.that(stats.getEvictionRulesCount()).isEqualTo(TEST_EVICTION_RULES_COUNT);
+        expect.that(stats.getPerBuyerSignalSize()).isEqualTo(TEST_BUCKETED_PER_BUYER_SIGNAL_SIZE);
+        expect.that(stats.getMeanRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MEAN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        assertThat(stats.getMaxRawProtectedSignalsSizeBytes())
+        expect.that(stats.getMaxRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        assertThat(stats.getMinRawProtectedSignalsSizeBytes())
+        expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
     }
 
@@ -137,18 +135,18 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .logUpdateSignalsProcessReportedStats(argumentCaptor.capture());
 
         UpdateSignalsProcessReportedStats stats = argumentCaptor.getValue();
-        assertThat(stats.getUpdateSignalsProcessLatencyMillis()).isEqualTo(FIELD_UNSET);
-        assertThat(stats.getAdservicesApiStatusCode()).isEqualTo(TEST_ADSERVICES_API_STATUS_CODE);
-        assertThat(stats.getSignalsWrittenCount()).isEqualTo(TEST_SIGNALS_WRITTEN_COUNT);
-        assertThat(stats.getKeysStoredCount()).isEqualTo(TEST_KEYS_STORED_COUNT);
-        assertThat(stats.getValuesStoredCount()).isEqualTo(TEST_VALUES_STORED_COUNT);
-        assertThat(stats.getEvictionRulesCount()).isEqualTo(TEST_EVICTION_RULES_COUNT);
-        assertThat(stats.getPerBuyerSignalSize()).isEqualTo(TEST_BUCKETED_PER_BUYER_SIGNAL_SIZE);
-        assertThat(stats.getMeanRawProtectedSignalsSizeBytes())
+        expect.that(stats.getUpdateSignalsProcessLatencyMillis()).isEqualTo(FIELD_UNSET);
+        expect.that(stats.getAdservicesApiStatusCode()).isEqualTo(TEST_ADSERVICES_API_STATUS_CODE);
+        expect.that(stats.getSignalsWrittenCount()).isEqualTo(TEST_SIGNALS_WRITTEN_COUNT);
+        expect.that(stats.getKeysStoredCount()).isEqualTo(TEST_KEYS_STORED_COUNT);
+        expect.that(stats.getValuesStoredCount()).isEqualTo(TEST_VALUES_STORED_COUNT);
+        expect.that(stats.getEvictionRulesCount()).isEqualTo(TEST_EVICTION_RULES_COUNT);
+        expect.that(stats.getPerBuyerSignalSize()).isEqualTo(TEST_BUCKETED_PER_BUYER_SIGNAL_SIZE);
+        expect.that(stats.getMeanRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MEAN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        assertThat(stats.getMaxRawProtectedSignalsSizeBytes())
+        expect.that(stats.getMaxRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        assertThat(stats.getMinRawProtectedSignalsSizeBytes())
+        expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
     }
 
@@ -179,19 +177,19 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .logUpdateSignalsProcessReportedStats(argumentCaptor.capture());
 
         UpdateSignalsProcessReportedStats stats = argumentCaptor.getValue();
-        assertThat(stats.getUpdateSignalsProcessLatencyMillis())
+        expect.that(stats.getUpdateSignalsProcessLatencyMillis())
                 .isEqualTo(TEST_UPDATE_SIGNALS_PROCESS_LATENCY_MILLIS);
-        assertThat(stats.getAdservicesApiStatusCode()).isEqualTo(FIELD_UNSET);
-        assertThat(stats.getSignalsWrittenCount()).isEqualTo(TEST_SIGNALS_WRITTEN_COUNT);
-        assertThat(stats.getKeysStoredCount()).isEqualTo(TEST_KEYS_STORED_COUNT);
-        assertThat(stats.getValuesStoredCount()).isEqualTo(TEST_VALUES_STORED_COUNT);
-        assertThat(stats.getEvictionRulesCount()).isEqualTo(TEST_EVICTION_RULES_COUNT);
-        assertThat(stats.getPerBuyerSignalSize()).isEqualTo(TEST_BUCKETED_PER_BUYER_SIGNAL_SIZE);
-        assertThat(stats.getMeanRawProtectedSignalsSizeBytes())
+        expect.that(stats.getAdservicesApiStatusCode()).isEqualTo(FIELD_UNSET);
+        expect.that(stats.getSignalsWrittenCount()).isEqualTo(TEST_SIGNALS_WRITTEN_COUNT);
+        expect.that(stats.getKeysStoredCount()).isEqualTo(TEST_KEYS_STORED_COUNT);
+        expect.that(stats.getValuesStoredCount()).isEqualTo(TEST_VALUES_STORED_COUNT);
+        expect.that(stats.getEvictionRulesCount()).isEqualTo(TEST_EVICTION_RULES_COUNT);
+        expect.that(stats.getPerBuyerSignalSize()).isEqualTo(TEST_BUCKETED_PER_BUYER_SIGNAL_SIZE);
+        expect.that(stats.getMeanRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MEAN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        assertThat(stats.getMaxRawProtectedSignalsSizeBytes())
+        expect.that(stats.getMaxRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        assertThat(stats.getMinRawProtectedSignalsSizeBytes())
+        expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
     }
 
@@ -224,18 +222,18 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .logUpdateSignalsProcessReportedStats(argumentCaptor.capture());
 
         UpdateSignalsProcessReportedStats stats = argumentCaptor.getValue();
-        assertThat(stats.getUpdateSignalsProcessLatencyMillis())
+        expect.that(stats.getUpdateSignalsProcessLatencyMillis())
                 .isEqualTo(TEST_UPDATE_SIGNALS_PROCESS_LATENCY_MILLIS);
-        assertThat(stats.getAdservicesApiStatusCode()).isEqualTo(TEST_ADSERVICES_API_STATUS_CODE);
-        assertThat(stats.getSignalsWrittenCount()).isEqualTo(0);
-        assertThat(stats.getKeysStoredCount()).isEqualTo(TEST_KEYS_STORED_COUNT);
-        assertThat(stats.getValuesStoredCount()).isEqualTo(0);
-        assertThat(stats.getEvictionRulesCount()).isEqualTo(TEST_EVICTION_RULES_COUNT);
-        assertThat(stats.getPerBuyerSignalSize()).isEqualTo(TEST_BUCKETED_PER_BUYER_SIGNAL_SIZE);
-        assertThat(stats.getMeanRawProtectedSignalsSizeBytes()).isEqualTo(SIZE_UNSET);
-        assertThat(stats.getMaxRawProtectedSignalsSizeBytes())
+        expect.that(stats.getAdservicesApiStatusCode()).isEqualTo(TEST_ADSERVICES_API_STATUS_CODE);
+        expect.that(stats.getSignalsWrittenCount()).isEqualTo(0);
+        expect.that(stats.getKeysStoredCount()).isEqualTo(TEST_KEYS_STORED_COUNT);
+        expect.that(stats.getValuesStoredCount()).isEqualTo(0);
+        expect.that(stats.getEvictionRulesCount()).isEqualTo(TEST_EVICTION_RULES_COUNT);
+        expect.that(stats.getPerBuyerSignalSize()).isEqualTo(TEST_BUCKETED_PER_BUYER_SIGNAL_SIZE);
+        expect.that(stats.getMeanRawProtectedSignalsSizeBytes()).isEqualTo(SIZE_UNSET);
+        expect.that(stats.getMaxRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        assertThat(stats.getMinRawProtectedSignalsSizeBytes())
+        expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
     }
 
@@ -267,19 +265,19 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .logUpdateSignalsProcessReportedStats(argumentCaptor.capture());
 
         UpdateSignalsProcessReportedStats stats = argumentCaptor.getValue();
-        assertThat(stats.getUpdateSignalsProcessLatencyMillis())
+        expect.that(stats.getUpdateSignalsProcessLatencyMillis())
                 .isEqualTo(TEST_UPDATE_SIGNALS_PROCESS_LATENCY_MILLIS);
-        assertThat(stats.getAdservicesApiStatusCode()).isEqualTo(TEST_ADSERVICES_API_STATUS_CODE);
-        assertThat(stats.getSignalsWrittenCount()).isEqualTo(TEST_SIGNALS_WRITTEN_COUNT);
-        assertThat(stats.getKeysStoredCount()).isEqualTo(0);
-        assertThat(stats.getValuesStoredCount()).isEqualTo(TEST_VALUES_STORED_COUNT);
-        assertThat(stats.getEvictionRulesCount()).isEqualTo(TEST_EVICTION_RULES_COUNT);
-        assertThat(stats.getPerBuyerSignalSize()).isEqualTo(TEST_BUCKETED_PER_BUYER_SIGNAL_SIZE);
-        assertThat(stats.getMeanRawProtectedSignalsSizeBytes())
+        expect.that(stats.getAdservicesApiStatusCode()).isEqualTo(TEST_ADSERVICES_API_STATUS_CODE);
+        expect.that(stats.getSignalsWrittenCount()).isEqualTo(TEST_SIGNALS_WRITTEN_COUNT);
+        expect.that(stats.getKeysStoredCount()).isEqualTo(0);
+        expect.that(stats.getValuesStoredCount()).isEqualTo(TEST_VALUES_STORED_COUNT);
+        expect.that(stats.getEvictionRulesCount()).isEqualTo(TEST_EVICTION_RULES_COUNT);
+        expect.that(stats.getPerBuyerSignalSize()).isEqualTo(TEST_BUCKETED_PER_BUYER_SIGNAL_SIZE);
+        expect.that(stats.getMeanRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MEAN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        assertThat(stats.getMaxRawProtectedSignalsSizeBytes())
+        expect.that(stats.getMaxRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        assertThat(stats.getMinRawProtectedSignalsSizeBytes())
+        expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
     }
 
@@ -311,19 +309,19 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .logUpdateSignalsProcessReportedStats(argumentCaptor.capture());
 
         UpdateSignalsProcessReportedStats stats = argumentCaptor.getValue();
-        assertThat(stats.getUpdateSignalsProcessLatencyMillis())
+        expect.that(stats.getUpdateSignalsProcessLatencyMillis())
                 .isEqualTo(TEST_UPDATE_SIGNALS_PROCESS_LATENCY_MILLIS);
-        assertThat(stats.getAdservicesApiStatusCode()).isEqualTo(TEST_ADSERVICES_API_STATUS_CODE);
-        assertThat(stats.getSignalsWrittenCount()).isEqualTo(TEST_SIGNALS_WRITTEN_COUNT);
-        assertThat(stats.getKeysStoredCount()).isEqualTo(TEST_KEYS_STORED_COUNT);
-        assertThat(stats.getValuesStoredCount()).isEqualTo(TEST_VALUES_STORED_COUNT);
-        assertThat(stats.getEvictionRulesCount()).isEqualTo(0);
-        assertThat(stats.getPerBuyerSignalSize()).isEqualTo(TEST_BUCKETED_PER_BUYER_SIGNAL_SIZE);
-        assertThat(stats.getMeanRawProtectedSignalsSizeBytes())
+        expect.that(stats.getAdservicesApiStatusCode()).isEqualTo(TEST_ADSERVICES_API_STATUS_CODE);
+        expect.that(stats.getSignalsWrittenCount()).isEqualTo(TEST_SIGNALS_WRITTEN_COUNT);
+        expect.that(stats.getKeysStoredCount()).isEqualTo(TEST_KEYS_STORED_COUNT);
+        expect.that(stats.getValuesStoredCount()).isEqualTo(TEST_VALUES_STORED_COUNT);
+        expect.that(stats.getEvictionRulesCount()).isEqualTo(0);
+        expect.that(stats.getPerBuyerSignalSize()).isEqualTo(TEST_BUCKETED_PER_BUYER_SIGNAL_SIZE);
+        expect.that(stats.getMeanRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MEAN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        assertThat(stats.getMaxRawProtectedSignalsSizeBytes())
+        expect.that(stats.getMaxRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        assertThat(stats.getMinRawProtectedSignalsSizeBytes())
+        expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
     }
 
@@ -354,18 +352,18 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .logUpdateSignalsProcessReportedStats(argumentCaptor.capture());
 
         UpdateSignalsProcessReportedStats stats = argumentCaptor.getValue();
-        assertThat(stats.getUpdateSignalsProcessLatencyMillis())
+        expect.that(stats.getUpdateSignalsProcessLatencyMillis())
                 .isEqualTo(TEST_UPDATE_SIGNALS_PROCESS_LATENCY_MILLIS);
-        assertThat(stats.getAdservicesApiStatusCode()).isEqualTo(TEST_ADSERVICES_API_STATUS_CODE);
-        assertThat(stats.getSignalsWrittenCount()).isEqualTo(TEST_SIGNALS_WRITTEN_COUNT);
-        assertThat(stats.getKeysStoredCount()).isEqualTo(TEST_KEYS_STORED_COUNT);
-        assertThat(stats.getValuesStoredCount()).isEqualTo(TEST_VALUES_STORED_COUNT);
-        assertThat(stats.getEvictionRulesCount()).isEqualTo(TEST_EVICTION_RULES_COUNT);
-        assertThat(stats.getPerBuyerSignalSize()).isEqualTo(SIZE_UNSET);
-        assertThat(stats.getMeanRawProtectedSignalsSizeBytes()).isEqualTo(SIZE_UNSET);
-        assertThat(stats.getMaxRawProtectedSignalsSizeBytes())
+        expect.that(stats.getAdservicesApiStatusCode()).isEqualTo(TEST_ADSERVICES_API_STATUS_CODE);
+        expect.that(stats.getSignalsWrittenCount()).isEqualTo(TEST_SIGNALS_WRITTEN_COUNT);
+        expect.that(stats.getKeysStoredCount()).isEqualTo(TEST_KEYS_STORED_COUNT);
+        expect.that(stats.getValuesStoredCount()).isEqualTo(TEST_VALUES_STORED_COUNT);
+        expect.that(stats.getEvictionRulesCount()).isEqualTo(TEST_EVICTION_RULES_COUNT);
+        expect.that(stats.getPerBuyerSignalSize()).isEqualTo(SIZE_UNSET);
+        expect.that(stats.getMeanRawProtectedSignalsSizeBytes()).isEqualTo(SIZE_UNSET);
+        expect.that(stats.getMaxRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        assertThat(stats.getMinRawProtectedSignalsSizeBytes())
+        expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
     }
 
@@ -397,18 +395,18 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .logUpdateSignalsProcessReportedStats(argumentCaptor.capture());
 
         UpdateSignalsProcessReportedStats stats = argumentCaptor.getValue();
-        assertThat(stats.getUpdateSignalsProcessLatencyMillis())
+        expect.that(stats.getUpdateSignalsProcessLatencyMillis())
                 .isEqualTo(TEST_UPDATE_SIGNALS_PROCESS_LATENCY_MILLIS);
-        assertThat(stats.getAdservicesApiStatusCode()).isEqualTo(TEST_ADSERVICES_API_STATUS_CODE);
-        assertThat(stats.getSignalsWrittenCount()).isEqualTo(TEST_SIGNALS_WRITTEN_COUNT);
-        assertThat(stats.getKeysStoredCount()).isEqualTo(TEST_KEYS_STORED_COUNT);
-        assertThat(stats.getValuesStoredCount()).isEqualTo(TEST_VALUES_STORED_COUNT);
-        assertThat(stats.getEvictionRulesCount()).isEqualTo(TEST_EVICTION_RULES_COUNT);
-        assertThat(stats.getPerBuyerSignalSize()).isEqualTo(TEST_BUCKETED_PER_BUYER_SIGNAL_SIZE);
-        assertThat(stats.getMeanRawProtectedSignalsSizeBytes())
+        expect.that(stats.getAdservicesApiStatusCode()).isEqualTo(TEST_ADSERVICES_API_STATUS_CODE);
+        expect.that(stats.getSignalsWrittenCount()).isEqualTo(TEST_SIGNALS_WRITTEN_COUNT);
+        expect.that(stats.getKeysStoredCount()).isEqualTo(TEST_KEYS_STORED_COUNT);
+        expect.that(stats.getValuesStoredCount()).isEqualTo(TEST_VALUES_STORED_COUNT);
+        expect.that(stats.getEvictionRulesCount()).isEqualTo(TEST_EVICTION_RULES_COUNT);
+        expect.that(stats.getPerBuyerSignalSize()).isEqualTo(TEST_BUCKETED_PER_BUYER_SIGNAL_SIZE);
+        expect.that(stats.getMeanRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MEAN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        assertThat(stats.getMaxRawProtectedSignalsSizeBytes()).isEqualTo(0F);
-        assertThat(stats.getMinRawProtectedSignalsSizeBytes())
+        expect.that(stats.getMaxRawProtectedSignalsSizeBytes()).isEqualTo(0F);
+        expect.that(stats.getMinRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MIN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
     }
 
@@ -440,18 +438,18 @@ public final class UpdateSignalsProcessReportedLoggerImplTest extends AdServices
                 .logUpdateSignalsProcessReportedStats(argumentCaptor.capture());
 
         UpdateSignalsProcessReportedStats stats = argumentCaptor.getValue();
-        assertThat(stats.getUpdateSignalsProcessLatencyMillis())
+        expect.that(stats.getUpdateSignalsProcessLatencyMillis())
                 .isEqualTo(TEST_UPDATE_SIGNALS_PROCESS_LATENCY_MILLIS);
-        assertThat(stats.getAdservicesApiStatusCode()).isEqualTo(TEST_ADSERVICES_API_STATUS_CODE);
-        assertThat(stats.getSignalsWrittenCount()).isEqualTo(TEST_SIGNALS_WRITTEN_COUNT);
-        assertThat(stats.getKeysStoredCount()).isEqualTo(TEST_KEYS_STORED_COUNT);
-        assertThat(stats.getValuesStoredCount()).isEqualTo(TEST_VALUES_STORED_COUNT);
-        assertThat(stats.getEvictionRulesCount()).isEqualTo(TEST_EVICTION_RULES_COUNT);
-        assertThat(stats.getPerBuyerSignalSize()).isEqualTo(TEST_BUCKETED_PER_BUYER_SIGNAL_SIZE);
-        assertThat(stats.getMeanRawProtectedSignalsSizeBytes())
+        expect.that(stats.getAdservicesApiStatusCode()).isEqualTo(TEST_ADSERVICES_API_STATUS_CODE);
+        expect.that(stats.getSignalsWrittenCount()).isEqualTo(TEST_SIGNALS_WRITTEN_COUNT);
+        expect.that(stats.getKeysStoredCount()).isEqualTo(TEST_KEYS_STORED_COUNT);
+        expect.that(stats.getValuesStoredCount()).isEqualTo(TEST_VALUES_STORED_COUNT);
+        expect.that(stats.getEvictionRulesCount()).isEqualTo(TEST_EVICTION_RULES_COUNT);
+        expect.that(stats.getPerBuyerSignalSize()).isEqualTo(TEST_BUCKETED_PER_BUYER_SIGNAL_SIZE);
+        expect.that(stats.getMeanRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MEAN_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        assertThat(stats.getMaxRawProtectedSignalsSizeBytes())
+        expect.that(stats.getMaxRawProtectedSignalsSizeBytes())
                 .isEqualTo(TEST_MAX_RAW_PROTECTED_SIGNALS_SIZE_BYTES);
-        assertThat(stats.getMinRawProtectedSignalsSizeBytes()).isEqualTo(0F);
+        expect.that(stats.getMinRawProtectedSignalsSizeBytes()).isEqualTo(0F);
     }
 }

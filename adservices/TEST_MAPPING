@@ -17,6 +17,30 @@
       ]
     },
     {
+      "name": "AdServicesApkUINotificationTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdServicesApkUISettingsTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdServicesApkUISettingsGaOtaTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       "name": "AdServicesCobaltUnitTests",
       "options": [
         {
@@ -372,6 +396,14 @@
       ]
     },
     {
+      "name": "AdExtServicesFrameworkRvcUnitTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       "name": "AdExtServicesServiceCoreUnitTests",
       "options": [
         {
@@ -381,6 +413,14 @@
     },
     {
       "name": "AdExtServicesServiceCoreAdIdUnitTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdExtServicesServiceCoreAdIdRvcUnitTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -413,6 +453,14 @@
     },
     {
       "name": "AdExtServicesServiceCoreMeasurementUnitTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdExtServicesServiceCoreMeasurementRvcUnitTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -460,6 +508,14 @@
       ]
     },
     {
+      "name": "CtsAdExtServicesRvcDeviceTestCases",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       "name": "CtsAdExtServicesDebuggableDeviceTestCases",
       "options": [
         {
@@ -477,6 +533,14 @@
     },
     {
       "name": "CtsAdExtServicesEndToEndTestMeasurement",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdExtServicesEndToEndRvcTestMeasurement",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -548,6 +612,14 @@
       ]
     },
     {
+      "name": "CtsAdExtServicesAdIdRvcEndToEndTest",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       "name": "CtsAdExtServicesExtDataStorageServiceTest",
       "options": [
         {
@@ -582,6 +654,14 @@
     },
     {
       "name": "AdExtServicesEndToEndTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdExtServicesRvcEndToEndTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -752,6 +832,15 @@
       ]
     },
     {
+      // Install com.google.android.extservices.apex and run AdExtServicesFrameworkRvcUnitTests.
+      "name": "AdExtServicesFrameworkRvcUnitTests[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       // Install com.google.android.adservices.apex and run AdServicesServiceCoreUnitTests.
       "name": "AdServicesServiceCoreUnitTests[com.google.android.adservices.apex]",
       "options": [
@@ -781,6 +870,15 @@
     {
       // Install com.google.android.extservices.apex and run AdExtServicesServiceCoreAdIdUnitTests.
       "name": "AdExtServicesServiceCoreAdIdUnitTests[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      // Install com.google.android.extservices.apex and run AdExtServicesServiceCoreAdIdRvcUnitTests.
+      "name": "AdExtServicesServiceCoreAdIdRvcUnitTests[com.google.android.extservices.apex]",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -855,6 +953,16 @@
       // Install com.google.android.extservices.apex and run
       // AdExtServicesServiceCoreMeasurementUnitTests.
       "name": "AdExtServicesServiceCoreMeasurementUnitTests[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      // Install com.google.android.extservices.apex and run
+      // AdExtServicesServiceCoreMeasurementRvcUnitTests.
+      "name": "AdExtServicesServiceCoreMeasurementRvcUnitTests[com.google.android.extservices.apex]",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -948,6 +1056,15 @@
       ]
     },
     {
+      // Install com.google.android.extservices.apex and run CtsAdExtServicesRvcDeviceTestCases.
+      "name": "CtsAdExtServicesRvcDeviceTestCases[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       // Install com.google.android.adservices.apex and run CtsAdServicesDebuggableDeviceTestCases.
       "name": "CtsAdServicesDebuggableDeviceTestCases[com.google.android.adservices.apex]",
       "options": [
@@ -1002,6 +1119,14 @@
     },
     {
       "name": "CtsAdExtServicesEndToEndTestMeasurement[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdExtServicesEndToEndRvcTestMeasurement[com.google.android.extservices.apex]",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
@@ -1175,6 +1300,15 @@
       ]
     },
     {
+      // Install com.google.android.extservices.apex and run CtsAdExtServicesAdIdRvcEndToEndTest.
+      "name": "CtsAdExtServicesAdIdRvcEndToEndTest[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       // Install com.google.android.extservices.apex and run CtsAdExtServicesExtDataStorageServiceTest.
       "name": "CtsAdExtServicesExtDataStorageServiceTest[com.google.android.extservices.apex]",
       "options": [
@@ -1242,6 +1376,15 @@
     {
       // Install com.google.android.extservices.apex and run AdExtServicesEndToEndTests.
       "name": "AdExtServicesEndToEndTests[com.google.android.extservices.apex]",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      // Install com.google.android.extservices.apex and run AdExtServicesRvcEndToEndTests.
+      "name": "AdExtServicesRvcEndToEndTests[com.google.android.extservices.apex]",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"

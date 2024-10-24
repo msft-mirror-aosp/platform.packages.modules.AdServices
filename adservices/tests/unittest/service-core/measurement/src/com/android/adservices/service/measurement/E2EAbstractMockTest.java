@@ -75,6 +75,7 @@ import com.android.adservices.service.measurement.registration.AsyncRegistration
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
+import com.android.adservices.service.measurement.reporting.AggregateDebugReportApi;
 import com.android.adservices.service.measurement.reporting.AggregateReportingJobHandlerWrapper;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobHandlerWrapper;
@@ -145,6 +146,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
     private final Set<String> mSeenUris = new HashSet<>();
     private final Map<String, String> mUriToEnrollmentId = new HashMap<>();
     protected DebugReportApi mDebugReportApi;
+    protected AggregateDebugReportApi mAggregateDebugReportApi;
 
     @Rule(order = 11)
     public final AdServicesExtendedMockitoRule extendedMockito;
@@ -205,12 +207,11 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         EnrollmentUtil.getInstance());
         mDebugReportApi =
                 new DebugReportApi(
-                        sContext,
+                        ApplicationProvider.getApplicationContext(),
                         mFlags,
                         new EventReportWindowCalcDelegate(mFlags),
-                        new SourceNoiseHandler(mFlags),
-                        new SQLDatastoreManager(
-                                DbTestUtil.getMeasurementDbHelperForTest(), mErrorLogger));
+                        new SourceNoiseHandler(mFlags));
+        mAggregateDebugReportApi = new AggregateDebugReportApi(mFlags);
 
         mImpressionNoiseUtil = spy(new ImpressionNoiseUtil());
 
@@ -258,8 +259,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                 .when(mImpressionNoiseUtil).getReportConfigsForSequenceIndex(any(), anyLong());
         Mockito.doReturn(fakeReportConfigs)
                 .when(mImpressionNoiseUtil)
-                        .selectFlexEventReportRandomStateAndGenerateReportConfigs(
-                                any(), anyInt(), any());
+                .selectFlexEventReportRandomStateAndGenerateReportConfigs(any(), anyInt(), any());
         Mockito.doReturn(fakeReportConfigs == null ? 2.0D : 0.0D).when(mSourceNoiseHandler)
                 .getRandomDouble(any());
     }
@@ -368,6 +368,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         sourceRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
         processActualDebugReportApiJob(sourceRegistration.mTimestamp);
+        processActualDebugReportJob(sourceRegistration.mTimestamp, 0L);
     }
 
     @Override
@@ -382,6 +383,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         sourceRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
         processActualDebugReportApiJob(sourceRegistration.mTimestamp);
+        processActualDebugReportJob(sourceRegistration.mTimestamp, 0L);
     }
 
     @Override
@@ -505,7 +507,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
     void processAction(UninstallApp uninstallApp) {
         Assert.assertTrue(
                 "measurementDao.undoInstallAttribution failed",
-                mMeasurementImpl.deletePackageRecords(uninstallApp.mUri));
+                mMeasurementImpl.deletePackageRecords(uninstallApp.mUri, uninstallApp.mTimestamp));
     }
 
     @Override
@@ -648,11 +650,22 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                             .put(
                                     TestFormatJsonMapping.REPORT_TIME_KEY,
                                     String.valueOf(
-                                            aggregateReports.get(i).getScheduledReportTime()
-                                                // Debug aggregate reports have the same scheduled
-                                                // report time as regular aggregate reports but are
-                                                // sent without delay.
-                                                - reportDelay))
+                                            aggregateReports
+                                                            .get(i)
+                                                            .getApi()
+                                                            .equals("attribution-reporting-debug")
+                                                    ? aggregateReports
+                                                            .get(i)
+                                                            .getScheduledReportTime()
+                                                    : aggregateReports
+                                                                    .get(i)
+                                                                    .getScheduledReportTime()
+                                                            // Debug aggregate reports have the same
+                                                            // scheduled
+                                                            // report time as regular aggregate
+                                                            // reports but are
+                                                            // sent without delay.
+                                                            - reportDelay))
                             .put(
                                     TestFormatJsonMapping.REPORT_TO_KEY,
                                     destinations.get(i).toString())
@@ -767,7 +780,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
     private void runDeleteExpiredRecordsJob(long earliestValidInsertion) {
         int retryLimit = Flags.MEASUREMENT_MAX_RETRIES_PER_REGISTRATION_REQUEST;
         mDatastoreManager.runInTransaction(
-                dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit, null));
+                dao -> dao.deleteExpiredRecords(earliestValidInsertion, retryLimit, null, 0));
     }
 
     void updateEnrollment(String uri) {

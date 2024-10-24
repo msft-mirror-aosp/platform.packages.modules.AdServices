@@ -17,6 +17,7 @@
 package android.adservices.rootcts;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
 import static com.android.adservices.spe.AdServicesJobInfo.SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB;
@@ -54,11 +55,14 @@ import java.util.concurrent.ExecutionException;
 
 @SetFlagEnabled(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
+@EnableDebugFlag(KEY_FLEDGE_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED)
 @SetIntegerFlag(
         name = KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
         value = 30)
-public class ScheduleCustomAudienceUpdateTest extends FledgeRootScenarioTest {
+public final class ScheduleCustomAudienceUpdateTest extends FledgeRootScenarioTest {
     private static final String CA_NAME = "delayed_updated_ca";
+    private static final String ACTION_SCHEDULE_CA_COMPLETE_INTENT =
+            "ACTION_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_FINISHED";
     private static final int MIN_ALLOWED_DELAY_TEST_OVERRIDE = -100;
     private BackgroundJobHelper mBackgroundJobHelper;
 
@@ -154,10 +158,9 @@ public class ScheduleCustomAudienceUpdateTest extends FledgeRootScenarioTest {
         try {
             doScheduleCustomAudienceUpdate(request);
             assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
-            assertThat(
-                            mBackgroundJobHelper.runJob(
-                                    SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB.getJobId()))
-                    .isTrue();
+            mBackgroundJobHelper.runJobWithBroadcastIntent(
+                    SCHEDULE_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB.getJobId(),
+                    ACTION_SCHEDULE_CA_COMPLETE_INTENT);
             AdSelectionOutcome result = doSelectAds(adSelectionConfig);
             assertThat(result.hasOutcome()).isTrue();
             assertThat(result.getRenderUri()).isNotNull();

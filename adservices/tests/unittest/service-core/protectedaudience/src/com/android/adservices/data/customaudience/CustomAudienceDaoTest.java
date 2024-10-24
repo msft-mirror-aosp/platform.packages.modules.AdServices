@@ -42,7 +42,6 @@ import android.adservices.customaudience.PartialCustomAudience;
 import android.content.pm.ApplicationInfo;
 import android.database.sqlite.SQLiteConstraintException;
 import android.net.Uri;
-import android.util.Pair;
 
 import androidx.room.Room;
 
@@ -61,7 +60,6 @@ import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.adservices.service.exception.PersistScheduleCAUpdateException;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -83,7 +81,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 @MockStatic(PackageManagerCompatUtils.class)
 public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCase {
@@ -161,6 +158,11 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
     private static final String NAME_2 = "name2";
     private static final String NAME_3 = "name3";
     private static final String NAME_4 = "name4";
+
+    private static final String CA_TO_LEAVE_NAME_1 = "ca_to_leave_1";
+    private static final String CA_TO_LEAVE_NAME_2 = "ca_to_leave_2";
+    private static final String CA_TO_LEAVE_NAME_3 = "ca_to_leave_3";
+    private static final String CA_TO_LEAVE_NAME_4 = "ca_to_leave_4";
 
     private static final double PRIORITY_1 = 1.0;
 
@@ -596,6 +598,17 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                             .setBuyer(BUYER_1)
                             .setOwner(OWNER_1)
                             .setUpdateUri(CommonFixture.getUri(BUYER_1, "/updateUri"))
+                            .setScheduledTime(
+                                    CommonFixture.FIXED_NEXT_ONE_DAY.truncatedTo(ChronoUnit.MILLIS))
+                            .setCreationTime(
+                                    CommonFixture.FIXED_NOW.truncatedTo(ChronoUnit.MILLIS));
+
+    private static final DBScheduledCustomAudienceUpdate.Builder
+            DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER_2 =
+                    DBScheduledCustomAudienceUpdate.builder()
+                            .setBuyer(BUYER_2)
+                            .setOwner(OWNER_2)
+                            .setUpdateUri(CommonFixture.getUri(BUYER_2, "/updateUri"))
                             .setScheduledTime(
                                     CommonFixture.FIXED_NEXT_ONE_DAY.truncatedTo(ChronoUnit.MILLIS))
                             .setCreationTime(
@@ -2753,10 +2766,79 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
     }
 
     @Test
-    public void testDeleteScheduledUpdate_ForeignKeyCascades() {
+    public void testInsertCustomAudiencesToLeaveSucceeds() {
         DBScheduledCustomAudienceUpdate anUpdate =
                 DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
         long updateId = mCustomAudienceDao.insertScheduledCustomAudienceUpdate(anUpdate);
+
+        DBCustomAudienceToLeave caToLeave1 =
+                DBCustomAudienceToLeave.builder()
+                        .setUpdateId(updateId)
+                        .setName(CA_TO_LEAVE_NAME_1)
+                        .build();
+        DBCustomAudienceToLeave caToLeave2 =
+                DBCustomAudienceToLeave.builder()
+                        .setUpdateId(updateId)
+                        .setName(CA_TO_LEAVE_NAME_2)
+                        .build();
+
+        List<DBScheduledCustomAudienceUpdate> updates =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
+                        anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
+        assertEquals("There should have been 1 entry", 1, updates.size());
+
+        mCustomAudienceDao.insertCustomAudiencesToLeaveForUpdate(List.of(caToLeave1, caToLeave2));
+
+        List<DBCustomAudienceToLeave> caToLeaveList =
+                mCustomAudienceDao.getCustomAudienceToLeaveListForUpdateId(updateId);
+        assertThat(
+                        caToLeaveList.stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(caToLeave1.getName(), caToLeave2.getName());
+    }
+
+    @Test
+    public void testGetCustomAudienceToLeaveListForUpdateId_returnsCorrectEntries() {
+        DBScheduledCustomAudienceUpdate anUpdate =
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
+        DBScheduledCustomAudienceUpdate anUpdate2 =
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER_2.setUpdateId(null).build();
+
+        long updateId = mCustomAudienceDao.insertScheduledCustomAudienceUpdate(anUpdate);
+        long updateId2 = mCustomAudienceDao.insertScheduledCustomAudienceUpdate(anUpdate2);
+
+        DBCustomAudienceToLeave caToLeave1 =
+                DBCustomAudienceToLeave.builder()
+                        .setUpdateId(updateId)
+                        .setName(CA_TO_LEAVE_NAME_1)
+                        .build();
+        DBCustomAudienceToLeave caToLeave2 =
+                DBCustomAudienceToLeave.builder()
+                        .setUpdateId(updateId2)
+                        .setName(CA_TO_LEAVE_NAME_2)
+                        .build();
+
+        mCustomAudienceDao.insertCustomAudiencesToLeaveForUpdate(List.of(caToLeave1, caToLeave2));
+
+        List<DBCustomAudienceToLeave> caToLeaveList =
+                mCustomAudienceDao.getCustomAudienceToLeaveListForUpdateId(updateId);
+        assertThat(
+                        caToLeaveList.stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(caToLeave1.getName());
+    }
+
+    @Test
+    public void testDeleteScheduledUpdate_ForeignKeyCascades() {
+        DBScheduledCustomAudienceUpdate anUpdate =
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
+        DBScheduledCustomAudienceUpdate anUpdate2 =
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER_2.setUpdateId(null).build();
+
+        long updateId = mCustomAudienceDao.insertScheduledCustomAudienceUpdate(anUpdate);
+        long updateId2 = mCustomAudienceDao.insertScheduledCustomAudienceUpdate(anUpdate2);
 
         DBPartialCustomAudience partialCustomAudience_1 =
                 DB_PARTIAL_CUSTOM_AUDIENCE_BUILDER
@@ -2772,6 +2854,25 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
         mCustomAudienceDao.insertPartialCustomAudiencesForUpdate(
                 List.of(partialCustomAudience_1, partialCustomAudience_2));
 
+        DBCustomAudienceToLeave caToLeave1 =
+                DBCustomAudienceToLeave.builder()
+                        .setUpdateId(updateId)
+                        .setName(CA_TO_LEAVE_NAME_1)
+                        .build();
+        DBCustomAudienceToLeave caToLeave2 =
+                DBCustomAudienceToLeave.builder()
+                        .setUpdateId(updateId)
+                        .setName(CA_TO_LEAVE_NAME_2)
+                        .build();
+        DBCustomAudienceToLeave caToLeave3 =
+                DBCustomAudienceToLeave.builder()
+                        .setUpdateId(updateId2)
+                        .setName(CA_TO_LEAVE_NAME_3)
+                        .build();
+
+        mCustomAudienceDao.insertCustomAudiencesToLeaveForUpdate(
+                List.of(caToLeave1, caToLeave2, caToLeave3));
+
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 mCustomAudienceDao.getPartialAudienceListForUpdateId(updateId);
         assertThat(
@@ -2781,18 +2882,38 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 .containsExactly(
                         partialCustomAudience_1.getName(), partialCustomAudience_2.getName());
 
-        mCustomAudienceDao.deleteScheduledCustomAudienceUpdatesCreatedBeforeTime(
-                anUpdate.getCreationTime().plus(10, ChronoUnit.MINUTES));
+        List<DBCustomAudienceToLeave> caToLeaveList =
+                mCustomAudienceDao.getCustomAudienceToLeaveListForUpdateId(updateId);
+        assertThat(
+                        caToLeaveList.stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(caToLeave1.getName(), caToLeave2.getName());
+
+        mCustomAudienceDao.deleteScheduledCustomAudienceUpdatesByOwner(OWNER_1);
 
         List<DBScheduledCustomAudienceUpdate> updates =
-                mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
-                        anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(OWNER_1);
         assertEquals("Entries should have been deleted", 0, updates.size());
         partialCustomAudienceList = mCustomAudienceDao.getPartialAudienceListForUpdateId(updateId);
         assertEquals(
-                "Entries with foreign keys should have also been deleted",
+                "Entries with foreign keys should have also been deleted from"
+                        + " partial_custom_audience table",
                 0,
                 partialCustomAudienceList.size());
+
+        caToLeaveList = mCustomAudienceDao.getCustomAudienceToLeaveListForUpdateId(updateId);
+        assertEquals(
+                "Entries with foreign keys should have also been deleted from"
+                        + " custom_audience_to_leave table",
+                0,
+                caToLeaveList.size());
+        caToLeaveList = mCustomAudienceDao.getCustomAudienceToLeaveListForUpdateId(updateId2);
+        assertEquals(
+                "Entries with different foreign keys should still exist from"
+                        + " custom_audience_to_leave table",
+                1,
+                caToLeaveList.size());
     }
 
     @Test
@@ -2874,6 +2995,19 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
     }
 
     @Test
+    public void testInsertCustomAudienceToLeave_ForeignKeyViolationFails() {
+        DBCustomAudienceToLeave caToLeave =
+                DBCustomAudienceToLeave.builder()
+                        .setUpdateId(500L)
+                        .setName(CA_TO_LEAVE_NAME_1)
+                        .build();
+
+        assertThrows(
+                SQLiteConstraintException.class,
+                () -> mCustomAudienceDao.insertCustomAudiencesToLeaveForUpdate(List.of(caToLeave)));
+    }
+
+    @Test
     public void testInsertAndQueryScheduledCustomAudienceUpdateInFuture_SingleTransaction() {
         DBScheduledCustomAudienceUpdate anUpdate =
                 DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
@@ -2901,9 +3035,10 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
         assertThat(updates).isEmpty();
 
-        mCustomAudienceDao.insertScheduledUpdateAndPartialCustomAudienceList(
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
                 anUpdate,
                 List.of(partialCustomAudience1, partialCustomAudience2),
+                Collections.emptyList(),
                 /* shouldReplacePendingUpdates= */ false);
         updates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
@@ -2919,20 +3054,98 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                                 .collect(Collectors.toList()))
                 .containsExactly(partialCaName1, partialCaName2);
 
-        List<Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>>
-                updateAndOverridesPair =
-                        mCustomAudienceDao.getScheduledUpdatesAndOverridesBeforeTime(
-                                anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
-        assertThat(updateAndOverridesPair.get(0).first.getUpdateId()).isEqualTo(updateId);
+        List<DBCustomAudienceToLeave> caToLeaveList =
+                mCustomAudienceDao.getCustomAudienceToLeaveListForUpdateId(updateId);
+        assertThat(caToLeaveList).isEmpty();
+
+        List<DBScheduledCustomAudienceUpdateRequest> updateRequestList =
+                mCustomAudienceDao.getScheduledCustomAudienceUpdateRequestsWithLeave(
+                        anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
+        assertThat(updateRequestList).isNotEmpty();
+        assertThat(updateRequestList.get(0).getUpdate().getUpdateId()).isEqualTo(updateId);
         assertThat(
-                        updateAndOverridesPair.get(0).second.stream()
+                        updateRequestList.get(0).getPartialCustomAudienceList().stream()
                                 .map(entry -> entry.getName())
                                 .collect(Collectors.toList()))
                 .containsExactly(partialCaName1, partialCaName2);
+        assertThat(updateRequestList.get(0).getCustomAudienceToLeaveList()).isEmpty();
     }
 
     @Test
-    public void testInsertScheduledCAUpdateInFuture_removePendingUpdatesTrue_PartialCAsReplaced() {
+    public void testInsertAndQueryScheduledCAUpdateInFuture_SingleTransaction_WithLeaveCAs() {
+        DBScheduledCustomAudienceUpdate anUpdate =
+                DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
+        DBPartialCustomAudience dbPartialCustomAudience =
+                DB_PARTIAL_CUSTOM_AUDIENCE_BUILDER.build();
+        String partialCaName1 = "partial_ca_1";
+        String partialCaName2 = "partial_ca_2";
+
+        PartialCustomAudience partialCustomAudience1 =
+                new PartialCustomAudience.Builder(partialCaName1)
+                        .setActivationTime(dbPartialCustomAudience.getActivationTime())
+                        .setExpirationTime(dbPartialCustomAudience.getExpirationTime())
+                        .setUserBiddingSignals(dbPartialCustomAudience.getUserBiddingSignals())
+                        .build();
+
+        PartialCustomAudience partialCustomAudience2 =
+                new PartialCustomAudience.Builder(partialCaName2)
+                        .setActivationTime(dbPartialCustomAudience.getActivationTime())
+                        .setExpirationTime(dbPartialCustomAudience.getExpirationTime())
+                        .setUserBiddingSignals(dbPartialCustomAudience.getUserBiddingSignals())
+                        .build();
+
+        List<DBScheduledCustomAudienceUpdate> updates =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
+                        anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
+        assertThat(updates).isEmpty();
+
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                anUpdate,
+                List.of(partialCustomAudience1, partialCustomAudience2),
+                List.of(CA_TO_LEAVE_NAME_1, CA_TO_LEAVE_NAME_2),
+                /* shouldReplacePendingUpdates= */ false);
+        updates =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
+                        anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
+        assertEquals("1 entry should have been inserted", 1, updates.size());
+
+        long updateId = updates.get(0).getUpdateId();
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                mCustomAudienceDao.getPartialAudienceListForUpdateId(updateId);
+        assertThat(
+                        partialCustomAudienceList.stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(partialCaName1, partialCaName2);
+
+        List<DBCustomAudienceToLeave> caToLeaveList =
+                mCustomAudienceDao.getCustomAudienceToLeaveListForUpdateId(updateId);
+        assertThat(
+                        caToLeaveList.stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(CA_TO_LEAVE_NAME_1, CA_TO_LEAVE_NAME_2);
+
+        List<DBScheduledCustomAudienceUpdateRequest> updateRequestList =
+                mCustomAudienceDao.getScheduledCustomAudienceUpdateRequestsWithLeave(
+                        anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
+        assertThat(updateRequestList).isNotEmpty();
+        assertThat(updateRequestList.get(0).getUpdate().getUpdateId()).isEqualTo(updateId);
+        assertThat(
+                        updateRequestList.get(0).getPartialCustomAudienceList().stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(partialCaName1, partialCaName2);
+        assertThat(
+                        updateRequestList.get(0).getCustomAudienceToLeaveList().stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(CA_TO_LEAVE_NAME_1, CA_TO_LEAVE_NAME_2);
+    }
+
+    @Test
+    public void
+            testInsertScheduledCAUpdateInFuture_removePendingUpdatesTrue_PartialAndLeaveReplaced() {
         DBScheduledCustomAudienceUpdate anUpdate =
                 DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
         DBPartialCustomAudience dbPartialCustomAudience =
@@ -2951,9 +3164,10 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
         assertThat(updates).isEmpty();
 
-        mCustomAudienceDao.insertScheduledUpdateAndPartialCustomAudienceList(
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
                 anUpdate,
                 List.of(partialCustomAudience1),
+                Collections.emptyList(),
                 /* shouldReplacePendingUpdates= */ false);
         updates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
@@ -2978,9 +3192,10 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                         .setExpirationTime(dbPartialCustomAudience.getExpirationTime())
                         .setUserBiddingSignals(dbPartialCustomAudience.getUserBiddingSignals())
                         .build();
-        mCustomAudienceDao.insertScheduledUpdateAndPartialCustomAudienceList(
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
                 similarUpdate,
                 List.of(partialCustomAudience_2),
+                Collections.emptyList(),
                 /* shouldReplacePendingUpdates= */ true);
         List<DBScheduledCustomAudienceUpdate> newUpdates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
@@ -3023,9 +3238,10 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
         assertThat(updates).isEmpty();
 
-        mCustomAudienceDao.insertScheduledUpdateAndPartialCustomAudienceList(
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
                 anUpdate,
                 List.of(partialCustomAudience1),
+                List.of(CA_TO_LEAVE_NAME_1),
                 /* shouldReplacePendingUpdates= */ false);
         updates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
@@ -3040,6 +3256,14 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                                 .collect(Collectors.toList()))
                 .containsExactly(partialCaName1);
 
+        List<DBCustomAudienceToLeave> caToLeaveList =
+                mCustomAudienceDao.getCustomAudienceToLeaveListForUpdateId(previousUpdateId);
+        assertThat(
+                        caToLeaveList.stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(CA_TO_LEAVE_NAME_1);
+
         DBScheduledCustomAudienceUpdate similarUpdate =
                 DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
         String partialCaName2 = "partial_ca_2";
@@ -3053,9 +3277,10 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
         assertThrows(
                 PersistScheduleCAUpdateException.class,
                 () ->
-                        mCustomAudienceDao.insertScheduledUpdateAndPartialCustomAudienceList(
+                        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
                                 similarUpdate,
                                 List.of(partialCustomAudience_2),
+                                List.of(CA_TO_LEAVE_NAME_2),
                                 /* shouldReplacePendingUpdates= */ false));
         List<DBScheduledCustomAudienceUpdate> updatesInDB =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
@@ -3071,6 +3296,14 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                                 .map(entry -> entry.getName())
                                 .collect(Collectors.toList()))
                 .containsExactly(partialCaName1);
+
+        List<DBCustomAudienceToLeave> newCaToLeaveList =
+                mCustomAudienceDao.getCustomAudienceToLeaveListForUpdateId(newUpdateId);
+        assertThat(
+                        newCaToLeaveList.stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(CA_TO_LEAVE_NAME_1);
     }
 
     @Test
@@ -3097,9 +3330,10 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                         .build();
 
         // insert old Scheduled Updates and Partial Custom Audience List
-        mCustomAudienceDao.insertScheduledUpdateAndPartialCustomAudienceList(
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
                 oldUpdate,
                 List.of(oldPartialCustomAudience1, oldPartialCustomAudience2),
+                List.of(CA_TO_LEAVE_NAME_1, CA_TO_LEAVE_NAME_2),
                 /* shouldReplacePendingUpdates= */ false);
 
         DBScheduledCustomAudienceUpdate anUpdate =
@@ -3133,11 +3367,20 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                                 .collect(Collectors.toList()))
                 .containsExactly(oldPartialCaName1, oldPartialCaName2);
 
+        List<DBCustomAudienceToLeave> oldCaToLeaveList =
+                mCustomAudienceDao.getCustomAudienceToLeaveListForUpdateId(oldUpdateId);
+        assertThat(
+                        oldCaToLeaveList.stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(CA_TO_LEAVE_NAME_1, CA_TO_LEAVE_NAME_2);
+
         // inserting new scheduled updates and partial custom audience. This should delete the
         // pending updates.
-        mCustomAudienceDao.insertScheduledUpdateAndPartialCustomAudienceList(
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
                 anUpdate,
                 List.of(newPartialCustomAudience1, newPartialCustomAudience2),
+                List.of(CA_TO_LEAVE_NAME_3, CA_TO_LEAVE_NAME_4),
                 /* shouldReplacePendingUpdates= */ true);
         List<DBScheduledCustomAudienceUpdate> updates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
@@ -3153,16 +3396,28 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                                 .collect(Collectors.toList()))
                 .containsExactly(newPartialCaName1, newPartialCaName2);
 
-        List<Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>>
-                updateAndOverridesPair =
-                        mCustomAudienceDao.getScheduledUpdatesAndOverridesBeforeTime(
-                                anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
-        assertThat(updateAndOverridesPair.get(0).first.getUpdateId()).isEqualTo(updateId);
+        List<DBCustomAudienceToLeave> newCaToLeaveList =
+                mCustomAudienceDao.getCustomAudienceToLeaveListForUpdateId(updateId);
         assertThat(
-                        updateAndOverridesPair.get(0).second.stream()
+                        newCaToLeaveList.stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(CA_TO_LEAVE_NAME_3, CA_TO_LEAVE_NAME_4);
+
+        List<DBScheduledCustomAudienceUpdateRequest> updateRequestList =
+                mCustomAudienceDao.getScheduledCustomAudienceUpdateRequestsWithLeave(
+                        anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
+        assertThat(updateRequestList.get(0).getUpdate().getUpdateId()).isEqualTo(updateId);
+        assertThat(
+                        updateRequestList.get(0).getPartialCustomAudienceList().stream()
                                 .map(entry -> entry.getName())
                                 .collect(Collectors.toList()))
                 .containsExactly(newPartialCaName1, newPartialCaName2);
+        assertThat(
+                        updateRequestList.get(0).getCustomAudienceToLeaveList().stream()
+                                .map(entry -> entry.getName())
+                                .collect(Collectors.toList()))
+                .containsExactly(CA_TO_LEAVE_NAME_3, CA_TO_LEAVE_NAME_4);
     }
 
     @Test

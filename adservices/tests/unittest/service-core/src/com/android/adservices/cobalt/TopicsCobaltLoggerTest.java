@@ -26,7 +26,6 @@ import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.cobalt.CobaltLogger;
 import com.android.cobalt.domain.Project;
 
@@ -40,7 +39,6 @@ import org.mockito.Mock;
 
 import java.util.Map;
 
-@RequiresSdkLevelAtLeastS
 public final class TopicsCobaltLoggerTest extends AdServicesMockitoTestCase {
     private static final int COUNT = 5;
 
@@ -68,7 +66,7 @@ public final class TopicsCobaltLoggerTest extends AdServicesMockitoTestCase {
         // See
         // //packages/modules/AdServices/adservices/service-core/resources/cobalt_registry.textpb
         // for the actual registy.
-        Project cobaltRegistry = CobaltRegistryLoader.getRegistry(sContext);
+        Project cobaltRegistry = CobaltRegistryLoader.getRegistry(sContext, mMockFlags);
         MetricDefinition topicsMetric =
                 cobaltRegistry.getMetrics().stream()
                         .filter(m -> m.getMetricName().equals("returned_topics"))

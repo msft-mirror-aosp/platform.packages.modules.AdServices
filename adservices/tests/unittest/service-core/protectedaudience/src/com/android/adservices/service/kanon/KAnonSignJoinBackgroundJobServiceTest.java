@@ -101,7 +101,7 @@ public final class KAnonSignJoinBackgroundJobServiceTest extends AdServicesJobSe
         doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN).when(mConsentManagerMock).getConsent(any());
         doReturn(mKAnonSignJoinBackgroundJobWorkerMock)
-                .when(() -> KAnonSignJoinBackgroundJobWorker.getInstance(any()));
+                .when(KAnonSignJoinBackgroundJobWorker::getInstance);
         doReturn(false).when(() -> ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(any()));
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mKAnonSignJoinBackgroundJobWorkerMock)
@@ -115,7 +115,8 @@ public final class KAnonSignJoinBackgroundJobServiceTest extends AdServicesJobSe
                         })
                 .when(mKAnonSignJoinBackgroundJobService)
                 .jobFinished(mJobParametersMock, false);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, testFlags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, testFlags);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
         mKAnonSignJoinBackgroundJobService.onStartJob(mJobParametersMock);
@@ -132,7 +133,7 @@ public final class KAnonSignJoinBackgroundJobServiceTest extends AdServicesJobSe
         doReturn(true).when(() -> ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(any()));
         doNothing().when(mKAnonSignJoinBackgroundJobService).jobFinished(mJobParametersMock, false);
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(mContext, mock(Flags.class));
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mock(Flags.class));
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
@@ -161,7 +162,7 @@ public final class KAnonSignJoinBackgroundJobServiceTest extends AdServicesJobSe
         doReturn(false).when(() -> ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(any()));
         doNothing().when(mKAnonSignJoinBackgroundJobService).jobFinished(mJobParametersMock, false);
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(mContext, testWithBackgroundDisabled);
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, testWithBackgroundDisabled);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
@@ -187,7 +188,7 @@ public final class KAnonSignJoinBackgroundJobServiceTest extends AdServicesJobSe
                 new KAnonSignJoinBackgroundJobServiceTestFlags(10000, false, true);
         doReturn(testFlags).when(() -> FlagsFactory.getFlags());
         doReturn(mKAnonSignJoinBackgroundJobWorkerMock)
-                .when(() -> KAnonSignJoinBackgroundJobWorker.getInstance(mContext));
+                .when(KAnonSignJoinBackgroundJobWorker::getInstance);
 
         KAnonSignJoinBackgroundJobService.scheduleIfNeeded(mContext, false);
 

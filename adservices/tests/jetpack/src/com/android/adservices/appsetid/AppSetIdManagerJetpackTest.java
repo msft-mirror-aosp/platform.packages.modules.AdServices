@@ -65,6 +65,5 @@ public class AppSetIdManagerJetpackTest {
                 AppSetIdManagerFutures.from(ApplicationProvider.getApplicationContext());
         AppSetId appSetId = appSetIdManager.getAppSetIdAsync().get();
         assertThat(appSetId.getId()).isNotEmpty();
-        assertThat(appSetId.getScope()).isNotNull();
     }
 }

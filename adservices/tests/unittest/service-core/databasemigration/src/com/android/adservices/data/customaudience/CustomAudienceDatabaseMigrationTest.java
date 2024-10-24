@@ -39,8 +39,6 @@ import androidx.room.util.TableInfo;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -56,9 +54,6 @@ public class CustomAudienceDatabaseMigrationTest {
 
     private static final String QUERY_TABLES_FROM_SQL_MASTER =
             "SELECT * FROM sqlite_master WHERE type='table' AND name='%s';";
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Rule(order = 1)
     public MigrationTestHelper helper =
@@ -245,6 +240,61 @@ public class CustomAudienceDatabaseMigrationTest {
         db = helper.runMigrationsAndValidate(TEST_DB, 8, true, MIGRATION_7_8);
         info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
         assertTrue(info.columns.containsKey("is_debuggable"));
+        db.close();
+    }
+
+    @Test
+    public void testAutoMigration9To10() throws IOException {
+        // Create DB with v9.
+        final String scheduledCustomAudienceUpdateTable = "scheduled_custom_audience_update";
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 9);
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put("update_id", 1L);
+        contentValues.put("owner", "");
+        contentValues.put("buyer", "");
+        contentValues.put("update_uri", "");
+        contentValues.put("creation_time", "");
+        contentValues.put("scheduled_time", "");
+        contentValues.put("is_debuggable", false);
+        db.insert(scheduledCustomAudienceUpdateTable, CONFLICT_FAIL, contentValues);
+
+        // The table added in v9 should already exist.
+        Cursor cursor =
+                db.query(
+                        String.format(
+                                QUERY_TABLES_FROM_SQL_MASTER,
+                                DBScheduledCustomAudienceUpdate.TABLE_NAME));
+        assertEquals(1, cursor.getCount());
+        cursor.close();
+
+        // Column added in v10 should not exist, yet.
+        TableInfo info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
+        assertFalse(info.columns.containsKey("allow_schedule_in_response"));
+
+        // Table added in v10 should not exist, yet.
+        TableInfo info2 = TableInfo.read(db, DBCustomAudienceToLeave.TABLE_NAME);
+        assertFalse(info2.columns.containsKey("name"));
+
+        // Close DB before attempting migrations.
+        db.close();
+
+        // Attempt to re-open the database with v10 auto migration.
+        db = helper.runMigrationsAndValidate(TEST_DB, 10, true);
+
+        // Check if the new column is created and assert success.
+        info = TableInfo.read(db, DBScheduledCustomAudienceUpdate.TABLE_NAME);
+        assertTrue(info.columns.containsKey("allow_schedule_in_response"));
+
+        // Table added in v10 should exist.
+        info2 = TableInfo.read(db, DBCustomAudienceToLeave.TABLE_NAME);
+        assertTrue(info2.columns.containsKey("name"));
+
+        // Check if value of the new column has the default value for already existing columns and
+        // assert success.
+        cursor = db.query("SELECT * FROM " + scheduledCustomAudienceUpdateTable);
+        cursor.moveToFirst();
+        assertEquals(0, cursor.getInt(cursor.getColumnIndex("allow_schedule_in_response")));
         db.close();
     }
 

@@ -25,9 +25,12 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReportData.AggregateDebugReportDataHeaderContract;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting.AggregateDebugReportingHeaderContract;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -42,10 +45,12 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -55,7 +60,12 @@ import java.util.regex.Pattern;
  */
 public class FetcherUtil {
     static final Pattern HEX_PATTERN = Pattern.compile("\\p{XDigit}+");
+    static final String DEFAULT_HEX_STRING = "0x0";
     public static final BigInteger BIG_INTEGER_LONG_MAX_VALUE = BigInteger.valueOf(Long.MAX_VALUE);
+    public static final BigDecimal BIG_DECIMAL_INT_MAX_VALUE =
+            BigDecimal.valueOf(Integer.MAX_VALUE);
+    public static final BigDecimal BIG_DECIMAL_INT_MIN_VALUE =
+            BigDecimal.valueOf(Integer.MIN_VALUE);
 
     /**
      * Determine all redirects.
@@ -139,10 +149,24 @@ public class FetcherUtil {
         return value.stripTrailingZeros().scale() <= 0;
     }
 
-    /** Extract value of a numeric integral object */
+    /** Extract value of a numeric integral from JSONObject. */
     public static Optional<BigDecimal> extractIntegralValue(JSONObject obj, String key) {
         try {
-            Object maybeIntegralValue = obj.get(key);
+            Object maybeObject = obj.get(key);
+            Optional<BigDecimal> maybeIntegralValue = extractIntegralValue(maybeObject);
+            if (maybeIntegralValue.isPresent()) {
+                return maybeIntegralValue;
+            }
+        } catch (JSONException | NumberFormatException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "extractIntegralValue: caught exception. Key: %s", key);
+            return Optional.empty();
+        }
+        return Optional.empty();
+    }
+
+    /** Extract value of a numeric integral Object. */
+    public static Optional<BigDecimal> extractIntegralValue(Object maybeIntegralValue) {
             if (!(maybeIntegralValue instanceof Number)) {
                 LoggerFactory.getMeasurementLogger()
                         .e(
@@ -161,11 +185,25 @@ public class FetcherUtil {
             }
 
             return Optional.of(bd);
-        } catch (JSONException | NumberFormatException e) {
+    }
+
+    /** Extract value of an int from a map. */
+    public static Optional<Integer> extractIntegralInt(JSONObject map, String id) {
+        Optional<BigDecimal> maybeBigDecimal = FetcherUtil.extractIntegralValue(map, id);
+        if (maybeBigDecimal.isEmpty()) {
             LoggerFactory.getMeasurementLogger()
-                    .e(e, "extractIntegralValue: caught exception. Key: %s", key);
+                    .d("extractIntegralInt: value for" + " bucket %s is not an integer.", id);
             return Optional.empty();
         }
+        BigDecimal integralValue = maybeBigDecimal.get();
+        if (integralValue.compareTo(BIG_DECIMAL_INT_MAX_VALUE) > 0
+                || integralValue.compareTo(BIG_DECIMAL_INT_MIN_VALUE) < 0) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("extractIntegralInt: value is larger than int. %s", integralValue);
+            return Optional.empty();
+        }
+
+        return Optional.of(integralValue.intValue());
     }
 
     private static boolean isValidLookbackWindow(JSONObject obj) {
@@ -400,6 +438,185 @@ public class FetcherUtil {
             }
         }
         return true;
+    }
+
+    static Optional<String> getValidAggregateDebugReportingWithBudget(
+            JSONObject aggregateDebugReporting, Flags flags) throws JSONException {
+        int budget = 0;
+        if (!aggregateDebugReporting.isNull(AggregateDebugReportingHeaderContract.BUDGET)) {
+            Optional<BigDecimal> optionalBudget =
+                    extractIntegralValue(
+                            aggregateDebugReporting, AggregateDebugReportingHeaderContract.BUDGET);
+            // If the budget is invalid number or not in range, fallback to 0
+            int maxSumAggValuesPerSource = flags.getMeasurementMaxSumOfAggregateValuesPerSource();
+            budget =
+                    optionalBudget
+                            .filter(val -> val.compareTo(BigDecimal.ZERO) >= 0)
+                            .filter(
+                                    val ->
+                                            val.compareTo(new BigDecimal(maxSumAggValuesPerSource))
+                                                    <= 0)
+                            .map(BigDecimal::intValue)
+                            .orElse(0);
+        }
+        Optional<JSONObject> validAggregateDebugReporting =
+                getValidAggregateDebugReportingWithoutBudget(
+                        aggregateDebugReporting, flags, budget);
+        if (validAggregateDebugReporting.isPresent()) {
+            validAggregateDebugReporting
+                    .get()
+                    .put(AggregateDebugReportingHeaderContract.BUDGET, budget);
+        }
+        return validAggregateDebugReporting.map(JSONObject::toString);
+    }
+
+    static Optional<String> getValidAggregateDebugReportingWithoutBudget(
+            JSONObject aggregateDebugReporting, Flags flags) throws JSONException {
+        return getValidAggregateDebugReportingWithoutBudget(
+                        aggregateDebugReporting,
+                        flags,
+                        flags.getMeasurementMaxSumOfAggregateValuesPerSource())
+                .map(JSONObject::toString);
+    }
+
+    private static Optional<JSONObject> getValidAggregateDebugReportingWithoutBudget(
+            JSONObject aggregateDebugReporting, Flags flags, int maxAggregateDebugDataValue)
+            throws JSONException {
+        JSONObject validAggregateDebugReporting = new JSONObject();
+        String keyPiece =
+                aggregateDebugReporting.optString(AggregateDebugReportingHeaderContract.KEY_PIECE);
+        if (keyPiece.isEmpty()) {
+            keyPiece = DEFAULT_HEX_STRING;
+        }
+        if (!FetcherUtil.isValidAggregateKeyPiece(keyPiece, flags)) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("Aggregate debug reporting key-piece is invalid.");
+            return Optional.empty();
+        }
+        validAggregateDebugReporting.put(AggregateDebugReportingHeaderContract.KEY_PIECE, keyPiece);
+
+        if (!aggregateDebugReporting.isNull(
+                AggregateDebugReportingHeaderContract.AGGREGATION_COORDINATOR_ORIGIN)) {
+            String origin =
+                    aggregateDebugReporting.getString(
+                            AggregateDebugReportingHeaderContract.AGGREGATION_COORDINATOR_ORIGIN);
+            String allowlist = flags.getMeasurementAggregationCoordinatorOriginList();
+            if (origin.isEmpty() || !isAllowlisted(allowlist, origin)) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("Aggregate debug reporting aggregation coordinator origin is invalid.");
+                return Optional.empty();
+            }
+            validAggregateDebugReporting.put(
+                    AggregateDebugReportingHeaderContract.AGGREGATION_COORDINATOR_ORIGIN,
+                    Uri.parse(origin));
+        }
+        if (!aggregateDebugReporting.isNull(AggregateDebugReportingHeaderContract.DEBUG_DATA)) {
+            Set<String> existingReportTypes = new HashSet<>();
+            Optional<JSONArray> maybeValidDebugDataArr =
+                    getValidAggregateDebugReportingData(
+                            aggregateDebugReporting.getJSONArray(
+                                    AggregateDebugReportingHeaderContract.DEBUG_DATA),
+                            existingReportTypes,
+                            flags,
+                            maxAggregateDebugDataValue);
+            if (maybeValidDebugDataArr.isEmpty()) {
+                return Optional.empty();
+            }
+            validAggregateDebugReporting.put(
+                    AggregateDebugReportingHeaderContract.DEBUG_DATA, maybeValidDebugDataArr.get());
+        }
+        return Optional.of(validAggregateDebugReporting);
+    }
+
+    private static Optional<JSONArray> getValidAggregateDebugReportingData(
+            JSONArray debugDataArr,
+            Set<String> existingReportTypes,
+            Flags flags,
+            int maxAggregateDebugDataValue)
+            throws JSONException {
+        JSONArray validDebugDataArr = new JSONArray();
+        for (int i = 0; i < debugDataArr.length(); i++) {
+            JSONObject debugDataObj = debugDataArr.getJSONObject(i);
+            JSONObject validDebugDataObj = new JSONObject();
+            if (debugDataObj.isNull(AggregateDebugReportDataHeaderContract.KEY_PIECE)
+                    || debugDataObj.isNull(AggregateDebugReportDataHeaderContract.VALUE)
+                    || debugDataObj.isNull(AggregateDebugReportDataHeaderContract.TYPES)) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("Aggregate debug reporting data is missing required keys.");
+                return Optional.empty();
+            }
+
+            String debugDatakeyPiece =
+                    debugDataObj.optString(AggregateDebugReportDataHeaderContract.KEY_PIECE);
+            if (!FetcherUtil.isValidAggregateKeyPiece(debugDatakeyPiece, flags)) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("Aggregate debug reporting data key-piece is invalid.");
+                return Optional.empty();
+            }
+            validDebugDataObj.put(
+                    AggregateDebugReportDataHeaderContract.KEY_PIECE, debugDatakeyPiece);
+
+            Optional<BigDecimal> optionalValue =
+                    extractIntegralValue(
+                            debugDataObj, AggregateDebugReportDataHeaderContract.VALUE);
+            if (optionalValue.isEmpty()) {
+                LoggerFactory.getMeasurementLogger().d("Aggregate debug data value is invalid.");
+                return Optional.empty();
+            }
+            BigDecimal value = optionalValue.get();
+            if (value.compareTo(BigDecimal.ZERO) <= 0
+                    || value.compareTo(new BigDecimal(maxAggregateDebugDataValue)) > 0) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("Aggregate debug reporting data value is invalid.");
+                return Optional.empty();
+            }
+            validDebugDataObj.put(AggregateDebugReportDataHeaderContract.VALUE, value.intValue());
+
+            Optional<List<String>> maybeDebugDataTypes =
+                    FetcherUtil.extractStringArray(
+                            debugDataObj,
+                            AggregateDebugReportDataHeaderContract.TYPES,
+                            Integer.MAX_VALUE,
+                            Integer.MAX_VALUE);
+            if (maybeDebugDataTypes.isEmpty()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("Aggregate debug reporting data type must not be empty.");
+                return Optional.empty();
+            }
+            List<String> debugDataTypesList = maybeDebugDataTypes.get();
+            List<String> validDebugDataTypes = new ArrayList<>();
+            for (String debugDataType : debugDataTypesList) {
+                Optional<DebugReportApi.Type> maybeType =
+                        DebugReportApi.Type.findByValue(debugDataType);
+                // Ignore the type if not recognized
+                if (maybeType.isPresent()) {
+                    if (existingReportTypes.contains(maybeType.get().getValue())) {
+                        LoggerFactory.getMeasurementLogger()
+                                .d(
+                                        "duplicate aggregate debug reporting data types within the"
+                                                + " same object or across multiple objects are not"
+                                                + " allowed.");
+                        return Optional.empty();
+                    }
+                    validDebugDataTypes.add(maybeType.get().getValue());
+                    existingReportTypes.add(maybeType.get().getValue());
+                }
+            }
+            validDebugDataObj.put(
+                    AggregateDebugReportDataHeaderContract.TYPES,
+                    new JSONArray(validDebugDataTypes));
+
+            validDebugDataArr.put(validDebugDataObj);
+        }
+        return Optional.of(validDebugDataArr);
+    }
+
+    private static boolean isAllowlisted(String allowlist, String origin) {
+        if (AllowLists.doesAllowListAllowAll(allowlist)) {
+            return true;
+        }
+        Set<String> elements = new HashSet<>(AllowLists.splitAllowList(allowlist));
+        return elements.contains(origin);
     }
 
     static String getSourceRegistrantToLog(AsyncRegistration asyncRegistration) {

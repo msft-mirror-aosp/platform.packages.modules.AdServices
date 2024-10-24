@@ -42,7 +42,6 @@ import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithE
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -71,7 +70,6 @@ import java.util.Map;
 /** Model Manager Test {@link ModelManager}. */
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(ModelManager.class)
-@RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
@@ -100,9 +98,6 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
             "classifier/classifier_input_config.txt";
     private static final String MODEL_FILE_PATH = "classifier/model.tflite";
     private static final String DOWNLOADED_MODEL_FILE_ID = "model.tflite";
-    private static final String MODEL_MANAGER_CLASS_NAME = "ModelManager";
-    private static final String GET_ASSETS_METADATA_MAP_METHOD_NAME = "getAssetsMetadataMap";
-    private static final String GET_APPS_TOPIC_MAP_METHOD_NAME = "getAppsTopicMap";
 
     @Mock private SynchronousFileStorage mMockFileStorage;
     @Mock private Map<String, ClientFile> mMockDownloadedFiles;
@@ -126,7 +121,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
     public void testRetrieveModel_bundled_emptyDownloadedFiles() throws IOException {
         mProductionModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
@@ -138,8 +133,8 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
         ByteBuffer byteBuffer = mProductionModelManager.retrieveModel();
         // Check byteBuffer capacity greater than 0 when retrieveModel() finds bundled TFLite model
         // and loads file as a ByteBuffer.
-        assertThat(mProductionModelManager.useDownloadedFiles()).isFalse();
-        assertThat(byteBuffer.capacity()).isGreaterThan(0);
+        expect.that(mProductionModelManager.useDownloadedFiles()).isFalse();
+        expect.that(byteBuffer.capacity()).isGreaterThan(0);
     }
 
     @Test
@@ -155,7 +150,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
 
         mProductionModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
@@ -165,10 +160,10 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
                         downloadedFiles);
 
         ByteBuffer byteBuffer = mProductionModelManager.retrieveModel();
-        assertThat(mProductionModelManager.useDownloadedFiles()).isFalse();
+        expect.that(mProductionModelManager.useDownloadedFiles()).isFalse();
         // Check byteBuffer capacity greater than 0 when retrieveModel() finds bundled TFLite model
         // and loads file as a ByteBuffer.
-        assertThat(byteBuffer.capacity()).isGreaterThan(0);
+        expect.that(byteBuffer.capacity()).isGreaterThan(0);
     }
 
     @Test
@@ -177,7 +172,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
     public void testRetrieveModel_bundled_incorrectFilePath() throws IOException {
         mProductionModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
@@ -205,11 +200,11 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
         // classification because downloaded model build id is bigger.
         ClientFileGroup clientFileGroup =
                 ClientFileGroup.newBuilder().setBuildId(CLIENT_FILE_GROUP_BUILD_ID).build();
-        doReturn(clientFileGroup).when(() -> ModelManager.getClientFileGroup());
+        doReturn(clientFileGroup).when(ModelManager::getClientFileGroup);
 
         mProductionModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
@@ -234,7 +229,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
         // The labels_topics.txt contains 446 topics.
         mProductionModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
@@ -247,25 +242,25 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
         assertThat(mProductionLabels.size()).isEqualTo(446);
 
         // Check some labels.
-        assertThat(mProductionLabels).containsAtLeast(10010, 10200, 10270, 10432);
+        expect.that(mProductionLabels).containsAtLeast(10010, 10200, 10270, 10432);
         // Verify ModelManager chooses bundled model because mMockDownloadedFiles is empty.
-        assertThat(mProductionModelManager.useDownloadedFiles()).isFalse();
+        expect.that(mProductionModelManager.useDownloadedFiles()).isFalse();
         // Verify ModelManager returns test bundled model build id = 8.
-        assertThat(mProductionModelManager.getBuildId()).isEqualTo(8);
+        expect.that(mProductionModelManager.getBuildId()).isEqualTo(8);
     }
 
     @Test
     public void testRetrieveLabels_downloaded_successfulRead() throws IOException {
         // Mock a MDD FileGroup and FileStorage
         when(mMockFileStorage.open(any(), any()))
-                .thenReturn(sContext.getAssets().open(PRODUCTION_LABELS_FILE_PATH));
+                .thenReturn(mContext.getAssets().open(PRODUCTION_LABELS_FILE_PATH));
 
         // Test the labels list in MDD downloaded label.
         // Check size of list.
         // The labels_topics.txt contains 446 topics.
         mProductionModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         PRODUCTION_LABELS_FILE_PATH,
                         PRODUCTION_APPS_FILE_PATH,
                         PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
@@ -286,7 +281,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
     public void testRetrieveLabels_bundled_emptyListReturnedOnException() {
         mProductionModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         "WrongFilePath",
                         "WrongFilePath",
                         "WrongFilePath",
@@ -309,7 +304,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
         when(mMockFileStorage.open(any(), any())).thenReturn(inputStream);
         mProductionModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         "WrongFilePath",
                         "WrongFilePath",
                         "WrongFilePath",
@@ -330,7 +325,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
     public void testLoadedAppTopics_bundled() {
         mTestModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
@@ -342,7 +337,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
         Map<String, List<Integer>> appTopic = mTestModelManager.retrieveAppClassificationTopics();
         // Check size of map
         // The app topics file contains 10000 apps + 11 sample apps + 2 test valid topics' apps
-        // + 1 end2end test app + 1 cts test app + 1 empty app.
+        // + 1 end-to-end test app + 1 cts test app + 1 empty app.
         assertThat(appTopic.size()).isEqualTo(10016);
 
         // Check android messaging, chrome and a sample app topics in map
@@ -354,7 +349,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
 
         // The topicId of "com.android.chrome" in assets/precomputed_test_app_list.csv
         // is 10185
-        List<Integer> chromeTopics = Arrays.asList(10185);
+        List<Integer> chromeTopics = List.of(10185);
         assertThat(appTopic.get("com.android.chrome")).isEqualTo(chromeTopics);
 
         // The topicIds of "com.example.adservices.samples.topics.sampleapp" in
@@ -396,7 +391,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
     public void testAppsWithOnlyEmptyTopics() {
         mTestModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
@@ -431,7 +426,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
     public void testGetTestClassifierAssetsMetadata_correctFormat() {
         mTestModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
@@ -501,7 +496,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
     public void testGetProductionClassifierAssetsMetadata_bundled_correctFormat() {
         mProductionModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         PRODUCTION_LABELS_FILE_PATH,
                         PRODUCTION_APPS_FILE_PATH,
                         PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
@@ -580,10 +575,10 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
         // Mock a MDD FileGroup and FileStorage
         when(mMockFileStorage.open(any(), any()))
                 .thenReturn(
-                        sContext.getAssets().open(PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH));
+                        mContext.getAssets().open(PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH));
         mProductionModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         PRODUCTION_LABELS_FILE_PATH,
                         PRODUCTION_APPS_FILE_PATH,
                         PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
@@ -660,7 +655,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
     public void testRetrieveClassifierInputConfig_bundled_successfulRead() {
         mProductionModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
@@ -683,11 +678,11 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
     public void testRetrieveClassifierInputConfig_downloaded_successfulRead() throws IOException {
         // Mock a MDD FileGroup and FileStorage
         when(mMockFileStorage.open(any(), any()))
-                .thenReturn(sContext.getAssets().open(PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH));
+                .thenReturn(mContext.getAssets().open(PRODUCTION_CLASSIFIER_INPUT_CONFIG_PATH));
 
         mProductionModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         PRODUCTION_LABELS_FILE_PATH,
                         PRODUCTION_APPS_FILE_PATH,
                         PRODUCTION_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
@@ -710,7 +705,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
     public void testRetrieveClassifierInputConfig_bundled_emptyConfigReturnedOnException() {
         mProductionModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         "WrongFilePath",
                         "WrongFilePath",
                         "WrongFilePath",
@@ -734,7 +729,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
 
         mProductionModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         "WrongFilePath",
                         "WrongFilePath",
                         "WrongFilePath",
@@ -815,7 +810,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
     public void testIsModelAvailable_downloadedModelIsAvailable() {
         mTestModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
@@ -832,7 +827,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
     public void testIsModelAvailable_nonNullBundledModel() {
         mTestModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
@@ -851,7 +846,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
     public void testIsModelAvailable_nullBundledModel() {
         mTestModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,
@@ -874,7 +869,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
     public void testGetTestClassifierAssetsMetadata_wrongFormat() {
         mTestModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         TEST_LABELS_FILE_PATH,
                         TEST_APPS_FILE_PATH,
                         TEST_CLASSIFIER_ASSETS_METADATA_FILE_PATH,

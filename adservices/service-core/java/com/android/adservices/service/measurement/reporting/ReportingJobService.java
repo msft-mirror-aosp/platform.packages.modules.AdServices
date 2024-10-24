@@ -43,6 +43,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.Optional;
@@ -188,7 +189,7 @@ public final class ReportingJobService extends JobService {
     }
 
     private static void saveNextExecution(Context context, Long latestReportTimeInBatch) {
-        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager();
         datastoreManager.runInTransaction(getSaveNextExecutionConsumer(latestReportTimeInBatch));
     }
 
@@ -211,7 +212,7 @@ public final class ReportingJobService extends JobService {
     }
 
     private static Long getNextScheduledExecution(Context context) {
-        DatastoreManager dataStoreManager = DatastoreManagerFactory.getDatastoreManager(context);
+        DatastoreManager dataStoreManager = DatastoreManagerFactory.getDatastoreManager();
 
         KeyValueData kvData =
                 dataStoreManager
@@ -226,7 +227,7 @@ public final class ReportingJobService extends JobService {
     }
 
     private static Optional<Long> getLastReportTimeInBatch(Context context, Flags flags) {
-        DatastoreManager dataStoreManager = DatastoreManagerFactory.getDatastoreManager(context);
+        DatastoreManager dataStoreManager = DatastoreManagerFactory.getDatastoreManager();
 
         return dataStoreManager.runInTransactionWithResult(
                 measurementDao ->
@@ -235,8 +236,7 @@ public final class ReportingJobService extends JobService {
     }
 
     private void saveExecutionStartTime() {
-        DatastoreManager datastoreManager =
-                DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager();
         datastoreManager.runInTransaction(getSaveExecutionTimeConsumer());
     }
 
@@ -252,7 +252,7 @@ public final class ReportingJobService extends JobService {
     }
 
     private static long getLastExecution(Context context) {
-        DatastoreManager dataStoreManager = DatastoreManagerFactory.getDatastoreManager(context);
+        DatastoreManager dataStoreManager = DatastoreManagerFactory.getDatastoreManager();
 
         KeyValueData lastExecution =
                 dataStoreManager
@@ -317,8 +317,7 @@ public final class ReportingJobService extends JobService {
                                     FlagsFactory.getFlags()
                                             .getMeasurementMaxAggregateReportUploadRetryWindowMs();
                             DatastoreManager datastoreManager =
-                                    DatastoreManagerFactory.getDatastoreManager(
-                                            getApplicationContext());
+                                    DatastoreManagerFactory.getDatastoreManager();
                             new AggregateReportingJobHandler(
                                             datastoreManager,
                                             new AggregateEncryptionKeyManager(
@@ -327,7 +326,8 @@ public final class ReportingJobService extends JobService {
                                             AdServicesLoggerImpl.getInstance(),
                                             ReportingStatus.ReportType.AGGREGATE,
                                             ReportingStatus.UploadMethod.REGULAR,
-                                            getApplicationContext())
+                                            getApplicationContext(),
+                                            new AndroidTimeSource())
                                     .performScheduledPendingReportsInWindow(
                                             System.currentTimeMillis()
                                                     - maxAggregateReportUploadRetryWindowMs,
@@ -345,13 +345,13 @@ public final class ReportingJobService extends JobService {
                                     FlagsFactory.getFlags()
                                             .getMeasurementMaxEventReportUploadRetryWindowMs();
                             new EventReportingJobHandler(
-                                            DatastoreManagerFactory.getDatastoreManager(
-                                                    getApplicationContext()),
+                                            DatastoreManagerFactory.getDatastoreManager(),
                                             FlagsFactory.getFlags(),
                                             AdServicesLoggerImpl.getInstance(),
                                             ReportingStatus.ReportType.EVENT,
                                             ReportingStatus.UploadMethod.REGULAR,
-                                            getApplicationContext())
+                                            getApplicationContext(),
+                                            new AndroidTimeSource())
                                     .performScheduledPendingReportsInWindow(
                                             System.currentTimeMillis()
                                                     - maxEventReportUploadRetryWindowMs,

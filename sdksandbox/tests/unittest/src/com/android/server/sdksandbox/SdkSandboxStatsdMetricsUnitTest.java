@@ -203,7 +203,8 @@ public class SdkSandboxStatsdMetricsUnitTest extends DeviceSupportedBaseTest {
                                                 .getPath()),
                                 sProvider,
                                 Mockito.spy(SdkSandboxPulledAtoms.class),
-                                mSdkSandboxStatsdLogger));
+                                mSdkSandboxStatsdLogger,
+                                new SdkSandboxRestrictionManager((mSpyContext))));
 
         mService = new SdkSandboxManagerService(mSpyContext, mInjector);
         mSdkSandboxManagerLocal = mService.getLocalManager();
