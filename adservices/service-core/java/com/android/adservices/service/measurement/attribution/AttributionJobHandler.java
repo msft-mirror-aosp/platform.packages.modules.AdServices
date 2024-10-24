@@ -25,6 +25,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_DELAYED_SOURCE_REGISTRATION;
 
 import android.annotation.NonNull;
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.util.Pair;
 
@@ -65,6 +68,7 @@ import com.android.adservices.service.measurement.reporting.DebugKeyAccessor;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate.MomentPlacement;
+import com.android.adservices.service.measurement.util.Applications;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -72,7 +76,9 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementAttributionStats;
 import com.android.adservices.service.stats.MeasurementDelayedSourceRegistrationStats;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 
@@ -110,6 +116,8 @@ class AttributionJobHandler {
     private final AggregateDebugReportApi mAdrApi;
     private final Flags mFlags;
     private final Filter mFilter;
+    private final Context mContext;
+    private final Map<Uri, Long> mPackageInstallTimeCache;
 
     private enum TriggeringStatus {
         DROPPED,
@@ -140,7 +148,8 @@ class AttributionJobHandler {
                 new SourceNoiseHandler(FlagsFactory.getFlags()),
                 AdServicesLoggerImpl.getInstance(),
                 new XnaSourceCreator(FlagsFactory.getFlags()),
-                adrApi);
+                adrApi,
+                ApplicationContextSingleton.get());
     }
 
     AttributionJobHandler(
@@ -151,7 +160,8 @@ class AttributionJobHandler {
             SourceNoiseHandler sourceNoiseHandler,
             AdServicesLogger logger,
             XnaSourceCreator xnaSourceCreator,
-            AggregateDebugReportApi adrApi) {
+            AggregateDebugReportApi adrApi,
+            Context context) {
         mDatastoreManager = datastoreManager;
         mFlags = flags;
         mDebugReportApi = debugReportApi;
@@ -160,7 +170,9 @@ class AttributionJobHandler {
         mLogger = logger;
         mXnaSourceCreator = xnaSourceCreator;
         mAdrApi = adrApi;
+        mContext = context;
         mFilter = new Filter(mFlags);
+        mPackageInstallTimeCache = new HashMap<>();
     }
 
     /**
@@ -249,6 +261,31 @@ class AttributionJobHandler {
                                         "JSONException when trigger attribution for"
                                                 + " trigger with ID: "
                                                 + trigger.getId());
+                    }
+
+                    if (mFlags.getMeasurementEnableInstallAttributionOnS()) {
+                        Uri uri = trigger.getAttributionDestination();
+                        if (!SdkLevel.isAtLeastT()
+                                && shouldDoInstallAttributionOnS(
+                                        measurementDao, uri, trigger.getTriggerTime())) {
+                            try {
+                                Long timestamp = mPackageInstallTimeCache.get(uri);
+                                if (timestamp == null) {
+                                    PackageManager packageManager = mContext.getPackageManager();
+                                    PackageInfo packageInfo =
+                                            packageManager.getPackageInfo(uri.getHost(), 0);
+                                    timestamp = packageInfo.firstInstallTime;
+                                    mPackageInstallTimeCache.put(uri, timestamp);
+                                }
+                                measurementDao.doInstallAttribution(uri, timestamp);
+                            } catch (PackageManager.NameNotFoundException w) {
+                                LoggerFactory.getMeasurementLogger()
+                                        .w(
+                                                w,
+                                                "AttributionJobHandler::performAttribution "
+                                                        + "NameNotFoundException");
+                            }
+                        }
                     }
 
                     Optional<Pair<Source, List<Source>>> sourceOpt =
@@ -394,6 +431,23 @@ class AttributionJobHandler {
                     mAdrApi.scheduleTriggerAttributionErrorWithSourceDebugReport(
                             source, trigger, adrTypes, measurementDao);
                 });
+    }
+
+    private boolean shouldDoInstallAttributionOnS(
+            IMeasurementDao measurementDao, Uri attributionDestination, long triggerTime) {
+        List<Uri> uris = List.of(attributionDestination);
+        try {
+            return measurementDao.existsActiveSourcesWithDestination(
+                            attributionDestination, triggerTime)
+                    && Applications.anyAppsInstalled(mContext, uris);
+        } catch (DatastoreException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            e,
+                            "AttributionJobHandler::shouldDoInstallAttributionOnS "
+                                    + "DatastoreException existsActiveSourcesWithDestination.");
+            return false;
+        }
     }
 
     private boolean getTriggerHasAggregatableData(Trigger trigger) throws JSONException {
@@ -619,8 +673,7 @@ class AttributionJobHandler {
 
             AggregateReport aggregateReport = aggregateReportBuilder.build();
 
-            if (mFlags.getMeasurementNullAggregateReportEnabled()
-                    && Trigger.SourceRegistrationTimeConfig.INCLUDE.equals(
+            if (Trigger.SourceRegistrationTimeConfig.INCLUDE.equals(
                             trigger.getAggregatableSourceRegistrationTimeConfig())) {
                 generateNullAggregateReportsIncludingSourceRegistrationTime(
                         trigger, aggregateReport, measurementDao, attributionStatus);
@@ -673,8 +726,7 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao, Trigger trigger, AttributionStatus attributionStatus)
             throws DatastoreException {
         try {
-            if (!mFlags.getMeasurementNullAggregateReportEnabled()
-                    || !getTriggerHasAggregatableData(trigger)) {
+            if (!getTriggerHasAggregatableData(trigger)) {
                 return;
             }
             if (Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
