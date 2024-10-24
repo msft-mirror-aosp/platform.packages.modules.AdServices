@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN;
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE_COMPAT;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE;
@@ -28,6 +30,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ER
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.ConsentStatus.SERVICE_NOT_ENABLED;
+import static android.adservices.common.Module.MEASUREMENT;
 
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_ENABLE;
@@ -522,7 +525,6 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
                             return;
                         }
-                        ConsentManager consentManager = ConsentManager.getInstance();
                         List<AdServicesModuleState> adServicesModuleStateList =
                                 updateParams.getModuleStateMap().entrySet().stream()
                                         .map(
@@ -530,11 +532,9 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                                         new AdServicesModuleState(
                                                                 entry.getKey(), entry.getValue()))
                                         .collect(Collectors.toList());
-                        consentManager.setModuleStates(adServicesModuleStateList);
+                        sendNotificationIfNeededAndUpdateState(
+                                adServicesModuleStateList, notificationType);
                         callback.onSuccess();
-
-                        // TODO(361411984): Add the notification trigger logic
-
                     } catch (Exception e) {
                         LogUtil.e(
                                 "requestAdServicesModuleOverrides() failed to complete: "
@@ -546,6 +546,52 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         }
                     }
                 });
+    }
+
+    private void sendNotificationIfNeededAndUpdateState(
+            List<AdServicesModuleState> adServicesModuleStateList,
+            @NotificationType.NotificationTypeCode int notificationType) {
+        ConsentManager consentManager = ConsentManager.getInstance();
+        boolean apiDiff = false;
+        boolean personalizedAdsApiDiff = false;
+        boolean isRenotify = false;
+        boolean isOptedInPersonalizedAdsApisUser = false;
+
+        for (AdServicesModuleState state : adServicesModuleStateList) {
+            int curState = consentManager.getModuleState(state.getModule());
+            if (curState != state.getModuleState()) {
+                apiDiff = true;
+                if (state.getModule() != MEASUREMENT) {
+                    personalizedAdsApiDiff = true;
+                    if (consentManager.getUserChoice(state.getModule()) == USER_CHOICE_OPTED_IN) {
+                        isOptedInPersonalizedAdsApisUser = true;
+                    }
+                }
+                if (consentManager.getUserChoice(state.getModule()) != USER_CHOICE_UNKNOWN) {
+                    isRenotify = true;
+                }
+            }
+        }
+
+        if (notificationType != NotificationType.NOTIFICATION_NONE) {
+            // enabling personalized ads APIs requires the full notification. Otherwise, show
+            // limited notification.
+            if (personalizedAdsApiDiff) {
+                // if opted-out of all personalization, then don't show notification
+                if (isOptedInPersonalizedAdsApisUser) {
+                    if (isRenotify) {
+                        // TODO(b/375464084): trigger re-notification
+                    } else {
+                        // TODO(b/375464084): trigger first time notification
+                    }
+                }
+            } else if (apiDiff) {
+                // show limited notification since no personalized APIs are enabled
+                // TODO(b/375464084): trigger non personalized ads api only notification
+            }
+        }
+
+        consentManager.setModuleStates(adServicesModuleStateList);
     }
 
     /** Sets AdServices feature user choices. */
