@@ -449,6 +449,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableInstallAttributionOnS() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S",
+                Flags::getMeasurementEnableInstallAttributionOnS);
+    }
+
+    @Test
     public void testGetMeasurementEnableDestinationLimitPriority() {
         testFeatureFlag(
                 "MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY",
@@ -919,6 +926,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFeatureFlag(
                 "MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING",
                 Flags::getMeasurementEnableAggregateDebugReporting);
+    }
+
+    @Test
+    public void testGetMeasurementEnableBothSideDebugKeysInReports() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS",
+                Flags::getMeasurementEnableBothSideDebugKeysInReports);
     }
 
     @Test

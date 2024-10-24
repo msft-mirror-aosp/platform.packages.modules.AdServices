@@ -183,6 +183,7 @@ public class CustomAudienceBlob {
     public void overrideFromJSONObject(JSONObject json) throws JSONException {
         LinkedHashSet<String> jsonKeySet = new LinkedHashSet<>(Lists.newArrayList(json.keys()));
         for (String key : mKeysSet) {
+            sLogger.v(key);
             if (jsonKeySet.contains(key)) {
                 sLogger.v("Adding %s", key);
                 switch (key) {

@@ -3284,10 +3284,10 @@ public interface Flags extends ModuleSharedFlags {
 
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE = true;
-    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER = false;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE = true;
-    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
-    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = false;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = false;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES = true;
 
     /**
@@ -4916,6 +4916,13 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL;
     }
 
+    @FeatureFlag boolean MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S = false;
+
+    /** Returns whether to enable install attribution on S feature. */
+    default boolean getMeasurementEnableInstallAttributionOnS() {
+        return MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S;
+    }
+
     /** Flag to enable context id for triggers */
     boolean MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID = false;
 
@@ -5051,6 +5058,14 @@ public interface Flags extends ModuleSharedFlags {
 
     default boolean getMeasurementEnableFlexibleContributionFiltering() {
         return MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING;
+    }
+
+    /** Flag for enabling measurement debug keys privacy enforcement */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS = false;
+
+    /** Returns whether measurement debug keys privacy enforcement is enabled. */
+    default boolean getMeasurementEnableBothSideDebugKeysInReports() {
+        return MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS;
     }
 
     /**
