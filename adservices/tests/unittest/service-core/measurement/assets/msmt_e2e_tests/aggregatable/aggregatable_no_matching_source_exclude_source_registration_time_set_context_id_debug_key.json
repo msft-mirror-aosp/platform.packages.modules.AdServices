@@ -1,7 +1,6 @@
 {
   "description": "Given a trigger with aggregatable data, and configured to exclude source registration time, and has a context id, and has a debug key with ad id permissions, and no sources, create a null aggregatable report that has no source registration time",
   "phflags_override": {
-    "measurement_null_aggregate_report_enabled": "true",
     "measurement_source_registration_time_optional_for_agg_reports_enabled": "true",
     "measurement_enable_trigger_context_id": "true",
     // Though set to 1, the path for null agg reports including source registration time should

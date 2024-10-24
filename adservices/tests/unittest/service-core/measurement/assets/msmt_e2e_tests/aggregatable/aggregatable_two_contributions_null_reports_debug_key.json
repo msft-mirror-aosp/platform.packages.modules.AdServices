@@ -1,7 +1,6 @@
 {
   "description": "Given a source and a trigger with aggregatable contributions, generate a real aggregate report with two contributions and 30 null aggregate reports. The trigger has debug permissions and a debug key, so each aggregate report should have a trigger_debug_key",
   "phflags_override": {
-    "measurement_null_aggregate_report_enabled": true,
     "measurement_null_agg_report_rate_incl_source_registration_time": "1.0",
     // Though set to 1, the path for null agg reports excluding source registration time should
     // never be reached. This will detect bugs if agg reports excluding source registration time are
