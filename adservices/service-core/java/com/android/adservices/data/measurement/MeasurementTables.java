@@ -272,6 +272,7 @@ public final class MeasurementTables {
         String TRIGGER_CONTEXT_ID = "trigger_context_id";
         String TRIGGER_TIME = "trigger_time";
         String API = "api";
+        String AGGREGATABLE_FILTERING_ID_MAX_BYTES = "aggregatable_filtering_id_max_bytes";
     }
 
     /** Contract for aggregate encryption key. */
@@ -1027,6 +1028,8 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + AggregateReport.API
                     + " TEXT, "
+                    + AggregateReport.AGGREGATABLE_FILTERING_ID_MAX_BYTES
+                    + " INTEGER, "
                     + "FOREIGN KEY ("
                     + AggregateReport.SOURCE_ID
                     + ") REFERENCES "

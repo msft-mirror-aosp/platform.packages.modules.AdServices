@@ -359,6 +359,9 @@ public class ContentValueFixtures {
 
         // Added in V43
         public static final String API = "attribution-reporting";
+
+        // Added in V44
+        public static final Integer AGGREGATABLE_FILTERING_ID_MAX_BYTES = 1;
     }
 
     public static class AggregateEncryptionKeyValues {
@@ -1134,6 +1137,11 @@ public class ContentValueFixtures {
         return values;
     }
 
+    /** Get ContentValues for V44 */
+    public static ContentValues generateTriggerContentValuesV44() {
+        return generateTriggerContentValuesV42();
+    }
+
     public static ContentValues generateAttributionContentValuesV1() {
         ContentValues attribution = new ContentValues();
 
@@ -1593,6 +1601,15 @@ public class ContentValueFixtures {
         ContentValues values = generateAggregateReportContentValuesV33();
         values.put(
                 MeasurementTables.AggregateReport.TRIGGER_TIME, AggregateReportValues.TRIGGER_TIME);
+        return values;
+    }
+
+    /** Returns content values for aggregate report version 44 */
+    public static ContentValues generateAggregateReportContentValuesV44() {
+        ContentValues values = generateAggregateReportContentValuesV41();
+        values.put(
+                MeasurementTables.AggregateReport.AGGREGATABLE_FILTERING_ID_MAX_BYTES,
+                AggregateReportValues.AGGREGATABLE_FILTERING_ID_MAX_BYTES);
         return values;
     }
 
