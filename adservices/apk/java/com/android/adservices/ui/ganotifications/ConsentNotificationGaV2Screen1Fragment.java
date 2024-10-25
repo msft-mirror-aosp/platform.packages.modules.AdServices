@@ -50,7 +50,6 @@ import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActiv
  * Fragment for the confirmation view after accepting or rejecting to be part of Privacy Sandbox
  * Beta.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
     public static final String INFO_VIEW_EXPANDED =

@@ -180,9 +180,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS =
             "measurement_aggregate_fallback_reporting_job_period_ms";
 
-    public static final String KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED =
-            "measurement_null_aggregate_report_enabled";
-
     public static final String KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME =
             "measurement_null_agg_report_rate_incl_source_registration_time";
 
