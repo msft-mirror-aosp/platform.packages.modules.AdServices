@@ -1,9 +1,5 @@
 {
   "description": "Given a trigger with aggregatable data that has two contributions, and that is configured to exclude the source registration time, and has a context id set, generate an aggregate report with two contributions and excludes source registration time",
-  "phflags_override": {
-    "measurement_source_registration_time_optional_for_agg_reports_enabled": "true",
-    "measurement_enable_trigger_context_id": "true"
-  },
   "input": {
     "sources": [{
       "registration_request": {
@@ -119,7 +115,6 @@
           "attribution_destination": "android-app://example.2d1.test",
           "reporting_origin": "https://www.ad-tech1.test",
           "scheduled_report_time": "800000600",
-          "source_registration_time": "0",
           "version": "0.1"
         },
         "aggregation_coordinator_origin": "https://coordinator.test",
