@@ -57,10 +57,12 @@ public final class DevSessionProtoDataStoreTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testGetDevSessionWithoutSet() throws Exception {
+    public void testGetDevSessionWithoutSetAlwaysInitializes() throws Exception {
         DevSession devSession = wait(mDevSessionDataStore.get());
 
-        expect.withMessage("DevSession future").that(devSession).isEqualTo(DevSession.UNKNOWN);
+        expect.withMessage("DevSession future")
+                .that(devSession)
+                .isEqualTo(DevSession.createForNewlyInitializedState());
     }
 
     private static <T> T wait(Future<T> future) throws Exception {
