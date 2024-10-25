@@ -54,6 +54,7 @@ import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_BU
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ADSERVICES_VERSION_MAPPINGS;
 import static com.android.adservices.service.Flags.DEFAULT_AD_ID_FETCHER_TIMEOUT_MS;
+import static com.android.adservices.service.Flags.DEFAULT_AD_ID_MIGRATION_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
 import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_APPSEARCH_READ_TIMEOUT_MS;
@@ -563,6 +564,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_VERSI
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_API_APP_BLOCK_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_CACHE_TTL_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
@@ -5882,6 +5884,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API,
                 DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API,
                 Flags::getEnableAtomicFileDatastoreBatchUpdateApi);
+    }
+
+    @Test
+    public void testGetAdIdMigrationEnabled() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_AD_ID_MIGRATION_ENABLED,
+                DEFAULT_AD_ID_MIGRATION_ENABLED,
+                Flags::getAdIdMigrationEnabled);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
