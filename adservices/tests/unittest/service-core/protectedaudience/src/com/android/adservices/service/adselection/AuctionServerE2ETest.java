@@ -2112,7 +2112,6 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
-    @FlakyTest(bugId = 303119299)
     public void testAuctionServerResult_usedInWaterfallMediation_success() throws Exception {
         Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         mocker.mockGetFlags(mFakeFlags);
