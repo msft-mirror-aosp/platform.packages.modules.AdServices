@@ -18,6 +18,7 @@ package com.android.adservices.shared.meta_testing;
 import static android.provider.DeviceConfig.SYNC_DISABLED_MODE_PERSISTENT;
 import static android.provider.DeviceConfig.SYNC_DISABLED_MODE_UNTIL_REBOOT;
 
+import static com.android.adservices.shared.meta_testing.CommonDescriptions.AClassWithDefaultSetSyncDisabledModeForTest;
 import static com.android.compatibility.common.util.SystemUtil.runWithShellPermissionIdentity;
 
 import android.app.UiAutomation;
@@ -25,7 +26,6 @@ import android.platform.test.annotations.DisabledOnRavenwood;
 
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
-import com.android.adservices.shared.testing.annotations.SetSyncDisabledModeForTest;
 import com.android.adservices.shared.testing.flags.DeviceSideFlagsPreparerClassRule;
 
 import org.junit.Rule;
@@ -62,7 +62,8 @@ public abstract class DeviceSideFlagsPreparerClassRuleTestCase<
 
         setDeviceConfigSyncMode("before", SYNC_DISABLED_MODE_UNTIL_REBOOT);
         Description testSuite =
-                Description.createSuiteDescription(AClassWithSetSyncDisabledModeForTest.class);
+                Description.createSuiteDescription(
+                        AClassWithDefaultSetSyncDisabledModeForTest.class);
         testSuite.addChild(mTest);
         try {
             rule.apply(mTestBody, testSuite).evaluate();
@@ -90,10 +91,4 @@ public abstract class DeviceSideFlagsPreparerClassRuleTestCase<
         runWithShellPermissionIdentity(
                 () -> android.provider.DeviceConfig.setSyncDisabledMode(mode));
     }
-
-    // TODO(b/297085722): get from commom place
-
-    // Use to create the Description fixtures
-    @SetSyncDisabledModeForTest
-    private static class AClassWithSetSyncDisabledModeForTest {}
 }
