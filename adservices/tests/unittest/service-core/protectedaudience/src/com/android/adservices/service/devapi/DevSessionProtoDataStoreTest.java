@@ -20,6 +20,7 @@ import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.devapi.DevSessionFixture;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,6 +40,11 @@ public final class DevSessionProtoDataStoreTest extends AdServicesUnitTestCase {
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
                         getTestInvocationId() + "_" + DevSessionProtoDataStore.FILE_NAME);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        wait(mDevSessionDataStore.set(DevSessionFixture.IN_PROD));
     }
 
     @Test
