@@ -3948,8 +3948,7 @@ class MeasurementDao implements IMeasurementDao {
                             postfixMatch);
         }
 
-        if (FlagsFactory.getFlags().getMeasurementNullAggregateReportEnabled()
-                && tableName.equals(MeasurementTables.AggregateReport.TABLE)) {
+        if (tableName.equals(MeasurementTables.AggregateReport.TABLE)) {
             query +=
                     String.format(
                             Locale.ENGLISH,

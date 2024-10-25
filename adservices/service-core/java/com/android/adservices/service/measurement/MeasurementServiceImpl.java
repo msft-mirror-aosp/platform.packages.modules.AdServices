@@ -112,7 +112,6 @@ import java.util.function.Supplier;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private static final String RATE_LIMIT_REACHED = "Rate limit reached to call this API.";
