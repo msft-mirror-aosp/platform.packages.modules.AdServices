@@ -37,15 +37,6 @@
         <option name="package" value="com.android.tests.sandbox.adid"/>
     </test>
 
-    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />
-        <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
-
-        <!-- Temporarily disable Device Config sync -->
-        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
-        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
-    </target_preparer>
-
     <object type="module_controller"
             class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController" >
         <option name="mainline-module-package-name" value="com.google.android.adservices" />
