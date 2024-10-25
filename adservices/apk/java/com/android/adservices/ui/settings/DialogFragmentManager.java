@@ -38,7 +38,6 @@ import java.io.IOException;
  * Creates and displays dialogs for the Privacy Sandbox application. This should be a substitute of
  * DialogManager It should solve double click and dismiss when rotating
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class DialogFragmentManager {
     static boolean sIsShowing = false;

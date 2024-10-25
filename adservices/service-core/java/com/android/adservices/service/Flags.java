@@ -4420,14 +4420,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
     }
 
-    /** Default value for Null Aggregate Report feature flag. */
-    boolean MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED = false;
-
-    /** Null Aggregate Report feature flag. */
-    default boolean getMeasurementNullAggregateReportEnabled() {
-        return MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED;
-    }
-
     /** Default value for null aggregate report rate including source registration time. */
     float MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME = .008f;
 

@@ -57,7 +57,6 @@ import com.google.common.util.concurrent.ListenableFuture;
 import java.util.concurrent.Executor;
 
 /** MDD JobService. This will download MDD files in background tasks. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class MddJobService extends JobService {
     static final String KEY_MDD_TASK_TAG = "mdd_task_tag";

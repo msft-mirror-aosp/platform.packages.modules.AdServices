@@ -15,6 +15,7 @@
  */
 package com.android.adservices.shared.meta_testing;
 
+import static com.android.adservices.shared.meta_testing.CommonDescriptions.newTestMethodForClassRule;
 import static com.android.adservices.shared.testing.AndroidSdk.SC;
 import static com.android.adservices.shared.testing.AndroidSdk.SC_V2;
 import static com.android.adservices.shared.testing.SdkSandbox.State.DISABLED;
@@ -29,14 +30,18 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
+import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassDisablesDeviceConfigUntilReboot;
+import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassDisablesSdkSandbox;
+import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassEnablesSdkSandbox;
+import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassHasNoNothingAtAll;
+import com.android.adservices.shared.meta_testing.CommonDescriptions.ASubClassDisablesDeviceConfigUntilRebootAndAlsoEnablesSdkSandbox;
+import com.android.adservices.shared.meta_testing.CommonDescriptions.ASubClassEnablesSdkSandboxAndAlsoDisablesDeviceConfigUntilReboot;
 import com.android.adservices.shared.testing.DynamicLogger;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.SdkSandbox;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
-import com.android.adservices.shared.testing.annotations.SetSdkSandboxStateEnabled;
-import com.android.adservices.shared.testing.annotations.SetSyncDisabledModeForTest;
 import com.android.adservices.shared.testing.device.DeviceConfig;
 import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
 import com.android.adservices.shared.testing.flags.AbstractFlagsPreparerClassRule;
@@ -46,7 +51,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.Description;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -431,38 +435,4 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
         assumeTrue(
                 "initial sdk_sandbox state is not " + state, mSdkSandboxStateBefore.equals(state));
     }
-
-    // Needs to create a test suite with a child to emulate running as a classRule
-    private static Description newTestMethodForClassRule(
-            Class<?> clazz, Annotation... annotations) {
-        Description child = Description.createTestDescription(clazz, "butItHasATest");
-
-        Description suite = Description.createSuiteDescription(clazz, annotations);
-        suite.addChild(child);
-
-        return suite;
-    }
-
-    // Classes used to create the Description fixtures
-
-    private static class AClassHasNoNothingAtAll {}
-
-    @SetSdkSandboxStateEnabled(true)
-    private static class AClassEnablesSdkSandbox {}
-
-    @SetSdkSandboxStateEnabled(false)
-    private static class AClassDisablesSdkSandbox {}
-
-    @SetSyncDisabledModeForTest(UNTIL_REBOOT)
-    private static class AClassDisablesDeviceConfigUntilReboot {}
-
-    @SetSdkSandboxStateEnabled(true)
-    @SetSyncDisabledModeForTest(UNTIL_REBOOT)
-    private static class ASubClassEnablesSdkSandboxAndAlsoDisablesDeviceConfigUntilReboot
-            extends AClassDisablesDeviceConfigUntilReboot {}
-
-    @SetSyncDisabledModeForTest(UNTIL_REBOOT)
-    @SetSdkSandboxStateEnabled(true)
-    private static class ASubClassDisablesDeviceConfigUntilRebootAndAlsoEnablesSdkSandbox
-            extends AClassDisablesDeviceConfigUntilReboot {}
 }
