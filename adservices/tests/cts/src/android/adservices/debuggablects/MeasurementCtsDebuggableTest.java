@@ -24,6 +24,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFO
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST;
 
@@ -581,7 +583,9 @@ public final class MeasurementCtsDebuggableTest extends AdServicesDebuggableTest
                         KEY_MEASUREMENT_AGGREGATION_COORDINATOR_PATH,
                         AGGREGATE_ENCRYPTION_KEY_COORDINATOR_PATH)
                 .setFlag(KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS, "8,15")
-                .setFlag(KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG, "0,0");
+                .setFlag(KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG, "0,0")
+                .setFlag(KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME, "0.0")
+                .setFlag(KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME, "0.0");
 
         sleep();
     }

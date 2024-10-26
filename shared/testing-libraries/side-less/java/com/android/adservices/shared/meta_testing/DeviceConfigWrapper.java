@@ -33,9 +33,10 @@ public class DeviceConfigWrapper extends Wrapper<DeviceConfig> implements Device
     }
 
     @Override
-    public void setSyncDisabledMode(SyncDisabledModeForTest mode) {
+    public DeviceConfigWrapper setSyncDisabledMode(SyncDisabledModeForTest mode) {
         mLog.v("setSyncDisabledMode(%s)", mode);
         getWrapped().setSyncDisabledMode(mode);
+        return this;
     }
 
     @Override

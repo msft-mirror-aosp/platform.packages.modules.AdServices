@@ -524,6 +524,13 @@
             android:process=".adservices">
         </service>
 
+        <!-- Ad Package Deny Pre Process Job -->
+        <service
+            android:name="com.android.adservices.service.common.AdPackageDenyPreProcessJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:process=".adservices">
+        </service>
+
         <provider
             android:name=
                 "com.android.adservices.service.measurement.attribution.TriggerContentProvider"

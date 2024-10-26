@@ -40,7 +40,6 @@ import com.android.adservices.ui.settings.viewmodels.AppsViewModel;
 import java.util.function.Function;
 
 /** Fragment for the apps view of the AdServices Settings App. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesSettingsAppsFragment extends Fragment {
 

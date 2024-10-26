@@ -19,7 +19,7 @@ package com.android.adservices.shared.testing.device;
 public interface DeviceConfig {
 
     /** Sets the synchronization mode. */
-    void setSyncDisabledMode(SyncDisabledModeForTest mode);
+    DeviceConfig setSyncDisabledMode(SyncDisabledModeForTest mode);
 
     /** Gets the synchronization mode. */
     SyncDisabledModeForTest getSyncDisabledMode();

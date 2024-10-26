@@ -37,7 +37,7 @@ java_test_host {
         "adservices-host-side-test-utility",
         "cts-statsd-atom-host-test-utils",
     ],
-    data: [
+    device_common_data: [
         ":CtsAdservicesHostTestApp",
     ],
     per_testcase_directory: true,
@@ -63,7 +63,7 @@ java_test_host {
         "adservices-host-side-test-utility",
         "cts-statsd-atom-host-test-utils",
     ],
-    data: [
+    device_common_data: [
         ":CtsAdservicesHostTestApp",
     ],
     test_config: "AndroidTest.ExtServices.xml",

@@ -108,7 +108,6 @@ import javax.annotation.Nonnull;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 

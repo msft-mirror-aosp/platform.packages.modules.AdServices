@@ -22,6 +22,8 @@ import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.Module;
 import android.adservices.common.NotificationType;
+import android.adservices.common.UpdateAdServicesModuleStatesParams;
+import android.adservices.common.UpdateAdServicesUserChoicesParams;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
 
@@ -35,8 +37,6 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Executors;
 
 public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
@@ -58,17 +58,17 @@ public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
     @Test
     public void testRequestAdServicesModuleOverrides() throws Exception {
 
-        List<AdServicesModuleState> adServicesModuleStateList = new ArrayList<>();
-        adServicesModuleStateList.add(
-                new AdServicesModuleState(
-                        Module.MEASUREMENT, AdServicesModuleState.MODULE_STATE_ENABLED));
-        int notificationType = NotificationType.NOTIFICATION_ONGOING;
+        UpdateAdServicesModuleStatesParams updateParams =
+                new UpdateAdServicesModuleStatesParams.Builder()
+                        .setModuleState(
+                                Module.MEASUREMENT, AdServicesModuleState.MODULE_STATE_ENABLED)
+                        .setNotificationType(NotificationType.NOTIFICATION_ONGOING)
+                        .build();
         ListenableFuture<Integer> responseFuture =
                 CallbackToFutureAdapter.getFuture(
                         completer -> {
                             mCommonManager.requestAdServicesModuleOverrides(
-                                    adServicesModuleStateList,
-                                    notificationType,
+                                    updateParams,
                                     Executors.newCachedThreadPool(),
                                     new AdServicesOutcomeReceiver<>() {
                                         @Override
@@ -89,18 +89,16 @@ public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
 
     @Test
     public void testRequestAdServicesModuleUserChoices() throws Exception {
-
-        List<AdServicesModuleUserChoice> adServicesModuleUserChoices =
-                List.of(
-                        new AdServicesModuleUserChoice(
-                                Module.MEASUREMENT,
-                                AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN));
-
+        UpdateAdServicesUserChoicesParams updateParams =
+                new UpdateAdServicesUserChoicesParams.Builder()
+                        .setUserChoice(
+                                Module.MEASUREMENT, AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN)
+                        .build();
         ListenableFuture<Integer> responseFuture =
                 CallbackToFutureAdapter.getFuture(
                         completer -> {
                             mCommonManager.requestAdServicesModuleUserChoices(
-                                    adServicesModuleUserChoices,
+                                    updateParams,
                                     Executors.newCachedThreadPool(),
                                     new AdServicesOutcomeReceiver<>() {
                                         @Override

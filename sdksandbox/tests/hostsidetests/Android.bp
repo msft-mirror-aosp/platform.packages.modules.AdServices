@@ -31,7 +31,7 @@ java_test_host {
         "modules-utils-build-testing",
         "SdkSandboxHostTestUtils",
     ],
-    data: [
+    device_common_data: [
         ":TestCodeProvider",
         ":TestCodeProvider2",
         ":SdkSandboxTestApp",
@@ -52,7 +52,7 @@ java_test_host {
     static_libs: [
         "SdkSandboxHostTestUtils",
     ],
-    data: [
+    device_common_data: [
         ":TestCodeProvider",
         ":TestCodeProvider2",
         ":SdkSandboxTestApp",

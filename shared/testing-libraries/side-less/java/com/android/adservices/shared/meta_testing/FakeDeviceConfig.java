@@ -31,13 +31,14 @@ public final class FakeDeviceConfig implements DeviceConfig {
     @Nullable private Runnable mOnSetCallback;
 
     @Override
-    public void setSyncDisabledMode(@Nullable SyncDisabledModeForTest mode) {
+    public FakeDeviceConfig setSyncDisabledMode(@Nullable SyncDisabledModeForTest mode) {
         mLog.i("setSyncDisabledMode(%s): mMode=%s, mOnSetCallback=%s", mode, mMode, mOnSetCallback);
         if (mOnSetCallback != null) {
             mOnSetCallback.run();
         }
         mLog.i("setSyncDisabledMode(): from %s to %s", mMode, mode);
         mMode = mode;
+        return this;
     }
 
     @Override

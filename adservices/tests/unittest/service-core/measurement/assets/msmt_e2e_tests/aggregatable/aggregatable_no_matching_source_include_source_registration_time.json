@@ -1,8 +1,6 @@
 {
   "description": "Given a trigger with aggregatable data configured to include source registration time and no sources, create many null aggregatable reports",
   "phflags_override": {
-    "measurement_null_aggregate_report_enabled": "true",
-    "measurement_source_registration_time_optional_for_agg_reports_enabled": "true",
     "measurement_null_agg_report_rate_incl_source_registration_time": "1.0",
     // Though set to 1, the path for null agg reports excluding source registration time should
     // never be reached. This will detect bugs if agg reports excluding source registration time are

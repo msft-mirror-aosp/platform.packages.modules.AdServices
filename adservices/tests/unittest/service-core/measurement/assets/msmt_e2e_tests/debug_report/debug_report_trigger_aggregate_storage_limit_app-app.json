@@ -59,7 +59,8 @@
                   "a": 123
                 },
                 "debug_reporting": true,
-                "debug_key": "8971346781"
+                "debug_key": "8971346781",
+                "aggregatable_source_registration_time": "INCLUDE"
               }
             }
           }
@@ -94,7 +95,8 @@
                   "a": 456
                 },
                 "debug_reporting": true,
-                "debug_key": "8971346782"
+                "debug_key": "8971346782",
+                "aggregatable_source_registration_time": "INCLUDE"
               }
             }
           }

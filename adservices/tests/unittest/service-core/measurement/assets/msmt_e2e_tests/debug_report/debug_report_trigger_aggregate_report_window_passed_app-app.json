@@ -164,7 +164,6 @@
             "debug_mode": "enabled",
             "reporting_origin": "https://www.ad-tech1.test",
             "scheduled_report_time": "5600",
-            "source_registration_time": "0",
             "version": "0.1"
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
@@ -190,7 +189,6 @@
             "debug_mode": "enabled",
             "reporting_origin": "https://www.ad-tech1.test",
             "scheduled_report_time": "5600",
-            "source_registration_time": "0",
             "version": "0.1"
           },
           "aggregation_coordinator_origin": "https://coordinator.test",

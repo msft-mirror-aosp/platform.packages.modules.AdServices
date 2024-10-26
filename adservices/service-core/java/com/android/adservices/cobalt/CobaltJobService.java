@@ -48,7 +48,6 @@ import com.google.common.util.concurrent.ListenableFuture;
  * Cobalt JobService. This will trigger cobalt generate observation and upload logging in background
  * tasks.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class CobaltJobService extends JobService {
     private static final int COBALT_LOGGING_JOB_ID = COBALT_LOGGING_JOB.getJobId();

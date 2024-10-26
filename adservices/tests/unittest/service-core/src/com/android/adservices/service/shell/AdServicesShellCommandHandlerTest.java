@@ -205,8 +205,6 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
         expectInvalidArgument(HELP_ECHO, CMD_ECHO);
         // empty message
         expectInvalidArgument(HELP_ECHO, CMD_ECHO, "");
-        // more than 1 arg
-        expectInvalidArgument(HELP_ECHO, CMD_ECHO, "4", "8", "15", "16", "23", "42");
     }
 
     @Test

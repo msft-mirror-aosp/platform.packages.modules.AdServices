@@ -28,10 +28,13 @@ import android.app.job.JobInfo;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.cobalt.AppNameApiErrorLogger;
 import com.android.adservices.cobalt.CobaltConstants;
+import com.android.adservices.service.measurement.attribution.AttributionJobService;
 import com.android.adservices.shared.common.flags.ConfigFlag;
 import com.android.adservices.shared.common.flags.FeatureFlag;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -61,8 +64,12 @@ public interface Flags extends ModuleSharedFlags {
         return TOPICS_EPOCH_JOB_PERIOD_MS;
     }
 
-    /** Topics Epoch Job Flex. Note the minimum value system allows is +8h24m0s0ms */
-    @ConfigFlag long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 5 hours.
+    /**
+     * Topics Epoch Job Flex. Note the minimum value system allows is 5 minutes
+     * or 5% of background job interval time, whichever is greater.
+     * Topics epoch job interval time is 7 days, so the minimum flex time should be 8.4 hours.
+     */
+    @ConfigFlag long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 9 hours.
 
     /** Returns flex for the Epoch computation job in Millisecond. */
     default long getTopicsEpochJobFlexMs() {
@@ -131,8 +138,10 @@ public interface Flags extends ModuleSharedFlags {
     /** Flag to enable Topics epoch job battery constraint logging for Topics API. */
     @FeatureFlag boolean TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED = false;
 
-    /** Returns the feature flag to enable Topics epoch job battery constraint logging
-     * for Topics API. */
+    /**
+     * Returns the feature flag to enable Topics epoch job battery constraint logging for Topics
+     * API.
+     */
     default boolean getTopicsEpochJobBatteryConstraintLoggingEnabled() {
         return TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED;
     }
@@ -174,8 +183,8 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Flag to enable rescheduling of Topics job scheduler tasks when modifications are made
-     * to the configuration of the background job.
+     * Flag to enable rescheduling of Topics job scheduler tasks when modifications are made to the
+     * configuration of the background job.
      */
     @FeatureFlag boolean TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED = false;
 
@@ -186,17 +195,33 @@ public interface Flags extends ModuleSharedFlags {
 
     /**
      * This flag allows you to execute the job regardless of the device's charging status.
-     * By default, the Topics API background job scheduler requires the device to be in charging
+     *
+     * <p>By default, the Topics API background job scheduler requires the device to be in charging
      * mode for job execution. The default value for this flag is false, indicating that the job
      * should only be executed when the device is charging. By enabling this flag, the job can be
      * executed when the battery level is not low.
      */
     @FeatureFlag boolean TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING = false;
 
-    /** Returns the feature flag to enable the device to be in batter not low mode for
-     * Topics API job execution.  */
+    /**
+     * Returns the feature flag to enable the device to be in batter not low mode for Topics API job
+     * execution.
+     */
     default boolean getTopicsEpochJobBatteryNotLowInsteadOfCharging() {
         return TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING;
+    }
+
+    /**
+     * Flag to enable cleaning Topics database when the settings of Topics epoch job
+     * is changed from server side.
+     */
+    @FeatureFlag boolean TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED = false;
+
+    /**
+     * Returns the feature flag to enable cleaning Topics database when epoch job settings changed.
+     */
+    default boolean getTopicsCleanDBWhenEpochJobSettingsChanged() {
+        return TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED;
     }
 
     /** Available types of classifier behaviours for the Topics API. */
@@ -805,8 +830,7 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW;
     }
 
-    @ConfigFlag
-    long MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW = TimeUnit.MINUTES.toMillis(1);
+    @ConfigFlag long MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW = TimeUnit.MINUTES.toMillis(1);
 
     /** Returns the duration that controls the rate-limiting window for destinations per minute. */
     default long getMeasurementDestinationRateLimitWindow() {
@@ -3260,10 +3284,10 @@ public interface Flags extends ModuleSharedFlags {
 
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE = true;
-    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER = false;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE = true;
-    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
-    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = false;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = false;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES = true;
 
     /**
@@ -3321,7 +3345,6 @@ public interface Flags extends ModuleSharedFlags {
     default boolean getEnforceForegroundStatusForMeasurementRegisterSources() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES;
     }
-
 
     /** Returns true if Topics API should require that the calling API is running in foreground. */
     default boolean getEnforceForegroundStatusForTopics() {
@@ -4397,14 +4420,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
     }
 
-    /** Default value for Null Aggregate Report feature flag. */
-    boolean MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED = false;
-
-    /** Null Aggregate Report feature flag. */
-    default boolean getMeasurementNullAggregateReportEnabled() {
-        return MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED;
-    }
-
     /** Default value for null aggregate report rate including source registration time. */
     float MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME = .008f;
 
@@ -4425,14 +4440,6 @@ public interface Flags extends ModuleSharedFlags {
      */
     default float getMeasurementNullAggReportRateExclSourceRegistrationTime() {
         return MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME;
-    }
-
-    /** Default value for Optional Source Registration Time feature flag. */
-    boolean MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED = false;
-
-    /** Returns true if source registration time is optional for aggregatable reports. */
-    default boolean getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled() {
-        return MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED;
     }
 
     /** Default U18 UX feature flag. */
@@ -4893,12 +4900,11 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL;
     }
 
-    /** Flag to enable context id for triggers */
-    boolean MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID = false;
+    @FeatureFlag boolean MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S = false;
 
-    /** Returns true if trigger context id is enabled. */
-    default boolean getMeasurementEnableTriggerContextId() {
-        return MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID;
+    /** Returns whether to enable install attribution on S feature. */
+    default boolean getMeasurementEnableInstallAttributionOnS() {
+        return MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S;
     }
 
     /** The maximum allowable length of a trigger context id. */
@@ -5028,6 +5034,14 @@ public interface Flags extends ModuleSharedFlags {
 
     default boolean getMeasurementEnableFlexibleContributionFiltering() {
         return MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING;
+    }
+
+    /** Flag for enabling measurement debug keys privacy enforcement */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS = false;
+
+    /** Returns whether measurement debug keys privacy enforcement is enabled. */
+    default boolean getMeasurementEnableBothSideDebugKeysInReports() {
+        return MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS;
     }
 
     /**
@@ -5823,6 +5837,22 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns MDD package deny registry manifest url. */
     default String getMddPackageDenyRegistryManifestFileUrl() {
         return DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
+    }
+
+    /** Feature flag to enable AtomicFileDataStore update API for adservices apk. */
+    @FeatureFlag boolean DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API = false;
+
+    /** Returns whether atomic file datastore batch update Api is enabled. */
+    default boolean getEnableAtomicFileDatastoreBatchUpdateApi() {
+        return DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API;
+    }
+
+    /** Feature flag to enable Ad Id migration. */
+    @FeatureFlag boolean DEFAULT_AD_ID_MIGRATION_ENABLED = false;
+
+    /** Returns whether Ad Id migration is enabled. */
+    default boolean getAdIdMigrationEnabled() {
+        return DEFAULT_AD_ID_MIGRATION_ENABLED;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

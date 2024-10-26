@@ -69,7 +69,8 @@
                 },
                 "debug_reporting": true,
                 "debug_key": "8971346781",
-                "debug_join_key": "sample-debug-join-key"
+                "debug_join_key": "sample-debug-join-key",
+                "aggregatable_source_registration_time": "INCLUDE"
               }
             }
           }
@@ -110,7 +111,8 @@
                 },
                 "debug_reporting": true,
                 "debug_key": "8971346782",
-                "debug_join_key": "sample-debug-join-key"
+                "debug_join_key": "sample-debug-join-key",
+                "aggregatable_source_registration_time": "INCLUDE"
               }
             }
           }

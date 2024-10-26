@@ -61,7 +61,8 @@
                     "category": ["filter_3", "filter_4"]
                   }
                 }
-              ]
+              ],
+              "aggregatable_source_registration_time": "INCLUDE"
             }
           }
         }]
@@ -85,7 +86,8 @@
               ],
               "aggregatable_values": {
                 "a": 456
-              }
+              },
+              "aggregatable_source_registration_time": "INCLUDE"
             }
           }
         }]

@@ -20,7 +20,9 @@ import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.service.DebugFlagsConstants;
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.testing.annotations.SetSdkSandboxStateEnabled;
 
+@SetSdkSandboxStateEnabled
 abstract class CtsSandboxedTopicsManagerTestsTestCase extends AdServicesCtsTestCase {
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.

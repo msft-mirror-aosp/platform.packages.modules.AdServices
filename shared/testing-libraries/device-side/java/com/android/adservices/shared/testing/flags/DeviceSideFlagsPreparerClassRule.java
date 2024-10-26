@@ -19,7 +19,6 @@ import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.adservices.shared.testing.SdkSandbox;
 import com.android.adservices.shared.testing.SdkSandboxShellCmdImpl;
 import com.android.adservices.shared.testing.device.DeviceConfig;
-import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
 import com.android.adservices.shared.testing.device.DeviceConfigShellCmdImpl;
 import com.android.adservices.shared.testing.device.DeviceGateway;
 import com.android.adservices.shared.testing.device.DeviceGatewayImpl;
@@ -38,31 +37,20 @@ public abstract class DeviceSideFlagsPreparerClassRule<
                 R extends DeviceSideFlagsPreparerClassRule<R>>
         extends AbstractFlagsPreparerClassRule<R> {
 
-    /**
-     * Default constructor, uses default {@link DeviceConfig} and {@link SdkSandbox} and {@link
-     * SyncDisabledModeForTest#PERSISTENT}.
-     */
+    /** Default constructor, uses default {@link DeviceConfig} and {@link SdkSandbox}. */
     protected DeviceSideFlagsPreparerClassRule() {
-        this(new DeviceGatewayImpl(), SyncDisabledModeForTest.PERSISTENT);
+        this(new DeviceGatewayImpl());
     }
 
-    /** Customizable constructor, uses default {@link DeviceConfig} and {@link SdkSandbox}. */
-    protected DeviceSideFlagsPreparerClassRule(SyncDisabledModeForTest mode) {
-        this(new DeviceGatewayImpl(), mode);
-    }
-
-    private DeviceSideFlagsPreparerClassRule(
-            DeviceGateway deviceGateway, SyncDisabledModeForTest mode) {
+    private DeviceSideFlagsPreparerClassRule(DeviceGateway deviceGateway) {
         this(
                 new SdkSandboxShellCmdImpl(AndroidLogger.getInstance(), deviceGateway),
                 // TODO(b/373470077): use custom client-side DeviceConfig implementation
-                new DeviceConfigShellCmdImpl(AndroidLogger.getInstance(), deviceGateway),
-                mode);
+                new DeviceConfigShellCmdImpl(AndroidLogger.getInstance(), deviceGateway));
     }
 
     @VisibleForTesting
-    protected DeviceSideFlagsPreparerClassRule(
-            SdkSandbox sdkSandbox, DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
-        super(AndroidLogger.getInstance(), sdkSandbox, deviceConfig, mode);
+    protected DeviceSideFlagsPreparerClassRule(SdkSandbox sdkSandbox, DeviceConfig deviceConfig) {
+        super(AndroidLogger.getInstance(), sdkSandbox, deviceConfig);
     }
 }

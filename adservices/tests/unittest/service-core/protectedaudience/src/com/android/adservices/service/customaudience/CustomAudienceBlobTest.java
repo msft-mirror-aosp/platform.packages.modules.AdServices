@@ -36,7 +36,7 @@ import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_AD_REND
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.AUCTION_SERVER_REQUEST_FLAGS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.OMIT_ADS_VALUE;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.PRIORITY_KEY;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CUSTOM_AUDIENCE_1;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.DB_PARTIAL_CUSTOM_AUDIENCE_1;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -144,20 +144,20 @@ public class CustomAudienceBlobTest {
         mCustomAudienceBlob.overrideFromPartialCustomAudience(
                 VALID_OWNER,
                 VALID_BUYER_1,
-                DBPartialCustomAudience.getPartialCustomAudience(PARTIAL_CUSTOM_AUDIENCE_1));
+                DBPartialCustomAudience.getPartialCustomAudience(DB_PARTIAL_CUSTOM_AUDIENCE_1));
 
         assertEquals(mCustomAudienceBlob.getOwner(), VALID_OWNER);
         assertEquals(mCustomAudienceBlob.getBuyer(), VALID_BUYER_1);
-        assertEquals(mCustomAudienceBlob.getName(), PARTIAL_CUSTOM_AUDIENCE_1.getName());
+        assertEquals(mCustomAudienceBlob.getName(), DB_PARTIAL_CUSTOM_AUDIENCE_1.getName());
         assertEquals(
                 mCustomAudienceBlob.getActivationTime(),
-                PARTIAL_CUSTOM_AUDIENCE_1.getActivationTime());
+                DB_PARTIAL_CUSTOM_AUDIENCE_1.getActivationTime());
         assertEquals(
                 mCustomAudienceBlob.getExpirationTime(),
-                PARTIAL_CUSTOM_AUDIENCE_1.getExpirationTime());
+                DB_PARTIAL_CUSTOM_AUDIENCE_1.getExpirationTime());
         assertEquals(
                 mCustomAudienceBlob.getUserBiddingSignals(),
-                PARTIAL_CUSTOM_AUDIENCE_1.getUserBiddingSignals());
+                DB_PARTIAL_CUSTOM_AUDIENCE_1.getUserBiddingSignals());
     }
 
     @Test

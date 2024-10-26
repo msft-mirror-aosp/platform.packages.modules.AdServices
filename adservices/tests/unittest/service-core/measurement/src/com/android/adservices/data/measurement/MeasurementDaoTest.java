@@ -5323,6 +5323,84 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void testExistsSourcesWithSameDestination() {
+        long currentTime = System.currentTimeMillis();
+        Uri destination1 = Uri.parse("android-app://com.destination1");
+        Uri destination2 = Uri.parse("android-app://com.destination2");
+        Uri destination3 = Uri.parse("android-app://com.destination3");
+        Uri destination4 = Uri.parse("android-app://com.destination4");
+        Uri destination5 = Uri.parse("android-app://com.destination5");
+
+        // Return true.
+        Source s1 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("S1")
+                        .setStatus(0)
+                        .setExpiryTime(currentTime + 1000L)
+                        .setAppDestinations(List.of(destination1))
+                        .build();
+
+        // Inactive source. Return false.
+        Source s2 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("S1")
+                        .setStatus(1)
+                        .setExpiryTime(currentTime + 1000L)
+                        .setAppDestinations(List.of(destination2))
+                        .build();
+
+        // Expired source. Return false.
+        Source s3 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("S3")
+                        .setStatus(0)
+                        .setExpiryTime(currentTime - 1000L)
+                        .setAppDestinations(List.of(destination3))
+                        .build();
+
+        // Web source. Return false.
+        Source s4 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("S4")
+                        .setStatus(0)
+                        .setExpiryTime(currentTime + 1000L)
+                        .setWebDestinations(List.of(destination4))
+                        .build();
+
+        insertSource(s1, "S1");
+        insertSource(s2, "S2");
+        insertSource(s3, "S3");
+        insertSource(s4, "S4");
+
+        Optional<Boolean> result1 =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.existsActiveSourcesWithDestination(destination1, currentTime));
+
+        Optional<Boolean> result2 =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.existsActiveSourcesWithDestination(destination2, currentTime));
+
+        Optional<Boolean> result3 =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.existsActiveSourcesWithDestination(destination3, currentTime));
+
+        Optional<Boolean> result4 =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.existsActiveSourcesWithDestination(destination4, currentTime));
+
+        // No source with app destination 5. Return false.
+        Optional<Boolean> result5 =
+                mDatastoreManager.runInTransactionWithResult(
+                        (dao) -> dao.existsActiveSourcesWithDestination(destination5, currentTime));
+
+        assertThat(result1.get()).isTrue();
+        assertThat(result2.get()).isFalse();
+        assertThat(result3.get()).isFalse();
+        assertThat(result4.get()).isFalse();
+        assertThat(result5.get()).isFalse();
+    }
+
+    @Test
     public void testInsertAggregateReport_withTriggerTime() {
         AggregateReport.Builder builder = AggregateReportFixture.getValidAggregateReportBuilder();
         builder.setTriggerTime(1L);

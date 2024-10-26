@@ -71,7 +71,6 @@ import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 /** Handles EnrollmentData download from MDD server to device. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class EnrollmentDataDownloadManager {
     private final Context mContext;

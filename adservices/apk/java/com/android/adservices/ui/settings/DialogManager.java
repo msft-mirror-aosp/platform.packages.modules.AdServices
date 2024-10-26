@@ -37,7 +37,6 @@ import java.io.IOException;
 import java.util.concurrent.Semaphore;
 
 /** Creates and displays dialogs for the Privacy Sandbox application. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class DialogManager {
     public static Semaphore sSemaphore = new Semaphore(1);

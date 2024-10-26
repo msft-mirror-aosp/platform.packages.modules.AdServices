@@ -54,7 +54,8 @@
                 ],
                 "aggregatable_values": {
                   "a": 123
-                }
+                },
+                "aggregatable_source_registration_time": "INCLUDE"
               }
             }
           }

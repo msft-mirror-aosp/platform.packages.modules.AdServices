@@ -60,7 +60,6 @@ import com.android.adservices.ui.UxUtil;
 import java.util.List;
 
 /** Provides methods which can be used to display Privacy Sandbox consent notification. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationTrigger {
 

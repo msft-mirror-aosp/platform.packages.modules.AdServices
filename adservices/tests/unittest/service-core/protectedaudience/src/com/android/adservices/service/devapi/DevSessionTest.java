@@ -18,8 +18,11 @@ package com.android.adservices.service.devapi;
 
 import static com.android.adservices.service.devapi.DevSessionState.IN_DEV;
 
+import static org.junit.Assert.assertThrows;
+
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.devapi.DevSessionFixture;
+import com.android.adservices.service.proto.DevSessionStorage;
 
 import org.junit.Test;
 
@@ -37,5 +40,12 @@ public final class DevSessionTest extends AdServicesUnitTestCase {
         DevSession devSession = DevSession.builder().setState(IN_DEV).build();
 
         expect.that(devSession.getState()).isEqualTo(IN_DEV);
+    }
+
+    @Test
+    public void testFromUninitializedProtoThrowsException() {
+        assertThrows(
+                IllegalStateException.class,
+                () -> DevSession.fromProto(DevSessionStorage.getDefaultInstance()));
     }
 }

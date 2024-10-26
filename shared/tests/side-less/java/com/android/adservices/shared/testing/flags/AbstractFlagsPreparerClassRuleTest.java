@@ -44,17 +44,15 @@ public final class AbstractFlagsPreparerClassRuleTest
         extends AbstractFlagsPreparerClassRuleTestCase<FakeFlagsPreparerClassRule> {
 
     @Override
-    protected FakeFlagsPreparerClassRule newRule(
-            SdkSandbox sdkSandbox, DeviceConfig deviceConfig, SyncDisabledModeForTest syncMode) {
-        return new FakeFlagsPreparerClassRule(sdkSandbox, deviceConfig, syncMode);
+    protected FakeFlagsPreparerClassRule newRule(SdkSandbox sdkSandbox, DeviceConfig deviceConfig) {
+        return new FakeFlagsPreparerClassRule(sdkSandbox, deviceConfig);
     }
 
     public static final class FakeFlagsPreparerClassRule
             extends AbstractFlagsPreparerClassRule<FakeFlagsPreparerClassRule> {
 
-        FakeFlagsPreparerClassRule(
-                SdkSandbox sdkSandbox, DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
-            super(DynamicLogger.getInstance(), sdkSandbox, deviceConfig, mode);
+        FakeFlagsPreparerClassRule(SdkSandbox sdkSandbox, DeviceConfig deviceConfig) {
+            super(DynamicLogger.getInstance(), sdkSandbox, deviceConfig);
         }
     }
 }

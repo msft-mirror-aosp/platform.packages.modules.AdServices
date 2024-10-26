@@ -59,6 +59,16 @@ public final class SetSdkSandboxStateActionTest extends SharedSidelessTestCase {
     }
 
     @Test
+    public void testGetState() {
+        for (State state : State.values()) {
+            if (state.isSettable()) {
+                var action = new SetSdkSandboxStateAction(mFakeLogger, mFakeSdkSandbox, state);
+                expect.withMessage("getState()").that(action.getState()).isEqualTo(state);
+            }
+        }
+    }
+
+    @Test
     public void testExecuteAndRevert_getPreviousFail() throws Exception {
         mFakeSdkSandbox.onGetStateThrows(new RuntimeException("D'OH!"));
 
@@ -185,17 +195,9 @@ public final class SetSdkSandboxStateActionTest extends SharedSidelessTestCase {
     @Test
     public void testEqualsAndHashCode() {
         var baseline = new SetSdkSandboxStateAction(mFakeLogger, mFakeSdkSandbox, ENABLED);
-        var equal1 = new SetSdkSandboxStateAction(mFakeLogger, mFakeSdkSandbox, ENABLED);
-        var equal2 =
-                new SetSdkSandboxStateAction(
-                        new Logger(mFakeRealLogger, "whatever"), mFakeSdkSandbox, ENABLED);
-        var equal3 = new SetSdkSandboxStateAction(mFakeLogger, new FakeSdkSandbox(), ENABLED);
-        var different = new SetSdkSandboxStateAction(mFakeLogger, mFakeSdkSandbox, DISABLED);
+        var different = new SetSdkSandboxStateAction(mFakeLogger, mFakeSdkSandbox, ENABLED);
         var et = new EqualsTester(expect);
 
-        et.expectObjectsAreEqual(baseline, equal1);
-        et.expectObjectsAreEqual(baseline, equal2);
-        et.expectObjectsAreEqual(baseline, equal3);
         et.expectObjectsAreNotEqual(baseline, different);
     }
 

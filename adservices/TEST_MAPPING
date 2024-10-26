@@ -1,3 +1,11 @@
+// Ths mapping file defines configurations for various test groups including pre-submit and
+// flag ramp testing in Gantry. Please ensure ALL groups are updated appropriately by reading any
+// prerequisites that are mentioned.
+
+// This group is used to configure the tests for AdServices pre-submit testing. Only add tests to
+// this group that are:
+// (a) Not flaky
+// (b) Targets T+ SDK version
 {
   "adservices-mainline-presubmit": [
     {
@@ -338,6 +346,10 @@
       ]
     }
   ],
+  // This group is used to configure AdServices tests for ExtServices pre-submit testing. Only add
+  // tests to this group that are:
+  // (a) Not flaky
+  // (b) Targets compat SDK version (S)
   "extservices-mainline-presubmit": [
     {
       "name": "AdExtServicesApkUINotificationTests",
@@ -1723,10 +1735,143 @@
       ]
     }
   ],
-
-  // Test group for flag ramp testing. Currently, under development. Do not alter this list.
-  // TODO (b/356893907): Add remaining tests
+  // This group is used to configure the tests for flag ramp testing in Gantry. Please add to this
+  // test group ONLY if all the conditions are met:
+  // (a) The test is an AdServices CTS test
+  // (b) The test resets flag values after each test by using FlagsSetterRule (i.e. tests extend one
+  //     of supported CTS test superclasses like AdServicesCtsTestCase).
+  // (c) The test does not enable flag sync
+  // (d) The test targets T+ SDK version.
+  // (e) Test is not flaky
   "adservices-flag-ramp-testing": [
+    {
+      "name": "CtsAdServicesDeviceTestCases",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesDebuggableDeviceTestCases",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesRootTestCases",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesEndToEndTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesEndToEndTestMeasurement",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesPermissionsValidEndToEndTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesPermissionsAppOptOutEndToEndTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesPermissionsNoPermEndToEndTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesNotInAllowListEndToEndTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesTopicsAppUpdateTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesTopicsConnectionTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesMddTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsSandboxedAdIdManagerTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsSandboxedTopicsManagerTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsSandboxedMeasurementManagerTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsSandboxedFledgeManagerTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
     {
       "name": "CtsAdIdEndToEndTest",
       "options": [
@@ -1737,6 +1882,31 @@
     },
     {
       "name": "CtsAppSetIdEndToEndTest",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesCobaltTest",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesHostTests",
+      "options": [
+        {
+          // NOTE: host-side tests use a different package
+          "exclude-annotation": "android.platform.test.annotations.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "CtsAdServicesExtDataStorageServiceTest",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"

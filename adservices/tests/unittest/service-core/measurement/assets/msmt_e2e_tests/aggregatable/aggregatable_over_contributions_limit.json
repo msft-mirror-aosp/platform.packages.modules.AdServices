@@ -83,7 +83,8 @@
               "aggregatable_values": {
                 "campaignCounts": 32769,
                 "geoValue": 32769
-              }
+              },
+              "aggregatable_source_registration_time": "INCLUDE"
             },
             "Location": null,
             "Attribution-Reporting-Redirect": null
@@ -136,7 +137,8 @@
               "aggregatable_values": {
                 "campaignCounts": 32768,
                 "geoValue": 1664
-              }
+              },
+              "aggregatable_source_registration_time": "INCLUDE"
             },
             "Location": null,
             "Attribution-Reporting-Redirect": null

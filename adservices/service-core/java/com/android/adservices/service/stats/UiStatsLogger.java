@@ -129,7 +129,6 @@ import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 /** Logger for UiStats. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class UiStatsLogger {
     private static AdServicesLoggerImpl sLogger = AdServicesLoggerImpl.getInstance();

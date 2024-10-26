@@ -46,9 +46,14 @@ public abstract class DevSession {
      *
      * @param proto The proto to convert from.
      * @return A new {@link DevSession} instance.
+     * @throws IllegalStateException If the {@link
+     *     com.android.adservices.service.proto.DevSessionStorage} was not initialized.
      */
     public static DevSession fromProto(
             com.android.adservices.service.proto.DevSessionStorage proto) {
+        if (!proto.getIsStorageInitialized()) {
+            throw new IllegalStateException("Cannot read DevSessionStorage when not initialized");
+        }
         return builder().setState(DevSessionState.values()[proto.getState().getNumber()]).build();
     }
 
@@ -64,12 +69,18 @@ public abstract class DevSession {
                 .setState(
                         com.android.adservices.service.proto.DevSessionStorage.State.forNumber(
                                 devSession.getState().ordinal()))
+                .setIsStorageInitialized(true)
                 .build();
     }
 
     /** Returns a new builder for creating a {@link DevSession} instance. */
     public static Builder builder() {
         return new AutoValue_DevSession.Builder();
+    }
+
+    /** Returns a {@link DevSession} for a newly initialized state, e.g. first read. */
+    public static DevSession createForNewlyInitializedState() {
+        return builder().setState(DevSessionState.IN_PROD).build();
     }
 
     /** Builder for creating a {@link DevSession} instance. */

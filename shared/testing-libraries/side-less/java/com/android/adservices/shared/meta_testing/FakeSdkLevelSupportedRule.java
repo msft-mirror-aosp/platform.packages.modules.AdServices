@@ -17,6 +17,7 @@ package com.android.adservices.shared.meta_testing;
 
 import com.android.adservices.shared.testing.AbstractSdkLevelSupportedRule;
 import com.android.adservices.shared.testing.AndroidSdk.Level;
+import com.android.adservices.shared.testing.AndroidSdk.Range;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 
 import java.util.Objects;
@@ -31,6 +32,12 @@ public final class FakeSdkLevelSupportedRule extends AbstractSdkLevelSupportedRu
 
     public FakeSdkLevelSupportedRule(RealLogger logger, FakeDeviceGateway deviceGateway) {
         super(logger);
+        mFakeDeviceGateway = Objects.requireNonNull(deviceGateway, "deviceGateway cannot be null");
+    }
+
+    public FakeSdkLevelSupportedRule(
+            RealLogger logger, FakeDeviceGateway deviceGateway, Range defaultRange) {
+        super(logger, defaultRange);
         mFakeDeviceGateway = Objects.requireNonNull(deviceGateway, "deviceGateway cannot be null");
     }
 

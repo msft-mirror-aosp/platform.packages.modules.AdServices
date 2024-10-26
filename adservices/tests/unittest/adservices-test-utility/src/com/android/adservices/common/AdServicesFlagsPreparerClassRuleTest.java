@@ -18,7 +18,6 @@ package com.android.adservices.common;
 import com.android.adservices.shared.meta_testing.DeviceSideFlagsPreparerClassRuleTestCase;
 import com.android.adservices.shared.testing.SdkSandbox;
 import com.android.adservices.shared.testing.device.DeviceConfig;
-import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
 
 public final class AdServicesFlagsPreparerClassRuleTest
         extends DeviceSideFlagsPreparerClassRuleTestCase<AdServicesFlagsPreparerClassRule> {
@@ -30,7 +29,7 @@ public final class AdServicesFlagsPreparerClassRuleTest
 
     @Override
     protected AdServicesFlagsPreparerClassRule newRule(
-            SdkSandbox sdkSandbox, DeviceConfig deviceConfig, SyncDisabledModeForTest syncMode) {
-        return new AdServicesFlagsPreparerClassRule(sdkSandbox, deviceConfig, syncMode);
+            SdkSandbox sdkSandbox, DeviceConfig deviceConfig) {
+        return new AdServicesFlagsPreparerClassRule(sdkSandbox, deviceConfig);
     }
 }

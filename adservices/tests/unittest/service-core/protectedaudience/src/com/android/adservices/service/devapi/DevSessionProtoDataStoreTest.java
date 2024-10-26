@@ -20,6 +20,7 @@ import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.devapi.DevSessionFixture;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,6 +42,11 @@ public final class DevSessionProtoDataStoreTest extends AdServicesUnitTestCase {
                         getTestInvocationId() + "_" + DevSessionProtoDataStore.FILE_NAME);
     }
 
+    @After
+    public void tearDown() throws Exception {
+        wait(mDevSessionDataStore.set(DevSessionFixture.IN_PROD));
+    }
+
     @Test
     public void testSetAndGetDevSession() throws Exception {
         wait(mDevSessionDataStore.set(DevSessionFixture.IN_DEV));
@@ -51,10 +57,12 @@ public final class DevSessionProtoDataStoreTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testGetDevSessionWithoutSet() throws Exception {
+    public void testGetDevSessionWithoutSetAlwaysInitializes() throws Exception {
         DevSession devSession = wait(mDevSessionDataStore.get());
 
-        expect.withMessage("DevSession future").that(devSession).isEqualTo(DevSession.UNKNOWN);
+        expect.withMessage("DevSession future")
+                .that(devSession)
+                .isEqualTo(DevSession.createForNewlyInitializedState());
     }
 
     private static <T> T wait(Future<T> future) throws Exception {

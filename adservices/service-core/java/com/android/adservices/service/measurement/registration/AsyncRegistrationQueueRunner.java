@@ -1250,7 +1250,9 @@ public final class AsyncRegistrationQueueRunner {
 
     @Nullable
     private UnsignedLong getSourceDebugKeyForNoisedReport(@NonNull Source source) {
-        if ((source.getPublisherType() == EventSurfaceType.APP && source.hasAdIdPermission())
+        if (mFlags.getMeasurementEnableBothSideDebugKeysInReports()) {
+            return null;
+        } else if ((source.getPublisherType() == EventSurfaceType.APP && source.hasAdIdPermission())
                 || (source.getPublisherType() == EventSurfaceType.WEB
                         && source.hasArDebugPermission())) {
             return source.getDebugKey();

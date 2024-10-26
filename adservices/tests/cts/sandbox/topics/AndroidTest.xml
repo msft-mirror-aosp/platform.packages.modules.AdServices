@@ -26,16 +26,7 @@
         <option name="test-file-name" value="CtsSandboxedTopicsManagerTests.apk"/>
     </target_preparer>
 
-    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <!-- NOTE: DeviceConfig and SystemProperties are handled by AdServicesFlagsSetterRule -->
-
-        <option name="run-command" value="cmd sdk_sandbox set-state --enabled"/>
-        <option name="teardown-command" value="cmd sdk_sandbox set-state --reset"/>
-
-        <!-- Temporarily disable Device Config sync -->
-        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>
-        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none"/>
-    </target_preparer>
+    <!-- NOTE: DeviceConfig and SystemProperties are handled by AdServicesFlagsSetterRule -->
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="hidden-api-checks" value="false"/>

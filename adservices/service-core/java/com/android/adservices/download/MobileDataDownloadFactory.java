@@ -75,7 +75,6 @@ import java.util.List;
 import java.util.concurrent.Executor;
 
 /** Mobile Data Download Factory. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class MobileDataDownloadFactory {
     private static MobileDataDownload sSingletonMdd;

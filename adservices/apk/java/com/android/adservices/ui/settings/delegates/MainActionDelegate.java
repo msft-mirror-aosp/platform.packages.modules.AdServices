@@ -42,7 +42,6 @@ import java.util.Map;
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class MainActionDelegate {
     private final AdServicesSettingsMainActivity mAdServicesSettingsMainActivity;

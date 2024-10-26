@@ -922,4 +922,14 @@ public interface IMeasurementDao {
     int sumAggregateDebugReportBudgetXOriginXPublisherXWindow(
             Uri publisher, @EventSurfaceType int publisherType, Uri origin, long windowStartTime)
             throws DatastoreException;
+
+    /**
+     * Returns if there exists any sources with the same input destination.
+     *
+     * @param attributionDestinations destination to match
+     * @param eventTime to filter out expired sources
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    boolean existsActiveSourcesWithDestination(Uri attributionDestinations, long eventTime)
+            throws DatastoreException;
 }

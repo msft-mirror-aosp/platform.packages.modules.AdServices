@@ -259,8 +259,7 @@
             "attribution_destination": "android-app://test.destination3",
             "reporting_origin": "https://reporter1.com",
             "scheduled_report_time": "6300",
-            "version": "0.1",
-            "source_registration_time": "0"
+            "version": "0.1"
           },
           "aggregation_coordinator_origin": "https://coordinator.com",
           "histograms": [

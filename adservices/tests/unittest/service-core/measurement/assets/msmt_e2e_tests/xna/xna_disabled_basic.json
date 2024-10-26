@@ -168,7 +168,8 @@
                     "priority": "200",
                     "expiry": "172801"
                   }
-                ]
+                ],
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null

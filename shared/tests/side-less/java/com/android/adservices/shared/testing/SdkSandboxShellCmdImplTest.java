@@ -96,7 +96,8 @@ public final class SdkSandboxShellCmdImplTest extends SharedSidelessTestCase {
 
         for (State state : State.values()) {
             if (state.isSettable()) {
-                mImpl.setState(state);
+                var self = mImpl.setState(state);
+                expect.withMessage("result of setState()").that(self).isSameInstanceAs(mImpl);
             } else {
                 assertThrows(IllegalArgumentException.class, () -> mImpl.setState(state));
             }
@@ -133,18 +134,18 @@ public final class SdkSandboxShellCmdImplTest extends SharedSidelessTestCase {
     public void testSetState_enabled() {
         mockCmdSdkSandbox("set-state --enabled", "");
 
-        mImpl.setState(ENABLED);
+        var self = mImpl.setState(ENABLED);
 
-        // Nothing to assert - setState() would throw if the cmd was invalid
+        expect.withMessage("result of setState()").that(self).isSameInstanceAs(mImpl);
     }
 
     @Test
     public void testSetState_disabled() {
         mockCmdSdkSandbox("set-state --reset", "");
 
-        mImpl.setState(DISABLED);
+        var self = mImpl.setState(DISABLED);
 
-        // Nothing to assert - setState() would throw if the cmd was invalid
+        expect.withMessage("result of setState()").that(self).isSameInstanceAs(mImpl);
     }
 
     private void mockDumpsysSdkSandbox(String dump) {

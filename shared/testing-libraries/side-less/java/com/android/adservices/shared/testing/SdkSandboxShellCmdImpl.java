@@ -73,14 +73,14 @@ public final class SdkSandboxShellCmdImpl implements SdkSandbox {
     }
 
     @Override
-    public void setState(State state) {
+    public SdkSandboxShellCmdImpl setState(State state) {
         Objects.requireNonNull(state, "state cannot be null");
         if (!state.isSettable()) {
             throw new IllegalArgumentException("invalid state: " + state);
         }
         if (!isSupported()) {
             mLog.d("setState(%s): ignoring when not supported", state);
-            return;
+            return this;
         }
 
         ShellCommandInput input =
@@ -90,6 +90,7 @@ public final class SdkSandboxShellCmdImpl implements SdkSandbox {
         if (!output.getOut().isEmpty()) {
             throw new InvalidShellCommandResultException(input, output);
         }
+        return this;
     }
 
     private boolean isSupported() {

@@ -83,6 +83,7 @@ import org.mockito.stubbing.Answer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /** Unit test for {@link com.android.adservices.service.common.PackageChangedReceiver}. */
@@ -91,6 +92,7 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(MeasurementImpl.class)
 @SpyStatic(ConsentManager.class)
+@SpyStatic(AdPackageDenyResolver.class)
 public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoTestCase {
     private static final String SAMPLE_PACKAGE = "com.example.measurement.sampleapp";
     private static final String PACKAGE_SCHEME = "package:";
@@ -109,6 +111,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
     @Mock private ProtectedSignalsDao mProtectedSignalsDaoMock;
     @Mock private ConsentManager mConsentManager;
+    @Mock private AdPackageDenyResolver mMockAdPackageDenyResolver;
 
     private TopicsWorker mSpyTopicsWorker;
 
@@ -138,6 +141,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         doNothingForTopics(spyReceiver);
         doNothingForFledge(spyReceiver);
         doNothingForConsent(spyReceiver);
+        doNothingForPackageDeny(spyReceiver);
         return spyReceiver;
     }
 
@@ -146,6 +150,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         doNothingForMeasurement(spyReceiver);
         doNothingForFledge(spyReceiver);
         doNothingForConsent(spyReceiver);
+        doNothingForPackageDeny(spyReceiver);
         return spyReceiver;
     }
 
@@ -154,6 +159,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         doNothingForMeasurement(spyReceiver);
         doNothingForTopics(spyReceiver);
         doNothingForConsent(spyReceiver);
+        doNothingForPackageDeny(spyReceiver);
         return spyReceiver;
     }
 
@@ -162,10 +168,21 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         doNothingForMeasurement(spyReceiver);
         doNothingForTopics(spyReceiver);
         doNothingForFledge(spyReceiver);
+        doNothingForPackageDeny(spyReceiver);
         return spyReceiver;
     }
 
     private PackageChangedReceiver createSpyPackageReceiverForExtServices() {
+        PackageChangedReceiver spyReceiver = Mockito.spy(new PackageChangedReceiver());
+        doNothingForMeasurement(spyReceiver);
+        doNothingForTopics(spyReceiver);
+        doNothingForFledge(spyReceiver);
+        doNothingForConsent(spyReceiver);
+        doNothingForPackageDeny(spyReceiver);
+        return spyReceiver;
+    }
+
+    private PackageChangedReceiver createSpyPackageReceiverForPackageDeny() {
         PackageChangedReceiver spyReceiver = Mockito.spy(new PackageChangedReceiver());
         doNothingForMeasurement(spyReceiver);
         doNothingForTopics(spyReceiver);
@@ -191,6 +208,10 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
     private void doNothingForConsent(PackageChangedReceiver receiver) {
         doNothing().when(receiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
+    }
+
+    private void doNothingForPackageDeny(PackageChangedReceiver receiver) {
+        doNothing().when(receiver).packageDenyPreProcessOnPackageAdded();
     }
 
     // This intent is sent from the AdServices system service.
@@ -1114,5 +1135,35 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         spyReceiver.onReceive(mContext, intent);
 
         verify(spyReceiver).measurementOnPackageAdded(any(), any());
+    }
+
+    @Test
+    public void runPackageAddedForPackageDeny_flagOn() throws Exception {
+        doReturn(mMockAdPackageDenyResolver).when(AdPackageDenyResolver::getInstance);
+        when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
+        when(mMockFlags.getEnablePackageDenyJobOnPackageAdd()).thenReturn(true);
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForPackageDeny();
+        Intent intent =
+                createIntentSentByAdServiceSystemService(PackageChangedReceiver.PACKAGE_ADDED);
+
+        // Invoke the onReceive method to test the behavior
+        spyReceiver.onReceive(mContext, intent);
+        Future<AdPackageDenyResolver.PackageDenyMddProcessStatus> statusListenableFuture =
+                verify(mMockAdPackageDenyResolver).loadDenyDataFromMdd();
+    }
+
+    @Test
+    public void runPackageAddedForPackageDeny_flagOff() throws Exception {
+        doReturn(mMockAdPackageDenyResolver).when(AdPackageDenyResolver::getInstance);
+        when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
+        when(mMockFlags.getEnablePackageDenyJobOnPackageAdd()).thenReturn(false);
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForPackageDeny();
+        Intent intent =
+                createIntentSentByAdServiceSystemService(PackageChangedReceiver.PACKAGE_ADDED);
+
+        // Invoke the onReceive method to test the behavior
+        spyReceiver.onReceive(mContext, intent);
+        Future<AdPackageDenyResolver.PackageDenyMddProcessStatus> statusListenableFuture =
+                verify(mMockAdPackageDenyResolver, never()).loadDenyDataFromMdd();
     }
 }

@@ -40,6 +40,11 @@ public final class SetSdkSandboxStateAction extends AbstractAction {
         }
     }
 
+    /** Gets the state that will be set by the action. */
+    public State getState() {
+        return mState;
+    }
+
     @Override
     protected boolean onExecuteLocked() throws Exception {
         try {
@@ -76,20 +81,6 @@ public final class SetSdkSandboxStateAction extends AbstractAction {
     @Override
     protected void onResetLocked() {
         mPreviousState = null;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(mState);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj == null) return false;
-        if (getClass() != obj.getClass()) return false;
-        SetSdkSandboxStateAction other = (SetSdkSandboxStateAction) obj;
-        return mState == other.mState;
     }
 
     @Override

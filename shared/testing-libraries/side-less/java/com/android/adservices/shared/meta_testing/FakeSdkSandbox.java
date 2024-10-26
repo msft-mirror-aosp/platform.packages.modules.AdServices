@@ -54,7 +54,7 @@ public final class FakeSdkSandbox implements SdkSandbox {
     }
 
     @Override
-    public void setState(@Nullable State state) {
+    public FakeSdkSandbox setState(@Nullable State state) {
         if (mOnSetStateException != null) {
             mLog.i(
                     "setState(%s): throwing exception set by onSetStateThrows(): %s",
@@ -62,6 +62,7 @@ public final class FakeSdkSandbox implements SdkSandbox {
             throw mOnSetStateException;
         }
         mState = state;
+        return this;
     }
 
     /** When called, {@link #getState()} will throw the given exception. */

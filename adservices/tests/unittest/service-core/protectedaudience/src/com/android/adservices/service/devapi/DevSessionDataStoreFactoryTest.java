@@ -38,6 +38,9 @@ public final class DevSessionDataStoreFactoryTest extends AdServicesMockitoTestC
         DevSession devSession = wait(dataStore.get());
 
         expect.that(devSession.getState()).isEqualTo(DevSessionState.IN_DEV);
+
+        // Leave device in a clean state.
+        wait(dataStore.set(DevSessionFixture.IN_DEV));
     }
 
     @Test

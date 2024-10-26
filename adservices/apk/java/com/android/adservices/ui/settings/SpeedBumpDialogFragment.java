@@ -33,7 +33,6 @@ import androidx.fragment.app.FragmentManager;
 import java.io.Serializable;
 
 /** Child class of DialogFragment for the Speed Bump Dialog of the AdServices Settings App. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class SpeedBumpDialogFragment extends DialogFragment {
     private static final String ARG_TITLE = "title";
