@@ -51,8 +51,11 @@ public final class TestHelper {
         return annotation;
     }
 
+    /**
+     * Gets the given annotation from the test class, its ancestors, or any of the implemented
+     * interface(s).
+     */
     // TODO(b/315339283): use in other places
-    /** Gets the given annotation from the a test class or its ancestors. */
     @Nullable
     public static <T extends Annotation> T getAnnotation(
             Class<?> testClass, Class<T> annotationClass) {
@@ -80,10 +83,24 @@ public final class TestHelper {
                 }
                 return annotation;
             }
+
+            for (Class<?> classInterface : testClass.getInterfaces()) {
+                annotation = classInterface.getAnnotation(annotationClass);
+                if (annotation != null) {
+                    if (VERBOSE) {
+                        sLogger.v(
+                                "getAnnotationInternal(%s): returning annotation (%s) from "
+                                        + "interface (%s)",
+                                annotationClass.getSimpleName(), annotation, classInterface);
+                    }
+                    return annotation;
+                }
+            }
+
             if (VERBOSE) {
                 sLogger.v(
-                        "getAnnotationInternal(%s): not found on class %s, will try superclass"
-                                + " (%s)",
+                        "getAnnotationInternal(%s): not found on class %s or any implemented "
+                                + "interfaces, will try superclass (%s)",
                         annotationClass.getSimpleName(), testClass, testClass.getSuperclass());
             }
             testClass = testClass.getSuperclass();

@@ -25,7 +25,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__UX__GA_UX_WITH_PAS;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.BETA_UX;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
-import static com.android.adservices.ui.util.ApkTestUtil.PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS;
 import static com.android.adservices.ui.util.ApkTestUtil.getPageElement;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -491,10 +490,8 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         BySelector titleSelector =
                 By.res(TEST_PRIVILEGED_APP_NAME + ":id/action_bar")
                         .hasChild(By.clazz("android.widget.TextView"));
-        UiObject2 titleObject =
-                sDevice.wait(
-                        Until.findObject(titleSelector), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
-        assertThat(titleObject).isNotNull();
+        UiObject2 titleObject = sDevice.wait(Until.findObject(titleSelector), LAUNCH_TIMEOUT);
+        assertWithMessage("Sample privileged app title").that(titleObject).isNotNull();
     }
 
     @NonNull

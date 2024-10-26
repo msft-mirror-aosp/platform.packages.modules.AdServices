@@ -22,6 +22,10 @@ import static com.android.adservices.service.customaudience.AdditionalScheduleRe
 
 import static com.google.common.util.concurrent.Futures.immediateVoidFuture;
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceToLeave;
@@ -43,6 +47,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdditionalScheduleRequestsEnabledStrategy
         implements ScheduleCustomAudienceUpdateStrategy {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -102,7 +107,7 @@ public class AdditionalScheduleRequestsEnabledStrategy
                                     return null;
                                 },
                                 mBackgroundExecutor));
-            } catch (JSONException | IllegalArgumentException e) {
+            } catch (Exception e) {
                 sLogger.e(e, "Invalid schedule request, skipping scheduling for this request");
             }
         }
