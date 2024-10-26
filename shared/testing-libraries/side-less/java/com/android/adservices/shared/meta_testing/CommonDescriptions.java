@@ -50,6 +50,9 @@ public final class CommonDescriptions {
     @SetSyncDisabledModeForTest(UNTIL_REBOOT)
     public static class AClassDisablesDeviceConfigUntilReboot {}
 
+    @SetSyncDisabledModeForTest
+    public static class AClassWithDefaultSetSyncDisabledModeForTest {}
+
     @SetSdkSandboxStateEnabled
     @SetSyncDisabledModeForTest(UNTIL_REBOOT)
     public static class AClassEnablesSdkSandboxAndDisablesDeviceConfigUntilReboot {}

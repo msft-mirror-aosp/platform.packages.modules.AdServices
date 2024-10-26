@@ -1675,4 +1675,7 @@ public final class FlagsConstants {
     /** Key to enable AtomicFileDataStore update API for adservices apk. */
     public static final String KEY_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API =
             "AtomicFileDatastore__enable_batch_update_api_in_adservices_process";
+
+    /** Key to enable Ad Id migration. */
+    public static final String KEY_AD_ID_MIGRATION_ENABLED = "ad_id_migration_enabled";
 }
