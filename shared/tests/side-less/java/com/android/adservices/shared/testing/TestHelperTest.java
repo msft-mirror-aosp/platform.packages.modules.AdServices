@@ -125,6 +125,33 @@ public final class TestHelperTest extends SharedSidelessTestCase {
     }
 
     @Test
+    public void testGetAnnotation_fromImplementedInterface() {
+        Description test =
+                Description.createSuiteDescription(AClassHasNoAnnotationButItsInterfaceDoes.class);
+
+        DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
+
+        assertWithMessage("getAnnotation(%s)", test).that(annotation).isNotNull();
+        expect.withMessage("getAnnotation(%s).value()", test)
+                .that(annotation.value())
+                .isEqualTo("An interface has an annotation!");
+    }
+
+    @Test
+    public void testGetAnnotation_fromParentsImplementedInterface() {
+        Description test =
+                Description.createSuiteDescription(
+                        AClassHasNoAnnotationButItsParentsInterfaceDoes.class);
+
+        DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
+
+        assertWithMessage("getAnnotation(%s)", test).that(annotation).isNotNull();
+        expect.withMessage("getAnnotation(%s).value()", test)
+                .that(annotation.value())
+                .isEqualTo("An interface has an annotation!");
+    }
+
+    @Test
     public void testGetAnnotation_fromGrandParentClass() {
         Description test =
                 Description.createSuiteDescription(
@@ -240,10 +267,19 @@ public final class TestHelperTest extends SharedSidelessTestCase {
     @DaRealAnnotation("A class has an annotation!")
     private static class AClassHasAnAnnotation {}
 
+    @DaRealAnnotation("An interface has an annotation!")
+    private interface AnInterfaceHasAnAnnotation {}
+
+    private static class AClassHasNoAnnotationButItsInterfaceDoes
+            implements AnInterfaceHasAnAnnotation {}
+
     @DaRealAnnotation("A class has an annotation and a parent!")
     private static class AClassHasAnAnnotationAndAParent extends AClassHasAnAnnotation {}
 
     private static class AClassHasNoAnnotationButItsParentDoes extends AClassHasAnAnnotation {}
+
+    private static class AClassHasNoAnnotationButItsParentsInterfaceDoes
+            extends AClassHasNoAnnotationButItsInterfaceDoes {}
 
     private static class AClassHasNoAnnotationButItsGrandParentDoes
             extends AClassHasNoAnnotationButItsParentDoes {}

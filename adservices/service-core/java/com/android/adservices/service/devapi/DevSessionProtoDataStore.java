@@ -82,6 +82,7 @@ public final class DevSessionProtoDataStore implements DevSessionDataStore {
      */
     @Override
     public ListenableFuture<DevSession> set(DevSession devSession) {
+        sLogger.v("Beginning DevSessionDataStore#set(%s)", devSession);
         return Futures.transform(
                 mDevSessionDataStore.updateDataAsync(
                         currentDevSession -> {
@@ -99,9 +100,13 @@ public final class DevSessionProtoDataStore implements DevSessionDataStore {
      */
     @Override
     public ListenableFuture<DevSession> get() {
-        return Futures.transform(
+        sLogger.v("Beginning DevSessionDataStore#get");
+        return Futures.transformAsync(
                 mDevSessionDataStore.getDataAsync(),
-                proto -> DevSession.fromProto(proto),
+                proto ->
+                        proto.getIsStorageInitialized()
+                                ? Futures.immediateFuture(DevSession.fromProto(proto))
+                                : set(DevSession.createForNewlyInitializedState()),
                 mLightWeightExecutor);
     }
 }

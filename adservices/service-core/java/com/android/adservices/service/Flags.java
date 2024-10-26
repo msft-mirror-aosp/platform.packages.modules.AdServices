@@ -5863,6 +5863,14 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API;
     }
 
+    /** Feature flag to enable Ad Id migration. */
+    @FeatureFlag boolean DEFAULT_AD_ID_MIGRATION_ENABLED = false;
+
+    /** Returns whether Ad Id migration is enabled. */
+    default boolean getAdIdMigrationEnabled() {
+        return DEFAULT_AD_ID_MIGRATION_ENABLED;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
     ////////////////////////////////////////////////////////////////////////////////////////////////

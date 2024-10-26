@@ -50,6 +50,7 @@ import android.net.Uri;
 import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.common.WebUtil;
@@ -5912,6 +5913,7 @@ public class AttributionJobHandlerTest {
     }
 
     @Test
+    @FlakyTest(bugId = 375611436)
     /**
      * The triggerData in the trigger didn't match any one of the trigger data in the source
      * registration. No report generated
