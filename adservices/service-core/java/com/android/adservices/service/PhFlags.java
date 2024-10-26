@@ -7472,4 +7472,10 @@ public final class PhFlags implements Flags {
                 FlagsConstants.KEY_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API,
                 DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API);
     }
+
+    @Override
+    public boolean getAdIdMigrationEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_AD_ID_MIGRATION_ENABLED, DEFAULT_AD_ID_MIGRATION_ENABLED);
+    }
 }

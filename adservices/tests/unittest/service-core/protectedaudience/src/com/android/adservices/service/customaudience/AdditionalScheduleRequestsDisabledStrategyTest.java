@@ -20,6 +20,7 @@ import static com.android.adservices.service.customaudience.ScheduleCustomAudien
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.DB_CUSTOM_AUDIENCE_TO_LEAVE_2;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.OWNER;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PACKAGE;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createRequestBodyWithOnlyPartialCustomAudiences;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.getPartialCustomAudienceJsonArray;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.getScheduleRequest_1;
 
@@ -81,7 +82,10 @@ public class AdditionalScheduleRequestsDisabledStrategyTest
                 mStrategy.prepareFetchUpdateRequestBody(
                         getPartialCustomAudienceJsonArray(), dbCustomAudienceToLeaveList);
 
-        assertThat(result).isEqualTo(getPartialCustomAudienceJsonArray().toString());
+        assertThat(result)
+                .isEqualTo(
+                        createRequestBodyWithOnlyPartialCustomAudiences(
+                                getPartialCustomAudienceJsonArray()));
     }
 
     @Test

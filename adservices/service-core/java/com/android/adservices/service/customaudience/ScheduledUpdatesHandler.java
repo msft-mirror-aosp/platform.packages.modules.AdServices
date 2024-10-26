@@ -43,8 +43,10 @@ import android.adservices.exceptions.AdServicesNetworkException;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.LoggerFactory;
@@ -67,6 +69,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdTechIdentifierValidator;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.JsonValidator;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
@@ -106,6 +109,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+@RequiresApi(Build.VERSION_CODES.S)
 public final class ScheduledUpdatesHandler {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
@@ -258,13 +262,17 @@ public final class ScheduledUpdatesHandler {
                         CustomAudienceDatabase.getInstance().customAudienceDao(),
                         FlagsFactory.getFlags()),
                 ScheduleCustomAudienceUpdateStrategyFactory.createStrategy(
+                        context,
                         CustomAudienceDatabase.getInstance().customAudienceDao(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
+                        FledgeAuthorizationFilter.create(
+                                context, AdServicesLoggerImpl.getInstance()),
                         FlagsFactory.getFlags()
                                 .getFledgeScheduleCustomAudienceMinDelayMinsOverride(),
                         FlagsFactory.getFlags()
-                                .getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests()),
+                                .getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests(),
+                        FlagsFactory.getFlags().getDisableFledgeEnrollmentCheck()),
                 AdServicesLoggerImpl.getInstance());
     }
 

@@ -1062,6 +1062,11 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getEnableAtomicFileDatastoreBatchUpdateApi);
     }
 
+    @Test
+    public void testGetAdIdMigrationEnabled() {
+        testFeatureFlag("DEFAULT_AD_ID_MIGRATION_ENABLED", Flags::getAdIdMigrationEnabled);
+    }
+
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {
         String name = field.getName();
         Annotation annotation = field.getAnnotation(annotationClass);

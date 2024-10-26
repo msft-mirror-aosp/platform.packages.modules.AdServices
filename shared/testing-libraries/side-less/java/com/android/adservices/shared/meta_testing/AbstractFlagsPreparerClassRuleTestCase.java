@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicReference;
 /**
  * Base class for {@link AbstractFlagsPreparerClassRule} implementations.
  *
- * <p>It contains the base tests for all of them, although subclasses my add they extra tests.
+ * <p>It contains the base tests for all of them, although subclasses might add they extra tests.
  *
  * @param <R> type of the rule
  */
