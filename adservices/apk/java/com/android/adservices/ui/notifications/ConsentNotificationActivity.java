@@ -38,7 +38,6 @@ import com.android.adservices.ui.UxSelector;
 /**
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationActivity extends FragmentActivity implements UxSelector {
     public enum NotificationFragmentEnum {

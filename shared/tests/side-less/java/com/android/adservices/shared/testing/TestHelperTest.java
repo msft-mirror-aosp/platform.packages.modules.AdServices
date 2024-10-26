@@ -15,28 +15,29 @@
  */
 package com.android.adservices.shared.testing;
 
+import static com.android.adservices.shared.meta_testing.CommonDescriptions.newTestMethodForClassRule;
 import static com.android.adservices.shared.testing.TestHelper.getAnnotation;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.when;
 
-import com.android.adservices.shared.SharedMockitoTestCase;
+import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassHasNoNothingAtAll;
+import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 
 import com.google.auto.value.AutoAnnotation;
 
 import org.junit.Test;
 import org.junit.runner.Description;
-import org.mockito.Mock;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-public final class TestHelperTest extends SharedMockitoTestCase {
-    @Mock private Description mMockDescription;
+public final class TestHelperTest extends SharedSidelessTestCase {
+    private final Description mNotTestDescription =
+            newTestMethodForClassRule(AClassHasNoNothingAtAll.class);
 
     @Test
     public void testGetTestName_null() {
@@ -124,6 +125,33 @@ public final class TestHelperTest extends SharedMockitoTestCase {
     }
 
     @Test
+    public void testGetAnnotation_fromImplementedInterface() {
+        Description test =
+                Description.createSuiteDescription(AClassHasNoAnnotationButItsInterfaceDoes.class);
+
+        DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
+
+        assertWithMessage("getAnnotation(%s)", test).that(annotation).isNotNull();
+        expect.withMessage("getAnnotation(%s).value()", test)
+                .that(annotation.value())
+                .isEqualTo("An interface has an annotation!");
+    }
+
+    @Test
+    public void testGetAnnotation_fromParentsImplementedInterface() {
+        Description test =
+                Description.createSuiteDescription(
+                        AClassHasNoAnnotationButItsParentsInterfaceDoes.class);
+
+        DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
+
+        assertWithMessage("getAnnotation(%s)", test).that(annotation).isNotNull();
+        expect.withMessage("getAnnotation(%s).value()", test)
+                .that(annotation.value())
+                .isEqualTo("An interface has an annotation!");
+    }
+
+    @Test
     public void testGetAnnotation_fromGrandParentClass() {
         Description test =
                 Description.createSuiteDescription(
@@ -194,12 +222,10 @@ public final class TestHelperTest extends SharedMockitoTestCase {
 
     @Test
     public void testThrowIfNotTest_withNonTestDescription_throwsException() {
-        when(mMockDescription.isTest()).thenReturn(false);
-
         Exception exception =
                 assertThrows(
                         IllegalStateException.class,
-                        () -> TestHelper.throwIfNotTest(mMockDescription));
+                        () -> TestHelper.throwIfNotTest(mNotTestDescription));
 
         expect.that(exception)
                 .hasMessageThat()
@@ -234,21 +260,26 @@ public final class TestHelperTest extends SharedMockitoTestCase {
 
     @Test
     public void testThrowIfTest_withTestDescription_throwsNoException() {
-        when(mMockDescription.isTest()).thenReturn(false);
-
         // No exception should be thrown for test.
-        TestHelper.throwIfTest(mMockDescription);
+        TestHelper.throwIfTest(mNotTestDescription);
     }
-
-    private static class AClassHasNoNothingAtAll {}
 
     @DaRealAnnotation("A class has an annotation!")
     private static class AClassHasAnAnnotation {}
+
+    @DaRealAnnotation("An interface has an annotation!")
+    private interface AnInterfaceHasAnAnnotation {}
+
+    private static class AClassHasNoAnnotationButItsInterfaceDoes
+            implements AnInterfaceHasAnAnnotation {}
 
     @DaRealAnnotation("A class has an annotation and a parent!")
     private static class AClassHasAnAnnotationAndAParent extends AClassHasAnAnnotation {}
 
     private static class AClassHasNoAnnotationButItsParentDoes extends AClassHasAnAnnotation {}
+
+    private static class AClassHasNoAnnotationButItsParentsInterfaceDoes
+            extends AClassHasNoAnnotationButItsInterfaceDoes {}
 
     private static class AClassHasNoAnnotationButItsGrandParentDoes
             extends AClassHasNoAnnotationButItsParentDoes {}

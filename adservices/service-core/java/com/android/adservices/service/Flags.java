@@ -3284,10 +3284,10 @@ public interface Flags extends ModuleSharedFlags {
 
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE = true;
-    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER = false;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE = true;
-    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
-    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = false;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = false;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES = true;
 
     /**
@@ -4420,14 +4420,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
     }
 
-    /** Default value for Null Aggregate Report feature flag. */
-    boolean MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED = false;
-
-    /** Null Aggregate Report feature flag. */
-    default boolean getMeasurementNullAggregateReportEnabled() {
-        return MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED;
-    }
-
     /** Default value for null aggregate report rate including source registration time. */
     float MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME = .008f;
 
@@ -4448,14 +4440,6 @@ public interface Flags extends ModuleSharedFlags {
      */
     default float getMeasurementNullAggReportRateExclSourceRegistrationTime() {
         return MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME;
-    }
-
-    /** Default value for Optional Source Registration Time feature flag. */
-    boolean MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED = false;
-
-    /** Returns true if source registration time is optional for aggregatable reports. */
-    default boolean getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled() {
-        return MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED;
     }
 
     /** Default U18 UX feature flag. */
@@ -4916,12 +4900,11 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL;
     }
 
-    /** Flag to enable context id for triggers */
-    boolean MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID = false;
+    @FeatureFlag boolean MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S = false;
 
-    /** Returns true if trigger context id is enabled. */
-    default boolean getMeasurementEnableTriggerContextId() {
-        return MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID;
+    /** Returns whether to enable install attribution on S feature. */
+    default boolean getMeasurementEnableInstallAttributionOnS() {
+        return MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S;
     }
 
     /** The maximum allowable length of a trigger context id. */
@@ -5051,6 +5034,14 @@ public interface Flags extends ModuleSharedFlags {
 
     default boolean getMeasurementEnableFlexibleContributionFiltering() {
         return MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING;
+    }
+
+    /** Flag for enabling measurement debug keys privacy enforcement */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS = false;
+
+    /** Returns whether measurement debug keys privacy enforcement is enabled. */
+    default boolean getMeasurementEnableBothSideDebugKeysInReports() {
+        return MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS;
     }
 
     /**
@@ -5854,6 +5845,14 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether atomic file datastore batch update Api is enabled. */
     default boolean getEnableAtomicFileDatastoreBatchUpdateApi() {
         return DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API;
+    }
+
+    /** Feature flag to enable Ad Id migration. */
+    @FeatureFlag boolean DEFAULT_AD_ID_MIGRATION_ENABLED = false;
+
+    /** Returns whether Ad Id migration is enabled. */
+    default boolean getAdIdMigrationEnabled() {
+        return DEFAULT_AD_ID_MIGRATION_ENABLED;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

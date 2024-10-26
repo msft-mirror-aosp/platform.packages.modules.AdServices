@@ -77,7 +77,6 @@ import com.android.adservices.service.topics.EpochJobService;
 import java.util.Objects;
 
 /** Provides functionality to schedule or unschedule all relevant background jobs. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class BackgroundJobsManager {
     /**

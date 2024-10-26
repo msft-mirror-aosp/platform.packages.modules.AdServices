@@ -449,6 +449,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableInstallAttributionOnS() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S",
+                Flags::getMeasurementEnableInstallAttributionOnS);
+    }
+
+    @Test
     public void testGetMeasurementEnableDestinationLimitPriority() {
         testFeatureFlag(
                 "MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY",
@@ -922,6 +929,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableBothSideDebugKeysInReports() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS",
+                Flags::getMeasurementEnableBothSideDebugKeysInReports);
+    }
+
+    @Test
     public void testGetFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
         testFlag(
                 "getFledgeGetAdSelectionDataBuyerInputCreatorVersion",
@@ -1046,6 +1060,11 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFeatureFlag(
                 "DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API",
                 Flags::getEnableAtomicFileDatastoreBatchUpdateApi);
+    }
+
+    @Test
+    public void testGetAdIdMigrationEnabled() {
+        testFeatureFlag("DEFAULT_AD_ID_MIGRATION_ENABLED", Flags::getAdIdMigrationEnabled);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {

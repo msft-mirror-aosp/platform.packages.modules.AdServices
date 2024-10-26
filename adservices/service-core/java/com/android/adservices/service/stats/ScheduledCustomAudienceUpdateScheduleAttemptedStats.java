@@ -28,7 +28,7 @@ public abstract class ScheduledCustomAudienceUpdateScheduleAttemptedStats {
     public abstract int getNumberOfLeaveCustomAudiences();
 
     /** Returns the minimum delay in seconds. */
-    public abstract long getMinimumDelayInMinutes();
+    public abstract int getMinimumDelayInMinutes();
 
     /** Returns whether this was the initial hop. */
     public abstract boolean isInitialHop();
@@ -57,7 +57,7 @@ public abstract class ScheduledCustomAudienceUpdateScheduleAttemptedStats {
         public abstract Builder setNumberOfLeaveCustomAudiences(int numberOfLeaveCustomAudiences);
 
         /** Sets the number of partial Custom Audiences. */
-        public abstract Builder setMinimumDelayInMinutes(long minimumDelayInMinutes);
+        public abstract Builder setMinimumDelayInMinutes(int minimumDelayInMinutes);
 
         /** Sets the number of partial Custom Audiences. */
         public abstract Builder setInitialHop(boolean initialHop);
