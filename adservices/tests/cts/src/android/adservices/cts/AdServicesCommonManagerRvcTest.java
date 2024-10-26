@@ -26,11 +26,11 @@ import static com.android.adservices.shared.testing.AndroidSdk.RVC;
 import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStatesResponse;
-import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesStates;
 import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
 import android.adservices.common.UpdateAdServicesModuleStatesParams;
+import android.adservices.common.UpdateAdServicesUserChoicesParams;
 import android.adservices.exceptions.AdServicesException;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
@@ -39,8 +39,6 @@ import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -86,13 +84,12 @@ public final class AdServicesCommonManagerRvcTest extends CtsAdServicesDeviceTes
     public void testSetAdServicesModuleUserChoices_onR_invokesCallbackOnError() throws Exception {
         AdServicesOutcomeReceiverForTests<Void> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
-        AdServicesModuleUserChoice adServicesModuleUserChoice =
-                new AdServicesModuleUserChoice(TOPICS, USER_CHOICE_OPTED_OUT);
-        List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList =
-                Arrays.asList(adServicesModuleUserChoice);
+        UpdateAdServicesUserChoicesParams params =
+                new UpdateAdServicesUserChoicesParams.Builder()
+                        .setUserChoice(TOPICS, USER_CHOICE_OPTED_OUT)
+                        .build();
 
-        mCommonManager.requestAdServicesModuleUserChoices(
-                adServicesModuleUserChoiceList, CALLBACK_EXECUTOR, receiver);
+        mCommonManager.requestAdServicesModuleUserChoices(params, CALLBACK_EXECUTOR, receiver);
 
         receiver.assertFailure(AdServicesException.class);
     }

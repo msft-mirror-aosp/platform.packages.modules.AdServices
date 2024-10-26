@@ -1156,9 +1156,6 @@ public class AttributionJobHandlerTest {
                 .thenReturn(5L);
         when(mMeasurementDao.getSourceDestinations(source.getId()))
                 .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
-        when(mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
-                .thenReturn(true);
-
         mHandler.performPendingAttributions();
 
         ArgumentCaptor<AggregateReport> aggregateReportCaptor =
@@ -1240,9 +1237,6 @@ public class AttributionJobHandlerTest {
                 .thenReturn(5L);
         when(mMeasurementDao.getSourceDestinations(source.getId()))
                 .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
-        when(mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
-                .thenReturn(true);
-        when(mFlags.getMeasurementEnableTriggerContextId()).thenReturn(true);
 
         mHandler.performPendingAttributions();
 
@@ -1286,8 +1280,6 @@ public class AttributionJobHandlerTest {
                 anyInt(), any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceDestinations(source.getId()))
                 .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
-        when(mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
-                .thenReturn(true);
         when(mFlags.getMeasurementNullAggReportRateInclSourceRegistrationTime()).thenReturn(1.0f);
 
         mHandler.performPendingAttributions();
@@ -1357,8 +1349,6 @@ public class AttributionJobHandlerTest {
                 anyInt(), any(), any())).thenReturn(5L);
         when(mMeasurementDao.getSourceDestinations(source.getId()))
                 .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
-        when(mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
-                .thenReturn(true);
         // A rate of 1 would guarantee a null report was generated if we were not checking the
         // SourceRegistrationTimeConfig on the trigger, but because we are checking, there
         // should be no null reports.

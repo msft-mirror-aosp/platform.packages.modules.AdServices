@@ -4442,14 +4442,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME;
     }
 
-    /** Default value for Optional Source Registration Time feature flag. */
-    boolean MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED = false;
-
-    /** Returns true if source registration time is optional for aggregatable reports. */
-    default boolean getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled() {
-        return MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED;
-    }
-
     /** Default U18 UX feature flag. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
@@ -4913,14 +4905,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether to enable install attribution on S feature. */
     default boolean getMeasurementEnableInstallAttributionOnS() {
         return MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S;
-    }
-
-    /** Flag to enable context id for triggers */
-    boolean MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID = false;
-
-    /** Returns true if trigger context id is enabled. */
-    default boolean getMeasurementEnableTriggerContextId() {
-        return MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID;
     }
 
     /** The maximum allowable length of a trigger context id. */
