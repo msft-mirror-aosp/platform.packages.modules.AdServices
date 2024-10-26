@@ -59,7 +59,6 @@ import java.util.concurrent.Future;
  * Receiver to receive a com.android.adservices.PACKAGE_CHANGED broadcast from the AdServices system
  * service when package install/uninstalls occur.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class PackageChangedReceiver extends BroadcastReceiver {
 

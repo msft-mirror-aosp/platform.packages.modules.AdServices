@@ -24,6 +24,7 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -544,7 +545,8 @@ public class AggregateReport {
                 @Nullable Long fakeSourceTime,
                 long delay,
                 String apiVersion,
-                String api)
+                String api,
+                Flags flags)
                 throws JSONException {
             mAttributionReport.mId = UUID.randomUUID().toString();
             long reportTime = trigger.getTriggerTime();
@@ -581,7 +583,9 @@ public class AggregateReport {
                                         .getMeasurementDefaultAggregationCoordinatorOrigin());
             }
 
-            if ((trigger.getDestinationType() == EventSurfaceType.APP
+            if (flags.getMeasurementEnableBothSideDebugKeysInReports()) {
+                mAttributionReport.mTriggerDebugKey = null;
+            } else if ((trigger.getDestinationType() == EventSurfaceType.APP
                             && trigger.hasAdIdPermission())
                     || (trigger.getDestinationType() == EventSurfaceType.WEB
                             && trigger.hasArDebugPermission())) {

@@ -35,4 +35,6 @@ message DevSessionStorage {
     TRANSITIONING_DEV_TO_PROD = 4;
   }
   optional State state = 2;
+  // If storage was correctly initialized.
+  bool is_storage_initialized = 3;
 }
