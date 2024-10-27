@@ -1290,8 +1290,24 @@ public class ConsentManager {
                 /* errorLogger= */ null);
     }
 
-    private void setPrivacySandboxFeatureTypeInApp(PrivacySandboxFeatureType currentFeatureType)
+    @VisibleForTesting
+    void setPrivacySandboxFeatureTypeInApp(PrivacySandboxFeatureType currentFeatureType)
             throws IOException {
+        if (FlagsFactory.getFlags().getEnableAtomicFileDatastoreBatchUpdateApi()) {
+            mDatastore.update(
+                    updateOperation -> {
+                        for (PrivacySandboxFeatureType featureType :
+                                PrivacySandboxFeatureType.values()) {
+                            if (featureType.name().equals(currentFeatureType.name())) {
+                                updateOperation.putBoolean(featureType.name(), true);
+                            } else {
+                                updateOperation.putBoolean(featureType.name(), false);
+                            }
+                        }
+                    });
+            return;
+        }
+
         for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
             if (featureType.name().equals(currentFeatureType.name())) {
                 mDatastore.putBoolean(featureType.name(), true);
@@ -1445,6 +1461,23 @@ public class ConsentManager {
             // TODO(b/259607624): implement a method in the datastore which would support
             // this exact scenario - if the value is null, return default value provided
             // in the parameter (similar to SP apply etc.)
+            if (FlagsFactory.getFlags().getEnableAtomicFileDatastoreBatchUpdateApi()) {
+                atomicFileDatastore.update(
+                        updateOperation -> {
+                            updateOperation.putBooleanIfNew(
+                                    ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, false);
+                            updateOperation.putBooleanIfNew(
+                                    ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
+                            updateOperation.putBooleanIfNew(
+                                    ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, false);
+                            updateOperation.putBooleanIfNew(
+                                    ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE, false);
+                            updateOperation.putBooleanIfNew(
+                                    ConsentConstants.PAS_NOTIFICATION_OPENED, false);
+                        });
+                return atomicFileDatastore;
+            }
+
             if (atomicFileDatastore.getBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE)
                     == null) {
                 atomicFileDatastore.putBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, false);

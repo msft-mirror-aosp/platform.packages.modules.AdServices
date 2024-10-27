@@ -24,9 +24,10 @@ public interface SdkSandbox {
     /**
      * Sets the state, or no-op if not supported..
      *
+     * @return self
      * @throws IllegalArgumentException if state is not {@code ENABLED} or {@code DISABLED}.
      */
-    void setState(State state);
+    SdkSandbox setState(State state);
 
     /* State of the {@code SdkSandbox}. */
     enum State {

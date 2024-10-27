@@ -15,31 +15,39 @@
  */
 package com.android.adservices.shared.meta_testing;
 
+import static com.android.adservices.shared.meta_testing.CommonDescriptions.newTestMethodForClassRule;
 import static com.android.adservices.shared.testing.SdkSandbox.State.DISABLED;
 import static com.android.adservices.shared.testing.SdkSandbox.State.ENABLED;
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.NONE;
-import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.PERSISTENT;
-import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.UNSUPPORTED;
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.UNTIL_REBOOT;
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassDisablesDeviceConfigUntilReboot;
+import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassEnablesSdkSandbox;
+import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassEnablesSdkSandboxAndDisablesDeviceConfigUntilReboot;
+import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassHasNoNothingAtAll;
+import com.android.adservices.shared.meta_testing.CommonDescriptions.ASubClassDisablesDeviceConfigUntilRebootAndAlsoEnablesSdkSandbox;
+import com.android.adservices.shared.meta_testing.CommonDescriptions.ASubClassEnablesSdkSandboxAndAlsoDisablesDeviceConfigUntilReboot;
+import com.android.adservices.shared.testing.Action;
 import com.android.adservices.shared.testing.SdkSandbox;
+import com.android.adservices.shared.testing.SetSdkSandboxStateAction;
 import com.android.adservices.shared.testing.device.DeviceConfig;
 import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
 import com.android.adservices.shared.testing.flags.AbstractFlagsPreparerClassRule;
+import com.android.adservices.shared.testing.flags.SetSyncModeAction;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.Description;
 
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Base class for {@link AbstractFlagsPreparerClassRule} implementations.
  *
- * <p>It contains the base tests for all of them, although subclasses my add they extra tests.
+ * <p>It contains the base tests for all of them, although subclasses might add they extra tests.
  *
  * @param <R> type of the rule
  */
@@ -56,281 +64,198 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
     protected final Description mSuite =
             Description.createSuiteDescription(AClassHasNoNothingAtAll.class);
 
-    private FakeDeviceConfig mFakeDeviceConfig = new FakeDeviceConfig();
-    private FakeSdkSandbox mFakeSdkSandbox = new FakeSdkSandbox();
+    private final FakeDeviceConfig mFakeDeviceConfig =
+            new FakeDeviceConfig().setSyncDisabledMode(NONE);
+    private final FakeSdkSandbox mFakeSdkSandbox = new FakeSdkSandbox().setState(DISABLED);
 
     @Before
     public final void setTestFixtures() {
         mSuite.addChild(mTest);
-        mFakeDeviceConfig.setSyncDisabledMode(NONE);
-        mFakeSdkSandbox.setState(DISABLED);
     }
 
     /** Gets a new concrete implementation of the rule. */
-    protected abstract R newRule(
-            SdkSandbox sdkSandbox, DeviceConfig deviceConfig, SyncDisabledModeForTest syncMode);
-
-    private R newRule(DeviceConfig deviceConfig, SyncDisabledModeForTest syncMode) {
-        return newRule(mFakeSdkSandbox, deviceConfig, syncMode);
-    }
+    protected abstract R newRule(SdkSandbox sdkSandbox, DeviceConfig deviceConfig);
 
     @Test
     public final void testConstructor_nullArgs() {
         assertThrows(
                 NullPointerException.class,
-                () -> newRule(mFakeSdkSandbox, /* deviceConfig= */ null, PERSISTENT));
+                () -> newRule(mFakeSdkSandbox, /* deviceConfig= */ null));
         assertThrows(
                 NullPointerException.class,
-                () -> newRule(/* sdkSandbox= */ null, mFakeDeviceConfig, PERSISTENT));
-        assertThrows(
-                NullPointerException.class,
-                () -> newRule(mFakeSdkSandbox, mFakeDeviceConfig, /* syncMode= */ null));
+                () -> newRule(/* sdkSandbox= */ null, mFakeDeviceConfig));
     }
 
     @Test
-    public final void testConstructor_unsupported() throws Throwable {
-        assertThrows(IllegalArgumentException.class, () -> newRule(mFakeDeviceConfig, UNSUPPORTED));
-    }
-
-    @Test
-    public final void testThrowsIfNotUsedAsClassRule() {
-        var rule = newRule(mFakeDeviceConfig, PERSISTENT);
+    public final void testThrowsIfNotUsedAsClassRule() throws Exception {
+        var rule = newRule(mFakeSdkSandbox, mFakeDeviceConfig);
 
         assertThrows(IllegalStateException.class, () -> runRule(rule, mTest));
     }
 
     @Test
-    public final void testWhenGetModeReturnsUnsupported() throws Throwable {
-        mFakeDeviceConfig.setSyncDisabledMode(UNSUPPORTED);
-        mFakeDeviceConfig.onSetSyncDisabledModeCallback(failWith("Supported I'm Not!"));
+    public final void testCreateActionsForTest_annotationOnMethodIsIgnored() {
+        var rule = newRule(mFakeSdkSandbox, mFakeDeviceConfig);
 
+        var actions =
+                rule.createActionsForTest(
+                        newTestMethodForClassRule(
+                                AClassHasNoNothingAtAll.class,
+                                new SetSdkSandboxStateEnabledAnnotation(false)));
+
+        expect.withMessage("actions").that(actions).isEmpty();
+    }
+
+    @Test
+    public final void testCreateActionsForTest_classOnly_deviceConfigMode() {
+        var rule = newRule(mFakeSdkSandbox, mFakeDeviceConfig);
+
+        var actions =
+                rule.createActionsForTest(
+                        newTestMethodForClassRule(AClassDisablesDeviceConfigUntilReboot.class));
+
+        expect.withMessage("actions").that(actions).hasSize(1);
+
+        assertSetSyncModeAction(actions, 0, UNTIL_REBOOT);
+    }
+
+    @Test
+    public final void testCreateActionsForTest_classOnly_sdkSandboxState() {
+        var rule = newRule(mFakeSdkSandbox, mFakeDeviceConfig);
+
+        var actions =
+                rule.createActionsForTest(newTestMethodForClassRule(AClassEnablesSdkSandbox.class));
+
+        expect.withMessage("actions").that(actions).hasSize(1);
+
+        assertSdkSandboxStateAction(actions, 0, ENABLED);
+    }
+
+    @Test
+    public final void testCreateActionsForTest_classOnly_deviceConfigModeAndsdkSandboxState() {
+        var rule = newRule(mFakeSdkSandbox, mFakeDeviceConfig);
+
+        var actions =
+                rule.createActionsForTest(
+                        newTestMethodForClassRule(
+                                AClassEnablesSdkSandboxAndDisablesDeviceConfigUntilReboot.class));
+
+        expect.withMessage("actions").that(actions).hasSize(2);
+
+        assertSdkSandboxStateAction(actions, 0, ENABLED);
+        assertSetSyncModeAction(actions, 1, UNTIL_REBOOT);
+    }
+
+    @Test
+    public final void testCreateActionsForTest_classOnly_sdkSandboxStateAnddeviceConfigMode() {
+        var rule = newRule(mFakeSdkSandbox, mFakeDeviceConfig);
+
+        var actions =
+                rule.createActionsForTest(
+                        newTestMethodForClassRule(
+                                ASubClassEnablesSdkSandboxAndAlsoDisablesDeviceConfigUntilReboot
+                                        .class));
+
+        expect.withMessage("actions").that(actions).hasSize(2);
+
+        assertSdkSandboxStateAction(actions, 0, ENABLED);
+        assertSetSyncModeAction(actions, 1, UNTIL_REBOOT);
+    }
+
+    @Test
+    public final void testCreateActionsForTest_classAndSuperClass_sdkSandboxFirst() {
+        var rule = newRule(mFakeSdkSandbox, mFakeDeviceConfig);
+
+        var actions =
+                rule.createActionsForTest(
+                        newTestMethodForClassRule(
+                                ASubClassEnablesSdkSandboxAndAlsoDisablesDeviceConfigUntilReboot
+                                        .class));
+
+        expect.withMessage("actions").that(actions).hasSize(2);
+
+        assertSdkSandboxStateAction(actions, 0, ENABLED);
+        assertSetSyncModeAction(actions, 1, UNTIL_REBOOT);
+    }
+
+    @Test
+    public final void testCreateActionsForTest_classAndSuperClass_deviceConfigFirst() {
+        var rule = newRule(mFakeSdkSandbox, mFakeDeviceConfig);
+
+        var actions =
+                rule.createActionsForTest(
+                        newTestMethodForClassRule(
+                                ASubClassDisablesDeviceConfigUntilRebootAndAlsoEnablesSdkSandbox
+                                        .class));
+
+        expect.withMessage("actions").that(actions).hasSize(2);
+
+        assertSdkSandboxStateAction(actions, 0, ENABLED);
+        assertSetSyncModeAction(actions, 1, UNTIL_REBOOT);
+    }
+
+    // Methods above test all - or most - annotation combinations on createActionsForTest(), but
+    // they don't assert the actions were executed (as it relies on the fact that the rule extends
+    // ActionBasedRule); this test is a simple "Integration" test to make sure they are
+    @Test
+    public final void testFullWorkflow() throws Throwable {
         AtomicReference<SyncDisabledModeForTest> modeSetDuringTest = new AtomicReference<>();
-        mTestBody.onEvaluate(() -> modeSetDuringTest.set(mFakeDeviceConfig.getSyncDisabledMode()));
-        var rule = newRule(mFakeDeviceConfig, PERSISTENT);
-        runRule(rule);
-
-        expect.withMessage("mode during test").that(modeSetDuringTest.get()).isEqualTo(UNSUPPORTED);
-        expect.withMessage("mode after test")
-                .that(mFakeDeviceConfig.getSyncDisabledMode())
-                .isEqualTo(UNSUPPORTED);
-    }
-
-    @Test
-    public final void testWhenTestPass() throws Throwable {
-        AtomicReference<SyncDisabledModeForTest> modeSetDuringTest = new AtomicReference<>();
-        mTestBody.onEvaluate(() -> modeSetDuringTest.set(mFakeDeviceConfig.getSyncDisabledMode()));
-        var rule = newRule(mFakeDeviceConfig, PERSISTENT);
-        runRule(rule);
-
-        expect.withMessage("mode during test").that(modeSetDuringTest.get()).isEqualTo(PERSISTENT);
-        expect.withMessage("mode after test")
-                .that(mFakeDeviceConfig.getSyncDisabledMode())
-                .isEqualTo(NONE);
-    }
-
-    @Test
-    public final void testWhenTestFail() throws Throwable {
-        RuntimeException testFailure = new RuntimeException("TEST, Y U NO PASS?");
-        AtomicReference<SyncDisabledModeForTest> modeSetDuringTest = new AtomicReference<>();
-        mTestBody.onEvaluate(
-                () -> {
-                    modeSetDuringTest.set(mFakeDeviceConfig.getSyncDisabledMode());
-                    throw testFailure;
-                });
-        var rule = newRule(mFakeDeviceConfig, PERSISTENT);
-        Throwable thrown = assertThrows(Throwable.class, () -> runRule(rule));
-
-        expect.withMessage("thrown exception ").that(thrown).isSameInstanceAs(testFailure);
-        expect.withMessage("mode during test").that(modeSetDuringTest.get()).isEqualTo(PERSISTENT);
-        expect.withMessage("mode after test")
-                .that(mFakeDeviceConfig.getSyncDisabledMode())
-                .isEqualTo(NONE);
-    }
-
-    @Test
-    public final void testWhenGetSyncModeFails() throws Throwable {
-        mFakeDeviceConfig.onGetSyncDisabledModeCallback(
-                failWith("(You Can't Get No) Satisfaction"));
-        AtomicReference<SyncDisabledModeForTest> modeSetDuringTest = new AtomicReference<>();
-        mTestBody.onEvaluate(
-                () -> {
-                    // reset it, otherwise next call would fail
-                    mFakeDeviceConfig.onGetSyncDisabledModeCallback(null);
-                    modeSetDuringTest.set(mFakeDeviceConfig.getSyncDisabledMode());
-                    mFakeDeviceConfig.onSetSyncDisabledModeCallback(
-                            failWith("Shouldn't have been called at the end"));
-                });
-
-        var rule = newRule(mFakeDeviceConfig, PERSISTENT);
-        runRule(rule);
-
-        expect.withMessage("mode during test").that(modeSetDuringTest.get()).isEqualTo(PERSISTENT);
-        // Not restored at the end because it didn't get the initial mode
-        expect.withMessage("mode after test")
-                .that(mFakeDeviceConfig.getSyncDisabledMode())
-                .isEqualTo(PERSISTENT);
-    }
-
-    @Test
-    public final void testWhenSetSyncModeFails() throws Throwable {
-        mFakeDeviceConfig.onSetSyncDisabledModeCallback(failWith("Ready, Set, Throw!"));
-        AtomicReference<SyncDisabledModeForTest> modeSetDuringTest = new AtomicReference<>();
-        mTestBody.onEvaluate(() -> modeSetDuringTest.set(mFakeDeviceConfig.getSyncDisabledMode()));
-
-        var rule = newRule(mFakeDeviceConfig, PERSISTENT);
-        runRule(rule);
-
-        // Was not changed at all
-        expect.withMessage("mode during test").that(modeSetDuringTest.get()).isEqualTo(NONE);
-        expect.withMessage("mode after test")
-                .that(mFakeDeviceConfig.getSyncDisabledMode())
-                .isEqualTo(NONE);
-    }
-
-    @Test
-    public final void testWhenTestPassAndRestoreFails() throws Throwable {
-        AtomicReference<SyncDisabledModeForTest> modeSetDuringTest = new AtomicReference<>();
-        mTestBody.onEvaluate(
-                () -> {
-                    modeSetDuringTest.set(mFakeDeviceConfig.getSyncDisabledMode());
-                    mFakeDeviceConfig.onSetSyncDisabledModeCallback(failWith("Failed at end"));
-                });
-        var rule = newRule(mFakeDeviceConfig, PERSISTENT);
-        runRule(rule);
-
-        expect.withMessage("mode during test").that(modeSetDuringTest.get()).isEqualTo(PERSISTENT);
-        expect.withMessage("mode after test")
-                .that(mFakeDeviceConfig.getSyncDisabledMode())
-                .isEqualTo(PERSISTENT);
-    }
-
-    @Test
-    public final void testSyncModeNotSetWhenItsTheSame() throws Throwable {
-        AtomicBoolean setCalled = new AtomicBoolean();
-        mFakeDeviceConfig.onSetSyncDisabledModeCallback(() -> setCalled.set(true));
-
-        var rule = newRule(mFakeDeviceConfig, NONE);
-        runRule(rule);
-
-        if (setCalled.get()) {
-            expect.withMessage("Rule shouldn't have called deviceConfig.setSyncDisabledMode()")
-                    .fail();
-        }
-    }
-
-    @Test
-    public final void testSetSyncDisabledModeForTest_null() throws Throwable {
-        var rule = newRule(mFakeDeviceConfig, PERSISTENT);
-
-        assertThrows(NullPointerException.class, () -> rule.setSyncDisabledModeForTest(null));
-    }
-
-    @Test
-    public final void testSetSyncDisabledModeForTest_returnsSelf() throws Throwable {
-        var rule = newRule(mFakeDeviceConfig, PERSISTENT);
-
-        expect.withMessage("return of setSyncDisabledModeForTest()")
-                .that(rule.setSyncDisabledModeForTest(UNTIL_REBOOT))
-                .isSameInstanceAs(rule);
-    }
-
-    @Test
-    public final void testSetSyncDisabledModeForTest_beforeTest() throws Throwable {
-        AtomicReference<SyncDisabledModeForTest> modeSetDuringTest = new AtomicReference<>();
-        mTestBody.onEvaluate(() -> modeSetDuringTest.set(mFakeDeviceConfig.getSyncDisabledMode()));
-        var rule = newRule(mFakeDeviceConfig, PERSISTENT);
-
-        rule.setSyncDisabledModeForTest(UNTIL_REBOOT);
-        runRule(rule);
-
-        expect.withMessage("mode during test")
-                .that(modeSetDuringTest.get())
-                .isEqualTo(UNTIL_REBOOT);
-        expect.withMessage("mode after test")
-                .that(mFakeDeviceConfig.getSyncDisabledMode())
-                .isEqualTo(NONE);
-    }
-
-    @Test
-    public final void testSetyncDisabledModeForTest_duringTest() throws Throwable {
-        var rule = newRule(mFakeDeviceConfig, PERSISTENT);
-        AtomicReference<SyncDisabledModeForTest> modeSetDuringTest = new AtomicReference<>();
-        mTestBody.onEvaluate(
-                () -> {
-                    rule.setSyncDisabledModeForTest(UNTIL_REBOOT);
-                    modeSetDuringTest.set(mFakeDeviceConfig.getSyncDisabledMode());
-                });
-
-        runRule(rule);
-
-        expect.withMessage("mode during test")
-                .that(modeSetDuringTest.get())
-                .isEqualTo(UNTIL_REBOOT);
-        expect.withMessage("mode after test")
-                .that(mFakeDeviceConfig.getSyncDisabledMode())
-                .isEqualTo(NONE);
-    }
-
-    @Test
-    public final void testSetSdkSandboxState_returnsSelf() throws Throwable {
-        var rule = newRule(mFakeDeviceConfig, PERSISTENT);
-
-        expect.withMessage("return of setSdkSandboxState()")
-                .that(rule.setSdkSandboxState(/* enabled= */ true))
-                .isSameInstanceAs(rule);
-    }
-
-    @Test
-    public final void testSetSdkSandboxState_beforeTest() throws Throwable {
-        var rule = newRule(mFakeSdkSandbox, mFakeDeviceConfig, PERSISTENT);
-        AtomicReference<SdkSandbox.State> stateSetDuringTest = new AtomicReference<>();
-        mTestBody.onEvaluate(() -> stateSetDuringTest.set(mFakeSdkSandbox.getState()));
-
-        rule.setSdkSandboxState(true);
-        runRule(rule);
-
-        expect.withMessage("sdk_sandbox sdk state during test")
-                .that(stateSetDuringTest.get())
-                .isEqualTo(ENABLED);
-        expect.withMessage("sdk_sandbox after test")
-                .that(mFakeSdkSandbox.getState())
-                .isEqualTo(DISABLED);
-    }
-
-    @Test
-    public final void testSetSdkSandboxState_duringTest() throws Throwable {
-        var rule = newRule(mFakeSdkSandbox, mFakeDeviceConfig, PERSISTENT);
         AtomicReference<SdkSandbox.State> stateSetDuringTest = new AtomicReference<>();
         mTestBody.onEvaluate(
                 () -> {
-                    rule.setSdkSandboxState(true);
+                    modeSetDuringTest.set(mFakeDeviceConfig.getSyncDisabledMode());
                     stateSetDuringTest.set(mFakeSdkSandbox.getState());
                 });
+        var rule = newRule(mFakeSdkSandbox, mFakeDeviceConfig);
 
-        runRule(rule);
+        runRule(
+                rule,
+                newTestMethodForClassRule(
+                        ASubClassDisablesDeviceConfigUntilRebootAndAlsoEnablesSdkSandbox.class));
 
-        expect.withMessage("sdk_sandbox sdk state during test")
+        expect.withMessage("DeviceConfig mode during test")
+                .that(modeSetDuringTest.get())
+                .isEqualTo(UNTIL_REBOOT);
+        expect.withMessage("SDK state during test")
                 .that(stateSetDuringTest.get())
                 .isEqualTo(ENABLED);
-        expect.withMessage("sdk_sandbox after test")
+        expect.withMessage("DeviceConfig mode after test")
+                .that(mFakeDeviceConfig.getSyncDisabledMode())
+                .isEqualTo(NONE);
+        expect.withMessage("SDK state after test")
                 .that(mFakeSdkSandbox.getState())
-                .isEqualTo(ENABLED);
-    }
-
-    private void runRule(R rule) throws Throwable {
-        runRule(rule, mSuite);
+                .isEqualTo(DISABLED);
     }
 
     private void runRule(R rule, Description description) throws Throwable {
         rule.apply(mTestBody, description).evaluate();
     }
 
-    private Runnable failWith(String message) {
-        return () -> {
-            throw new IllegalStateException(message);
-        };
+    private void assertSetSyncModeAction(
+            List<Action> actions, int index, SyncDisabledModeForTest expectedMode) {
+        var action = actions.get(index);
+        if (!(action instanceof SetSyncModeAction)) {
+            expect.withMessage("action#%s (from %s) is not SetSyncModeAction", index, action)
+                    .fail();
+            return;
+        }
+        SetSyncModeAction castAction = (SetSyncModeAction) action;
+        expect.withMessage("mode on action#%s ", index)
+                .that(castAction.getMode())
+                .isEqualTo(UNTIL_REBOOT);
     }
 
-    // Use to create the Description fixtures
-    private static class AClassHasNoNothingAtAll {}
+    private void assertSdkSandboxStateAction(
+            List<Action> actions, int index, SdkSandbox.State expectedState) {
+        var action = actions.get(index);
+        if (!(action instanceof SetSdkSandboxStateAction)) {
+            expect.withMessage("action#%s (from %s) is not SetSdkSandboxStateAction", index, action)
+                    .fail();
+            return;
+        }
+        SetSdkSandboxStateAction castAction = (SetSdkSandboxStateAction) action;
+        expect.withMessage("state on action#%s ", index)
+                .that(castAction.getState())
+                .isEqualTo(expectedState);
+    }
 }

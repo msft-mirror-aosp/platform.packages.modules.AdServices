@@ -55,9 +55,10 @@ public abstract class ScheduledCustomAudienceUpdatePerformedStats {
      */
     public static Builder builder() {
         return new AutoValue_ScheduledCustomAudienceUpdatePerformedStats.Builder()
-                .setWasInitialHop(false)
+                .setWasInitialHop(true)
                 .setNumberOfScheduleUpdatesInResponse(0)
-                .setNumberOfUpdatesScheduled(0);
+                .setNumberOfUpdatesScheduled(0)
+                .setNumberOfLeaveCustomAudienceInRequest(0);
     }
 
     /** Builder for {@link ScheduledCustomAudienceUpdatePerformedStats} objects. */

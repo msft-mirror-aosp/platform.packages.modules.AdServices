@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_UNKNOWN;
+
 import com.google.auto.value.AutoValue;
 
 @AutoValue
@@ -28,7 +30,7 @@ public abstract class ScheduledCustomAudienceUpdateScheduleAttemptedStats {
     public abstract int getNumberOfLeaveCustomAudiences();
 
     /** Returns the minimum delay in seconds. */
-    public abstract long getMinimumDelayInMinutes();
+    public abstract int getMinimumDelayInMinutes();
 
     /** Returns whether this was the initial hop. */
     public abstract boolean isInitialHop();
@@ -44,7 +46,8 @@ public abstract class ScheduledCustomAudienceUpdateScheduleAttemptedStats {
     public static Builder builder() {
         return new AutoValue_ScheduledCustomAudienceUpdateScheduleAttemptedStats.Builder()
                 .setNumberOfLeaveCustomAudiences(0)
-                .setInitialHop(false);
+                .setInitialHop(true)
+                .setExistingUpdateStatus(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_UNKNOWN);
     }
 
     @AutoValue.Builder
@@ -57,7 +60,7 @@ public abstract class ScheduledCustomAudienceUpdateScheduleAttemptedStats {
         public abstract Builder setNumberOfLeaveCustomAudiences(int numberOfLeaveCustomAudiences);
 
         /** Sets the number of partial Custom Audiences. */
-        public abstract Builder setMinimumDelayInMinutes(long minimumDelayInMinutes);
+        public abstract Builder setMinimumDelayInMinutes(int minimumDelayInMinutes);
 
         /** Sets the number of partial Custom Audiences. */
         public abstract Builder setInitialHop(boolean initialHop);

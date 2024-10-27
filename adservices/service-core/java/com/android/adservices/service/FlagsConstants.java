@@ -96,6 +96,9 @@ public final class FlagsConstants {
             "topics_job_scheduler_reschedule_enabled";
     public static final String KEY_TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING =
             "topics_epoch_job_battery_not_low_instead_of_charging";
+    public static final String
+            KEY_TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED =
+            "Topics__clean_db_when_epoch_job_settings_changed";
     public static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
     public static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";
@@ -177,21 +180,11 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS =
             "measurement_aggregate_fallback_reporting_job_period_ms";
 
-    public static final String KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED =
-            "measurement_null_aggregate_report_enabled";
-
     public static final String KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME =
             "measurement_null_agg_report_rate_incl_source_registration_time";
 
     public static final String KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME =
             "measurement_null_agg_report_rate_excl_source_registration_time";
-
-    public static final String
-            KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED =
-                    "measurement_source_registration_time_optional_for_agg_reports_enabled";
-
-    public static final String KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID =
-            "measurement_enable_trigger_context_id";
 
     public static final String KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID =
             "measurement_max_length_of_trigger_context_id";
@@ -1368,6 +1361,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS =
             "Measurement__min_report_lifespan_for_uninstall_seconds";
 
+    public static final String KEY_MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S =
+            "Measurement__enable_install_attribution_on_s";
+
     public static final String KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK =
             "measurement_enable_navigation_reporting_origin_check";
 
@@ -1419,6 +1415,9 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE =
             "Measurement__max_adr_count_per_source";
+
+    public static final String KEY_MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS =
+            "Measurement__enable_both_side_debug_keys_in_reports";
 
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
@@ -1665,4 +1664,11 @@ public final class FlagsConstants {
     /** Key for MDD Package Deny registry manifest file url */
     public static final String KEY_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL =
             "DownloadConfig__default_mdd_package_deny_manifest_file_url";
+
+    /** Key to enable AtomicFileDataStore update API for adservices apk. */
+    public static final String KEY_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API =
+            "AtomicFileDatastore__enable_batch_update_api_in_adservices_process";
+
+    /** Key to enable Ad Id migration. */
+    public static final String KEY_AD_ID_MIGRATION_ENABLED = "ad_id_migration_enabled";
 }

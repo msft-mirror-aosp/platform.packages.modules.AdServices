@@ -19,7 +19,6 @@ import com.android.adservices.shared.testing.ConsoleLogger;
 import com.android.adservices.shared.testing.SdkSandbox;
 import com.android.adservices.shared.testing.SdkSandboxShellCmdImpl;
 import com.android.adservices.shared.testing.device.DeviceConfig;
-import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
 import com.android.adservices.shared.testing.device.DeviceConfigShellCmdImpl;
 import com.android.adservices.shared.testing.device.DeviceGateway;
 import com.android.adservices.shared.testing.device.HostSideDeviceGateway;
@@ -38,24 +37,17 @@ public abstract class HostSideFlagsPreparerClassRule<R extends HostSideFlagsPrep
         extends AbstractFlagsPreparerClassRule<R> {
 
     public HostSideFlagsPreparerClassRule() {
-        this(SyncDisabledModeForTest.PERSISTENT);
+        this(new HostSideDeviceGateway());
     }
 
-    public HostSideFlagsPreparerClassRule(SyncDisabledModeForTest mode) {
-        this(new HostSideDeviceGateway(), mode);
-    }
-
-    private HostSideFlagsPreparerClassRule(
-            DeviceGateway deviceGateway, SyncDisabledModeForTest mode) {
+    private HostSideFlagsPreparerClassRule(DeviceGateway deviceGateway) {
         this(
                 new SdkSandboxShellCmdImpl(ConsoleLogger.getInstance(), deviceGateway),
-                new DeviceConfigShellCmdImpl(ConsoleLogger.getInstance(), deviceGateway),
-                mode);
+                new DeviceConfigShellCmdImpl(ConsoleLogger.getInstance(), deviceGateway));
     }
 
     @VisibleForTesting
-    protected HostSideFlagsPreparerClassRule(
-            SdkSandbox sdkSandbox, DeviceConfig deviceConfig, SyncDisabledModeForTest syncMode) {
-        super(ConsoleLogger.getInstance(), sdkSandbox, deviceConfig, syncMode);
+    protected HostSideFlagsPreparerClassRule(SdkSandbox sdkSandbox, DeviceConfig deviceConfig) {
+        super(ConsoleLogger.getInstance(), sdkSandbox, deviceConfig);
     }
 }

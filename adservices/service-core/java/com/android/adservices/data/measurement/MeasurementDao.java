@@ -3488,6 +3488,37 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public boolean existsActiveSourcesWithDestination(Uri attributionDestination, long eventTime)
+            throws DatastoreException {
+        String whereStatement =
+                String.format(
+                        SourceContract.STATUS
+                                + " = "
+                                + Source.Status.ACTIVE
+                                + " AND "
+                                + SourceContract.EXPIRY_TIME
+                                + " > %1$s",
+                        eventTime);
+
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .rawQuery(
+                                selectSourceIdsByDestinations(
+                                        List.of(
+                                                Pair.create(
+                                                        EventSurfaceType.APP,
+                                                        attributionDestination.toString())),
+                                        whereStatement),
+                                null)) {
+            if (cursor.getCount() > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
     public KeyValueData getKeyValueData(@NonNull String key, @NonNull DataType dataType)
             throws DatastoreException {
         String value = null;
@@ -3917,8 +3948,7 @@ class MeasurementDao implements IMeasurementDao {
                             postfixMatch);
         }
 
-        if (FlagsFactory.getFlags().getMeasurementNullAggregateReportEnabled()
-                && tableName.equals(MeasurementTables.AggregateReport.TABLE)) {
+        if (tableName.equals(MeasurementTables.AggregateReport.TABLE)) {
             query +=
                     String.format(
                             Locale.ENGLISH,

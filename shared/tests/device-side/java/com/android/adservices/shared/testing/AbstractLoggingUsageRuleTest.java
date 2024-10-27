@@ -66,7 +66,7 @@ public final class AbstractLoggingUsageRuleTest extends SharedExtendedMockitoTes
     @Test
     public void testEvaluate_withSkipAnnotation_gracefullyExits() throws Throwable {
         when(mDescription.isTest()).thenReturn(true);
-        doReturn(mAnnotation).when(() -> TestHelper.getAnnotation(any(), any()));
+        doReturn(mAnnotation).when(() -> TestHelper.getAnnotation(any(Description.class), any()));
         AbstractLoggingUsageRule rule =
                 new ConcreteLoggingUsageRule(ImmutableList.of(mLogVerifier1));
 

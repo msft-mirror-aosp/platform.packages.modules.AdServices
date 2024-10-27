@@ -32,6 +32,8 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.Objects;
 
+import javax.annotation.Nullable;
+
 /**
  * Provider used to set the application context singleton and other common stuff (like dumping data
  * not associated with a service).
@@ -43,13 +45,17 @@ public final class AdServicesInternalProvider extends ApplicationContextProvider
 
     private final Flags mFlags;
 
+    // NOTE: currently only used on tests (to mock dump()), so it's null in production
+    @Nullable private final Throttler mThrottler;
+
     public AdServicesInternalProvider() {
-        this(FlagsFactory.getFlags());
+        this(FlagsFactory.getFlags(), /* throttler= */ null);
     }
 
     @VisibleForTesting
-    AdServicesInternalProvider(Flags flags) {
+    AdServicesInternalProvider(Flags flags, @Nullable Throttler throttler) {
         mFlags = Objects.requireNonNull(flags, "flags cannot be null");
+        mThrottler = throttler;
     }
 
     @Override
@@ -103,6 +109,9 @@ public final class AdServicesInternalProvider extends ApplicationContextProvider
             DebugFlags debugFlags = DebugFlags.getInstance();
             writer.printf("\nDebugFlags (from %s):\n", debugFlags.getClass().getName());
             debugFlags.dump(writer);
+
+            Throttler throttler = mThrottler == null ? Throttler.getInstance() : mThrottler;
+            throttler.dump(writer);
         }
     }
 }
