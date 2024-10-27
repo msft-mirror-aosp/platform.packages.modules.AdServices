@@ -34,7 +34,7 @@ java_test_host {
         "general-tests",
         "mcts-adservices",
     ],
-    data: [
+    device_common_data: [
         ":CtsSdkSandboxHostTestApp",
         ":CtsSdkSandboxHostTestApp2",
         ":SdkSandboxDataIsolationTestProvider",

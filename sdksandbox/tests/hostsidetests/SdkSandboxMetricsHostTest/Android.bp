@@ -29,7 +29,7 @@ java_test_host {
         "SdkSandboxHostTestUtils",
     ],
     test_suites: ["general-tests"],
-    data: [
+    device_common_data: [
         ":CrashTestSdkProvider",
         ":SdkSandboxMetricsTestApp",
         ":SdkSandboxMetricsSecondaryTestApp",
