@@ -18,6 +18,9 @@ package com.android.adservices.data.customaudience;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -25,6 +28,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -33,6 +37,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.times;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -60,6 +65,7 @@ import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.adservices.service.exception.PersistScheduleCAUpdateException;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -68,6 +74,8 @@ import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 
 import java.time.Clock;
@@ -645,6 +653,11 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                     .setUserBiddingSignals(USER_BIDDING_SIGNALS_1);
 
     private CustomAudienceDao mCustomAudienceDao;
+    @Captor ArgumentCaptor<Integer> mScheduleAttemptedStatsCaptor;
+
+    @Mock
+    ScheduledCustomAudienceUpdateScheduleAttemptedStats.Builder
+            mUpdateScheduleAttemptedStatsBuilderMock;
 
     @Before
     public void setup() {
@@ -3039,7 +3052,8 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 anUpdate,
                 List.of(partialCustomAudience1, partialCustomAudience2),
                 Collections.emptyList(),
-                /* shouldReplacePendingUpdates= */ false);
+                /* shouldReplacePendingUpdates= */ false,
+                mUpdateScheduleAttemptedStatsBuilderMock);
         updates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
@@ -3103,7 +3117,8 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 anUpdate,
                 List.of(partialCustomAudience1, partialCustomAudience2),
                 List.of(CA_TO_LEAVE_NAME_1, CA_TO_LEAVE_NAME_2),
-                /* shouldReplacePendingUpdates= */ false);
+                /* shouldReplacePendingUpdates= */ false,
+                mUpdateScheduleAttemptedStatsBuilderMock);
         updates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
@@ -3168,7 +3183,8 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 anUpdate,
                 List.of(partialCustomAudience1),
                 Collections.emptyList(),
-                /* shouldReplacePendingUpdates= */ false);
+                /* shouldReplacePendingUpdates= */ false,
+                mUpdateScheduleAttemptedStatsBuilderMock);
         updates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
@@ -3196,7 +3212,8 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 similarUpdate,
                 List.of(partialCustomAudience_2),
                 Collections.emptyList(),
-                /* shouldReplacePendingUpdates= */ true);
+                /* shouldReplacePendingUpdates= */ true,
+                mUpdateScheduleAttemptedStatsBuilderMock);
         List<DBScheduledCustomAudienceUpdate> newUpdates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
@@ -3242,7 +3259,9 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 anUpdate,
                 List.of(partialCustomAudience1),
                 List.of(CA_TO_LEAVE_NAME_1),
-                /* shouldReplacePendingUpdates= */ false);
+                /* shouldReplacePendingUpdates= */ false,
+                mUpdateScheduleAttemptedStatsBuilderMock);
+
         updates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
@@ -3281,11 +3300,21 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                                 similarUpdate,
                                 List.of(partialCustomAudience_2),
                                 List.of(CA_TO_LEAVE_NAME_2),
-                                /* shouldReplacePendingUpdates= */ false));
+                                /* shouldReplacePendingUpdates= */ false,
+                                mUpdateScheduleAttemptedStatsBuilderMock));
+
         List<DBScheduledCustomAudienceUpdate> updatesInDB =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
         assertEquals("Only 1 entry should have been inserted", 1, updatesInDB.size());
+        verify(mUpdateScheduleAttemptedStatsBuilderMock, times(2))
+                .setExistingUpdateStatus(mScheduleAttemptedStatsCaptor.capture());
+        assertWithMessage("Existing update status")
+                .that(mScheduleAttemptedStatsCaptor.getAllValues().get(0))
+                .isEqualTo(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE);
+        assertWithMessage("Existing update status")
+                .that(mScheduleAttemptedStatsCaptor.getAllValues().get(1))
+                .isEqualTo(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE);
 
         long newUpdateId = updatesInDB.get(0).getUpdateId();
         assertEquals(previousUpdateId, newUpdateId);
@@ -3304,6 +3333,7 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                                 .map(entry -> entry.getName())
                                 .collect(Collectors.toList()))
                 .containsExactly(CA_TO_LEAVE_NAME_1);
+
     }
 
     @Test
@@ -3334,7 +3364,8 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 oldUpdate,
                 List.of(oldPartialCustomAudience1, oldPartialCustomAudience2),
                 List.of(CA_TO_LEAVE_NAME_1, CA_TO_LEAVE_NAME_2),
-                /* shouldReplacePendingUpdates= */ false);
+                /* shouldReplacePendingUpdates= */ false,
+                mUpdateScheduleAttemptedStatsBuilderMock);
 
         DBScheduledCustomAudienceUpdate anUpdate =
                 DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
@@ -3381,7 +3412,18 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 anUpdate,
                 List.of(newPartialCustomAudience1, newPartialCustomAudience2),
                 List.of(CA_TO_LEAVE_NAME_3, CA_TO_LEAVE_NAME_4),
-                /* shouldReplacePendingUpdates= */ true);
+                /* shouldReplacePendingUpdates= */ true,
+                mUpdateScheduleAttemptedStatsBuilderMock);
+
+        verify(mUpdateScheduleAttemptedStatsBuilderMock, times(2))
+                .setExistingUpdateStatus(mScheduleAttemptedStatsCaptor.capture());
+        assertWithMessage("Existing update status")
+                .that(mScheduleAttemptedStatsCaptor.getAllValues().get(0))
+                .isEqualTo(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE);
+        assertWithMessage("Existing update status")
+                .that(mScheduleAttemptedStatsCaptor.getAllValues().get(1))
+                .isEqualTo(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE);
+
         List<DBScheduledCustomAudienceUpdate> updates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
