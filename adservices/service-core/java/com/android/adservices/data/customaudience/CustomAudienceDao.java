@@ -16,6 +16,10 @@
 
 package com.android.adservices.data.customaudience;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE;
+
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.PartialCustomAudience;
 import android.content.pm.PackageManager;
@@ -39,6 +43,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.JsVersionHelper;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.adservices.service.exception.PersistScheduleCAUpdateException;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableMap;
@@ -816,14 +821,18 @@ public abstract class CustomAudienceDao {
             @NonNull DBScheduledCustomAudienceUpdate update,
             @NonNull List<PartialCustomAudience> partialCustomAudienceList,
             @NonNull List<String> customAudienceToLeaveList,
-            boolean shouldReplacePendingUpdates) {
-        if (shouldReplacePendingUpdates) {
-            deleteScheduleCAUpdatesByOwnerAndBuyer(update.getOwner(), update.getBuyer());
-        } else {
-            int pendingUpdates =
-                    getNumberOfScheduleCAUpdatesByOwnerAndBuyer(
-                            update.getOwner(), update.getBuyer());
-            if (pendingUpdates != 0) {
+            boolean shouldReplacePendingUpdates,
+            ScheduledCustomAudienceUpdateScheduleAttemptedStats.Builder statsBuilder) {
+        int pendingUpdates =
+                getNumberOfScheduleCAUpdatesByOwnerAndBuyer(update.getOwner(), update.getBuyer());
+        if (pendingUpdates != 0) {
+            if (shouldReplacePendingUpdates) {
+                statsBuilder.setExistingUpdateStatus(
+                        SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE);
+                deleteScheduleCAUpdatesByOwnerAndBuyer(update.getOwner(), update.getBuyer());
+            } else {
+                statsBuilder.setExistingUpdateStatus(
+                        SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE);
                 throw new PersistScheduleCAUpdateException(
                         String.format(
                                 Locale.ENGLISH,
@@ -831,6 +840,9 @@ public abstract class CustomAudienceDao {
                                         + " update(s)",
                                 pendingUpdates));
             }
+        } else {
+            statsBuilder.setExistingUpdateStatus(
+                    SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE);
         }
 
         long updateId = insertScheduledCustomAudienceUpdate(update);

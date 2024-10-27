@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_UNKNOWN;
+
 import com.google.auto.value.AutoValue;
 
 @AutoValue
@@ -44,7 +46,8 @@ public abstract class ScheduledCustomAudienceUpdateScheduleAttemptedStats {
     public static Builder builder() {
         return new AutoValue_ScheduledCustomAudienceUpdateScheduleAttemptedStats.Builder()
                 .setNumberOfLeaveCustomAudiences(0)
-                .setInitialHop(false);
+                .setInitialHop(true)
+                .setExistingUpdateStatus(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_UNKNOWN);
     }
 
     @AutoValue.Builder
