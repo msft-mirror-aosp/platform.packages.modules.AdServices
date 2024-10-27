@@ -70,7 +70,7 @@ public class AdditionalScheduleRequestsDisabledStrategyTest
                 .get();
 
         verify(mCustomAudienceDao, times(0))
-                .insertScheduledCustomAudienceUpdate(any(), any(), any(), anyBoolean());
+                .insertScheduledCustomAudienceUpdate(any(), any(), any(), anyBoolean(), any());
     }
 
     @Test

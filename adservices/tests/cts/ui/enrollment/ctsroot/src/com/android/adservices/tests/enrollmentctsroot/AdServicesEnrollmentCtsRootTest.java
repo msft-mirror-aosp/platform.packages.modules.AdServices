@@ -23,6 +23,7 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.Module;
 import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdServicesModuleStatesParams;
+import android.adservices.common.UpdateAdServicesUserChoicesParams;
 
 import androidx.concurrent.futures.CallbackToFutureAdapter;
 
@@ -36,7 +37,6 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.List;
 import java.util.concurrent.Executors;
 
 public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
@@ -89,18 +89,16 @@ public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
 
     @Test
     public void testRequestAdServicesModuleUserChoices() throws Exception {
-
-        List<AdServicesModuleUserChoice> adServicesModuleUserChoices =
-                List.of(
-                        new AdServicesModuleUserChoice(
-                                Module.MEASUREMENT,
-                                AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN));
-
+        UpdateAdServicesUserChoicesParams updateParams =
+                new UpdateAdServicesUserChoicesParams.Builder()
+                        .setUserChoice(
+                                Module.MEASUREMENT, AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN)
+                        .build();
         ListenableFuture<Integer> responseFuture =
                 CallbackToFutureAdapter.getFuture(
                         completer -> {
                             mCommonManager.requestAdServicesModuleUserChoices(
-                                    adServicesModuleUserChoices,
+                                    updateParams,
                                     Executors.newCachedThreadPool(),
                                     new AdServicesOutcomeReceiver<>() {
                                         @Override

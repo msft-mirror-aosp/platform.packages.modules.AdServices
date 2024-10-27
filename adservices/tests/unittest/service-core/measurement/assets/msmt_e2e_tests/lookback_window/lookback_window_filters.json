@@ -128,7 +128,8 @@
                     ],
                     "_lookback_window": 10
                   }
-                ]
+                ],
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -197,7 +198,8 @@
                     ],
                     "_lookback_window": 10
                   }
-                ]
+                ],
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
