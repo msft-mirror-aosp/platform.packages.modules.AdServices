@@ -22,12 +22,17 @@ import static com.android.adservices.service.customaudience.AdditionalScheduleRe
 
 import static com.google.common.util.concurrent.Futures.immediateVoidFuture;
 
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceToLeave;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdateRequest;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
 
 import com.google.common.util.concurrent.ExecutionSequencer;
 import com.google.common.util.concurrent.FluentFuture;
@@ -43,6 +48,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdditionalScheduleRequestsEnabledStrategy
         implements ScheduleCustomAudienceUpdateStrategy {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -98,11 +104,13 @@ public class AdditionalScheduleRequestsEnabledStrategy
                                                     .extractCustomAudiencesToLeaveFromRequest(
                                                             scheduleRequest),
                                             scheduleRequest.getBoolean(
-                                                    SHOULD_REPLACE_PENDING_UPDATES_KEY));
+                                                    SHOULD_REPLACE_PENDING_UPDATES_KEY),
+                                            ScheduledCustomAudienceUpdateScheduleAttemptedStats
+                                                    .builder());
                                     return null;
                                 },
                                 mBackgroundExecutor));
-            } catch (JSONException | IllegalArgumentException e) {
+            } catch (Exception e) {
                 sLogger.e(e, "Invalid schedule request, skipping scheduling for this request");
             }
         }

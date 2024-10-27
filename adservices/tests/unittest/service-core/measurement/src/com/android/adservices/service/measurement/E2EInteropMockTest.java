@@ -239,13 +239,8 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
     private static final Map<String, String> sPhFlagsForInterop =
             Map.ofEntries(
                     entry(
-                            FlagsConstants
-                                    .KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED,
-                            "true"),
-                    entry(
                             FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED,
                             "true"),
-                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID, "true"),
                     entry(
                             FlagsConstants
                                     .KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING,
@@ -272,7 +267,6 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                             "11.46173"),
                     entry(FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM, "1"),
                     entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER, "true"),
-                    entry(FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED, "true"),
                     entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT, "true"),
                     entry(
                             FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE,

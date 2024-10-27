@@ -43,8 +43,10 @@ import android.adservices.exceptions.AdServicesNetworkException;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.LoggerFactory;
@@ -67,6 +69,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdTechIdentifierValidator;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.JsonValidator;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
@@ -80,6 +83,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateBackgroundJobStats;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedFailureStats;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedStats;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 
 import com.google.common.collect.ImmutableMap;
@@ -105,6 +109,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
+@RequiresApi(Build.VERSION_CODES.S)
 public final class ScheduledUpdatesHandler {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
@@ -257,13 +262,17 @@ public final class ScheduledUpdatesHandler {
                         CustomAudienceDatabase.getInstance().customAudienceDao(),
                         FlagsFactory.getFlags()),
                 ScheduleCustomAudienceUpdateStrategyFactory.createStrategy(
+                        context,
                         CustomAudienceDatabase.getInstance().customAudienceDao(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
+                        FledgeAuthorizationFilter.create(
+                                context, AdServicesLoggerImpl.getInstance()),
                         FlagsFactory.getFlags()
                                 .getFledgeScheduleCustomAudienceMinDelayMinsOverride(),
                         FlagsFactory.getFlags()
-                                .getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests()),
+                                .getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests(),
+                        FlagsFactory.getFlags().getDisableFledgeEnrollmentCheck()),
                 AdServicesLoggerImpl.getInstance());
     }
 
@@ -430,6 +439,10 @@ public final class ScheduledUpdatesHandler {
             List<CustomAudienceBlob> overrideCustomAudienceBlobs,
             DevContext devContext)
             throws JSONException {
+        ScheduledCustomAudienceUpdatePerformedStats.Builder statsBuilder =
+                ScheduledCustomAudienceUpdatePerformedStats.builder()
+                        .setNumberOfPartialCustomAudienceInRequest(
+                                overrideCustomAudienceBlobs.size());
         String responseBody = response.getResponseBody();
 
         JSONObject jsonResponse = new JSONObject(responseBody);
@@ -441,14 +454,16 @@ public final class ScheduledUpdatesHandler {
                                     leaveCustomAudiences(
                                             update.getOwner(),
                                             update.getBuyer(),
-                                            extractLeaveCustomAudiencesFromResponse(jsonResponse));
+                                            extractLeaveCustomAudiencesFromResponse(jsonResponse),
+                                            statsBuilder);
                                 }))
                 .transformAsync(
                         ignoredVoid ->
                                 joinCustomAudiences(
                                         overrideCustomAudienceBlobs,
                                         extractJoinCustomAudiencesFromResponse(jsonResponse),
-                                        devContext),
+                                        devContext,
+                                        statsBuilder),
                         mLightWeightExecutor)
                 .transformAsync(
                         ignoredVoid ->
@@ -458,14 +473,30 @@ public final class ScheduledUpdatesHandler {
                                         jsonResponse,
                                         devContext),
                         mLightWeightExecutor)
-                .transformAsync(ignoredVoid -> removeHandledUpdate(update), mLightWeightExecutor);
+                .transformAsync(ignoredVoid -> removeHandledUpdate(update), mLightWeightExecutor)
+                .transformAsync(
+                        ignoredVoid -> {
+                            mAdServicesLogger.logScheduledCustomAudienceUpdatePerformedStats(
+                                    statsBuilder.build());
+                            return immediateVoidFuture();
+                        },
+                        mLightWeightExecutor);
     }
 
     private void leaveCustomAudiences(
-            String owner, AdTechIdentifier buyer, List<String> leaveCustomAudienceList) {
-
+            String owner,
+            AdTechIdentifier buyer,
+            List<String> leaveCustomAudienceList,
+            ScheduledCustomAudienceUpdatePerformedStats.Builder statsBuilder) {
+        AtomicInteger numberOfCustomAudiencesLeft = new AtomicInteger();
+        statsBuilder.setNumberOfLeaveCustomAudienceInResponse(leaveCustomAudienceList.size());
         leaveCustomAudienceList.stream()
-                .forEach(leave -> mCustomAudienceImpl.leaveCustomAudience(owner, buyer, leave));
+                .forEach(
+                        leave -> {
+                            mCustomAudienceImpl.leaveCustomAudience(owner, buyer, leave);
+                            numberOfCustomAudiencesLeft.getAndIncrement();
+                        });
+        statsBuilder.setNumberOfCustomAudienceLeft(numberOfCustomAudiencesLeft.intValue());
     }
 
     private FluentFuture<Void> removeHandledUpdate(DBScheduledCustomAudienceUpdate handledUpdate) {
@@ -480,7 +511,10 @@ public final class ScheduledUpdatesHandler {
     private FluentFuture<Void> joinCustomAudiences(
             @NonNull List<CustomAudienceBlob> overrideBlobs,
             @NonNull List<JSONObject> joinCustomAudienceList,
-            @NonNull DevContext devContext) {
+            @NonNull DevContext devContext,
+            ScheduledCustomAudienceUpdatePerformedStats.Builder statsBuilder) {
+        statsBuilder.setNumberOfJoinCustomAudienceInResponse(joinCustomAudienceList.size());
+        AtomicInteger numberOfCustomAudienceJoined = new AtomicInteger(0);
         List<ListenableFuture<Void>> persistCustomAudienceList = new ArrayList<>();
 
         Map<String, CustomAudienceBlob> customAudienceOverrideMap =
@@ -520,7 +554,11 @@ public final class ScheduledUpdatesHandler {
                 }
                 persistCustomAudienceList.add(
                         sequencer.submitAsync(
-                                () -> persistCustomAudience(fusedBlob, devContext),
+                                () ->
+                                        persistCustomAudience(
+                                                fusedBlob,
+                                                devContext,
+                                                numberOfCustomAudienceJoined),
                                 mBackgroundExecutor));
             } catch (Throwable e) {
                 if (e instanceof JSONException || e.getCause() instanceof JSONException) {
@@ -538,12 +576,20 @@ public final class ScheduledUpdatesHandler {
         }
 
         return FluentFuture.from(Futures.successfulAsList(persistCustomAudienceList))
-                .transform(ignored -> null, mLightWeightExecutor);
+                .transformAsync(
+                        ignored -> {
+                            statsBuilder.setNumberOfCustomAudienceJoined(
+                                    numberOfCustomAudienceJoined.intValue());
+                            return immediateVoidFuture();
+                        },
+                        mLightWeightExecutor);
     }
 
     // TODO(b/324474350) Refactor common code with FetchAndJoinCA API
     private FluentFuture<Void> persistCustomAudience(
-            CustomAudienceBlob fusedCustomAudienceBlob, DevContext devContext) {
+            CustomAudienceBlob fusedCustomAudienceBlob,
+            DevContext devContext,
+            AtomicInteger numberOfCustomAudienceJoined) {
         sLogger.d("Persisting Custom Audience obtained from delayed update");
         return FluentFuture.from(
                         mBackgroundExecutor.submit(
@@ -618,6 +664,12 @@ public final class ScheduledUpdatesHandler {
                                     SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_JOIN_CA,
                                     SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR);
                             return immediateFailedFuture(e);
+                        },
+                        mLightWeightExecutor)
+                .transformAsync(
+                        ignored -> {
+                            numberOfCustomAudienceJoined.getAndIncrement();
+                            return immediateVoidFuture();
                         },
                         mLightWeightExecutor);
     }

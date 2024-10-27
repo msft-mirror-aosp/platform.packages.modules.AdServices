@@ -17,6 +17,7 @@
 package android.adservices.cts;
 
 import static android.adservices.common.AdServicesModuleState.MODULE_STATE_ENABLED;
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN;
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT;
 import static android.adservices.common.Module.MEASUREMENT;
 import static android.adservices.common.Module.TOPICS;
@@ -27,10 +28,10 @@ import static com.android.adservices.service.FlagsConstants.KEY_IS_GET_ADSERVICE
 import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStatesResponse;
-import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
 import android.adservices.common.UpdateAdServicesModuleStatesParams;
+import android.adservices.common.UpdateAdServicesUserChoicesParams;
 
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
@@ -40,8 +41,6 @@ import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -169,19 +168,21 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
     }
 
     @Test
+    @SuppressWarnings("VisibleForTests")
+    // TODO(b/343741206): Remove suppress warning once the lint is fixed.
     public void testRequestAdServicesModuleUserChoiceOverrides() {
         AdServicesOutcomeReceiverForTests<Void> receiver =
                 new AdServicesOutcomeReceiverForTests<>();
 
-        AdServicesModuleUserChoice adServicesModuleUserChoice =
-                new AdServicesModuleUserChoice(TOPICS, USER_CHOICE_OPTED_OUT);
-        List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList =
-                Arrays.asList(adServicesModuleUserChoice);
+        UpdateAdServicesUserChoicesParams params =
+                new UpdateAdServicesUserChoicesParams.Builder()
+                        .setUserChoice(TOPICS, USER_CHOICE_OPTED_IN)
+                        .setUserChoice(TOPICS, USER_CHOICE_OPTED_OUT)
+                        .build();
 
-        expect.that(adServicesModuleUserChoice.getModule()).isEqualTo(TOPICS);
-        expect.that(adServicesModuleUserChoice.getUserChoice()).isEqualTo(USER_CHOICE_OPTED_OUT);
+        // last set value should be the returned value
+        expect.that(params.getUserChoice(TOPICS)).isEqualTo(USER_CHOICE_OPTED_OUT);
 
-        mCommonManager.requestAdServicesModuleUserChoices(
-                adServicesModuleUserChoiceList, CALLBACK_EXECUTOR, receiver);
+        mCommonManager.requestAdServicesModuleUserChoices(params, CALLBACK_EXECUTOR, receiver);
     }
 }

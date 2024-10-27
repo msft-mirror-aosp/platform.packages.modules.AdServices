@@ -57,7 +57,6 @@ import com.google.android.libraries.mobiledatadownload.tracing.PropagatedFutures
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.ListenableFuture;
 
-// TODO(b/269798827): Enable for R.
 // TODO(b/331291972): Refactor this class.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class MddJob implements JobWorker {
