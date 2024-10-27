@@ -18,6 +18,7 @@ package com.android.adservices.shared.meta_testing;
 import static android.provider.DeviceConfig.SYNC_DISABLED_MODE_PERSISTENT;
 import static android.provider.DeviceConfig.SYNC_DISABLED_MODE_UNTIL_REBOOT;
 
+import static com.android.adservices.shared.meta_testing.CommonDescriptions.AClassWithDefaultSetSyncDisabledModeForTest;
 import static com.android.compatibility.common.util.SystemUtil.runWithShellPermissionIdentity;
 
 import android.app.UiAutomation;
@@ -29,6 +30,7 @@ import com.android.adservices.shared.testing.flags.DeviceSideFlagsPreparerClassR
 
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.Description;
 
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -59,8 +61,12 @@ public abstract class DeviceSideFlagsPreparerClassRuleTestCase<
         mTestBody.onEvaluate(() -> modeInside.set(getDeviceConfigSyncMode("inside")));
 
         setDeviceConfigSyncMode("before", SYNC_DISABLED_MODE_UNTIL_REBOOT);
+        Description testSuite =
+                Description.createSuiteDescription(
+                        AClassWithDefaultSetSyncDisabledModeForTest.class);
+        testSuite.addChild(mTest);
         try {
-            rule.apply(mTestBody, mSuite).evaluate();
+            rule.apply(mTestBody, testSuite).evaluate();
         } finally {
             // Restore it
             setDeviceConfigSyncMode("after", modeBefore);

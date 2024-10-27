@@ -33,7 +33,6 @@ import com.android.adservices.service.measurement.CachedFlags;
  * will return true if the consent notification was displayed, false otherwise. {@link
  * UserConsentAccessResolver} should be applied after this to get the true user consent value.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotifiedAccessResolver implements IAccessResolver {
     private static final String ERROR_MESSAGE = "Consent notification has not been displayed.";

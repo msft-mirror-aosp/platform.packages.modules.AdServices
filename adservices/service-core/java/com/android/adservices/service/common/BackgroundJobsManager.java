@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.spe.AdServicesJobInfo.AD_PACKAGE_DENY_PRE_PROCESS_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.COBALT_LOGGING_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.CONSENT_NOTIFICATION_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
@@ -76,7 +77,6 @@ import com.android.adservices.service.topics.EpochJobService;
 import java.util.Objects;
 
 /** Provides functionality to schedule or unschedule all relevant background jobs. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class BackgroundJobsManager {
     /**
@@ -174,6 +174,7 @@ public class BackgroundJobsManager {
             scheduleMddBackgroundJobs();
             scheduleEncryptionKeyBackgroundJobs(context);
             scheduleCobaltBackgroundJob(context);
+            scheduleAdPackageDenyPreProcessBackgroundJob();
         }
     }
 
@@ -246,6 +247,7 @@ public class BackgroundJobsManager {
             scheduleMddBackgroundJobs();
             scheduleEncryptionKeyBackgroundJobs(context);
             scheduleCobaltBackgroundJob(context);
+            scheduleAdPackageDenyPreProcessBackgroundJob();
         }
     }
 
@@ -257,6 +259,13 @@ public class BackgroundJobsManager {
     public static void scheduleCobaltBackgroundJob(Context context) {
         if (FlagsFactory.getFlags().getCobaltLoggingEnabled()) {
             CobaltJobService.scheduleIfNeeded(context, /* forceSchedule= */ false);
+        }
+    }
+
+    /** Tries to schedule Package Deny related background jobs */
+    public static void scheduleAdPackageDenyPreProcessBackgroundJob() {
+        if (FlagsFactory.getFlags().getEnablePackageDenyBgJob()) {
+            AdPackageDenyPreProcessJobService.scheduleIfNeeded();
         }
     }
 
@@ -283,6 +292,8 @@ public class BackgroundJobsManager {
         jobScheduler.cancel(ENCRYPTION_KEY_PERIODIC_JOB.getJobId());
 
         unscheduleCobaltJob(jobScheduler);
+
+        unscheduleAdPackageDenyPreProcessJob(jobScheduler);
     }
 
     /**
@@ -350,5 +361,12 @@ public class BackgroundJobsManager {
         Objects.requireNonNull(jobScheduler);
 
         jobScheduler.cancel(COBALT_LOGGING_JOB.getJobId());
+    }
+
+    /** Tries to unschedule Package Deny background job. */
+    public static void unscheduleAdPackageDenyPreProcessJob(@NonNull JobScheduler jobScheduler) {
+        Objects.requireNonNull(jobScheduler);
+
+        jobScheduler.cancel(AD_PACKAGE_DENY_PRE_PROCESS_JOB.getJobId());
     }
 }

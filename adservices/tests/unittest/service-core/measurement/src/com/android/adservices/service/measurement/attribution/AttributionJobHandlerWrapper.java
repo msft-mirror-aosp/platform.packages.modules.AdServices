@@ -20,6 +20,8 @@ import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.spy;
 
+import androidx.test.core.app.ApplicationProvider;
+
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.actions.UriConfig;
@@ -57,7 +59,8 @@ public class AttributionJobHandlerWrapper {
                                 sourceNoiseHandler,
                                 logger,
                                 new XnaSourceCreator(flags),
-                                adrApi));
+                                adrApi,
+                                ApplicationProvider.getApplicationContext()));
     }
 
     /** Perform attribution. */

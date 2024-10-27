@@ -44,7 +44,7 @@ public final class DeviceConfigShellCmdImpl implements DeviceConfig {
     }
 
     @Override
-    public void setSyncDisabledMode(SyncDisabledModeForTest mode) {
+    public DeviceConfigShellCmdImpl setSyncDisabledMode(SyncDisabledModeForTest mode) {
         Objects.requireNonNull(mode, "mode cannot be null");
 
         Level sdkLevel = mGateway.getSdkLevel();
@@ -52,7 +52,7 @@ public final class DeviceConfigShellCmdImpl implements DeviceConfig {
             mLog.w(
                     "setSyncDisabledMode(%s): ignoring on device with SDK level %d",
                     mode, sdkLevel.getLevel());
-            return;
+            return this;
         }
 
         ShellCommandInput input =
@@ -64,6 +64,7 @@ public final class DeviceConfigShellCmdImpl implements DeviceConfig {
         if (!output.getOut().isEmpty() || !output.getErr().isEmpty()) {
             throw new InvalidShellCommandResultException(input, output);
         }
+        return this;
     }
 
     @Override

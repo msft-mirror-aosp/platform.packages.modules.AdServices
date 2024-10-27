@@ -449,6 +449,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableInstallAttributionOnS() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S",
+                Flags::getMeasurementEnableInstallAttributionOnS);
+    }
+
+    @Test
     public void testGetMeasurementEnableDestinationLimitPriority() {
         testFeatureFlag(
                 "MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY",
@@ -602,6 +609,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED",
                 /* defaultValue */ false,
                 Flags::getTopicsEpochJobBatteryConstraintLoggingEnabled);
+    }
+
+    @Test
+    public void testGetTopicsCleanDBWhenEpochJobSettingsChanged() {
+        testFlag(
+                "TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED",
+                /* defaultValue */ false,
+                Flags::getTopicsCleanDBWhenEpochJobSettingsChanged);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -914,6 +929,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableBothSideDebugKeysInReports() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS",
+                Flags::getMeasurementEnableBothSideDebugKeysInReports);
+    }
+
+    @Test
     public void testGetFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
         testFlag(
                 "getFledgeGetAdSelectionDataBuyerInputCreatorVersion",
@@ -1031,6 +1053,18 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Test
     public void testGetAdIdCacheTtl() {
         testFlag("getAdIdCacheTtl()", DEFAULT_ADID_CACHE_TTL_MS, Flags::getAdIdCacheTtlMs);
+    }
+
+    @Test
+    public void testGetEnableAtomicFileDatastoreBatchUpdateApi() {
+        testFeatureFlag(
+                "DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API",
+                Flags::getEnableAtomicFileDatastoreBatchUpdateApi);
+    }
+
+    @Test
+    public void testGetAdIdMigrationEnabled() {
+        testFeatureFlag("DEFAULT_AD_ID_MIGRATION_ENABLED", Flags::getAdIdMigrationEnabled);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {
