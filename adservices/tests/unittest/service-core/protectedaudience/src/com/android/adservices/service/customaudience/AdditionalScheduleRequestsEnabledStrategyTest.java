@@ -144,7 +144,8 @@ public class AdditionalScheduleRequestsEnabledStrategyTest
                         mScheduledUpdateArgumentCaptor.capture(),
                         mPartialCAListArgumentCaptor.capture(),
                         mCAToLeaveListArgumentCaptor.capture(),
-                        eq(true));
+                        eq(true),
+                        any());
 
         assertInsertScheduledCAUpdateArgumentCaptors(
                 0, scheduleRequest, partialCustomAudienceList, customAudienceToLeaveList);
@@ -187,7 +188,8 @@ public class AdditionalScheduleRequestsEnabledStrategyTest
                         mScheduledUpdateArgumentCaptor.capture(),
                         mPartialCAListArgumentCaptor.capture(),
                         mCAToLeaveListArgumentCaptor.capture(),
-                        eq(true));
+                        eq(true),
+                        any());
 
         assertInsertScheduledCAUpdateArgumentCaptors(
                 0, scheduleRequest2, partialCustomAudienceList, customAudienceToLeaveList);
@@ -206,7 +208,7 @@ public class AdditionalScheduleRequestsEnabledStrategyTest
                 .get();
 
         verify(mCustomAudienceDao, never())
-                .insertScheduledCustomAudienceUpdate(any(), any(), any(), anyBoolean());
+                .insertScheduledCustomAudienceUpdate(any(), any(), any(), anyBoolean(), any());
     }
 
     @Test
