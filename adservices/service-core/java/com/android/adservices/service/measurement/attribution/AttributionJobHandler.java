@@ -652,7 +652,9 @@ class AttributionJobHandler {
                             .setRegistrationOrigin(trigger.getRegistrationOrigin())
                             .setTriggerContextId(trigger.getTriggerContextId())
                             .setTriggerTime(trigger.getTriggerTime())
-                            .setApi(API);
+                            .setApi(API)
+                            .setAggregatableFilteringIdMaxBytes(
+                                    trigger.getAggregatableFilteringIdMaxBytes());
             if (mFlags.getMeasurementEnableMinReportLifespanForUninstall()) {
                 aggregateReportBuilder.setTriggerTime(trigger.getTriggerTime());
             }
