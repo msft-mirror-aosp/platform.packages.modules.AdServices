@@ -674,7 +674,7 @@ class AttributionJobHandler {
             AggregateReport aggregateReport = aggregateReportBuilder.build();
 
             if (Trigger.SourceRegistrationTimeConfig.INCLUDE.equals(
-                            trigger.getAggregatableSourceRegistrationTimeConfig())) {
+                    trigger.getAggregatableSourceRegistrationTimeConfig())) {
                 generateNullAggregateReportsIncludingSourceRegistrationTime(
                         trigger, aggregateReport, measurementDao, attributionStatus);
             }
@@ -712,9 +712,8 @@ class AttributionJobHandler {
 
     @Nullable
     private Long getSourceRegistrationTime(Source source, Trigger trigger) {
-        if (mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled()
-                && Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
-                        trigger.getAggregatableSourceRegistrationTimeConfig())) {
+        if (Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
+                trigger.getAggregatableSourceRegistrationTimeConfig())) {
             // A null source registration time implies source registration time should be excluded
             // from the report.
             return null;
