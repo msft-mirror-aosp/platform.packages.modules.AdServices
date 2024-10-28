@@ -23,6 +23,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -46,7 +47,8 @@ public class ScheduleCustomAudienceUpdateStrategyFactory {
             FledgeAuthorizationFilter fledgeAuthorizationFilter,
             int minDelayMinsOverride,
             boolean additionalScheduleRequestsEnabled,
-            boolean disableFledgeEnrollmentCheck) {
+            boolean disableFledgeEnrollmentCheck,
+            AdServicesLogger adservicesLogger) {
         if (additionalScheduleRequestsEnabled) {
             return new AdditionalScheduleRequestsEnabledStrategy(
                     customAudienceDao,
@@ -56,7 +58,8 @@ public class ScheduleCustomAudienceUpdateStrategyFactory {
                             context,
                             fledgeAuthorizationFilter,
                             minDelayMinsOverride,
-                            disableFledgeEnrollmentCheck));
+                            disableFledgeEnrollmentCheck),
+                    adservicesLogger);
         }
         return new AdditionalScheduleRequestsDisabledStrategy(customAudienceDao);
     }

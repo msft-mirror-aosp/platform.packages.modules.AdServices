@@ -272,7 +272,8 @@ public final class ScheduledUpdatesHandler {
                                 .getFledgeScheduleCustomAudienceMinDelayMinsOverride(),
                         FlagsFactory.getFlags()
                                 .getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests(),
-                        FlagsFactory.getFlags().getDisableFledgeEnrollmentCheck()),
+                        FlagsFactory.getFlags().getDisableFledgeEnrollmentCheck(),
+                        AdServicesLoggerImpl.getInstance()),
                 AdServicesLoggerImpl.getInstance());
     }
 
@@ -471,7 +472,8 @@ public final class ScheduledUpdatesHandler {
                                         update.getOwner(),
                                         update.getAllowScheduleInResponse(),
                                         jsonResponse,
-                                        devContext),
+                                        devContext,
+                                        statsBuilder),
                         mLightWeightExecutor)
                 .transformAsync(ignoredVoid -> removeHandledUpdate(update), mLightWeightExecutor)
                 .transformAsync(
