@@ -140,6 +140,9 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateBackgroundJobStats;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedFailureStats;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedStats;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
 import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 import com.android.adservices.testutils.DevSessionHelper;
@@ -290,6 +293,18 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     @Captor
     private ArgumentCaptor<ScheduledCustomAudienceUpdateScheduleAttemptedStats>
             mScheduleCAUpdateAttemptedStats;
+
+    @Captor
+    ArgumentCaptor<ScheduledCustomAudienceUpdatePerformedFailureStats>
+            mScheduleCAFailureStatsCaptor;
+
+    @Captor
+    ArgumentCaptor<ScheduledCustomAudienceUpdatePerformedStats>
+            mScheduleCAUpdatePerformedStatsCaptor;
+
+    @Captor
+    ArgumentCaptor<ScheduledCustomAudienceUpdateBackgroundJobStats>
+            mScheduleCABackgroundJobStatsCaptor;
 
     private static final Flags COMMON_FLAGS_WITH_FILTERS_ENABLED =
             new CustomAudienceServiceE2ETestFlags() {
@@ -3488,6 +3503,58 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                 "The custom audience should have been left",
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
                         VALID_OWNER, LOCALHOST_BUYER, LEAVE_CA_1));
+
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedStats(
+                        mScheduleCAUpdatePerformedStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedStats performedStats =
+                mScheduleCAUpdatePerformedStatsCaptor.getValue();
+
+        assertWithMessage("Number of custom audience joined")
+                .that(performedStats.getNumberOfCustomAudienceJoined())
+                .isEqualTo(2);
+        assertWithMessage("Number of join custom audience in response")
+                .that(performedStats.getNumberOfJoinCustomAudienceInResponse())
+                .isEqualTo(2);
+        assertWithMessage("Number of leave custom audience in response")
+                .that(performedStats.getNumberOfLeaveCustomAudienceInResponse())
+                .isEqualTo(2);
+        assertWithMessage("Number of custom audiences left")
+                .that(performedStats.getNumberOfCustomAudienceLeft())
+                .isEqualTo(2);
+        assertWithMessage("Number of partial custom audience in request")
+                .that(performedStats.getNumberOfPartialCustomAudienceInRequest())
+                .isEqualTo(2);
+        assertWithMessage("Number of schedule custom audience updates in response")
+                .that(performedStats.getNumberOfScheduleUpdatesInResponse())
+                .isEqualTo(0);
+        assertWithMessage("Number of custom audience updates scheduled")
+                .that(performedStats.getNumberOfUpdatesScheduled())
+                .isEqualTo(0);
+        assertWithMessage("Was initial hop")
+                .that(performedStats.getWasInitialHop())
+                .isEqualTo(true);
+
+        verify(mAdServicesLoggerMock, times(2))
+                .logScheduledCustomAudienceUpdateBackgroundJobStats(
+                        mScheduleCABackgroundJobStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdateBackgroundJobStats backgroundJobStatsFirstTime =
+                ScheduledCustomAudienceUpdateBackgroundJobStats.builder()
+                        .setNumberOfSuccessfulUpdates(1)
+                        .setNumberOfUpdatesFound(1)
+                        .build();
+
+        ScheduledCustomAudienceUpdateBackgroundJobStats backgroundJobStatsSecondTime =
+                ScheduledCustomAudienceUpdateBackgroundJobStats.builder()
+                        .setNumberOfSuccessfulUpdates(0)
+                        .setNumberOfUpdatesFound(0)
+                        .build();
+
+        assertWithMessage("Scheduled custom audience update background job stats")
+                .that(mScheduleCABackgroundJobStatsCaptor.getAllValues())
+                .containsExactly(backgroundJobStatsFirstTime, backgroundJobStatsSecondTime);
     }
 
     @Test
@@ -3625,6 +3692,60 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         assertNull(
                 "The custom audience should have been left",
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(VALID_OWNER, buyer, LEAVE_CA_1));
+
+        verify(mAdServicesLoggerMock, times(2))
+                .logScheduledCustomAudienceUpdatePerformedStats(
+                        mScheduleCAUpdatePerformedStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedStats firstHopStats =
+                ScheduledCustomAudienceUpdatePerformedStats.builder()
+                        .setNumberOfPartialCustomAudienceInRequest(0)
+                        .setNumberOfLeaveCustomAudienceInRequest(0)
+                        .setNumberOfJoinCustomAudienceInResponse(0)
+                        .setNumberOfLeaveCustomAudienceInResponse(0)
+                        .setNumberOfCustomAudienceJoined(0)
+                        .setNumberOfCustomAudienceLeft(0)
+                        .setWasInitialHop(true)
+                        .setNumberOfScheduleUpdatesInResponse(1)
+                        .setNumberOfUpdatesScheduled(1)
+                        .build();
+
+        ScheduledCustomAudienceUpdatePerformedStats secondHopStats =
+                ScheduledCustomAudienceUpdatePerformedStats.builder()
+                        .setNumberOfPartialCustomAudienceInRequest(2)
+                        .setNumberOfLeaveCustomAudienceInRequest(0)
+                        .setNumberOfLeaveCustomAudienceInResponse(1)
+                        .setNumberOfCustomAudienceLeft(1)
+                        .setNumberOfJoinCustomAudienceInResponse(2)
+                        .setNumberOfCustomAudienceJoined(2)
+                        .setWasInitialHop(false)
+                        .setNumberOfScheduleUpdatesInResponse(0)
+                        .setNumberOfUpdatesScheduled(0)
+                        .build();
+
+        assertWithMessage("Scheduled custom audience performed stats.")
+                .that(mScheduleCAUpdatePerformedStatsCaptor.getAllValues())
+                .containsExactly(firstHopStats, secondHopStats);
+
+        verify(mAdServicesLoggerMock, times(2))
+                .logScheduledCustomAudienceUpdateBackgroundJobStats(
+                        mScheduleCABackgroundJobStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdateBackgroundJobStats backgroundJobStatsFirstTime =
+                ScheduledCustomAudienceUpdateBackgroundJobStats.builder()
+                        .setNumberOfSuccessfulUpdates(1)
+                        .setNumberOfUpdatesFound(1)
+                        .build();
+
+        ScheduledCustomAudienceUpdateBackgroundJobStats backgroundJobStatsSecondTime =
+                ScheduledCustomAudienceUpdateBackgroundJobStats.builder()
+                        .setNumberOfSuccessfulUpdates(1)
+                        .setNumberOfUpdatesFound(1)
+                        .build();
+
+        assertWithMessage("Scheduled custom audience update background job stats")
+                .that(mScheduleCABackgroundJobStatsCaptor.getAllValues())
+                .containsExactly(backgroundJobStatsFirstTime, backgroundJobStatsSecondTime);
     }
 
     @Test
