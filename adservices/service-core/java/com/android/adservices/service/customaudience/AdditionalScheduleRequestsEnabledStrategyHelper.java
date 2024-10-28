@@ -188,7 +188,10 @@ public class AdditionalScheduleRequestsEnabledStrategyHelper {
                 Preconditions.checkStringNotEmpty(caName);
                 customAudienceToLeaveList.add(caName);
             } catch (Throwable e) {
-                sLogger.e(e, "Invalid Custom Audience to Leave object, skipping");
+                sLogger.e(
+                        e,
+                        "Invalid Custom Audience to leave object, skipping the schedule CA"
+                                + " request");
                 throw new JSONException(e);
             }
         }
