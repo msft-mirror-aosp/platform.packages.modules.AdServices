@@ -92,7 +92,7 @@ import javax.net.ssl.X509TrustManager;
 public class AdServicesHttpsClient {
 
     public static final long DEFAULT_MAX_BYTES = 1048576;
-    private static final int DEFAULT_TIMEOUT_MS = 5000;
+    public static final int DEFAULT_TIMEOUT_MS = 5000;
     // Setting default max content size to 1024 * 1024 which is ~ 1MB
     private static final String CONTENT_SIZE_ERROR = "Content size exceeds limit!";
     private static final String RETRY_AFTER_HEADER_FIELD = "Retry-After";
