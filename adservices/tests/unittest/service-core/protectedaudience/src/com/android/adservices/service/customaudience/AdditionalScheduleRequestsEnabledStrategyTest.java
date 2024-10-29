@@ -32,7 +32,7 @@ import static com.android.adservices.service.customaudience.ScheduleCustomAudien
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.convertScheduleRequestToDBScheduledCustomAudienceUpdate;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithScheduleRequests;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createScheduleRequest;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.generateScheduleRequestMissingUpdateUriKey;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createScheduleRequestWithUpdateUri;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.getPartialCustomAudienceJsonArray;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.getScheduleRequest_1;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.partialCustomAudienceListToJsonArray;
@@ -45,6 +45,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 
 import android.adservices.customaudience.PartialCustomAudience;
 
@@ -53,7 +54,11 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceToLeave;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedStats;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -74,7 +79,9 @@ public class AdditionalScheduleRequestsEnabledStrategyTest
     @Captor private ArgumentCaptor<DBScheduledCustomAudienceUpdate> mScheduledUpdateArgumentCaptor;
     @Captor private ArgumentCaptor<List<PartialCustomAudience>> mPartialCAListArgumentCaptor;
     @Captor private ArgumentCaptor<List<String>> mCAToLeaveListArgumentCaptor;
-    @Mock private CustomAudienceDao mCustomAudienceDao;
+    @Mock private CustomAudienceDao mCustomAudienceDaoMock;
+    @Mock private AdServicesLogger mAdServicesLoggerMock;
+    @Mock private ScheduledCustomAudienceUpdatePerformedStats.Builder mStatsBuilderMock;
     private AdditionalScheduleRequestsEnabledStrategyHelper mHelper;
     private AdditionalScheduleRequestsEnabledStrategy mStrategy;
     private DevContext mDevContext;
@@ -82,14 +89,21 @@ public class AdditionalScheduleRequestsEnabledStrategyTest
 
     @Before
     public void setup() {
-        mHelper = new AdditionalScheduleRequestsEnabledStrategyHelper(MIN_DELAY);
+        mHelper =
+                new AdditionalScheduleRequestsEnabledStrategyHelper(
+                        mContext,
+                        FledgeAuthorizationFilter.create(
+                                mContext, AdServicesLoggerImpl.getInstance()),
+                        MIN_DELAY,
+                        /* disableFledgeEnrollmentCheck= */ true);
 
         mStrategy =
                 new AdditionalScheduleRequestsEnabledStrategy(
-                        mCustomAudienceDao,
+                        mCustomAudienceDaoMock,
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
-                        mHelper);
+                        mHelper,
+                        mAdServicesLoggerMock);
 
         mDevContext = DevContext.builder(PACKAGE).setDeviceDevOptionsEnabled(false).build();
     }
@@ -128,20 +142,25 @@ public class AdditionalScheduleRequestsEnabledStrategyTest
                         OWNER,
                         true,
                         createJsonResponsePayloadWithScheduleRequests(scheduleRequests),
-                        mDevContext)
+                        mDevContext,
+                        mStatsBuilderMock)
                 .get();
 
-        verify(mCustomAudienceDao, times(2))
+        verify(mCustomAudienceDaoMock, times(2))
                 .insertScheduledCustomAudienceUpdate(
                         mScheduledUpdateArgumentCaptor.capture(),
                         mPartialCAListArgumentCaptor.capture(),
                         mCAToLeaveListArgumentCaptor.capture(),
-                        eq(true));
+                        eq(true),
+                        any());
 
         assertInsertScheduledCAUpdateArgumentCaptors(
                 0, scheduleRequest, partialCustomAudienceList, customAudienceToLeaveList);
         assertInsertScheduledCAUpdateArgumentCaptors(
                 1, scheduleRequest_2, partialCustomAudienceList_2, customAudienceToLeaveList_2);
+
+        verify(mStatsBuilderMock, times(1)).setNumberOfScheduleUpdatesInResponse(2);
+        verify(mStatsBuilderMock, times(1)).setNumberOfUpdatesScheduled(2);
     }
 
     @Test
@@ -153,6 +172,14 @@ public class AdditionalScheduleRequestsEnabledStrategyTest
         List<String> customAudienceToLeaveList = List.of(LEAVE_CA_1);
 
         JSONObject scheduleRequest =
+                createScheduleRequestWithUpdateUri(
+                        null,
+                        MIN_DELAY,
+                        partialCustomAudienceListToJsonArray(partialCustomAudienceList),
+                        new JSONArray(customAudienceToLeaveList),
+                        true);
+
+        JSONObject scheduleRequest2 =
                 createScheduleRequest(
                         BUYER,
                         MIN_DELAY,
@@ -160,23 +187,25 @@ public class AdditionalScheduleRequestsEnabledStrategyTest
                         new JSONArray(customAudienceToLeaveList),
                         true);
 
-        JSONArray scheduleRequests =
-                new JSONArray(
-                        List.of(generateScheduleRequestMissingUpdateUriKey(), scheduleRequest));
+        JSONArray scheduleRequests = new JSONArray(List.of(scheduleRequest, scheduleRequest2));
 
         JSONObject jsonPayload = createJsonResponsePayloadWithScheduleRequests(scheduleRequests);
 
-        mStrategy.scheduleRequests(OWNER, true, jsonPayload, mDevContext).get();
+        mStrategy.scheduleRequests(OWNER, true, jsonPayload, mDevContext, mStatsBuilderMock).get();
 
-        verify(mCustomAudienceDao, times(1))
+        verify(mCustomAudienceDaoMock, times(1))
                 .insertScheduledCustomAudienceUpdate(
                         mScheduledUpdateArgumentCaptor.capture(),
                         mPartialCAListArgumentCaptor.capture(),
                         mCAToLeaveListArgumentCaptor.capture(),
-                        eq(true));
+                        eq(true),
+                        any());
 
         assertInsertScheduledCAUpdateArgumentCaptors(
-                0, scheduleRequest, partialCustomAudienceList, customAudienceToLeaveList);
+                0, scheduleRequest2, partialCustomAudienceList, customAudienceToLeaveList);
+
+        verify(mStatsBuilderMock, times(1)).setNumberOfScheduleUpdatesInResponse(2);
+        verify(mStatsBuilderMock, times(1)).setNumberOfUpdatesScheduled(1);
     }
 
     @Test
@@ -188,11 +217,14 @@ public class AdditionalScheduleRequestsEnabledStrategyTest
                         false,
                         createJsonResponsePayloadWithScheduleRequests(
                                 new JSONArray(List.of(getScheduleRequest_1()))),
-                        mDevContext)
+                        mDevContext,
+                        mStatsBuilderMock)
                 .get();
 
-        verify(mCustomAudienceDao, never())
-                .insertScheduledCustomAudienceUpdate(any(), any(), any(), anyBoolean());
+        verify(mCustomAudienceDaoMock, never())
+                .insertScheduledCustomAudienceUpdate(any(), any(), any(), anyBoolean(), any());
+
+        verifyNoMoreInteractions(mAdServicesLoggerMock);
     }
 
     @Test
@@ -225,7 +257,7 @@ public class AdditionalScheduleRequestsEnabledStrategyTest
     public void testGetScheduledCustomAudienceUpdateRequestList_Success() {
         mStrategy.getScheduledCustomAudienceUpdateRequestList(NOW);
 
-        verify(mCustomAudienceDao)
+        verify(mCustomAudienceDaoMock)
                 .getScheduledCustomAudienceUpdateRequestsWithLeave(
                         mBeforeTimeArgumentCaptor.capture());
         assertThat(mBeforeTimeArgumentCaptor.getValue()).isEqualTo(NOW);

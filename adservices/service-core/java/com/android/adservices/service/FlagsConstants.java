@@ -180,21 +180,11 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERIOD_MS =
             "measurement_aggregate_fallback_reporting_job_period_ms";
 
-    public static final String KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED =
-            "measurement_null_aggregate_report_enabled";
-
     public static final String KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME =
             "measurement_null_agg_report_rate_incl_source_registration_time";
 
     public static final String KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME =
             "measurement_null_agg_report_rate_excl_source_registration_time";
-
-    public static final String
-            KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED =
-                    "measurement_source_registration_time_optional_for_agg_reports_enabled";
-
-    public static final String KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID =
-            "measurement_enable_trigger_context_id";
 
     public static final String KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID =
             "measurement_max_length_of_trigger_context_id";
@@ -510,9 +500,6 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_REPORTING_JOB_PERSISTED =
             "measurement_reporting_job_persisted";
-
-    public static final String KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING =
-            "measurement_enable_aggregatable_report_payload_padding";
 
     public static final String KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES =
             "key_measurement_enable_session_stable_kill_switches";
@@ -1678,4 +1665,7 @@ public final class FlagsConstants {
     /** Key to enable AtomicFileDataStore update API for adservices apk. */
     public static final String KEY_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API =
             "AtomicFileDatastore__enable_batch_update_api_in_adservices_process";
+
+    /** Key to enable Ad Id migration. */
+    public static final String KEY_AD_ID_MIGRATION_ENABLED = "ad_id_migration_enabled";
 }

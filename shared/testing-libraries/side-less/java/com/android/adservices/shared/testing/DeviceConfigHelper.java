@@ -342,7 +342,7 @@ public final class DeviceConfigHelper {
 
         /** Clears all flags. */
         public void clear() {
-            // TODO (b/297085722): Remove after aligning on approach for clearing flags in tests.
+            // TODO (b/373480101): Remove after aligning on approach for clearing flags in tests.
             if (true) {
                 throw new UnsupportedOperationException(
                         "Flags should not be cleared to avoid interference with flag ramp and "

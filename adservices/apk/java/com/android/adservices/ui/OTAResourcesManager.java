@@ -53,7 +53,6 @@ import java.util.concurrent.ExecutionException;
  * Manages OTA (over the air) Resources downloaded from MDD. This allows device to use updated OTA
  * resources. Currently only strings are supported.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class OTAResourcesManager {
     // this value needs to be updated if bundled resources are updated

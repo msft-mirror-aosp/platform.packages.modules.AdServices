@@ -17,6 +17,7 @@ package com.android.adservices.shared.testing;
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassHasNoNothingAtAll;
 import com.android.adservices.shared.meta_testing.FakeAction;
 import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 import com.android.adservices.shared.meta_testing.SimpleStatement;
@@ -497,7 +498,4 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
             string.append(", concrete=I am!");
         }
     }
-
-    // Used to create the Description fixture
-    private static class AClassHasNoNothingAtAll {}
 }

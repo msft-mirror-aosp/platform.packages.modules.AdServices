@@ -405,15 +405,18 @@
             "attribution_destination": "android-app://destination.test",
             "reporting_origin": "https://reporter.test",
             "scheduled_report_time": "3601",
-            "version": "0.1",
-            "source_registration_time": "0"
+            "version": "0.1"
           },
           "aggregation_coordinator_origin": "https://coordinator.com",
           "histograms": [
             {
               "key": "0x1",
               "value": 123
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       }
@@ -435,7 +438,11 @@
             {
               "key": "0x1159",
               "value": 990
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -452,10 +459,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.com",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -472,10 +480,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.com",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -499,7 +508,10 @@
             {
               "key": "0x1379", // 0x159 OR 0x1000 OR 0x321
               "value": 5
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -516,10 +528,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.com",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -536,10 +549,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.com",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -556,10 +570,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.com",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -576,10 +591,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.com",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -599,7 +615,11 @@
             {
               "key": "0x12f", // 0x12f OR 0x6
               "value": 65536
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -619,7 +639,11 @@
             {
               "key": "0xf2b", // 0xf23 OR 0x8
               "value": 65536
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       }

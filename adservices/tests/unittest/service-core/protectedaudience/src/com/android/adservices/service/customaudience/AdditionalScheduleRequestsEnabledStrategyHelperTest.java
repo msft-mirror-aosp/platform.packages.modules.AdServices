@@ -17,6 +17,7 @@
 package com.android.adservices.service.customaudience;
 
 import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
+import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
 import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addActivationTime;
 import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addExpirationTime;
 import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addName;
@@ -36,29 +37,45 @@ import static com.android.adservices.service.customaudience.ScheduleCustomAudien
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createScheduleRequest;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createScheduleRequestWithUpdateUri;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.generateScheduleRequestFromCustomAudienceNames;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.generateScheduleRequestMissingUpdateUriKey;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.getPartialCustomAudienceJsonArray;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.getPartialCustomAudience_1;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.getScheduleRequest_1;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.getScheduleRequest_2;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.PartialCustomAudience;
+import android.content.Context;
+import android.net.Uri;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
+import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Spy;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -71,19 +88,31 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
     private AdditionalScheduleRequestsEnabledStrategyHelper mHelper;
     private DevContext mDevContext;
 
+    private final AdServicesLogger mAdServicesLoggerMock = mock(AdServicesLoggerImpl.class);
+
+    @Spy
+    FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
+            new FledgeAuthorizationFilter(
+                    mSpyContext.getPackageManager(),
+                    new EnrollmentDao(
+                            mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mMockFlags),
+                    mAdServicesLoggerMock);
+
+    private static final Instant NOW = Instant.now();
+
     @Before
     public void setup() {
         mHelper =
                 new AdditionalScheduleRequestsEnabledStrategyHelper(
-                        FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE);
-
+                        mContext,
+                        mFledgeAuthorizationFilterSpy,
+                        FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
+                        /* disableFledgeEnrollmentCheck */ true);
         mDevContext = DevContext.builder(PACKAGE).setDeviceDevOptionsEnabled(false).build();
     }
 
     @Test
     public void testValidateAndConvertScheduleRequest_Success() throws JSONException {
-        Instant now = Instant.now();
-
         JSONObject scheduleRequest =
                 createScheduleRequest(
                         BUYER,
@@ -98,24 +127,39 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
                         .setBuyer(BUYER)
                         .setUpdateUri(BUYER_UPDATE_URI)
                         .setOwner(OWNER)
-                        .setCreationTime(now)
-                        .setScheduledTime(now.plus(MIN_DELAY, ChronoUnit.MINUTES))
+                        .setCreationTime(NOW)
+                        .setScheduledTime(NOW.plus(MIN_DELAY, ChronoUnit.MINUTES))
                         .setIsDebuggable(mDevContext.getDeviceDevOptionsEnabled())
                         .build();
 
         DBScheduledCustomAudienceUpdate result =
-                mHelper.validateAndConvertScheduleRequest(OWNER, scheduleRequest, now, mDevContext);
+                mHelper.validateAndConvertScheduleRequest(OWNER, scheduleRequest, NOW, mDevContext);
 
         assertThat(result.toString()).isEqualTo(expected.toString());
     }
 
     @Test
-    public void
-            testValidateAndConvertScheduleRequest_InvalidMinDelay_ThrowsIllegalArgumentException()
-                    throws JSONException {
-        Instant now = Instant.now();
+    public void testValidateAndConvertScheduleRequest_MissingUpdateUri_ThrowsException()
+            throws JSONException {
+        JSONObject scheduleRequest =
+                createScheduleRequestWithUpdateUri(
+                        null,
+                        MIN_DELAY,
+                        getPartialCustomAudienceJsonArray(),
+                        CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY,
+                        true);
 
-        int invalidMinDelay = 10;
+        assertThrows(
+                JSONException.class,
+                () ->
+                        mHelper.validateAndConvertScheduleRequest(
+                                OWNER, scheduleRequest, NOW, mDevContext));
+    }
+
+    @Test
+    public void testValidateAndConvertScheduleRequest_InvalidMinDelay_ThrowsException()
+            throws JSONException {
+        int invalidMinDelay = -10;
 
         JSONObject scheduleRequest =
                 createScheduleRequest(
@@ -125,46 +169,101 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
                         CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY,
                         true);
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        mHelper.validateAndConvertScheduleRequest(
-                                OWNER, scheduleRequest, now, mDevContext));
+        Throwable error =
+                assertThrows(
+                        JSONException.class,
+                        () ->
+                                mHelper.validateAndConvertScheduleRequest(
+                                        OWNER, scheduleRequest, NOW, mDevContext));
+        assertThat(error).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
-    public void testValidateAndConvertScheduleRequest_MissingUpdateUriField_ThrowsJSONException()
+    public void testValidateAndConvertScheduleRequest_NullHost_ThrowsException()
             throws JSONException {
-        Instant now = Instant.now();
-
-        JSONObject scheduleRequest = generateScheduleRequestMissingUpdateUriKey();
-
-        assertThrows(
-                JSONException.class,
-                () ->
-                        mHelper.validateAndConvertScheduleRequest(
-                                OWNER, scheduleRequest, now, mDevContext));
-    }
-
-    @Test
-    public void testValidateAndConvertScheduleRequest_NullUpdateUri_ThrowsJSONException()
-            throws JSONException {
-        Instant now = Instant.now();
-
         JSONObject scheduleRequest =
                 createScheduleRequestWithUpdateUri(
-                        "",
+                        "noHost",
                         MIN_DELAY,
                         getPartialCustomAudienceJsonArray(),
                         CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY,
                         true);
 
-        assertThrows(
-                JSONException.class,
-                () -> {
-                    mHelper.validateAndConvertScheduleRequest(
-                            OWNER, scheduleRequest, now, mDevContext);
-                });
+        Throwable errorThrown =
+                assertThrows(
+                        JSONException.class,
+                        () -> {
+                            mHelper.validateAndConvertScheduleRequest(
+                                    OWNER, scheduleRequest, NOW, mDevContext);
+                        });
+        assertThat(errorThrown).hasCauseThat().isInstanceOf(NullPointerException.class);
+    }
+
+    @Test
+    public void testValidateAndConvertScheduleRequest_EnrollmentCheckEnabled_Success()
+            throws JSONException {
+        setupWithDisableFledgeEnrollmentCheckFalse();
+
+        doReturn(AdTechIdentifier.fromString(BUYER_UPDATE_URI.getHost()))
+                .when(mFledgeAuthorizationFilterSpy)
+                .getAndAssertAdTechFromUriAllowed(
+                        mContext,
+                        OWNER,
+                        BUYER_UPDATE_URI,
+                        AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE,
+                        API_CUSTOM_AUDIENCES);
+
+        JSONObject scheduleRequest =
+                createScheduleRequestWithUpdateUri(
+                        BUYER_UPDATE_URI.toString(),
+                        MIN_DELAY,
+                        getPartialCustomAudienceJsonArray(),
+                        CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY,
+                        true);
+
+        DBScheduledCustomAudienceUpdate result =
+                mHelper.validateAndConvertScheduleRequest(OWNER, scheduleRequest, NOW, mDevContext);
+
+        verify(mFledgeAuthorizationFilterSpy)
+                .getAndAssertAdTechFromUriAllowed(
+                        mContext,
+                        OWNER,
+                        BUYER_UPDATE_URI,
+                        AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE,
+                        API_CUSTOM_AUDIENCES);
+        assertThat(result.getBuyer()).isEqualTo(BUYER);
+    }
+
+    @Test
+    public void
+            testValidateAndConvertScheduleRequest_EnrollmentCheckEnabled_NotEnrolled_ThrowsException()
+                    throws JSONException {
+        setupWithDisableFledgeEnrollmentCheckFalse();
+
+        doThrow(FledgeAuthorizationFilter.AdTechNotAllowedException.class)
+                .when(mFledgeAuthorizationFilterSpy)
+                .getAndAssertAdTechFromUriAllowed(
+                        any(Context.class), anyString(), any(Uri.class), anyInt(), anyInt());
+
+        JSONObject scheduleRequest =
+                createScheduleRequestWithUpdateUri(
+                        BUYER_UPDATE_URI.toString(),
+                        MIN_DELAY,
+                        getPartialCustomAudienceJsonArray(),
+                        CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY,
+                        true);
+
+        Throwable error =
+                assertThrows(
+                        JSONException.class,
+                        () -> {
+                            mHelper.validateAndConvertScheduleRequest(
+                                    OWNER, scheduleRequest, NOW, mDevContext);
+                        });
+
+        assertThat(error)
+                .hasCauseThat()
+                .isInstanceOf(FledgeAuthorizationFilter.AdTechNotAllowedException.class);
     }
 
     @Test
@@ -210,7 +309,7 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
     }
 
     @Test
-    public void extractPartialCustomAudiencesFromRequest_Success() throws JSONException {
+    public void testExtractPartialCustomAudiencesFromRequest_Success() throws JSONException {
         List<String> partialCaList = List.of(PARTIAL_CA_1, PARTIAL_CA_2);
 
         JSONObject scheduleRequest =
@@ -228,7 +327,8 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
     }
 
     @Test
-    public void extractPartialCustomAudiencesFromRequest_UnableToParseOne() throws JSONException {
+    public void testExtractPartialCustomAudiencesFromRequest_UnableToParseOne()
+            throws JSONException {
         JSONObject partialCustomAudience = getPartialCustomAudience_1();
 
         JSONArray partialCustomAudiences =
@@ -241,17 +341,15 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
                         partialCustomAudiences,
                         CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY,
                         true);
-
-        List<PartialCustomAudience> result =
-                mHelper.extractPartialCustomAudiencesFromRequest(scheduleRequest);
-
-        assertThat(result.stream().map(ca -> ca.getName()).collect(Collectors.toList()))
-                .containsExactly(PARTIAL_CA_1);
+        assertThrows(
+                JSONException.class,
+                () -> mHelper.extractPartialCustomAudiencesFromRequest(scheduleRequest));
     }
 
     @Test
-    public void extractPartialCustomAudiencesFromRequest_UnableToParseAnything_ReturnsEmptyList()
-            throws JSONException {
+    public void
+            testExtractPartialCustomAudiencesFromRequest_UnableToParseAnything_ReturnsEmptyList()
+                    throws JSONException {
         JSONArray partialCustomAudiences = new JSONArray(List.of(new JSONArray(), new JSONArray()));
 
         JSONObject scheduleRequest =
@@ -261,15 +359,13 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
                         partialCustomAudiences,
                         CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY,
                         true);
-
-        List<PartialCustomAudience> result =
-                mHelper.extractPartialCustomAudiencesFromRequest(scheduleRequest);
-
-        assertThat(result).isEmpty();
+        assertThrows(
+                JSONException.class,
+                () -> mHelper.extractPartialCustomAudiencesFromRequest(scheduleRequest));
     }
 
     @Test
-    public void extractCustomAudiencesToLeaveFromRequest_Success() throws JSONException {
+    public void testExtractCustomAudiencesToLeaveFromRequest_Success() throws JSONException {
         JSONObject scheduleRequest =
                 generateScheduleRequestFromCustomAudienceNames(
                         BUYER,
@@ -284,7 +380,8 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
     }
 
     @Test
-    public void extractCustomAudiencesToLeaveFromRequest_UnableToParseOne() throws JSONException {
+    public void testExtractCustomAudiencesToLeaveFromRequest_UnableToParseOne()
+            throws JSONException {
         JSONArray customAudiencesToLeave = new JSONArray(List.of("", LEAVE_CA_1));
 
         JSONObject scheduleRequest =
@@ -295,14 +392,15 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
                         customAudiencesToLeave,
                         true);
 
-        List<String> result = mHelper.extractCustomAudiencesToLeaveFromRequest(scheduleRequest);
-
-        assertThat(result).containsExactly(LEAVE_CA_1);
+        assertThrows(
+                JSONException.class,
+                () -> mHelper.extractCustomAudiencesToLeaveFromRequest(scheduleRequest));
     }
 
     @Test
-    public void extractCustomAudiencesToLeaveFromRequest_UnableToParseAnything_ReturnsEmptyList()
-            throws JSONException {
+    public void
+            testExtractCustomAudiencesToLeaveFromRequest_UnableToParseAnything_ReturnsEmptyList()
+                    throws JSONException {
         JSONArray customAudiencesToLeave = new JSONArray(List.of("", ""));
 
         JSONObject scheduleRequest =
@@ -313,9 +411,9 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
                         customAudiencesToLeave,
                         true);
 
-        List<String> result = mHelper.extractCustomAudiencesToLeaveFromRequest(scheduleRequest);
-
-        assertThat(result).isEmpty();
+        assertThrows(
+                JSONException.class,
+                () -> mHelper.extractCustomAudiencesToLeaveFromRequest(scheduleRequest));
     }
 
     @Test
@@ -369,5 +467,14 @@ public class AdditionalScheduleRequestsEnabledStrategyHelperTest
                 () -> {
                     mHelper.jsonObjectToPartialCustomAudience(finalObject);
                 });
+    }
+
+    private void setupWithDisableFledgeEnrollmentCheckFalse() {
+        mHelper =
+                new AdditionalScheduleRequestsEnabledStrategyHelper(
+                        mContext,
+                        mFledgeAuthorizationFilterSpy,
+                        FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
+                        /* disableFledgeEnrollmentCheck */ false);
     }
 }

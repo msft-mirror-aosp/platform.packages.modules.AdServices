@@ -16,11 +16,19 @@
 
 package com.android.adservices.service.customaudience;
 
+import android.content.Context;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
+
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.stats.AdServicesLogger;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 /** Factory for {@link ScheduleCustomAudienceUpdateStrategy}s */
+@RequiresApi(Build.VERSION_CODES.S)
 public class ScheduleCustomAudienceUpdateStrategyFactory {
 
     /**
@@ -32,17 +40,26 @@ public class ScheduleCustomAudienceUpdateStrategyFactory {
      * @return An implementation of ScheduleCustomAudienceUpdateStrategy
      */
     public static ScheduleCustomAudienceUpdateStrategy createStrategy(
+            Context context,
             CustomAudienceDao customAudienceDao,
             ListeningExecutorService backgroundExecutor,
             ListeningExecutorService lightWeightExecutor,
+            FledgeAuthorizationFilter fledgeAuthorizationFilter,
             int minDelayMinsOverride,
-            boolean additionalScheduleRequestsEnabled) {
+            boolean additionalScheduleRequestsEnabled,
+            boolean disableFledgeEnrollmentCheck,
+            AdServicesLogger adservicesLogger) {
         if (additionalScheduleRequestsEnabled) {
             return new AdditionalScheduleRequestsEnabledStrategy(
                     customAudienceDao,
                     backgroundExecutor,
                     lightWeightExecutor,
-                    new AdditionalScheduleRequestsEnabledStrategyHelper(minDelayMinsOverride));
+                    new AdditionalScheduleRequestsEnabledStrategyHelper(
+                            context,
+                            fledgeAuthorizationFilter,
+                            minDelayMinsOverride,
+                            disableFledgeEnrollmentCheck),
+                    adservicesLogger);
         }
         return new AdditionalScheduleRequestsDisabledStrategy(customAudienceDao);
     }

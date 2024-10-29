@@ -35,6 +35,8 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
+import androidx.test.filters.FlakyTest;
+
 import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -181,6 +183,7 @@ public final class AdPackageDenyPreProcessJobServiceTest extends AdServicesJobSe
     }
 
     @Test
+    @FlakyTest(bugId = 375608382)
     public void onStartJob_shouldDisableJobTrue() {
         doReturn(true)
                 .when(

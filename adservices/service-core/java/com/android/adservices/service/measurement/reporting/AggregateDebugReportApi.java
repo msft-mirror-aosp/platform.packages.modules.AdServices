@@ -659,12 +659,10 @@ public class AggregateDebugReportApi {
     private List<AggregateHistogramContribution> getPaddedContributions(
             List<AggregateHistogramContribution> contributions) {
         List<AggregateHistogramContribution> paddedContributions = new ArrayList<>(contributions);
-        if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
-            IntStream.range(
-                            contributions.size(),
-                            mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
-                    .forEach(i -> paddedContributions.add(createPaddingContribution()));
-        }
+        IntStream.range(
+                        contributions.size(),
+                        mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
+                .forEach(i -> paddedContributions.add(createPaddingContribution()));
         return paddedContributions;
     }
 

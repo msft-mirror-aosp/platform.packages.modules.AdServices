@@ -97,7 +97,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME;
@@ -981,13 +980,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_SOURCE,
                 MEASUREMENT_MAX_DISTINCT_REP_ORIG_PER_PUBLISHER_X_DEST_IN_SOURCE);
-    }
-
-    @Override
-    public boolean getMeasurementEnableAggregatableReportPayloadPadding() {
-        return getDeviceConfigFlag(
-                KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING,
-                MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING);
     }
 
     @Override
@@ -3958,11 +3950,6 @@ public final class PhFlags implements Flags {
                         + getMeasurementAggregateFallbackReportingJobPeriodMs());
         writer.println(
                 "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED
-                        + " = "
-                        + getMeasurementNullAggregateReportEnabled());
-        writer.println(
-                "\t"
                         + FlagsConstants
                                 .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME
                         + " = "
@@ -4099,20 +4086,9 @@ public final class PhFlags implements Flags {
         writer.println(
                 "\t"
                         + FlagsConstants
-                                .KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED
-                        + " = "
-                        + getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled());
-        writer.println(
-                "\t"
-                        + FlagsConstants
                                 .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME
                         + " = "
                         + getMeasurementNullAggReportRateExclSourceRegistrationTime());
-        writer.println(
-                "\t"
-                        + FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID
-                        + " = "
-                        + getMeasurementEnableTriggerContextId());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID
@@ -5728,11 +5704,6 @@ public final class PhFlags implements Flags {
                         + getMeasurementReportingJobServiceBatchWindowMillis());
         writer.println(
                 "\t"
-                        + KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING
-                        + " = "
-                        + getMeasurementEnableAggregatableReportPayloadPadding());
-        writer.println(
-                "\t"
                         + FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS
                         + " = "
                         + getEnforceForegroundStatusForSignals());
@@ -6904,13 +6875,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementNullAggregateReportEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED,
-                MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED);
-    }
-
-    @Override
     public float getMeasurementNullAggReportRateInclSourceRegistrationTime() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME,
@@ -6922,21 +6886,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME,
                 MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME);
-    }
-
-    @Override
-    public boolean getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants
-                        .KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED,
-                MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED);
-    }
-
-    @Override
-    public boolean getMeasurementEnableTriggerContextId() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID,
-                MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID);
     }
 
     @Override
@@ -7483,5 +7432,11 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API,
                 DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API);
+    }
+
+    @Override
+    public boolean getAdIdMigrationEnabled() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_AD_ID_MIGRATION_ENABLED, DEFAULT_AD_ID_MIGRATION_ENABLED);
     }
 }

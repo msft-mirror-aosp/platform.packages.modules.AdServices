@@ -18,7 +18,7 @@ package com.android.adservices.shared.testing;
 import com.android.adservices.shared.testing.AndroidSdk.Level;
 import com.android.adservices.shared.testing.AndroidSdk.Range;
 
-public final class SdkLevelSupportRuleTest extends AbstractSdkLevelSupportedRuleTest {
+public final class SdkLevelSupportRuleTest extends AbstractSdkLevelSupportedRuleTestCase {
 
     public SdkLevelSupportRuleTest() {
         super(AndroidLogger.getInstance());

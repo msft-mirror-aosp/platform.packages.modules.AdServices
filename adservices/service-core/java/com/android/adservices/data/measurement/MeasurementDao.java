@@ -2843,6 +2843,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AggregateReport.TRIGGER_TIME, aggregateReport.getTriggerTime());
         values.put(MeasurementTables.AggregateReport.API, aggregateReport.getApi());
+        values.put(
+                MeasurementTables.AggregateReport.AGGREGATABLE_FILTERING_ID_MAX_BYTES,
+                aggregateReport.getAggregatableFilteringIdMaxBytes());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -3948,8 +3951,7 @@ class MeasurementDao implements IMeasurementDao {
                             postfixMatch);
         }
 
-        if (FlagsFactory.getFlags().getMeasurementNullAggregateReportEnabled()
-                && tableName.equals(MeasurementTables.AggregateReport.TABLE)) {
+        if (tableName.equals(MeasurementTables.AggregateReport.TABLE)) {
             query +=
                     String.format(
                             Locale.ENGLISH,

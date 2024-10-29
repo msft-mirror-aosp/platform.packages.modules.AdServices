@@ -47,7 +47,6 @@ import android.adservices.customaudience.ScheduleCustomAudienceUpdateCallback;
 import android.net.Uri;
 import android.os.RemoteException;
 
-import com.android.adservices.LogUtil;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.customaudience.DBCustomAudienceToLeave;
@@ -211,43 +210,13 @@ public class ScheduleCustomAudienceUpdateTestUtils {
         return responseJson;
     }
 
-    /**
-     * Creates a JSON response with schedule requests that is expected to be returned from the
-     * server for update
-     */
+    /** Creates a JSON response that is expected to be returned from the server for update */
     public static JSONObject createJsonResponsePayloadWithScheduleRequests(
-            JSONArray scheduleRequests) throws JSONException {
-        JSONObject scheduleObject = new JSONObject();
-        scheduleObject.put(REQUESTS_KEY, scheduleRequests);
-
-        JSONObject updateResponseJson = new JSONObject();
-        updateResponseJson.put(SCHEDULE_REQUESTS_KEY, scheduleObject);
-
-        LogUtil.e(updateResponseJson.toString());
-
-        return updateResponseJson;
-    }
-
-    /** Creates a Schedule Request JSONObject without an update uri */
-    public static JSONObject generateScheduleRequestMissingUpdateUriKey() throws JSONException {
-        JSONObject responseJson = new JSONObject();
-
-        responseJson.put(MIN_DELAY_KEY, MIN_DELAY);
-        responseJson.put(SHOULD_REPLACE_PENDING_UPDATES_KEY, true);
-        responseJson.put(PARTIAL_CUSTOM_AUDIENCES_KEY, getPartialCustomAudienceJsonArray());
-        responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY);
-        return responseJson;
-    }
-
-    /**
-     * Creates a JSON response that is expected to be returned from the server for update without
-     * Leave CA fields
-     */
-    public static JSONObject createJsonResponsePayloadWithoutLeaveCA(
             AdTechIdentifier buyer,
             String owner,
             List<String> joinCustomAudienceNames,
             List<String> leaveCustomAudienceNames,
+            JSONArray scheduleRequests,
             boolean auctionServerRequestFlagsEnabled,
             boolean sellerConfigurationEnabled)
             throws JSONException {
@@ -277,9 +246,127 @@ public class ScheduleCustomAudienceUpdateTestUtils {
             joinCustomAudienceArray.put(i, generatedCa);
         }
 
+        JSONArray leaveCustomAudienceArray = new JSONArray();
+        for (int i = 0; i < leaveCustomAudienceNames.size(); i++) {
+            leaveCustomAudienceArray.put(i, leaveCustomAudienceNames.get(i));
+        }
+
+        JSONObject scheduleObject = new JSONObject();
+        scheduleObject.put(REQUESTS_KEY, scheduleRequests);
+
         responseJson.put(JOIN_CUSTOM_AUDIENCE_KEY, joinCustomAudienceArray);
+        responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, leaveCustomAudienceArray);
+        responseJson.put(SCHEDULE_REQUESTS_KEY, scheduleObject);
 
         return responseJson;
+    }
+
+    /**
+     * Creates a JSON response with schedule requests that is expected to be returned from the
+     * server for update
+     */
+    public static JSONObject createJsonResponsePayloadWithScheduleRequests(
+            JSONArray scheduleRequests) throws JSONException {
+        JSONObject scheduleObject = new JSONObject();
+        scheduleObject.put(REQUESTS_KEY, scheduleRequests);
+
+        JSONObject updateResponseJson = new JSONObject();
+        updateResponseJson.put(SCHEDULE_REQUESTS_KEY, scheduleObject);
+
+        return updateResponseJson;
+    }
+
+    /** Creates a Schedule Request JSONObject without an update uri */
+    public static JSONObject generateScheduleRequestMissingUpdateUriKey() throws JSONException {
+        JSONObject responseJson = new JSONObject();
+
+        responseJson.put(MIN_DELAY_KEY, MIN_DELAY);
+        responseJson.put(SHOULD_REPLACE_PENDING_UPDATES_KEY, true);
+        responseJson.put(PARTIAL_CUSTOM_AUDIENCES_KEY, getPartialCustomAudienceJsonArray());
+        responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, CUSTOM_AUDIENCE_TO_LEAVE_JSON_ARRAY);
+        return responseJson;
+    }
+
+    /**
+     * Creates a JSON response with join and schedule requests that is expected to be returned from
+     * the server for update
+     */
+    public static JSONObject createJsonResponseWithJoinAndScheduleRequests(
+            JSONArray scheduleRequests) throws JSONException {
+        JSONObject scheduleObject = new JSONObject();
+        scheduleObject.put(REQUESTS_KEY, scheduleRequests);
+
+        JSONObject updateResponseJson = new JSONObject();
+        updateResponseJson.put(SCHEDULE_REQUESTS_KEY, scheduleObject);
+
+        return updateResponseJson;
+    }
+
+    /**
+     * Creates a JSON response that is expected to be returned from the server for update without
+     * Leave CA fields
+     */
+    public static JSONObject createJsonResponsePayloadWithoutLeaveCA(
+            AdTechIdentifier buyer,
+            String owner,
+            List<String> joinCustomAudienceNames,
+            List<String> leaveCustomAudienceNames,
+            boolean auctionServerRequestFlagsEnabled,
+            boolean sellerConfigurationEnabled)
+            throws JSONException {
+        JSONObject responseJson = new JSONObject();
+
+        JSONObject scheduleRequest =
+                generateScheduleRequestFromCustomAudienceNames(
+                        buyer, 40, joinCustomAudienceNames, leaveCustomAudienceNames, true);
+        JSONArray scheduleRequests = new JSONArray(List.of(scheduleRequest));
+        JSONObject scheduleObject = new JSONObject();
+        scheduleObject.put(REQUESTS_KEY, scheduleRequests);
+        responseJson.put(SCHEDULE_REQUESTS_KEY, scheduleObject);
+
+        JSONArray joinCustomAudienceArray =
+                createJoinCustomAudienceArray(
+                        buyer,
+                        owner,
+                        joinCustomAudienceNames,
+                        leaveCustomAudienceNames,
+                        auctionServerRequestFlagsEnabled,
+                        sellerConfigurationEnabled);
+        responseJson.put(JOIN_CUSTOM_AUDIENCE_KEY, joinCustomAudienceArray);
+        return responseJson;
+    }
+
+    private static JSONArray createJoinCustomAudienceArray(
+            AdTechIdentifier buyer,
+            String owner,
+            List<String> joinCustomAudienceNames,
+            List<String> leaveCustomAudienceNames,
+            boolean auctionServerRequestFlagsEnabled,
+            boolean sellerConfigurationEnabled)
+            throws JSONException {
+        JSONArray joinCustomAudienceArray = new JSONArray();
+        for (int i = 0; i < joinCustomAudienceNames.size(); i++) {
+            JSONObject generatedCa =
+                    generateCustomAudienceWithName(buyer, owner, joinCustomAudienceNames.get(i));
+            if (auctionServerRequestFlagsEnabled) {
+                // Add auction server request flags
+                generatedCa =
+                        addAuctionServerRequestFlags(
+                                generatedCa,
+                                ImmutableList.of(CustomAudienceBlob.OMIT_ADS_VALUE),
+                                false);
+            }
+            if (sellerConfigurationEnabled) {
+                // give every CA a priority of 1.0
+                generatedCa =
+                        addPriority(
+                                /* jsonObject */ generatedCa,
+                                CustomAudienceFixture.VALID_PRIORITY_1,
+                                /* shouldAddHarmlessJunk= */ false);
+            }
+            joinCustomAudienceArray.put(i, generatedCa);
+        }
+        return joinCustomAudienceArray;
     }
 
     /**
@@ -401,6 +488,32 @@ public class ScheduleCustomAudienceUpdateTestUtils {
                 shouldReplacePendingUpdates);
     }
 
+    /** Creates a Schedule Request JSONObject from custom audience names with invalid partial CA. */
+    public static JSONObject generateScheduleRequestFromCustomAudienceNamesWithInvalidPartialCA(
+            AdTechIdentifier buyer,
+            int minDelay,
+            List<String> partialCustomAudienceNames,
+            List<String> leaveCustomAudienceNames,
+            Boolean shouldReplacePendingUpdates)
+            throws JSONException {
+        JSONArray partialCustomAudiences = new JSONArray();
+        for (int i = 0; i < partialCustomAudienceNames.size(); i++) {
+            partialCustomAudiences.put(i, new JSONObject());
+        }
+
+        JSONArray customAudiencesToLeave = new JSONArray();
+        for (int i = 0; i < leaveCustomAudienceNames.size(); i++) {
+            customAudiencesToLeave.put(i, leaveCustomAudienceNames.get(i));
+        }
+
+        return createScheduleRequest(
+                buyer,
+                minDelay,
+                partialCustomAudiences,
+                customAudiencesToLeave,
+                shouldReplacePendingUpdates);
+    }
+
     /** Creates a Schedule Request JSONObject */
     public static JSONObject createScheduleRequestWithUpdateUri(
             String updateUri,
@@ -417,7 +530,6 @@ public class ScheduleCustomAudienceUpdateTestUtils {
         responseJson.put(PARTIAL_CUSTOM_AUDIENCES_KEY, partialCustomAudiences);
         responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, customAudiencesToLeave);
 
-        LogUtil.e("createScheduleRequestReturn: " + responseJson);
         return responseJson;
     }
 
@@ -437,7 +549,6 @@ public class ScheduleCustomAudienceUpdateTestUtils {
         responseJson.put(PARTIAL_CUSTOM_AUDIENCES_KEY, partialCustomAudiences);
         responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, customAudiencesToLeave);
 
-        LogUtil.e("createScheduleRequestReturn: " + responseJson);
         return responseJson;
     }
 
@@ -498,7 +609,8 @@ public class ScheduleCustomAudienceUpdateTestUtils {
         String requestBodyString = new String(requestBody);
         List<CustomAudienceBlob> overrideCustomAudienceBlobs = new ArrayList<>();
         try {
-            JSONArray jsonArray = new JSONArray(requestBodyString);
+            JSONObject jsonObject = new JSONObject(requestBodyString);
+            JSONArray jsonArray = jsonObject.getJSONArray(PARTIAL_CUSTOM_AUDIENCES_KEY);
 
             for (int i = 0; i < jsonArray.length(); i++) {
                 CustomAudienceBlob blob = new CustomAudienceBlob();
@@ -509,6 +621,27 @@ public class ScheduleCustomAudienceUpdateTestUtils {
             sLogger.e(e, "Unable to extract partial CAs from request");
         }
         return overrideCustomAudienceBlobs;
+    }
+
+    /**
+     * Extracts custom audiences to leave sent in the update request. Helps validate that the
+     * request to server had expected payload.
+     */
+    public static List<String> extractCustomAudiencesToLeaveFromScheduleRequest(
+            byte[] requestBody) {
+        String requestBodyString = new String(requestBody);
+        List<String> customAudiencesToLeave = new ArrayList<>();
+        try {
+            JSONObject jsonObject = new JSONObject(requestBodyString);
+            JSONArray jsonArray = jsonObject.getJSONArray(LEAVE_CUSTOM_AUDIENCE_KEY);
+
+            for (int i = 0; i < jsonArray.length(); i++) {
+                customAudiencesToLeave.add(jsonArray.getString(i));
+            }
+        } catch (JSONException e) {
+            sLogger.e(e, "Unable to extract CAs to leave from request");
+        }
+        return customAudiencesToLeave;
     }
 
     /** Create request body with partial custom audiences and custom audiences to leave */
@@ -529,6 +662,16 @@ public class ScheduleCustomAudienceUpdateTestUtils {
                 jsonArray);
 
         return jsonObject;
+    }
+
+    /** Create request body with only partial custom audiences, this should only be used for v1 */
+    public static String createRequestBodyWithOnlyPartialCustomAudiences(
+            JSONArray partialCustomAudienceJsonArray) throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+
+        jsonObject.put(PARTIAL_CUSTOM_AUDIENCES_KEY, partialCustomAudienceJsonArray);
+
+        return jsonObject.toString();
     }
 
     /** Converts list of PartialCustomAudience to JSONArray */

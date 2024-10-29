@@ -652,7 +652,9 @@ class AttributionJobHandler {
                             .setRegistrationOrigin(trigger.getRegistrationOrigin())
                             .setTriggerContextId(trigger.getTriggerContextId())
                             .setTriggerTime(trigger.getTriggerTime())
-                            .setApi(API);
+                            .setApi(API)
+                            .setAggregatableFilteringIdMaxBytes(
+                                    trigger.getAggregatableFilteringIdMaxBytes());
             if (mFlags.getMeasurementEnableMinReportLifespanForUninstall()) {
                 aggregateReportBuilder.setTriggerTime(trigger.getTriggerTime());
             }
@@ -673,9 +675,8 @@ class AttributionJobHandler {
 
             AggregateReport aggregateReport = aggregateReportBuilder.build();
 
-            if (mFlags.getMeasurementNullAggregateReportEnabled()
-                    && Trigger.SourceRegistrationTimeConfig.INCLUDE.equals(
-                            trigger.getAggregatableSourceRegistrationTimeConfig())) {
+            if (Trigger.SourceRegistrationTimeConfig.INCLUDE.equals(
+                    trigger.getAggregatableSourceRegistrationTimeConfig())) {
                 generateNullAggregateReportsIncludingSourceRegistrationTime(
                         trigger, aggregateReport, measurementDao, attributionStatus);
             }
@@ -713,9 +714,8 @@ class AttributionJobHandler {
 
     @Nullable
     private Long getSourceRegistrationTime(Source source, Trigger trigger) {
-        if (mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled()
-                && Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
-                        trigger.getAggregatableSourceRegistrationTimeConfig())) {
+        if (Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
+                trigger.getAggregatableSourceRegistrationTimeConfig())) {
             // A null source registration time implies source registration time should be excluded
             // from the report.
             return null;
@@ -727,8 +727,7 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao, Trigger trigger, AttributionStatus attributionStatus)
             throws DatastoreException {
         try {
-            if (!mFlags.getMeasurementNullAggregateReportEnabled()
-                    || !getTriggerHasAggregatableData(trigger)) {
+            if (!getTriggerHasAggregatableData(trigger)) {
                 return;
             }
             if (Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
@@ -826,7 +825,6 @@ class AttributionJobHandler {
                                 API,
                                 mFlags);
 
-        if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
             AggregateHistogramContribution paddingContribution =
                     new AggregateHistogramContribution.Builder().setPaddingContribution().build();
             List<AggregateHistogramContribution> contributions = new ArrayList<>();
@@ -835,7 +833,6 @@ class AttributionJobHandler {
             generator.padContributions(contributions, paddingContribution);
             nullReportBuilder.setDebugCleartextPayload(
                     AggregateReport.generateDebugPayload(contributions));
-        }
 
         return nullReportBuilder.build();
     }

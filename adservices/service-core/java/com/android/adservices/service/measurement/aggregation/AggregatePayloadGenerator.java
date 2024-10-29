@@ -124,14 +124,9 @@ public class AggregatePayloadGenerator {
             }
         }
         if (contributions.size() > 0) {
-            if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
-                AggregateHistogramContribution paddingContribution =
-                        new AggregateHistogramContribution.Builder()
-                                .setPaddingContribution()
-                                .build();
-
-                padContributions(contributions, paddingContribution);
-            }
+            AggregateHistogramContribution paddingContribution =
+                    new AggregateHistogramContribution.Builder().setPaddingContribution().build();
+            padContributions(contributions, paddingContribution);
             return Optional.of(contributions);
         }
         return Optional.empty();

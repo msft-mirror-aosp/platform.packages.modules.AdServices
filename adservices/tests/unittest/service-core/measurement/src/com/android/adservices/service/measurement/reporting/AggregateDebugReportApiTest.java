@@ -87,7 +87,6 @@ public class AggregateDebugReportApiTest {
         when(mTimeSource.currentTimeMillis()).thenReturn(System.currentTimeMillis());
         when(mFlags.getMeasurementDefaultAggregationCoordinatorOrigin())
                 .thenReturn(Flags.MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN);
-        when(mFlags.getMeasurementEnableAggregatableReportPayloadPadding()).thenReturn(true);
         when(mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
                 .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION);
         when(mFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
