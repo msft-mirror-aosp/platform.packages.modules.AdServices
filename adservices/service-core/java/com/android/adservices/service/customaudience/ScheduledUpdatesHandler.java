@@ -585,8 +585,12 @@ public final class ScheduledUpdatesHandler {
         return FluentFuture.from(Futures.successfulAsList(persistCustomAudienceList))
                 .transformAsync(
                         ignored -> {
-                            statsBuilder.setNumberOfCustomAudienceJoined(
-                                    numberOfCustomAudienceJoined.intValue());
+                            int numCustomAudiencesJoined = numberOfCustomAudienceJoined.intValue();
+
+                            if (numCustomAudiencesJoined > 0) {
+                                BackgroundFetchJob.schedule(mFlags);
+                            }
+                            statsBuilder.setNumberOfCustomAudienceJoined(numCustomAudiencesJoined);
                             return immediateVoidFuture();
                         },
                         mLightWeightExecutor);
