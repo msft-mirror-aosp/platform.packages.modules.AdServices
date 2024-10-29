@@ -163,6 +163,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
         expect.that(params.getModuleStateMap().get(MEASUREMENT)).isEqualTo(MODULE_STATE_ENABLED);
         expect.that(params.getNotificationType()).isEqualTo(NotificationType.NOTIFICATION_ONGOING);
+        expect.that(params.getModuleState(MEASUREMENT)).isEqualTo(MODULE_STATE_ENABLED);
 
         mCommonManager.requestAdServicesModuleOverrides(params, CALLBACK_EXECUTOR, receiver);
     }
@@ -182,6 +183,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
         // last set value should be the returned value
         expect.that(params.getUserChoice(TOPICS)).isEqualTo(USER_CHOICE_OPTED_OUT);
+        expect.that(params.getUserChoiceMap().get(TOPICS)).isEqualTo(USER_CHOICE_OPTED_OUT);
 
         mCommonManager.requestAdServicesModuleUserChoices(params, CALLBACK_EXECUTOR, receiver);
     }

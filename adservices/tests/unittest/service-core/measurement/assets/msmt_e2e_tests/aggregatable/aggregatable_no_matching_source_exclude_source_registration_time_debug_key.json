@@ -79,6 +79,10 @@
         },
         "aggregation_coordinator_origin": "https://coordinator.test",
         "histograms": [
+          {"key": "0x0", "value": 0},
+          {"key": "0x0", "value": 0},
+          {"key": "0x0", "value": 0},
+          {"key": "0x0", "value": 0},
           {"key": "0x0", "value": 0}
         ],
         "trigger_debug_key": "123"

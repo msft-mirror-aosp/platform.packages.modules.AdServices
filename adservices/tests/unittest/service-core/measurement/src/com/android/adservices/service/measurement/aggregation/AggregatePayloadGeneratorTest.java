@@ -176,7 +176,6 @@ public final class AggregatePayloadGeneratorTest {
     @Test
     public void testGenerateAttributionReport_filterSetMatches_withPayloadPadding()
             throws JSONException {
-        when(mFlags.getMeasurementEnableAggregatableReportPayloadPadding()).thenReturn(true);
         when(mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration()).thenReturn(5);
         // Build AggregatableAttributionSource.
         TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();

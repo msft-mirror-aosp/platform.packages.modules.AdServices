@@ -360,7 +360,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         COMMON_FLAGS_WITH_FILTERS_ENABLED
                                 .getFledgeScheduleCustomAudienceMinDelayMinsOverride(),
                         /* additionalScheduleRequestsEnabled= */ false,
-                        COMMON_FLAGS_WITH_FILTERS_ENABLED.getDisableFledgeEnrollmentCheck());
+                        COMMON_FLAGS_WITH_FILTERS_ENABLED.getDisableFledgeEnrollmentCheck(),
+                        mAdServicesLoggerMock);
 
         mService =
                 new CustomAudienceServiceImpl(
@@ -5003,7 +5004,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mContext, AdServicesLoggerImpl.getInstance()),
                         flags.getFledgeScheduleCustomAudienceMinDelayMinsOverride(),
                         /* additionalScheduleRequestsEnabled= */ true,
-                        COMMON_FLAGS_WITH_FILTERS_ENABLED.getDisableFledgeEnrollmentCheck());
+                        COMMON_FLAGS_WITH_FILTERS_ENABLED.getDisableFledgeEnrollmentCheck(),
+                        mAdServicesLoggerMock);
 
         mService =
                 new CustomAudienceServiceImpl(

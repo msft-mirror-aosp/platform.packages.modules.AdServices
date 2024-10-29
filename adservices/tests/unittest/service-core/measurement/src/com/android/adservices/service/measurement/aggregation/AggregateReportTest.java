@@ -59,6 +59,7 @@ public final class AggregateReportTest {
     private static final long TRIGGER_TIME = 1000L;
 
     private static final String API = "attribution-reporting";
+    private static final Integer AGGREGATABLE_FILTERING_ID_MAX_BYTES = 1;
 
     private AggregateReport createAttributionReport() {
         return new AggregateReport.Builder()
@@ -81,6 +82,7 @@ public final class AggregateReportTest {
                         AggregateReportFixture.ValidAggregateReportParams.REGISTRATION_ORIGIN)
                 .setTriggerTime(TRIGGER_TIME)
                 .setApi(API)
+                .setAggregatableFilteringIdMaxBytes(AGGREGATABLE_FILTERING_ID_MAX_BYTES)
                 .build();
     }
 
@@ -153,6 +155,9 @@ public final class AggregateReportTest {
         assertEquals(TRIGGER_TIME, attributionReport.getTriggerTime());
         assertFalse(attributionReport.isFakeReport());
         assertEquals(API, attributionReport.getApi());
+        assertEquals(
+                AGGREGATABLE_FILTERING_ID_MAX_BYTES,
+                attributionReport.getAggregatableFilteringIdMaxBytes());
     }
 
     @Test
