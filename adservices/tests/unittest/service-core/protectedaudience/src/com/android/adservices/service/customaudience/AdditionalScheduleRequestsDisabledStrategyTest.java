@@ -35,6 +35,7 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceToLeave;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedStats;
 
 import org.json.JSONException;
 import org.junit.Before;
@@ -52,6 +53,7 @@ public class AdditionalScheduleRequestsDisabledStrategyTest
     @Captor private ArgumentCaptor<Instant> mBeforeTimeArgumentCaptor;
     @Mock private CustomAudienceDao mCustomAudienceDao;
     private AdditionalScheduleRequestsDisabledStrategy mStrategy;
+    @Mock private ScheduledCustomAudienceUpdatePerformedStats.Builder mStatsBuilderMock;
 
     @Before
     public void setup() {
@@ -66,7 +68,8 @@ public class AdditionalScheduleRequestsDisabledStrategyTest
                         OWNER,
                         true,
                         getScheduleRequest_1(),
-                        DevContext.builder(PACKAGE).setDeviceDevOptionsEnabled(false).build())
+                        DevContext.builder(PACKAGE).setDeviceDevOptionsEnabled(false).build(),
+                        mStatsBuilderMock)
                 .get();
 
         verify(mCustomAudienceDao, times(0))
