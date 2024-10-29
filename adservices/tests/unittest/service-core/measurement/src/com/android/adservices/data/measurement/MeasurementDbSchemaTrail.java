@@ -2996,6 +2996,70 @@ public class MeasurementDbSchemaTrail {
                     + ") ON DELETE CASCADE"
                     + ")";
 
+    private static final String CREATE_TABLE_AGGREGATE_REPORT_V44 =
+            "CREATE TABLE "
+                    + AggregateReport.TABLE
+                    + " ("
+                    + AggregateReport.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + AggregateReport.PUBLISHER
+                    + " TEXT, "
+                    + AggregateReport.ATTRIBUTION_DESTINATION
+                    + " TEXT, "
+                    + AggregateReport.SOURCE_REGISTRATION_TIME
+                    + " INTEGER, "
+                    + AggregateReport.SCHEDULED_REPORT_TIME
+                    + " INTEGER, "
+                    + AggregateReport.ENROLLMENT_ID
+                    + " TEXT, "
+                    + AggregateReport.DEBUG_CLEARTEXT_PAYLOAD
+                    + " TEXT, "
+                    + AggregateReport.STATUS
+                    + " INTEGER, "
+                    + AggregateReport.DEBUG_REPORT_STATUS
+                    + " INTEGER, "
+                    + AggregateReport.API_VERSION
+                    + " TEXT, "
+                    + AggregateReport.SOURCE_DEBUG_KEY
+                    + " INTEGER, "
+                    + AggregateReport.TRIGGER_DEBUG_KEY
+                    + " INTEGER, "
+                    + AggregateReport.SOURCE_ID
+                    + " TEXT, "
+                    + AggregateReport.TRIGGER_ID
+                    + " TEXT, "
+                    + AggregateReport.DEDUP_KEY
+                    + " INTEGER, "
+                    + AggregateReport.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + AggregateReport.AGGREGATION_COORDINATOR_ORIGIN
+                    + " TEXT, "
+                    + AggregateReport.IS_FAKE_REPORT
+                    + " INTEGER, "
+                    + AggregateReport.TRIGGER_CONTEXT_ID
+                    + " TEXT, "
+                    + AggregateReport.TRIGGER_TIME
+                    + " INTEGER, "
+                    + AggregateReport.API
+                    + " TEXT, "
+                    + AggregateReport.AGGREGATABLE_FILTERING_ID_MAX_BYTES
+                    + " INTEGER, "
+                    + "FOREIGN KEY ("
+                    + AggregateReport.SOURCE_ID
+                    + ") REFERENCES "
+                    + SourceContract.TABLE
+                    + "("
+                    + SourceContract.ID
+                    + ") ON DELETE CASCADE "
+                    + "FOREIGN KEY ("
+                    + AggregateReport.TRIGGER_ID
+                    + ") REFERENCES "
+                    + TriggerContract.TABLE
+                    + "("
+                    + TriggerContract.ID
+                    + ") ON DELETE CASCADE"
+                    + ")";
+
     private static final String CREATE_TABLE_AGGREGATE_ENCRYPTION_KEY_V6 =
             "CREATE TABLE "
                     + AggregateEncryptionKey.TABLE
@@ -3861,6 +3925,13 @@ public class MeasurementDbSchemaTrail {
         return createStatements;
     }
 
+    private static Map<String, String> getCreateStatementByTableV44() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV43());
+        createStatements.put(
+                MeasurementTables.AggregateReport.TABLE, CREATE_TABLE_AGGREGATE_REPORT_V44);
+        return createStatements;
+    }
+
     private static Map<String, String> getCreateIndexesV7() {
         Map<String, String> createIndexes = new HashMap<>();
         createIndexes.putAll(CREATE_INDEXES_V6);
@@ -4023,6 +4094,10 @@ public class MeasurementDbSchemaTrail {
         return getCreateIndexesV42();
     }
 
+    private static Map<String, String> getCreateIndexesV44() {
+        return getCreateIndexesV43();
+    }
+
     private static final Map<Integer, Collection<String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
             new ImmutableMap.Builder<Integer, Collection<String>>()
                     .put(6, CREATE_STATEMENT_BY_TABLE_V6.values())
@@ -4063,6 +4138,7 @@ public class MeasurementDbSchemaTrail {
                     .put(41, getCreateStatementByTableV41().values())
                     .put(42, getCreateStatementByTableV42().values())
                     .put(43, getCreateStatementByTableV43().values())
+                    .put(44, getCreateStatementByTableV44().values())
                     .build();
 
     private static final Map<Integer, Collection<String>> CREATE_INDEXES_STATEMENTS_BY_VERSION =
@@ -4105,6 +4181,7 @@ public class MeasurementDbSchemaTrail {
                     .put(41, getCreateIndexesV41().values())
                     .put(42, getCreateIndexesV42().values())
                     .put(43, getCreateIndexesV43().values())
+                    .put(44, getCreateIndexesV44().values())
                     .build();
 
     /**

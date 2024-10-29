@@ -5428,6 +5428,35 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void testInsertAggregateReport_withAggregatableFilteringIdMaxBytes() {
+        AggregateReport.Builder builder = AggregateReportFixture.getValidAggregateReportBuilder();
+        builder.setAggregatableFilteringIdMaxBytes(2);
+        AggregateReport aggregateReportWithAggregatableFilteringIdMaxBytes = builder.build();
+        mDatastoreManager.runInTransaction(
+                (dao) ->
+                        dao.insertAggregateReport(
+                                aggregateReportWithAggregatableFilteringIdMaxBytes));
+
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.AggregateReport.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            assertTrue(cursor.moveToNext());
+            AggregateReport aggregateReport = SqliteObjectMapper.constructAggregateReport(cursor);
+            assertNotNull(aggregateReport);
+            assertNotNull(aggregateReport.getId());
+            assertEquals(aggregateReportWithAggregatableFilteringIdMaxBytes, aggregateReport);
+        }
+    }
+
+    @Test
     public void testDeleteAllMeasurementDataWithEmptyList() {
         SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
 

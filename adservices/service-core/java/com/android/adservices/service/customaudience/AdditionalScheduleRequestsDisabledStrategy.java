@@ -24,6 +24,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceToLeave;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdateRequest;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedStats;
 
 import com.google.common.util.concurrent.FluentFuture;
 
@@ -47,7 +48,8 @@ public class AdditionalScheduleRequestsDisabledStrategy
             String owner,
             boolean allowScheduleInResponse,
             JSONObject updateResponseJson,
-            DevContext devContext) {
+            DevContext devContext,
+            ScheduledCustomAudienceUpdatePerformedStats.Builder statsBuilder) {
         return FluentFuture.from(immediateVoidFuture());
     }
 

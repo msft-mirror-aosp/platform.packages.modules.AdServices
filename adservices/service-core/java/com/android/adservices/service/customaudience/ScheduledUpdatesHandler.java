@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+
 import static com.android.adservices.service.common.ValidatorUtil.AD_TECH_ROLE_BUYER;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.AUCTION_SERVER_REQUEST_FLAGS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.PRIORITY_KEY;
@@ -24,6 +25,8 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHED
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_JOIN_CA;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_LEAVE_CA;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CLIENT_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CONTENT_SIZE_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_IO_EXCEPTION;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_REDIRECTION;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_SERVER_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_TOO_MANY_REQUESTS;
@@ -78,6 +81,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientResp
 import com.android.adservices.service.common.httpclient.AdServicesHttpUtil;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.exception.HttpContentSizeException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
@@ -97,6 +101,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.io.InvalidObjectException;
 import java.time.Clock;
 import java.time.Duration;
@@ -272,7 +277,8 @@ public final class ScheduledUpdatesHandler {
                                 .getFledgeScheduleCustomAudienceMinDelayMinsOverride(),
                         FlagsFactory.getFlags()
                                 .getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests(),
-                        FlagsFactory.getFlags().getDisableFledgeEnrollmentCheck()),
+                        FlagsFactory.getFlags().getDisableFledgeEnrollmentCheck(),
+                        AdServicesLoggerImpl.getInstance()),
                 AdServicesLoggerImpl.getInstance());
     }
 
@@ -471,7 +477,8 @@ public final class ScheduledUpdatesHandler {
                                         update.getOwner(),
                                         update.getAllowScheduleInResponse(),
                                         jsonResponse,
-                                        devContext),
+                                        devContext,
+                                        statsBuilder),
                         mLightWeightExecutor)
                 .transformAsync(ignoredVoid -> removeHandledUpdate(update), mLightWeightExecutor)
                 .transformAsync(
@@ -754,8 +761,8 @@ public final class ScheduledUpdatesHandler {
     }
 
     private void logHttpError(Throwable error) {
+        int typeOfHttpError = SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_UNKNOWN_ERROR;
         if (error instanceof AdServicesNetworkException adServicesNetworkException) {
-            int typeOfHttpError = SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_UNKNOWN_ERROR;
             int errorCode = adServicesNetworkException.getErrorCode();
             if (errorCode == AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS) {
                 typeOfHttpError = SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_TOO_MANY_REQUESTS;
@@ -766,12 +773,12 @@ public final class ScheduledUpdatesHandler {
             } else if (errorCode == AdServicesNetworkException.ERROR_CLIENT) {
                 typeOfHttpError = SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CLIENT_ERROR;
             }
-            logFailureStats(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_HTTP_CALL, typeOfHttpError);
-        } else {
-            logFailureStats(
-                    SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_HTTP_CALL,
-                    SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR);
+        } else if (error instanceof HttpContentSizeException) {
+            typeOfHttpError = SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CONTENT_SIZE_ERROR;
+        } else if (error instanceof IOException) {
+            typeOfHttpError = SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_IO_EXCEPTION;
         }
+        logFailureStats(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_HTTP_CALL, typeOfHttpError);
     }
 
     private void sendBroadcastIntentIfEnabled() {
