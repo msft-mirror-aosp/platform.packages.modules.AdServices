@@ -62,6 +62,12 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHED
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_TOO_MANY_REQUESTS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.common.util.concurrent.Futures.immediateVoidFuture;
@@ -72,12 +78,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -92,6 +92,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -124,6 +125,7 @@ import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateBackgro
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedFailureStats;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedStats;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
@@ -142,8 +144,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
 import java.net.URL;
@@ -159,7 +159,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-public final class ScheduledUpdatesHandlerTest {
+@MockStatic(BackgroundFetchJob.class)
+public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String OWNER = CustomAudienceFixture.VALID_OWNER;
     private static final String OWNER_2 = "com.android.test.2";
@@ -191,7 +192,6 @@ public final class ScheduledUpdatesHandlerTest {
 
     private final AdRenderIdValidator mAdRenderIdValidator =
             AdRenderIdValidator.createEnabledInstance(100);
-    @Rule public MockitoRule rule = MockitoJUnit.rule();
     @Captor ArgumentCaptor<AdServicesHttpClientRequest> mRequestCaptor;
     @Captor ArgumentCaptor<DBCustomAudience> mInsertCustomAudienceCaptor;
 
@@ -213,7 +213,7 @@ public final class ScheduledUpdatesHandlerTest {
     private boolean mAuctionServerRequestFlags;
     private boolean mSellerConfigurationEnabled;
     private long mFledgeAuctionServerAdRenderIdMaxLength;
-    private Flags mFlags;
+    private Flags mFakeFlags;
     @NonNull private CustomAudienceDao mCustomAudienceDao;
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
     @Mock private AppInstallDao mAppInstallDaoMock;
@@ -238,9 +238,9 @@ public final class ScheduledUpdatesHandlerTest {
 
     @Before
     public void setup() throws Exception {
-        mFlags = new ScheduleCustomAudienceUpdateFlags();
+        mFakeFlags = new ScheduleCustomAudienceUpdateFlags();
         mAdFilteringFeatureFactory =
-                new AdFilteringFeatureFactory(mAppInstallDaoMock, mFrequencyCapDaoMock, mFlags);
+                new AdFilteringFeatureFactory(mAppInstallDaoMock, mFrequencyCapDaoMock, mFakeFlags);
 
         mHelper =
                 new AdditionalScheduleRequestsEnabledStrategyHelper(
@@ -253,7 +253,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDaoMock,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -265,14 +265,15 @@ public final class ScheduledUpdatesHandlerTest {
                         mStrategyMock,
                         mAdServicesLoggerMock);
 
-        mFledgeFrequencyCapFilteringEnabled = mFlags.getFledgeFrequencyCapFilteringEnabled();
-        mFledgeAppInstallFilteringEnabled = mFlags.getFledgeAppInstallFilteringEnabled();
-        mFledgeAuctionServerAdRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
+        mFledgeFrequencyCapFilteringEnabled = mFakeFlags.getFledgeFrequencyCapFilteringEnabled();
+        mFledgeAppInstallFilteringEnabled = mFakeFlags.getFledgeAppInstallFilteringEnabled();
+        mFledgeAuctionServerAdRenderIdEnabled =
+                mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled();
         mFledgeAuctionServerAdRenderIdMaxLength =
-                mFlags.getFledgeAuctionServerAdRenderIdMaxLength();
-        mAuctionServerRequestFlags = mFlags.getFledgeAuctionServerRequestFlagsEnabled();
+                mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength();
+        mAuctionServerRequestFlags = mFakeFlags.getFledgeAuctionServerRequestFlagsEnabled();
         mSellerConfigurationEnabled =
-                mFlags.getFledgeGetAdSelectionDataSellerConfigurationEnabled();
+                mFakeFlags.getFledgeGetAdSelectionDataSellerConfigurationEnabled();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
@@ -382,6 +383,7 @@ public final class ScheduledUpdatesHandlerTest {
                 joinedCustomAudiences.get(0).getUserBiddingSignals().toString());
 
         verifyDisabledStrategy(beforeTime, UPDATE, responseJson, partialCustomAudienceJsonArray);
+        verify(() -> BackgroundFetchJob.schedule(any()));
     }
 
     @Test
@@ -395,7 +397,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDaoMock,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -1893,7 +1895,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -1941,6 +1943,9 @@ public final class ScheduledUpdatesHandlerTest {
         // error
         verify(mAdServicesLoggerMock, never())
                 .logScheduledCustomAudienceUpdatePerformedFailureStats(any());
+
+        // Background job should not be scheduled as no custom audiences are joined
+        verify(() -> BackgroundFetchJob.schedule(any()), never());
     }
 
     @Test
@@ -1952,7 +1957,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2062,7 +2067,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2166,7 +2171,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2296,7 +2301,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2426,7 +2431,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2526,7 +2531,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2640,7 +2645,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2751,7 +2756,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2807,7 +2812,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2926,7 +2931,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -3055,7 +3060,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -3109,7 +3114,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -3164,7 +3169,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -3218,7 +3223,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -3268,7 +3273,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -3323,7 +3328,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -3410,7 +3415,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -3475,7 +3480,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDaoMock,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -3573,7 +3578,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -3827,7 +3832,7 @@ public final class ScheduledUpdatesHandlerTest {
 
     private void enableAuctionServerRequestFlags() {
         // Enable auction server request flags
-        mFlags =
+        mFakeFlags =
                 new ScheduleCustomAudienceUpdateFlags() {
                     @Override
                     public boolean getFledgeAuctionServerRequestFlagsEnabled() {
@@ -3838,7 +3843,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDaoMock,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -3853,7 +3858,7 @@ public final class ScheduledUpdatesHandlerTest {
 
     private void enableSellerConfigurationFlag() {
         // Enable seller configuration flag
-        mFlags =
+        mFakeFlags =
                 new ScheduleCustomAudienceUpdateFlags() {
                     @Override
                     public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
@@ -3864,7 +3869,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDaoMock,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -3880,7 +3885,7 @@ public final class ScheduledUpdatesHandlerTest {
     private void disableSellerConfigurationFlag() {
         // Disable seller configuration flag
         // Safeguard to ensure that tests continue to work as intended when flag is turned on
-        mFlags =
+        mFakeFlags =
                 new ScheduleCustomAudienceUpdateFlags() {
                     @Override
                     public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
@@ -3891,7 +3896,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDaoMock,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
