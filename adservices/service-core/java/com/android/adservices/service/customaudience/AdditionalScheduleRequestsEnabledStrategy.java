@@ -93,7 +93,10 @@ public class AdditionalScheduleRequestsEnabledStrategy
             JSONObject updateResponseJson,
             DevContext devContext,
             ScheduledCustomAudienceUpdatePerformedStats.Builder statsBuilder) {
-        if (!allowScheduleInResponse) return FluentFuture.from(immediateVoidFuture());
+        if (!allowScheduleInResponse) {
+            statsBuilder.setWasInitialHop(false);
+            return FluentFuture.from(immediateVoidFuture());
+        }
         List<ListenableFuture<Void>> persistScheduleRequestList = new ArrayList<>();
         ExecutionSequencer sequencer = ExecutionSequencer.create();
         List<JSONObject> scheduledRequests =
