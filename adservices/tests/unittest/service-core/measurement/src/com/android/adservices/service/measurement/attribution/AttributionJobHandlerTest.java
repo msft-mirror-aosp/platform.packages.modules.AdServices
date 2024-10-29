@@ -1415,8 +1415,9 @@ public class AttributionJobHandlerTest {
                         .setAttributionDestination(trigger.getAttributionDestination())
                         .setDebugCleartextPayload(
                                 "{\"operation\":\"histogram\","
-                                        + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},"
-                                        + "{\"bucket\":\"2693\",\"value\":1644}]}")
+                                        + "\"data\":[{"
+                                        + "\"bucket\":\"1369\",\"value\":32768,\"id\":\"0\"},"
+                                        + "{\"bucket\":\"2693\",\"value\":1644,\"id\":\"0\"}]}")
                         .setEnrollmentId(source.getEnrollmentId())
                         .setPublisher(source.getRegistrant())
                         .setSourceId(source.getId())
@@ -1429,10 +1430,12 @@ public class AttributionJobHandlerTest {
                                                         new AggregateHistogramContribution.Builder()
                                                                 .setKey(new BigInteger("1369"))
                                                                 .setValue(32768)
+                                                                .setId(UnsignedLong.ZERO)
                                                                 .build(),
                                                         new AggregateHistogramContribution.Builder()
                                                                 .setKey(new BigInteger("2693"))
                                                                 .setValue(1644)
+                                                                .setId(UnsignedLong.ZERO)
                                                                 .build()))
                                         .build())
                         .setSourceRegistrationTime(SOURCE_TIME)
@@ -9222,6 +9225,147 @@ public class AttributionJobHandlerTest {
                         eq(List.of(validTrigger.getId())), eq(Trigger.Status.ATTRIBUTED));
     }
 
+    @Test
+    public void performAttribution_triggerHasUnsupportedAggregatableValues_returnAndIgnoreTrigger()
+            throws Exception {
+        // Setup
+        String unsupportedAggregatableValues =
+                "{\"campaignCounts\": {\"value\": 32768, \"filtering_id\": \"1\"}}";
+        Source validSource = SourceFixture.getValidSource();
+        Trigger validTrigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregateTriggerData(null)
+                        .setAggregateValuesString(unsupportedAggregatableValues)
+                        .setEventTriggers(EVENT_TRIGGERS)
+                        .setId(UUID.randomUUID().toString())
+                        .build();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(validTrigger.getId()));
+        when(mMeasurementDao.getTrigger(validTrigger.getId())).thenReturn(validTrigger);
+        when(mMeasurementDao.getMatchingActiveSources(validTrigger))
+                .thenReturn(List.of(validSource));
+        // Execution
+        mHandler.performPendingAttributions();
+        // Assertions
+        MeasurementAttributionStats measurementAttributionStats = getMeasurementAttributionStats();
+        assertEquals(
+                AttributionStatus.AttributionResult.NOT_ATTRIBUTED.getValue(),
+                measurementAttributionStats.getResult());
+        verify(mMeasurementDao, times(1))
+                .updateTriggerStatus(eq(List.of(validTrigger.getId())), eq(Trigger.Status.IGNORED));
+        verify(mMeasurementDao, never()).insertAggregateReport(any());
+        verify(mMeasurementDao, never()).insertEventReport(any());
+    }
+
+    @Test
+    public void performAttribution_triggerHasUnsupportedAggregatableValues_generatesNoReport()
+            throws JSONException, DatastoreException {
+        // Setup
+        JSONArray triggerData = getAggregateTriggerData();
+        String unsupportedAggregatableValues =
+                "{\"campaignCounts\": {\"value\": 32768, \"filtering_id\": \"1\"}}";
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(getEventTriggers())
+                        .setAggregateTriggerData(triggerData.toString())
+                        .setAggregateValuesString(unsupportedAggregatableValues)
+                        .build();
+        Source source = getAggregateSource();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(List.of(source));
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(anyInt(), any(), any()))
+                .thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
+        // Execution
+        mHandler.performPendingAttributions();
+        // Assertions
+        verify(mMeasurementDao)
+                .updateTriggerStatus(eq(List.of(trigger.getId())), eq(Trigger.Status.IGNORED));
+        verify(mMeasurementDao, never()).insertAggregateReport(any());
+        verify(mMeasurementDao, never()).insertEventReport(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void
+            performAttribution_triggerHasUnsupportedAggregatableValuesArr_returnAndIgnoreTrigger()
+                    throws Exception {
+        // Setup
+        String unsupportedAggregatableValues =
+                "[{\"values\":{\"campaignCounts\":{\"value\":32768, \"filtering_id\":\"123\"},"
+                        + " \"geoValue\":1664}}]";
+        Source validSource = SourceFixture.getValidSource();
+        Trigger validTrigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregateTriggerData(null)
+                        .setAggregateValuesString(unsupportedAggregatableValues)
+                        .setEventTriggers(EVENT_TRIGGERS)
+                        .setId(UUID.randomUUID().toString())
+                        .build();
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(validTrigger.getId()));
+        when(mMeasurementDao.getTrigger(validTrigger.getId())).thenReturn(validTrigger);
+        when(mMeasurementDao.getMatchingActiveSources(validTrigger))
+                .thenReturn(List.of(validSource));
+        // Execution
+        mHandler.performPendingAttributions();
+        // Assertions
+        MeasurementAttributionStats measurementAttributionStats = getMeasurementAttributionStats();
+        assertEquals(
+                AttributionStatus.AttributionResult.NOT_ATTRIBUTED.getValue(),
+                measurementAttributionStats.getResult());
+        verify(mMeasurementDao, times(1))
+                .updateTriggerStatus(eq(List.of(validTrigger.getId())), eq(Trigger.Status.IGNORED));
+        verify(mMeasurementDao, never()).insertAggregateReport(any());
+        verify(mMeasurementDao, never()).insertEventReport(any());
+    }
+
+    @Test
+    public void performAttribution_triggerHasUnsupportedAggregatableValuesArr_generateNoReport()
+            throws JSONException, DatastoreException {
+        // Setup
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        JSONArray triggerData = getAggregateTriggerData();
+        String unsupportedAggregatableValues =
+                "[{\"values\":{\"campaignCounts\":{\"value\":32768, \"filtering_id\":\"123\"},"
+                        + " \"geoValue\":1664}}]";
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setTriggerTime(TRIGGER_TIME)
+                        .setStatus(Trigger.Status.PENDING)
+                        .setEventTriggers(getEventTriggers())
+                        .setAggregateTriggerData(triggerData.toString())
+                        .setAggregateValuesString(unsupportedAggregatableValues)
+                        .build();
+        Source source = getAggregateSource();
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(List.of(source));
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(anyInt(), any(), any()))
+                .thenReturn(5L);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
+        // Execution
+        mHandler.performPendingAttributions();
+        // Assertions
+        verify(mMeasurementDao)
+                .updateTriggerStatus(eq(List.of(trigger.getId())), eq(Trigger.Status.IGNORED));
+        verify(mMeasurementDao, never()).insertAggregateReport(any());
+        verify(mMeasurementDao, never()).insertEventReport(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
     private void testNullAggregateReport_noSource(
             Trigger.SourceRegistrationTimeConfig sourceRegistrationTimeConfig,
             String triggerContextId,
@@ -9889,8 +10033,9 @@ public class AttributionJobHandlerTest {
                 .setAttributionDestination(trigger.getAttributionDestination())
                 .setDebugCleartextPayload(
                         "{\"operation\":\"histogram\","
-                                + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},"
-                                + "{\"bucket\":\"2693\",\"value\":1644}]}")
+                                + "\"data\":[{\"bucket\":\"1369\",\"value\":32768,\"id"
+                                + "\":\"0\"},"
+                                + "{\"bucket\":\"2693\",\"value\":1644,\"id\":\"0\"}]}")
                 .setEnrollmentId(source.getEnrollmentId())
                 .setPublisher(source.getRegistrant())
                 .setSourceId(source.getId())
@@ -9906,15 +10051,16 @@ public class AttributionJobHandlerTest {
                                                 new AggregateHistogramContribution.Builder()
                                                         .setKey(new BigInteger("1369"))
                                                         .setValue(32768)
+                                                        .setId(UnsignedLong.ZERO)
                                                         .build(),
                                                 new AggregateHistogramContribution.Builder()
                                                         .setKey(new BigInteger("2693"))
                                                         .setValue(1644)
+                                                        .setId(UnsignedLong.ZERO)
                                                         .build()))
                                 .build())
                 .setIsFakeReport(false)
                 .setApi(API);
-
     }
 
     private static JSONArray getAggregateTriggerData() throws JSONException {
