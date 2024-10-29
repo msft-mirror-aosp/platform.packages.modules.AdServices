@@ -16,7 +16,7 @@
 package com.android.adservices.shared.testing.flags;
 
 import static com.android.adservices.shared.testing.SdkSandbox.State.DISABLED;
-import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.PERSISTENT;
+import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.NONE;
 
 import com.android.adservices.shared.meta_testing.AbstractFlagsPreparerClassRuleIntegrationTestCase;
 import com.android.adservices.shared.meta_testing.DeviceConfigWrapper;
@@ -59,9 +59,7 @@ public final class AbstractFlagsPreparerClassRuleIntegrationTest
     protected FakeFlagsPreparerClassRule newRule(
             SdkSandboxWrapper sdkSandbox, DeviceConfigWrapper deviceConfig) {
         sdkSandbox.setWrapped(new FakeSdkSandbox().setState(DISABLED));
-        // NOTE: ideally initial mode should be NONE, but somehow tradefed / atest set it to
-        // PERSISTENT, and this class should mimic the real flag as much as possible
-        deviceConfig.setWrapped(new FakeDeviceConfig().setSyncDisabledMode(PERSISTENT));
+        deviceConfig.setWrapped(new FakeDeviceConfig().setSyncDisabledMode(NONE));
         return new FakeFlagsPreparerClassRule(sdkSandbox, deviceConfig);
     }
 

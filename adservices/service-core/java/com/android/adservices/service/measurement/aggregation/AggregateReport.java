@@ -71,6 +71,7 @@ public class AggregateReport {
     @Nullable private String mTriggerContextId;
     private long mTriggerTime;
     private String mApi;
+    @Nullable private Integer mAggregatableFilteringIdMaxBytes;
 
     @IntDef(value = {Status.PENDING, Status.DELIVERED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -112,6 +113,7 @@ public class AggregateReport {
         mTriggerContextId = null;
         mTriggerTime = 0L;
         mApi = null;
+        mAggregatableFilteringIdMaxBytes = null;
     }
 
     @Override
@@ -143,7 +145,10 @@ public class AggregateReport {
                 && mIsFakeReport == aggregateReport.mIsFakeReport
                 && Objects.equals(mTriggerContextId, aggregateReport.mTriggerContextId)
                 && mTriggerTime == aggregateReport.mTriggerTime
-                && Objects.equals(mApi, aggregateReport.mApi);
+                && Objects.equals(mApi, aggregateReport.mApi)
+                && Objects.equals(
+                        mAggregatableFilteringIdMaxBytes,
+                        aggregateReport.mAggregatableFilteringIdMaxBytes);
     }
 
     @Override
@@ -169,7 +174,8 @@ public class AggregateReport {
                 mIsFakeReport,
                 mTriggerContextId,
                 mTriggerTime,
-                mApi);
+                mApi,
+                mAggregatableFilteringIdMaxBytes);
     }
 
     /**
@@ -296,6 +302,12 @@ public class AggregateReport {
     /** Returns the aggregate report api. */
     public String getApi() {
         return mApi;
+    }
+
+    /** Returns the aggregatable filtering id max bytes. */
+    @Nullable
+    public Integer getAggregatableFilteringIdMaxBytes() {
+        return mAggregatableFilteringIdMaxBytes;
     }
 
     /**
@@ -525,6 +537,13 @@ public class AggregateReport {
             return this;
         }
 
+        /** See {@link AggregateReport#getAggregatableFilteringIdMaxBytes()} */
+        public Builder setAggregatableFilteringIdMaxBytes(
+                @Nullable Integer aggregatableFilteringIdMaxBytes) {
+            mAttributionReport.mAggregatableFilteringIdMaxBytes = aggregatableFilteringIdMaxBytes;
+            return this;
+        }
+
         /**
          * Given a {@link Trigger} trigger, source registration time, reporting delay, and the api
          * version, initialize an {@link AggregateReport.Builder} builder that builds a null
@@ -572,6 +591,8 @@ public class AggregateReport {
             mAttributionReport.mTriggerContextId = trigger.getTriggerContextId();
             mAttributionReport.mTriggerTime = trigger.getTriggerTime();
             mAttributionReport.mApi = api;
+            mAttributionReport.mAggregatableFilteringIdMaxBytes =
+                    trigger.getAggregatableFilteringIdMaxBytes();
 
             if (trigger.getAggregationCoordinatorOrigin() != null) {
                 mAttributionReport.mAggregationCoordinatorOrigin =

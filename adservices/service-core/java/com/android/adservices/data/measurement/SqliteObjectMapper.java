@@ -421,6 +421,10 @@ public class SqliteObjectMapper {
         setLongColumn(
                 cursor, MeasurementTables.AggregateReport.TRIGGER_TIME, builder::setTriggerTime);
         setTextColumn(cursor, MeasurementTables.AggregateReport.API, builder::setApi);
+        setIntColumn(
+                cursor,
+                MeasurementTables.AggregateReport.AGGREGATABLE_FILTERING_ID_MAX_BYTES,
+                builder::setAggregatableFilteringIdMaxBytes);
         return builder.build();
     }
 

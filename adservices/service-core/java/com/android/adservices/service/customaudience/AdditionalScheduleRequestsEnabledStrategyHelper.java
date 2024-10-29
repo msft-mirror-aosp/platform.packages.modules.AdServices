@@ -109,7 +109,7 @@ public class AdditionalScheduleRequestsEnabledStrategyHelper {
                     .setIsDebuggable(devContext.getDeviceDevOptionsEnabled())
                     .setAllowScheduleInResponse(false)
                     .build();
-        } catch (JSONException e) {
+        } catch (Throwable e) {
             sLogger.e(e, "Cannot convert schedule request json to DBScheduledCustomAudienceUpdate");
             throw new JSONException(e);
         }
@@ -122,7 +122,7 @@ public class AdditionalScheduleRequestsEnabledStrategyHelper {
                     updateResponseJson
                             .getJSONObject(SCHEDULE_REQUESTS_KEY)
                             .getJSONArray(REQUESTS_KEY);
-        } catch (JSONException e) {
+        } catch (Throwable e) {
             sLogger.d(e, "There are no schedule requests in the request");
             return new ArrayList<>();
         }
@@ -132,7 +132,7 @@ public class AdditionalScheduleRequestsEnabledStrategyHelper {
         for (int i = 0; i < jsonArray.length(); i++) {
             try {
                 scheduleRequestJsonList.add(jsonArray.getJSONObject(i));
-            } catch (JSONException e) {
+            } catch (Throwable e) {
                 sLogger.e(e, "Invalid Schedule Request object, skipping");
             }
         }
@@ -143,7 +143,8 @@ public class AdditionalScheduleRequestsEnabledStrategyHelper {
         return scheduleRequestJsonList;
     }
 
-    List<PartialCustomAudience> extractPartialCustomAudiencesFromRequest(JSONObject requestJson) {
+    List<PartialCustomAudience> extractPartialCustomAudiencesFromRequest(JSONObject requestJson)
+            throws JSONException {
         JSONArray jsonArray;
         try {
             jsonArray = requestJson.getJSONArray(PARTIAL_CUSTOM_AUDIENCES_KEY);
@@ -151,14 +152,16 @@ public class AdditionalScheduleRequestsEnabledStrategyHelper {
             sLogger.d(e, "There are no partial custom audiences in the request");
             return new ArrayList<>();
         }
-
         List<PartialCustomAudience> partialCustomAudiences = new ArrayList<>();
         for (int i = 0; i < jsonArray.length(); i++) {
             try {
                 JSONObject jsonObject = jsonArray.getJSONObject(i);
                 partialCustomAudiences.add(jsonObjectToPartialCustomAudience(jsonObject));
-            } catch (JSONException e) {
-                sLogger.e(e, "Invalid Partial Custom Audience object, skipping");
+            } catch (Throwable e) {
+                sLogger.e(
+                        e,
+                        "Invalid Partial Custom Audience object, skipping the schedule CA request");
+                throw new JSONException(e);
             }
         }
         sLogger.d(
@@ -168,7 +171,8 @@ public class AdditionalScheduleRequestsEnabledStrategyHelper {
         return partialCustomAudiences;
     }
 
-    List<String> extractCustomAudiencesToLeaveFromRequest(JSONObject scheduleRequest) {
+    List<String> extractCustomAudiencesToLeaveFromRequest(JSONObject scheduleRequest)
+            throws JSONException {
         JSONArray jsonArray;
         try {
             jsonArray = scheduleRequest.getJSONArray(LEAVE_CUSTOM_AUDIENCE_KEY);
@@ -182,10 +186,13 @@ public class AdditionalScheduleRequestsEnabledStrategyHelper {
             try {
                 String caName = jsonArray.getString(i);
                 Preconditions.checkStringNotEmpty(caName);
-
                 customAudienceToLeaveList.add(caName);
-            } catch (IllegalArgumentException | JSONException e) {
-                sLogger.e(e, "Invalid Custom Audience to Leave object, skipping");
+            } catch (Throwable e) {
+                sLogger.e(
+                        e,
+                        "Invalid Custom Audience to leave object, skipping the schedule CA"
+                                + " request");
+                throw new JSONException(e);
             }
         }
         sLogger.d("No of CAs to leave obtained from request: %s", customAudienceToLeaveList.size());
