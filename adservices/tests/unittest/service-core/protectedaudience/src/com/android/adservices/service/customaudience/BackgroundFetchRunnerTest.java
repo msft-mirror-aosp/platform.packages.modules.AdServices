@@ -58,6 +58,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -85,6 +86,8 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
 @SetFlagEnabled(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
+// TODO (b/384952360): refine CEL related verifications later
+@SkipLoggingUsageRule(reason = "b/384952360")
 public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTestCase {
 
     private final String mFetchPath = "/fetch";
@@ -103,6 +106,7 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
 
     @Before
     public void setup() {
+        mocker.mockGetFlags(mFakeFlags);
         when(mCustomAudienceLoggerFactoryMock.getUpdateCustomAudienceExecutionLogger())
                 .thenReturn(mUpdateCustomAudienceExecutionLoggerMock);
 

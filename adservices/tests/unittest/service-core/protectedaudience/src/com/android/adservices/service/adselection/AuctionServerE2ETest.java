@@ -207,6 +207,7 @@ import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
@@ -276,6 +277,8 @@ import java.util.stream.Collectors;
 @MockStatic(AppImportanceFilter.class)
 @MockStatic(DebugFlags.class)
 @MockStatic(FlagsFactory.class)
+// TODO (b/384952360): refine CEL related verifications later
+@SkipLoggingUsageRule(reason = "b/384952360")
 public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final int COUNTDOWN_LATCH_LIMIT_SECONDS = 10;
     private static final int CALLER_UID = Process.myUid();

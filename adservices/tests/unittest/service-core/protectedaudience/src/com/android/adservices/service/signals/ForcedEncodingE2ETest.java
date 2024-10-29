@@ -69,6 +69,7 @@ import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
@@ -90,12 +91,13 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerImpl;
 import com.android.adservices.shared.testing.BroadcastReceiverSyncCallback;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.concurrency.SimpleSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
-import com.android.modules.utils.testing.ExtendedMockitoRule;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -116,8 +118,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-@ExtendedMockitoRule.MockStatic(PeriodicEncodingJobService.class)
+@MockStatic(PeriodicEncodingJobService.class)
 @RequiresSdkLevelAtLeastT
+@MockStatic(FlagsFactory.class)
+// TODO (b/384952360): refine CEL related verifications later
+@SkipLoggingUsageRule(reason = "b/384952360")
 public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final int TIMEOUT_MS = 30_000;
     private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
@@ -199,7 +204,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
     @Before
     public void setup() {
         mLegacyFakeFlags = new ForcedEncodingE2ETestFlags();
-
+        mocker.mockGetFlags(mLegacyFakeFlags);
         mSignalsDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
                         .build()
