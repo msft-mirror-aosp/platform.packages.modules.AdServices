@@ -84,13 +84,6 @@ import com.android.adservices.service.measurement.reporting.EventReportingJobHan
 import com.android.adservices.service.stats.NoOpLoggerImpl;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
-import co.nstant.in.cbor.CborDecoder;
-import co.nstant.in.cbor.CborException;
-import co.nstant.in.cbor.model.Array;
-import co.nstant.in.cbor.model.ByteString;
-import co.nstant.in.cbor.model.DataItem;
-import co.nstant.in.cbor.model.UnicodeString;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -116,6 +109,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import javax.net.ssl.HttpsURLConnection;
+
+import co.nstant.in.cbor.CborDecoder;
+import co.nstant.in.cbor.CborException;
+import co.nstant.in.cbor.model.Array;
+import co.nstant.in.cbor.model.ByteString;
+import co.nstant.in.cbor.model.DataItem;
+import co.nstant.in.cbor.model.UnicodeString;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
@@ -283,6 +283,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
             }
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
+            when(urlConnection.getURL()).thenReturn(new URL(uri.toString()));
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
                     invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
@@ -300,6 +301,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
             }
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
+            when(urlConnection.getURL()).thenReturn(new URL(uri.toString()));
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
                     invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
@@ -317,6 +319,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
             }
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
+            when(urlConnection.getURL()).thenReturn(new URL(uri.toString()));
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
                     invocation ->
                             getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri);
@@ -335,6 +338,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
             }
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
+            when(urlConnection.getURL()).thenReturn(new URL(uri.toString()));
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
                     invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
@@ -352,6 +356,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
             }
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
+            when(urlConnection.getURL()).thenReturn(new URL(uri.toString()));
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
                     invocation ->
                             getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri);
