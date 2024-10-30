@@ -366,7 +366,12 @@ public class AsyncTriggerFetcher {
             }
             asyncFetchStatus.setResponseSize(headerSize);
             int responseCode = urlConnection.getResponseCode();
-            LoggerFactory.getMeasurementLogger().d("Response code = " + responseCode);
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Response code: %s, Method: %s, Host: %s",
+                            responseCode,
+                            urlConnection.getRequestMethod(),
+                            urlConnection.getURL().getHost());
             if (!FetcherUtil.isRedirect(responseCode) && !FetcherUtil.isSuccess(responseCode)) {
                 asyncFetchStatus.setResponseStatus(
                         AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);
