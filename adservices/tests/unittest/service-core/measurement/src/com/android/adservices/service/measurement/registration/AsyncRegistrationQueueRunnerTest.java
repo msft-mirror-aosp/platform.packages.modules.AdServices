@@ -142,6 +142,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     private static final String LOCATION_TYPE_REDIRECT_URI_2 = WebUtil.validUrl("https://qux.test");
     private static final String LOCATION_TYPE_REDIRECT_URI_3 =
             WebUtil.validUrl("https://quux.test");
+    private static final String PLATFORM_AD_ID = "platform-ad-id";
 
     private static final Uri WEB_DESTINATION = WebUtil.validUri("https://web-destination.test");
     private static final Uri APP_DESTINATION = Uri.parse("android-app://com.app_destination");
@@ -366,7 +367,9 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
         verify(mAsyncSourceFetcher, times(1))
                 .fetchSource(any(AsyncRegistration.class), any(), any());
         verify(mMeasurementDao, times(1)).insertSource(any(Source.class));
-        verify(mMeasurementDao, times(2)).insertAsyncRegistration(any(AsyncRegistration.class));
+        ArgumentCaptor<AsyncRegistration> redirectsCaptor =
+                ArgumentCaptor.forClass(AsyncRegistration.class);
+        verify(mMeasurementDao, times(2)).insertAsyncRegistration(redirectsCaptor.capture());
         verify(mDebugReportApi, times(1))
                 .scheduleSourceReport(
                         any(Source.class),
@@ -945,27 +948,33 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
 
         // Assertions for first invocation
         assertRepeatedAsyncRegistration(
+                validAsyncRegistration,
                 asyncRegistrationArgumentCaptor,
                 0,
                 getRegistrationRedirectToWellKnownUri(
                         Uri.parse(LOCATION_TYPE_REDIRECT_URI),
-                        LOCATION_TYPE_REDIRECT_URI.toString()));
+                        LOCATION_TYPE_REDIRECT_URI.toString()),
+                AsyncRedirect.RedirectBehavior.LOCATION_TO_WELL_KNOWN);
 
         // Assertions for second invocation
         assertRepeatedAsyncRegistration(
+                validAsyncRegistration,
                 asyncRegistrationArgumentCaptor,
                 1,
                 getRegistrationRedirectToWellKnownUri(
                         Uri.parse(LOCATION_TYPE_REDIRECT_URI_2),
-                        LOCATION_TYPE_REDIRECT_URI_2.toString()));
+                        LOCATION_TYPE_REDIRECT_URI_2.toString()),
+                AsyncRedirect.RedirectBehavior.LOCATION_TO_WELL_KNOWN);
 
         // Assertions for third invocation
         assertRepeatedAsyncRegistration(
+                validAsyncRegistration,
                 asyncRegistrationArgumentCaptor,
                 2,
                 getRegistrationRedirectToWellKnownUri(
                         Uri.parse(LOCATION_TYPE_REDIRECT_URI_3),
-                        LOCATION_TYPE_REDIRECT_URI_3.toString()));
+                        LOCATION_TYPE_REDIRECT_URI_3.toString()),
+                AsyncRedirect.RedirectBehavior.LOCATION_TO_WELL_KNOWN);
     }
 
     @Test
@@ -5979,11 +5988,32 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     }
 
     private void assertRepeatedAsyncRegistration(
+            AsyncRegistration firstAsyncRegistration,
             ArgumentCaptor<AsyncRegistration> asyncRegistrationArgumentCaptor,
             int index,
-            Uri redirectUri) {
-        AsyncRegistration asyncReg = asyncRegistrationArgumentCaptor.getAllValues().get(index);
-        Assert.assertEquals(redirectUri, asyncReg.getRegistrationUri());
+            Uri redirectUri,
+            AsyncRedirect.RedirectBehavior redirectBehavior) {
+        AsyncRegistration expectedAsyncReg =
+                new AsyncRegistration.Builder()
+                        .setId(UUID.randomUUID().toString())
+                        .setRegistrationUri(redirectUri)
+                        .setWebDestination(firstAsyncRegistration.getWebDestination())
+                        .setOsDestination(firstAsyncRegistration.getOsDestination())
+                        .setRegistrant(firstAsyncRegistration.getRegistrant())
+                        .setVerifiedDestination(firstAsyncRegistration.getVerifiedDestination())
+                        .setTopOrigin(firstAsyncRegistration.getTopOrigin())
+                        .setType(firstAsyncRegistration.getType())
+                        .setSourceType(firstAsyncRegistration.getSourceType())
+                        .setRequestTime(firstAsyncRegistration.getRequestTime())
+                        .setRetryCount(0)
+                        .setDebugKeyAllowed(firstAsyncRegistration.getDebugKeyAllowed())
+                        .setAdIdPermission(firstAsyncRegistration.hasAdIdPermission())
+                        .setPlatformAdId(firstAsyncRegistration.getPlatformAdId())
+                        .setRegistrationId(firstAsyncRegistration.getRegistrationId())
+                        .setRedirectBehavior(redirectBehavior)
+                        .build();
+        assertThat(asyncRegistrationArgumentCaptor.getAllValues().get(index))
+                .isEqualTo(expectedAsyncReg);
     }
 
     private Answer<Optional<Source>> getAsyncSourceAnswerForLocationTypeRedirectToWellKnown(
@@ -6065,6 +6095,8 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .setDebugKeyAllowed(true)
                 .setRegistrationId(
                         AsyncRegistrationFixture.ValidAsyncRegistrationParams.REGISTRATION_ID)
+                .setAdIdPermission(true)
+                .setPlatformAdId(PLATFORM_AD_ID)
                 .build();
     }
 
