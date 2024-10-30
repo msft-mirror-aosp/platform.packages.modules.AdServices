@@ -213,4 +213,12 @@ public final class AdservicesTestHelper {
                 ShellUtils.runShellCommand("pm install --user %d -r %s", currentUserId, apkPath);
         assertThat(installMessage).contains("Success");
     }
+
+    /** Uninstall test app and verify the uninstallation. */
+    public static void uninstallTestApp(String apkName) {
+        int currentUserId = Process.myUserHandle().getIdentifier();
+        String uninstallMessage =
+                ShellUtils.runShellCommand("pm uninstall --user %d %s", currentUserId, apkName);
+        assertThat(uninstallMessage).contains("Success");
+    }
 }
