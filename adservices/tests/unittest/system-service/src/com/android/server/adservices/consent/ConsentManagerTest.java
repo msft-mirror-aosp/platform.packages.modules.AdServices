@@ -18,6 +18,7 @@ package com.android.server.adservices.consent;
 
 import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.server.adservices.consent.ConsentManager.NOTIFICATION_DISPLAYED_ONCE;
 import static com.android.server.adservices.consent.ConsentManager.STORAGE_VERSION;
 import static com.android.server.adservices.consent.ConsentManager.STORAGE_XML_IDENTIFIER;
@@ -27,38 +28,51 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.when;
 
 import android.app.adservices.consent.ConsentParcel;
 import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.storage.AtomicFileDatastore;
+import com.android.modules.utils.testing.ExtendedMockitoRule;
+import com.android.server.adservices.Flags;
+import com.android.server.adservices.FlagsFactory;
 import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
 import com.android.server.adservices.feature.PrivacySandboxFeatureType;
 import com.android.server.adservices.feature.PrivacySandboxUxCollection;
 
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 /** Tests for {@link ConsentManager} */
-public final class ConsentManagerTest extends AdServicesMockitoTestCase {
+@ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
+public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase {
     private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String BASE_DIR = PPAPI_CONTEXT.getFilesDir().getAbsolutePath();
 
+    @Rule(order = 11)
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.withoutAdoptingShellPermissions().setDefaultLogcatTags();
+
     @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
+
+    // TODO(b/358120731): create an AdServicesServerExtendedMockitoTestCase class instead, which
+    // contains a mMockServerFlags
+    @Mock private Flags mMockServerFlags;
 
     private AtomicFileDatastore mDatastore;
 
@@ -71,11 +85,14 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
                         STORAGE_VERSION,
                         VERSION_KEY,
                         mMockAdServicesErrorLogger);
+        when(FlagsFactory.getFlags()).thenReturn(mMockServerFlags);
+        mockGetEnableAtomicFileDatastoreBatchUpdateApiInSystemServer(false);
     }
 
     @After
     public void tearDown() {
         mDatastore.tearDownForTesting();
+
     }
 
     @Test
@@ -96,21 +113,18 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testCreateAndInitAtomicFileDatastore() {
-        AtomicFileDatastore datastore = null;
-        try {
-            datastore = ConsentManager.createAndInitAtomicFileDatastore(BASE_DIR);
-        } catch (IOException e) {
-            Assert.fail("Fail to create the DataStore");
-        }
-
-        // Assert that the DataStore is created and initialized with NOTIFICATION_DISPLAYED_ONCE
-        // is false.
-        assertThat(datastore.getBoolean(NOTIFICATION_DISPLAYED_ONCE)).isFalse();
+    public void testCreateAndInitAtomicFileDatastore() throws Exception {
+        testCreateAndInitAtomicFileDatastoreSteps();
     }
 
     @Test
-    public void testGetConsent_unSet() throws IOException {
+    public void testCreateAndInitAtomicFileDatastore_atomic() throws Exception {
+        mockGetEnableAtomicFileDatastoreBatchUpdateApiInSystemServer(true);
+        testCreateAndInitAtomicFileDatastoreSteps();
+    }
+
+    @Test
+    public void testGetConsent_unSet() throws Exception {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
         // Newly initialized ConsentManager has consent = false.
@@ -121,7 +135,7 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testGetAndSetConsent_null() throws IOException {
+    public void testGetAndSetConsent_null() throws Exception {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
 
@@ -159,56 +173,18 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testGetAndSetConsent_nonNull() throws IOException {
-        // Create a ConsentManager for user 0.
-        ConsentManager consentManager0 =
-                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-        consentManager0.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.ALL_API));
-        assertThat(consentManager0.getConsent(ConsentParcel.ALL_API).isIsGiven()).isFalse();
-
-        consentManager0.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API));
-        assertThat(consentManager0.getConsent(ConsentParcel.ALL_API).isIsGiven()).isTrue();
-
-        consentManager0.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.TOPICS));
-        assertThat(consentManager0.getConsent(ConsentParcel.TOPICS).isIsGiven()).isFalse();
-
-        consentManager0.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.TOPICS));
-        assertThat(consentManager0.getConsent(ConsentParcel.TOPICS).isIsGiven()).isTrue();
-
-        consentManager0.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.FLEDGE));
-        assertThat(consentManager0.getConsent(ConsentParcel.FLEDGE).isIsGiven()).isFalse();
-
-        consentManager0.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.FLEDGE));
-        assertThat(consentManager0.getConsent(ConsentParcel.FLEDGE).isIsGiven()).isTrue();
-
-        consentManager0.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.MEASUREMENT));
-        assertThat(consentManager0.getConsent(ConsentParcel.MEASUREMENT).isIsGiven()).isFalse();
-
-        consentManager0.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.MEASUREMENT));
-        assertThat(consentManager0.getConsent(ConsentParcel.MEASUREMENT).isIsGiven()).isTrue();
-
-        // Create another ConsentManager for user 1 to make sure ConsentManagers
-        // are isolated by users.
-        ConsentManager consentManager1 =
-                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 1);
-        // By default, this ConsentManager has isGiven false.
-        assertThat(consentManager1.getConsent(ConsentParcel.ALL_API).isIsGiven()).isFalse();
-
-        // Set the user 0 to revoked.
-        consentManager0.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.ALL_API));
-        assertThat(consentManager0.getConsent(ConsentParcel.ALL_API).isIsGiven()).isFalse();
-
-        // Set the user 1 to given.
-        consentManager1.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API));
-        assertThat(consentManager1.getConsent(ConsentParcel.ALL_API).isIsGiven()).isTrue();
-
-        // This validates that the consentManager for user 0 was not changed when updating
-        // ConsentManager for user 1.
-        assertThat(consentManager0.getConsent(ConsentParcel.ALL_API).isIsGiven()).isFalse();
+    public void testGetAndSetConsent_nonNull() throws Exception {
+        testConsentNonNull();
     }
 
     @Test
-    public void testGetAndSetConsent_upgrade() throws IOException {
+    public void testGetAndSetConsent_nonNull_atomic() throws Exception {
+        mockGetEnableAtomicFileDatastoreBatchUpdateApiInSystemServer(true);
+        testConsentNonNull();
+    }
+
+    @Test
+    public void testGetAndSetConsent_upgrade() throws Exception {
         // Create a ConsentManager for user 0.
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
@@ -225,7 +201,7 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testGetAndSetConsent_downgrade() throws IOException {
+    public void testGetAndSetConsent_downgrade() throws Exception {
         // Create a ConsentManager for user 0.
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
@@ -259,7 +235,7 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testGetConsent_unSetConsentApiType() throws IOException {
+    public void testGetConsent_unSetConsentApiType() throws Exception {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
         // Newly initialized ConsentManager has consent = false.
@@ -276,7 +252,7 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testRecordNotificationDisplayed() throws IOException {
+    public void testRecordNotificationDisplayed() throws Exception {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
         // First, the notification displayed is false.
@@ -287,7 +263,7 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testGaUxRecordNotificationDisplayed() throws IOException {
+    public void testGaUxRecordNotificationDisplayed() throws Exception {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
         // First, the notification displayed is false.
@@ -298,7 +274,7 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testDeleteConsentDataStoreDir() throws IOException {
+    public void testDeleteConsentDataStoreDir() throws Exception {
         int userIdentifier = 0;
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, userIdentifier);
@@ -314,7 +290,7 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testSetUserManualInteractionWithConsentToTrue() throws IOException {
+    public void testSetUserManualInteractionWithConsentToTrue() throws Exception {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
 
@@ -324,7 +300,7 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testSetUserManualInteractionWithConsentToFalse() throws IOException {
+    public void testSetUserManualInteractionWithConsentToFalse() throws Exception {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
 
@@ -334,7 +310,7 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testSetUserManualInteractionWithConsentToUnknown() throws IOException {
+    public void testSetUserManualInteractionWithConsentToUnknown() throws Exception {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
 
@@ -344,89 +320,29 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testSetCurrentPrivacySandboxFeature() throws IOException {
-        ConsentManager consentManager =
-                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-
-        // All bits are false in the beginning.
-        assertThat(
-                        consentManager.isPrivacySandboxFeatureEnabled(
-                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
-                .isEqualTo(false);
-        assertThat(
-                        consentManager.isPrivacySandboxFeatureEnabled(
-                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
-                .isEqualTo(false);
-        assertThat(
-                        consentManager.isPrivacySandboxFeatureEnabled(
-                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
-                .isEqualTo(false);
-
-        consentManager.setCurrentPrivacySandboxFeature(
-                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.name());
-        assertThat(
-                        consentManager.isPrivacySandboxFeatureEnabled(
-                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
-                .isEqualTo(true);
-        assertThat(
-                        consentManager.isPrivacySandboxFeatureEnabled(
-                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
-                .isEqualTo(false);
-        assertThat(
-                        consentManager.isPrivacySandboxFeatureEnabled(
-                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
-                .isEqualTo(false);
-
-        consentManager.setCurrentPrivacySandboxFeature(
-                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT.name());
-        assertThat(
-                        consentManager.isPrivacySandboxFeatureEnabled(
-                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
-                .isEqualTo(true);
-        assertThat(
-                        consentManager.isPrivacySandboxFeatureEnabled(
-                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
-                .isEqualTo(false);
-        assertThat(
-                        consentManager.isPrivacySandboxFeatureEnabled(
-                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
-                .isEqualTo(false);
-
-        consentManager.setCurrentPrivacySandboxFeature(
-                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED.name());
-        assertThat(
-                        consentManager.isPrivacySandboxFeatureEnabled(
-                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
-                .isEqualTo(true);
-        assertThat(
-                        consentManager.isPrivacySandboxFeatureEnabled(
-                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
-                .isEqualTo(false);
-        assertThat(
-                        consentManager.isPrivacySandboxFeatureEnabled(
-                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
-                .isEqualTo(false);
+    public void testSetCurrentPrivacySandboxFeature() throws Exception {
+        testSetCurrentPrivacySandboxFeatureSteps();
     }
 
     @Test
-    public void uxConformanceTest() throws IOException {
-        ConsentManager consentManager =
-                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-
-        // All bits are fall in the beginning.
-        assertThat(consentManager.getUx())
-                .isEqualTo(PrivacySandboxUxCollection.UNSUPPORTED_UX.toString());
-
-        Stream.of(PrivacySandboxUxCollection.values())
-                .forEach(
-                        ux -> {
-                            consentManager.setUx(ux.toString());
-                            assertThat(consentManager.getUx()).isEqualTo(ux.toString());
-                        });
+    public void testSetCurrentPrivacySandboxFeature_atomic() throws Exception {
+        mockGetEnableAtomicFileDatastoreBatchUpdateApiInSystemServer(true);
+        testSetCurrentPrivacySandboxFeatureSteps();
     }
 
     @Test
-    public void testDeleteConsentDataStoreDirUserIdentifierNotPresent() throws IOException {
+    public void uxConformanceTest() throws Exception {
+        uxConformanceTestSteps();
+    }
+
+    @Test
+    public void uxConformanceTest_atomic() throws Exception {
+        mockGetEnableAtomicFileDatastoreBatchUpdateApiInSystemServer(true);
+        uxConformanceTestSteps();
+    }
+
+    @Test
+    public void testDeleteConsentDataStoreDirUserIdentifierNotPresent() throws Exception {
         int userIdentifier = 0;
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, userIdentifier);
@@ -446,7 +362,7 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void isAdIdEnabledTest() throws IOException {
+    public void isAdIdEnabledTest() throws Exception {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
 
@@ -457,7 +373,7 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void isU18AccountTest() throws IOException {
+    public void isU18AccountTest() throws Exception {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
 
@@ -468,7 +384,7 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void isEntryPointEnabledTest() throws IOException {
+    public void isEntryPointEnabledTest() throws Exception {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
 
@@ -479,7 +395,7 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void isAdultAccountTest() throws IOException {
+    public void isAdultAccountTest() throws Exception {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
 
@@ -490,7 +406,7 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void wasU18NotificationDisplayedTest() throws IOException {
+    public void wasU18NotificationDisplayedTest() throws Exception {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
 
@@ -501,20 +417,14 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void enrollmentChannelConformanceTest() throws IOException {
-        ConsentManager consentManager =
-                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+    public void enrollmentChannelConformanceTest() throws Exception {
+        enrollmentChannelConformanceTestSteps();
+    }
 
-        // All bits are fall in the beginning.
-        assertThat(consentManager.getEnrollmentChannel()).isEqualTo(null);
-
-        Stream.of(PrivacySandboxEnrollmentChannelCollection.values())
-                .forEach(
-                        channel -> {
-                            consentManager.setEnrollmentChannel(channel.toString());
-                            assertThat(consentManager.getEnrollmentChannel())
-                                    .isEqualTo(channel.toString());
-                        });
+    @Test
+    public void enrollmentChannelConformanceTest_atomic() throws Exception {
+        mockGetEnableAtomicFileDatastoreBatchUpdateApiInSystemServer(true);
+        enrollmentChannelConformanceTestSteps();
     }
 
     @Test
@@ -532,7 +442,7 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void isMeasurementDataResetTest() throws IOException {
+    public void isMeasurementDataResetTest() throws Exception {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
 
@@ -543,7 +453,7 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void isPaDataResetTest() throws IOException {
+    public void isPaDataResetTest() throws Exception {
         ConsentManager consentManager =
                 ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
 
@@ -551,5 +461,207 @@ public final class ConsentManagerTest extends AdServicesMockitoTestCase {
         consentManager.setPaDataReset(true);
 
         assertThat(consentManager.isPaDataReset()).isTrue();
+    }
+
+    private void mockGetEnableAtomicFileDatastoreBatchUpdateApiInSystemServer(boolean enable) {
+        doReturn(enable)
+                .when(mMockServerFlags)
+                .getEnableAtomicFileDatastoreBatchUpdateApiInSystemServer();
+    }
+
+    private void testCreateAndInitAtomicFileDatastoreSteps() throws Exception {
+        AtomicFileDatastore datastore = null;
+
+        datastore = ConsentManager.createAndInitAtomicFileDatastore(BASE_DIR);
+
+        // Assert that the DataStore is created and initialized with NOTIFICATION_DISPLAYED_ONCE
+        // is false.
+        assertThat(datastore.getBoolean(NOTIFICATION_DISPLAYED_ONCE)).isFalse();
+    }
+
+    private void testConsentNonNull() throws Exception {
+        // Create a ConsentManager for user 0.
+        ConsentManager consentManager0 =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+        consentManager0.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.ALL_API));
+        expect.withMessage("consentManager0 consent ALL_API")
+                .that(consentManager0.getConsent(ConsentParcel.ALL_API).isIsGiven())
+                .isFalse();
+
+        consentManager0.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API));
+        expect.withMessage("consentManager0 consent ALL_API")
+                .that(consentManager0.getConsent(ConsentParcel.ALL_API).isIsGiven())
+                .isTrue();
+
+        consentManager0.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.TOPICS));
+        expect.withMessage("consentManager0 consent TOPICS")
+                .that(consentManager0.getConsent(ConsentParcel.TOPICS).isIsGiven())
+                .isFalse();
+
+        consentManager0.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.TOPICS));
+        expect.withMessage("consentManager0 consent TOPICS")
+                .that(consentManager0.getConsent(ConsentParcel.TOPICS).isIsGiven())
+                .isTrue();
+
+        consentManager0.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.FLEDGE));
+        expect.withMessage("consentManager0 consent FLEDGE")
+                .that(consentManager0.getConsent(ConsentParcel.FLEDGE).isIsGiven())
+                .isFalse();
+
+        consentManager0.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.FLEDGE));
+        expect.withMessage("consentManager0 consent FLEDGE")
+                .that(consentManager0.getConsent(ConsentParcel.FLEDGE).isIsGiven())
+                .isTrue();
+
+        consentManager0.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.MEASUREMENT));
+        expect.withMessage("consentManager0 consent MEASUREMENT")
+                .that(consentManager0.getConsent(ConsentParcel.MEASUREMENT).isIsGiven())
+                .isFalse();
+
+        consentManager0.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.MEASUREMENT));
+        expect.withMessage("consentManager0 consent MEASUREMENT")
+                .that(consentManager0.getConsent(ConsentParcel.MEASUREMENT).isIsGiven())
+                .isTrue();
+
+        // Create another ConsentManager for user 1 to make sure ConsentManagers
+        // are isolated by users.
+        ConsentManager consentManager1 =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 1);
+        // By default, this ConsentManager has isGiven false.
+        expect.withMessage("consentManager1 consent ALL_API")
+                .that(consentManager1.getConsent(ConsentParcel.ALL_API).isIsGiven())
+                .isFalse();
+
+        // Set the user 0 to revoked.
+        consentManager0.setConsent(ConsentParcel.createRevokedConsent(ConsentParcel.ALL_API));
+        expect.withMessage("consentManager0 consent ALL_API")
+                .that(consentManager0.getConsent(ConsentParcel.ALL_API).isIsGiven())
+                .isFalse();
+
+        // Set the user 1 to given.
+        consentManager1.setConsent(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API));
+        expect.withMessage("consentManager1 consent ALL_API")
+                .that(consentManager1.getConsent(ConsentParcel.ALL_API).isIsGiven())
+                .isTrue();
+
+        // This validates that the consentManager for user 0 was not changed when updating
+        // ConsentManager for user 1.
+        expect.withMessage("consentManager0 consent ALL_API")
+                .that(consentManager0.getConsent(ConsentParcel.ALL_API).isIsGiven())
+                .isFalse();
+    }
+
+    private void testSetCurrentPrivacySandboxFeatureSteps() throws Exception {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        // All bits are false in the beginning.
+        expect.withMessage("consentManager privacy feature enabled")
+                .that(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
+                .isFalse();
+        expect.withMessage("consentManager privacy feature enabled")
+                .that(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
+                .isFalse();
+        expect.withMessage("consentManager privacy feature enabled")
+                .that(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
+                .isFalse();
+
+        consentManager.setCurrentPrivacySandboxFeature(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.name());
+        expect.withMessage("consentManager privacy feature enabled")
+                .that(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
+                .isTrue();
+        expect.withMessage("consentManager privacy feature enabled")
+                .that(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
+                .isFalse();
+        expect.withMessage("consentManager privacy feature enabled")
+                .that(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
+                .isFalse();
+
+        consentManager.setCurrentPrivacySandboxFeature(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT.name());
+        expect.withMessage("consentManager privacy feature enabled")
+                .that(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
+                .isTrue();
+        expect.withMessage("consentManager privacy feature enabled")
+                .that(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
+                .isFalse();
+        expect.withMessage("consentManager privacy feature enabled")
+                .that(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
+                .isFalse();
+
+        consentManager.setCurrentPrivacySandboxFeature(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED.name());
+        expect.withMessage("consentManager privacy feature enabled")
+                .that(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED))
+                .isTrue();
+        expect.withMessage("consentManager privacy feature enabled")
+                .that(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT))
+                .isFalse();
+        expect.withMessage("consentManager privacy feature enabled")
+                .that(
+                        consentManager.isPrivacySandboxFeatureEnabled(
+                                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT))
+                .isFalse();
+    }
+
+    private void uxConformanceTestSteps() throws Exception {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        // All bits are fall in the beginning.
+        assertWithMessage("ConsentManager get ux should be unsupported")
+                .that(consentManager.getUx())
+                .isEqualTo(PrivacySandboxUxCollection.UNSUPPORTED_UX.toString());
+
+        Stream.of(PrivacySandboxUxCollection.values())
+                .forEach(
+                        ux -> {
+                            consentManager.setUx(ux.toString());
+                            expect.withMessage("consentManager get ux")
+                                    .that(consentManager.getUx())
+                                    .isEqualTo(ux.toString());
+                        });
+    }
+
+    private void enrollmentChannelConformanceTestSteps() throws Exception {
+        ConsentManager consentManager =
+                ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
+
+        // All bits are fall in the beginning.
+        assertWithMessage("consentManager get enrollment channel should be null")
+                .that(consentManager.getEnrollmentChannel())
+                .isNull();
+
+        Stream.of(PrivacySandboxEnrollmentChannelCollection.values())
+                .forEach(
+                        channel -> {
+                            consentManager.setEnrollmentChannel(channel.toString());
+                            expect.withMessage("consentManager get enrollment channel")
+                                    .that(consentManager.getEnrollmentChannel())
+                                    .isEqualTo(channel.toString());
+                        });
     }
 }
