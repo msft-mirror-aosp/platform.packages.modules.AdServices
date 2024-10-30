@@ -22,6 +22,7 @@ import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
 import org.junit.Test;
@@ -30,6 +31,7 @@ import org.mockito.Mock;
 public class ScheduleCustomAudienceUpdateStrategyFactoryTest extends AdServicesMockitoTestCase {
 
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
+    @Mock private AdServicesLogger mAdServicesLoggerMock;
 
     @Test
     public void testCreateStrategy_AdditionalScheduleRequestsFalse_ReturnsDisabledStrategy() {
@@ -43,7 +45,8 @@ public class ScheduleCustomAudienceUpdateStrategyFactoryTest extends AdServicesM
                                 mContext, AdServicesLoggerImpl.getInstance()),
                         MIN_DELAY,
                         /* additionalScheduleRequestsEnabled= */ false,
-                        /* disableFledgeEnrollmentCheck= */ false);
+                        /* disableFledgeEnrollmentCheck= */ false,
+                        mAdServicesLoggerMock);
 
         expect.that(strategy).isInstanceOf(AdditionalScheduleRequestsDisabledStrategy.class);
     }
@@ -60,7 +63,8 @@ public class ScheduleCustomAudienceUpdateStrategyFactoryTest extends AdServicesM
                                 mContext, AdServicesLoggerImpl.getInstance()),
                         MIN_DELAY,
                         /* additionalScheduleRequestsEnabled= */ true,
-                        /* disableFledgeEnrollmentCheck= */ false);
+                        /* disableFledgeEnrollmentCheck= */ false,
+                        mAdServicesLoggerMock);
 
         expect.that(strategy).isInstanceOf(AdditionalScheduleRequestsEnabledStrategy.class);
     }
