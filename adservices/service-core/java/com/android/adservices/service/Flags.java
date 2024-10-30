@@ -649,13 +649,6 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
     }
 
-    boolean MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING = false;
-
-    /** Returns true if aggregatable report padding is enabled else false. */
-    default boolean getMeasurementEnableAggregatableReportPayloadPadding() {
-        return MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
-    }
-
     int DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION = 100;
 
     /** Max number of {@link Trigger} to process per job for {@link AttributionJobService} */

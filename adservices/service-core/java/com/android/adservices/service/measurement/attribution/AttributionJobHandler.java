@@ -652,7 +652,9 @@ class AttributionJobHandler {
                             .setRegistrationOrigin(trigger.getRegistrationOrigin())
                             .setTriggerContextId(trigger.getTriggerContextId())
                             .setTriggerTime(trigger.getTriggerTime())
-                            .setApi(API);
+                            .setApi(API)
+                            .setAggregatableFilteringIdMaxBytes(
+                                    trigger.getAggregatableFilteringIdMaxBytes());
             if (mFlags.getMeasurementEnableMinReportLifespanForUninstall()) {
                 aggregateReportBuilder.setTriggerTime(trigger.getTriggerTime());
             }
@@ -823,7 +825,6 @@ class AttributionJobHandler {
                                 API,
                                 mFlags);
 
-        if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
             AggregateHistogramContribution paddingContribution =
                     new AggregateHistogramContribution.Builder().setPaddingContribution().build();
             List<AggregateHistogramContribution> contributions = new ArrayList<>();
@@ -832,7 +833,6 @@ class AttributionJobHandler {
             generator.padContributions(contributions, paddingContribution);
             nullReportBuilder.setDebugCleartextPayload(
                     AggregateReport.generateDebugPayload(contributions));
-        }
 
         return nullReportBuilder.build();
     }

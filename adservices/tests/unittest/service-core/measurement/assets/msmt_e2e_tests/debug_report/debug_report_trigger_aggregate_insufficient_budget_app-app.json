@@ -108,7 +108,11 @@
             {
               "key": "0x559",
               "value": 65535
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key" : "347982378",
           "trigger_debug_key": "8971346782"
@@ -134,7 +138,11 @@
             {
               "key": "0x559",
               "value": 65535
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key" : "347982378",
           "trigger_debug_key": "8971346782"

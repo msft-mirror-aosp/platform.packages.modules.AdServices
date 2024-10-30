@@ -224,6 +224,18 @@ public class AdsRelevanceStatusUtils {
     /** Internal error during schedule custom audience update by the background job. */
     public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR = 7;
 
+    /**
+     * Used for logging IO Exception thrown by the AdServicesHttpsClient. This exception is thrown
+     * by IOException.
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_IO_EXCEPTION = 8;
+
+    /**
+     * Used for logging HttpContentSizeException thrown by the AdServicesHttpsClient. This exception
+     * is thrown when the http response is exceeds the maximum permitted value.
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CONTENT_SIZE_ERROR = 9;
+
     /** Unknown status for existing update in the database. */
     public static final int SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_UNKNOWN = 0;
 
@@ -378,7 +390,9 @@ public class AdsRelevanceStatusUtils {
                 SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CLIENT_ERROR,
                 SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_SERVER_ERROR,
                 SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR,
-                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_IO_EXCEPTION,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CONTENT_SIZE_ERROR
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ScheduleCustomAudienceUpdatePerformedFailureType {}
