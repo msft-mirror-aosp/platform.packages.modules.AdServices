@@ -182,7 +182,6 @@
             "attribution_destination": "android-app://com.destination",
             "reporting_origin": "https://reporter.test",
             "scheduled_report_time": "3601",
-            "source_registration_time": "0",
             "version": "0.1"
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
@@ -190,7 +189,11 @@
             {
               "key": "0x559",
               "value": 123
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         },
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",

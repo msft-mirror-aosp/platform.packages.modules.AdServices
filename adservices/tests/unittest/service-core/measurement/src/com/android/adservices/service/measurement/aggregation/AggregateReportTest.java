@@ -56,9 +56,25 @@ public final class AggregateReportTest {
                     + "\"value\": 1664"
                     + "}]"
                     + "}";
+
+    private static final String DEBUG_CLEARTEXT_PAYLOAD_WITH_FILTERING_ID =
+            "{"
+                    + "\"operation\": \"histogram\","
+                    + "\"data\": [{"
+                    + "\"id\": \"0\","
+                    + "\"bucket\": \"1369\","
+                    + "\"value\": 32768"
+                    + "},"
+                    + "{"
+                    + "\"id\": \"123\","
+                    + "\"bucket\": \"3461\","
+                    + "\"value\": 1664"
+                    + "}]"
+                    + "}";
     private static final long TRIGGER_TIME = 1000L;
 
     private static final String API = "attribution-reporting";
+    private static final Integer AGGREGATABLE_FILTERING_ID_MAX_BYTES = 1;
 
     private AggregateReport createAttributionReport() {
         return new AggregateReport.Builder()
@@ -73,6 +89,31 @@ public final class AggregateReportTest {
                 .setStatus(AggregateReport.Status.PENDING)
                 .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
                 .setApiVersion("1452")
+                .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                .setSourceId(SOURCE_ID)
+                .setTriggerId(TRIGGER_ID)
+                .setRegistrationOrigin(
+                        AggregateReportFixture.ValidAggregateReportParams.REGISTRATION_ORIGIN)
+                .setTriggerTime(TRIGGER_TIME)
+                .setApi(API)
+                .setAggregatableFilteringIdMaxBytes(AGGREGATABLE_FILTERING_ID_MAX_BYTES)
+                .build();
+    }
+
+    private AggregateReport createAttributionReportWithIdInDebugClearTextPayload() {
+        return new AggregateReport.Builder()
+                .setId("1")
+                .setPublisher(Uri.parse("android-app://com.example.abc"))
+                .setAttributionDestination(Uri.parse("https://example.test/aS"))
+                .setSourceRegistrationTime(5L)
+                .setScheduledReportTime(1L)
+                .setEnrollmentId("enrollment-id")
+                .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD_WITH_FILTERING_ID)
+                .setAggregateAttributionData(new AggregateAttributionData.Builder().build())
+                .setStatus(AggregateReport.Status.PENDING)
+                .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
+                .setApiVersion("1.0")
                 .setSourceDebugKey(SOURCE_DEBUG_KEY)
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                 .setSourceId(SOURCE_ID)
@@ -153,6 +194,9 @@ public final class AggregateReportTest {
         assertEquals(TRIGGER_TIME, attributionReport.getTriggerTime());
         assertFalse(attributionReport.isFakeReport());
         assertEquals(API, attributionReport.getApi());
+        assertEquals(
+                AGGREGATABLE_FILTERING_ID_MAX_BYTES,
+                attributionReport.getAggregatableFilteringIdMaxBytes());
     }
 
     @Test
@@ -330,5 +374,31 @@ public final class AggregateReportTest {
 
         // Assertion
         assertEquals(0, contributions.size());
+    }
+
+    @Test
+    public void extractAggregateHistogramContributions_withFilteringId_success() {
+        AggregateReport aggregateReport = createAttributionReportWithIdInDebugClearTextPayload();
+        AggregateHistogramContribution expectedContribution1 =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger("1369"))
+                        .setValue(32768)
+                        .setId(UnsignedLong.ZERO)
+                        .build();
+        AggregateHistogramContribution expectedContribution2 =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger("3461"))
+                        .setValue(1664)
+                        .setId(new UnsignedLong("123"))
+                        .build();
+
+        // Execution
+        List<AggregateHistogramContribution> contributions =
+                aggregateReport.extractAggregateHistogramContributions();
+
+        // Assertion
+        assertEquals(2, contributions.size());
+        assertEquals(expectedContribution1, contributions.get(0));
+        assertEquals(expectedContribution2, contributions.get(1));
     }
 }

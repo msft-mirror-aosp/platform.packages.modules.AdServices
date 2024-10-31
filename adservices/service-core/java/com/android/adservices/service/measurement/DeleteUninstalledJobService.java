@@ -43,7 +43,6 @@ import java.util.concurrent.Executor;
 /**
  * Service for deleting data for uninstalled packages that the package change receiver has missed.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class DeleteUninstalledJobService extends JobService {
     private static final int MEASUREMENT_DELETE_UNINSTALLED_JOB_ID =
@@ -75,7 +74,7 @@ public final class DeleteUninstalledJobService extends JobService {
         LoggerFactory.getMeasurementLogger().d("DeleteUninstalledJobService.onStartJob");
         sBackgroundExecutor.execute(
                 () -> {
-                    MeasurementImpl.getInstance(this).deleteAllUninstalledMeasurementData();
+                    MeasurementImpl.getInstance().deleteAllUninstalledMeasurementData();
 
                     boolean shouldRetry = false;
                     AdServicesJobServiceLogger.getInstance()

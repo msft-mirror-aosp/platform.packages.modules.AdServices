@@ -18,6 +18,15 @@ package com.android.adservices.service.signals;
 
 import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FLEDGE_CONSENT_NOT_GIVEN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FLEDGE_CONSENT_REVOKED_FOR_APP_AFTER_SETTING_FLEDGE_USE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_GET_CALLING_UID_ILLEGAL_STATE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_USER_CONSENT_REVOKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_INVALID_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_SERVICE_IMPL_NULL_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_UNABLE_SEND_RESULT_TO_CALLBACK;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_OTHER_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_SUCCESS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -47,8 +56,13 @@ import android.net.Uri;
 import android.os.LimitExceededException;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.ProtectedSignalsServiceFilter;
@@ -60,8 +74,10 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerImpl;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -76,6 +92,12 @@ import org.mockito.Mock;
 import java.util.concurrent.ExecutorService;
 
 @MockStatic(PeriodicEncodingJobService.class)
+@RequiresSdkLevelAtLeastT(reason = "Protected App Signals is enabled for T+")
+@SetErrorLogUtilDefaultParams(
+        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final int API_NAME = AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
@@ -109,6 +131,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     @Before
     public void setup() {
         mFakeFlags = new ProtectedSignalsServiceImplTestFlags();
+        mocker.mockGetDebugFlags(mMockDebugFlags);
         logApiCallStatsCallback = mocker.mockLogApiCallStats(mAdServicesLoggerMock);
 
         mProtectedSignalsService =
@@ -121,12 +144,13 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         mCallingAppUidSupplierMock,
                         mProtectedSignalsServiceFilterMock,
                         mEnrollmentDaoMock,
                         mUpdateSignalsProcessReportedLoggerMock);
 
-        mDevContext = DevContext.builder(PACKAGE).setDevOptionsEnabled(false).build();
+        mDevContext = DevContext.builder(PACKAGE).setDeviceDevOptionsEnabled(false).build();
         mInput = new UpdateSignalsInput.Builder(URI, PACKAGE).build();
 
         // Set up the mocks for a success flow -- individual tests that want a failure can overwrite
@@ -205,14 +229,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     @SuppressWarnings("FutureReturnValueIgnored")
     @Test
     public void testUpdateSignalsSuccessWithUXNotificationNotEnforced() throws Exception {
-        Flags flagsWithUXNotificationEnforcementDisabled =
-                new ProtectedSignalsServiceImplTestFlags() {
-                    @Override
-                    public boolean getConsentNotificationDebugMode() {
-                        return true;
-                    }
-                };
-
+        mocker.mockGetConsentNotificationDebugMode(true);
         when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(URI),
                         eq(PACKAGE),
@@ -235,7 +252,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         mDevContextFilterMock,
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerMock,
-                        flagsWithUXNotificationEnforcementDisabled,
+                        mFakeFlags,
+                        mMockDebugFlags,
                         mCallingAppUidSupplierMock,
                         mProtectedSignalsServiceFilterMock,
                         mEnrollmentDaoMock,
@@ -282,6 +300,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_SERVICE_IMPL_NULL_ARGUMENT)
     public void testUpdateSignalsNullInput() throws Exception {
         assertThrows(
                 NullPointerException.class,
@@ -296,6 +316,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_SERVICE_IMPL_NULL_ARGUMENT)
     public void testUpdateSignalsLogsPackageUidAndAdtech() throws Exception {
         assertThrows(
                 NullPointerException.class,
@@ -310,6 +332,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_SERVICE_IMPL_NULL_ARGUMENT)
     public void testUpdateSignalsNullCallback() throws Exception {
         assertThrows(
                 NullPointerException.class,
@@ -323,6 +347,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_GET_CALLING_UID_ILLEGAL_STATE)
     public void testUpdateSignalsExceptionGettingUid() throws Exception {
         when(mCallingAppUidSupplierMock.getCallingAppUid()).thenThrow(new IllegalStateException());
         assertThrows(
@@ -337,6 +363,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED)
     public void testUpdateSignalsFilterException() throws Exception {
         when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(URI),
@@ -367,6 +395,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_USER_CONSENT_REVOKED)
     public void testUpdateSignals_filterExceptionFromConsent_notifiesSuccess() throws Exception {
         when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(URI),
@@ -387,6 +417,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_USER_CONSENT_REVOKED)
     public void testUpdateSignals_filterExceptionFromConsent_doesNotLogApiCalledLog()
             throws Exception {
         when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
@@ -412,6 +444,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_FILTER_EXCEPTION_USER_CONSENT_REVOKED)
     public void testUpdateSignals_filterExceptionFromConsent_doesNotScheduleJob() throws Exception {
         when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(URI),
@@ -432,6 +466,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_INVALID_ARGUMENT)
     public void testUpdateSignalsIllegalArgumentException() throws Exception {
         IllegalArgumentException exception = new IllegalArgumentException(EXCEPTION_MESSAGE);
         SettableFuture<Object> future = SettableFuture.create();
@@ -458,6 +494,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FLEDGE_CONSENT_REVOKED_FOR_APP_AFTER_SETTING_FLEDGE_USE)
     public void testUpdateSignalsNoConsentIfCallerNotHaveApiConsent() throws Exception {
         // Does NOT have FLEDGE consent
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
@@ -476,6 +514,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FLEDGE_CONSENT_NOT_GIVEN)
     public void testUpdateSignalsNoConsentIfUserNotSeenPASNotification() throws Exception {
         // Has FLEDGE consent
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
@@ -494,6 +534,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FLEDGE_CONSENT_NOT_GIVEN)
     public void testUpdateSignalsNoConsent() throws Exception {
         // Revokes PA consent
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
@@ -516,6 +558,8 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_UNABLE_SEND_RESULT_TO_CALLBACK)
     public void testUpdateSignalsCallbackException() throws Exception {
         doThrow(new RuntimeException()).when(mUpdateSignalsCallbackMock).onSuccess();
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);

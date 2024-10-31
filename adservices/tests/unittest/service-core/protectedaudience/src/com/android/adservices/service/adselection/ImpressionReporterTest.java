@@ -50,7 +50,9 @@ import com.android.adservices.data.adselection.datahandlers.ReportingData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.FrequencyCapAdDataValidatorNoOpImpl;
@@ -59,14 +61,15 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-@RequiresSdkLevelAtLeastS(reason = "PA APIs only available on S+")
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 public final class ImpressionReporterTest extends AdServicesExtendedMockitoTestCase {
     private static final long AD_SELECTION_ID = 100;
     private static final int LOGGING_TIMEOUT_MS = 5_000;
@@ -145,6 +148,7 @@ public final class ImpressionReporterTest extends AdServicesExtendedMockitoTestC
                         DevContext.createForDevOptionsDisabled(),
                         mMockAdServicesLogger,
                         flagsWithAuctionServerEnabled,
+                        mMockDebugFlags,
                         mMockAdSelectionServiceFilter,
                         mMockFledgeAuthorizationFilter,
                         new FrequencyCapAdDataValidatorNoOpImpl(),
@@ -222,6 +226,7 @@ public final class ImpressionReporterTest extends AdServicesExtendedMockitoTestC
                         DevContext.createForDevOptionsDisabled(),
                         mMockAdServicesLogger,
                         flagsWithAuctionServerEnabled,
+                        mMockDebugFlags,
                         mMockAdSelectionServiceFilter,
                         mMockFledgeAuthorizationFilter,
                         new FrequencyCapAdDataValidatorNoOpImpl(),

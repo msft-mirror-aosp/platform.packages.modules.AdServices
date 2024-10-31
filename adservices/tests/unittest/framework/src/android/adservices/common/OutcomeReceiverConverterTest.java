@@ -16,53 +16,40 @@
 
 package android.adservices.common;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import android.os.OutcomeReceiver;
 
+import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
-import java.util.concurrent.CountDownLatch;
-
-@RequiresSdkLevelAtLeastS
+@SuppressWarnings("NewApi")
 public class OutcomeReceiverConverterTest extends AdServicesUnitTestCase {
     @Test
-    public void testOutcomeReceiverConverterNullInput() {
-        expect.that(OutcomeReceiverConverter.toAdServicesOutcomeReceiver(null)).isNull();
+    public void testToOutcomeReceiverNullInput() {
+        expect.that(OutcomeReceiverConverter.toOutcomeReceiver(null)).isNull();
     }
 
     @Test
-    public void testOutcomeReceiverConverter() {
+    public void testToOutcomeReceiver() throws Exception {
         Object obj = new Object();
-        CountDownLatch resultLatch = new CountDownLatch(1);
+        AdServicesOutcomeReceiverForTests<Object> adServicesOutcomeReceiver1 =
+                new AdServicesOutcomeReceiverForTests<>();
+        OutcomeReceiver<Object, Exception> converted1 =
+                OutcomeReceiverConverter.toOutcomeReceiver(adServicesOutcomeReceiver1);
+
+        converted1.onResult(obj);
+        expect.withMessage("result callback").that(
+                adServicesOutcomeReceiver1.assertSuccess()).isEqualTo(obj);
 
         Exception error = new Exception();
-        CountDownLatch errorLatch = new CountDownLatch(1);
+        AdServicesOutcomeReceiverForTests<Object> adServicesOutcomeReceiver2 =
+                new AdServicesOutcomeReceiverForTests<>();
+        OutcomeReceiver<Object, Exception> converted2 = OutcomeReceiverConverter.toOutcomeReceiver(
+                adServicesOutcomeReceiver2);
 
-        OutcomeReceiver<Object, Exception> outcomeReceiver =
-                new OutcomeReceiver<>() {
-                    @Override
-                    public void onResult(Object result) {
-                        assertThat(result).isSameInstanceAs(obj);
-                        resultLatch.countDown();
-                    }
-
-                    @Override
-                    public void onError(Exception e) {
-                        assertThat(e).isSameInstanceAs(error);
-                        errorLatch.countDown();
-                    }
-                };
-
-        AdServicesOutcomeReceiver<Object, Exception> converted =
-                OutcomeReceiverConverter.toAdServicesOutcomeReceiver(outcomeReceiver);
-        converted.onResult(obj);
-        expect.withMessage("result callback").that(resultLatch.getCount()).isEqualTo(0);
-
-        converted.onError(error);
-        expect.withMessage("error callback").that(errorLatch.getCount()).isEqualTo(0);
+        converted2.onError(error);
+        expect.withMessage("error callback").that(
+                adServicesOutcomeReceiver2.assertErrorReceived()).isEqualTo(error);
     }
 }

@@ -43,11 +43,11 @@ public interface AdServicesFlagsMocker {
     /** Mocks a call to {@link Flags#getCobaltLoggingEnabled()}, returning {@code value}. */
     void mockGetCobaltLoggingEnabled(boolean value);
 
-    /**
-     * Mocks a call to {@link Flags#getAppNameApiErrorCobaltLoggingEnabled()}, returning
-     * overrideValue.
-     */
+    /** Mocks a call to {@link Flags#getAppNameApiErrorCobaltLoggingEnabled()}. */
     void mockGetAppNameApiErrorCobaltLoggingEnabled(boolean value);
+
+    /** Mocks a call to {@link Flags#getCobaltEnableApiCallResponseLogging()}. */
+    void mockGetEnableApiCallResponseLoggingEnabled(boolean value);
 
     /** Mocks calls to override Cobalt app name api error logging related flags. */
     void mockAllCobaltLoggingFlags(boolean enabled);
@@ -57,4 +57,7 @@ public interface AdServicesFlagsMocker {
      * for the testing release stage.
      */
     void mockGetAdservicesReleaseStageForCobalt(String stage);
+
+    /** Mocks a call to {@link Flags#getDeveloperModeFeatureEnabled()}. */
+    void mockGetDeveloperModeFeatureEnabled(boolean value);
 }

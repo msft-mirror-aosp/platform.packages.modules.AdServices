@@ -166,8 +166,7 @@ public final class DebugReportingJobService extends JobService {
                         "DebugReportingJobService",
                         () -> {
                             DatastoreManager datastoreManager =
-                                    DatastoreManagerFactory.getDatastoreManager(
-                                            getApplicationContext());
+                                    DatastoreManagerFactory.getDatastoreManager();
                             AndroidTimeSource timeSource = new AndroidTimeSource();
                             new EventReportingJobHandler(
                                             datastoreManager,

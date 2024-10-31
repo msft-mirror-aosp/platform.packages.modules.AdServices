@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FAILED_PER_BUYER_ENCODING;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_VALIDATE_AND_PERSIST_ENCODED_PAYLOAD_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
@@ -30,6 +34,9 @@ import static org.mockito.Mockito.when;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.DBEncodedPayload;
@@ -43,7 +50,7 @@ import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.pas.EncodingJobRunStats;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
@@ -53,13 +60,10 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -70,7 +74,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class PeriodicEncodingJobWorkerTest {
+@SetErrorLogUtilDefaultParams(
+        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
+@RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
+public class PeriodicEncodingJobWorkerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
     private static final AdTechIdentifier BUYER_2 = CommonFixture.VALID_BUYER_2;
@@ -101,15 +109,12 @@ public class PeriodicEncodingJobWorkerTest {
 
     private static final int MAX_SIZE_BYTES = 100;
 
-    @Rule public MockitoRule rule = MockitoJUnit.rule();
-
     @Mock private EncoderLogicHandler mEncoderLogicHandler;
     @Mock private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
     @Mock private EncoderPersistenceDao mEncoderPersistenceDao;
     @Mock private EncodedPayloadDao mEncodedPayloadDao;
     @Mock private ProtectedSignalsDao mProtectedSignalsDao;
     @Mock private SignalsScriptEngine mScriptEngine;
-    @Mock Flags mFlags;
     @Mock private EnrollmentDao mEnrollmentDao;
     @Mock private Clock mClock;
     @Mock private AdServicesLogger mAdServicesLogger;
@@ -124,19 +129,16 @@ public class PeriodicEncodingJobWorkerTest {
     private PeriodicEncodingJobWorker mJobWorker;
     private ArgumentCaptor<EncodingJobRunStats> mEncodingJobRunStatsArgumentCaptor;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
-
     @Before
     public void setup() {
         int maxFailedRun =
                 Flags.PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP;
-        when(mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes()).thenReturn(MAX_SIZE_BYTES);
-        when(mFlags.getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop())
+        when(mMockFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes()).thenReturn(MAX_SIZE_BYTES);
+        when(mMockFlags.getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop())
                 .thenReturn(maxFailedRun);
-        when(mFlags.getPasExtendedMetricsEnabled()).thenReturn(true);
-        when(mFlags.getPasScriptExecutionTimeoutMs()).thenReturn(1000);
-        when(mFlags.getPasEncodingJobImprovementsEnabled()).thenReturn(true);
+        when(mMockFlags.getPasExtendedMetricsEnabled()).thenReturn(true);
+        when(mMockFlags.getPasScriptExecutionTimeoutMs()).thenReturn(1000);
+        when(mMockFlags.getPasEncodingJobImprovementsEnabled()).thenReturn(true);
         mJobWorker =
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,
@@ -146,13 +148,17 @@ public class PeriodicEncodingJobWorkerTest {
                         mScriptEngine,
                         mBackgroundExecutor,
                         mLightWeightExecutor,
-                        mFlags,
+                        mMockFlags,
                         mEnrollmentDao,
                         mClock,
                         mAdServicesLogger);
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FAILED_PER_BUYER_ENCODING)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_VALIDATE_AND_PERSIST_ENCODED_PAYLOAD_FAILURE)
     public void testEncodeProtectedSignalsGracefullyHandleFailures()
             throws ExecutionException, InterruptedException, TimeoutException {
         setupEncodingJobRunStatsLogging();

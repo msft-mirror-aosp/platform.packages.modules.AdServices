@@ -57,7 +57,6 @@ import com.android.adservices.common.annotations.EnableAllApis;
 import com.android.adservices.common.annotations.SetCompatModeFlags;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
@@ -82,7 +81,6 @@ import java.util.concurrent.TimeoutException;
 
 /** Abstract class for FLEDGE scenario tests using local servers. */
 @EnableAllApis
-@RequiresSdkLevelAtLeastS
 @SetCompatModeFlags
 @SetFlagEnabled(KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED)
 @SetIntegerFlag(name = KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS, value = 5_000)
@@ -162,7 +160,7 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
     }
 
     @After
-    public final void tearDown() throws Exception {
+    public void tearDown() throws Exception {
         try {
             leaveCustomAudience(SHOES_CA);
             leaveCustomAudience(SHIRTS_CA);
@@ -325,6 +323,7 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
         Log.d(TAG, "Started default MockWebServer.");
         return scenarioDispatcher;
     }
+
 
     private JoinCustomAudienceRequest makeJoinCustomAudienceRequest(String customAudienceName) {
         return new JoinCustomAudienceRequest.Builder()

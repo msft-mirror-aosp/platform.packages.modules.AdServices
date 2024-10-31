@@ -1,8 +1,6 @@
 {
   "description": "Given an app source with aggregatable_report_window specified and an app trigger configured to exclude source registration time and that has aggregatable data and that occurs after the aggregatable report window, create a null aggregatable report with source registration time excluded",
   "phflags_override": {
-    "measurement_null_aggregate_report_enabled": "true",
-    "measurement_source_registration_time_optional_for_agg_reports_enabled": "true",
     "measurement_null_agg_report_rate_excl_source_registration_time": "1.0"
   },
   "input": {
@@ -76,11 +74,14 @@
           "attribution_destination": "android-app://example.2d1.test",
           "reporting_origin": "https://www.ad-tech1.test",
           "scheduled_report_time": "800007190",
-          "source_registration_time": "0",
           "version": "0.1"
         },
         "aggregation_coordinator_origin": "https://coordinator.test",
         "histograms": [
+          {"key": "0x0", "value": 0},
+          {"key": "0x0", "value": 0},
+          {"key": "0x0", "value": 0},
+          {"key": "0x0", "value": 0},
           {"key": "0x0", "value": 0}
         ]
       }

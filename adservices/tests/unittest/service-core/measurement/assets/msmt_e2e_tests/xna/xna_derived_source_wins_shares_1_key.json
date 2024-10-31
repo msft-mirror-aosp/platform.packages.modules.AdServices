@@ -395,7 +395,8 @@
                     "priority": "2000",
                     "expiry": "172801"
                   }
-                ]
+                ],
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -427,7 +428,11 @@
             {
               "key": "0x559",
               "value": 32768
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       }
