@@ -18,20 +18,16 @@ package com.android.adservices.data.common;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import com.google.common.collect.ImmutableSet;
 
 import org.json.JSONArray;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Clock;
@@ -40,11 +36,8 @@ import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.Set;
 
-public class FledgeRoomConvertersTest {
+public final class FledgeRoomConvertersTest extends AdServicesUnitTestCase {
     private static final Clock CLOCK = Clock.fixed(Instant.now(), ZoneOffset.UTC);
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testSerializeDeserializeInstant() {
@@ -53,22 +46,22 @@ public class FledgeRoomConvertersTest {
         Long fromInstant = FledgeRoomConverters.serializeInstant(instant);
         Instant fromLong = FledgeRoomConverters.deserializeInstant(fromInstant);
 
-        assertEquals(instant, fromLong);
+        assertThat(fromLong).isEqualTo(instant);
     }
 
     @Test
     public void testConvertersNullInputs() {
-        assertNull(FledgeRoomConverters.serializeInstant(null));
-        assertNull(FledgeRoomConverters.deserializeInstant(null));
+        expect.that(FledgeRoomConverters.serializeInstant(null)).isNull();
+        expect.that(FledgeRoomConverters.deserializeInstant(null)).isNull();
 
-        assertNull(FledgeRoomConverters.serializeUri(null));
-        assertNull(FledgeRoomConverters.deserializeUri(null));
+        expect.that(FledgeRoomConverters.serializeUri(null)).isNull();
+        expect.that(FledgeRoomConverters.deserializeUri(null)).isNull();
 
-        assertNull(FledgeRoomConverters.serializeAdTechIdentifier(null));
-        assertNull(FledgeRoomConverters.deserializeAdTechIdentifier(null));
+        expect.that(FledgeRoomConverters.serializeAdTechIdentifier(null)).isNull();
+        expect.that(FledgeRoomConverters.deserializeAdTechIdentifier(null)).isNull();
 
-        assertNull(FledgeRoomConverters.serializeAdSelectionSignals(null));
-        assertNull(FledgeRoomConverters.deserializeAdSelectionSignals(null));
+        expect.that(FledgeRoomConverters.serializeAdSelectionSignals(null)).isNull();
+        expect.that(FledgeRoomConverters.deserializeAdSelectionSignals(null)).isNull();
     }
 
     @Test
@@ -78,7 +71,7 @@ public class FledgeRoomConvertersTest {
         String fromUri = FledgeRoomConverters.serializeUri(uri);
         Uri fromString = FledgeRoomConverters.deserializeUri(fromUri);
 
-        assertEquals(uri, fromString);
+        assertThat(fromString).isEqualTo(uri);
     }
 
     @Test
@@ -90,7 +83,7 @@ public class FledgeRoomConvertersTest {
         AdTechIdentifier deserializedIdentifier =
                 FledgeRoomConverters.deserializeAdTechIdentifier(serializedIdentifier);
 
-        assertEquals(adTechIdentifier, deserializedIdentifier);
+        assertThat(deserializedIdentifier).isEqualTo(adTechIdentifier);
     }
 
     @Test
@@ -102,7 +95,7 @@ public class FledgeRoomConvertersTest {
         AdSelectionSignals deserializedIdentifier =
                 FledgeRoomConverters.deserializeAdSelectionSignals(serializedIdentifier);
 
-        assertEquals(adSelectionSignals, deserializedIdentifier);
+        assertThat(deserializedIdentifier).isEqualTo(adSelectionSignals);
     }
 
     @Test
@@ -122,7 +115,7 @@ public class FledgeRoomConvertersTest {
 
     @Test
     public void testSerializeDeserializeStringSet() {
-        final ImmutableSet<String> originalSet = ImmutableSet.of("one", "two", "three");
+        ImmutableSet<String> originalSet = ImmutableSet.of("one", "two", "three");
 
         String serializedStringSet = FledgeRoomConverters.serializeStringSet(originalSet);
         Set<String> deserializeStringSet =
@@ -149,9 +142,9 @@ public class FledgeRoomConvertersTest {
 
     @Test
     public void testSerializeDeserializeIntegerSet() {
-        final String serializedIntegerSet =
+        String serializedIntegerSet =
                 FledgeRoomConverters.serializeIntegerSet(AdDataFixture.getAdCounterKeys());
-        final Set<Integer> deserializeIntegerSet =
+        Set<Integer> deserializeIntegerSet =
                 FledgeRoomConverters.deserializeIntegerSet(serializedIntegerSet);
 
         assertThat(deserializeIntegerSet)
@@ -160,9 +153,9 @@ public class FledgeRoomConvertersTest {
 
     @Test
     public void testSerializeDeserializeIntegerSet_invalidIntegerSkipped() {
-        final String serializedIntegerSet =
+        String serializedIntegerSet =
                 new JSONArray(AdDataFixture.getAdCounterKeys()).put("invalid").toString();
-        final Set<Integer> deserializeIntegerSet =
+        Set<Integer> deserializeIntegerSet =
                 FledgeRoomConverters.deserializeIntegerSet(serializedIntegerSet);
 
         assertThat(deserializeIntegerSet)

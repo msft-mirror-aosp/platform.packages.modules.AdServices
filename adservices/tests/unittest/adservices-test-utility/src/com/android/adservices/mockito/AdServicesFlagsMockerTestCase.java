@@ -83,6 +83,15 @@ public abstract class AdServicesFlagsMockerTestCase<T extends AdServicesFlagsMoc
     }
 
     @Test
+    public final void testMockGetEnableApiCallResponseLoggingEnabled() {
+        getMocker().mockGetEnableApiCallResponseLoggingEnabled(true);
+
+        boolean result = mMockFlags.getCobaltEnableApiCallResponseLogging();
+
+        expect.withMessage("flags.getCobaltEnableApiCallResponseLogging()").that(result).isTrue();
+    }
+
+    @Test
     public final void testMockGetAdservicesReleaseStageForCobalt() {
         getMocker().mockGetAdservicesReleaseStageForCobalt("Central Stage");
 
@@ -106,5 +115,14 @@ public abstract class AdServicesFlagsMockerTestCase<T extends AdServicesFlagsMoc
         expect.withMessage("flags.getAdservicesReleaseStageForCobalt()")
                 .that(mMockFlags.getAdservicesReleaseStageForCobalt())
                 .isEqualTo("DEBUG");
+    }
+
+    @Test
+    public void testMockGetDeveloperModeFeatureEnabled() {
+        getMocker().mockGetDeveloperModeFeatureEnabled(true);
+
+        boolean result = mMockFlags.getDeveloperModeFeatureEnabled();
+
+        expect.withMessage("flags.getDeveloperModeFeatureEnabled()").that(result).isTrue();
     }
 }

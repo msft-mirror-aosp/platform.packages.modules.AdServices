@@ -20,36 +20,17 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.when;
 
-import androidx.test.filters.SmallTest;
-
-import com.android.adservices.service.Flags;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 
 import com.google.common.collect.ImmutableList;
 
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.util.HashSet;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /** Unit tests for {@link com.android.adservices.service.topics.GlobalBlockedTopicsManager} */
-@SmallTest
-public class GlobalBlockedTopicsManagerTest {
-    @Mock Flags mMockFlags;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Before
-    public void setup() {
-        MockitoAnnotations.initMocks(this);
-    }
-
+public final class GlobalBlockedTopicsManagerTest extends AdServicesMockitoTestCase {
     @Test
     public void testGetGlobalBlockedTopicIds() {
         // Blocked topics values are empty.
@@ -76,8 +57,7 @@ public class GlobalBlockedTopicsManagerTest {
         // Add global blocked topics to the flag
         ImmutableList<Integer> globalBlockedTopicIdsList = ImmutableList.of(1, 2);
         when(mMockFlags.getGlobalBlockedTopicIds()).thenReturn(globalBlockedTopicIdsList);
-        HashSet<Integer> expectedBlockedTopicIds =
-                globalBlockedTopicIdsList.stream().collect(Collectors.toCollection(HashSet::new));
+        HashSet<Integer> expectedBlockedTopicIds = new HashSet<>(globalBlockedTopicIdsList);
 
         assertThat(GlobalBlockedTopicsManager.getGlobalBlockedTopicIdsFromFlag(mMockFlags))
                 .isEqualTo(expectedBlockedTopicIds);

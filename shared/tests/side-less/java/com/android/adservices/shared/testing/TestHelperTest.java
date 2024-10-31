@@ -15,28 +15,29 @@
  */
 package com.android.adservices.shared.testing;
 
+import static com.android.adservices.shared.meta_testing.CommonDescriptions.newTestMethodForClassRule;
 import static com.android.adservices.shared.testing.TestHelper.getAnnotation;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
-import static org.mockito.Mockito.when;
 
-import com.android.adservices.shared.SharedMockitoTestCase;
+import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassHasNoNothingAtAll;
+import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 
 import com.google.auto.value.AutoAnnotation;
 
 import org.junit.Test;
 import org.junit.runner.Description;
-import org.mockito.Mock;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-public final class TestHelperTest extends SharedMockitoTestCase {
-    @Mock private Description mMockDescription;
+public final class TestHelperTest extends SharedSidelessTestCase {
+    private final Description mNotTestDescription =
+            newTestMethodForClassRule(AClassHasNoNothingAtAll.class);
 
     @Test
     public void testGetTestName_null() {
@@ -70,7 +71,7 @@ public final class TestHelperTest extends SharedMockitoTestCase {
                 NullPointerException.class, () -> getAnnotation(test, /* annotationClass= */ null));
         assertThrows(
                 NullPointerException.class,
-                () -> getAnnotation(/* test= */ null, DaRealAnnotation.class));
+                () -> getAnnotation((Description) null, DaRealAnnotation.class));
     }
 
     @Test
@@ -124,6 +125,33 @@ public final class TestHelperTest extends SharedMockitoTestCase {
     }
 
     @Test
+    public void testGetAnnotation_fromImplementedInterface() {
+        Description test =
+                Description.createSuiteDescription(AClassHasNoAnnotationButItsInterfaceDoes.class);
+
+        DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
+
+        assertWithMessage("getAnnotation(%s)", test).that(annotation).isNotNull();
+        expect.withMessage("getAnnotation(%s).value()", test)
+                .that(annotation.value())
+                .isEqualTo("An interface has an annotation!");
+    }
+
+    @Test
+    public void testGetAnnotation_fromParentsImplementedInterface() {
+        Description test =
+                Description.createSuiteDescription(
+                        AClassHasNoAnnotationButItsParentsInterfaceDoes.class);
+
+        DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
+
+        assertWithMessage("getAnnotation(%s)", test).that(annotation).isNotNull();
+        expect.withMessage("getAnnotation(%s).value()", test)
+                .that(annotation.value())
+                .isEqualTo("An interface has an annotation!");
+    }
+
+    @Test
     public void testGetAnnotation_fromGrandParentClass() {
         Description test =
                 Description.createSuiteDescription(
@@ -138,13 +166,66 @@ public final class TestHelperTest extends SharedMockitoTestCase {
     }
 
     @Test
-    public void testIfNotTest_withNonTestDescription_throwsException() {
-        when(mMockDescription.isTest()).thenReturn(false);
+    public void testGetAnnotationFromTestClass_null() {
+        assertThrows(
+                NullPointerException.class,
+                () -> getAnnotation(AClassHasNoNothingAtAll.class, /* annotationClass= */ null));
+        assertThrows(
+                NullPointerException.class,
+                () -> getAnnotation(/* testClass= */ (Class<?>) null, DaRealAnnotation.class));
+    }
 
+    @Test
+    public void testGetAnnotationFromTestClass_notSetAnywhere() {
+        Class<?> testClass = AClassHasNoNothingAtAll.class;
+
+        expect.withMessage("getAnnotation(%s)", testClass)
+                .that(getAnnotation(testClass, DaRealAnnotation.class))
+                .isNull();
+    }
+
+    @Test
+    public void testGetAnnotationFromTestClass_fromClass() {
+        Class<?> testClass = AClassHasAnAnnotationAndAParent.class;
+
+        DaRealAnnotation annotation = getAnnotation(testClass, DaRealAnnotation.class);
+
+        assertWithMessage("getAnnotation(%s)", testClass).that(annotation).isNotNull();
+        expect.withMessage("getAnnotation(%s).value()", testClass)
+                .that(annotation.value())
+                .isEqualTo("A class has an annotation and a parent!");
+    }
+
+    @Test
+    public void testGetAnnotationFromTestClass_fromParentClass() {
+        Class<?> testClass = AClassHasNoAnnotationButItsParentDoes.class;
+
+        DaRealAnnotation annotation = getAnnotation(testClass, DaRealAnnotation.class);
+
+        assertWithMessage("getAnnotation(%s)", testClass).that(annotation).isNotNull();
+        expect.withMessage("getAnnotation(%s).value()", testClass)
+                .that(annotation.value())
+                .isEqualTo("A class has an annotation!");
+    }
+
+    @Test
+    public void testGetAnnotationFromTestClass_fromGrandParentClass() {
+        Class<?> testClass = AClassHasNoAnnotationButItsGrandParentDoes.class;
+
+        DaRealAnnotation annotation = getAnnotation(testClass, DaRealAnnotation.class);
+
+        assertWithMessage("getAnnotation(%s)", testClass).that(annotation).isNotNull();
+        expect.withMessage("getAnnotation(%s).value()", testClass)
+                .that(annotation.value())
+                .isEqualTo("A class has an annotation!");
+    }
+
+    @Test
+    public void testThrowIfNotTest_withNonTestDescription_throwsException() {
         Exception exception =
                 assertThrows(
                         IllegalStateException.class,
-                        () -> TestHelper.throwIfNotTest(mMockDescription));
+                        () -> TestHelper.throwIfNotTest(mNotTestDescription));
 
         expect.that(exception)
                 .hasMessageThat()
@@ -154,7 +235,7 @@ public final class TestHelperTest extends SharedMockitoTestCase {
     }
 
     @Test
-    public void testIfNotTest_withTestDescription_throwsNoException() {
+    public void testThrowIfNotTest_withTestDescription_throwsNoException() {
         Description test =
                 Description.createTestDescription(AClassHasNoNothingAtAll.class, "butItHasATest");
 
@@ -162,15 +243,43 @@ public final class TestHelperTest extends SharedMockitoTestCase {
         TestHelper.throwIfNotTest(test);
     }
 
-    private static class AClassHasNoNothingAtAll {}
+    @Test
+    public void testThrowIfTest_withNonTestDescription_throwsException() {
+        Description test =
+                Description.createTestDescription(AClassHasNoNothingAtAll.class, "butItHasATest");
+
+        Exception exception =
+                assertThrows(IllegalStateException.class, () -> TestHelper.throwIfTest(test));
+
+        expect.that(exception)
+                .hasMessageThat()
+                .isEqualTo(
+                        "This rule can only be used as a @ClassRule or in a test suit, it cannot be"
+                                + " applied to individual tests as a @Rule");
+    }
+
+    @Test
+    public void testThrowIfTest_withTestDescription_throwsNoException() {
+        // No exception should be thrown for test.
+        TestHelper.throwIfTest(mNotTestDescription);
+    }
 
     @DaRealAnnotation("A class has an annotation!")
     private static class AClassHasAnAnnotation {}
+
+    @DaRealAnnotation("An interface has an annotation!")
+    private interface AnInterfaceHasAnAnnotation {}
+
+    private static class AClassHasNoAnnotationButItsInterfaceDoes
+            implements AnInterfaceHasAnAnnotation {}
 
     @DaRealAnnotation("A class has an annotation and a parent!")
     private static class AClassHasAnAnnotationAndAParent extends AClassHasAnAnnotation {}
 
     private static class AClassHasNoAnnotationButItsParentDoes extends AClassHasAnAnnotation {}
+
+    private static class AClassHasNoAnnotationButItsParentsInterfaceDoes
+            extends AClassHasNoAnnotationButItsInterfaceDoes {}
 
     private static class AClassHasNoAnnotationButItsGrandParentDoes
             extends AClassHasNoAnnotationButItsParentDoes {}

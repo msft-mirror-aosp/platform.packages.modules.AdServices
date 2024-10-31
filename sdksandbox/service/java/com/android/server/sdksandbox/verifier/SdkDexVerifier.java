@@ -18,6 +18,7 @@ package com.android.server.sdksandbox.verifier;
 
 import android.annotation.NonNull;
 import android.annotation.Nullable;
+import android.content.Context;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.OutcomeReceiver;
@@ -111,6 +112,7 @@ public class SdkDexVerifier {
             String sdkPath,
             String packagename,
             long targetSdkVersion,
+            Context context,
             OutcomeReceiver<VerificationResult, Exception> callback) {
         long startTime = SystemClock.elapsedRealtime();
         synchronized (mVerificationLock) {
@@ -134,6 +136,7 @@ public class SdkDexVerifier {
         mDexLoader.queueApkToLoad(
                 sdkFile,
                 packagename,
+                context,
                 new VerificationHandler() {
                     private VerificationResult mLastDexResult;
 

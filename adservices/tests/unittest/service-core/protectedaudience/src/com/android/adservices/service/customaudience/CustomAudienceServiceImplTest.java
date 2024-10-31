@@ -75,7 +75,9 @@ import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.adselection.JsVersionRegister;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -91,9 +93,9 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.testing.SkipLoggingUsageRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -107,10 +109,11 @@ import org.mockito.quality.Strictness;
 
 import java.util.concurrent.ExecutorService;
 
-@RequiresSdkLevelAtLeastS()
 // TODO (b/315812832) - Refactor test so strictness can be lenient and enable logging usage rule.
 @SkipLoggingUsageRule(reason = "Overrides mocking strictness to STRICT_STUBS.")
 @MockStatic(BackgroundFetchJob.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 public final class CustomAudienceServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();
@@ -147,6 +150,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     @Before
     public void setup() throws Exception {
+        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetConsentNotificationDebugMode(false);
         mService =
                 new CustomAudienceServiceImpl(
                         sContext,
@@ -158,6 +163,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithAllCheckEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -257,14 +263,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
             throws RemoteException {
         CustomAudienceServiceFilter customAudienceServiceFilterMock =
                 Mockito.mock(CustomAudienceServiceFilter.class);
-
-        Flags flagsWithUXNotificationEnforcementDisabled =
-                new FlagsWithCheckEnabledSwitch(true, true) {
-                    @Override
-                    public boolean getConsentNotificationDebugMode() {
-                        return true;
-                    }
-                };
+        mocker.mockGetConsentNotificationDebugMode(true);
 
         CustomAudienceServiceImpl service =
                 new CustomAudienceServiceImpl(
@@ -276,13 +275,14 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
-                        flagsWithUXNotificationEnforcementDisabled,
+                        mFlagsWithAllCheckEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         customAudienceServiceFilterMock,
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
-                                flagsWithUXNotificationEnforcementDisabled));
+                                mFlagsWithAllCheckEnabled));
 
         service.joinCustomAudience(
                 VALID_CUSTOM_AUDIENCE,
@@ -371,6 +371,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithAllCheckEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -593,7 +594,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     @Test
     public void testJoinCustomAudience_devOptionsEnabled() throws RemoteException {
         DevContext devContextEnabled =
-                DevContext.builder(mPackageName).setDevOptionsEnabled(true).build();
+                DevContext.builder(mPackageName).setDeviceDevOptionsEnabled(true).build();
         Mockito.lenient()
                 .doReturn(devContextEnabled)
                 .when(mDevContextFilterMock)
@@ -688,6 +689,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithAllCheckEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -778,14 +780,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
             throws RemoteException {
         CustomAudienceServiceFilter customAudienceServiceFilterMock =
                 Mockito.mock(CustomAudienceServiceFilter.class);
-
-        Flags flagsWithUXNotificationEnforcementDisabled =
-                new FlagsWithCheckEnabledSwitch(true, true) {
-                    @Override
-                    public boolean getConsentNotificationDebugMode() {
-                        return true;
-                    }
-                };
+        mocker.mockGetConsentNotificationDebugMode(true);
 
         CustomAudienceServiceImpl service =
                 new CustomAudienceServiceImpl(
@@ -797,13 +792,14 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
-                        flagsWithUXNotificationEnforcementDisabled,
+                        mFlagsWithAllCheckEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         customAudienceServiceFilterMock,
                         new AdFilteringFeatureFactory(
                                 mAppInstallDaoMock,
                                 mFrequencyCapDaoMock,
-                                flagsWithUXNotificationEnforcementDisabled));
+                                mFlagsWithAllCheckEnabled));
 
         service.leaveCustomAudience(
                 CustomAudienceFixture.VALID_OWNER,
@@ -892,6 +888,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithAllCheckEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -1174,6 +1171,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithForegroundCheckDisabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -1278,6 +1276,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithForegroundCheckDisabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -1338,7 +1337,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     public void testAppImportanceTestFails_overrideCustomAudienceThrowsException()
             throws RemoteException {
         when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.builder(mPackageName).setDevOptionsEnabled(true).build());
+                .thenReturn(
+                        DevContext.builder(mPackageName).setDeviceDevOptionsEnabled(true).build());
         when(mCustomAudienceImplMock.getCustomAudienceDao()).thenReturn(mCustomAudienceDaoMock);
         doThrow(new WrongCallingApplicationStateException())
                 .when(mAppImportanceFilterMock)
@@ -1385,7 +1385,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CustomAudienceFixture.VALID_OWNER)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
         mService =
                 new CustomAudienceServiceImpl(
@@ -1398,6 +1398,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithForegroundCheckDisabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -1453,7 +1454,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     public void testAppImportanceTestFails_removeCustomAudienceOverrideThrowsException()
             throws RemoteException {
         when(mDevContextFilterMock.createDevContext())
-                .thenReturn(DevContext.builder(mPackageName).setDevOptionsEnabled(true).build());
+                .thenReturn(
+                        DevContext.builder(mPackageName).setDeviceDevOptionsEnabled(true).build());
         when(mCustomAudienceImplMock.getCustomAudienceDao()).thenReturn(mCustomAudienceDaoMock);
         int apiName = AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
         doThrow(new WrongCallingApplicationStateException())
@@ -1488,7 +1490,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CustomAudienceFixture.VALID_OWNER)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
         int apiName = AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
         mService =
@@ -1502,6 +1504,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithForegroundCheckDisabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -1545,7 +1548,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CustomAudienceFixture.VALID_OWNER)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
         int apiName = AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
         doThrow(new WrongCallingApplicationStateException())
@@ -1575,7 +1578,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CustomAudienceFixture.VALID_OWNER)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
         mService =
                 new CustomAudienceServiceImpl(
@@ -1588,6 +1591,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithForegroundCheckDisabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -1688,7 +1692,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CustomAudienceFixture.VALID_OWNER)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
         doThrow(SecurityException.class)
                 .when(mFledgeAuthorizationFilterMock)
@@ -1717,7 +1721,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CustomAudienceFixture.VALID_OWNER)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
         int apiName = AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
         doThrow(SecurityException.class)
@@ -1743,7 +1747,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         when(mDevContextFilterMock.createDevContext())
                 .thenReturn(
                         DevContext.builder(CustomAudienceFixture.VALID_OWNER)
-                                .setDevOptionsEnabled(true)
+                                .setDeviceDevOptionsEnabled(true)
                                 .build());
         doThrow(SecurityException.class)
                 .when(mFledgeAuthorizationFilterMock)
@@ -1817,6 +1821,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithEnrollmentCheckDisabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -1927,6 +1932,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithEnrollmentCheckDisabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,

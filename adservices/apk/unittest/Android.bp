@@ -41,7 +41,7 @@ android_test {
         "androidx.room_room-runtime",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
@@ -63,7 +63,7 @@ android_test {
     privileged: true,
     defaults: ["adservices-extended-mockito-defaults"],
     sdk_version: "module_current",
-    min_sdk_version: "30",
+    min_sdk_version: "31",
     max_sdk_version: "32",
     static_libs: [
         "adservices-assets",
@@ -80,7 +80,7 @@ android_test {
     ],
     libs: [
         "android.ext.adservices",
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.test.mock.stubs",
         "framework-annotations-lib",
     ],

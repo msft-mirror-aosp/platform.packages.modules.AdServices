@@ -16,7 +16,6 @@
 
 package com.android.cobalt.impl;
 
-
 import static com.google.common.base.Preconditions.checkArgument;
 
 import android.util.Log;
@@ -29,6 +28,7 @@ import com.android.cobalt.data.ObservationGenerator;
 import com.android.cobalt.data.ObservationStoreEntity;
 import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.domain.Project;
+import com.android.cobalt.domain.ReportIdentifier;
 import com.android.cobalt.logging.CobaltOperationLogger;
 import com.android.cobalt.observations.ObservationGeneratorFactory;
 import com.android.cobalt.observations.PrivacyGenerator;
@@ -46,6 +46,7 @@ import com.google.cobalt.ObservationMetadata;
 import com.google.cobalt.ReleaseStage;
 import com.google.cobalt.ReportDefinition;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -90,7 +91,9 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
     private final Uploader mUploader;
     private final Encrypter mEncrypter;
     private final ByteString mApiKey;
+    private final CobaltOperationLogger mOperationLogger;
     private final ObservationGeneratorFactory mObservationGeneratorFactory;
+    private final ImmutableSet<ReportIdentifier> mReportsToIgnore;
 
     public CobaltPeriodicJobImpl(
             Project project,
@@ -107,6 +110,7 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
             ByteString apiKey,
             Duration uploadDoneDelay,
             CobaltOperationLogger operationLogger,
+            Iterable<ReportIdentifier> reportsToIgnore,
             boolean enabled) {
         mProject = Objects.requireNonNull(project);
         mReleaseStage = Objects.requireNonNull(releaseStage);
@@ -120,6 +124,7 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
         mUploader = Objects.requireNonNull(uploader);
         mEncrypter = Objects.requireNonNull(encrypter);
         mApiKey = Objects.requireNonNull(apiKey);
+        mOperationLogger = Objects.requireNonNull(operationLogger);
         mObservationGeneratorFactory =
                 new ObservationGeneratorFactory(
                         mProject,
@@ -127,7 +132,8 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
                         mDataService.getDaoBuildingBlocks(),
                         Objects.requireNonNull(privacyGenerator),
                         Objects.requireNonNull(secureRandom),
-                        Objects.requireNonNull(operationLogger));
+                        mOperationLogger);
+        mReportsToIgnore = ImmutableSet.copyOf(reportsToIgnore);
     }
 
     /**
@@ -192,6 +198,21 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
                                 metric.getId(),
                                 report.getId());
                 relevantReports.add(reportKey);
+
+                if (mReportsToIgnore.contains(
+                        ReportIdentifier.create(
+                                mProject.getCustomerId(),
+                                mProject.getProjectId(),
+                                metric.getId(),
+                                report.getId()))) {
+                    // The report is still considered relevant because it's in the registry despite
+                    // being ignored temporarily.
+                    logInfo(
+                            "Not generating observations for day %s for report %s",
+                            dayIndexToGenerate, reportKey);
+                    continue;
+                }
+
                 logInfo(
                         "Generating observations for day %s for report %s",
                         dayIndexToGenerate, reportKey);
@@ -250,6 +271,8 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
         // Send the final set of observations not sent in the loop.
         uploadAndRemoveObservationBatches(currentBatches.build(), currentObservationIds.build());
 
+        // Log upload success on return.
+        mOperationLogger.logUploadSuccess();
         return null;
     }
 
@@ -313,6 +336,7 @@ public final class CobaltPeriodicJobImpl implements CobaltPeriodicJob {
 
     private Void logUploadFailure(Throwable t) {
         logThrownAtError("One or more observations failed to be uploaded", t);
+        mOperationLogger.logUploadFailure();
         return null;
     }
 

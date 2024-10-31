@@ -28,7 +28,6 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -38,7 +37,6 @@ import org.junit.Test;
 
 import java.util.Set;
 
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 @MockStatic(PackageManagerCompatUtils.class)
 public final class AuctionServerAdSelectionDaoTest extends AdServicesExtendedMockitoTestCase {

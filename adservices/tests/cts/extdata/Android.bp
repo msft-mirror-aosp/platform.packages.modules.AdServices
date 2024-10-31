@@ -30,7 +30,7 @@ android_test {
         "truth",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "framework-adservices-lib",
         "framework-sdksandbox.impl",
     ],
@@ -63,7 +63,7 @@ android_test {
     ],
     libs: [
         "android.ext.adservices",
-        "android.test.base",
+        "android.test.base.stubs.system",
         "framework-sdksandbox.impl",
     ],
     test_suites: [
@@ -73,7 +73,7 @@ android_test {
         "mcts-extservices",
     ],
     sdk_version: "module_current",
-    min_sdk_version: "30",
+    min_sdk_version: "31",
     max_sdk_version: "32",
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",

@@ -37,15 +37,16 @@ public class DevContextUtils {
 
     /** Method to check if Dev Options are enabled based on DevContext. */
     public static boolean isDevOptionsEnabled(Context context, String logTag) {
-        DevContextFilter devContextFilter = DevContextFilter.create(context);
-        DevContext mDevContext = DevContextFilter.create(context).createDevContext(Process.myUid());
+        DevContextFilter devContextFilter =
+                DevContextFilter.create(context, /* developerModeFeatureEnabled= */ false);
+        DevContext mDevContext = devContextFilter.createDevContext(Process.myUid());
         boolean isDebuggable =
                 devContextFilter.isDebuggable(mDevContext.getCallingAppPackageName());
-        boolean isDeveloperMode = devContextFilter.isDeveloperMode();
+        boolean isDeveloperMode = devContextFilter.isDeviceDevOptionsEnabledOrDebuggable();
         Log.d(
                 logTag,
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode));
-        return mDevContext.getDevOptionsEnabled();
+        return mDevContext.getDeviceDevOptionsEnabled();
     }
 }

@@ -1,0 +1,259 @@
+{
+  "description": "app-app conversion with both side debug keys enforcement",
+  "phflags_override": {
+    "measurement_debug_key_ad_id_matching_enrollment_blocklist": "",
+    "Measurement__enable_both_side_debug_keys_in_reports": "true"
+  },
+  "input": {
+    "sources": [
+      // Source A: Debug permission is (true) and debug key is (present).
+      {
+        "timestamp": "1",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "source.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-source",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "destination": "android-app://destination1.test",
+                "source_event_id": "123",
+                "aggregation_keys": {
+                  "a": "0x159",
+                  "b": "0x5"
+                },
+                "debug_key": "123"
+              }
+            }
+          }
+        ]
+      },
+      // Source B: Debug permission is (true) and debug key is (not present).
+      {
+        "timestamp": "2",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "source.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-source",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "destination": "android-app://destination2.test",
+                "source_event_id": "123",
+                "aggregation_keys": {
+                  "a": "0x5"
+                }
+              }
+            }
+          }
+        ]
+      },
+      // Source C: Debug permission is (true) and debug key is (present).
+      {
+        "timestamp": "3",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "source.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-source",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "destination": "android-app://destination3.test",
+                "source_event_id": "123",
+                "aggregation_keys": {
+                  "a": "0x2"
+                },
+                "debug_key": "456"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "triggers": [
+      // Trigger A: Debug permission is (true) and debug key is (present).
+      {
+        "timestamp": "1000",
+        "registration_request": {
+          "registrant": "destination1.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_values": {
+                  "a": 7
+                },
+                "debug_key": "678"
+              }
+            }
+          }
+        ]
+      },
+      // Trigger B: Debug permission is (false) and debug key is (present).
+      {
+        "timestamp": "2000",
+        "registration_request": {
+          "registrant": "destination2.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_values": {
+                  "a": 10
+                },
+                "debug_key": "910"
+              }
+            }
+          }
+        ]
+      },
+      // Trigger C: Debug permission is (false) and debug key is (present).
+      {
+        "timestamp": "3000",
+        "registration_request": {
+          "registrant": "destination3.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_values": {
+                  "a": 13
+                },
+                "debug_key": "999"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "aggregatable_results": [
+      // Report (Source A + Trigger A) debug keys present in report
+      {
+        "report_time": "3601000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://destination1.test",
+            "debug_mode":"enabled",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "3601",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x159",
+              "value": 7
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ],
+          "source_debug_key": "123",
+          "trigger_debug_key": "678"
+        }
+      },
+      // Report (Source B + Trigger B) Source missing debug keys -> no debug keys present in report
+      {
+        "report_time": "3602000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://destination2.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "3602",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x5",
+              "value": 10
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ]
+        }
+      },
+      // Report (Source C + Trigger C) Source missing debug keys -> no debug keys present in report
+      {
+        "report_time": "3603000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://destination3.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "3603",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x2",
+              "value": 13
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ]
+        }
+      }
+    ],
+    "debug_aggregatable_results": [
+      // Report (Source A + Trigger A)
+      {
+        "report_time": "1000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://destination1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "3601",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x159",
+              "value": 7
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ],
+          "source_debug_key": "123",
+          "trigger_debug_key": "678"
+        }
+      }
+    ]
+  }
+}

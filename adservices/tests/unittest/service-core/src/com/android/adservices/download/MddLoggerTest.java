@@ -35,7 +35,6 @@ import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.stats.AdServicesStatsLog;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -50,7 +49,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(AdServicesStatsLog.class)
 public final class MddLoggerTest extends AdServicesExtendedMockitoTestCase {
 
@@ -64,7 +62,7 @@ public final class MddLoggerTest extends AdServicesExtendedMockitoTestCase {
     private static final int TEST_DAYS = 3;
     private static final long TEST_BYTE_USED = 5;
 
-    private MddLogger mMddLogger = new MddLogger();
+    private final MddLogger mMddLogger = new MddLogger();
     private MessageLite mMessageLite;
 
     @Mock private MessageLite mMockLog;

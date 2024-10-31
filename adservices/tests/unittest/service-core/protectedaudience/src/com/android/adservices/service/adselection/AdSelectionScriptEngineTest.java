@@ -63,7 +63,6 @@ import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -92,7 +91,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @SmallTest
-@RequiresSdkLevelAtLeastS
 public final class AdSelectionScriptEngineTest extends AdServicesUnitTestCase {
     private static final String TAG = "AdSelectionScriptEngineTest";
 

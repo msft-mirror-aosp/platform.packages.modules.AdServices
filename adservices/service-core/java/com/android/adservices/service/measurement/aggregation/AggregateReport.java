@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import static com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator.POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION;
+
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.net.Uri;
@@ -24,6 +26,7 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.AdServicesConfig;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -70,6 +73,7 @@ public class AggregateReport {
     @Nullable private String mTriggerContextId;
     private long mTriggerTime;
     private String mApi;
+    @Nullable private Integer mAggregatableFilteringIdMaxBytes;
 
     @IntDef(value = {Status.PENDING, Status.DELIVERED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -111,6 +115,7 @@ public class AggregateReport {
         mTriggerContextId = null;
         mTriggerTime = 0L;
         mApi = null;
+        mAggregatableFilteringIdMaxBytes = null;
     }
 
     @Override
@@ -142,7 +147,10 @@ public class AggregateReport {
                 && mIsFakeReport == aggregateReport.mIsFakeReport
                 && Objects.equals(mTriggerContextId, aggregateReport.mTriggerContextId)
                 && mTriggerTime == aggregateReport.mTriggerTime
-                && Objects.equals(mApi, aggregateReport.mApi);
+                && Objects.equals(mApi, aggregateReport.mApi)
+                && Objects.equals(
+                        mAggregatableFilteringIdMaxBytes,
+                        aggregateReport.mAggregatableFilteringIdMaxBytes);
     }
 
     @Override
@@ -168,7 +176,8 @@ public class AggregateReport {
                 mIsFakeReport,
                 mTriggerContextId,
                 mTriggerTime,
-                mApi);
+                mApi,
+                mAggregatableFilteringIdMaxBytes);
     }
 
     /**
@@ -297,6 +306,26 @@ public class AggregateReport {
         return mApi;
     }
 
+    /** Returns the aggregatable filtering id max bytes. */
+    @Nullable
+    public Integer getAggregatableFilteringIdMaxBytes() {
+        return mAggregatableFilteringIdMaxBytes;
+    }
+
+    /** Returns if the report for this Trigger should be sent immediately or with a delay. */
+    public static boolean isDelayed(Trigger trigger, Flags flags) {
+        boolean isNonNullTriggerContextId = trigger.getTriggerContextId() != null;
+        boolean isNonNullFilteringIdAndNonDefaultFilteringIdMaxBytes =
+                flags.getMeasurementEnableFlexibleContributionFiltering()
+                        && trigger.getAggregatableFilteringIdMaxBytes() != null
+                        && trigger.getAggregatableFilteringIdMaxBytes()
+                        != Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES;
+        if (isNonNullTriggerContextId || isNonNullFilteringIdAndNonDefaultFilteringIdMaxBytes) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Generates String for debugCleartextPayload. JSON for format : { "operation": "histogram",
      * "data": [{ "bucket": 1369, "value": 32768 }, { "bucket": 3461, "value": 1664 }] }
@@ -340,12 +369,20 @@ public class AggregateReport {
         }
     }
 
-    /** Source ID */
+    /**
+     * Source ID. Can be null for trigger verbose aggregate debug reports, where no source is
+     * involved, e.g. trigger-no-matching-source or source-destination-limit (no source in DB).
+     */
+    @Nullable
     public String getSourceId() {
         return mSourceId;
     }
 
-    /** Trigger ID */
+    /**
+     * Trigger ID. Can be null for source verbose aggregate debug reports, where no trigger is
+     * involved, e.g. source-success.
+     */
+    @Nullable
     public String getTriggerId() {
         return mTriggerId;
     }
@@ -516,6 +553,13 @@ public class AggregateReport {
             return this;
         }
 
+        /** See {@link AggregateReport#getAggregatableFilteringIdMaxBytes()} */
+        public Builder setAggregatableFilteringIdMaxBytes(
+                @Nullable Integer aggregatableFilteringIdMaxBytes) {
+            mAttributionReport.mAggregatableFilteringIdMaxBytes = aggregatableFilteringIdMaxBytes;
+            return this;
+        }
+
         /**
          * Given a {@link Trigger} trigger, source registration time, reporting delay, and the api
          * version, initialize an {@link AggregateReport.Builder} builder that builds a null
@@ -536,18 +580,26 @@ public class AggregateReport {
                 @Nullable Long fakeSourceTime,
                 long delay,
                 String apiVersion,
-                String api)
+                String api,
+                Flags flags)
                 throws JSONException {
             mAttributionReport.mId = UUID.randomUUID().toString();
             long reportTime = trigger.getTriggerTime();
-            if (trigger.getTriggerContextId() == null) {
+            if (isDelayed(trigger, flags)) {
                 reportTime += delay;
             }
-            AggregateHistogramContribution paddingContribution =
-                    new AggregateHistogramContribution.Builder().setPaddingContribution().build();
+
+            AggregateHistogramContribution.Builder paddingContributionBuilder =
+                    new AggregateHistogramContribution.Builder();
+            if (apiVersion.equals(POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION)) {
+                paddingContributionBuilder.setPaddingContributionWithFilteringId();
+            } else {
+                paddingContributionBuilder.setPaddingContribution();
+            }
 
             String debugPayload =
-                    AggregateReport.generateDebugPayload(List.of(paddingContribution));
+                    AggregateReport.generateDebugPayload(
+                            List.of(paddingContributionBuilder.build()));
 
             mAttributionReport.mApiVersion = apiVersion;
             mAttributionReport.mPublisher = Uri.EMPTY;
@@ -562,6 +614,8 @@ public class AggregateReport {
             mAttributionReport.mTriggerContextId = trigger.getTriggerContextId();
             mAttributionReport.mTriggerTime = trigger.getTriggerTime();
             mAttributionReport.mApi = api;
+            mAttributionReport.mAggregatableFilteringIdMaxBytes =
+                    trigger.getAggregatableFilteringIdMaxBytes();
 
             if (trigger.getAggregationCoordinatorOrigin() != null) {
                 mAttributionReport.mAggregationCoordinatorOrigin =
@@ -573,7 +627,9 @@ public class AggregateReport {
                                         .getMeasurementDefaultAggregationCoordinatorOrigin());
             }
 
-            if ((trigger.getDestinationType() == EventSurfaceType.APP
+            if (flags.getMeasurementEnableBothSideDebugKeysInReports()) {
+                mAttributionReport.mTriggerDebugKey = null;
+            } else if ((trigger.getDestinationType() == EventSurfaceType.APP
                             && trigger.hasAdIdPermission())
                     || (trigger.getDestinationType() == EventSurfaceType.WEB
                             && trigger.hasArDebugPermission())) {
