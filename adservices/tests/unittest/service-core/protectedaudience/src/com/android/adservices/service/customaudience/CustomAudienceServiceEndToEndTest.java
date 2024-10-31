@@ -3290,8 +3290,6 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .toString();
 
         String updateUriForSecondHop = mMockWebServerRule.uriForPath(UPDATE_URI_PATH_2).toString();
-        AdTechIdentifier buyer =
-                AdTechIdentifier.fromString(Uri.parse(updateUriForSecondHop).getHost());
 
         JSONObject scheduleRequest =
                 createScheduleRequestWithUpdateUri(
@@ -3337,7 +3335,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         CustomAudienceServiceEndToEndTest.ResultCapturingCallback joinCallback =
                 new CustomAudienceServiceEndToEndTest.ResultCapturingCallback();
         mService.joinCustomAudience(
-                getValidBuilderForBuyerFilters(buyer).setName(LEAVE_CA_1).build(),
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_1).build(),
                 VALID_OWNER,
                 joinCallback);
         assertTrue(joinCallback.mIsSuccess);
@@ -3387,14 +3385,17 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         // Join
         assertNull(
                 "The custom audience shouldn't have been joined",
-                mCustomAudienceDao.getCustomAudienceByPrimaryKey(VALID_OWNER, buyer, PARTIAL_CA_1));
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_1));
         assertNull(
                 "The custom audience shouldn't have been joined",
-                mCustomAudienceDao.getCustomAudienceByPrimaryKey(VALID_OWNER, buyer, PARTIAL_CA_2));
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_2));
         // Leave
         assertNotNull(
                 "The custom audience shouldn't have been left",
-                mCustomAudienceDao.getCustomAudienceByPrimaryKey(VALID_OWNER, buyer, LEAVE_CA_1));
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, LEAVE_CA_1));
     }
 
     @Test
@@ -3579,8 +3580,6 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .toString();
 
         String updateUriForSecondHop = mMockWebServerRule.uriForPath(UPDATE_URI_PATH_2).toString();
-        AdTechIdentifier buyer =
-                AdTechIdentifier.fromString(Uri.parse(updateUriForSecondHop).getHost());
 
         JSONObject scheduleRequest =
                 createScheduleRequestWithUpdateUri(
@@ -3626,7 +3625,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         CustomAudienceServiceEndToEndTest.ResultCapturingCallback joinCallback =
                 new CustomAudienceServiceEndToEndTest.ResultCapturingCallback();
         mService.joinCustomAudience(
-                getValidBuilderForBuyerFilters(buyer).setName(LEAVE_CA_1).build(),
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_1).build(),
                 VALID_OWNER,
                 joinCallback);
         assertTrue(joinCallback.mIsSuccess);
@@ -3684,14 +3683,17 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         // Join
         assertNotNull(
                 "The custom audience should have been joined",
-                mCustomAudienceDao.getCustomAudienceByPrimaryKey(VALID_OWNER, buyer, PARTIAL_CA_1));
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_1));
         assertNotNull(
                 "The custom audience should have been joined",
-                mCustomAudienceDao.getCustomAudienceByPrimaryKey(VALID_OWNER, buyer, PARTIAL_CA_2));
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_2));
         // Leave
         assertNull(
                 "The custom audience should have been left",
-                mCustomAudienceDao.getCustomAudienceByPrimaryKey(VALID_OWNER, buyer, LEAVE_CA_1));
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, LEAVE_CA_1));
 
         verify(mAdServicesLoggerMock, times(2))
                 .logScheduledCustomAudienceUpdatePerformedStats(
@@ -3770,8 +3772,6 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .toString();
 
         String updateUriForSecondHop = mMockWebServerRule.uriForPath(UPDATE_URI_PATH_2).toString();
-        AdTechIdentifier buyer =
-                AdTechIdentifier.fromString(Uri.parse(updateUriForSecondHop).getHost());
 
         JSONObject scheduleRequest =
                 createScheduleRequestWithUpdateUri(
@@ -3838,7 +3838,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         CustomAudienceServiceEndToEndTest.ResultCapturingCallback joinCallback2 =
                 new CustomAudienceServiceEndToEndTest.ResultCapturingCallback();
         mService.joinCustomAudience(
-                getValidBuilderForBuyerFilters(buyer).setName(LEAVE_CA_2).build(),
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_2).build(),
                 VALID_OWNER,
                 joinCallback2);
         assertTrue(joinCallback2.mIsSuccess);
@@ -3916,11 +3916,13 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         // Join
         assertNotNull(
                 "The custom audience should have been joined",
-                mCustomAudienceDao.getCustomAudienceByPrimaryKey(VALID_OWNER, buyer, PARTIAL_CA_3));
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_3));
         // Leave
         assertNull(
                 "The custom audience should have been left",
-                mCustomAudienceDao.getCustomAudienceByPrimaryKey(VALID_OWNER, buyer, LEAVE_CA_2));
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, LEAVE_CA_2));
     }
 
     @Test
@@ -3945,8 +3947,6 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .toString();
 
         String updateUriForSecondHop = mMockWebServerRule.uriForPath(UPDATE_URI_PATH_2).toString();
-        AdTechIdentifier buyer =
-                AdTechIdentifier.fromString(Uri.parse(updateUriForSecondHop).getHost());
 
         JSONObject scheduleRequest =
                 createScheduleRequestWithUpdateUri(
@@ -4051,7 +4051,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         // Join
         assertNotNull(
                 "The custom audience should have been joined",
-                mCustomAudienceDao.getCustomAudienceByPrimaryKey(VALID_OWNER, buyer, PARTIAL_CA_1));
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_1));
         // Leave
         assertNotNull(
                 "The custom audience shouldn't have been left",
@@ -4082,8 +4083,6 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .toString();
 
         String updateUriForThirdHop = mMockWebServerRule.uriForPath(UPDATE_URI_PATH_3).toString();
-        AdTechIdentifier buyer2 =
-                AdTechIdentifier.fromString(Uri.parse(updateUriForThirdHop).getHost());
 
         JSONObject scheduleRequest_SecondHop =
                 createScheduleRequestWithUpdateUri(
@@ -4107,8 +4106,6 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .toString();
 
         String updateUriForSecondHop = mMockWebServerRule.uriForPath(UPDATE_URI_PATH_2).toString();
-        AdTechIdentifier buyer =
-                AdTechIdentifier.fromString(Uri.parse(updateUriForSecondHop).getHost());
 
         // For the first hop
         JSONObject scheduleRequest =
@@ -4169,7 +4166,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         CustomAudienceServiceEndToEndTest.ResultCapturingCallback joinCallback =
                 new CustomAudienceServiceEndToEndTest.ResultCapturingCallback();
         mService.joinCustomAudience(
-                getValidBuilderForBuyerFilters(buyer).setName(LEAVE_CA_1).build(),
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_1).build(),
                 VALID_OWNER,
                 joinCallback);
         assertTrue(joinCallback.mIsSuccess);
@@ -4177,7 +4174,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         CustomAudienceServiceEndToEndTest.ResultCapturingCallback joinCallback2 =
                 new CustomAudienceServiceEndToEndTest.ResultCapturingCallback();
         mService.joinCustomAudience(
-                getValidBuilderForBuyerFilters(buyer2).setName(LEAVE_CA_2).build(),
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_2).build(),
                 VALID_OWNER,
                 joinCallback2);
         assertTrue(joinCallback2.mIsSuccess);
@@ -4235,11 +4232,13 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         // Join
         assertNotNull(
                 "The custom audience should have been joined",
-                mCustomAudienceDao.getCustomAudienceByPrimaryKey(VALID_OWNER, buyer, PARTIAL_CA_1));
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_1));
         // Leave
         assertNull(
                 "The custom audience should have been left",
-                mCustomAudienceDao.getCustomAudienceByPrimaryKey(VALID_OWNER, buyer, LEAVE_CA_1));
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, LEAVE_CA_1));
 
         // Check that the third hop update hasn't been scheduled
         assertThat(mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()))
@@ -4250,11 +4249,12 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         assertNull(
                 "The custom audience shouldn't have been joined",
                 mCustomAudienceDao.getCustomAudienceByPrimaryKey(
-                        VALID_OWNER, buyer2, PARTIAL_CA_2));
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_2));
         // Leave
         assertNotNull(
                 "The custom audience shouldn't have been left",
-                mCustomAudienceDao.getCustomAudienceByPrimaryKey(VALID_OWNER, buyer2, LEAVE_CA_2));
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, LEAVE_CA_2));
     }
 
     @Test

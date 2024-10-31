@@ -18,6 +18,7 @@ package com.android.adservices.service.customaudience;
 
 
 import static com.android.adservices.service.common.ValidatorUtil.AD_TECH_ROLE_BUYER;
+import static com.android.adservices.service.common.httpclient.AdServicesHttpsClient.DEFAULT_TIMEOUT_MS;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.AUCTION_SERVER_REQUEST_FLAGS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.PRIORITY_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.USER_BIDDING_SIGNALS_KEY;
@@ -75,7 +76,6 @@ import com.android.adservices.service.common.AdTechIdentifierValidator;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;
 import com.android.adservices.service.common.JsonValidator;
-import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpUtil;
@@ -247,7 +247,9 @@ public final class ScheduledUpdatesHandler {
                 CustomAudienceDatabase.getInstance().customAudienceDao(),
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
-                        CacheProviderFactory.createNoOpCache()),
+                        DEFAULT_TIMEOUT_MS,
+                        DEFAULT_TIMEOUT_MS,
+                        FlagsFactory.getFlags().getFledgeScheduleCustomAudienceUpdateMaxBytes()),
                 FlagsFactory.getFlags(),
                 Clock.systemUTC(),
                 AdServicesExecutors.getBackgroundExecutor(),
@@ -585,8 +587,12 @@ public final class ScheduledUpdatesHandler {
         return FluentFuture.from(Futures.successfulAsList(persistCustomAudienceList))
                 .transformAsync(
                         ignored -> {
-                            statsBuilder.setNumberOfCustomAudienceJoined(
-                                    numberOfCustomAudienceJoined.intValue());
+                            int numCustomAudiencesJoined = numberOfCustomAudienceJoined.intValue();
+
+                            if (numCustomAudiencesJoined > 0) {
+                                BackgroundFetchJob.schedule(mFlags);
+                            }
+                            statsBuilder.setNumberOfCustomAudienceJoined(numCustomAudiencesJoined);
                             return immediateVoidFuture();
                         },
                         mLightWeightExecutor);

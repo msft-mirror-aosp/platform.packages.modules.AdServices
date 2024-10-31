@@ -50,6 +50,7 @@ import android.os.IBinder;
 import android.os.RemoteException;
 
 import androidx.room.Room;
+import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesMockitoTestCase;
@@ -332,6 +333,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
         mDevSessionHelper.endDevSession();
     }
 
+    @FlakyTest // b/376069423
     @Test
     public void testPut_duringDevSession_signalIsCleared() throws Exception {
         setupService(true);

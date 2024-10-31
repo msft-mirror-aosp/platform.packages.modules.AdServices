@@ -1473,6 +1473,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getFledgeScheduleCustomAudienceUpdateMaxBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES,
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES);
+    }
+
+    @Override
     public boolean getFledgeHttpCachingEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE, FLEDGE_HTTP_CACHE_ENABLE);
@@ -5193,6 +5200,11 @@ public final class PhFlags implements Flags {
                                 .KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE
                         + " = "
                         + getFledgeScheduleCustomAudienceMinDelayMinsOverride());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES
+                        + " = "
+                        + getFledgeScheduleCustomAudienceUpdateMaxBytes());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE

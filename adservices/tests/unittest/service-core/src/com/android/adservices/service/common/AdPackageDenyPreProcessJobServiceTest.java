@@ -114,6 +114,7 @@ public final class AdPackageDenyPreProcessJobServiceTest extends AdServicesJobSe
     }
 
     @Test
+    @FlakyTest(bugId = 376351631)
     public void testScheduleIfNeeded_success() throws Exception {
         // Feature is enabled.
         when(mMockFlags.getEnablePackageDenyBgJob()).thenReturn(true);
