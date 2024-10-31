@@ -36,7 +36,7 @@ android_test {
         "adservices-test-utility",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
     ],
     test_suites: [
         "general-tests",
@@ -47,12 +47,9 @@ android_test {
     },
 }
 
-android_test {
-    name: "AdExtServicesEndToEndTests",
+java_defaults {
+    name: "AdExtServices-EndToEndTests-Defaults",
     defaults: ["mts-target-sdk-version-current"],
-    srcs: [
-        "src/**/*.java",
-    ],
     sdk_version: "module_current",
     static_libs: [
         "adservices-clients",
@@ -67,19 +64,45 @@ android_test {
         "adservices-test-utility",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.ext.adservices",
     ],
     test_suites: [
         "general-tests",
     ],
-    min_sdk_version: "30",
+}
+
+android_test {
+    name: "AdExtServicesEndToEndTests",
+    defaults: ["AdExtServices-EndToEndTests-Defaults"],
+    srcs: [
+        "src/**/*.java",
+    ],
+    min_sdk_version: "31",
     max_sdk_version: "32",
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
         baseline_filename: "lint-baseline-adextservices.xml",
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
+}
+
+android_test {
+    name: "AdExtServicesRvcEndToEndTests",
+    defaults: ["AdExtServices-EndToEndTests-Defaults"],
+    srcs: [
+        "src/com/android/adservices/measurement/MeasurementManagerRvcTest.java",
+        "src/com/android/adservices/measurement/MeasurementManagerUtil.java",
+        "src/com/android/adservices/AdServicesEndToEndTestCase.java",
+    ],
+    min_sdk_version: "30",
+    max_sdk_version: "30",
+    test_config: "AndroidTest.ExtServicesRvc.xml",
+    manifest: "AndroidManifestExtServicesRvc.xml",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
         test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }

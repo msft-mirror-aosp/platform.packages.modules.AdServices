@@ -16,6 +16,8 @@
 
 package com.android.server.sdksandbox.verifier;
 
+import android.annotation.NonNull;
+
 import com.android.server.sdksandbox.verifier.SerialDexLoader.DexSymbols;
 import com.android.tools.smali.dexlib2.DexFileFactory;
 import com.android.tools.smali.dexlib2.DexFileFactory.DexFileNotFoundException;
@@ -42,7 +44,7 @@ import java.util.zip.ZipFile;
 public class DexParserImpl implements DexParser {
 
     @Override
-    public Map<File, List<String>> getDexFilePaths(File apkPathFile) throws IOException {
+    public List<DexEntry> getDexFilePaths(@NonNull File apkPathFile) throws IOException {
         ArrayList<File> apkList = new ArrayList<>();
 
         // If multi-apk directory, find a base apk and zero or more split apks
@@ -56,26 +58,24 @@ public class DexParserImpl implements DexParser {
             apkList.add(apkPathFile);
         }
 
-        HashMap<File, List<String>> dexLists = new HashMap<>();
+        List<DexEntry> dexList = new ArrayList<>();
 
         for (File apk : apkList) {
             try (ZipFile apkZipFile = new ZipFile(apk)) {
                 Enumeration<? extends ZipEntry> entriesEnumeration = apkZipFile.entries();
-                ArrayList<String> dexEntries = new ArrayList<>();
 
                 while (entriesEnumeration.hasMoreElements()) {
                     String entryName = entriesEnumeration.nextElement().getName();
                     if (entryName.endsWith(".dex")) {
-                        dexEntries.add(entryName);
+                        dexList.add(new DexEntry(apk, entryName));
                     }
                 }
-                dexLists.put(apk, dexEntries);
             } catch (IOException ex) {
                 throw new IOException(apk.getName() + " is not a valid DEX container file.", ex);
             }
         }
 
-        return (Map<File, List<String>>) dexLists;
+        return dexList;
     }
 
     @Override

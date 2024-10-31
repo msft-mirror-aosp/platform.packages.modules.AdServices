@@ -18,6 +18,8 @@ package com.android.adservices.service.measurement.reporting;
 
 import static com.android.adservices.service.measurement.util.Time.roundDownToDay;
 
+import static junit.framework.Assert.assertFalse;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -1479,55 +1481,8 @@ public class AggregateReportingJobHandlerTest {
     }
 
     @Test
-    public void testSendReportForPendingReportSuccess_contextIdDisabled()
-            throws DatastoreException, IOException, JSONException {
-        when(mMockFlags.getMeasurementEnableTriggerContextId()).thenReturn(false);
-        AggregateReport aggregateReport =
-                new AggregateReport.Builder()
-                        .setId(AGGREGATE_REPORT_ID)
-                        .setStatus(AggregateReport.Status.PENDING)
-                        .setEnrollmentId(ENROLLMENT_ID)
-                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
-                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
-                        .setRegistrationOrigin(REPORTING_URI)
-                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
-                        .setTriggerContextId(TRIGGER_CONTEXT_ID)
-                        .setApi(AggregateReportFixture.ValidAggregateReportParams.API)
-                        .build();
-
-        JSONObject aggregateReportBody = createASampleAggregateReportBody(aggregateReport);
-        // No Context Id
-        assertTrue(
-                aggregateReportBody.isNull(AggregateReportBody.PayloadBodyKeys.TRIGGER_CONTEXT_ID));
-
-        when(mMeasurementDao.getAggregateReport(aggregateReport.getId()))
-                .thenReturn(aggregateReport);
-        doReturn(HttpURLConnection.HTTP_OK)
-                .when(mSpyAggregateReportingJobHandler)
-                .makeHttpPostRequest(eq(REPORTING_URI), any(), eq(null), anyString());
-        doReturn(aggregateReportBody)
-                .when(mSpyAggregateReportingJobHandler)
-                .createReportJsonPayload(any(), eq(REPORTING_URI), any());
-
-        doNothing()
-                .when(mMeasurementDao)
-                .markAggregateReportStatus(
-                        aggregateReport.getId(), AggregateReport.Status.DELIVERED);
-        ReportingStatus status = new ReportingStatus();
-
-        mSpyAggregateReportingJobHandler.performReport(
-                aggregateReport.getId(), AggregateCryptoFixture.getKey(), status);
-
-        assertEquals(ReportingStatus.UploadStatus.SUCCESS, status.getUploadStatus());
-        verify(mMeasurementDao, times(1)).markAggregateReportStatus(any(), anyInt());
-        verify(mTransaction, times(2)).begin();
-        verify(mTransaction, times(2)).end();
-    }
-
-    @Test
     public void testSendReportForPendingReportSuccess_contextIdEnabled()
             throws DatastoreException, IOException, JSONException {
-        when(mMockFlags.getMeasurementEnableTriggerContextId()).thenReturn(true);
         AggregateReport aggregateReport =
                 new AggregateReport.Builder()
                         .setId(AGGREGATE_REPORT_ID)
@@ -1604,6 +1559,72 @@ public class AggregateReportingJobHandlerTest {
         assertEquals(
                 "1674000000",
                 sharedInfo.getString(AggregateReportBody.SharedInfoKeys.SOURCE_REGISTRATION_TIME));
+    }
+
+    @Test
+    public void createReportJsonPayload_adrReport_doesNotIncludeSRTIfNotSpecified()
+            throws JSONException {
+        String debugCleartextPayload =
+                "{\"operation\":\"histogram\","
+                        + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},{\"bucket\":\"3461\","
+                        + "\"value\":1664}]}";
+        AggregateReport aggregateReport =
+                new AggregateReport.Builder()
+                        .setId(AGGREGATE_REPORT_ID)
+                        .setStatus(AggregateReport.Status.PENDING)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .setRegistrationOrigin(REPORTING_URI)
+                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setSourceRegistrationTime(null)
+                        .setApi(AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API)
+                        .setDebugCleartextPayload(debugCleartextPayload)
+                        .build();
+
+        JSONObject reportJson =
+                mSpyAggregateReportingJobHandler.createReportJsonPayload(
+                        aggregateReport, REPORTING_URI, AggregateCryptoFixture.getKey());
+
+        JSONObject sharedInfo =
+                new JSONObject(
+                        reportJson.getString(AggregateReportBody.PayloadBodyKeys.SHARED_INFO));
+
+        assertTrue(sharedInfo.isNull(AggregateReportBody.SharedInfoKeys.SOURCE_REGISTRATION_TIME));
+    }
+
+    @Test
+    public void createReportJsonPayload_normalAggregateReport_doesNotIncludeSRTIfNotSpecified()
+            throws JSONException {
+        String debugCleartextPayload =
+                "{\"operation\":\"histogram\","
+                        + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},{\"bucket\":\"3461\","
+                        + "\"value\":1664}]}";
+        AggregateReport aggregateReport =
+                new AggregateReport.Builder()
+                        .setId(AGGREGATE_REPORT_ID)
+                        .setStatus(AggregateReport.Status.PENDING)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                        .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                        .setRegistrationOrigin(REPORTING_URI)
+                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setSourceRegistrationTime(null)
+                        .setDebugCleartextPayload(debugCleartextPayload)
+                        .setApi(AggregateReportFixture.ValidAggregateReportParams.API)
+                        .build();
+
+        JSONObject reportJson =
+                mSpyAggregateReportingJobHandler.createReportJsonPayload(
+                        aggregateReport, REPORTING_URI, AggregateCryptoFixture.getKey());
+
+        JSONObject sharedInfo =
+                new JSONObject(
+                        reportJson.getString(AggregateReportBody.PayloadBodyKeys.SHARED_INFO));
+
+        assertFalse(sharedInfo.has(AggregateReportBody.SharedInfoKeys.SOURCE_REGISTRATION_TIME));
     }
 
     @Test

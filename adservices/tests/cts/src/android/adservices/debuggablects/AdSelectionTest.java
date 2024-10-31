@@ -17,6 +17,7 @@
 package android.adservices.debuggablects;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
@@ -28,7 +29,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assume.assumeTrue;
 
 import android.adservices.adid.AdId;
-import android.adservices.adid.AdIdCompatibleManager;
+import android.adservices.adid.AdIdManager;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionOutcome;
@@ -116,6 +117,7 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
      */
     @Test
     @SetFlagEnabled(KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES)
+    @SetFlagEnabled(KEY_FLEDGE_CPC_BILLING_ENABLED)
     public void testAdSelection_withUnifiedTable_withBiddingAndScoringLogic_happyPath()
             throws Exception {
         testAdSelection_withAdCostInUrl_happyPath();
@@ -159,6 +161,7 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
      * reporting URI (Remarketing CUJ 160).
      */
     @Test
+    @SetFlagEnabled(KEY_FLEDGE_CPC_BILLING_ENABLED)
     public void testAdSelection_withAdCostInUrl_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
@@ -169,14 +172,12 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
         long adSelectionId;
 
         try {
-            overrideCpcBillingEnabled(true);
             joinCustomAudience(SHOES_CA);
             AdSelectionOutcome result = doSelectAds(adSelectionConfig);
             adSelectionId = result.getAdSelectionId();
             assertThat(result.hasOutcome()).isTrue();
             assertThat(result.getRenderUri()).isNotNull();
         } finally {
-            overrideCpcBillingEnabled(false);
             leaveCustomAudience(SHOES_CA);
         }
         doReportImpression(adSelectionId, adSelectionConfig);
@@ -190,6 +191,7 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
      */
     @Test
     @SetFlagEnabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_CPC_BILLING_ENABLED)
     public void testAdSelection_withAdCostInUrl_adCostIsReported() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
@@ -200,14 +202,12 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
         long adSelectionId;
 
         try {
-            overrideCpcBillingEnabled(true);
             joinCustomAudience(SHOES_CA);
             AdSelectionOutcome result = doSelectAds(adSelectionConfig);
             adSelectionId = result.getAdSelectionId();
             doReportImpression(adSelectionId, adSelectionConfig);
             doReportEvent(adSelectionId, "click");
         } finally {
-            overrideCpcBillingEnabled(false);
             leaveCustomAudience(SHOES_CA);
         }
 
@@ -449,12 +449,12 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
     }
 
     private boolean isAdIdSupported() {
-        AdIdCompatibleManager adIdCompatibleManager;
+        AdIdManager adIdManager;
         AdServicesOutcomeReceiverForTests<AdId> callback =
                 new AdServicesOutcomeReceiverForTests<>();
         try {
-            adIdCompatibleManager = new AdIdCompatibleManager(sContext);
-            adIdCompatibleManager.getAdId(MoreExecutors.directExecutor(), callback);
+            adIdManager = AdIdManager.get(sContext);
+            adIdManager.getAdId(MoreExecutors.directExecutor(), callback);
         } catch (IllegalStateException e) {
             Log.d(TAG, "isAdIdAvailable(): IllegalStateException detected in AdId manager.");
             return false;

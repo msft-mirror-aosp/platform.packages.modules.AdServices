@@ -28,8 +28,8 @@ android_test {
     ],
 
     libs: [
-        "android.test.base",
-        "android.test.runner",
+        "android.test.base.stubs.system",
+        "android.test.runner.stubs.system",
         "framework-adservices.impl",
     ],
     static_libs: [
@@ -51,7 +51,7 @@ android_test {
         "general-tests",
         "mcts-adservices",
     ],
-    jarjar_rules: ":test-jarjar-rules",
+    jarjar_rules: ":test-service-jarjar-rules",
 }
 
 android_test {
@@ -66,8 +66,8 @@ android_test {
     ],
 
     libs: [
-        "android.test.base",
-        "android.test.runner",
+        "android.test.base.stubs.system",
+        "android.test.runner.stubs.system",
         "framework-adservices.impl",
     ],
     static_libs: [
@@ -86,5 +86,5 @@ android_test {
     test_suites: [
         "general-tests",
     ],
-    jarjar_rules: ":test-jarjar-rules",
+    jarjar_rules: ":test-service-jarjar-rules",
 }

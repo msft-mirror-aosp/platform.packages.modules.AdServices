@@ -83,6 +83,7 @@ java_library {
     defaults: ["framework-module-defaults"],
     lint: {
         extra_check_modules: ["AdServicesProdLintChecker"],
+        baseline_filename: "lint-baseline.xml",
     },
 }
 

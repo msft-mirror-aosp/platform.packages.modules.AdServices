@@ -24,6 +24,7 @@ import android.net.Uri;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
+import com.android.adservices.service.measurement.aggregation.AggregatableNamedBudget;
 import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig;
 import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
@@ -86,6 +87,7 @@ public class Trigger {
     @Nullable private Integer mAggregatableFilteringIdMaxBytes;
     @Nullable private String mAggregateDebugReportingString;
     @Nullable private AggregateDebugReporting mAggregateDebugReporting;
+    @Nullable private String mNamedBudgetsString;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -146,7 +148,8 @@ public class Trigger {
                 && Objects.equals(
                         mAggregatableFilteringIdMaxBytes, trigger.mAggregatableFilteringIdMaxBytes)
                 && Objects.equals(
-                        mAggregateDebugReportingString, trigger.mAggregateDebugReportingString);
+                        mAggregateDebugReportingString, trigger.mAggregateDebugReportingString)
+                && Objects.equals(mNamedBudgetsString, trigger.mNamedBudgetsString);
     }
 
     @Override
@@ -178,7 +181,8 @@ public class Trigger {
                 mTriggerContextId,
                 mAttributionScopesString,
                 mAggregatableFilteringIdMaxBytes,
-                mAggregateDebugReportingString);
+                mAggregateDebugReportingString,
+                mNamedBudgetsString);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -276,6 +280,16 @@ public class Trigger {
      */
     public String getAggregateDeduplicationKeys() {
         return mAggregateDeduplicationKeys;
+    }
+
+    /**
+     * Returns the JSON representation of the list of named budgets. named budget is a JSONObject.
+     * example: {"name": "biddable", "filters": { "2": ["11102626635", "11081876753"]},
+     * "not_filters": { "2": ["11102626635", "11081876753"]}}
+     */
+    @Nullable
+    public String getNamedBudgetsString() {
+        return mNamedBudgetsString;
     }
 
     /**
@@ -411,6 +425,20 @@ public class Trigger {
         return mAggregatableFilteringIdMaxBytes;
     }
 
+    /** Returns if the report for this Trigger should be sent immediately or with a delay. */
+    public boolean shouldAddDelay(Flags flags) {
+        boolean isNonNullTriggerContextId = mTriggerContextId != null;
+        boolean isNonNullFilteringIdAndNonDefaultFilteringIdMaxBytes =
+                flags.getMeasurementEnableFlexibleContributionFiltering()
+                        && mAggregatableFilteringIdMaxBytes != null
+                        && mAggregatableFilteringIdMaxBytes
+                                != Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES;
+        if (isNonNullTriggerContextId || isNonNullFilteringIdAndNonDefaultFilteringIdMaxBytes) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
@@ -509,11 +537,24 @@ public class Trigger {
         } else {
             // Default case: Convert value from integer to AggregatableKeyValue.
             AggregatableValuesConfig aggregatableValuesConfig =
-                    new AggregatableValuesConfig.Builder(new JSONObject(mAggregateValuesString))
+                    new AggregatableValuesConfig.Builder(
+                                    new JSONObject(mAggregateValuesString), flags)
                             .build();
             aggregatableAttributionTriggerBuilder.setValueConfigs(
                     List.of(aggregatableValuesConfig));
         }
+
+        if (flags.getMeasurementEnableAggregatableNamedBudgets()
+                && getNamedBudgetsString() != null) {
+            JSONArray budgetObjects = new JSONArray(getNamedBudgetsString());
+            List<AggregatableNamedBudget> aggregatableNamedBudgets = new ArrayList<>();
+            for (int i = 0; i < budgetObjects.length(); i++) {
+                aggregatableNamedBudgets.add(
+                        new AggregatableNamedBudget(budgetObjects.getJSONObject(i), flags));
+            }
+            aggregatableAttributionTriggerBuilder.setNamedBudgets(aggregatableNamedBudgets);
+        }
+
         return Optional.of(aggregatableAttributionTriggerBuilder.build());
     }
 
@@ -746,6 +787,12 @@ public class Trigger {
             return this;
         }
 
+        /** See {@link Trigger#getNamedBudgetsString()} ()} */
+        public Builder setNamedBudgetsString(String namedBudgetsString) {
+            mBuilding.mNamedBudgetsString = namedBudgetsString;
+            return this;
+        }
+
         /** See {@link Trigger#getFilters()} */
         @NonNull
         public Builder setFilters(@Nullable String filters) {
@@ -796,7 +843,7 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getAggregatableAttributionTrigger()} */
+        /** See {@link Trigger#getAggregatableAttributionTrigger(Flags)} */
         @NonNull
         public Builder setAggregatableAttributionTrigger(
                 @Nullable AggregatableAttributionTrigger aggregatableAttributionTrigger) {

@@ -173,7 +173,7 @@ public class ReportImpressionScriptEngine {
             RegisterAdBeaconScriptEngineHelper registerAdBeaconScriptEngineHelper,
             RetryStrategy retryStrategy,
             DevContext devContext) {
-        mJsEngine = JSScriptEngine.getInstance(sLogger);
+        mJsEngine = JSScriptEngine.getInstance();
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mRegisterAdBeaconScriptEngineHelper = registerAdBeaconScriptEngineHelper;
         mRetryStrategy = retryStrategy;
@@ -353,7 +353,8 @@ public class ReportImpressionScriptEngine {
         IsolateSettings isolateSettings =
                 IsolateSettings.builder()
                         .setMaxHeapSizeBytes(mMaxHeapSizeBytesSupplier.get())
-                        .setIsolateConsoleMessageInLogsEnabled(mDevContext.getDevOptionsEnabled())
+                        .setIsolateConsoleMessageInLogsEnabled(
+                                mDevContext.getDeviceDevOptionsEnabled())
                         .build();
         return mJsEngine.evaluate(jsScript, args, functionName, isolateSettings, mRetryStrategy);
     }

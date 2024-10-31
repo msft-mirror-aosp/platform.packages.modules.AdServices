@@ -28,13 +28,11 @@ import android.adservices.common.AdTechIdentifier;
 import android.os.Parcel;
 
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 import java.util.Collections;
 
-@RequiresSdkLevelAtLeastS
 public final class SignedContextualAdsTest extends CtsAdServicesDeviceTestCase {
     public static final byte[] TEST_SIGNATURE = new byte[] {0, 1, 2};
 

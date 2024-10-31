@@ -24,6 +24,7 @@ import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT
 import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT_API_REGISTER_WEB_SOURCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT_API_REGISTER_WEB_TRIGGER;
 import static com.android.adservices.service.common.Throttler.ApiKey.UNKNOWN;
+import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -34,10 +35,22 @@ import com.android.adservices.common.AdServicesMockitoTestCase;
 
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
 /** Unit tests for {@link Throttler}. */
 public final class ThrottlerTest extends AdServicesMockitoTestCase {
+
     @Test
-    public void testTryAcquire_skdName() throws InterruptedException {
+    public void testNewInstance_null() {
+        assertThrows(NullPointerException.class, () -> Throttler.newInstance(null));
+    }
+
+    @Test
+    public void testTryAcquire_skdName() throws Exception {
         // Create a throttler with 1 permit per second.
         Throttler throttler = createThrottler(1);
 
@@ -59,7 +72,7 @@ public final class ThrottlerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testTryAcquire_appPackageName() throws InterruptedException {
+    public void testTryAcquire_appPackageName() throws Exception {
         // Create a throttler with 1 permit per second.
         Throttler throttler = createThrottler(1);
 
@@ -122,7 +135,7 @@ public final class ThrottlerTest extends AdServicesMockitoTestCase {
         doReturn(7F).when(mMockFlags).getMeasurementRegisterWebTriggerRequestPermitsPerSecond();
         doReturn(8F).when(mMockFlags).getMeasurementRegisterSourcesRequestPermitsPerSecond();
 
-        Throttler throttler = new Throttler(mMockFlags);
+        Throttler throttler = Throttler.newInstance(mMockFlags);
 
         // Default ApiKey configured with 1 request per second
         assertAcquireSeveralTimes(throttler, UNKNOWN, 1);
@@ -150,31 +163,113 @@ public final class ThrottlerTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void testGetInstance_withOnePermitPerSecond() {
-        // Reset throttler state. There is no guarantee another class has initialized the Throttler
-        // using getInstance, therefore destroying the throttler before testing. This is the only
-        // method using getInstance while the others are using the constructor, therefore there is
-        // no need to add this to the setup and tear down test phase.
-        Throttler.destroyExistingThrottler();
-
+    public void testThrottler_withOnePermitPerSecond() {
         // Create a throttler with 1 permit per second from getInstance.
         mockFlags(1F);
-        Throttler throttler = Throttler.getInstance(mMockFlags);
+        Throttler throttler = Throttler.newInstance(mMockFlags);
 
         // tryAcquire should return false after 1 permit
         assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_SOURCE, 1);
 
         // Calling a different API. tryAcquire should return false after 1 permit
         assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_TRIGGER, 1);
-
-        // Reset throttler state.
-        // If another class calls getInstance, it can be initialized to its original state
-        Throttler.destroyExistingThrottler();
     }
 
     @Test
-    public void testGetInstance_onEmptyFlags_throwNullPointerException() {
-        assertThrows(NullPointerException.class, () -> Throttler.getInstance(null));
+    public void testDump_noSdk() throws Exception {
+        Throttler throttler = createThrottler(1);
+
+        testDump(throttler, /* expectSdkRateLimitLines= */ 0);
+    }
+
+    @Test
+    public void testDump_withSdk() throws Exception {
+        Throttler throttler = createThrottler(1);
+
+        throttler.tryAcquire(Throttler.ApiKey.TOPICS_API_SDK_NAME, "sdk1");
+        throttler.tryAcquire(Throttler.ApiKey.TOPICS_API_APP_PACKAGE_NAME, "app2");
+        throttler.tryAcquire(Throttler.ApiKey.TOPICS_API_APP_PACKAGE_NAME, "app1");
+
+        testDump(throttler, /* expectSdkRateLimitLines= */ 3);
+    }
+
+    private void testDump(Throttler throttler, int expectedSdkRateLimitLinesLength)
+            throws Exception {
+        String dump = dump(pw -> throttler.dump(pw));
+        mLog.v("Throttler.dump():\n%s", dump);
+
+        // Ideally it should check the exact value of each entry, but it's an overkill - just
+        // checking that the lines on each section are sorted is good enough...
+        String[] lines = dump.split("\n");
+        int lineNumber = 0; // lines iterator
+        String line = null; // line being asserted
+
+        List<String> sortedKeys =
+                Arrays.stream(Throttler.ApiKey.values())
+                        .map(Throttler.ApiKey::toString)
+                        .collect(Collectors.toList());
+        Collections.sort(sortedKeys);
+        if (lines.length < sortedKeys.size() + 3) {
+            expect.withMessage(
+                            "dump() is missing some rate-limit API Key lines; assertions below"
+                                    + " might be out of sync")
+                    .fail();
+        }
+        expect.withMessage("line 0").that(lines[lineNumber++]).isEqualTo("Throttler");
+
+        // First section - rate limit
+        expect.withMessage("line 1").that(lines[lineNumber++]).isEqualTo("  Rate limit per API");
+        for (String apiKey : sortedKeys) {
+            line = lines[lineNumber++];
+            if (lineNumber < lines.length - 1) {
+                expect.withMessage("line %s", lineNumber)
+                        .that(line)
+                        .startsWith("    " + apiKey + ": ");
+            } else {
+                mLog.w("Ignoring dump() after line number %s", lineNumber);
+                return;
+            }
+        }
+
+        // Second section - rate limit
+        if (expectedSdkRateLimitLinesLength == 0) {
+            expect.withMessage("line %s", lineNumber)
+                    .that(lines[lineNumber++])
+                    .isEqualTo("  SDK rate limit per API: N/A");
+        } else {
+            expect.withMessage("line %s", lineNumber)
+                    .that(lines[lineNumber++])
+                    .isEqualTo("  SDK rate limit per API:");
+
+            // We don't know - actually, we don't care :-) - what the lines are, just that they're
+            // sorted. So, we scan all lines and asserts the actual / expected at the end
+            List<String> actualSdkRateLimitLines = new ArrayList<>(expectedSdkRateLimitLinesLength);
+            for (int i = 0; i < expectedSdkRateLimitLinesLength; i++) {
+                line = lines[lineNumber];
+                actualSdkRateLimitLines.add(line);
+                lineNumber += i;
+            }
+            List<String> expectedSdkRateLimitLines = new ArrayList<>(actualSdkRateLimitLines);
+            Collections.sort(expectedSdkRateLimitLines);
+
+            expect.withMessage("sdk rate limit lines")
+                    .that(actualSdkRateLimitLines)
+                    .containsExactlyElementsIn(expectedSdkRateLimitLines)
+                    .inOrder();
+        }
+
+        // Finally, makes sure there's nothing else left
+        assertNoMoreLinesAfterLine(lines, lineNumber);
+    }
+
+    private void assertNoMoreLinesAfterLine(String[] lines, int lineNumber) {
+        int numberExtraLines = lines.length - lineNumber;
+        if (lineNumber == lines.length) {
+            return;
+        }
+        String extraLines =
+                Arrays.stream(lines, lineNumber, lines.length).collect(Collectors.joining("\n"));
+        expect.withMessage("%s extra lines at the end: %s", numberExtraLines, extraLines).fail();
     }
 
     private void assertAcquireSeveralTimes(
@@ -188,7 +283,7 @@ public final class ThrottlerTest extends AdServicesMockitoTestCase {
 
     private Throttler createThrottler(float permitsPerSecond) {
         mockFlags(permitsPerSecond);
-        return new Throttler(mMockFlags);
+        return Throttler.newInstance(mMockFlags);
     }
 
     private void mockFlags(float permitsPerSecond) {

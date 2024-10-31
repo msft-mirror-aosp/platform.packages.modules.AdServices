@@ -35,6 +35,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.WebAddresses;
+import com.android.adservices.service.measurement.AggregatableNamedBudgets;
 import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.MeasurementHttpClient;
 import com.android.adservices.service.measurement.Source;
@@ -60,11 +61,13 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -90,7 +93,7 @@ public class AsyncSourceFetcher {
                 context,
                 EnrollmentDao.getInstance(),
                 FlagsFactory.getFlags(),
-                DatastoreManagerFactory.getDatastoreManager(context),
+                DatastoreManagerFactory.getDatastoreManager(),
                 new DebugReportApi(context, FlagsFactory.getFlags()));
     }
 
@@ -587,15 +590,32 @@ public class AsyncSourceFetcher {
         if (mFlags.getMeasurementEnableAggregateDebugReporting()
                 && !json.isNull(SourceHeaderContract.AGGREGATABLE_DEBUG_REPORTING)) {
             Optional<String> validAggregateDebugReporting =
-                    FetcherUtil.getValidAggregateDebugReportingString(
+                    FetcherUtil.getValidAggregateDebugReportingWithBudget(
                             json.getJSONObject(SourceHeaderContract.AGGREGATABLE_DEBUG_REPORTING),
                             mFlags);
-            if (!validAggregateDebugReporting.isPresent()) {
+            if (validAggregateDebugReporting.isPresent()) {
+                builder.setAggregateDebugReportingString(validAggregateDebugReporting.get());
+            } else {
                 LoggerFactory.getMeasurementLogger()
                         .d("parseSource: aggregatable debug reporting is invalid.");
+            }
+        }
+        if (mFlags.getMeasurementEnableAggregatableNamedBudgets()
+                && !json.isNull(SourceHeaderContract.NAMED_BUDGETS)) {
+            Optional<AggregatableNamedBudgets> maybeAggregatableNamedBudgets =
+                    parseAggregatableNamedBudgets(
+                            json.getJSONObject(SourceHeaderContract.NAMED_BUDGETS));
+            if (maybeAggregatableNamedBudgets.isEmpty()) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(
+                                String.format(
+                                        "parseValidateSource: Invalid"
+                                                + " named_budgets in %s header.",
+                                        SourceHeaderContract
+                                                .HEADER_ATTRIBUTION_REPORTING_REGISTER_SOURCE));
                 return false;
             }
-            builder.setAggregateDebugReportingString(validAggregateDebugReporting.get());
+            builder.setAggregatableNamedBudgets(maybeAggregatableNamedBudgets.get());
         }
         return true;
     }
@@ -672,6 +692,51 @@ public class AsyncSourceFetcher {
         builder.setAttributionScopes(attributionScopes);
         builder.setMaxEventStates(maxEventStates);
         return true;
+    }
+
+    private Optional<AggregatableNamedBudgets> parseAggregatableNamedBudgets(
+            JSONObject namedBudgetObj) {
+        if (namedBudgetObj.length() > mFlags.getMeasurementMaxNamedBudgetsPerSourceRegistration()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "parseAggregatableNamedBudgets: more named budgets than permitted. %s",
+                            namedBudgetObj.length());
+            return Optional.empty();
+        }
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+
+        Iterator<String> keys = namedBudgetObj.keys();
+        while (keys.hasNext()) {
+            String name = keys.next();
+            if (name.length() > mFlags.getMeasurementMaxLengthPerBudgetName()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("parseAggregatableNamedBudgets: budget name is invalid." + " %s", name);
+                return Optional.empty();
+            }
+            Optional<Integer> maybeIntBudget = FetcherUtil.extractIntegralInt(namedBudgetObj, name);
+            if (maybeIntBudget.isEmpty()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("parseAggregatableNamedBudgets: budget isn't an integer. %s", name);
+                return Optional.empty();
+            }
+            int intBudget = maybeIntBudget.get();
+            if (intBudget <= 0) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("parseAggregatableNamedBudgets: budget is non positive. %s", intBudget);
+                return Optional.empty();
+            }
+            if (intBudget > mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "parseAggregatableNamedBudgets: budget is over max capacity. %s",
+                                intBudget);
+                return Optional.empty();
+            }
+
+            aggregatableNamedBudgets.createContributionBudget(name, intBudget);
+        }
+
+        return Optional.of(aggregatableNamedBudgets);
     }
 
     private boolean isValidTriggerDataSet(Set<UnsignedLong> triggerDataSet,
@@ -900,6 +965,7 @@ public class AsyncSourceFetcher {
         LoggerFactory.getMeasurementLogger()
                 .d("Source ArDebug permission enabled %b", arDebugPermission);
         Source.Builder builder = new Source.Builder();
+        builder.setId(UUID.randomUUID().toString());
         builder.setRegistrationId(asyncRegistration.getRegistrationId());
         builder.setPublisher(getBaseUri(asyncRegistration.getTopOrigin()));
         builder.setEnrollmentId(enrollmentId);
@@ -1072,7 +1138,12 @@ public class AsyncSourceFetcher {
             headers = urlConnection.getHeaderFields();
             asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headers));
             int responseCode = urlConnection.getResponseCode();
-            LoggerFactory.getMeasurementLogger().d("Response code = " + responseCode);
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Response code: %s, Method: %s, Host: %s",
+                            responseCode,
+                            urlConnection.getRequestMethod(),
+                            urlConnection.getURL().getHost());
             if (!FetcherUtil.isRedirect(responseCode) && !FetcherUtil.isSuccess(responseCode)) {
                 asyncFetchStatus.setResponseStatus(
                         AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);
@@ -1236,6 +1307,7 @@ public class AsyncSourceFetcher {
         String DESTINATION_LIMIT_ALGORITHM = "destination_limit_algorithm";
         String EVENT_LEVEL_EPSILON = "event_level_epsilon";
         String AGGREGATABLE_DEBUG_REPORTING = "aggregatable_debug_reporting";
+        String NAMED_BUDGETS = "named_budgets";
     }
 
     private interface SourceRequestContract {

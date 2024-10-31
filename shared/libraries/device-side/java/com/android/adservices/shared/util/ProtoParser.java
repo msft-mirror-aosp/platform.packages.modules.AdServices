@@ -16,9 +16,15 @@
 
 package com.android.adservices.shared.util;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PROTO_PARSER_DECODE_BASE64_ENCODED_STRING_TO_BYTES_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PROTO_PARSER_INVALID_PROTO_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+
 import android.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Base64;
+
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.MessageLite;
@@ -33,22 +39,23 @@ public final class ProtoParser {
     }
 
     /**
-     * Parses Base64 encoded string to a proto object.
+     * Parses Base64 encoded string to a proto object. This uses client error logger to log errors.
      *
      * @param parser A protobuf parser object. e.g. MyProto.parser()
+     * @param errorLogger Error logger to log errors.
      * @param property The property which needs to be decoded
      * @param value Base64 encoded String
      * @return parsed proto from the Base64 encoded string
      */
     @Nullable
     public static <T extends MessageLite> T parseBase64EncodedStringToProto(
-            Parser<T> parser, String property, String value) {
+            Parser<T> parser, AdServicesErrorLogger errorLogger, String property, String value) {
         if (TextUtils.isEmpty(value)) {
             LogUtil.d("Property %s is empty.", property);
             return null;
         }
 
-        byte[] decode = getDecodedPropertyValue(property, value);
+        byte[] decode = getDecodedPropertyValue(errorLogger, property, value);
         if (Objects.isNull(decode)) {
             return null;
         }
@@ -57,8 +64,11 @@ public final class ProtoParser {
         try {
             proto = parser.parseFrom(decode);
         } catch (InvalidProtocolBufferException e) {
-            // TODO(b/315382750): Add CEL for this
             LogUtil.e(e, "Error while parsing %s. Error: ", property);
+            errorLogger.logErrorWithExceptionInfo(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PROTO_PARSER_INVALID_PROTO_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
         }
 
         return proto;
@@ -71,12 +81,16 @@ public final class ProtoParser {
      * @param base64value The base64 value of the property
      * @return The decoded value of the property passed as the parameter
      */
-    private static byte[] getDecodedPropertyValue(String property, String base64value) {
+    private static byte[] getDecodedPropertyValue(
+            AdServicesErrorLogger errorLogger, String property, String base64value) {
         try {
             return Base64.decode(base64value, Base64.NO_PADDING | Base64.NO_WRAP);
         } catch (IllegalArgumentException e) {
-            // TODO(b/315382750): Add CEL for this
             LogUtil.e(e, "Error while decoding %s. Error: ", property);
+            errorLogger.logErrorWithExceptionInfo(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PROTO_PARSER_DECODE_BASE64_ENCODED_STRING_TO_BYTES_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
         }
         return null;
     }

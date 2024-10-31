@@ -34,7 +34,6 @@ import android.cts.statsdatom.lib.ReportUtils;
 import com.android.adservices.common.AdServicesHostSideTestCase;
 import com.android.adservices.shared.testing.TestDeviceHelper;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
@@ -63,7 +62,6 @@ import java.util.List;
  * into an APK which it then installed at runtime and started. The activity simply called getTopics
  * service which trigger the log event, and then gets uninstalled.
  */
-@RequiresSdkLevelAtLeastS(reason = "Topics are not going to be implemented on Android R")
 @RunWith(DeviceJUnit4ClassRunner.class)
 @SetFlagDisabled(KEY_TOPICS_KILL_SWITCH)
 @SetFlagDisabled(KEY_MDD_BACKGROUND_TASK_KILL_SWITCH)

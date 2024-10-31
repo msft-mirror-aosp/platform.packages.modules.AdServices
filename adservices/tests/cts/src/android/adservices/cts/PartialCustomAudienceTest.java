@@ -23,14 +23,12 @@ import android.os.Parcel;
 
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import org.junit.Test;
 
 import java.time.Instant;
 
-@RequiresSdkLevelAtLeastS
 @SetFlagEnabled(FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
 public final class PartialCustomAudienceTest extends CtsAdServicesDeviceTestCase {
     private static final String VALID_CA_NAME = "running_shoes";

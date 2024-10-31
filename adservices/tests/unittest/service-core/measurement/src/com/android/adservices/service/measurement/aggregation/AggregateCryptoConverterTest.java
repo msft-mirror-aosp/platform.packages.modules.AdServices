@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.BUCKET;
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.ID;
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.VALUE;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -28,6 +32,7 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.HpkeJni;
 import com.android.adservices.service.exception.CryptoException;
 import com.android.adservices.service.measurement.PrivacyParams;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.junit.Test;
 
@@ -299,15 +304,71 @@ public class AggregateCryptoConverterTest {
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "1")
-                                                && isFound((Map) i, "value", "2")));
-
+                                        isFound((Map) i, BUCKET, "1")
+                                                && isFound((Map) i, VALUE, "2")));
         assertTrue(
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "3")
-                                                && isFound((Map) i, "value", "4")));
+                                        isFound((Map) i, BUCKET, "3")
+                                                && isFound((Map) i, VALUE, "4")));
+    }
+
+    @Test
+    public void testEncodeWithCbor_filteringId_successfully() throws Exception {
+        final List<AggregateHistogramContribution> contributions = new ArrayList<>();
+        final AggregateHistogramContribution firstContribution =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger("1"))
+                        .setValue(2)
+                        .setId(UnsignedLong.ZERO)
+                        .build();
+        final AggregateHistogramContribution secondContribution =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger("2"))
+                        .setValue(3)
+                        .setId(new UnsignedLong("255"))
+                        .build();
+        final AggregateHistogramContribution thirdContribution =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger("3"))
+                        .setValue(4)
+                        .setId(new UnsignedLong("65535"))
+                        .build();
+        contributions.add(firstContribution);
+        contributions.add(secondContribution);
+        contributions.add(thirdContribution);
+
+        final byte[] encoded = AggregateCryptoConverter.encodeWithCbor(contributions, 2);
+        final List<DataItem> dataItems =
+                new CborDecoder(new ByteArrayInputStream(encoded)).decode();
+
+        final Map payload = (Map) dataItems.get(0);
+        final Array payloadArray = (Array) payload.get(new UnicodeString("data"));
+
+        assertEquals(3, payloadArray.getDataItems().size());
+        assertEquals("histogram", payload.get(new UnicodeString("operation")).toString());
+        assertTrue(
+                payloadArray.getDataItems().stream()
+                        .anyMatch(
+                                i ->
+                                        isFound((Map) i, BUCKET, "1")
+                                                && isFound((Map) i, VALUE, "2")
+                                                && isFound((Map) i, ID, "0")));
+        assertTrue(
+                payloadArray.getDataItems().stream()
+                        .anyMatch(
+                                i ->
+                                        isFound((Map) i, BUCKET, "2")
+                                                && isFound((Map) i, VALUE, "3")
+                                                && isFound((Map) i, ID, "255")));
+        assertTrue(
+                payloadArray.getDataItems().stream()
+                        .anyMatch(
+                                i ->
+                                        isFound((Map) i, BUCKET, "3")
+                                                && isFound((Map) i, VALUE, "4")
+                                                && isFound((Map) i, ID, "65535")));
     }
 
     @Test
@@ -336,17 +397,17 @@ public class AggregateCryptoConverterTest {
         assertEquals(2, payloadArray.getDataItems().size());
         assertEquals(
                 PrivacyParams.AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE,
-                getBytesLength((Map) payloadArray.getDataItems().get(0), "bucket"));
+                getBytesLength((Map) payloadArray.getDataItems().get(0), BUCKET));
         assertEquals(
-                getBytesLength((Map) payloadArray.getDataItems().get(0), "bucket"),
-                getBytesLength((Map) payloadArray.getDataItems().get(1), "bucket"));
+                getBytesLength((Map) payloadArray.getDataItems().get(0), BUCKET),
+                getBytesLength((Map) payloadArray.getDataItems().get(1), BUCKET));
 
         assertEquals(
                 PrivacyParams.AGGREGATE_HISTOGRAM_VALUE_BYTE_SIZE,
-                getBytesLength((Map) payloadArray.getDataItems().get(0), "value"));
+                getBytesLength((Map) payloadArray.getDataItems().get(0), VALUE));
         assertEquals(
-                getBytesLength((Map) payloadArray.getDataItems().get(0), "value"),
-                getBytesLength((Map) payloadArray.getDataItems().get(1), "value"));
+                getBytesLength((Map) payloadArray.getDataItems().get(0), VALUE),
+                getBytesLength((Map) payloadArray.getDataItems().get(1), VALUE));
     }
 
     @Test
@@ -374,9 +435,8 @@ public class AggregateCryptoConverterTest {
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", bucketUpperBound)
-                                                && isFound(
-                                                        (Map) i, "value", "" + valueUpperBound)));
+                                        isFound((Map) i, BUCKET, bucketUpperBound)
+                                                && isFound((Map) i, VALUE, "" + valueUpperBound)));
     }
 
     @Test
@@ -417,20 +477,20 @@ public class AggregateCryptoConverterTest {
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "10")
-                                                && isFound((Map) i, "value", "1")));
+                                        isFound((Map) i, BUCKET, "10")
+                                                && isFound((Map) i, VALUE, "1")));
         assertTrue(
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "20")
-                                                && isFound((Map) i, "value", "2")));
+                                        isFound((Map) i, BUCKET, "20")
+                                                && isFound((Map) i, VALUE, "2")));
         assertTrue(
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "0")
-                                                && isFound((Map) i, "value", "0")));
+                                        isFound((Map) i, BUCKET, "0")
+                                                && isFound((Map) i, VALUE, "0")));
     }
 
     @Test
@@ -490,15 +550,15 @@ public class AggregateCryptoConverterTest {
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "1")
-                                                && isFound((Map) i, "value", "2")));
+                                        isFound((Map) i, BUCKET, "1")
+                                                && isFound((Map) i, VALUE, "2")));
 
         assertTrue(
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "3")
-                                                && isFound((Map) i, "value", "4")));
+                                        isFound((Map) i, BUCKET, "3")
+                                                && isFound((Map) i, VALUE, "4")));
     }
 
     private void assertEncodedPayload(String encodedPayloadBase64) throws Exception {
@@ -517,15 +577,15 @@ public class AggregateCryptoConverterTest {
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "1")
-                                                && isFound((Map) i, "value", "2")));
+                                        isFound((Map) i, BUCKET, "1")
+                                                && isFound((Map) i, VALUE, "2")));
 
         assertTrue(
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "3")
-                                                && isFound((Map) i, "value", "4")));
+                                        isFound((Map) i, BUCKET, "3")
+                                                && isFound((Map) i, VALUE, "4")));
     }
 
     private boolean isFound(Map map, String name, String value) {

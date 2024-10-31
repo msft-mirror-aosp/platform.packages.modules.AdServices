@@ -15,36 +15,62 @@
  */
 package com.android.adservices.common;
 
-import android.annotation.CallSuper;
+import android.content.Context;
 
+import com.android.adservices.common.AdServicesJobTestCase.Mocker;
+import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.AdServicesJobMocker;
 import com.android.adservices.mockito.AdServicesMockitoJobMocker;
+import com.android.adservices.mockito.StaticClassChecker;
+import com.android.adservices.service.DebugFlags;
+import com.android.adservices.service.Flags;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
+
+import com.google.common.annotations.VisibleForTesting;
 
 /** Base class for tests that exercise custom {@code Jobs}. */
-public abstract class AdServicesJobTestCase extends AdServicesExtendedMockitoTestCase {
+public abstract class AdServicesJobTestCase
+        extends AdServicesMockerLessExtendedMockitoTestCase<Mocker> {
 
-    public final AdServicesJobMocker jobMocker = new AdServicesMockitoJobMocker(extendedMockito);
-
-    // TODO(b/314969513): consider inlining after all classes are refactored
-    /**
-     * Convenience method to call {@link
-     * AdServicesJobMocker#mockJobSchedulingLogger(AdServicesJobServiceFactory)} using {@link
-     * #jobMocker}
-     */
-    protected final JobSchedulingLogger mockJobSchedulingLogger(
-            AdServicesJobServiceFactory factory) {
-        return jobMocker.mockJobSchedulingLogger(factory);
+    @Override
+    protected final Mocker newMocker(
+            AdServicesExtendedMockitoRule rule, Flags mockFlags, DebugFlags mockDebugFlags) {
+        return new Mocker(rule, mockFlags, mockDebugFlags);
     }
 
-    // TODO(b/361555631): rename to testAdServicesJobTestCaseFixtures() and annotate
-    // it with @MetaTest
-    @CallSuper
-    @Override
-    protected void assertValidTestCaseFixtures() throws Exception {
-        super.assertValidTestCaseFixtures();
+    public static final class Mocker
+            extends AdServicesMockerLessExtendedMockitoTestCase.InternalMocker
+            implements AdServicesJobMocker {
+        private final AdServicesJobMocker mJobMocker;
 
-        assertTestClassHasNoFieldsFromSuperclass(AdServicesJobTestCase.class, "jobMocker");
+        @VisibleForTesting
+        Mocker(StaticClassChecker checker, Flags mockFlags, DebugFlags mockDebugFlags) {
+            super(checker, mockFlags, mockDebugFlags);
+            mJobMocker = new AdServicesMockitoJobMocker(checker);
+        }
+
+        @Override
+        public JobSchedulingLogger mockJobSchedulingLogger(AdServicesJobServiceFactory factory) {
+            return mJobMocker.mockJobSchedulingLogger(factory);
+        }
+
+        @Override
+        public AdServicesJobServiceLogger getSpiedAdServicesJobServiceLogger(
+                Context context, Flags flags) {
+            return mJobMocker.getSpiedAdServicesJobServiceLogger(context, flags);
+        }
+
+        @Override
+        public void mockGetAdServicesJobServiceLogger(AdServicesJobServiceLogger logger) {
+            mJobMocker.mockGetAdServicesJobServiceLogger(logger);
+        }
+
+        @Override
+        public AdServicesJobServiceLogger mockNoOpAdServicesJobServiceLogger(
+                Context context, Flags flags) {
+            return mJobMocker.mockNoOpAdServicesJobServiceLogger(context, flags);
+        }
     }
 }
