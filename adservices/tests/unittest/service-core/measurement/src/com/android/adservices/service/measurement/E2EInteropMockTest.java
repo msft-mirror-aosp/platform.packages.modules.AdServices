@@ -299,12 +299,12 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                 paramsProvider,
                 name,
                 ((Supplier<Map<String, String>>)
-                                () -> {
-                                    for (String key : sPhFlagsForInterop.keySet()) {
-                                        phFlagsMap.putIfAbsent(key, sPhFlagsForInterop.get(key));
-                                    }
-                                    return phFlagsMap;
-                                })
+                        () -> {
+                            for (String key : sPhFlagsForInterop.keySet()) {
+                                phFlagsMap.putIfAbsent(key, sPhFlagsForInterop.get(key));
+                            }
+                            return phFlagsMap;
+                        })
                         .get());
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(mDatastoreManager, mFlags);
         mMeasurementImpl =
