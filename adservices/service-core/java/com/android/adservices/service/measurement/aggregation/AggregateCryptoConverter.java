@@ -18,6 +18,9 @@ package com.android.adservices.service.measurement.aggregation;
 
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE;
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_HISTOGRAM_VALUE_BYTE_SIZE;
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.BUCKET;
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.ID;
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.VALUE;
 
 import android.annotation.Nullable;
 
@@ -26,6 +29,7 @@ import androidx.annotation.NonNull;
 import com.android.adservices.HpkeJni;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.exception.CryptoException;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONArray;
@@ -108,6 +112,61 @@ public class AggregateCryptoConverter {
     }
 
     /**
+     * Aggregate payload encryption. The payload is encrypted with the following steps: 1. Extracts
+     * Histogram Contributions 2. Encode with CBOR 3. Retrieve public key for encryption 4. Encrypt
+     * with HPKE 5. Encode with Base64
+     *
+     * @param payload json string of histogram data. Example: {operation: histogram, data: [bucket:
+     *     1, value: 2]}
+     * @param sharedInfo plain value that will be shared with receiver
+     * @param filteringIdMaxBytes int value used to limit size of filtering ids and allocate byte []
+     * @throws CryptoException if any exception is encountered
+     */
+    public static String encrypt(
+            @NonNull String publicKeyBase64Encoded,
+            @NonNull String payload,
+            @Nullable String sharedInfo,
+            int filteringIdMaxBytes)
+            throws CryptoException {
+        try {
+            Objects.requireNonNull(payload);
+            Objects.requireNonNull(publicKeyBase64Encoded);
+
+            // Extract Histogram
+            final List<AggregateHistogramContribution> contributions = convert(payload);
+            if (contributions.isEmpty()) {
+                throw new CryptoException("No histogram found");
+            }
+
+            // Encode with Cbor
+            final byte[] payloadCborEncoded = encodeWithCbor(contributions, filteringIdMaxBytes);
+
+            // Get public key
+            final byte[] publicKey = sBase64Decoder.decode(publicKeyBase64Encoded);
+
+            final byte[] contextInfo;
+            if (sharedInfo == null) {
+                contextInfo = "aggregation_service".getBytes();
+            } else {
+                contextInfo = ("aggregation_service" + sharedInfo).getBytes();
+            }
+
+            // Encrypt with HPKE
+            final byte[] payloadEncrypted =
+                    encryptWithHpke(publicKey, payloadCborEncoded, contextInfo);
+            if (payloadEncrypted == null) {
+                throw new CryptoException("Payload not hpke encrypted");
+            }
+
+            // Encode with Base 64
+            return encodeWithBase64(payloadEncrypted);
+        } catch (Exception e) {
+            LoggerFactory.getMeasurementLogger().e(e, "Encryption error");
+            throw new CryptoException("Encryption error", e);
+        }
+    }
+
+    /**
      * Same as {@link AggregateCryptoConverter#encrypt(String, String, String)}, but without hpke
      * encryption
      */
@@ -132,6 +191,34 @@ public class AggregateCryptoConverter {
         }
     }
 
+    /**
+     * Same as {@link AggregateCryptoConverter#encrypt(String, String, String)}, but without hpke
+     * encryption.
+     *
+     * @param payload json string of histogram data
+     * @param filteringIdMaxBytes int value used to limit size of filtering ids and allocate byte []
+     */
+    public static String encode(@NonNull String payload, int filteringIdMaxBytes) {
+        try {
+            Objects.requireNonNull(payload);
+
+            // Extract Histogram
+            final List<AggregateHistogramContribution> contributions = convert(payload);
+            if (contributions.isEmpty()) {
+                throw new CryptoException("No histogram found");
+            }
+
+            // Encode with Cbor
+            final byte[] payloadCborEncoded = encodeWithCbor(contributions, filteringIdMaxBytes);
+
+            // Encode with Base 64
+            return encodeWithBase64(payloadCborEncoded);
+        } catch (Exception e) {
+            LoggerFactory.getMeasurementLogger().e(e, "Encoding error");
+            throw new CryptoException("Encoding error", e);
+        }
+    }
+
     @VisibleForTesting
     static List<AggregateHistogramContribution> convert(String payload) {
         final List<AggregateHistogramContribution> contributions = new ArrayList<>();
@@ -145,13 +232,17 @@ public class AggregateCryptoConverter {
 
             for (int i = 0; i < jsonArray.length(); i++) {
                 JSONObject dataObject = jsonArray.getJSONObject(i);
-                String bucket = dataObject.getString("bucket");
-                String value = dataObject.getString("value");
-                contributions.add(
+                String bucket = dataObject.getString(BUCKET);
+                String value = dataObject.getString(VALUE);
+                AggregateHistogramContribution.Builder contributionBuilder =
                         new AggregateHistogramContribution.Builder()
                                 .setKey(new BigInteger(bucket))
-                                .setValue(Integer.parseInt(value))
-                                .build());
+                                .setValue(Integer.parseInt(value));
+                // TODO(b/374823995) Remove flag dependencies
+                if (dataObject.has(ID)) {
+                    contributionBuilder.setId(new UnsignedLong(dataObject.getString(ID)));
+                }
+                contributions.add(contributionBuilder.build());
             }
             return contributions;
         } catch (NumberFormatException | JSONException e) {
@@ -184,8 +275,58 @@ public class AggregateCryptoConverter {
             System.arraycopy(src, srcPosExcludingSign, bucket, position, length);
 
             final Map dataMap = new Map();
-            dataMap.put(new UnicodeString("bucket"), new ByteString(bucket));
-            dataMap.put(new UnicodeString("value"), new ByteString(value));
+            dataMap.put(new UnicodeString(BUCKET), new ByteString(bucket));
+            dataMap.put(new UnicodeString(VALUE), new ByteString(value));
+            dataArray.add(dataMap);
+        }
+        payloadMap.put(new UnicodeString("operation"), new UnicodeString("histogram"));
+        payloadMap.put(new UnicodeString("data"), dataArray);
+
+        new CborEncoder(outputStream).encode(cborBuilder.add(payloadMap).build());
+        return outputStream.toByteArray();
+    }
+
+    @VisibleForTesting
+    static byte[] encodeWithCbor(
+            List<AggregateHistogramContribution> contributions, int filteringIdMaxBytes)
+            throws CborException {
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        final CborBuilder cborBuilder = new CborBuilder();
+
+        final Map payloadMap = new Map();
+        final Array dataArray = new Array();
+
+        for (AggregateHistogramContribution contribution : contributions) {
+            final byte[] value =
+                    ByteBuffer.allocate(AGGREGATE_HISTOGRAM_VALUE_BYTE_SIZE)
+                            .putInt(contribution.getValue())
+                            .array();
+            final byte[] bucket = new byte[AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE];
+            final byte[] src = contribution.getKey().toByteArray();
+            final int bytesExcludingSign = (int) Math.ceil(contribution.getKey().bitLength() / 8d);
+            final int length = Math.min(bytesExcludingSign, AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE);
+            final int position = bucket.length - length;
+            // Excluding sign bit that BigInteger#toByteArray adds to the first element of the array
+            final int srcPosExcludingSign = src[0] == 0 ? 1 : 0;
+            System.arraycopy(src, srcPosExcludingSign, bucket, position, length);
+
+            final Map dataMap = new Map();
+            dataMap.put(new UnicodeString(BUCKET), new ByteString(bucket));
+            dataMap.put(new UnicodeString(VALUE), new ByteString(value));
+            if (contribution.getId() != null) {
+                final byte[] id =
+                        ByteBuffer.allocate(filteringIdMaxBytes)
+                                .put(
+                                        ByteBuffer.allocate(Long.BYTES)
+                                                .putLong(
+                                                        Long.valueOf(
+                                                                contribution.getId().toString()))
+                                                .array(),
+                                        Long.BYTES - filteringIdMaxBytes,
+                                        filteringIdMaxBytes)
+                                .array();
+                dataMap.put(new UnicodeString(ID), new ByteString(id));
+            }
             dataArray.add(dataMap);
         }
         payloadMap.put(new UnicodeString("operation"), new UnicodeString("histogram"));

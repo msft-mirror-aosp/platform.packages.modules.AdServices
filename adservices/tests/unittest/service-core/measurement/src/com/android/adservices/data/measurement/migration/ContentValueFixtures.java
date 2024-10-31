@@ -260,6 +260,11 @@ public class ContentValueFixtures {
                 "{\"budget\":1024,\"key_piece\":\"0x1\",\"debug_data\":[{\"types\":"
                     + " [\"source-destination-limit\"],\"key_piece\": \"0x123\",\"value\": 123}],"
                     + "\"aggregation_coordinator_origin\":\"https://coordinator.example.test\"}";
+
+        // Added in V45
+        public static final String NAMED_BUDGETS =
+                "{\"name\": \"biddable\", \"filters\": { \"2\": [\"1234\", "
+                        + "\"234\"]}, \"not_filters\": { \"1\": [\"78\", \"891\"]}}";
     }
 
     public static class AttributionValues {
@@ -1140,6 +1145,13 @@ public class ContentValueFixtures {
     /** Get ContentValues for V44 */
     public static ContentValues generateTriggerContentValuesV44() {
         return generateTriggerContentValuesV42();
+    }
+
+    /** Get ContentValues for V45 */
+    public static ContentValues generateTriggerContentValuesV45() {
+        ContentValues values = generateTriggerContentValuesV44();
+        values.put(MeasurementTables.TriggerContract.NAMED_BUDGETS, TriggerValues.NAMED_BUDGETS);
+        return values;
     }
 
     public static ContentValues generateAttributionContentValuesV1() {

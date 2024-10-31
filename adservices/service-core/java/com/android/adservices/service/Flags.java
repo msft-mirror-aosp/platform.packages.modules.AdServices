@@ -1546,6 +1546,8 @@ public interface Flags extends ModuleSharedFlags {
     long FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
     int FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE = 30;
 
+    @ConfigFlag int FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES = 100 * 1024;
+
     default boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
         return !getGlobalKillSwitch() && FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
     }
@@ -1565,6 +1567,10 @@ public interface Flags extends ModuleSharedFlags {
 
     default int getFledgeScheduleCustomAudienceMinDelayMinsOverride() {
         return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
+    }
+
+    default int getFledgeScheduleCustomAudienceUpdateMaxBytes() {
+        return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES;
     }
 
     boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = false;

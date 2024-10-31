@@ -301,6 +301,7 @@ import static com.android.adservices.service.Flags.FLEDGE_REPORT_INTERACTION_REQ
 import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS;
+import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES;
 import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
 import static com.android.adservices.service.Flags.FLEDGE_SELECT_ADS_FROM_OUTCOMES_API_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_SELECT_ADS_KILL_SWITCH;
@@ -789,6 +790,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IN
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_FROM_OUTCOMES_API_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
@@ -3435,6 +3437,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
                 FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
                 Flags::getFledgeScheduleCustomAudienceMinDelayMinsOverride);
+    }
+
+    @Test
+    public void testGetFledgeScheduleCustomAudienceUpdateMaxBytes() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES,
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES,
+                Flags::getFledgeScheduleCustomAudienceUpdateMaxBytes);
     }
 
     @Test

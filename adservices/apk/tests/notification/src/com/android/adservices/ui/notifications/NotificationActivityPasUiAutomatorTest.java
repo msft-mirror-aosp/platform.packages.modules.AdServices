@@ -69,6 +69,7 @@ public final class NotificationActivityPasUiAutomatorTest extends AdservicesNoti
                     .setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
 
     @Test
+    @FlakyTest(bugId = 374129459)
     public void renotifyClickSettingsTest() throws Exception {
         // enable at least one of Fledge or Mesurement API
         ApkTestUtil.launchSettingView(mDevice, LAUNCH_TIMEOUT);
