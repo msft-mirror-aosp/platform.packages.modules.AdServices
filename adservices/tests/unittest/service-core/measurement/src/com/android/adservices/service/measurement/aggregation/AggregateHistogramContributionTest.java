@@ -18,8 +18,11 @@ package com.android.adservices.service.measurement.aggregation;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNull;
 
 import androidx.test.filters.SmallTest;
+
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -51,6 +54,7 @@ public final class AggregateHistogramContributionTest {
                 new AggregateHistogramContribution.Builder().build();
         assertEquals(0L, contribution.getKey().longValue());
         assertEquals(0, contribution.getValue());
+        assertNull(contribution.getId());
     }
 
     @Test
@@ -86,6 +90,7 @@ public final class AggregateHistogramContributionTest {
                 new AggregateHistogramContribution.Builder()
                         .setKey(new BigInteger(largeIntegerStr))
                         .setValue(1)
+                        .setId(new UnsignedLong("123"))
                         .build();
         JSONObject jsonObj = contribution.toJSONObject();
         // Convert the JSONObject to string and use the JSON parser to confirm the large integer is

@@ -22,6 +22,7 @@ import static android.adservices.customaudience.CustomAudience.PRIORITY_DEFAULT;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_PRIORITY_1;
 
 import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
+import static com.android.adservices.service.common.httpclient.AdServicesHttpsClient.DEFAULT_TIMEOUT_MS;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.ACTIVATION_TIME;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.BUYER_2;
@@ -3779,6 +3780,72 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         assertWithMessage("Number of number of partial custom audience in request")
                 .that(performedStats.getNumberOfPartialCustomAudienceInRequest())
                 .isEqualTo(partialCustomAudienceList.size());
+    }
+
+    @Test
+    public void testFetchUpdate_maxBytes_Failure() throws Exception {
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        new AdServicesHttpsClient(
+                                AdServicesExecutors.getBlockingExecutor(),
+                                DEFAULT_TIMEOUT_MS,
+                                DEFAULT_TIMEOUT_MS,
+                                /* maxBytes= */ 1),
+                        mFakeFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        mStrategyMock,
+                        mAdServicesLoggerMock);
+
+        MockResponse mockResponse =
+                new MockResponse().setBody("larger than 1 byte").setResponseCode(200);
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(ImmutableList.of(mockResponse));
+        URL updateUri = server.getUrl("/update");
+
+        DBScheduledCustomAudienceUpdate update =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setOwner(OWNER)
+                        .setBuyer(BUYER)
+                        .setUpdateUri(Uri.parse(updateUri.toString()))
+                        .setScheduledTime(Instant.now())
+                        .setCreationTime(Instant.now())
+                        .build();
+
+        DBScheduledCustomAudienceUpdateRequest request =
+                DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(update).build();
+
+        when(mStrategyMock.prepareFetchUpdateRequestBody(new JSONArray(), List.of()))
+                .thenReturn("");
+
+        when(mStrategyMock.getScheduledCustomAudienceUpdateRequestList(any()))
+                .thenReturn(List.of(request));
+
+        Void ignored =
+                mHandler.performScheduledUpdates(update.getScheduledTime().plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesLoggerMock)
+                .logScheduledCustomAudienceUpdatePerformedFailureStats(
+                        mScheduleCAFailureStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedFailureStats loggedStats =
+                mScheduleCAFailureStatsCaptor.getValue();
+
+        assertWithMessage("Failure action")
+                .that(loggedStats.getFailureAction())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_HTTP_CALL);
+        assertWithMessage("Failure type")
+                .that(loggedStats.getFailureType())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CONTENT_SIZE_ERROR);
     }
 
     private JSONArray createJsonArrayFromPartialCustomAudienceList(

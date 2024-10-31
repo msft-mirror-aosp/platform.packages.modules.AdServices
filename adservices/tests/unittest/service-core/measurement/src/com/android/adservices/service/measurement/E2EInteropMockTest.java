@@ -276,7 +276,10 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                                     .KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT,
                             "true"),
                     entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS, "true"),
-                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING, "true"));
+                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING, "true"),
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS,
+                            "true"));
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
@@ -296,12 +299,12 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                 paramsProvider,
                 name,
                 ((Supplier<Map<String, String>>)
-                                () -> {
-                                    for (String key : sPhFlagsForInterop.keySet()) {
-                                        phFlagsMap.putIfAbsent(key, sPhFlagsForInterop.get(key));
-                                    }
-                                    return phFlagsMap;
-                                })
+                        () -> {
+                            for (String key : sPhFlagsForInterop.keySet()) {
+                                phFlagsMap.putIfAbsent(key, sPhFlagsForInterop.get(key));
+                            }
+                            return phFlagsMap;
+                        })
                         .get());
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(mDatastoreManager, mFlags);
         mMeasurementImpl =
