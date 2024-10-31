@@ -105,7 +105,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
     private GetAdIdParam mRequest;
 
     @Mock private PackageManager mMockPackageManager;
-    @Mock private Clock mClock;
+    @Mock private Clock mMockClock;
     @Mock private Context mMockSdkContext;
     @Mock private Throttler mMockThrottler;
     @Mock private AdIdServiceImpl mAdIdServiceImpl;
@@ -117,7 +117,10 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
         mAdIdWorker = new AdIdWorker(adIdCacheManager);
         Mockito.doReturn(null).when(adIdCacheManager).getService();
 
-        when(mClock.elapsedRealtime()).thenReturn(150L, 200L);
+        // NOTE: it looks like the statement below is not needed anymore - tests would pass even if
+        // it's removed
+        mocker.mockCurrentTimeMillis(mMockClock, 150L, 200L);
+
         mCallerMetadata = new CallerMetadata.Builder().setBinderElapsedTimestamp(100L).build();
         mRequest =
                 new GetAdIdParam.Builder()
@@ -337,7 +340,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
                         context,
                         mAdIdWorker,
                         mSpyAdServicesLogger,
-                        mClock,
+                        mMockClock,
                         mMockFlags,
                         mMockThrottler,
                         mMockAppImportanceFilter);
@@ -399,7 +402,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
                 mSpyContext,
                 mAdIdWorker,
                 mSpyAdServicesLogger,
-                mClock,
+                mMockClock,
                 mMockFlags,
                 mMockThrottler,
                 mMockAppImportanceFilter);
@@ -411,7 +414,7 @@ public final class AdIdServiceImplTest extends AdServicesExtendedMockitoTestCase
                 mMockSdkContext,
                 mAdIdWorker,
                 mSpyAdServicesLogger,
-                mClock,
+                mMockClock,
                 mMockFlags,
                 mMockThrottler,
                 mMockAppImportanceFilter);

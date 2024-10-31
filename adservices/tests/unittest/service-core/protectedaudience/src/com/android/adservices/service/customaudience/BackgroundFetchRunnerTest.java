@@ -39,8 +39,6 @@ import android.adservices.http.MockWebServerRule;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 
-import androidx.test.filters.FlakyTest;
-
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -58,7 +56,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -81,7 +78,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTestCase {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -335,7 +331,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -363,7 +360,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -425,7 +423,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -485,7 +484,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -495,15 +495,9 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
         assertEquals(mFetchPath, fetchRequest.getPath());
     }
 
-    @FlakyTest(bugId = 322167446)
     @Test
     public void testFetchAndValidateCustomAudienceUpdatableDataNetworkTimeout() throws Exception {
         class FlagsWithSmallLimits implements Flags {
-            @Override
-            public int getFledgeBackgroundFetchNetworkConnectTimeoutMs() {
-                return 30;
-            }
-
             @Override
             public int getFledgeBackgroundFetchNetworkReadTimeoutMs() {
                 return 50;
@@ -552,7 +546,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertTrue(responseLatch.await(150, TimeUnit.MILLISECONDS));
@@ -584,7 +579,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 invalidFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);
@@ -629,7 +625,8 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                 CommonFixture.FIXED_NOW,
                                 CommonFixture.VALID_BUYER_1,
                                 mFetchUri,
-                                DevContext.createForDevOptionsDisabled().getDevOptionsEnabled())
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
                         .get();
 
         assertEquals(expectedUpdatableData, updatableData);

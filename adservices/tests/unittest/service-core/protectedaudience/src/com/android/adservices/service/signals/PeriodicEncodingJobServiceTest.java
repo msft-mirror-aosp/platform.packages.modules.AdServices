@@ -48,7 +48,6 @@ import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.shared.testing.HandlerIdleSyncCallback;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -65,7 +64,6 @@ import org.mockito.Spy;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 @MockStatic(ConsentManager.class)
 @SpyStatic(PeriodicEncodingJobService.class)
@@ -114,7 +112,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
         mockGetProtectedSignalsPeriodicEncodingEnabled(false);
 
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(mMockContext, mMockFlags);
+                mocker.mockNoOpAdServicesJobServiceLogger(mMockContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobFlagDisabled();
@@ -148,7 +146,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     public void testOnStartJobConsentRevokedGaUxEnabled_withLogging() throws Exception {
         mockDisableRelevantKillSwitches();
 
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
@@ -202,7 +201,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     public void testOnStartJobUpdateSuccess_withLogging() throws Exception {
         mockDisableRelevantKillSwitches();
 
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -215,7 +215,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     public void testOnStartJobUpdateTimeoutHandled_withLogging() throws Exception {
         mockDisableRelevantKillSwitches();
 
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -272,7 +273,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
 
     @Test
     public void testOnStopJob_withLogging() throws Exception {
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         doReturn(mMockPeriodicEncodingJobWorker).when(PeriodicEncodingJobWorker::getInstance);
@@ -413,7 +415,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
 
     @Test
     public void testOnStartJobShouldDisableJobTrue() {
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
 
         doReturn(true)
                 .when(

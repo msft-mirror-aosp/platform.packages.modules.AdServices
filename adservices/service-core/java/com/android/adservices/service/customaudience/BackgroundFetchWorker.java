@@ -22,6 +22,7 @@ import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UN
 
 import android.annotation.NonNull;
 import android.content.Context;
+import android.content.Intent;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -31,12 +32,14 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.SingletonRunner;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.BackgroundFetchExecutionLogger;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableList;
@@ -46,6 +49,7 @@ import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -56,10 +60,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 /** Worker instance for updating custom audiences in the background. */
-public class BackgroundFetchWorker {
+public final class BackgroundFetchWorker {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     public static final String JOB_DESCRIPTION = "FLEDGE background fetch";
     private static final Object SINGLETON_LOCK = new Object();
+    private static final String ACTION_BACKGROUND_FETCH_JOB_FINISHED =
+            "ACTION_BACKGROUND_FETCH_JOB_FINISHED";
+
+    @GuardedBy("SINGLETON_LOCK")
     private static volatile BackgroundFetchWorker sBackgroundFetchWorker;
 
     private final CustomAudienceDao mCustomAudienceDao;
@@ -94,17 +102,15 @@ public class BackgroundFetchWorker {
      *
      * <p>If an instance hasn't been initialized, a new singleton will be created and returned.
      */
-    @NonNull
-    public static BackgroundFetchWorker getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
-
+    public static BackgroundFetchWorker getInstance() {
         if (sBackgroundFetchWorker == null) {
             synchronized (SINGLETON_LOCK) {
                 if (sBackgroundFetchWorker == null) {
+                    Context context = ApplicationContextSingleton.get();
                     CustomAudienceDao customAudienceDao =
-                            CustomAudienceDatabase.getInstance(context).customAudienceDao();
+                            CustomAudienceDatabase.getInstance().customAudienceDao();
                     AppInstallDao appInstallDao =
-                            SharedStorageDatabase.getInstance(context).appInstallDao();
+                            SharedStorageDatabase.getInstance().appInstallDao();
                     CustomAudienceLoggerFactory customAudienceLoggerFactory =
                             CustomAudienceLoggerFactory.getInstance();
                     Flags flags = FlagsFactory.getFlags();
@@ -165,11 +171,22 @@ public class BackgroundFetchWorker {
                                 mFlags.getFledgeBackgroundFetchJobMaxRuntimeMs(),
                                 TimeUnit.MILLISECONDS,
                                 AdServicesExecutors.getScheduler());
+
         run.addCallback(
                 getCloseBackgroundFetchExecutionLoggerCallback(backgroundFetchExecutionLogger),
                 AdServicesExecutors.getBackgroundExecutor());
 
         return run;
+    }
+
+    private void sendBroadcastIntentIfEnabled() {
+        if (DebugFlags.getInstance().getFledgeBackgroundFetchCompleteBroadcastEnabled()) {
+            Context context = ApplicationContextSingleton.get();
+            sLogger.d(
+                    "Sending a broadcast intent with intent action: %s",
+                    ACTION_BACKGROUND_FETCH_JOB_FINISHED);
+            context.sendBroadcast(new Intent(ACTION_BACKGROUND_FETCH_JOB_FINISHED));
+        }
     }
 
     private ListenableFuture<Void> updateData(
@@ -260,6 +277,7 @@ public class BackgroundFetchWorker {
                         backgroundFetchExecutionLogger,
                         backgroundFetchExecutionLogger.getNumOfEligibleToUpdateCAs(),
                         STATUS_SUCCESS);
+                sendBroadcastIntentIfEnabled();
             }
 
             @Override
@@ -270,6 +288,7 @@ public class BackgroundFetchWorker {
                         backgroundFetchExecutionLogger,
                         backgroundFetchExecutionLogger.getNumOfEligibleToUpdateCAs(),
                         resultCode);
+                sendBroadcastIntentIfEnabled();
             }
         };
     }

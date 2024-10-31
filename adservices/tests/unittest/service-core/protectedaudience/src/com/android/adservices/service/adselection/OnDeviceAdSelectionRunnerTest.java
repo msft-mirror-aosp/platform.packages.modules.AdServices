@@ -155,6 +155,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -183,7 +184,6 @@ import com.android.adservices.service.stats.RunAdBiddingProcessReportedStats;
 import com.android.adservices.service.stats.RunAdSelectionProcessReportedStats;
 import com.android.adservices.service.stats.SignatureVerificationStats;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -230,8 +230,8 @@ import java.util.stream.Collectors;
  * mocked and provide expected mock responses when invoked with desired input
  */
 @SuppressWarnings("FutureReturnValueIgnored")
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 @MockStatic(com.android.adservices.shared.util.Clock.class)
 public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMockitoTestCase {
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
@@ -343,6 +343,8 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
 
     @Before
     public void setUp() {
+        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetConsentNotificationDebugMode(false);
         // Initializing up here so object is spied
         mAdSelectionEntryDaoSpy =
                 spy(
@@ -453,6 +455,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -543,15 +546,9 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     @Test
     public void testRunAdSelectionSuccessWithUXNotificationEnforcementDisabled()
             throws AdServicesException {
-        Flags flagsWithoutUxNotificationEnforcement =
-                new OnDeviceAdSelectionRunnerTestFlags() {
-                    @Override
-                    public boolean getConsentNotificationDebugMode() {
-                        return true;
-                    }
-                };
+        mocker.mockGetConsentNotificationDebugMode(true);
 
-        doReturn(flagsWithoutUxNotificationEnforcement).when(FlagsFactory::getFlags);
+        doReturn(mFakeFlags).when(FlagsFactory::getFlags);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         verifyAndSetupCommonSuccessScenario(adSelectionConfig);
@@ -569,7 +566,8 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        flagsWithoutUxNotificationEnforcement,
+                        mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -690,6 +688,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -866,6 +865,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -995,6 +995,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -1141,6 +1142,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         flagsWithFilteringDisabled,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -1345,6 +1347,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -1450,6 +1453,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -1568,6 +1572,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -1647,6 +1652,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -1718,6 +1724,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -1785,6 +1792,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         flags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -1843,6 +1851,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -1997,6 +2006,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -2120,6 +2130,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -2221,6 +2232,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -2327,6 +2339,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -2436,6 +2449,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -2567,6 +2581,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -2642,6 +2657,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         flagsWithOnDeviceAuctionDisabled,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -2740,6 +2756,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         flagsWithSmallerLimits,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -2890,6 +2907,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         flagsWithSmallPerBuyerTimeout,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -2982,6 +3000,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -3058,6 +3077,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         flags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -3177,6 +3197,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         flags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -3304,6 +3325,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         flags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -3394,6 +3416,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -3452,6 +3475,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -3526,6 +3550,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         flags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -3603,6 +3628,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         flags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -3677,6 +3703,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         flags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -3765,6 +3792,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         flags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -3836,6 +3864,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         flags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -3915,6 +3944,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         flags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -3992,6 +4022,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -4084,6 +4115,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -4169,6 +4201,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -4238,6 +4271,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         flagsWithKAnonEnabled,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,
@@ -4366,6 +4400,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mClockSpy,
                         mAdServicesLoggerMock,
                         flagsWithKAnonEnabled,
+                        mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
                         mAdSelectionExecutionLogger,

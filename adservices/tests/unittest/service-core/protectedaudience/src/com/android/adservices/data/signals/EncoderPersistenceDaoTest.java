@@ -27,37 +27,23 @@ import static org.junit.Assert.assertTrue;
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
-import android.content.Context;
 
-import androidx.test.core.app.ApplicationProvider;
-
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.After;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.File;
 
-public class EncoderPersistenceDaoTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
-
+public final class EncoderPersistenceDaoTest extends AdServicesUnitTestCase {
     private static final AdTechIdentifier BUYER_1 = CommonFixture.VALID_BUYER_1;
     private static final String ENCODER =
             "function hello() {\n" + "  console.log(\"Hello World!\");\n" + "}";
     private static final String ENCODER_2 =
             "function bye() {\n" + "  console.log(\"Goodbye World!\");\n" + "}";
 
-    private EncoderPersistenceDao mEncoderPersistenceDao;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
-
-    @Before
-    public void setup() {
-        mEncoderPersistenceDao = EncoderPersistenceDao.getInstance(CONTEXT);
-    }
+    private final EncoderPersistenceDao mEncoderPersistenceDao =
+            EncoderPersistenceDao.getInstance();
 
     @After
     public void tearDown() {
@@ -69,7 +55,7 @@ public class EncoderPersistenceDaoTest {
         assertEquals(
                 "Both objects should have been the same instance",
                 mEncoderPersistenceDao,
-                EncoderPersistenceDao.getInstance(CONTEXT.getApplicationContext()));
+                EncoderPersistenceDao.getInstance());
     }
 
     @Test
@@ -81,7 +67,7 @@ public class EncoderPersistenceDaoTest {
 
     @Test
     public void testCreateEncoderDirectory() {
-        File encoderDir = new File(CONTEXT.getFilesDir(), ENCODERS_DIR);
+        File encoderDir = new File(mContext.getFilesDir(), ENCODERS_DIR);
         assertFalse("Directory should not have existed so far", encoderDir.exists());
 
         encoderDir = mEncoderPersistenceDao.createEncodersDirectoryIfDoesNotExist();
@@ -164,13 +150,13 @@ public class EncoderPersistenceDaoTest {
         assertTrue(
                 "All encoders and directory should have been deleted",
                 mEncoderPersistenceDao.deleteAllEncoders());
-        encoderDir = new File(CONTEXT.getFilesDir(), ENCODERS_DIR);
+        encoderDir = new File(mContext.getFilesDir(), ENCODERS_DIR);
         assertFalse("Directory should have been wiped", encoderDir.exists());
     }
 
     @Test
     public void testDeleteEmptyDirectory() {
-        File encoderDir = new File(CONTEXT.getFilesDir(), ENCODERS_DIR);
+        File encoderDir = new File(mContext.getFilesDir(), ENCODERS_DIR);
         assertFalse("Directory should not have existed", encoderDir.exists());
 
         assertTrue(
@@ -180,10 +166,10 @@ public class EncoderPersistenceDaoTest {
 
     @Test
     public void testWriteAndReadForFile() {
-        File tempFile = new File(CONTEXT.getFilesDir(), ADSERVICES_PREFIX + "temp_file");
+        File tempFile = new File(mContext.getFilesDir(), ADSERVICES_PREFIX + "temp_file");
         mEncoderPersistenceDao.writeDataToFile(tempFile, ENCODER);
         String readData =
-                mEncoderPersistenceDao.readDataFromFile(CONTEXT.getFilesDir(), tempFile.getName());
+                mEncoderPersistenceDao.readDataFromFile(mContext.getFilesDir(), tempFile.getName());
         assertEquals(
                 "Data written to the file should have matched data read from file",
                 ENCODER,

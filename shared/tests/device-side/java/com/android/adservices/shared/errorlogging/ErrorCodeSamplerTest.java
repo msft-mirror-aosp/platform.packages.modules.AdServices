@@ -44,6 +44,7 @@ public final class ErrorCodeSamplerTest extends SharedMockitoTestCase {
             Base64.encodeToString(SAMPLE_INTERVAL.toByteArray(), Base64.DEFAULT);
 
     @Mock private Random mRandom;
+    @Mock private AdServicesErrorLogger mMockErrorLogger;
 
     @Before
     public void setUp() {
@@ -54,7 +55,8 @@ public final class ErrorCodeSamplerTest extends SharedMockitoTestCase {
     @Test
     public void testShouldLog_randomSampling_loggingSuccess() {
         when(mRandom.nextInt(anyInt())).thenReturn(1);
-        ErrorCodeSampler errorCodeSampler = new ErrorCodeSampler(mMockFlags, mRandom);
+        ErrorCodeSampler errorCodeSampler =
+                new ErrorCodeSampler(mMockFlags, mMockErrorLogger, mRandom);
 
         int errorCode = 200;
         expect.withMessage("shouldLog(errorCode=%s)", errorCode)
@@ -80,7 +82,7 @@ public final class ErrorCodeSamplerTest extends SharedMockitoTestCase {
                         .build();
         when(mMockFlags.getEncodedErrorCodeListPerSampleInterval())
                 .thenReturn(Base64.encodeToString(sampleInterval.toByteArray(), Base64.DEFAULT));
-        ErrorCodeSampler errorCodeSampler = new ErrorCodeSampler(mMockFlags);
+        ErrorCodeSampler errorCodeSampler = new ErrorCodeSampler(mMockFlags, mMockErrorLogger);
 
         // Error code not present in map and default sampling rate is not defined.
         int errorCode = 101;
@@ -97,7 +99,7 @@ public final class ErrorCodeSamplerTest extends SharedMockitoTestCase {
     @Test
     public void testShouldLog_noSampling_emptyMap() {
         when(mMockFlags.getEncodedErrorCodeListPerSampleInterval()).thenReturn("");
-        ErrorCodeSampler errorCodeSampler = new ErrorCodeSampler(mMockFlags);
+        ErrorCodeSampler errorCodeSampler = new ErrorCodeSampler(mMockFlags, mMockErrorLogger);
         int errorCode = 101;
 
         expect.withMessage("shouldLog(errorCode=%s)", errorCode)
@@ -108,7 +110,8 @@ public final class ErrorCodeSamplerTest extends SharedMockitoTestCase {
     @Test
     public void testShouldLog_randomSampling_doesNotLog() {
         when(mRandom.nextInt(anyInt())).thenReturn(10);
-        ErrorCodeSampler errorCodeSampler = new ErrorCodeSampler(mMockFlags, mRandom);
+        ErrorCodeSampler errorCodeSampler =
+                new ErrorCodeSampler(mMockFlags, mMockErrorLogger, mRandom);
 
         // Error code present
         int errorCode = 200;

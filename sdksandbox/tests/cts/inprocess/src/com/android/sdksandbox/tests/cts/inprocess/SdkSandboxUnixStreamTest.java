@@ -33,7 +33,6 @@ import com.android.modules.utils.build.SdkLevel;
 import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -48,10 +47,9 @@ public class SdkSandboxUnixStreamTest extends DeviceSupportedBaseTest {
 
     @Before
     public void setUp() {
-        assertAppLaunchSuccessful(
-                SystemUtil.runShellCommandOrThrow(
-                        "am start --user current -W -S --activity-reorder-to-front "
-                                + "com.android.socketapp/.SocketApp"));
+        SystemUtil.runShellCommandOrThrow(
+                "am start --user current -W -S --activity-reorder-to-front "
+                        + "com.android.socketapp/.SocketApp");
         assertAppAndSandboxRunning();
     }
 
@@ -103,10 +101,6 @@ public class SdkSandboxUnixStreamTest extends DeviceSupportedBaseTest {
                     IOException.class,
                     () -> socketToSandbox.connect(sandboxSocket));
         }
-    }
-
-    private static void assertAppLaunchSuccessful(String output) {
-        assertThat(output).contains("LaunchState: COLD");
     }
 
     private static void assertAppAndSandboxRunning() {

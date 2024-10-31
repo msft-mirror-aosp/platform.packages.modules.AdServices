@@ -41,6 +41,7 @@ import android.os.Process;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.devapi.DevSessionFixture;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
@@ -271,7 +272,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
-                DevContext.builder(CALLER_PACKAGE_NAME).setDevOptionsEnabled(true).build());
+                DevContext.builder(CALLER_PACKAGE_NAME).setDeviceDevOptionsEnabled(true).build());
     }
 
     @Test
@@ -295,7 +296,7 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
-                DevContext.builder(CALLER_PACKAGE_NAME).setDevOptionsEnabled(true).build());
+                DevContext.builder(CALLER_PACKAGE_NAME).setDeviceDevOptionsEnabled(true).build());
 
         verify(mFledgeAuthorizationFilterSpy, never())
                 .assertAdTechAllowed(any(), anyString(), any(), anyInt(), anyInt());
@@ -738,8 +739,9 @@ public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTest
                                 API_NAME,
                                 Throttler.ApiKey.UNKNOWN,
                                 DevContext.builder()
-                                        .setDevOptionsEnabled(true)
+                                        .setDeviceDevOptionsEnabled(true)
                                         .setCallingAppPackageName(CALLER_PACKAGE_NAME)
+                                        .setDevSession(DevSessionFixture.IN_PROD)
                                         .build()));
     }
 }

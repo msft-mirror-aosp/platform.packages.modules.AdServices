@@ -468,17 +468,10 @@ public class AggregateReportingJobHandler {
     @VisibleForTesting
     JSONObject createReportJsonPayload(AggregateReport aggregateReport, Uri reportingOrigin,
             AggregateEncryptionKey key) throws JSONException {
-        String sourceRegistrationTimeStr =
-                aggregateReport.getSourceRegistrationTime() == null
-                        ? null
-                        : String.valueOf(
-                                TimeUnit.MILLISECONDS.toSeconds(
-                                        roundDownToDay(
-                                                aggregateReport.getSourceRegistrationTime())));
         return new AggregateReportBody.Builder()
                 .setReportId(aggregateReport.getId())
                 .setAttributionDestination(aggregateReport.getAttributionDestination().toString())
-                .setSourceRegistrationTime(sourceRegistrationTimeStr)
+                .setSourceRegistrationTime(getSourceRegistrationTimeStr(aggregateReport))
                 .setScheduledReportTime(
                         String.valueOf(
                                 TimeUnit.MILLISECONDS.toSeconds(
@@ -496,8 +489,20 @@ public class AggregateReportingJobHandler {
                                 ? "enabled"
                                 : null)
                 .setTriggerContextId(aggregateReport.getTriggerContextId())
+                .setAggregatableFilteringIdMaxBytes(
+                        aggregateReport.getAggregatableFilteringIdMaxBytes())
                 .build()
                 .toJson(key, mFlags);
+    }
+
+    private String getSourceRegistrationTimeStr(AggregateReport aggregateReport) {
+        if (aggregateReport.getSourceRegistrationTime() == null) {
+            return null;
+        }
+
+        return String.valueOf(
+                TimeUnit.MILLISECONDS.toSeconds(
+                        roundDownToDay(aggregateReport.getSourceRegistrationTime())));
     }
 
     /** Makes the POST request to the reporting URL. */

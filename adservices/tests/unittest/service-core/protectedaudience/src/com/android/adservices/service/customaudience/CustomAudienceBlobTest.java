@@ -36,7 +36,7 @@ import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_AD_REND
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.AUCTION_SERVER_REQUEST_FLAGS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.OMIT_ADS_VALUE;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.PRIORITY_KEY;
-import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PARTIAL_CUSTOM_AUDIENCE_1;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.DB_PARTIAL_CUSTOM_AUDIENCE_1;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -56,7 +56,6 @@ import android.net.Uri;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 
@@ -64,7 +63,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnitRunner;
@@ -112,9 +110,6 @@ public class CustomAudienceBlobTest {
 
     public CustomAudienceBlobTest() throws JSONException {}
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() throws JSONException {
         mCustomAudienceBlob = new CustomAudienceBlob();
@@ -149,20 +144,20 @@ public class CustomAudienceBlobTest {
         mCustomAudienceBlob.overrideFromPartialCustomAudience(
                 VALID_OWNER,
                 VALID_BUYER_1,
-                DBPartialCustomAudience.getPartialCustomAudience(PARTIAL_CUSTOM_AUDIENCE_1));
+                DBPartialCustomAudience.getPartialCustomAudience(DB_PARTIAL_CUSTOM_AUDIENCE_1));
 
         assertEquals(mCustomAudienceBlob.getOwner(), VALID_OWNER);
         assertEquals(mCustomAudienceBlob.getBuyer(), VALID_BUYER_1);
-        assertEquals(mCustomAudienceBlob.getName(), PARTIAL_CUSTOM_AUDIENCE_1.getName());
+        assertEquals(mCustomAudienceBlob.getName(), DB_PARTIAL_CUSTOM_AUDIENCE_1.getName());
         assertEquals(
                 mCustomAudienceBlob.getActivationTime(),
-                PARTIAL_CUSTOM_AUDIENCE_1.getActivationTime());
+                DB_PARTIAL_CUSTOM_AUDIENCE_1.getActivationTime());
         assertEquals(
                 mCustomAudienceBlob.getExpirationTime(),
-                PARTIAL_CUSTOM_AUDIENCE_1.getExpirationTime());
+                DB_PARTIAL_CUSTOM_AUDIENCE_1.getExpirationTime());
         assertEquals(
                 mCustomAudienceBlob.getUserBiddingSignals(),
-                PARTIAL_CUSTOM_AUDIENCE_1.getUserBiddingSignals());
+                DB_PARTIAL_CUSTOM_AUDIENCE_1.getUserBiddingSignals());
     }
 
     @Test

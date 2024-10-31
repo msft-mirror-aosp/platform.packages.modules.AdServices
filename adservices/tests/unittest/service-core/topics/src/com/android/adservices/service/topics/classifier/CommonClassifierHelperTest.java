@@ -31,7 +31,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationGetTopTopicsStats;
 import com.android.adservices.shared.testing.SkipLoggingUsageRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
@@ -61,7 +60,6 @@ import java.util.stream.Collectors;
  * be selected from the topics list in order by their index in the topics list. </b>
  */
 @SpyStatic(FlagsFactory.class)
-@RequiresSdkLevelAtLeastS
 // TODO (b/359964245): Remove after bug is resolved.
 @SkipLoggingUsageRule(reason = "b/359964245")
 public final class CommonClassifierHelperTest extends AdServicesExtendedMockitoTestCase {
@@ -80,8 +78,6 @@ public final class CommonClassifierHelperTest extends AdServicesExtendedMockitoT
             "classifier/classifier_input_config.txt";
     private static final String BUNDLED_MODEL_FILE_PATH = "classifier/model.tflite";
 
-    private ModelManager mTestModelManager;
-    private ModelManager mProductionModelManager;
     private ImmutableList<Integer> testLabels;
     private ImmutableMap<String, ImmutableMap<String, String>> testClassifierAssetsMetadata;
     private long mTestTaxonomyVersion;
@@ -100,7 +96,7 @@ public final class CommonClassifierHelperTest extends AdServicesExtendedMockitoT
     public void setUp() {
         mocker.mockGetFlagsForTesting();
 
-        mTestModelManager =
+        ModelManager testModelManager =
                 new ModelManager(
                         mContext,
                         TEST_LABELS_FILE_PATH,
@@ -111,7 +107,7 @@ public final class CommonClassifierHelperTest extends AdServicesExtendedMockitoT
                         mMockFileStorage,
                         mMockDownloadedFiles);
 
-        mProductionModelManager =
+        ModelManager productionModelManager =
                 new ModelManager(
                         mContext,
                         PRODUCTION_LABELS_FILE_PATH,
@@ -125,8 +121,8 @@ public final class CommonClassifierHelperTest extends AdServicesExtendedMockitoT
         // TODO (b/359964245): Delete after bug is resolved and use annotations to verify calls.
         doNothingOnErrorLogUtilError();
 
-        testLabels = mTestModelManager.retrieveLabels();
-        testClassifierAssetsMetadata = mTestModelManager.retrieveClassifierAssetsMetadata();
+        testLabels = testModelManager.retrieveLabels();
+        testClassifierAssetsMetadata = testModelManager.retrieveClassifierAssetsMetadata();
         mTestTaxonomyVersion =
                 Long.parseLong(
                         testClassifierAssetsMetadata.get("labels_topics").get("asset_version"));
@@ -134,9 +130,9 @@ public final class CommonClassifierHelperTest extends AdServicesExtendedMockitoT
                 Long.parseLong(
                         testClassifierAssetsMetadata.get("tflite_model").get("asset_version"));
 
-        productionLabels = mProductionModelManager.retrieveLabels();
+        productionLabels = productionModelManager.retrieveLabels();
         productionClassifierAssetsMetadata =
-                mProductionModelManager.retrieveClassifierAssetsMetadata();
+                productionModelManager.retrieveClassifierAssetsMetadata();
         mProductionTaxonomyVersion =
                 Long.parseLong(
                         productionClassifierAssetsMetadata
@@ -174,17 +170,18 @@ public final class CommonClassifierHelperTest extends AdServicesExtendedMockitoT
                         /* numberOfRandomTopics */ 1,
                         mLogger);
 
-        assertThat(testResponse.get(0)).isEqualTo(getTestTopic(1));
-        assertThat(testResponse.get(1)).isEqualTo(getTestTopic(2));
-        assertThat(testResponse.get(2)).isEqualTo(getTestTopic(3));
-        assertThat(testResponse.get(3)).isEqualTo(getTestTopic(4));
-        assertThat(testResponse.get(4)).isEqualTo(getTestTopic(5));
+        assertThat(testResponse).hasSize(6);
+        expect.that(testResponse.get(0)).isEqualTo(getTestTopic(1));
+        expect.that(testResponse.get(1)).isEqualTo(getTestTopic(2));
+        expect.that(testResponse.get(2)).isEqualTo(getTestTopic(3));
+        expect.that(testResponse.get(3)).isEqualTo(getTestTopic(4));
+        expect.that(testResponse.get(4)).isEqualTo(getTestTopic(5));
         // Check the random topic is not empty
         // The random topic is at the end
-        assertThat(testResponse.get(5)).isNotNull();
+        expect.that(testResponse.get(5)).isNotNull();
 
         verify(mLogger).logEpochComputationGetTopTopicsStats(argument.capture());
-        assertThat(argument.getValue())
+        expect.that(argument.getValue())
                 .isEqualTo(
                         EpochComputationGetTopTopicsStats.builder()
                                 .setTopTopicCount(5)

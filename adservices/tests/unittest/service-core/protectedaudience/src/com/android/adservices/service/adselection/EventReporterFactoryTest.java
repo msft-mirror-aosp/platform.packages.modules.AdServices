@@ -23,6 +23,7 @@ import android.os.Process;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -31,11 +32,9 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
@@ -56,9 +55,7 @@ public class EventReporterFactoryTest {
     @Mock private MeasurementImpl mMeasurementServiceMock;
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private Context mContextMock;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    @Mock private DebugFlags mDebugFlags;
 
     @Test
     public void testFactory_registerAdBeaconDisabled_allDisabled() {
@@ -134,6 +131,7 @@ public class EventReporterFactoryTest {
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         flags,
+                        mDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
