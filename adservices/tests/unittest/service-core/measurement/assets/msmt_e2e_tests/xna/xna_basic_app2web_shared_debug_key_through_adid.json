@@ -183,7 +183,8 @@
                   }
                 ],
                 "debug_key": "211",
-                "debug_ad_id": "9e2c3718906d618c5745ecc69971f083e9b249029c123486d949c453e55cb882"
+                "debug_ad_id": "9e2c3718906d618c5745ecc69971f083e9b249029c123486d949c453e55cb882",
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -220,7 +221,10 @@
             {
               "key": "0xb85",
               "value": 1664
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "112",
           "trigger_debug_key": "211"
@@ -251,7 +255,10 @@
             {
               "key": "0xb85",
               "value": 1664
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "112",
           "trigger_debug_key": "211"

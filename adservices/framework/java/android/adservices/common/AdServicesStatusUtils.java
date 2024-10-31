@@ -253,6 +253,15 @@ public final class AdServicesStatusUtils {
     /** This error denotes that consent was revoked for all APIS. */
     public static final int STATUS_CONSENT_REVOKED_ALL_APIS = 30;
 
+    /** This error occurs when a dev session is still transitioning between prod or dev. */
+    public static final int STATUS_DEV_SESSION_IS_STILL_TRANSITIONING = 31;
+
+    /** This error occurs when a non-debuggable app is calling during a dev session. */
+    public static final int STATUS_DEV_SESSION_CALLER_IS_NON_DEBUGGABLE = 32;
+
+    /** This error occurs when dev session state is unable to be read. */
+    public static final int STATUS_DEV_SESSION_FAILURE = 33;
+
     /** The error message to be returned along with {@link LimitExceededException}. */
     public static final String RATE_LIMIT_REACHED_ERROR_MESSAGE = "API rate limit exceeded.";
 
@@ -314,6 +323,24 @@ public final class AdServicesStatusUtils {
 
     /** The error message to be returned along with {@link ServiceUnavailableException}. */
     public static final String SERVICE_UNAVAILABLE_ERROR_MESSAGE = "Service is not available.";
+
+    private static final String DEV_SESSION_ERROR_TRANSITIONING_HELP =
+            "If this error persists, run `cmd adservices_manager adservices-api dev-session end` "
+                    + "to reset the dev session.";
+
+    /** The error message when a dev session is still transitioning between prod or dev. */
+    public static final String DEV_SESSION_IS_TRANSITIONING_MESSAGE =
+            "Caller is not allowed during the transition to or from dev mode. "
+                    + DEV_SESSION_ERROR_TRANSITIONING_HELP;
+
+    /** The error message when a non-debuggable app is calling during a dev session. */
+    public static final String DEV_SESSION_CALLER_IS_NON_DEBUGGABLE_MESSAGE =
+            "Caller during a dev session must have android:debuggable=\"true\" in their manifest! "
+                    + DEV_SESSION_ERROR_TRANSITIONING_HELP;
+
+    /** The error message when dev session state cannot be read. */
+    public static final String DEV_SESSION_FAILURE_MESSAGE =
+            "Failed to read dev session state. " + DEV_SESSION_ERROR_TRANSITIONING_HELP;
 
     /**
      * The error message returned when a call to schedule a custom audience update fails because of
@@ -379,6 +406,12 @@ public final class AdServicesStatusUtils {
                 return new LimitExceededException(SERVER_RATE_LIMIT_REACHED_ERROR_MESSAGE);
             case STATUS_PROVIDER_SERVICE_INTERNAL_ERROR:
                 return new ProviderServiceInternalException();
+            case STATUS_DEV_SESSION_IS_STILL_TRANSITIONING:
+                return new IllegalStateException(DEV_SESSION_IS_TRANSITIONING_MESSAGE);
+            case STATUS_DEV_SESSION_CALLER_IS_NON_DEBUGGABLE:
+                return new SecurityException(DEV_SESSION_CALLER_IS_NON_DEBUGGABLE_MESSAGE);
+            case STATUS_DEV_SESSION_FAILURE:
+                return new IllegalStateException(DEV_SESSION_FAILURE_MESSAGE);
             default:
                 return new IllegalStateException();
         }
@@ -430,6 +463,9 @@ public final class AdServicesStatusUtils {
                 STATUS_PROVIDER_SERVICE_INTERNAL_ERROR,
                 STATUS_UPDATE_ALREADY_PENDING_ERROR,
                 STATUS_CONSENT_REVOKED_ALL_APIS,
+                STATUS_DEV_SESSION_IS_STILL_TRANSITIONING,
+                STATUS_DEV_SESSION_CALLER_IS_NON_DEBUGGABLE,
+                STATUS_DEV_SESSION_FAILURE,
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface StatusCode {}

@@ -19,7 +19,6 @@ import static android.adservices.common.AdServicesStatusUtils.SERVICE_UNAVAILABL
 
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_SERVICE;
-import static com.android.adservices.AdServicesCommon.ACTION_AD_EXT_DATA_STORAGE_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_AD_SELECTION_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_AD_SERVICES_COBALT_UPLOAD_SERVICE;
 import static com.android.adservices.AdServicesCommon.ACTION_AD_SERVICES_COMMON_SERVICE;
@@ -241,7 +240,6 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
                 && !mServiceIntentAction.equals(ACTION_APPSETID_PROVIDER_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_AD_SERVICES_COBALT_UPLOAD_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_AD_SERVICES_COMMON_SERVICE)
-                && !mServiceIntentAction.equals(ACTION_AD_EXT_DATA_STORAGE_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_SHELL_COMMAND_SERVICE)
                 && !mServiceIntentAction.equals(ACTION_PROTECTED_SIGNALS_SERVICE)) {
             LogUtil.e("Bad service intent action: " + mServiceIntentAction);
@@ -278,9 +276,6 @@ class AndroidServiceBinder<T> extends ServiceBinder<T> {
             mService = null;
         }
     }
-
-    // TODO(b/293894199, b/284744130): members below were adapted from BuildCompatUtils, it would
-    // be better to move BuildCompatUtils to this package
 
     private static final boolean IS_DEBUGGABLE = computeIsDebuggable();
 

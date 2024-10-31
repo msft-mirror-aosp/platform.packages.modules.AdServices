@@ -28,6 +28,7 @@ android_test {
     ],
     libs: [
         "framework-adservices-lib", // Needed to test fake ServiceBinder implementations
+        "framework-configinfrastructure.stubs.module_lib",
     ],
     static_libs: [
         "adservices-test-utility",
@@ -39,7 +40,7 @@ android_test {
     sdk_version: "module_current",
     plugins: ["auto_annotation_plugin"],
     test_config: "AndroidTest.xml",
-    min_sdk_version: "30",
+    min_sdk_version: "31",
     target_sdk_version: "31",
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],

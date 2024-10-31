@@ -71,7 +71,7 @@ android_test {
     privileged: true,
     defaults: ["modules-utils-testable-device-config-defaults"],
     sdk_version: "module_current",
-    min_sdk_version: "30",
+    min_sdk_version: "31",
     max_sdk_version: "32",
     static_libs: [
         "compatibility-device-util-axt",

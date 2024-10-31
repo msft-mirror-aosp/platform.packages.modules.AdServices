@@ -40,6 +40,7 @@ import android.os.Process;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.devapi.DevSessionFixture;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
@@ -47,7 +48,6 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
@@ -55,7 +55,6 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
-@RequiresSdkLevelAtLeastS
 public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCase {
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
@@ -390,7 +389,7 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
-                DevContext.builder(CALLER_PACKAGE_NAME).setDevOptionsEnabled(true).build());
+                DevContext.builder(CALLER_PACKAGE_NAME).setDeviceDevOptionsEnabled(true).build());
     }
 
     @Test
@@ -414,7 +413,7 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
                 MY_UID,
                 API_NAME,
                 Throttler.ApiKey.UNKNOWN,
-                DevContext.builder(CALLER_PACKAGE_NAME).setDevOptionsEnabled(true).build());
+                DevContext.builder(CALLER_PACKAGE_NAME).setDeviceDevOptionsEnabled(true).build());
 
         verify(mFledgeAuthorizationFilterSpy, never())
                 .assertAdTechAllowed(any(), anyString(), any(), anyInt(), anyInt());
@@ -454,9 +453,9 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
                                         MY_UID,
                                         API_NAME,
                                         Throttler.ApiKey.UNKNOWN,
-                                        DevContext.builder()
-                                                .setDevOptionsEnabled(true)
-                                                .setCallingAppPackageName(CALLER_PACKAGE_NAME)
+                                        DevContext.builder(CALLER_PACKAGE_NAME)
+                                                .setDeviceDevOptionsEnabled(true)
+                                                .setDevSession(DevSessionFixture.IN_PROD)
                                                 .build()));
 
         assertThat(exception)

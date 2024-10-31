@@ -273,4 +273,24 @@ public interface AdServicesLogger {
 
     /** Logs stats for UpdateSignalsApiCalledStats */
     void logUpdateSignalsApiCalledStats(UpdateSignalsApiCalledStats stats);
+
+    /** Logs stats for TopicsScheduleEpochJobSettingReportedStats */
+    void logTopicsScheduleEpochJobSettingReportedStats(
+            TopicsScheduleEpochJobSettingReportedStats stats);
+
+    /** Logs stats for ScheduledCustomAudienceUpdatePerformedStats */
+    void logScheduledCustomAudienceUpdatePerformedStats(
+            ScheduledCustomAudienceUpdatePerformedStats stats);
+
+    /** Logs stats for ScheduledCustomAudienceUpdateBackgroundJobStats */
+    void logScheduledCustomAudienceUpdateBackgroundJobStats(
+            ScheduledCustomAudienceUpdateBackgroundJobStats stats);
+
+    /** Logs stats for ScheduledCustomAudienceUpdateScheduleAttemptedStats */
+    void logScheduledCustomAudienceUpdateScheduleAttemptedStats(
+            ScheduledCustomAudienceUpdateScheduleAttemptedStats stats);
+
+    /** Logs stats for ScheduledCustomAudienceUpdatePerformedFailure */
+    void logScheduledCustomAudienceUpdatePerformedFailureStats(
+            ScheduledCustomAudienceUpdatePerformedFailureStats stats);
 }

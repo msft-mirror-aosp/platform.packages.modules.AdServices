@@ -432,19 +432,19 @@ public class VerboseDebugReportingFallbackJobServiceTest
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
         doReturn(Mockito.mock(Context.class)).when(mSpyService).getApplicationContext();
-        ExtendedMockito.doReturn(mock(EnrollmentDao.class)).when(() -> EnrollmentDao.getInstance());
+        ExtendedMockito.doReturn(mock(EnrollmentDao.class)).when(EnrollmentDao::getInstance);
         ExtendedMockito.doReturn(mock(AdServicesLoggerImpl.class))
                 .when(AdServicesLoggerImpl::getInstance);
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingFallbackJobService.schedule(any(), any()));
         ExtendedMockito.doReturn(mMockDatastoreManager)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+                .when(DatastoreManagerFactory::getDatastoreManager);
         ExtendedMockito.doReturn(false)
                 .when(
                         () ->
                                 ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(
                                         any(Context.class)));
-        mockGetAdServicesJobServiceLogger(mSpyLogger);
+        mocker.mockGetAdServicesJobServiceLogger(mSpyLogger);
 
         // Execute
         execute.run();

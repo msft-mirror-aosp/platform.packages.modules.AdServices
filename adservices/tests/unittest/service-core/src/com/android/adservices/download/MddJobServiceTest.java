@@ -52,7 +52,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
@@ -71,7 +70,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /** Unit tests for {@link com.android.adservices.download.MddJobService} */
-@RequiresSdkLevelAtLeastS
 @SpyStatic(MddJob.class)
 @SpyStatic(MddJobService.class)
 @SpyStatic(MobileDataDownloadFactory.class)
@@ -130,7 +128,7 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
 
         doReturn(JOB_SCHEDULER).when(mSpyMddJobService).getSystemService(JobScheduler.class);
 
-        mLogger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        mLogger = mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
 
         // MDD Task Tag.
         PersistableBundle bundle = new PersistableBundle();

@@ -28,25 +28,20 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.Flags.ClassifierType;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -55,40 +50,23 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /** Manager Classifier Test {@link ClassifierManager}. */
-public class ClassifierManagerTest {
-
-    private MockitoSession mStaticMockSession;
-
-    @Mock Flags mMockFlags;
+@SpyStatic(FlagsFactory.class)
+public final class ClassifierManagerTest extends AdServicesExtendedMockitoTestCase {
 
     @Mock private OnDeviceClassifier mOnDeviceClassifier;
     @Mock private PrecomputedClassifier mPrecomputedClassifier;
 
     private ClassifierManager mClassifierManager;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setUp() throws IOException {
-        MockitoAnnotations.initMocks(this);
-
-        // Start a mockitoSession to mock static method
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession().spyStatic(FlagsFactory.class).startMocking();
-
         // Mock static method FlagsFactory.getFlags() to return Mock Flags.
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mMockFlags);
 
         mClassifierManager =
                 new ClassifierManager(
                         Suppliers.memoize(() -> mOnDeviceClassifier),
                         Suppliers.memoize(() -> mPrecomputedClassifier));
-    }
-
-    @After
-    public void tearDown() {
-        mStaticMockSession.finishMocking();
     }
 
     @Test
@@ -187,7 +165,7 @@ public class ClassifierManagerTest {
 
         String appPackage1 = "com.example.adservices.samples.topics.sampleapp1";
         ImmutableSet<String> appPackages = ImmutableSet.of(appPackage1);
-        List<Topic> onDeviceTopics = createTopics(/* TopicIds *//* TopicIds */ 123, 72);
+        List<Topic> onDeviceTopics = createTopics(/* TopicIds */ 123, 72);
         when(mOnDeviceClassifier.classify(eq(appPackages)))
                 .thenReturn(ImmutableMap.of(appPackage1, onDeviceTopics));
         // Empty map for precomputed topics.

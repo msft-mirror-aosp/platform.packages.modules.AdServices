@@ -36,7 +36,7 @@ import java.util.Objects;
 @SystemApi
 public final class EnableAdServicesResponse implements Parcelable {
 
-    private final int mStatusCode;
+    @StatusCode private final int mStatusCode;
 
     private final String mErrorMessage;
 
@@ -63,6 +63,7 @@ public final class EnableAdServicesResponse implements Parcelable {
     }
 
     /** Returns the response status code. */
+    @StatusCode
     int getStatusCode() {
         return mStatusCode;
     }

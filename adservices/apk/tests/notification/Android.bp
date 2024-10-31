@@ -26,7 +26,6 @@ android_test {
     defaults: ["modules-utils-testable-device-config-defaults"],
     sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
-    compile_multilib: "both",
     static_libs: [
         "compatibility-device-util-axt",
         "adservices-service-core",
@@ -59,7 +58,10 @@ android_test {
         "general-tests",
         "mts-adservices",
     ],
-    data: [":com.example.adservices.samples.ui.consenttestapp"],
+    data: [
+        ":com.example.adservices.samples.ui.consenttestapp",
+        ":com.example.adservices.samples.ui.sampletestapp",
+    ],
     instrumentation_for: "AdServicesApk",
 }
 
@@ -73,7 +75,7 @@ android_test {
     privileged: true,
     defaults: ["modules-utils-testable-device-config-defaults"],
     sdk_version: "module_current",
-    min_sdk_version: "30",
+    min_sdk_version: "31",
     max_sdk_version: "32",
     compile_multilib: "both",
     static_libs: [
@@ -110,6 +112,9 @@ android_test {
     ],
     test_config: "AndroidTest.ExtServices.xml",
     manifest: "AndroidManifestExtServices.xml",
-    data: [":com.example.adservices.samples.ui.consenttestapp"],
+    data: [
+        ":com.example.adservices.samples.ui.consenttestapp",
+        ":com.example.adservices.samples.ui.sampletestapp",
+    ],
     instrumentation_for: "ExtServices-sminus",
 }

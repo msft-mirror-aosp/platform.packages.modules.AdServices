@@ -17,6 +17,10 @@
 package com.android.adservices.service.signals;
 
 import static com.android.adservices.service.signals.SignalsFixture.DEV_CONTEXT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_COLLISION_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_JSON_PROCESSING_STATUS_SEMANTIC_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_UNPACK_SIGNAL_UPDATES_JSON_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_SEMANTIC_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_SYNTACTIC_ERROR;
 
@@ -34,6 +38,10 @@ import static org.mockito.Mockito.when;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
@@ -44,13 +52,12 @@ import com.android.adservices.service.signals.updateprocessors.UpdateProcessor;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -68,7 +75,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @RunWith(MockitoJUnitRunner.class)
-public class UpdateProcessingOrchestratorTest {
+@SetErrorLogUtilDefaultParams(
+        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
+@RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
+public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoTestCase {
 
     public static final byte[] KEY_1 = {(byte) 1, (byte) 2, (byte) 3, (byte) 4};
     public static final byte[] KEY_2 = {(byte) 5, (byte) 6, (byte) 7, (byte) 8};
@@ -88,9 +99,6 @@ public class UpdateProcessingOrchestratorTest {
     @Captor ArgumentCaptor<UpdateOutput> mUpdateOutputArgumentCaptor;
 
     private UpdateProcessingOrchestrator mUpdateProcessingOrchestrator;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
 
     @Before
     public void setup() {
@@ -128,6 +136,8 @@ public class UpdateProcessingOrchestratorTest {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_UNPACK_SIGNAL_UPDATES_JSON_FAILURE)
     public void testUpdatesProcessorBadJson() throws Exception {
         final JSONException exception = new JSONException("JSONException for testing");
         when(mUpdateProcessorSelectorMock.getUpdateProcessor(TEST_PROCESSOR))
@@ -338,6 +348,10 @@ public class UpdateProcessingOrchestratorTest {
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_COLLISION_ERROR)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_JSON_PROCESSING_STATUS_SEMANTIC_ERROR)
     public void testUpdatesProcessorTwoInsertsSameKey() throws Exception {
         JSONObject json = new JSONObject();
         json.put(TEST_PROCESSOR + 1, new JSONObject());

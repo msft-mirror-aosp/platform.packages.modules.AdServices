@@ -17,22 +17,24 @@
 package com.android.adservices.service;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
-import static android.os.Build.VERSION.SDK_INT;
 
+import static com.android.adservices.service.DebugFlags.CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_GLOBAL;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_RAMPED_UP;
 
 import android.annotation.IntDef;
 import android.app.job.JobInfo;
-import android.os.Build;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.cobalt.AppNameApiErrorLogger;
 import com.android.adservices.cobalt.CobaltConstants;
+import com.android.adservices.service.measurement.attribution.AttributionJobService;
 import com.android.adservices.shared.common.flags.ConfigFlag;
 import com.android.adservices.shared.common.flags.FeatureFlag;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
+import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -62,8 +64,12 @@ public interface Flags extends ModuleSharedFlags {
         return TOPICS_EPOCH_JOB_PERIOD_MS;
     }
 
-    /** Topics Epoch Job Flex. Note the minimum value system allows is +8h24m0s0ms */
-    @ConfigFlag long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 5 hours.
+    /**
+     * Topics Epoch Job Flex. Note the minimum value system allows is 5 minutes
+     * or 5% of background job interval time, whichever is greater.
+     * Topics epoch job interval time is 7 days, so the minimum flex time should be 8.4 hours.
+     */
+    @ConfigFlag long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 9 hours.
 
     /** Returns flex for the Epoch computation job in Millisecond. */
     default long getTopicsEpochJobFlexMs() {
@@ -129,6 +135,17 @@ public interface Flags extends ModuleSharedFlags {
         return TOPICS_ENCRYPTION_METRICS_ENABLED;
     }
 
+    /** Flag to enable Topics epoch job battery constraint logging for Topics API. */
+    @FeatureFlag boolean TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED = false;
+
+    /**
+     * Returns the feature flag to enable Topics epoch job battery constraint logging for Topics
+     * API.
+     */
+    default boolean getTopicsEpochJobBatteryConstraintLoggingEnabled() {
+        return TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED;
+    }
+
     /** Flag to disable plaintext Topics for Topics API response. */
     boolean TOPICS_DISABLE_PLAINTEXT_RESPONSE = false;
 
@@ -166,8 +183,8 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Flag to enable rescheduling of Topics job scheduler tasks when modifications are made
-     * to the configuration of the background job.
+     * Flag to enable rescheduling of Topics job scheduler tasks when modifications are made to the
+     * configuration of the background job.
      */
     @FeatureFlag boolean TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED = false;
 
@@ -178,17 +195,33 @@ public interface Flags extends ModuleSharedFlags {
 
     /**
      * This flag allows you to execute the job regardless of the device's charging status.
-     * By default, the Topics API background job scheduler requires the device to be in charging
+     *
+     * <p>By default, the Topics API background job scheduler requires the device to be in charging
      * mode for job execution. The default value for this flag is false, indicating that the job
      * should only be executed when the device is charging. By enabling this flag, the job can be
      * executed when the battery level is not low.
      */
     @FeatureFlag boolean TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING = false;
 
-    /** Returns the feature flag to enable the device to be in batter not low mode for
-     * Topics API job execution.  */
+    /**
+     * Returns the feature flag to enable the device to be in batter not low mode for Topics API job
+     * execution.
+     */
     default boolean getTopicsEpochJobBatteryNotLowInsteadOfCharging() {
         return TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING;
+    }
+
+    /**
+     * Flag to enable cleaning Topics database when the settings of Topics epoch job
+     * is changed from server side.
+     */
+    @FeatureFlag boolean TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED = false;
+
+    /**
+     * Returns the feature flag to enable cleaning Topics database when epoch job settings changed.
+     */
+    default boolean getTopicsCleanDBWhenEpochJobSettingsChanged() {
+        return TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED;
     }
 
     /** Available types of classifier behaviours for the Topics API. */
@@ -616,13 +649,6 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_ATTRIBUTION_JOB_TRIGGERING_DELAY_MS;
     }
 
-    boolean MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING = false;
-
-    /** Returns true if aggregatable report padding is enabled else false. */
-    default boolean getMeasurementEnableAggregatableReportPayloadPadding() {
-        return MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
-    }
-
     int DEFAULT_MEASUREMENT_MAX_ATTRIBUTIONS_PER_INVOCATION = 100;
 
     /** Max number of {@link Trigger} to process per job for {@link AttributionJobService} */
@@ -797,8 +823,7 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW;
     }
 
-    @ConfigFlag
-    long MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW = TimeUnit.MINUTES.toMillis(1);
+    @ConfigFlag long MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW = TimeUnit.MINUTES.toMillis(1);
 
     /** Returns the duration that controls the rate-limiting window for destinations per minute. */
     default long getMeasurementDestinationRateLimitWindow() {
@@ -1514,12 +1539,22 @@ public interface Flags extends ModuleSharedFlags {
     // Enable scheduleCustomAudienceUpdateApi()
     boolean FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED = false;
 
+    @FeatureFlag
+    boolean FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS = false;
+
     long FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS = 1L * 60L * 60L * 1000L; // 1 hour
     long FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS = 5L * 60L * 1000L; // 5 minutes
     int FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE = 30;
 
+    @ConfigFlag int FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES = 100 * 1024;
+
     default boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
         return !getGlobalKillSwitch() && FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+    }
+
+    default boolean getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
+        return getFledgeScheduleCustomAudienceUpdateEnabled()
+                && FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS;
     }
 
     default long getFledgeScheduleCustomAudienceUpdateJobPeriodMs() {
@@ -1532,6 +1567,10 @@ public interface Flags extends ModuleSharedFlags {
 
     default int getFledgeScheduleCustomAudienceMinDelayMinsOverride() {
         return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
+    }
+
+    default int getFledgeScheduleCustomAudienceUpdateMaxBytes() {
+        return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES;
     }
 
     boolean FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED = false;
@@ -2015,6 +2054,15 @@ public interface Flags extends ModuleSharedFlags {
         return ADSERVICES_ENABLED;
     }
 
+    @FeatureFlag boolean DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED = false;
+
+    /**
+     * @return {@code true} if the developer mode feature is enabled on this device.
+     */
+    default boolean getDeveloperModeFeatureEnabled() {
+        return DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED;
+    }
+
     /**
      * The number of epoch to look back to do garbage collection for old epoch data. Assume current
      * Epoch is T, then any epoch data of (T-NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY-1) (inclusive)
@@ -2097,34 +2145,13 @@ public interface Flags extends ModuleSharedFlags {
         return CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS;
     }
 
+    /**
+     * @deprecated - TODO(b/330796095): remove once all usages of this method are moved to {@link
+     *     DebugFlags}
+     */
+    @Deprecated
     default boolean getConsentNotificationDebugMode() {
-        return DebugFlags.getInstance().getConsentNotificationDebugMode();
-    }
-
-    /** Returns the consent notification activity debug mode. */
-    default boolean getConsentNotificationActivityDebugMode() {
-        return DebugFlags.getInstance().getConsentNotificationActivityDebugMode();
-    }
-
-    /** Returns whether to suppress consent notified state. */
-    default boolean getConsentNotifiedDebugMode() {
-        return DebugFlags.getInstance().getConsentNotifiedDebugMode();
-    }
-
-    default boolean getConsentManagerDebugMode() {
-        return DebugFlags.getInstance().getConsentManagerDebugMode();
-    }
-
-    /** When enabled, the device is treated as OTA device. */
-    default boolean getConsentManagerOTADebugMode() {
-        return DebugFlags.getInstance().getConsentManagerOTADebugMode();
-    }
-
-    boolean DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK = false;
-
-    /** When enabled, perform age check in rvc post ota notification channel. */
-    default boolean getRvcPostOtaNotifAgeCheck() {
-        return DEFAULT_RVC_POST_OTA_NOTIF_AGE_CHECK;
+        return CONSENT_NOTIFICATION_DEBUG_MODE;
     }
 
     /** Available sources of truth to get consent for PPAPI. */
@@ -2135,7 +2162,6 @@ public interface Flags extends ModuleSharedFlags {
                 PPAPI_ONLY,
                 PPAPI_AND_SYSTEM_SERVER,
                 APPSEARCH_ONLY,
-                PPAPI_AND_ADEXT_SERVICE,
             })
     @Retention(RetentionPolicy.SOURCE)
     @interface ConsentSourceOfTruth {}
@@ -2158,22 +2184,12 @@ public interface Flags extends ModuleSharedFlags {
     int APPSEARCH_ONLY = FlagsConstants.APPSEARCH_ONLY;
 
     /**
-     * Read and write data that need to be rollback-safe from AdServicesExtDataStorageService; rest
-     * can be handled by PPAPI_API only. This is intended to be used on Android R as AppSearch and
-     * system server are unavailable.
-     */
-    int PPAPI_AND_ADEXT_SERVICE = FlagsConstants.PPAPI_AND_ADEXT_SERVICE;
-
-    /**
      * Consent source of truth intended to be used by default. On S devices, there is no AdServices
-     * code running in the system server, so the default is APPSEARCH_ONLY. On R devices, there is
-     * no system server and appseach, so the default is PPAPI_AND_ADEXT_SERVICE_ONLY.
+     * code running in the system server, so the default for those is PPAPI_ONLY.
      */
     @ConsentSourceOfTruth
     int DEFAULT_CONSENT_SOURCE_OF_TRUTH =
-            SdkLevel.isAtLeastT()
-                    ? PPAPI_AND_SYSTEM_SERVER
-                    : (SdkLevel.isAtLeastS() ? APPSEARCH_ONLY : PPAPI_AND_ADEXT_SERVICE);
+            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : APPSEARCH_ONLY;
 
     /** Returns the consent source of truth currently used for PPAPI. */
     @ConsentSourceOfTruth
@@ -2182,16 +2198,12 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Blocked topics source of truth intended to be used by default. On S devices, there is no
-     * AdServices code running in the system server, so the default is APPSEARCH_ONLY. On R devices,
-     * there is no system server and appseach, so the default is PPAPI_ADEXT_SERVICE_ONLY. However,
-     * note that topics is not supported on R.
+     * Blocked topics source of truth intended to be used by default. On S- devices, there is no
+     * AdServices code running in the system server, so the default for those is PPAPI_ONLY.
      */
     @ConsentSourceOfTruth
     int DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
-            SdkLevel.isAtLeastT()
-                    ? PPAPI_AND_SYSTEM_SERVER
-                    : (SdkLevel.isAtLeastS() ? APPSEARCH_ONLY : PPAPI_AND_ADEXT_SERVICE);
+            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : APPSEARCH_ONLY;
 
     /** Returns the blocked topics source of truth currently used for PPAPI */
     @ConsentSourceOfTruth
@@ -2932,33 +2944,6 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION;
     }
 
-    /**
-     * Enable AdServicesExtDataStorageService read for consent data feature flag. The default value
-     * on R devices is true as the consent source of truth is PPAPI_AND_ADEXT_SERVICE_ONLY. The
-     * default value on S+ devices is false which means AdServicesExtDataStorageService is not
-     * considered as source of truth after OTA. This flag should be enabled for OTA support of
-     * consent data on S devices.
-     */
-    boolean ENABLE_ADEXT_SERVICE_CONSENT_DATA = SDK_INT == Build.VERSION_CODES.R;
-
-    /** Returns value of enable AdExt service consent data flag. */
-    default boolean getEnableAdExtServiceConsentData() {
-        return ENABLE_ADEXT_SERVICE_CONSENT_DATA;
-    }
-
-    /**
-     * Enables data migration from AdServicesExtDataStorageService to AppSearch (on S) and System
-     * server (on T+) upon OTA from R.
-     */
-    boolean ENABLE_MIGRATION_FROM_ADEXT_SERVICE = SdkLevel.isAtLeastS();
-
-    /**
-     * @return value of enable migration AdExt service.
-     */
-    default boolean getEnableMigrationFromAdExtService() {
-        return ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
-    }
-
     /*
      * The allow-list for PP APIs. This list has the list of app package names that we allow
      * using PP APIs.
@@ -3298,10 +3283,10 @@ public interface Flags extends ModuleSharedFlags {
 
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE = true;
-    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER = false;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_SOURCE = true;
-    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
-    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = false;
+    boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = false;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES = true;
 
     /**
@@ -3359,7 +3344,6 @@ public interface Flags extends ModuleSharedFlags {
     default boolean getEnforceForegroundStatusForMeasurementRegisterSources() {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES;
     }
-
 
     /** Returns true if Topics API should require that the calling API is running in foreground. */
     default boolean getEnforceForegroundStatusForTopics() {
@@ -3868,6 +3852,14 @@ public interface Flags extends ModuleSharedFlags {
     /** Get adservices version mappings */
     default String getAdservicesVersionMappings() {
         return DEFAULT_ADSERVICES_VERSION_MAPPINGS;
+    }
+
+    /** Default value for Measurement aggregatable named budgets */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS = false;
+
+    /** Returns whether to enable Measurement aggregatable named budgets */
+    default boolean getMeasurementEnableAggregatableNamedBudgets() {
+        return MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS;
     }
 
     /** Default value for Measurement V1 source trigger data */
@@ -4427,14 +4419,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
     }
 
-    /** Default value for Null Aggregate Report feature flag. */
-    boolean MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED = false;
-
-    /** Null Aggregate Report feature flag. */
-    default boolean getMeasurementNullAggregateReportEnabled() {
-        return MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED;
-    }
-
     /** Default value for null aggregate report rate including source registration time. */
     float MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME = .008f;
 
@@ -4457,36 +4441,12 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME;
     }
 
-    /** Default value for Optional Source Registration Time feature flag. */
-    boolean MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED = false;
-
-    /** Returns true if source registration time is optional for aggregatable reports. */
-    default boolean getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled() {
-        return MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED;
-    }
-
     /** Default U18 UX feature flag. */
     boolean DEFAULT_U18_UX_ENABLED = false;
 
     /** U18 UX feature flag.. */
     default boolean getU18UxEnabled() {
         return DEFAULT_U18_UX_ENABLED;
-    }
-
-    /** Default RVC UX feature flag.. */
-    boolean DEFAULT_RVC_UX_ENABLED = SDK_INT == Build.VERSION_CODES.R;
-
-    /** RVC UX feature flag.. */
-    default boolean getEnableRvcUx() {
-        return DEFAULT_RVC_UX_ENABLED;
-    }
-
-    /** Default RVC NOTIFICATION feature flag.. */
-    boolean DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED = false;
-
-    /** RVC Notification feature flag.. */
-    default boolean getEnableRvcPostOtaNotification() {
-        return DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED;
     }
 
     /** Default enableAdServices system API feature flag.. */
@@ -4659,6 +4619,20 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns max length of attribution scope. */
     default int getMeasurementMaxAttributionScopeLength() {
         return MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH;
+    }
+
+    @ConfigFlag int MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME = 25;
+
+    /** Returns max length of an attribution source's named budget's name. */
+    default int getMeasurementMaxLengthPerBudgetName() {
+        return MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME;
+    }
+
+    @ConfigFlag int MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION = 25;
+
+    /** Returns max size of an attribution source's named budget list. */
+    default int getMeasurementMaxNamedBudgetsPerSourceRegistration() {
+        return MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION;
     }
 
     /** Default value of flag for logging consent migration metrics when OTA from S to T+. */
@@ -4846,6 +4820,18 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
+     * The flag to enable Cobalt logging for API call response, including both success and failure
+     * responses. This metric is replacing the app package name API error metric, controlled by the
+     * {@link APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED} flag.
+     */
+    @FeatureFlag Boolean COBALT__ENABLE_API_CALL_RESPONSE_LOGGING = false;
+
+    /** Returns whether Cobalt Api call response logging is enabled. */
+    default boolean getCobaltEnableApiCallResponseLogging() {
+        return COBALT__ENABLE_API_CALL_RESPONSE_LOGGING;
+    }
+
+    /**
      * A feature flag to enable DB schema change to version 8 in Topics API. Version 8 is to add
      * logged_topic column to ReturnedTopic table.
      *
@@ -4913,12 +4899,11 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL;
     }
 
-    /** Flag to enable context id for triggers */
-    boolean MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID = false;
+    @FeatureFlag boolean MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S = false;
 
-    /** Returns true if trigger context id is enabled. */
-    default boolean getMeasurementEnableTriggerContextId() {
-        return MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID;
+    /** Returns whether to enable install attribution on S feature. */
+    default boolean getMeasurementEnableInstallAttributionOnS() {
+        return MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S;
     }
 
     /** The maximum allowable length of a trigger context id. */
@@ -5014,6 +4999,13 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS;
     }
 
+    @ConfigFlag int MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE = 5;
+
+    /** Returns maximum number of aggregatable debug reports allowed per source. */
+    default int getMeasurementMaxAdrCountPerSource() {
+        return MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.
@@ -5025,16 +5017,30 @@ public interface Flags extends ModuleSharedFlags {
         return ENROLLMENT_ENABLE_LIMITED_LOGGING;
     }
 
-    @ConfigFlag int MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES = 8;
+    @ConfigFlag int MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES = 1;
 
     default int getMeasurementDefaultFilteringIdMaxBytes() {
         return MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES;
+    }
+
+    @ConfigFlag int MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES = 8;
+
+    default int getMeasurementMaxFilteringIdMaxBytes() {
+        return MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES;
     }
 
     @FeatureFlag boolean MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING = false;
 
     default boolean getMeasurementEnableFlexibleContributionFiltering() {
         return MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING;
+    }
+
+    /** Flag for enabling measurement debug keys privacy enforcement */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS = false;
+
+    /** Returns whether measurement debug keys privacy enforcement is enabled. */
+    default boolean getMeasurementEnableBothSideDebugKeysInReports() {
+        return MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS;
     }
 
     /**
@@ -5144,20 +5150,6 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Default value to determine whether {@link
-     * android.adservices.common.AdServicesCommonManager#enableAdServices} is enabled.
-     */
-    boolean DEFAULT_ENABLE_ADSERVICES_API_ENABLED = true;
-
-    /**
-     * Returns whether {@link android.adservices.common.AdServicesCommonManager#enableAdServices} is
-     * enabled.
-     */
-    default boolean getEnableAdservicesApiEnabled() {
-        return DEFAULT_ENABLE_ADSERVICES_API_ENABLED;
-    }
-
-    /**
      * Default value to determine whether AdServicesExtDataStorageService related APIs are enabled.
      */
     boolean DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS = true;
@@ -5165,34 +5157,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether AdServicesExtDataStorageService related APIs are enabled. */
     default boolean getEnableAdExtDataServiceApis() {
         return DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS;
-    }
-
-    /**
-     * Default value to determine whether {@link
-     * android.adservices.common.AdServicesCommonManager#isAdServicesEnabled} is enabled.
-     */
-    boolean DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED = true;
-
-    /**
-     * Returns whether {@link android.adservices.common.AdServicesCommonManager#isAdServicesEnabled}
-     * is enabled.
-     */
-    default boolean getAdservicesEnablementCheckEnabled() {
-        return DEFAULT_ADSERVICES_ENABLEMENT_CHECK_ENABLED;
-    }
-
-    /**
-     * Enable AdServicesExtDataStorageServiceProxy read for consent data feature flag. Its meant to
-     * enable the proxy service for testing when the actual service is unavailable The default value
-     * is false.
-     */
-    boolean DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY = false;
-
-    /**
-     * @return value of enable AdExt service proxy.
-     */
-    default boolean getEnableAdExtServiceDebugProxy() {
-        return DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY;
     }
 
     /**
@@ -5233,36 +5197,6 @@ public interface Flags extends ModuleSharedFlags {
      */
     default int getAppSearchReadTimeout() {
         return DEFAULT_APPSEARCH_READ_TIMEOUT_MS;
-    }
-
-    /** Default value of the timeout for AdExtDataStorageService write operations */
-    @ConfigFlag int DEFAULT_ADEXT_WRITE_TIMEOUT_MS = 3000;
-
-    /**
-     * Gets the value of the timeout for AdExtDataStorageService write operations, in milliseconds.
-     * Note that this is the platform side timeout which awaits for the operation to be completed by
-     * the chimera service, which does not reside in AdServices. Ensure timeout on platform side is
-     * greater with ~100 ms buffer to take into account binder communication latency.
-     *
-     * @return the timeout, in milliseconds, for AdExtDataStorageService write operations
-     */
-    default int getAdExtWriteTimeoutMs() {
-        return DEFAULT_ADEXT_WRITE_TIMEOUT_MS;
-    }
-
-    /** Default value of the timeout for AdExtDataStorageService read operations */
-    @ConfigFlag int DEFAULT_ADEXT_READ_TIMEOUT_MS = 1000;
-
-    /**
-     * Gets the value of the timeout for AdExtDataStorageService read operations, in milliseconds.
-     * Note that this is the platform side timeout which awaits for the operation to be completed by
-     * the chimera service, which does not reside in AdServices. Ensure timeout on platform side is
-     * greater with ~100 ms buffer to take into account binder communication latency.
-     *
-     * @return the timeout, in milliseconds, for AdExtDataStoreageService read operations
-     */
-    default int getAdExtReadTimeoutMs() {
-        return DEFAULT_ADEXT_READ_TIMEOUT_MS;
     }
 
     /** default value for get adservices common states enabled */
@@ -5902,6 +5836,22 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns MDD package deny registry manifest url. */
     default String getMddPackageDenyRegistryManifestFileUrl() {
         return DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
+    }
+
+    /** Feature flag to enable AtomicFileDataStore update API for adservices apk. */
+    @FeatureFlag boolean DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API = false;
+
+    /** Returns whether atomic file datastore batch update Api is enabled. */
+    default boolean getEnableAtomicFileDatastoreBatchUpdateApi() {
+        return DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API;
+    }
+
+    /** Feature flag to enable Ad Id migration. */
+    @FeatureFlag boolean DEFAULT_AD_ID_MIGRATION_ENABLED = false;
+
+    /** Returns whether Ad Id migration is enabled. */
+    default boolean getAdIdMigrationEnabled() {
+        return DEFAULT_AD_ID_MIGRATION_ENABLED;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

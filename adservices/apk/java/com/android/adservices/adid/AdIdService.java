@@ -58,7 +58,7 @@ public class AdIdService extends Service {
                             AdServicesLoggerImpl.getInstance(),
                             Clock.getInstance(),
                             FlagsFactory.getFlags(),
-                            Throttler.getInstance(FlagsFactory.getFlags()),
+                            Throttler.getInstance(),
                             appImportanceFilter);
         }
     }

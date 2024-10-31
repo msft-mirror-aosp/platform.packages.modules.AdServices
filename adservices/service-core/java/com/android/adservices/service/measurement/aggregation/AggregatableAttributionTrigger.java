@@ -33,6 +33,7 @@ import java.util.Optional;
 public class AggregatableAttributionTrigger {
 
     private List<AggregateTriggerData> mTriggerData;
+    @Nullable private List<AggregatableNamedBudget> mNamedBudgets;
     @Nullable private List<AggregatableValuesConfig> mValueConfigs;
     private Optional<List<AggregateDeduplicationKey>> mAggregateDeduplicationKeys;
 
@@ -47,12 +48,13 @@ public class AggregatableAttributionTrigger {
         }
         AggregatableAttributionTrigger attributionTrigger = (AggregatableAttributionTrigger) obj;
         return Objects.equals(mTriggerData, attributionTrigger.mTriggerData)
-                && Objects.equals(mValueConfigs, attributionTrigger.mValueConfigs);
+                && Objects.equals(mValueConfigs, attributionTrigger.mValueConfigs)
+                && Objects.equals(mNamedBudgets, attributionTrigger.mNamedBudgets);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mTriggerData, mValueConfigs);
+        return Objects.hash(mTriggerData, mNamedBudgets, mValueConfigs);
     }
 
     /**
@@ -75,6 +77,15 @@ public class AggregatableAttributionTrigger {
     /** Returns De-deuplication keys for Aggregate Report Creation. */
     public Optional<List<AggregateDeduplicationKey>> getAggregateDeduplicationKeys() {
         return mAggregateDeduplicationKeys;
+    }
+
+    /**
+     * Returns a list of AggregatableNamedBudget that contains name, filters, and not_filters for
+     * each budget.
+     */
+    @Nullable
+    public List<AggregatableNamedBudget> getNamedBudgets() {
+        return mNamedBudgets;
     }
 
     /**
@@ -109,6 +120,42 @@ public class AggregatableAttributionTrigger {
     }
 
     /**
+     * Extract the value for key "name" from the {@link AggregatableNamedBudget}
+     * aggregatableNamedBudget.
+     *
+     * @param sourceFilterMap the source filter map of the AggregatableAttributionSource.
+     */
+    public Optional<String> maybeExtractNamedBudget(FilterMap sourceFilterMap, Flags flags) {
+        if (getNamedBudgets() == null || getNamedBudgets().isEmpty()) {
+            return Optional.empty();
+        }
+
+        if (sourceFilterMap.isEmpty(flags)) {
+            return Optional.of(getNamedBudgets().get(0).getName());
+        }
+        Filter filter = new Filter(flags);
+        for (AggregatableNamedBudget aggregatableNamedBudget : getNamedBudgets()) {
+            if (aggregatableNamedBudget.getFilterSet() != null
+                    && !filter.isFilterMatch(
+                            sourceFilterMap,
+                            aggregatableNamedBudget.getFilterSet(),
+                            /* isFilter= */ true)) {
+                continue;
+            }
+
+            if (aggregatableNamedBudget.getNotFilterSet() != null
+                    && !filter.isFilterMatch(
+                            sourceFilterMap,
+                            aggregatableNamedBudget.getNotFilterSet(),
+                            /* isFilter= */ false)) {
+                continue;
+            }
+            return Optional.of(aggregatableNamedBudget.getName());
+        }
+        return Optional.empty();
+    }
+
+    /**
      * Builder for {@link AggregatableAttributionTrigger}.
      */
     public static final class Builder {
@@ -135,6 +182,12 @@ public class AggregatableAttributionTrigger {
         /** See {@link AggregatableAttributionTrigger#getAggregateDeduplicationKeys()}. */
         public Builder setAggregateDeduplicationKeys(List<AggregateDeduplicationKey> keys) {
             mBuilding.mAggregateDeduplicationKeys = Optional.of(keys);
+            return this;
+        }
+
+        /** See {@link AggregatableAttributionTrigger#getNamedBudgets()} ()} ()}. */
+        public Builder setNamedBudgets(List<AggregatableNamedBudget> namedBudgets) {
+            mBuilding.mNamedBudgets = namedBudgets;
             return this;
         }
 

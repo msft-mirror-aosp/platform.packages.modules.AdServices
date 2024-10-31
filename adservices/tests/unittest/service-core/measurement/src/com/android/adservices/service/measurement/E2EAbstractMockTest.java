@@ -17,6 +17,9 @@
 package com.android.adservices.service.measurement;
 
 import static com.android.adservices.ResultCode.RESULT_OK;
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.BUCKET;
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.ID;
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.VALUE;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -81,17 +84,9 @@ import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobHandlerWrapper;
 import com.android.adservices.service.measurement.reporting.EventReportWindowCalcDelegate;
 import com.android.adservices.service.measurement.reporting.EventReportingJobHandlerWrapper;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.NoOpLoggerImpl;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
-
-import co.nstant.in.cbor.CborDecoder;
-import co.nstant.in.cbor.CborException;
-import co.nstant.in.cbor.model.Array;
-import co.nstant.in.cbor.model.ByteString;
-import co.nstant.in.cbor.model.DataItem;
-import co.nstant.in.cbor.model.UnicodeString;
-
-import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -118,6 +113,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
 import javax.net.ssl.HttpsURLConnection;
+
+import co.nstant.in.cbor.CborDecoder;
+import co.nstant.in.cbor.CborException;
+import co.nstant.in.cbor.model.Array;
+import co.nstant.in.cbor.model.ByteString;
+import co.nstant.in.cbor.model.DataItem;
+import co.nstant.in.cbor.model.UnicodeString;
 
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
@@ -148,28 +150,34 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
     private final Set<String> mSeenUris = new HashSet<>();
     private final Map<String, String> mUriToEnrollmentId = new HashMap<>();
     protected DebugReportApi mDebugReportApi;
+    protected AggregateDebugReportApi mAggregateDebugReportApi;
 
     @Rule(order = 11)
     public final AdServicesExtendedMockitoRule extendedMockito;
 
-    private static Map<String, String> sPhFlags = Map.ofEntries(
-            entry(
-                    FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG,
-                    AGGREGATE_REPORT_DELAY + ",0"),
-            entry(
-                    FlagsConstants.KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
-                    WebUtil.validUrl("https://coordinator.test")),
-            entry(
-                    FlagsConstants.KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST,
-                    WebUtil.validUrl("https://coordinator.test")),
-            entry(
-                    FlagsConstants
-                            .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME,
-                    "0"),
-            entry(
-                    FlagsConstants
-                            .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME,
-                    "0"));
+    private static Map<String, String> sPhFlags =
+            Map.ofEntries(
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG,
+                            AGGREGATE_REPORT_DELAY + ",0"),
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN,
+                            WebUtil.validUrl("https://coordinator.test")),
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST,
+                            WebUtil.validUrl("https://coordinator.test")),
+                    entry(
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME,
+                            "0"),
+                    entry(
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME,
+                            "0"),
+                    entry(
+                            FlagsConstants
+                                    .KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION,
+                            "5"));
 
     E2EAbstractMockTest(
             Collection<Action> actions,
@@ -211,8 +219,8 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         ApplicationProvider.getApplicationContext(),
                         mFlags,
                         new EventReportWindowCalcDelegate(mFlags),
-                        new SourceNoiseHandler(mFlags),
-                        new AggregateDebugReportApi(mFlags, new AndroidTimeSource()));
+                        new SourceNoiseHandler(mFlags));
+        mAggregateDebugReportApi = new AggregateDebugReportApi(mFlags);
 
         mImpressionNoiseUtil = spy(new ImpressionNoiseUtil());
 
@@ -260,8 +268,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                 .when(mImpressionNoiseUtil).getReportConfigsForSequenceIndex(any(), anyLong());
         Mockito.doReturn(fakeReportConfigs)
                 .when(mImpressionNoiseUtil)
-                        .selectFlexEventReportRandomStateAndGenerateReportConfigs(
-                                any(), anyInt(), any());
+                .selectFlexEventReportRandomStateAndGenerateReportConfigs(any(), anyInt(), any());
         Mockito.doReturn(fakeReportConfigs == null ? 2.0D : 0.0D).when(mSourceNoiseHandler)
                 .getRandomDouble(any());
     }
@@ -280,6 +287,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
             }
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
+            when(urlConnection.getURL()).thenReturn(new URL(uri.toString()));
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
                     invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
@@ -297,6 +305,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
             }
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
+            when(urlConnection.getURL()).thenReturn(new URL(uri.toString()));
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
                     invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
@@ -314,6 +323,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
             }
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
+            when(urlConnection.getURL()).thenReturn(new URL(uri.toString()));
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
                     invocation ->
                             getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri);
@@ -332,6 +342,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
             }
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
+            when(urlConnection.getURL()).thenReturn(new URL(uri.toString()));
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
                     invocation -> getNextResponse(sourceRegistration.mUriToResponseHeadersMap, uri);
             Mockito.doAnswer(headerFieldsMockAnswer).when(urlConnection).getHeaderFields();
@@ -349,6 +360,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
             }
             HttpsURLConnection urlConnection = mock(HttpsURLConnection.class);
             when(urlConnection.getResponseCode()).thenReturn(200);
+            when(urlConnection.getURL()).thenReturn(new URL(uri.toString()));
             Answer<Map<String, List<String>>> headerFieldsMockAnswer =
                     invocation ->
                             getNextResponse(triggerRegistration.mUriToResponseHeadersMap, uri);
@@ -370,6 +382,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         sourceRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
         processActualDebugReportApiJob(sourceRegistration.mTimestamp);
+        processActualDebugReportJob(sourceRegistration.mTimestamp, 0L);
     }
 
     @Override
@@ -384,6 +397,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         sourceRegistration.mTimestamp));
         mAsyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
         processActualDebugReportApiJob(sourceRegistration.mTimestamp);
+        processActualDebugReportJob(sourceRegistration.mTimestamp, 0L);
     }
 
     @Override
@@ -650,11 +664,22 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                             .put(
                                     TestFormatJsonMapping.REPORT_TIME_KEY,
                                     String.valueOf(
-                                            aggregateReports.get(i).getScheduledReportTime()
-                                                // Debug aggregate reports have the same scheduled
-                                                // report time as regular aggregate reports but are
-                                                // sent without delay.
-                                                - reportDelay))
+                                            aggregateReports
+                                                            .get(i)
+                                                            .getApi()
+                                                            .equals("attribution-reporting-debug")
+                                                    ? aggregateReports
+                                                            .get(i)
+                                                            .getScheduledReportTime()
+                                                    : aggregateReports
+                                                                    .get(i)
+                                                                    .getScheduledReportTime()
+                                                            // Debug aggregate reports have the same
+                                                            // scheduled
+                                                            // report time as regular aggregate
+                                                            // reports but are
+                                                            // sent without delay.
+                                                            - reportDelay))
                             .put(
                                     TestFormatJsonMapping.REPORT_TO_KEY,
                                     destinations.get(i).toString())
@@ -728,26 +753,30 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
             final Array payloadArray = (Array) payload.get(new UnicodeString("data"));
             for (DataItem i : payloadArray.getDataItems()) {
                 co.nstant.in.cbor.model.Map m = (co.nstant.in.cbor.model.Map) i;
+                JSONObject histogram = new JSONObject();
                 Object value =
                         "0x"
                                 + new BigInteger(
                                                 1,
-                                                ((ByteString) m.get(new UnicodeString("bucket")))
+                                                ((ByteString) m.get(new UnicodeString(BUCKET)))
                                                         .getBytes())
                                         .toString(16);
-                result.add(
-                        new JSONObject()
-                                .put(AggregateHistogramKeys.BUCKET, value)
-                                .put(
-                                        AggregateHistogramKeys.VALUE,
-                                        new BigInteger(
-                                                        1,
-                                                        ((ByteString)
-                                                                        m.get(
-                                                                                new UnicodeString(
-                                                                                        "value")))
-                                                                .getBytes())
-                                                .intValue()));
+                histogram.put(AggregateHistogramKeys.BUCKET, value);
+                histogram.put(
+                        AggregateHistogramKeys.VALUE,
+                        new BigInteger(1, ((ByteString) m.get(new UnicodeString(VALUE))).getBytes())
+                                .intValue());
+                if (m.get(new UnicodeString(AggregateHistogramKeys.ID)) != null) {
+                    UnsignedLong id =
+                            new UnsignedLong(
+                                    new BigInteger(
+                                                    1,
+                                                    ((ByteString) m.get(new UnicodeString(ID)))
+                                                            .getBytes())
+                                            .longValue());
+                    histogram.put(ID, id);
+                }
+                result.add(histogram);
             }
         } catch (CborException e) {
             throw new JSONException(e);

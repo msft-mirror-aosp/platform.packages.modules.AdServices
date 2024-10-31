@@ -237,7 +237,8 @@
                 },
                 "debug_reporting": true,
                 "debug_key": "111",
-                "debug_ad_id": "9e2c3718906d618c5745ecc69971f083e9b249029c123486d949c453e55cb882"
+                "debug_ad_id": "9e2c3718906d618c5745ecc69971f083e9b249029c123486d949c453e55cb882",
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -280,7 +281,8 @@
                 },
                 "debug_reporting": true,
                 "debug_key": "222",
-                "debug_ad_id": "9e2c3718906d618c5745ecc69971f083e9b249029c123486d949c453e55cb882"
+                "debug_ad_id": "9e2c3718906d618c5745ecc69971f083e9b249029c123486d949c453e55cb882",
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -317,7 +319,8 @@
                 "a": 333
               },
               "debug_reporting": true,
-              "debug_key": "333"
+              "debug_key": "333",
+              "aggregatable_source_registration_time": "INCLUDE"
             }
           }
         }]
@@ -349,7 +352,8 @@
                 "a": 444
               },
               "debug_reporting": true,
-              "debug_key": "444"
+              "debug_key": "444",
+              "aggregatable_source_registration_time": "INCLUDE"
             }
           }
         }]
@@ -381,7 +385,8 @@
                 "a": 555
               },
               "debug_reporting": true,
-              "debug_key": "555"
+              "debug_key": "555",
+              "aggregatable_source_registration_time": "INCLUDE"
             }
           }
         }]
@@ -413,7 +418,8 @@
                 "a": 666
               },
               "debug_reporting": true,
-              "debug_key": "666"
+              "debug_key": "666",
+              "aggregatable_source_registration_time": "INCLUDE"
             }
           }
         }]
@@ -445,7 +451,8 @@
                 "a": 777
               },
               "debug_reporting": true,
-              "debug_key": "777"
+              "debug_key": "777",
+              "aggregatable_source_registration_time": "INCLUDE"
             }
           }
         }]
@@ -472,7 +479,11 @@
             {
               "key": "0x33",
               "value": 333
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "111",
           "trigger_debug_key": "333"
@@ -496,7 +507,11 @@
             {
               "key": "0x22",
               "value": 222
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "222",
           "trigger_debug_key": "222"
@@ -521,7 +536,11 @@
             {
               "key": "0x44",
               "value": 444
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "444",
           "trigger_debug_key": "444"
@@ -546,7 +565,11 @@
             {
               "key": "0x11",
               "value": 111
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "111",
           "trigger_debug_key": "111"
@@ -571,7 +594,11 @@
             {
               "key": "0x67",
               "value": 666
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "333",
           "trigger_debug_key": "666"
@@ -598,7 +625,11 @@
             {
               "key": "0x33",
               "value": 333
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "111",
           "trigger_debug_key": "333"
@@ -622,7 +653,11 @@
             {
               "key": "0x22",
               "value": 222
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "222",
           "trigger_debug_key": "222"
@@ -646,7 +681,11 @@
             {
               "key": "0x44",
               "value": 444
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "444",
           "trigger_debug_key": "444"
@@ -670,7 +709,11 @@
             {
               "key": "0x11",
               "value": 111
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "111",
           "trigger_debug_key": "111"
@@ -694,7 +737,11 @@
             {
               "key": "0x67",
               "value": 666
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "333",
           "trigger_debug_key": "666"
