@@ -54,7 +54,6 @@ import com.android.adservices.service.consent.ConsentConstants;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -76,7 +75,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @SpyStatic(FlagsFactory.class)
-@RequiresSdkLevelAtLeastS
 public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String ADSERVICES_PACKAGE_NAME = "com.android.adservices.api";

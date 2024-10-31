@@ -45,7 +45,6 @@ import com.android.adservices.service.encryptionkey.EncryptionKeyFetcher;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -73,7 +72,6 @@ import java.util.concurrent.ExecutionException;
 @MockStatic(MobileDataDownloadFactory.class)
 @MockStatic(EnrollmentDao.class)
 @MockStatic(EncryptionKeyDao.class)
-@RequiresSdkLevelAtLeastS
 @SetErrorLogUtilDefaultParams(
         throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)
@@ -114,16 +112,16 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
     @Test
     public void testReadFileAndInsertIntoDatabaseSuccess()
             throws IOException, ExecutionException, InterruptedException {
-        doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
+        doReturn(mMockFileStorage).when(MobileDataDownloadFactory::getFileStorage);
         doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
-        doReturn(mMockEnrollmentDao).when(() -> (EnrollmentDao.getInstance()));
+        doReturn(mMockEnrollmentDao).when(EnrollmentDao::getInstance);
         doReturn(mMockEncryptionKeyDao).when(EncryptionKeyDao::getInstance);
         when(mMockFileStorage.open(any(), any()))
-                .thenReturn(sContext.getAssets().open(TEST_ENROLLMENT_DATA_FILE_PATH));
+                .thenReturn(mContext.getAssets().open(TEST_ENROLLMENT_DATA_FILE_PATH));
 
         mEnrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(
-                        sContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
+                        mContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
 
         when(mMockMdd.getFileGroup(any()))
                 .thenReturn(
@@ -182,13 +180,13 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
 
     @Test
     public void testReadFileAndInsertIntoDatabaseFileGroupNull() throws Exception {
-        doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
+        doReturn(mMockFileStorage).when(MobileDataDownloadFactory::getFileStorage);
         doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
-        doReturn(mMockEnrollmentDao).when(() -> (EnrollmentDao.getInstance()));
+        doReturn(mMockEnrollmentDao).when(EnrollmentDao::getInstance);
 
         mEnrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(
-                        sContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
+                        mContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
 
         when(mMockMdd.getFileGroup(any())).thenReturn(Futures.immediateFuture(null));
 
@@ -201,14 +199,14 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
 
     @Test
     public void testReadFileAndInsertIntoDatabaseEnrollmentDataFileIdMissing() throws Exception {
-        doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
+        doReturn(mMockFileStorage).when(MobileDataDownloadFactory::getFileStorage);
         doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
-        doReturn(mMockEnrollmentDao).when(() -> (EnrollmentDao.getInstance()));
+        doReturn(mMockEnrollmentDao).when(EnrollmentDao::getInstance);
         when(mMockFileStorage.open(any(), any()))
-                .thenReturn(sContext.getAssets().open(TEST_ENROLLMENT_DATA_FILE_PATH));
+                .thenReturn(mContext.getAssets().open(TEST_ENROLLMENT_DATA_FILE_PATH));
         mEnrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(
-                        sContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
+                        mContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
 
         when(mMockMdd.getFileGroup(any()))
                 .thenReturn(
@@ -231,14 +229,14 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE)
     public void testReadFileAndInsertIntoDatabaseExecutionException() throws Exception {
-        doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
+        doReturn(mMockFileStorage).when(MobileDataDownloadFactory::getFileStorage);
         doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
-        doReturn(mMockEnrollmentDao).when(() -> (EnrollmentDao.getInstance()));
+        doReturn(mMockEnrollmentDao).when(EnrollmentDao::getInstance);
         when(mMockFileStorage.open(any(), any()))
-                .thenReturn(sContext.getAssets().open(TEST_ENROLLMENT_DATA_FILE_PATH));
+                .thenReturn(mContext.getAssets().open(TEST_ENROLLMENT_DATA_FILE_PATH));
         mEnrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(
-                        sContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
+                        mContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
 
         when(mMockMdd.getFileGroup(any()))
                 .thenReturn(Futures.immediateFailedFuture(new CancellationException()));
@@ -254,13 +252,13 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_FAILED_PARSING)
     public void testReadFileAndInsertIntoDatabaseParsingFailed() throws Exception {
-        doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
+        doReturn(mMockFileStorage).when(MobileDataDownloadFactory::getFileStorage);
         doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
-        doReturn(mMockEnrollmentDao).when(() -> (EnrollmentDao.getInstance()));
+        doReturn(mMockEnrollmentDao).when(EnrollmentDao::getInstance);
         when(mMockFileStorage.open(any(), any())).thenThrow(new IOException());
         mEnrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(
-                        sContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
+                        mContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
 
         when(mMockMdd.getFileGroup(any()))
                 .thenReturn(
@@ -286,15 +284,15 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
 
     @Test
     public void testEnrollmentMddRecordDeletionCallsOverwrite() throws Exception {
-        doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
+        doReturn(mMockFileStorage).when(MobileDataDownloadFactory::getFileStorage);
         doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
-        doReturn(mMockEnrollmentDao).when(() -> (EnrollmentDao.getInstance()));
+        doReturn(mMockEnrollmentDao).when(EnrollmentDao::getInstance);
         doReturn(mMockEncryptionKeyDao).when(EncryptionKeyDao::getInstance);
         when(mMockFileStorage.open(any(), any()))
-                .thenReturn(sContext.getAssets().open(TEST_ENROLLMENT_DATA_FILE_PATH));
+                .thenReturn(mContext.getAssets().open(TEST_ENROLLMENT_DATA_FILE_PATH));
         mEnrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(
-                        sContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
+                        mContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
 
         when(mMockMdd.getFileGroup(any()))
                 .thenReturn(
@@ -355,16 +353,16 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
     @Test
     public void testReadFileAndInsertIntoDatabaseSuccess_verifyFileGroupDataInSharedPreference()
             throws IOException, ExecutionException, InterruptedException {
-        doReturn(mMockFileStorage).when(() -> (MobileDataDownloadFactory.getFileStorage()));
+        doReturn(mMockFileStorage).when(MobileDataDownloadFactory::getFileStorage);
         doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
-        doReturn(mMockEnrollmentDao).when(() -> (EnrollmentDao.getInstance()));
+        doReturn(mMockEnrollmentDao).when(EnrollmentDao::getInstance);
         doReturn(mMockEncryptionKeyDao).when(EncryptionKeyDao::getInstance);
         when(mMockFileStorage.open(any(), any()))
-                .thenReturn(sContext.getAssets().open(TEST_ENROLLMENT_DATA_FILE_PATH));
+                .thenReturn(mContext.getAssets().open(TEST_ENROLLMENT_DATA_FILE_PATH));
 
         mEnrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(
-                        sContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
+                        mContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
 
         when(mMockMdd.getFileGroup(any()))
                 .thenReturn(
@@ -440,11 +438,11 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
         doReturn(mMockEnrollmentDao).when(EnrollmentDao::getInstance);
         doReturn(mMockEncryptionKeyDao).when(EncryptionKeyDao::getInstance);
         when(mMockFileStorage.open(any(), any()))
-                .thenReturn(sContext.getAssets().open(TEST_ENROLLMENT_DATA_PROTO_FILE_PATH));
+                .thenReturn(mContext.getAssets().open(TEST_ENROLLMENT_DATA_PROTO_FILE_PATH));
 
         mEnrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(
-                        sContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
+                        mContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
 
         GetFileGroupRequest getProtoFileGroupRequest =
                 GetFileGroupRequest.newBuilder()
@@ -532,7 +530,7 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
         when(mMockFileStorage.open(any(), any())).thenThrow(new IOException());
         mEnrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(
-                        sContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
+                        mContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
 
         when(mMockMdd.getFileGroup(any()))
                 .thenReturn(
@@ -565,11 +563,11 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
         doReturn(mMockEnrollmentDao).when(EnrollmentDao::getInstance);
         doReturn(mMockEncryptionKeyDao).when(EncryptionKeyDao::getInstance);
         when(mMockFileStorage.open(any(), any()))
-                .thenReturn(sContext.getAssets().open(TEST_ENROLLMENT_DATA_FILE_PATH));
+                .thenReturn(mContext.getAssets().open(TEST_ENROLLMENT_DATA_FILE_PATH));
 
         mEnrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(
-                        sContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
+                        mContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
 
         when(mMockMdd.getFileGroup(any()))
                 .thenReturn(
@@ -634,10 +632,10 @@ public final class EnrollmentDataDownloadManagerTest extends AdServicesExtendedM
         doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
         doReturn(mMockEnrollmentDao).when(EnrollmentDao::getInstance);
         when(mMockFileStorage.open(any(), any()))
-                .thenReturn(sContext.getAssets().open(TEST_ENROLLMENT_DATA_PROTO_FILE_PATH));
+                .thenReturn(mContext.getAssets().open(TEST_ENROLLMENT_DATA_PROTO_FILE_PATH));
         mEnrollmentDataDownloadManager =
                 new EnrollmentDataDownloadManager(
-                        sContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
+                        mContext, mMockFlags, mLogger, mEnrollmentUtil, mEncryptionKeyFetcher);
 
         when(mMockMdd.getFileGroup(any()))
                 .thenReturn(

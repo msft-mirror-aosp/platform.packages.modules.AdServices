@@ -19,12 +19,9 @@ package com.android.adservices.service.ui;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_U18_UX_DETENTION_CHANNEL_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_RVC_POST_OTA_NOTIFICATION_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_RVC_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.BETA_UX;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
-import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.RVC_UX;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.U18_UX;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.UNSUPPORTED_UX;
 
@@ -51,7 +48,6 @@ import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.collection.BetaUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.GaUxEnrollmentChannelCollection;
-import com.android.adservices.service.ui.enrollment.collection.RvcUxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.enrollment.collection.U18UxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.util.UxEngineUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -328,57 +324,6 @@ public class UxEngineTest {
                 .setEnrollmentChannel(
                         U18_UX,
                         U18UxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL);
-
-        ExtendedMockito.verify(
-                () ->
-                        ConsentNotificationJobService.schedule(
-                                any(Context.class), eq(adIdEnabled), eq(false)));
-        ExtendedMockito.verify(() -> PackageChangedReceiver.enableReceiver(mContext, mFlags));
-
-        ExtendedMockito.verify(
-                () -> BackgroundJobsManager.scheduleAllBackgroundJobs(mContext), never());
-        ExtendedMockito.verify(
-                () -> BackgroundJobsManager.scheduleMeasurementBackgroundJobs(mContext));
-    }
-
-    // RVC UX selected.
-    @Test
-    public void startTest_rvcSelected() {
-        boolean entryPointEnabled = true;
-        boolean adIdEnabled = true;
-        AdServicesStates adServicesStates =
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(adIdEnabled)
-                        .setPrivacySandboxUiEnabled(entryPointEnabled)
-                        .setPrivacySandboxUiRequest(false)
-                        .build();
-
-        doReturn(adIdEnabled).when(mConsentManager).isAdIdEnabled();
-        doReturn(entryPointEnabled).when(mConsentManager).isEntryPointEnabled();
-        doReturn(true).when(mUxStatesManager).getFlag(KEY_RVC_UX_ENABLED);
-
-        mUxEngine.start(adServicesStates);
-
-        verify(mUxStatesManager).persistAdServicesStates(adServicesStates);
-
-        // Unsupported UX logic.
-        verify(mUxStatesManager).getFlag(KEY_ADSERVICES_ENABLED);
-        verify(mConsentManager).isEntryPointEnabled();
-
-        // RVC UX logic.
-        verify(mUxStatesManager).getFlag(KEY_RVC_UX_ENABLED);
-
-        // GA UX logic.
-        verify(mUxStatesManager, never()).getFlag(KEY_GA_UX_FEATURE_ENABLED);
-
-        // U18 UX logic.
-        verify(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
-
-        verify(mConsentManager).setUx(RVC_UX);
-        verify(mConsentManager)
-                .setEnrollmentChannel(
-                        RVC_UX,
-                        RvcUxEnrollmentChannelCollection.FIRST_CONSENT_NOTIFICATION_CHANNEL);
 
         ExtendedMockito.verify(
                 () ->
@@ -741,12 +686,6 @@ public class UxEngineTest {
         // U18 UX logic.
         verify(mUxStatesManager).getFlag(KEY_U18_UX_ENABLED);
         verify(mConsentManager).isU18Account();
-
-        // RVC UX logic where flag is checked once in RVC_UX.
-        verify(mUxStatesManager).getFlag(KEY_RVC_UX_ENABLED);
-
-        // RVC UX logic where flag is checked once in RvcPostOTAChannel.
-        verify(mUxStatesManager).getFlag(KEY_RVC_POST_OTA_NOTIFICATION_ENABLED);
 
         // The UX can not be updated due to the fact that graduation channel is currently disabled.
         verify(mConsentManager, never()).setUx(any());

@@ -21,6 +21,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.Filter.FilterContract;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,9 +35,9 @@ import java.util.Objects;
 
 /** POJO for AggregatableValuesConfig */
 public class AggregatableValuesConfig {
-    Map<String, AggregatableKeyValue> mValues;
-    @Nullable List<FilterMap> mFilterSet;
-    @Nullable List<FilterMap> mNotFilterSet;
+    private final Map<String, AggregatableKeyValue> mValues;
+    @Nullable private final List<FilterMap> mFilterSet;
+    @Nullable private final List<FilterMap> mNotFilterSet;
 
     private AggregatableValuesConfig(AggregatableValuesConfig.Builder builder) {
         mValues = builder.mValues;
@@ -44,9 +45,24 @@ public class AggregatableValuesConfig {
         mNotFilterSet = builder.mNotFilterSet;
     }
 
-    /** Returns a map of key and aggregatable_value's values. Example: {"campaignCounts": 1664 } */
+    /**
+     * Returns a map of key and aggregatable_value's values. Example: {"campaignCounts":
+     * AggregatableKeyValue{"value":1664}}
+     */
     public Map<String, AggregatableKeyValue> getValues() {
         return mValues;
+    }
+
+    /**
+     * Returns a map of key and int value of aggregatable_values's values. Example:
+     * {"campaignCounts": 1664}
+     */
+    public Map<String, Integer> getConfigValuesMap() {
+        Map<String, Integer> configValuesMap = new HashMap<>();
+        for (String key : mValues.keySet()) {
+            configValuesMap.put(key, mValues.get(key).getValue());
+        }
+        return configValuesMap;
     }
 
     /** Returns AggregateKeyValue filters. Example: [{"category": ["filter_1", "filter_2"]}] */
@@ -61,6 +77,21 @@ public class AggregatableValuesConfig {
         return mNotFilterSet;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof AggregatableValuesConfig)) return false;
+        AggregatableValuesConfig that = (AggregatableValuesConfig) o;
+        return Objects.equals(mValues, that.mValues)
+                && Objects.equals(mFilterSet, that.mFilterSet)
+                && Objects.equals(mNotFilterSet, that.mNotFilterSet);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(mValues, mFilterSet, mNotFilterSet);
+    }
+
     public static final class Builder {
         private Map<String, AggregatableKeyValue> mValues;
         @Nullable private List<FilterMap> mFilterSet;
@@ -71,10 +102,15 @@ public class AggregatableValuesConfig {
         }
 
         public Builder(JSONObject aggregateKeyValuesJson, Flags flags) throws JSONException {
-            mValues =
-                    buildValues(
-                            aggregateKeyValuesJson.getJSONObject(
-                                    AggregatableValuesConfigContract.VALUES));
+            if (!aggregateKeyValuesJson.isNull(AggregatableValuesConfigContract.VALUES)) {
+                mValues =
+                        buildValues(
+                                aggregateKeyValuesJson.getJSONObject(
+                                        AggregatableValuesConfigContract.VALUES),
+                                flags);
+            } else {
+                mValues = buildValues(aggregateKeyValuesJson, flags);
+            }
             Filter filter = new Filter(flags);
             if (!aggregateKeyValuesJson.isNull(FilterContract.FILTERS)) {
                 JSONArray filterSet =
@@ -88,16 +124,44 @@ public class AggregatableValuesConfig {
             }
         }
 
-        private Map<String, AggregatableKeyValue> buildValues(JSONObject aggregateKeyValuesJson)
-                throws JSONException {
+        /**
+         * Create {@link AggregatableValuesConfigContract#getValues} from a JSONObject that has
+         * Integer typed values.
+         */
+        private Map<String, AggregatableKeyValue> buildValues(
+                JSONObject aggregateKeyValuesJson, Flags flags) throws JSONException {
             Iterator<String> valuesKeySet = aggregateKeyValuesJson.keys();
             Map<String, AggregatableKeyValue> mValues = new HashMap<>();
             while (valuesKeySet.hasNext()) {
                 String key = valuesKeySet.next();
-                AggregatableKeyValue aggregatableKeyValue =
-                        new AggregatableKeyValue.Builder(aggregateKeyValuesJson.getInt(key))
-                                .build();
-                mValues.put(key, aggregatableKeyValue);
+                AggregatableKeyValue.Builder aggregatableKeyValueBuilder;
+                if (flags.getMeasurementEnableFlexibleContributionFiltering()) {
+                    int value;
+                    UnsignedLong filteringId = UnsignedLong.ZERO;
+                    if (aggregateKeyValuesJson.get(key) instanceof JSONObject) {
+                        JSONObject obj = aggregateKeyValuesJson.getJSONObject(key);
+                        value = obj.getInt(AggregatableKeyValue.AggregatableKeyValueContract.VALUE);
+                        if (!obj.isNull(
+                                AggregatableKeyValue.AggregatableKeyValueContract.FILTERING_ID)) {
+                            filteringId =
+                                    new UnsignedLong(
+                                            obj.getString(
+                                                    AggregatableKeyValue
+                                                            .AggregatableKeyValueContract
+                                                            .FILTERING_ID));
+                        }
+                    } else {
+                        value = aggregateKeyValuesJson.getInt(key);
+                    }
+                    aggregatableKeyValueBuilder =
+                            new AggregatableKeyValue.Builder(value).setFilteringId(filteringId);
+                } else {
+                    // This will throw JSONException if a JSONObject was previously persisted, and
+                    // flag MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING gets set to false.
+                    aggregatableKeyValueBuilder =
+                            new AggregatableKeyValue.Builder(aggregateKeyValuesJson.getInt(key));
+                }
+                mValues.put(key, aggregatableKeyValueBuilder.build());
             }
             return mValues;
         }
@@ -115,7 +179,7 @@ public class AggregatableValuesConfig {
         }
 
         /** Build the {@link AggregatableValuesConfig}. */
-        public AggregatableValuesConfig build() {
+        public AggregatableValuesConfig build() throws JSONException {
             Objects.requireNonNull(mValues);
             return new AggregatableValuesConfig(this);
         }

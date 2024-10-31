@@ -27,6 +27,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
@@ -86,7 +88,11 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
         EventReportingJobHandler spyReportingService =
                 Mockito.spy(
                         new EventReportingJobHandler(
-                                datastoreManager, mFlags, mLogger, sContext));
+                                datastoreManager,
+                                mFlags,
+                                mLogger,
+                                sContext,
+                                new AndroidTimeSource()));
         try {
             Mockito.doReturn(returnCode)
                     .when(spyReportingService)

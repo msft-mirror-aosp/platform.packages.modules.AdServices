@@ -21,6 +21,14 @@ import static com.android.adservices.shared.testing.mockito.MockitoHelper.isSpy;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import com.android.adservices.mockito.AdServicesDebugFlagsMocker;
+import com.android.adservices.mockito.AdServicesFlagsMocker;
+import com.android.adservices.mockito.AdServicesPragmaticMocker;
+import com.android.adservices.mockito.AdServicesStaticMocker;
+import com.android.adservices.mockito.AndroidMocker;
+import com.android.adservices.mockito.AndroidStaticMocker;
+import com.android.adservices.mockito.SharedMocker;
+
 import org.junit.Test;
 
 public final class AdServicesExtendedMockitoTestCaseTest extends AdServicesExtendedMockitoTestCase {
@@ -40,5 +48,23 @@ public final class AdServicesExtendedMockitoTestCaseTest extends AdServicesExten
         expect.withMessage("spied context")
                 .that(getSpiedInstance(mSpyContext))
                 .isSameInstanceAs(mContext);
+    }
+
+    @Test
+    public void testMockFlags() {
+        expect.withMessage("mMockFlags").that(mMockFlags).isNotNull();
+        expect.withMessage("mMockDebugFlags").that(mMockDebugFlags).isNotNull();
+    }
+
+    @Test
+    public void testMocker() {
+        assertWithMessage("mocker").that(mocker).isNotNull();
+        expect.withMessage("mocker").that(mocker).isInstanceOf(SharedMocker.class);
+        expect.withMessage("mocker").that(mocker).isInstanceOf(AndroidMocker.class);
+        expect.withMessage("mocker").that(mocker).isInstanceOf(AndroidStaticMocker.class);
+        expect.withMessage("mocker").that(mocker).isInstanceOf(AdServicesPragmaticMocker.class);
+        expect.withMessage("mocker").that(mocker).isInstanceOf(AdServicesFlagsMocker.class);
+        expect.withMessage("mocker").that(mocker).isInstanceOf(AdServicesDebugFlagsMocker.class);
+        expect.withMessage("mocker").that(mocker).isInstanceOf(AdServicesStaticMocker.class);
     }
 }

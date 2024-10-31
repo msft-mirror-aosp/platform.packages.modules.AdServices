@@ -16,22 +16,28 @@
 
 package com.android.adservices.service.common;
 
-import android.annotation.NonNull;
-import android.os.Binder;
+import android.util.Log;
 import android.util.Pair;
 
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.RateLimiter;
 
+import java.io.PrintWriter;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 
 /** Class to throttle PPAPI requests. */
-public class Throttler {
+public final class Throttler {
+
+    private static final String TAG = Throttler.class.getSimpleName();
+
     // Enum for each PP API or entry point that will be throttled.
     public enum ApiKey {
         UNKNOWN,
@@ -101,7 +107,6 @@ public class Throttler {
         TOPICS_API_SDK_NAME,
     }
 
-    private static volatile Throttler sSingleton;
     private static final double DEFAULT_RATE_LIMIT = 1d;
 
     // A Map from a Pair<ApiKey, Requester> to its RateLimiter.
@@ -116,36 +121,33 @@ public class Throttler {
     // - MEASUREMENT_API_REGISTER_SOURCE, 5 requests per second
     private final Map<ApiKey, Double> mRateLimitPerApiMap = new HashMap<>();
 
-    /** Returns the singleton instance of the Throttler. */
-    @NonNull
-    public static Throttler getInstance(@NonNull Flags flags) {
-        Objects.requireNonNull(flags);
-        synchronized (Throttler.class) {
-            if (null == sSingleton) {
-                // Clearing calling identity to check device config permission read by flags on the
-                // local process and not on the process called. Once the device configs are read,
-                // restore calling identity.
-                final long token = Binder.clearCallingIdentity();
-                sSingleton = new Throttler(flags);
-                Binder.restoreCallingIdentity(token);
-            }
-            return sSingleton;
+    // Lazy initialization holder class idiom for static fields as described in Effective Java Item
+    // 83 - this is needed because otherwise the singleton would be initialized in unit tests, even
+    // when they (correctly) call newInstance() instead of getInstance().
+    private static final class FieldHolder {
+        private static final Throttler sSingleton;
+
+        static {
+            Flags flags = FlagsFactory.getFlags();
+            Log.v(TAG, "Initializing singleton with " + flags);
+            sSingleton = new Throttler(flags);
         }
     }
 
-    @VisibleForTesting
-    Throttler(Flags flags) {
-        setRateLimitPerApiMap(flags);
+    /** Returns the singleton instance of the Throttler. */
+    public static Throttler getInstance() {
+        return FieldHolder.sSingleton;
     }
 
-    /**
-     * The throttler is a Singleton and does not allow changing the rate limits once initialised,
-     * therefore it is not feasible to test different throttling policies across tests without
-     * destroying the previous instance. Intended to be used in test cases only.
-     */
+    /** Factory method - should only be used for tests. */
     @VisibleForTesting
-    public static void destroyExistingThrottler() {
-        sSingleton = null;
+    public static Throttler newInstance(Flags flags) {
+        return new Throttler(flags);
+    }
+
+    private Throttler(Flags flags) {
+        Objects.requireNonNull(flags, "flags cannot be null");
+        setRateLimitPerApiMap(flags);
     }
 
     /**
@@ -156,13 +158,12 @@ public class Throttler {
      */
     public boolean tryAcquire(ApiKey apiKey, String requester) {
         // Negative Permits Per Second turns off rate limiting.
-        final double permitsPerSecond =
-                mRateLimitPerApiMap.getOrDefault(apiKey, DEFAULT_RATE_LIMIT);
+        double permitsPerSecond = mRateLimitPerApiMap.getOrDefault(apiKey, DEFAULT_RATE_LIMIT);
         if (permitsPerSecond <= 0) {
             return true;
         }
 
-        final RateLimiter rateLimiter =
+        RateLimiter rateLimiter =
                 mSdkRateLimitMap.computeIfAbsent(
                         Pair.create(apiKey, requester), ignored -> create(permitsPerSecond));
 
@@ -171,42 +172,26 @@ public class Throttler {
 
     /** Configures permits per second per {@link ApiKey} */
     private void setRateLimitPerApiMap(Flags flags) {
-        final double defaultPermitsPerSecond = flags.getSdkRequestPermitsPerSecond();
-        final double adIdPermitsPerSecond = flags.getAdIdRequestPermitsPerSecond();
-        final double appSetIdPermitsPerSecond = flags.getAppSetIdRequestPermitsPerSecond();
-        final double registerSource = flags.getMeasurementRegisterSourceRequestPermitsPerSecond();
-        final double registerWebSource =
-                flags.getMeasurementRegisterWebSourceRequestPermitsPerSecond();
-        final double registerSources = flags.getMeasurementRegisterSourcesRequestPermitsPerSecond();
-        final double registerTrigger = flags.getMeasurementRegisterTriggerRequestPermitsPerSecond();
-        final double registerWebTrigger =
-                flags.getMeasurementRegisterWebTriggerRequestPermitsPerSecond();
-        final double topicsApiAppRequestPermitsPerSecond =
-                flags.getTopicsApiAppRequestPermitsPerSecond();
-        final double topicsApiSdkRequestPermitsPerSecond =
-                flags.getTopicsApiSdkRequestPermitsPerSecond();
+        // Set default values first
+        double defaultPermitsPerSecond = flags.getSdkRequestPermitsPerSecond();
+        for (var key : ApiKey.values()) {
+            mRateLimitPerApiMap.put(key, defaultPermitsPerSecond);
+        }
 
-        mRateLimitPerApiMap.put(ApiKey.UNKNOWN, defaultPermitsPerSecond);
+        // Then override some using flags:
+        double adIdPermitsPerSecond = flags.getAdIdRequestPermitsPerSecond();
+        double appSetIdPermitsPerSecond = flags.getAppSetIdRequestPermitsPerSecond();
+        double registerSource = flags.getMeasurementRegisterSourceRequestPermitsPerSecond();
+        double registerWebSource = flags.getMeasurementRegisterWebSourceRequestPermitsPerSecond();
+        double registerSources = flags.getMeasurementRegisterSourcesRequestPermitsPerSecond();
+        double registerTrigger = flags.getMeasurementRegisterTriggerRequestPermitsPerSecond();
+        double registerWebTrigger = flags.getMeasurementRegisterWebTriggerRequestPermitsPerSecond();
+        double topicsApiAppRequestPermitsPerSecond = flags.getTopicsApiAppRequestPermitsPerSecond();
+        double topicsApiSdkRequestPermitsPerSecond = flags.getTopicsApiSdkRequestPermitsPerSecond();
 
         mRateLimitPerApiMap.put(ApiKey.ADID_API_APP_PACKAGE_NAME, adIdPermitsPerSecond);
         mRateLimitPerApiMap.put(ApiKey.APPSETID_API_APP_PACKAGE_NAME, appSetIdPermitsPerSecond);
 
-        mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE, defaultPermitsPerSecond);
-        mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE, defaultPermitsPerSecond);
-        mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_REPORT_IMPRESSIONS, defaultPermitsPerSecond);
-        mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_REPORT_INTERACTION, defaultPermitsPerSecond);
-        mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_SELECT_ADS, defaultPermitsPerSecond);
-        mRateLimitPerApiMap.put(ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA, defaultPermitsPerSecond);
-        mRateLimitPerApiMap.put(
-                ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT, defaultPermitsPerSecond);
-        mRateLimitPerApiMap.put(
-                ApiKey.FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM, defaultPermitsPerSecond);
-
-        mRateLimitPerApiMap.put(
-                ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS, defaultPermitsPerSecond);
-
-        mRateLimitPerApiMap.put(
-                ApiKey.MEASUREMENT_API_DELETION_REGISTRATION, defaultPermitsPerSecond);
         mRateLimitPerApiMap.put(ApiKey.MEASUREMENT_API_REGISTER_SOURCE, registerSource);
         mRateLimitPerApiMap.put(ApiKey.MEASUREMENT_API_REGISTER_TRIGGER, registerTrigger);
         mRateLimitPerApiMap.put(ApiKey.MEASUREMENT_API_REGISTER_WEB_SOURCE, registerWebSource);
@@ -235,5 +220,46 @@ public class Throttler {
         rateLimiter.setRate(permitsPerSecond);
         boolean unused = rateLimiter.tryAcquire();
         return rateLimiter;
+    }
+
+    /** Dump it! */
+    public void dump(PrintWriter writer) {
+        writer.println("Throttler");
+
+        writer.println("  Rate limit per API");
+        dumpsSortedMap(
+                writer,
+                mRateLimitPerApiMap,
+                entry ->
+                        String.format(
+                                Locale.ENGLISH,
+                                "%s: %3.2f",
+                                entry.getKey(),
+                                (Double) entry.getValue()));
+
+        writer.printf("  SDK rate limit per API:");
+        if (mSdkRateLimitMap.isEmpty()) {
+            writer.println(" N/A");
+            return;
+        }
+        writer.println();
+        dumpsSortedMap(
+                writer,
+                mSdkRateLimitMap,
+                entry -> {
+                    Pair<?, ?> pair = (Pair<?, ?>) entry.getKey();
+                    return String.format(
+                            Locale.ENGLISH, "%s.%s: %s", pair.first, pair.second, entry.getValue());
+                });
+    }
+
+    private void dumpsSortedMap(
+            PrintWriter writer,
+            Map<?, ?> map,
+            Function<Map.Entry<?, ?>, String> entryStringanizer) {
+        map.entrySet().stream()
+                .map(entryStringanizer)
+                .sorted()
+                .forEachOrdered(line -> writer.printf("    %s\n", line));
     }
 }

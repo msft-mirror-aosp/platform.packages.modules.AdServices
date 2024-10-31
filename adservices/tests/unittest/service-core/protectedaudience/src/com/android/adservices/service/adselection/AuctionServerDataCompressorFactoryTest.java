@@ -18,19 +18,13 @@ package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.adselection.AuctionServerDataCompressorFactory.NO_IMPLEMENTATION_FOUND;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 
 public class AuctionServerDataCompressorFactoryTest {
     private static final int VALID_VERSION = AuctionServerDataCompressorGzip.VERSION;
     private static final int INVALID_VERSION = Integer.MAX_VALUE;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testFactory_validVersion_returnImplementationSuccess() {

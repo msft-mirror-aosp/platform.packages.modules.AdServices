@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.common.AdTechIdentifier;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
@@ -30,7 +29,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 // TODO(b/273329939): Delete once CTS tests are unignored
-@RequiresSdkLevelAtLeastS
 public final class SetAppInstallAdvertisersRequestTest extends AdServicesUnitTestCase {
     private static final Set<AdTechIdentifier> ADVERTISERS =
             new HashSet<>(

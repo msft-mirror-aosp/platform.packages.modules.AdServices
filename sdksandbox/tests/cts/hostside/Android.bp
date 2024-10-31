@@ -34,14 +34,14 @@ java_test_host {
         "general-tests",
         "mcts-adservices",
     ],
-    data: [
+    device_common_data: [
         ":CtsSdkSandboxHostTestApp",
         ":CtsSdkSandboxHostTestApp2",
         ":SdkSandboxDataIsolationTestProvider",
         ":SdkSandboxStorageTestProvider",
         ":SdkSandboxManagerCtsProvider",
     ],
-    jarjar_rules: ":test-jarjar-rules",
+    jarjar_rules: ":test-service-jarjar-rules",
 }
 
 android_test_helper_app {
@@ -91,7 +91,7 @@ android_test_helper_app {
         "compatibility-device-util-axt",
     ],
     min_sdk_version: "33",
-    target_sdk_version: "33",
+    target_sdk_version: "34",
 }
 
 java_library {
@@ -114,7 +114,7 @@ android_test_helper_app {
         "compatibility-device-util-axt",
     ],
     min_sdk_version: "33",
-    target_sdk_version: "33",
+    target_sdk_version: "34",
 }
 
 java_library {

@@ -28,7 +28,6 @@ import com.android.adservices.api.R;
 import com.android.adservices.ui.settings.activities.MeasurementActivity;
 
 /** Fragment for the Measurement view of the AdServices Settings App. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesSettingsMeasurementFragment extends Fragment {
 

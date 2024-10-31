@@ -29,6 +29,7 @@ import org.json.JSONException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.IntStream;
@@ -39,6 +40,8 @@ import java.util.stream.IntStream;
  */
 public class AggregatePayloadGenerator {
     private final Flags mFlags;
+    public static final String PRE_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "0.1";
+    public static final String POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "1.0";
 
     public AggregatePayloadGenerator(Flags flags) {
         mFlags = flags;
@@ -59,7 +62,7 @@ public class AggregatePayloadGenerator {
                 source.getAggregatableAttributionSource(trigger, mFlags);
         Optional<AggregatableAttributionTrigger> aggregateAttributionTrigger =
                 trigger.getAggregatableAttributionTrigger(mFlags);
-        if (!aggregateAttributionSource.isPresent() || !aggregateAttributionTrigger.isPresent()) {
+        if (aggregateAttributionSource.isEmpty() || aggregateAttributionTrigger.isEmpty()) {
             return Optional.empty();
         }
 
@@ -110,25 +113,39 @@ public class AggregatePayloadGenerator {
         }
 
         List<AggregateHistogramContribution> contributions = new ArrayList<>();
-        for (String id : aggregateSourceMap.navigableKeySet()) {
-            if (!attributionTrigger.getValues().containsKey(id)) {
-                continue;
+        Optional<Map<String, AggregatableKeyValue>> maybeMatchedValueMap =
+                getMatchedAggregatableKeyValueMap(attributionTrigger, sourceFilterMap, filter);
+        if (maybeMatchedValueMap.isPresent()) {
+            for (String id : aggregateSourceMap.navigableKeySet()) {
+                if (maybeMatchedValueMap.get().containsKey(id)) {
+                    if (mFlags.getMeasurementEnableFlexibleContributionFiltering()) {
+                        UnsignedLong filteringId = UnsignedLong.ZERO;
+                        if (maybeMatchedValueMap.get().get(id).getFilteringId() != null) {
+                            filteringId = maybeMatchedValueMap.get().get(id).getFilteringId();
+                        }
+                        contributions.add(
+                                buildContribution(
+                                        aggregateSourceMap.get(id),
+                                        maybeMatchedValueMap.get().get(id).getValue(),
+                                        filteringId));
+                    } else {
+                        contributions.add(
+                                buildContribution(
+                                        aggregateSourceMap.get(id),
+                                        maybeMatchedValueMap.get().get(id).getValue()));
+                    }
+                }
             }
-            AggregateHistogramContribution contribution =
-                    new AggregateHistogramContribution.Builder()
-                            .setKey(aggregateSourceMap.get(id))
-                            .setValue(attributionTrigger.getValues().get(id)).build();
-            contributions.add(contribution);
         }
         if (contributions.size() > 0) {
-            if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
-                AggregateHistogramContribution paddingContribution =
-                        new AggregateHistogramContribution.Builder()
-                                .setPaddingContribution()
-                                .build();
-
-                padContributions(contributions, paddingContribution);
+            AggregateHistogramContribution.Builder paddingContribution =
+                    new AggregateHistogramContribution.Builder();
+            if (mFlags.getMeasurementEnableFlexibleContributionFiltering()) {
+                paddingContribution.setPaddingContributionWithFilteringId();
+            } else {
+                paddingContribution.setPaddingContribution();
             }
+            padContributions(contributions, paddingContribution.build());
             return Optional.of(contributions);
         }
         return Optional.empty();
@@ -151,5 +168,64 @@ public class AggregatePayloadGenerator {
                         contributions.size(),
                         mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
                 .forEach(i -> contributions.add(padding));
+    }
+
+    /**
+     * Returns first matched value map from getValueConfigs against Source filters or value map from
+     * getValues.
+     */
+    public Optional<Map<String, AggregatableKeyValue>> getMatchedAggregatableKeyValueMap(
+            AggregatableAttributionTrigger aggregatableAttributionTrigger,
+            FilterMap sourceFilterMap,
+            Filter filter) {
+        if (aggregatableAttributionTrigger.getValueConfigs() != null) {
+            for (AggregatableValuesConfig aggregatableValuesConfig :
+                    aggregatableAttributionTrigger.getValueConfigs()) {
+                boolean matchedFilters =
+                        aggregatableValuesConfig.getFilterSet() == null
+                                ? true
+                                : filter.isFilterMatch(
+                                        sourceFilterMap,
+                                        aggregatableValuesConfig.getFilterSet(),
+                                        true);
+                if (!matchedFilters) {
+                    continue;
+                }
+                boolean matchedNotFilters =
+                        aggregatableValuesConfig.getNotFilterSet() == null
+                                ? true
+                                : filter.isFilterMatch(
+                                        sourceFilterMap,
+                                        aggregatableValuesConfig.getNotFilterSet(),
+                                        false);
+                if (matchedNotFilters) {
+                    return Optional.of(aggregatableValuesConfig.getValues());
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
+    /** Add a new contribution with key, value to the existing list of contributions. */
+    private static AggregateHistogramContribution buildContribution(BigInteger key, int value) {
+        return new AggregateHistogramContribution.Builder().setKey(key).setValue(value).build();
+    }
+
+    /** Add a new contribution with key, value,and id to the existing list of contributions. */
+    private static AggregateHistogramContribution buildContribution(
+            BigInteger key, int value, UnsignedLong filteringId) {
+        return new AggregateHistogramContribution.Builder()
+                .setKey(key)
+                .setValue(value)
+                .setId(filteringId)
+                .build();
+    }
+
+    /** Returns the API version for the report. */
+    public static String getApiVersion(Flags flags) {
+        if (flags.getMeasurementEnableFlexibleContributionFiltering()) {
+            return POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION;
+        }
+        return PRE_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION;
     }
 }

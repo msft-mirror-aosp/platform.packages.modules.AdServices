@@ -56,17 +56,28 @@
     </test>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <!-- Enable sandbox throughout the test duration -->
+        <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />
+        <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
 
         <!-- Keep screen on throughout the test duration -->
         <option name="run-command" value="svc power stayon true" />
+        <option name="teardown-command" value="svc power stayon false" />
+
+        <!-- Disable facedown screen timeout throughout the test duration -->
+        <option name="run-command" value="cmd power set-face-down-detector false" />
+        <option name="teardown-command" value="cmd power set-face-down-detector true" />
+
         <!-- Unlock the screen before starting our test, otherwise launch activity fails -->
         <option name="run-command" value="input keyevent 82" />
-        <option name="run-command" value="cmd sdk_sandbox set-state --enabled" />
-        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
 
-        <option name="teardown-command" value="svc power stayon false" />
+        <!-- Disable DeviceConfig syncing throughout the test duration -->
+        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
-        <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
+
+        <!-- Turn on debug logs for tests -->
+        <option name="run-command" value="setprop persist.log.tag.SDK_SANDBOX DEBUG" />
+        <option name="teardown-command" value="setprop persist.log.tag.SDK_SANDBOX INFO" />
     </target_preparer>
 
     <object type="module_controller"

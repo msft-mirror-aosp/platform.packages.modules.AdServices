@@ -17,7 +17,11 @@ package com.android.adservices.cobalt;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_EVENT_VECTOR_BUFFER_MAX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_MAX_VALUE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_STRING_BUFFER_MAX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_COBALT_PERIODIC_JOB_EVENT_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_COBALT_PERIODIC_JOB_EVENT_REPORTED__COBALT_PERIODIC_JOB_EVENT__UPLOAD_EVENT_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_COBALT_PERIODIC_JOB_EVENT_REPORTED__COBALT_PERIODIC_JOB_EVENT__UPLOAD_EVENT_SUCCESS;
 
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.cobalt.logging.CobaltOperationLogger;
@@ -64,5 +68,45 @@ public final class CobaltOperationLoggerImpl implements CobaltOperationLogger {
                 metricId,
                 reportId,
                 AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_EVENT_VECTOR_BUFFER_MAX);
+    }
+
+    /**
+     * Logs that a Cobalt logging event exceeds the max value to Cobalt operational metric.
+     *
+     * @param metricId the Cobalt metric id of the event that is being logged
+     * @param reportId the Cobalt report id of the event that is being logged
+     */
+    public void logMaxValueExceeded(int metricId, int reportId) {
+        if (!mLoggerEnabled) {
+            return;
+        }
+
+        AdServicesStatsLog.write(
+                AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED,
+                metricId,
+                reportId,
+                AD_SERVICES_COBALT_LOGGER_EVENT_REPORTED__COBALT_LOGGING_EVENT__LOGGING_EVENT_OVER_MAX_VALUE);
+    }
+
+    /** Logs that Cobalt periodic job failed to upload envelopes. */
+    public void logUploadFailure() {
+        if (!mLoggerEnabled) {
+            return;
+        }
+
+        AdServicesStatsLog.write(
+                AD_SERVICES_COBALT_PERIODIC_JOB_EVENT_REPORTED,
+                AD_SERVICES_COBALT_PERIODIC_JOB_EVENT_REPORTED__COBALT_PERIODIC_JOB_EVENT__UPLOAD_EVENT_FAILURE);
+    }
+
+    /** Logs that Cobalt periodic job uploaded envelopes successfully. */
+    public void logUploadSuccess() {
+        if (!mLoggerEnabled) {
+            return;
+        }
+
+        AdServicesStatsLog.write(
+                AD_SERVICES_COBALT_PERIODIC_JOB_EVENT_REPORTED,
+                AD_SERVICES_COBALT_PERIODIC_JOB_EVENT_REPORTED__COBALT_PERIODIC_JOB_EVENT__UPLOAD_EVENT_SUCCESS);
     }
 }

@@ -16,11 +16,39 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_JS_SANDBOX_UNAVAILABLE;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_ADSERVICES_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_CREATE_ASSET_FILE_DESCRIPTOR_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_EXCEEDED_ALLOWED_TIME_LIMIT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_FILTER_AND_REVOKED_CONSENT_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_EMPTY_SUCCESS_CALLBACK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_CALLBACK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_USER_CONSENT_REVOKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_INTERNAL_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_INVALID_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_JS_SANDBOX_UNAVAILABLE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_TIMEOUT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_SUCCESS_CALLBACK_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_RUNNER_OUTCOME_SELECTION_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_UNSUPPORTED_PAYLOAD_SIZE_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
 
@@ -48,6 +76,8 @@ import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionInitialization;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
@@ -114,6 +144,7 @@ public class GetAdSelectionDataRunner {
     @NonNull private final ListeningExecutorService mBlockingExecutorService;
     @NonNull private final ScheduledThreadPoolExecutor mScheduledExecutor;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
     private final int mCallerUid;
 
     @NonNull protected final AdSelectionIdGenerator mAdSelectionIdGenerator;
@@ -150,6 +181,7 @@ public class GetAdSelectionDataRunner {
             @NonNull final ExecutorService blockingExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final Flags flags,
+            @NonNull final DebugFlags debugFlags,
             final int callerUid,
             @NonNull final DevContext devContext,
             @NonNull final AuctionServerDebugReporting auctionServerDebugReporting,
@@ -170,6 +202,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(auctionServerDebugReporting);
         Objects.requireNonNull(adsRelevanceExecutionLogger);
@@ -192,6 +225,7 @@ public class GetAdSelectionDataRunner {
         mBlockingExecutorService = MoreExecutors.listeningDecorator(blockingExecutorService);
         mScheduledExecutor = scheduledExecutor;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mCallerUid = callerUid;
         mDevContext = devContext;
         mClock = Clock.systemUTC();
@@ -255,6 +289,7 @@ public class GetAdSelectionDataRunner {
             @NonNull final ExecutorService blockingExecutorService,
             @NonNull final ScheduledThreadPoolExecutor scheduledExecutor,
             @NonNull final Flags flags,
+            @NonNull final DebugFlags debugFlags,
             final int callerUid,
             @NonNull final DevContext devContext,
             @NonNull Clock clock,
@@ -275,6 +310,7 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(lightweightExecutorService);
         Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(auctionServerDebugReporting);
@@ -298,6 +334,7 @@ public class GetAdSelectionDataRunner {
         mBlockingExecutorService = MoreExecutors.listeningDecorator(blockingExecutorService);
         mScheduledExecutor = scheduledExecutor;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mCallerUid = callerUid;
         mDevContext = devContext;
         mClock = clock;
@@ -385,7 +422,7 @@ public class GetAdSelectionDataRunner {
                                             inputParams.getCallerPackageName(),
                                             /*enforceForeground:*/ false,
                                             /*enforceConsent:*/ true,
-                                            !mFlags.getConsentNotificationDebugMode(),
+                                            !mDebugFlags.getConsentNotificationDebugMode(),
                                             mCallerUid,
                                             apiName,
                                             Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA,
@@ -429,18 +466,27 @@ public class GetAdSelectionDataRunner {
                         public void onFailure(Throwable t) {
                             if (t instanceof FilterException
                                     && t.getCause()
-                                            instanceof ConsentManager.RevokedConsentException) {
+                                    instanceof ConsentManager.RevokedConsentException) {
                                 // Skip logging if a FilterException occurs.
                                 // AdSelectionServiceFilter ensures the failing assertion is logged
                                 // internally.
 
+                                ErrorLogUtil.e(
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_FILTER_AND_REVOKED_CONSENT_EXCEPTION,
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
                                 // Fail Silently by notifying success to caller
                                 notifyEmptySuccessToCaller(callback);
                             } else {
                                 if (t.getCause() instanceof AdServicesException) {
+                                    ErrorLogUtil.e(
+                                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_ADSERVICES_EXCEPTION,
+                                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
                                     notifyFailureToCaller(t.getCause(), callback);
                                 } else {
                                     if (t instanceof UnsupportedPayloadSizeException) {
+                                        ErrorLogUtil.e(
+                                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_UNSUPPORTED_PAYLOAD_SIZE_EXCEPTION,
+                                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
                                         mAuctionServerPayloadMetricsStrategy
                                                 .logGetAdSelectionDataApiCalledStats(
                                                         apiCalledStatsBuilder,
@@ -457,6 +503,9 @@ public class GetAdSelectionDataRunner {
                     mLightweightExecutorService);
         } catch (Throwable t) {
             sLogger.v("runOutcomeSelection fails fast with exception %s.", t.toString());
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_RUNNER_OUTCOME_SELECTION_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
             notifyFailureToCaller(t, callback);
         }
     }
@@ -563,6 +612,10 @@ public class GetAdSelectionDataRunner {
     @Nullable
     private byte[] handleTimeoutError(TimeoutException e) {
         sLogger.e(e, GET_AD_SELECTION_DATA_TIMED_OUT);
+        ErrorLogUtil.e(
+                e,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_EXCEEDED_ALLOWED_TIME_LIMIT,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
         throw new UncheckedTimeoutException(GET_AD_SELECTION_DATA_TIMED_OUT);
     }
 
@@ -595,12 +648,12 @@ public class GetAdSelectionDataRunner {
     private int getCurrentPayloadSize(AuctionServerPayloadInfo auctionServerPayloadInfo) {
         sLogger.v("Calling get current payload size");
         return composeProtectedAuctionInputBytes(
-                        auctionServerPayloadInfo.getCompressedBuyerInput(),
-                        auctionServerPayloadInfo.getPackageName(),
-                        auctionServerPayloadInfo.getAdSelectionDataId(),
-                        auctionServerPayloadInfo.getDebugReportingEnabled(),
-                        auctionServerPayloadInfo.getUnlimitedEgressEnabled(),
-                        auctionServerPayloadInfo.getConsentedDebugConfigurationOptional())
+                auctionServerPayloadInfo.getCompressedBuyerInput(),
+                auctionServerPayloadInfo.getPackageName(),
+                auctionServerPayloadInfo.getAdSelectionDataId(),
+                auctionServerPayloadInfo.getDebugReportingEnabled(),
+                auctionServerPayloadInfo.getUnlimitedEgressEnabled(),
+                auctionServerPayloadInfo.getConsentedDebugConfigurationOptional())
                 .toByteArray()
                 .length;
     }
@@ -695,6 +748,10 @@ public class GetAdSelectionDataRunner {
                                     result, mBlockingExecutorService);
                 } catch (IOException e) {
                     sLogger.e(e, "Encountered error creating response with AssetFileDescriptor");
+                    ErrorLogUtil.e(
+                            e,
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_CREATE_ASSET_FILE_DESCRIPTOR_ERROR,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
                     notifyFailureToCaller(e, callback);
                     resultCode = STATUS_IO_ERROR;
                     return;
@@ -713,6 +770,10 @@ public class GetAdSelectionDataRunner {
             }
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying GetAdSelectionDataCallback");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_SUCCESS_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
             resultCode = STATUS_INTERNAL_ERROR;
         } finally {
             sLogger.v("Get Ad Selection Data completed and attempted notifying success");
@@ -739,6 +800,10 @@ public class GetAdSelectionDataRunner {
                             .build());
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying GetAdSelectionDataCallback");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_EMPTY_SUCCESS_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
             resultCode = STATUS_INTERNAL_ERROR;
         } finally {
             sLogger.v(
@@ -762,9 +827,14 @@ public class GetAdSelectionDataRunner {
             callback.onFailure(selectionFailureResponse);
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying GetAdSelectionDataCallback");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_CALLBACK_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
             resultCode = STATUS_INTERNAL_ERROR;
         } finally {
             sLogger.v("Get Ad Selection Data failed");
+            logGetAdSelectionDataRunnerExceptionCel(resultCode);
             mAdsRelevanceExecutionLogger.endAdsRelevanceApi(resultCode);
         }
     }
@@ -775,5 +845,43 @@ public class GetAdSelectionDataRunner {
             return SERVER_AUCTION_COORDINATOR_SOURCE_API;
         }
         return SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
+    }
+
+    private void logGetAdSelectionDataRunnerExceptionCel(int resultCode) {
+        int celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED;
+        switch (resultCode) {
+            case STATUS_TIMEOUT:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_TIMEOUT;
+                break;
+            case STATUS_JS_SANDBOX_UNAVAILABLE:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_JS_SANDBOX_UNAVAILABLE;
+                break;
+            case STATUS_INVALID_ARGUMENT:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_INVALID_ARGUMENT;
+                break;
+            case STATUS_INTERNAL_ERROR:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_INTERNAL_ERROR;
+                break;
+            case STATUS_USER_CONSENT_REVOKED:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_USER_CONSENT_REVOKED;
+                break;
+            case STATUS_BACKGROUND_CALLER:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER;
+                break;
+            case STATUS_CALLER_NOT_ALLOWED:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED;
+                break;
+            case STATUS_UNAUTHORIZED:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED;
+                break;
+            case STATUS_RATE_LIMIT_REACHED:
+                celEnum = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
+                break;
+            default:
+                // Skip the error logging if celEnum is
+                // AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED.
+                return;
+        }
+        ErrorLogUtil.e(celEnum, AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
     }
 }

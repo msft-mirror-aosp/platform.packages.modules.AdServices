@@ -57,7 +57,7 @@ public class CustomAudienceDevOverridesHelper {
 
     /**
      * Looks for a bidding logic override for the given combination of {@code owner}, {@code buyer},
-     * and {@code name}. Will return {@code null} if {@link DevContext#getDevOptionsEnabled()}
+     * and {@code name}. Will return {@code null} if {@link DevContext#getDeviceDevOptionsEnabled()}
      * returns false for the {@link DevContext} passed in the constructor or if there is no override
      * created by the app with package name specified in {@link
      * DevContext#getCallingAppPackageName()}.
@@ -69,7 +69,7 @@ public class CustomAudienceDevOverridesHelper {
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(name);
 
-        if (!mDevContext.getDevOptionsEnabled()) {
+        if (!mDevContext.getDeviceDevOptionsEnabled()) {
             sLogger.v("Dev options disabled");
             return null;
         }
@@ -89,8 +89,8 @@ public class CustomAudienceDevOverridesHelper {
     /**
      * Looks for a bidding trusted signals override for the given combination of {@code owner},
      * {@code buyer}, and {@code name}. Will return {@code null} if {@link
-     * DevContext#getDevOptionsEnabled()} returns false for the {@link DevContext} passed in the
-     * constructor or if there is no override created by the app with package name specified in
+     * DevContext#getDeviceDevOptionsEnabled()} returns false for the {@link DevContext} passed in
+     * the constructor or if there is no override created by the app with package name specified in
      * {@link DevContext#getCallingAppPackageName()}.
      */
     @Nullable
@@ -100,7 +100,7 @@ public class CustomAudienceDevOverridesHelper {
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(name);
 
-        if (!mDevContext.getDevOptionsEnabled()) {
+        if (!mDevContext.getDeviceDevOptionsEnabled()) {
             return null;
         }
 
@@ -120,8 +120,8 @@ public class CustomAudienceDevOverridesHelper {
      * <p>If the given {@code owner} does not match the package name that corresponds to the calling
      * UID, fail silently.
      *
-     * @throws SecurityException if {@link DevContext#getDevOptionsEnabled()} returns false for the
-     *     {@link DevContext}
+     * @throws SecurityException if {@link DevContext#getDeviceDevOptionsEnabled()} returns false
+     *     for the {@link DevContext}
      */
     public void addOverride(
             @NonNull String owner,
@@ -138,7 +138,7 @@ public class CustomAudienceDevOverridesHelper {
 
         sLogger.v("addOverride");
 
-        if (!mDevContext.getDevOptionsEnabled()) {
+        if (!mDevContext.getDeviceDevOptionsEnabled()) {
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -175,8 +175,8 @@ public class CustomAudienceDevOverridesHelper {
      * Removes an override for the given combination of {@code owner}, {@code buyer}, {@code name},
      * and the package name derived from the calling UID.
      *
-     * @throws SecurityException if{@link DevContext#getDevOptionsEnabled()} returns false for the
-     *     {@link DevContext}
+     * @throws SecurityException if{@link DevContext#getDeviceDevOptionsEnabled()} returns false for
+     *     the {@link DevContext}
      */
     public void removeOverride(
             @NonNull String owner, @NonNull AdTechIdentifier buyer, @NonNull String name) {
@@ -184,7 +184,7 @@ public class CustomAudienceDevOverridesHelper {
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(name);
 
-        if (!mDevContext.getDevOptionsEnabled()) {
+        if (!mDevContext.getDeviceDevOptionsEnabled()) {
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -198,11 +198,11 @@ public class CustomAudienceDevOverridesHelper {
      * Removes all custom audience overrides that match {@link
      * DevContext#getCallingAppPackageName()}.
      *
-     * @throws SecurityException if {@link DevContext#getDevOptionsEnabled()} returns false for the
-     *     {@link DevContext}
+     * @throws SecurityException if {@link DevContext#getDeviceDevOptionsEnabled()} returns false
+     *     for the {@link DevContext}
      */
     public void removeAllOverrides() {
-        if (!mDevContext.getDevOptionsEnabled()) {
+        if (!mDevContext.getDeviceDevOptionsEnabled()) {
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 

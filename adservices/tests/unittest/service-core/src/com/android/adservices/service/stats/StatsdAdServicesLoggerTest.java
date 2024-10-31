@@ -65,15 +65,23 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.PERSIST_AD
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_RAN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SCHEDULED_CUSTOM_AUDIENCE_UPDATE_PERFORMED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SCHEDULED_CUSTOM_AUDIENCE_UPDATE_PERFORMED_ATTEMPTED_FAILURE_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.SCHEDULED_CUSTOM_AUDIENCE_UPDATE_SCHEDULE_ATTEMPTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.SERVER_AUCTION_BACKGROUND_KEY_FETCH_ENABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_EPOCH_COMPUTATION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_ENCRYPTION_GET_TOPICS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.TOPICS_SCHEDULE_EPOCH_JOB_SETTING_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_SIGNALS_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.UPDATE_SIGNALS_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.BACKGROUND_KEY_FETCH_STATUS_NO_OP;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_TOO_BIG;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_SCHEDULE_CA_UPDATE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_UNSET;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_LARGE;
@@ -543,12 +551,11 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         mLogger = new StatsdAdServicesLogger(mMockFlags);
 
         int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
-        String appPackageName = null;
         int resultCode = STATUS_SUCCESS;
         int latencyMs = 10;
 
         // Log api call with app package name.
-        mLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
+        mLogger.logFledgeApiCallStats(apiName, null, resultCode, latencyMs);
 
         // Verify app package name is logged.
         verify(
@@ -583,12 +590,11 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         mLogger = new StatsdAdServicesLogger(mMockFlags);
 
         int apiName = AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
-        String appPackageName = TEST_PACKAGE_NAME;
         int resultCode = STATUS_SUCCESS;
         int latencyMs = 10;
 
         // Log api call with app package name.
-        mLogger.logFledgeApiCallStats(apiName, appPackageName, resultCode, latencyMs);
+        mLogger.logFledgeApiCallStats(apiName, TEST_PACKAGE_NAME, resultCode, latencyMs);
 
         // Verify app package name is not logged.
         verify(
@@ -1378,10 +1384,6 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                 DestinationRegisteredBeaconsReportedStats
                         .InteractionKeySizeRangeType
                         .EQUAL_TO_MAXIMUM_KEY_SIZE);
-        int[] keySizeRangeTypeArray = new int[] {
-                /* LARGER_THAN_MAXIMUM_KEY_SIZE */ 4,
-                /* SMALLER_THAN_MAXIMUM_KEY_SIZE */ 2,
-                /* EQUAL_TO_MAXIMUM_KEY_SIZE */ 3};
 
         DestinationRegisteredBeaconsReportedStats stats =
                 DestinationRegisteredBeaconsReportedStats.builder()
@@ -2419,6 +2421,171 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(0.0001F));
         verify(writeInvocation);
 
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogTopicsScheduleEpochJobSettingReportedStats_success() {
+        TopicsScheduleEpochJobSettingReportedStats stats =
+                TopicsScheduleEpochJobSettingReportedStats.builder()
+                        .setRescheduleEpochJobStatus(0)
+                        .setPreviousEpochJobSetting(1)
+                        .setCurrentEpochJobSetting(2)
+                        .setScheduleIfNeededEpochJobStatus(1)
+                        .build();
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(), anyInt(), anyInt(), anyInt(), anyInt()));
+
+        // Invoke logging call.
+        mLogger.logTopicsScheduleEpochJobSettingReportedStats(stats);
+
+        // Verify only compat logging took place.
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                TOPICS_SCHEDULE_EPOCH_JOB_SETTING_REPORTED,
+                                0,
+                                1,
+                                2,
+                                1);
+        verify(writeInvocation);
+
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogScheduledCustomAudienceUpdatePerformedStats_success() {
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyBoolean(),
+                                        anyInt(),
+                                        anyInt()));
+        ScheduledCustomAudienceUpdatePerformedStats stats =
+                ScheduledCustomAudienceUpdatePerformedStats.builder()
+                        .setNumberOfPartialCustomAudienceInRequest(1)
+                        .setNumberOfLeaveCustomAudienceInRequest(2)
+                        .setNumberOfJoinCustomAudienceInResponse(3)
+                        .setNumberOfLeaveCustomAudienceInResponse(4)
+                        .setNumberOfCustomAudienceJoined(5)
+                        .setNumberOfCustomAudienceLeft(6)
+                        .setWasInitialHop(true)
+                        .setNumberOfScheduleUpdatesInResponse(7)
+                        .setNumberOfUpdatesScheduled(8)
+                        .build();
+        mLogger.logScheduledCustomAudienceUpdatePerformedStats(stats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                SCHEDULED_CUSTOM_AUDIENCE_UPDATE_PERFORMED,
+                                stats.getNumberOfPartialCustomAudienceInRequest(),
+                                stats.getNumberOfJoinCustomAudienceInResponse(),
+                                stats.getNumberOfCustomAudienceJoined(),
+                                stats.getNumberOfLeaveCustomAudienceInRequest(),
+                                stats.getNumberOfLeaveCustomAudienceInResponse(),
+                                stats.getNumberOfCustomAudienceLeft(),
+                                stats.getWasInitialHop(),
+                                stats.getNumberOfScheduleUpdatesInResponse(),
+                                stats.getNumberOfUpdatesScheduled());
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogScheduledCustomAudienceUpdateBackgroundJobStats_success() {
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
+        ScheduledCustomAudienceUpdateBackgroundJobStats stats =
+                ScheduledCustomAudienceUpdateBackgroundJobStats.builder()
+                        .setNumberOfUpdatesFound(1)
+                        .setNumberOfSuccessfulUpdates(2)
+                        .build();
+        mLogger.logScheduledCustomAudienceUpdateBackgroundJobStats(stats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BACKGROUND_JOB_RAN,
+                                stats.getNumberOfUpdatesFound(),
+                                stats.getNumberOfSuccessfulUpdates());
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogScheduledCustomAudienceUpdateScheduleAttemptedStats_success() {
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyBoolean()));
+        ScheduledCustomAudienceUpdateScheduleAttemptedStats stats =
+                ScheduledCustomAudienceUpdateScheduleAttemptedStats.builder()
+                        .setNumberOfPartialCustomAudiences(1)
+                        .setNumberOfLeaveCustomAudiences(2)
+                        .setMinimumDelayInMinutes(12345)
+                        .setInitialHop(true)
+                        .setExistingUpdateStatus(
+                                SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE)
+                        .build();
+        mLogger.logScheduledCustomAudienceUpdateScheduleAttemptedStats(stats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                SCHEDULED_CUSTOM_AUDIENCE_UPDATE_SCHEDULE_ATTEMPTED,
+                                stats.getNumberOfPartialCustomAudiences(),
+                                stats.getMinimumDelayInMinutes(),
+                                stats.getExistingUpdateStatus(),
+                                stats.getNumberOfLeaveCustomAudiences(),
+                                stats.isInitialHop());
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogScheduledCustomAudienceUpdatePerformedFailureStats_success() {
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyInt(),
+                                        anyBoolean()));
+        ScheduledCustomAudienceUpdatePerformedFailureStats stats =
+                ScheduledCustomAudienceUpdatePerformedFailureStats.builder()
+                        .setFailureAction(
+                                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_SCHEDULE_CA_UPDATE)
+                        .setFailureType(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR)
+                        .build();
+        mLogger.logScheduledCustomAudienceUpdatePerformedFailureStats(stats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                            SCHEDULED_CUSTOM_AUDIENCE_UPDATE_PERFORMED_ATTEMPTED_FAILURE_REPORTED,
+                            stats.getFailureType(),
+                            stats.getFailureAction());
+        verify(writeInvocation);
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
 

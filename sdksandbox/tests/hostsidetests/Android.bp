@@ -31,7 +31,7 @@ java_test_host {
         "modules-utils-build-testing",
         "SdkSandboxHostTestUtils",
     ],
-    data: [
+    device_common_data: [
         ":TestCodeProvider",
         ":TestCodeProvider2",
         ":SdkSandboxTestApp",
@@ -40,7 +40,7 @@ java_test_host {
         ":SdkSandboxTestSharedApp2",
     ],
     compile_multilib: "both",
-    jarjar_rules: ":test-jarjar-rules",
+    jarjar_rules: ":test-service-jarjar-rules",
 }
 
 java_test_host {
@@ -52,13 +52,13 @@ java_test_host {
     static_libs: [
         "SdkSandboxHostTestUtils",
     ],
-    data: [
+    device_common_data: [
         ":TestCodeProvider",
         ":TestCodeProvider2",
         ":SdkSandboxTestApp",
         ":SdkSandboxTestDebuggableApp",
     ],
-    jarjar_rules: ":test-jarjar-rules",
+    jarjar_rules: ":test-service-jarjar-rules",
 }
 
 android_test_helper_app {
@@ -171,7 +171,7 @@ android_test_helper_app {
     ],
     platform_apis: true,
     min_sdk_version: "33",
-    target_sdk_version: "33",
+    target_sdk_version: "34",
 }
 
 android_test_helper_app {
@@ -187,5 +187,5 @@ android_test_helper_app {
     ],
     platform_apis: true,
     min_sdk_version: "33",
-    target_sdk_version: "33",
+    target_sdk_version: "34",
 }

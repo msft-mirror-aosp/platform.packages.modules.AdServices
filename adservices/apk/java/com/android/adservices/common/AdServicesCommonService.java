@@ -40,7 +40,6 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 
 /** Common service for work that applies to all PPAPIs. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesCommonService extends Service {
 
@@ -57,7 +56,7 @@ public class AdServicesCommonService extends Service {
                     new AdServicesCommonServiceImpl(
                             this,
                             FlagsFactory.getFlags(),
-                            UxEngine.getInstance(this),
+                            UxEngine.getInstance(),
                             UxStatesManager.getInstance(),
                             AdIdWorker.getInstance(),
                             AdServicesLoggerImpl.getInstance(),

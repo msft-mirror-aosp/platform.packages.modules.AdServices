@@ -70,6 +70,8 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerSpecs;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReportData;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.ondevicepersonalization.NoOdpDelegationWrapper;
 import com.android.adservices.service.measurement.ondevicepersonalization.OdpDelegationWrapperImpl;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
@@ -93,14 +95,18 @@ import org.junit.runners.Parameterized;
 import org.mockito.Mock;
 
 import java.io.IOException;
+import java.math.BigInteger;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -127,38 +133,52 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     private static final String LONG_AGGREGATE_KEY_ID = "12345678901234567890123456";
     private static final String LONG_AGGREGATE_KEY_PIECE = "0x123456789012345678901234567890123";
     private static final long DEDUP_KEY = 100;
+    private static final String BUDGET_NAME = "biddable";
     private static final UnsignedLong DEBUG_KEY = new UnsignedLong(34787843L);
     private static final String DEBUG_JOIN_KEY = "SAMPLE_DEBUG_JOIN_KEY";
     private static final String DEFAULT_REDIRECT = WebUtil.validUrl("https://subdomain.bar.test");
     private static final String EVENT_TRIGGERS_1 =
-            "[\n"
-                    + "{\n"
+            "["
+                    + "{"
                     + "  \"trigger_data\": \""
                     + TRIGGER_DATA
-                    + "\",\n"
+                    + "\","
                     + "  \"priority\": \""
                     + PRIORITY
-                    + "\",\n"
+                    + "\","
                     + "  \"deduplication_key\": \""
                     + DEDUP_KEY
-                    + "\",\n"
-                    + "  \"filters\": [{\n"
-                    + "    \"source_type\": [\"navigation\"],\n"
-                    + "    \"key_1\": [\"value_1\"] \n"
-                    + "   }]\n"
+                    + "\","
+                    + "  \"filters\": [{"
+                    + "    \"source_type\": [\"navigation\"],"
+                    + "    \"key_1\": [\"value_1\"] "
+                    + "   }]"
                     + "}"
-                    + "]\n";
-    private static final String AGGREGATE_DEDUPLICATION_KEYS_1 =
+                    + "]";
+    private static final String AGGREGATE_DEDUPLICATION_KEYS =
             "[{\"deduplication_key\": \""
                     + DEDUP_KEY
-                    + "\",\n"
-                    + "\"filters\": {\n"
-                    + "  \"category_1\": [\"filter\"],\n"
-                    + "  \"category_2\": [\"filter\"] \n"
+                    + "\","
+                    + "\"filters\": {"
+                    + "  \"category_1\": [\"filter\"],"
+                    + "  \"category_2\": [\"filter\"] "
                     + " },"
-                    + "\"not_filters\": {\n"
-                    + "  \"category_1\": [\"filter\"],\n"
-                    + "  \"category_2\": [\"filter\"] \n"
+                    + "\"not_filters\": {"
+                    + "  \"category_1\": [\"filter\"],"
+                    + "  \"category_2\": [\"filter\"] "
+                    + "}}"
+                    + "]";
+    private static final String NAMED_BUDGETS =
+            "[{\"name\": \""
+                    + BUDGET_NAME
+                    + "\","
+                    + "\"filters\": {"
+                    + "  \"category_1\": [\"filter\"],"
+                    + "  \"category_2\": [\"filter\"] "
+                    + " },"
+                    + "\"not_filters\": {"
+                    + "  \"category_1\": [\"filter\"],"
+                    + "  \"category_2\": [\"filter\"] "
                     + "}}"
                     + "]";
     private static final String LIST_TYPE_REDIRECT_URI =
@@ -279,6 +299,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 .thenReturn(Flags.MEASUREMENT_ENABLE_DEBUG_REPORT);
         when(mMockFlags.getMeasurementEnableHeaderErrorDebugReport())
                 .thenReturn(Flags.MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT);
+        when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets())
+                .thenReturn(Flags.MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS);
     }
 
     @Test
@@ -288,7 +310,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 new MeasurementRegistrationResponseStats.Builder(
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
-                                223,
+                                213,
                                 UNKNOWN_SOURCE_TYPE,
                                 APP_REGISTRATION_SURFACE_TYPE,
                                 SUCCESS_STATUS,
@@ -305,6 +327,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -346,7 +369,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 new MeasurementRegistrationResponseStats.Builder(
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
-                                436,
+                                419,
                                 UNKNOWN_SOURCE_TYPE,
                                 APP_REGISTRATION_SURFACE_TYPE,
                                 SUCCESS_STATUS,
@@ -384,6 +407,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -394,7 +418,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                                 + EVENT_TRIGGERS_1
                                                 + ","
                                                 + "\"aggregatable_deduplication_keys\":"
-                                                + AGGREGATE_DEDUPLICATION_KEYS_1
+                                                + AGGREGATE_DEDUPLICATION_KEYS
                                                 + "}")));
 
         AsyncRedirects asyncRedirects = new AsyncRedirects();
@@ -449,6 +473,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -497,6 +522,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -545,6 +571,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -593,6 +620,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -640,6 +668,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -667,6 +696,274 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
+    @Test
+    public void testBasicTriggerRequest_withNamedBudget_success() throws Exception {
+        when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String wrappedFilters =
+                "[{"
+                        + "  \"category_1\": [\"filter\"],"
+                        + "  \"category_2\": [\"filter\"] "
+                        + " }]";
+        String wrappedNotFilters =
+                "[{" + "  \"category_1\": [\"filter\"]," + "  \"category_2\": [\"filter\"] " + "}]";
+        String expectedNamedBudgets =
+                "[{\"name\": \""
+                        + BUDGET_NAME
+                        + "\","
+                        + "\"filters\": "
+                        + wrappedFilters
+                        + ","
+                        + "\"not_filters\":"
+                        + wrappedNotFilters
+                        + "}"
+                        + "]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"named_budgets\":"
+                                                + NAMED_BUDGETS
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRegistrationDelay(0L);
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        Trigger result = fetch.get();
+        assertThat(result.getAttributionDestination().toString())
+                .isEqualTo(asyncRegistration.getTopOrigin().toString());
+        assertThat(result.getEnrollmentId()).isEqualTo(ENROLLMENT_ID);
+        assertThat(result.getEventTriggers()).isEqualTo(new JSONArray(EVENT_TRIGGERS_1).toString());
+        assertThat(result.getNamedBudgetsString())
+                .isEqualTo(new JSONArray(expectedNamedBudgets).toString());
+        assertThat(result.getRegistrationOrigin().toString()).isEqualTo(TRIGGER_URI);
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicTriggerRequest_namedBudgetWithEnableFlagOff_success() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"named_budgets\":"
+                                                + NAMED_BUDGETS
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        asyncFetchStatus.setRegistrationDelay(0L);
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        Trigger result = fetch.get();
+        assertThat(result.getAttributionDestination().toString())
+                .isEqualTo(asyncRegistration.getTopOrigin().toString());
+        assertThat(result.getEnrollmentId()).isEqualTo(ENROLLMENT_ID);
+        assertThat(result.getEventTriggers()).isEqualTo(new JSONArray(EVENT_TRIGGERS_1).toString());
+        assertThat(result.getNamedBudgetsString()).isNull();
+        assertThat(result.getRegistrationOrigin().toString()).isEqualTo(TRIGGER_URI);
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void triggerRequest_namedBudgetNotJsonObj_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String budgets = "[5678, 1910]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"named_budgets\":"
+                                                + budgets
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isFalse();
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void triggerRequest_namedBudgetsNameNotString_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String wrappedFilters =
+                "[{" + "\"category_1\":[\"filter\"]," + "\"category_2\":[\"filter\"]" + "}]";
+        String wrappedNotFilters =
+                "[{" + "\"category_1\":[\"filter\"]," + "\"category_2\":[\"filter\"]" + "}]";
+        String budgets =
+                "[{\"name\": 123,"
+                        + "\"filters\": "
+                        + wrappedFilters
+                        + ","
+                        + "\"not_filters\":"
+                        + wrappedNotFilters
+                        + "}"
+                        + "]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"named_budgets\":"
+                                                + budgets
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isFalse();
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
+    public void triggerRequest_namedBudgetsNoNameField_succeeds() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String wrappedFilters =
+                "[{" + "\"category_1\":[\"filter\"]," + "\"category_2\":[\"filter\"]" + "}]";
+        String wrappedNotFilters =
+                "[{" + "\"category_1\":[\"filter\"]," + "\"category_2\":[\"filter\"]" + "}]";
+        String budgets =
+                "[{\"filters\":"
+                        + wrappedFilters
+                        + ","
+                        + "\"not_filters\":"
+                        + wrappedNotFilters
+                        + "}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"named_budgets\":"
+                                                + budgets
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        Trigger result = fetch.get();
+        assertThat(result.getNamedBudgetsString()).isEqualTo(budgets);
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void triggerRequest_namedBudgetsNameOnly_succeeds() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String budgets = "[{\"name\":\"" + BUDGET_NAME + "\"}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"event_trigger_data\":"
+                                                + EVENT_TRIGGERS_1
+                                                + ","
+                                                + "\"named_budgets\":"
+                                                + budgets
+                                                + "}")));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        Trigger result = fetch.get();
+        assertThat(result.getNamedBudgetsString()).isEqualTo(budgets);
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
     // Tests for redirect types
 
     @Test
@@ -674,6 +971,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate both 'list' and 'location' type headers
@@ -718,6 +1016,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate only 'location' type header
@@ -750,6 +1049,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate both 'list' and 'location' type headers
@@ -794,6 +1094,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate only 'location' type header
@@ -829,6 +1130,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(
@@ -875,6 +1177,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate behavior config header, but no redirects.
@@ -905,6 +1208,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate behavior config header, but no Location type redirect.
@@ -945,6 +1249,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(
@@ -977,6 +1282,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(
@@ -1014,6 +1320,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String expectedResult = DEFAULT_EVENT_TRIGGER_DATA;
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1047,6 +1354,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         eventTriggers.append("}]");
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1072,6 +1380,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 + "{\"_something_reserved\":[\"val1\", \"val2\"]}}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1096,6 +1405,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String expectedResult = DEFAULT_EVENT_TRIGGER_DATA;
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1126,6 +1436,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"trigger_data\":\"2\"},{\"trigger_data\":\"0\"},{\"trigger_data\":\"0\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1162,6 +1473,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         eventTriggers.append("}]");
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1187,6 +1499,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 + "{\"_something_reserved\":[\"val1\", \"val2\"]}}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1210,6 +1523,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String eventTriggerData = "[{\"trigger_data\":2,\"priority\":\"101\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1236,6 +1550,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String eventTriggerData = "[{\"trigger_data\":\"-2\",\"priority\":\"101\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1263,6 +1578,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"trigger_data\":\"18446744073709551616\",\"priority\":\"101\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1289,6 +1605,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String eventTriggerData = "[{\"trigger_data\":\"101z\",\"priority\":\"101\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1316,6 +1633,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"trigger_data\":\"18446744073709551615\",\"priority\":\"101\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1345,6 +1663,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"trigger_data\":\"14\",\"priority\":\"101\",\"value\":156}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1374,6 +1693,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"trigger_data\":\"14\",\"priority\":\"101\",\"value\":0}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1402,6 +1722,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"trigger_data\":\"14\",\"priority\":\"101\",\"value\":" + tooLarge + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1429,6 +1750,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"trigger_data\":\"14\",\"priority\":\"101\",\"value\":\"123\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1455,6 +1777,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String eventTriggerData = "[{\"trigger_data\":\"2\",\"priority\":\"-101\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1484,6 +1807,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"trigger_data\":\"2\",\"priority\":74}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1511,6 +1835,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"trigger_data\":\"2\",\"priority\":\"18446744073709551615\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1537,6 +1862,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String eventTriggerData = "[{\"trigger_data\":\"2\",\"priority\":\"a101\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1566,6 +1892,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "\"deduplication_key\":34}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1595,6 +1922,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "\"deduplication_key\":\"-34\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1624,6 +1952,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "\"deduplication_key\":\"18446744073709551616\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1653,6 +1982,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "\"deduplication_key\":\"145l\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1682,6 +2012,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "\"deduplication_key\":\"18446744073709551615\"}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1712,6 +2043,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"trigger_data\":\"2\",\"filters\":[{\"id\":[\"val1\",\"val2\"]}]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1742,6 +2074,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"trigger_data\":\"2\",\"priority\":\"101\",\"filters\":" + filters + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1773,6 +2106,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"trigger_data\":\"2\",\"priority\":\"101\",\"filters\":" + filters + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1800,6 +2134,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"trigger_data\":\"2\",\"priority\":\"101\",\"filters\":" + filters + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1835,6 +2170,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"trigger_data\":\"2\",\"priority\":\"101\",\"filters\":" + filters + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1862,6 +2198,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"trigger_data\":\"2\",\"priority\":\"101\",\"filters\":" + filters + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1888,6 +2225,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"trigger_data\":\"2\",\"not_filters\":[{\"id\":[\"val1\",\"val2\"]}]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1921,6 +2259,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1955,6 +2294,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1985,6 +2325,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2023,6 +2364,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2055,6 +2397,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2081,6 +2424,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"product\":[\"1234\",\"2345\"],\"cid\":[\"id\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2113,6 +2457,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         filters.append("]");
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2136,6 +2481,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String filters = "[{\"_something_reserved\":[\"val1\", \"val2\"]}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2159,6 +2505,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2172,9 +2519,9 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 mFetcher.fetchTrigger(
                         appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        assertTrue(fetch.isPresent());
+        assertThat(fetch.isPresent()).isTrue();
         Trigger result = fetch.get();
-        assertEquals(null, result.getAggregateValues());
+        assertThat(result.getAggregateValuesString()).isNull();
         assertThat(asyncFetchStatus.isTriggerAggregatableValueFiltersConfigured()).isFalse();
     }
 
@@ -2184,6 +2531,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String validAggregatableValues = "{\"campaignCounts\":32768}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2200,12 +2548,12 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 mFetcher.fetchTrigger(
                         appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        assertTrue(fetch.isPresent());
-        assertEquals(AsyncFetchStatus.EntityStatus.SUCCESS, asyncFetchStatus.getEntityStatus());
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.SUCCESS);
         Trigger result = fetch.get();
-        assertEquals(
-                new JSONObject(validAggregatableValues).toString(), result.getAggregateValues());
-        assertThat(asyncFetchStatus.isTriggerAggregatableValueFiltersConfigured()).isTrue();
+        assertThat(result.getAggregateValuesString())
+                .isEqualTo(new JSONObject(validAggregatableValues).toString());
     }
 
     @Test
@@ -2215,6 +2563,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String validAggregatableValuesArr = "[{\"values\": {}}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2231,11 +2580,12 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 mFetcher.fetchTrigger(
                         appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        assertTrue(fetch.isPresent());
-        assertEquals(AsyncFetchStatus.EntityStatus.SUCCESS, asyncFetchStatus.getEntityStatus());
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.SUCCESS);
         Trigger result = fetch.get();
-        assertEquals(
-                new JSONArray(validAggregatableValuesArr).toString(), result.getAggregateValues());
+        assertThat(result.getAggregateValuesString())
+                .isEqualTo(new JSONArray(validAggregatableValuesArr).toString());
         assertThat(asyncFetchStatus.isTriggerAggregatableValueFiltersConfigured()).isTrue();
     }
 
@@ -2245,6 +2595,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         String invalidAggregatableValues = "{" + "\"aggregatable_values\":\"12.0\"" + "}";
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2258,9 +2609,9 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 mFetcher.fetchTrigger(
                         appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        assertFalse(fetch.isPresent());
-        assertEquals(
-                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertThat(fetch.isPresent()).isFalse();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
         assertThat(asyncFetchStatus.isTriggerAggregatableValueFiltersConfigured()).isFalse();
     }
 
@@ -2284,6 +2635,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2304,7 +2656,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertEquals(AsyncFetchStatus.EntityStatus.SUCCESS, asyncFetchStatus.getEntityStatus());
         Trigger result = fetch.get();
         assertEquals(
-                new JSONArray(validAggregatableValuesArr).toString(), result.getAggregateValues());
+                new JSONArray(validAggregatableValuesArr).toString(),
+                result.getAggregateValuesString());
         assertThat(asyncFetchStatus.isTriggerAggregatableValueFiltersConfigured()).isTrue();
     }
 
@@ -2315,6 +2668,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String invalidAggregatableValuesArr = "[{}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2331,9 +2685,9 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 mFetcher.fetchTrigger(
                         appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        assertFalse(fetch.isPresent());
-        assertEquals(
-                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertThat(fetch.isPresent()).isFalse();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
         assertThat(asyncFetchStatus.isTriggerAggregatableValueFiltersConfigured()).isFalse();
     }
 
@@ -2345,6 +2699,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"values\": {\"campaignCounts\": 65537, \"geoValue\": 1664}}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2379,6 +2734,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2422,6 +2778,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2465,6 +2822,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2488,11 +2846,540 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    public void testTriggerRequest_flexibleFilteringJsonObject_success() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String validAggregatableValues =
+                "{\"campaignCounts\": {\"value\": 32768, \"filtering_id"
+                        + "\":\"1\"},\"geoValue\":1664}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\":"
+                                                + validAggregatableValues
+                                                + ","
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 2
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertTrue(fetch.isPresent());
+        assertEquals(AsyncFetchStatus.EntityStatus.SUCCESS, asyncFetchStatus.getEntityStatus());
+        Trigger result = fetch.get();
+        assertThat(result.getAggregateValuesString())
+                .isEqualTo(new JSONObject(validAggregatableValues).toString());
+        assertThat(result.getAggregatableFilteringIdMaxBytes()).isEqualTo(2);
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringValueTooLarge_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValues =
+                "{\"campaignCounts\": {\"value\": 65537, \"filtering_id"
+                        + "\":\"1\"},\"geoValue\":1664}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\":"
+                                                + invalidAggregatableValues
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringInvalidValueType_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValues = "{\"campaignCounts\":\"1664\"}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_values\":"
+                                                + invalidAggregatableValues
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringTooSmallFilterIdMaxBytes_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 0
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringTooLargeFilterIdMaxBytes_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 9
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringInvalidFilterIdMaxBytesType_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + "2"
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringFilteringIdMaxBytesDefaultToOne_success()
+            throws Exception {
+        // filtering_id is valid because default maxBytes is 1
+        // 255 is within range of 0-255 inclusive
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String validAggregatableValues =
+                "{\"campaignCounts\": {\"value\": 32768, \"filtering_id"
+                        + "\":\"255\"},\"geoValue\":1664}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_values\":"
+                                                + validAggregatableValues
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.SUCCESS);
+        Trigger result = fetch.get();
+        assertThat(result.getAggregateValuesString())
+                .isEqualTo(new JSONObject(validAggregatableValues).toString());
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringJsonObjectFilteringIdWithinRange_passes()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String validAggregatableValues =
+                "{\"campaignCounts\": {\"value\": 32768, \"filtering_id"
+                        + "\":\"65535\"},\"geoValue\":1664}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\":"
+                                                + validAggregatableValues
+                                                + ","
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 2
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.SUCCESS);
+        Trigger result = fetch.get();
+        assertThat(result.getAggregateValuesString())
+                .isEqualTo(new JSONObject(validAggregatableValues).toString());
+        assertThat(result.getAggregatableFilteringIdMaxBytes()).isEqualTo(2);
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringJsonObjectFilteringIdExceedsDefaultRange_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValues =
+                "{\"campaignCounts\": {\"value\": 32768,"
+                        + " \"filtering_id\":\"256\"},\"geoValue\":1664}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\":"
+                                                + invalidAggregatableValues
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringJsonObjectInvalidFilteringIdInvalidType_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValues =
+                "{\"campaignCounts\": {\"value\": 32768,"
+                        + " \"filtering_id\":20},\"geoValue\":1664}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\":"
+                                                + invalidAggregatableValues
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringWithoutAggregateValueFilters_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String validAggregatableValuesArr =
+                "[{\"values\":{\"campaignCounts\":{\"value\":32768, \"filtering_id\":\"123\"},"
+                        + " \"geoValue\":1664}, \"filters\":{\"category\":[\"filter_1\"]},"
+                        + " \"not_filters\":{\"category\":[\"filter_2\"]}}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\":"
+                                                + validAggregatableValuesArr
+                                                + ","
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 2
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringWithAggregateValueFilters_success()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String validAggregatableValuesArr =
+                "[{\"values\":{\"campaignCounts\":{\"value\":32768, \"filtering_id\":\"123\"},"
+                        + " \"geoValue\":1664}, \"filters\":{\"category\":[\"filter_1\"]},"
+                        + " \"not_filters\":{\"category\":[\"filter_2\"]}}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\":"
+                                                + validAggregatableValuesArr
+                                                + ","
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 2
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.SUCCESS);
+        Trigger result = fetch.get();
+        assertThat(result.getAggregateValuesString())
+                .isEqualTo(new JSONArray(validAggregatableValuesArr).toString());
+        assertThat(result.getAggregatableFilteringIdMaxBytes()).isEqualTo(2);
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringJsonArrayValueNotIntOrJsonObject_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValuesArr = "[{\"values\":{\"campaignCounts\":\"123\"}}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_values\":"
+                                                + invalidAggregatableValuesArr
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void
+            testTriggerRequest_flexibleFilteringFilteringIdExceedsDefaultFilteringIdMaxBytes_fails()
+                    throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        String invalidAggregatableValuesArr =
+                "[{\"values\":{\"campaignCounts\":{\"value\":32768, \"filtering_id\":\"257\"},"
+                        + " \"geoValue\":1664}, \"filters\":{\"category\":[\"filter_1\"]},"
+                        + " \"not_filters\":{\"category\":[\"filter_2\"]}}]";
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_values\":"
+                                                + invalidAggregatableValuesArr
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringFilteringIdExceedsFilteringIdMaxBytes_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        String invalidAggregatableValuesArr =
+                "[{\"values\":{\"campaignCounts\":{\"value\":32768, \"filtering_id\":\"65537\"},"
+                        + " \"geoValue\":1664}, \"filters\":{\"category\":[\"filter_1\"]},"
+                        + " \"not_filters\":{\"category\":[\"filter_2\"]}}]";
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\":"
+                                                + invalidAggregatableValuesArr
+                                                + ","
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 2
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
     public void testTriggerRequest_filterMapIncludesNullValue_fails() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String filters = "[{\"something\":[\"val1\", null]}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2516,6 +3403,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String filters = "[{\"something\":[\"val1\", 347]}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2540,6 +3428,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "{\"product\":[\"1234\",\"2345\"], \"\"\":[\"id\"]}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2571,6 +3460,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         tooManyEntries.append("]");
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2608,6 +3498,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         deduplicationKeys.append("]");
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2669,6 +3560,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2728,6 +3620,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2757,6 +3650,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2785,6 +3679,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2819,6 +3714,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         filters.append("}");
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2844,6 +3740,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "{\"product\":[\"1234\",\"2345\"], \"" + LONG_FILTER_STRING + "\":[\"id\"]}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2877,6 +3774,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         filters.append("]}");
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2902,6 +3800,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "{\"product\":[\"1234\",\"" + LONG_FILTER_STRING + "\"], \"ctid\":[\"id\"]}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2925,6 +3824,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String filters = "{\"product\":[\"1234\"], \"ctid\":[\"id\"], \"_lookback_window\": 123}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2950,6 +3850,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "{\"product\":[\"1234\"], \"ctid\":[\"id\"], \"_lookback_window\": \"123\"}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2974,6 +3875,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String filters = "{\"product\":[\"1234\"], \"ctid\":[\"id\"], \"_lookback_window\": 0}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2998,6 +3900,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String filters = "{\"product\":[\"1234\"], \"ctid\":[\"id\"], \"_lookback_window\": -123}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3025,6 +3928,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "[{\"product\":[\"1234\",\"2345\"],\"cid\":[\"id\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3057,6 +3961,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         notFilters.append("]");
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3080,6 +3985,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String filters = "[{\"_something_reserved\":[\"val1\", \"val2\"]}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3104,6 +4010,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "{\"product\":[\"1234\",\"2345\"], \"\"\":[\"id\"]}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3133,6 +4040,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         notFilters.append("}");
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3158,6 +4066,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "{\"product\":[\"1234\",\"2345\"], \"" + LONG_FILTER_STRING + "\":[\"id\"]}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3191,6 +4100,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         notFilters.append("]}");
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3216,6 +4126,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "{\"product\":[\"1234\",\"" + LONG_FILTER_STRING + "\"], \"ctid\":[\"id\"]}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3245,6 +4156,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                         any(), anyString(), any(), any(), any()));
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3274,6 +4186,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
                 "Attribution-Reporting-Register-Trigger",
@@ -3311,6 +4224,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
 
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -3343,6 +4257,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
 
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -3375,6 +4290,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
 
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -3407,6 +4323,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
 
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -3439,6 +4356,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
 
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -3539,6 +4457,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(400);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3563,6 +4482,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3592,6 +4512,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200).thenReturn(500);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         Map<String, List<String>> headersFirstRequest = new HashMap<>();
         headersFirstRequest.put(
                 "Attribution-Reporting-Register-Trigger",
@@ -3625,6 +4546,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3671,6 +4593,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3723,6 +4646,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "\"x_network_data\":{\"key_offset\":\"20\"}}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3764,6 +4688,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "\"x_network_data\":{\"key_offset\":\"INVALID_VALUE\"}}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3799,6 +4724,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "\"x_network_data\":{}}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3841,6 +4767,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3887,6 +4814,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3921,6 +4849,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3961,6 +4890,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3996,6 +4926,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4024,6 +4955,40 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String aggregatableValues = "{\"campaignCounts\":32768,\"geoValue\":1644}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\": "
+                                                + aggregatableValues
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        Trigger result = fetch.get();
+        assertThat(result.getAggregateValuesString())
+                .isEqualTo(new JSONObject(aggregatableValues).toString());
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void testBasicTriggerRequestWithAggregateValues_valueWithTrailingZeros_success()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String aggregatableValues = "{\"campaignCounts\": 1664.0}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4043,7 +5008,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
         assertTrue(fetch.isPresent());
         Trigger result = fetch.get();
-        assertEquals(new JSONObject(aggregatableValues).toString(), result.getAggregateValues());
+        assertEquals(
+                new JSONObject(aggregatableValues).toString(), result.getAggregateValuesString());
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -4060,6 +5026,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4072,9 +5039,9 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 mFetcher.fetchTrigger(
                         appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
-        assertEquals(
-                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
-        assertFalse(fetch.isPresent());
+        assertThat(fetch.isPresent()).isFalse();
+        assertThat(asyncFetchStatus.getEntityStatus())
+                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -4083,10 +5050,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
             throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mMockFlags.getMeasurementEnableTriggerContextId()).thenReturn(true);
-        when(mMockFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
-                .thenReturn(true);
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4116,10 +5081,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     public void basicTriggerRequest_triggerContextIdNotAString_fails() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mMockFlags.getMeasurementEnableTriggerContextId()).thenReturn(true);
-        when(mMockFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
-                .thenReturn(true);
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4144,10 +5107,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String triggerContextId = "a".repeat(MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID + 1);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mMockFlags.getMeasurementEnableTriggerContextId()).thenReturn(true);
-        when(mMockFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
-                .thenReturn(true);
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4181,10 +5142,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String triggerContextId = "test_context_id";
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mMockFlags.getMeasurementEnableTriggerContextId()).thenReturn(true);
-        when(mMockFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
-                .thenReturn(true);
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4221,10 +5180,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String triggerContextId = "test_context_id";
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        when(mMockFlags.getMeasurementEnableTriggerContextId()).thenReturn(true);
-        when(mMockFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
-                .thenReturn(true);
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4261,6 +5218,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4289,6 +5247,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
         doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection1.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("");
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -4328,6 +5287,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("");
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         String aggregatableValues = "{\"campaignCounts\":32768,\"geoValue\":1644}";
         String filters =
                 "[{\n"
@@ -4365,15 +5325,17 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         asyncFetchStatus,
                         asyncRedirects);
         // Assertion
-        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
-        assertTrue(fetch.isPresent());
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
         Trigger result = fetch.get();
-        assertEquals(new JSONArray(EVENT_TRIGGERS_1).toString(), result.getEventTriggers());
-        assertEquals(new JSONArray(aggregatableTriggerData).toString(),
-                result.getAggregateTriggerData());
-        assertEquals(new JSONObject(aggregatableValues).toString(), result.getAggregateValues());
-        assertEquals(new JSONArray(filters).toString(), result.getFilters());
-        assertEquals(TRIGGER_URI, result.getRegistrationOrigin().toString());
+        assertThat(result.getEventTriggers()).isEqualTo(new JSONArray(EVENT_TRIGGERS_1).toString());
+        assertThat(result.getAggregateTriggerData())
+                .isEqualTo((new JSONArray(aggregatableTriggerData).toString()));
+        assertThat(result.getAggregateValuesString())
+                .isEqualTo(new JSONObject(aggregatableValues).toString());
+        assertThat(result.getFilters()).isEqualTo(new JSONArray(filters).toString());
+        assertThat(result.getRegistrationOrigin().toString()).isEqualTo(TRIGGER_URI);
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -4386,6 +5348,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         Collections.singletonList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("");
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -4427,6 +5390,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4459,6 +5423,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4493,6 +5458,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4532,6 +5498,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4566,6 +5533,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4610,6 +5578,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4642,6 +5611,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4676,6 +5646,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4716,6 +5687,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4751,6 +5723,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4795,6 +5768,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4830,6 +5804,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4870,6 +5845,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4906,6 +5882,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4950,6 +5927,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4986,6 +5964,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         + "{\"key_piece\":\"0xA80\",\"source_keys\":[\"geoValue\"]}]";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5011,6 +5990,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
 
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -5043,6 +6023,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
 
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -5075,6 +6056,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
 
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -5107,6 +6089,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
 
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -5139,6 +6122,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
 
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -5169,6 +6153,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String aggregatableValues = "{\"campaignCounts\":32768,\"geoValue\":1644}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5184,12 +6169,67 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         Optional<Trigger> fetch =
                 mFetcher.fetchTrigger(
                         appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
-        assertTrue(fetch.isPresent());
+        assertThat(fetch.isPresent()).isTrue();
         Trigger result = fetch.get();
-        assertEquals(ENROLLMENT_ID, result.getEnrollmentId());
-        assertEquals(new JSONObject(aggregatableValues).toString(), result.getAggregateValues());
-        assertEquals(TRIGGER_URI, result.getRegistrationOrigin().toString());
+        assertThat(result.getEnrollmentId()).isEqualTo(ENROLLMENT_ID);
+        assertThat(result.getAggregateValuesString())
+                .isEqualTo(new JSONObject(aggregatableValues).toString());
+        assertThat(result.getRegistrationOrigin().toString()).isEqualTo(TRIGGER_URI);
         verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void triggerRequest_aggregatableValueJsonObject_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValues =
+                "{\"campaignCounts\": {\"value\": 32768, \"filtering_id\": \"1\"}}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\": "
+                                                + invalidAggregatableValues
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        assertFalse(fetch.isPresent());
+    }
+
+    @Test
+    public void triggerRequest_aggregatableValueJsonArrayNotAccepted_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValues =
+                "[{\"values\":{\"campaignCounts\":{\"value\":32768, \"filtering_id\":\"123\"},"
+                        + " \"geoValue\":1664}, \"filters\":{\"category\":[\"filter_1\"]},"
+                        + " \"not_filters\":{\"category\":[\"filter_2\"]}}]";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\": "
+                                                + invalidAggregatableValues
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        assertFalse(fetch.isPresent());
     }
 
     @Test
@@ -5198,6 +6238,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String aggregatableValues = "{\"campaignCounts\":32768,\"geoValue\":0}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5226,6 +6267,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String aggregatableValues = "{\"campaignCounts\":32768,\"geoValue\":\"1a2\"}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5249,6 +6291,38 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    public void triggerRequest_aggregatableValueWithFractional_fails() throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        String invalidAggregatableValues = "{\"campaignCounts\":32768.01,\"geoValue\":1644}";
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{"
+                                                + "\"aggregatable_values\": "
+                                                + invalidAggregatableValues
+                                                + "}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertEquals(AsyncFetchStatus.ResponseStatus.SUCCESS, asyncFetchStatus.getResponseStatus());
+        assertFalse(fetch.isPresent());
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+        assertFalse(fetch.isPresent());
+        verify(mUrlConnection, times(1)).setRequestMethod("POST");
+        verify(mFetcher, times(1)).openUrl(any());
+    }
+
+    @Test
     public void triggerRequest_aggregatableValueLongValue_fails() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         Long longValue = ((long) Integer.MAX_VALUE) + 1L;
@@ -5256,6 +6330,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 + "}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5286,6 +6361,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 + "}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5314,6 +6390,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         String aggregatableValues = "{\"campaignCounts\":32768\"geoValue\":1644}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5348,6 +6425,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5371,6 +6449,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 "{\"campaignCounts\":32768, \"" + LONG_AGGREGATE_KEY_ID + "\":1644}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5399,7 +6478,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 new MeasurementRegistrationResponseStats.Builder(
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS,
                                 AD_SERVICES_MEASUREMENT_REGISTRATIONS__TYPE__TRIGGER,
-                                223,
+                                213,
                                 UNKNOWN_SOURCE_TYPE,
                                 APP_REGISTRATION_SURFACE_TYPE,
                                 SUCCESS_STATUS,
@@ -5416,6 +6495,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         .build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5452,6 +6532,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields()).thenReturn(headers);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -5478,6 +6559,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields()).thenReturn(headers);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -5497,6 +6579,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         String originalAttributionConfigString =
                 "[{\n"
                         + "\"source_network\": \"AdTech1-Ads\",\n"
@@ -5599,6 +6682,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 buildWebTriggerRegistrationRequest(List.of(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mMockFlags.getWebContextClientAppAllowList())
                 .thenReturn(sContext.getPackageName() + ",some_other_package");
         String originalAttributionConfigString =
@@ -5703,6 +6787,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 buildWebTriggerRegistrationRequest(List.of(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         // Doesn't have the app package
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("some_other_package");
         String originalAttributionConfigString =
@@ -5767,6 +6852,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5805,6 +6891,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         // Opt-in header error debug report by adding header "Attribution-Reporting-Info";
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -5846,6 +6933,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         // Opt-in header error debug report by adding header "Attribution-Reporting-Info";
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -5880,6 +6968,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         // Didn't opt-in header error debug report by adding header "Attribution-Reporting-Info";
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Map.of(headerName, List.of(headerWithJsonError)));
@@ -5910,6 +6999,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         // Invalid opt-in string for header error debug report.
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -5944,6 +7034,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         // The header fields only contains attribution info header and have no registration header
         // or redirect header.
         when(mUrlConnection.getHeaderFields())
@@ -5974,6 +7065,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6017,6 +7109,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6080,6 +7173,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6123,9 +7217,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
         doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection1.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("");
-        when(mMockFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
-                .thenReturn(true);
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
                 "Attribution-Reporting-Register-Trigger",
@@ -6160,9 +7253,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
         doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection1.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("");
-        when(mMockFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
-                .thenReturn(true);
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
                 "Attribution-Reporting-Register-Trigger",
@@ -6204,9 +7296,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
         doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection1.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("");
-        when(mMockFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
-                .thenReturn(true);
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
                 "Attribution-Reporting-Register-Trigger",
@@ -6248,9 +7339,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
         doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection1.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("");
-        when(mMockFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled())
-                .thenReturn(true);
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
                 "Attribution-Reporting-Register-Trigger",
@@ -6284,6 +7374,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
         doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection1.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("");
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -6329,6 +7420,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
         doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection1.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("");
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -6368,6 +7460,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
 
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -6407,6 +7500,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
 
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -6446,6 +7540,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(uri);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(uri));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
                 "Attribution-Reporting-Register-Trigger",
@@ -6484,6 +7579,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(uri);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(uri));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
                 "Attribution-Reporting-Register-Trigger",
@@ -6520,6 +7616,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequestWithAdId(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
 
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -6557,6 +7654,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
         doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection1.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("");
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -6601,6 +7699,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
         doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection1.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("");
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -6645,6 +7744,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         Arrays.asList(TRIGGER_REGISTRATION_1), TOP_ORIGIN);
         doReturn(mUrlConnection1).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection1.getResponseCode()).thenReturn(200);
+        when(mUrlConnection1.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mMockFlags.getWebContextClientAppAllowList()).thenReturn("");
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -6685,6 +7785,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(uri);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(uri));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         doReturn(true).when(mMockFlags).isDisableMeasurementEnrollmentCheck();
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -6724,6 +7825,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(uri);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(uri));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         doReturn(true).when(mMockFlags).isDisableMeasurementEnrollmentCheck();
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -6763,6 +7865,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(uri);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(uri));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         doReturn(true).when(mMockFlags).isDisableMeasurementEnrollmentCheck();
         Map<String, List<String>> headersRequest = new HashMap<>();
         headersRequest.put(
@@ -6800,6 +7903,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6841,6 +7945,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6873,6 +7978,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6905,6 +8011,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -7018,6 +8125,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         headersRequest.put(HEADER_ODP_REGISTER_TRIGGER, odpHeaderValue);
         doReturn(mUrlConnection).when(fetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Collections.unmodifiableMap(headersRequest));
 
@@ -7081,6 +8189,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         headersRequest.put(HEADER_ODP_REGISTER_TRIGGER, odpHeaderValue);
         doReturn(mUrlConnection).when(fetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Collections.unmodifiableMap(headersRequest));
 
@@ -7125,6 +8234,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 List.of("{\"event_trigger_data\":" + EVENT_TRIGGERS_1 + "}"));
         doReturn(mUrlConnection).when(fetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Collections.unmodifiableMap(headersRequest));
 
@@ -7195,6 +8305,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(fetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Collections.unmodifiableMap(reportingAndOdpHeaders));
         AsyncRedirects asyncRedirects = new AsyncRedirects();
@@ -7232,6 +8343,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -7258,6 +8370,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -7285,6 +8398,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -7306,11 +8420,12 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
-    public void fetchTrigger_zeroAttributionScope_fail() throws Exception {
+    public void fetchTrigger_zeroAttributionScopes_pass() throws Exception {
         when(mMockFlags.getMeasurementEnableAttributionScope()).thenReturn(true);
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -7326,9 +8441,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         // Execution
         assertThat(asyncFetchStatus.getResponseStatus())
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
-        assertThat(fetch.isPresent()).isFalse();
-        assertThat(asyncFetchStatus.getEntityStatus())
-                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getAttributionScopes()).isEmpty();
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
@@ -7339,6 +8453,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -7356,6 +8471,188 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
         assertThat(fetch.isPresent()).isTrue();
         assertThat(fetch.get().getAttributionScopes()).isNull();
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void
+            fetchTrigger_aggregateDebugReportingDisabled_ignoreValidAggregateDebugReportingFields()
+                    throws Exception {
+        when(mMockFlags.getMeasurementEnableAggregateDebugReporting()).thenReturn(false);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_debug_reporting\":{"
+                                                + "\"budget\":1024,"
+                                                + "\"key_piece\":\"0x1\","
+                                                + "\"debug_data\":["
+                                                + "{\"types\":["
+                                                + "\"trigger-event-deduplicated\","
+                                                + "\"trigger-event-low-priority\"],"
+                                                + "\"key_piece\":\"0x123\","
+                                                + "\"value\": 123},"
+                                                + "{\"types\":["
+                                                + "\"trigger-event-no-matching-configurations\"],"
+                                                + "\"key_piece\":\"0x789\","
+                                                + "\"value\":789}],"
+                                                + "\"aggregation_coordinator_origin\":"
+                                                + " \"https://cloud.coordination.test\"}}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getAggregateDebugReportingString()).isNull();
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchTrigger_adrHasInvalidDebugData_acceptsTrigger() throws Exception {
+        when(mMockFlags.getMeasurementEnableAggregateDebugReporting()).thenReturn(true);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_debug_reporting\":{"
+                                                + "\"budget\":1024,"
+                                                + "\"key_piece\":\"0x1\","
+                                                + "\"debug_data\":["
+                                                + "{\"types\":["
+                                                + "\"trigger-event-deduplicated\","
+                                                + "\"invalid-report-type\"],"
+                                                + "\"key_piece\":\"0x123\","
+                                                + "\"value\": 123},"
+                                                + "{\"types\":["
+                                                + "\"trigger-event-no-matching-configurations\"],"
+                                                + "\"key_piece\":\"0x789\","
+                                                + "\"value\":789}],"
+                                                + "\"aggregation_coordinator_origin\":"
+                                                + " \"https://cloud.coordination.test\"}}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+
+        Set<String> dataTypes1 = new HashSet<>();
+        dataTypes1.add(DebugReportApi.Type.TRIGGER_EVENT_DEDUPLICATED.getValue());
+        AggregateDebugReportData debugData1 =
+                new AggregateDebugReportData.Builder(dataTypes1, new BigInteger("123", 16), 123)
+                        .build();
+
+        Set<String> dataTypes2 = new HashSet<>();
+        dataTypes2.add(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_CONFIGURATIONS.getValue());
+        AggregateDebugReportData debugData2 =
+                new AggregateDebugReportData.Builder(dataTypes2, new BigInteger("789", 16), 789)
+                        .build();
+
+        AggregateDebugReporting adrObject =
+                new AggregateDebugReporting.Builder(
+                                // Budget field is ignored for trigger
+                                0,
+                                new BigInteger("1", 16),
+                                new ArrayList<>(List.of(debugData1, debugData2)),
+                                Uri.parse("https://cloud.coordination.test"))
+                        .build();
+
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        verify(mUrlConnection).setRequestMethod("POST");
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getAggregateDebugReportingObject()).isEqualTo(adrObject);
+    }
+
+    @Test
+    public void
+            fetchTrigger_aggregateDebugReportingEnabled_parseValidAggregateDebugReportingFields()
+                    throws Exception {
+        when(mMockFlags.getMeasurementEnableAggregateDebugReporting()).thenReturn(true);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_debug_reporting\":{"
+                                                + "\"budget\":1024,"
+                                                + "\"key_piece\":\"0x1\","
+                                                + "\"debug_data\":["
+                                                + "{\"types\":["
+                                                + "\"trigger-event-deduplicated\","
+                                                + "\"trigger-event-low-priority\"],"
+                                                + "\"key_piece\":\"0x123\","
+                                                + "\"value\": 123},"
+                                                + "{\"types\":["
+                                                + "\"trigger-event-no-matching-configurations\"],"
+                                                + "\"key_piece\":\"0x789\","
+                                                + "\"value\":789}],"
+                                                + "\"aggregation_coordinator_origin\":"
+                                                + " \"https://cloud.coordination.test\"}}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        AggregateDebugReporting aggregateDebugReporting =
+                new AggregateDebugReporting.Builder(
+                                new JSONObject(fetch.get().getAggregateDebugReportingString()))
+                        .build();
+        assertThat(aggregateDebugReporting.getKeyPiece()).isEqualTo(new BigInteger("1", 16));
+        // Budget field is ignored for trigger
+        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(0);
+        assertThat(aggregateDebugReporting.getAggregationCoordinatorOrigin())
+                .isEqualTo(Uri.parse("https://cloud.coordination.test"));
+        assertThat(aggregateDebugReporting.getAggregateDebugReportDataList().get(0).getKeyPiece())
+                .isEqualTo(new BigInteger("123", 16));
+        assertThat(aggregateDebugReporting.getAggregateDebugReportDataList().get(0).getValue())
+                .isEqualTo(123);
+        assertThat(aggregateDebugReporting.getAggregateDebugReportDataList().get(0).getReportType())
+                .isEqualTo(
+                        new HashSet<>(
+                                Arrays.asList(
+                                        "trigger-event-deduplicated",
+                                        "trigger-event-low-priority")));
+        assertThat(aggregateDebugReporting.getAggregateDebugReportDataList().get(1).getKeyPiece())
+                .isEqualTo(new BigInteger("789", 16));
+        assertThat(aggregateDebugReporting.getAggregateDebugReportDataList().get(1).getValue())
+                .isEqualTo(789);
+        assertThat(aggregateDebugReporting.getAggregateDebugReportDataList().get(1).getReportType())
+                .isEqualTo(
+                        new HashSet<>(Arrays.asList("trigger-event-no-matching-configurations")));
         verify(mUrlConnection).setRequestMethod("POST");
     }
 

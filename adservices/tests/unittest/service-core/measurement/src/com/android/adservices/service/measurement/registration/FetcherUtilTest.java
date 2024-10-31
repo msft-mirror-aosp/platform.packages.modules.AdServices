@@ -36,6 +36,8 @@ import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReportData;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
@@ -55,8 +57,10 @@ import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.quality.Strictness;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -312,83 +316,122 @@ public final class FetcherUtilTest {
 
     @Test
     public void extractIntegralValue_posIntegralNumber_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 123);
+        JSONObject jsonObj = new JSONObject().put(KEY, 123);
         assertWithMessage("extractValueOfValidPositiveIntegralNumber")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.of(new BigDecimal(123)));
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidPositiveIntegralNumber")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.of(new BigDecimal(123)));
     }
 
     @Test
     public void extractIntegralValue_negativeIntegralNumber_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, -123);
+        JSONObject jsonObj = new JSONObject().put(KEY, -123);
         assertWithMessage("extractValueOfValidNegativeIntegralNumber")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.of(new BigDecimal(-123)));
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidNegativeIntegralNumber")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.of(new BigDecimal(-123)));
     }
 
     @Test
     public void extractIntegralValue_zeroInput_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 0);
+        JSONObject jsonObj = new JSONObject().put(KEY, 0);
         assertWithMessage("extractValueOfZero")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.of(new BigDecimal(0)));
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfZero")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.of(new BigDecimal(0)));
     }
 
     @Test
     public void extractIntegralValue_posNumWithDecimalZero_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 12.0);
+        JSONObject jsonObj = new JSONObject().put(KEY, 12.0);
         assertWithMessage("extractValueOfValidPosNumberWithDecimalOfZero")
                 .that(
-                        FetcherUtil.extractIntegralValue(obj, KEY)
+                        FetcherUtil.extractIntegralValue(jsonObj, KEY)
                                 .get()
                                 .compareTo(new BigDecimal(12.0)))
+                .isEqualTo(0);
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidPosNumberWithDecimalOfZero")
+                .that(FetcherUtil.extractIntegralValue(obj).get().compareTo(new BigDecimal(12.0)))
                 .isEqualTo(0);
     }
 
     @Test
     public void extractIntegralValue_negNumWithDecimalZero_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, -12.0);
+        JSONObject jsonObj = new JSONObject().put(KEY, -12.0);
         assertWithMessage("extractValueOfValidNegNumberWithDecimalOfZero")
                 .that(
-                        FetcherUtil.extractIntegralValue(obj, KEY)
+                        FetcherUtil.extractIntegralValue(jsonObj, KEY)
                                 .get()
                                 .compareTo(new BigDecimal(-12.0)))
+                .isEqualTo(0);
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidNegNumberWithDecimalOfZero")
+                .that(FetcherUtil.extractIntegralValue(obj).get().compareTo(new BigDecimal(-12.0)))
                 .isEqualTo(0);
     }
 
     @Test
     public void extractIntegralValue_posNumWithDecimalNonZero_fails() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 3.4);
+        JSONObject jsonObj = new JSONObject().put(KEY, 3.4);
         assertWithMessage("extractValueOfValidPosNumberWithDecimalNonZero")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidPosNumberWithDecimalNonZero")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.empty());
     }
 
     @Test
     public void extractIntegralValue_negNumWithDecimalNonZero_fails() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, -5.6);
+        JSONObject jsonObj = new JSONObject().put(KEY, -5.6);
         assertWithMessage("extractValueOfValidNegNumberWithDecimalNonZero")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfValidNegNumberWithDecimalNonZero")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.empty());
     }
 
     @Test
     public void extractIntegralValue_posIntegralSciNotation_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 1.23e3);
+        JSONObject jsonObj = new JSONObject().put(KEY, 1.23e3);
         assertWithMessage("extractValueOfPosSciNotation")
                 .that(
-                        FetcherUtil.extractIntegralValue(obj, KEY)
+                        FetcherUtil.extractIntegralValue(jsonObj, KEY)
                                 .get()
                                 .compareTo(new BigDecimal(1230.0)))
+                .isEqualTo(0);
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfPosSciNotation")
+                .that(FetcherUtil.extractIntegralValue(obj).get().compareTo(new BigDecimal(1230.0)))
                 .isEqualTo(0);
     }
 
     @Test
     public void extractIntegralValue_negIntegralSciNotation_success() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, -3.456e3);
+        JSONObject jsonObj = new JSONObject().put(KEY, -3.456e3);
         assertWithMessage("extractValueOfNegSciNotation")
                 .that(
-                        FetcherUtil.extractIntegralValue(obj, KEY)
+                        FetcherUtil.extractIntegralValue(jsonObj, KEY)
+                                .get()
+                                .compareTo(new BigDecimal(-3456.0)))
+                .isEqualTo(0);
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfNegSciNotation")
+                .that(
+                        FetcherUtil.extractIntegralValue(obj)
                                 .get()
                                 .compareTo(new BigDecimal(-3456.0)))
                 .isEqualTo(0);
@@ -396,25 +439,77 @@ public final class FetcherUtilTest {
 
     @Test
     public void extractIntegralValue_posNonIntegralSciNotation_fails() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, 1.23e1);
+        JSONObject jsonObj = new JSONObject().put(KEY, 1.23e1);
         assertWithMessage("extractValueOfPosNonIntegralSciNotation")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfPosNonIntegralSciNotation")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.empty());
     }
 
     @Test
     public void extractIntegralValue_negNonIntegralSciNotation_fails() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, -0.345e2);
+        JSONObject jsonObj = new JSONObject().put(KEY, -0.345e2);
         assertWithMessage("extractValueOfNegNonIntegralSciNotation")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfNegNonIntegralSciNotation")
+                .that(FetcherUtil.extractIntegralValue(obj))
                 .isEqualTo(Optional.empty());
     }
 
     @Test
     public void extractIntegralValue_nonNumericInput_fails() throws Exception {
-        JSONObject obj = new JSONObject().put(KEY, "78");
+        JSONObject jsonObj = new JSONObject().put(KEY, "78");
         assertWithMessage("extractValueOfNonNumericInput")
-                .that(FetcherUtil.extractIntegralValue(obj, KEY))
+                .that(FetcherUtil.extractIntegralValue(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+        Object obj = jsonObj.get(KEY);
+        assertWithMessage("extractValueOfNonNumericInput")
+                .that(FetcherUtil.extractIntegralValue(obj))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void extractIntegralInt_posIntegralNumber_success() throws Exception {
+        JSONObject jsonObj = new JSONObject().put(KEY, 2147483647);
+        assertWithMessage("extractIntegralInt(2147483647)")
+                .that(FetcherUtil.extractIntegralInt(jsonObj, KEY))
+                .isEqualTo(Optional.of(Integer.valueOf(2147483647)));
+    }
+
+    @Test
+    public void extractIntegralInt_negativeIntegralNumber_success() throws Exception {
+        JSONObject jsonObj = new JSONObject().put(KEY, -2147483648);
+        assertWithMessage("extractIntegralInt(-2147483648)")
+                .that(FetcherUtil.extractIntegralInt(jsonObj, KEY))
+                .isEqualTo(Optional.of(Integer.valueOf(-2147483648)));
+    }
+
+    @Test
+    public void extractIntegralInt_zeroInput_success() throws Exception {
+        JSONObject jsonObj = new JSONObject().put(KEY, 0);
+        assertWithMessage("extractIntegralInt(0)")
+                .that(FetcherUtil.extractIntegralInt(jsonObj, KEY))
+                .isEqualTo(Optional.of(Integer.valueOf(0)));
+    }
+
+    @Test
+    public void extractIntegralInt_inputAboveMaxInt_fails() throws Exception {
+        JSONObject jsonObj = new JSONObject().put(KEY, 2147483648L);
+        assertWithMessage("extractIntegralInt(2147483648)")
+                .that(FetcherUtil.extractIntegralInt(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void extractIntegralInt_inputBelowMinInt_fails() throws Exception {
+        JSONObject jsonObj = new JSONObject().put(KEY, -2147483649L);
+        assertWithMessage("extractIntegralInt(-2147483649)")
+                .that(FetcherUtil.extractIntegralInt(jsonObj, KEY))
                 .isEqualTo(Optional.empty());
     }
 
@@ -1641,6 +1736,431 @@ public final class FetcherUtilTest {
         assertFalse(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
                         Arrays.asList("report-header-errors", "report-header-errors=?0"), mFlags));
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_emptyObject_returnDefaultValue()
+            throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        JSONObject obj = new JSONObject();
+        String aggregateDebugReportingString =
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
+        AggregateDebugReporting aggregateDebugReporting =
+                new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
+                        .build();
+        assertThat(new BigInteger("0", 16)).isEqualTo(aggregateDebugReporting.getKeyPiece());
+        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(0);
+        assertThat(aggregateDebugReporting.getAggregationCoordinatorOrigin()).isNull();
+        assertThat(aggregateDebugReporting.getAggregateDebugReportDataList()).isNull();
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_missingKeyPiece_returnDefaultValue()
+            throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        JSONObject obj = new JSONObject();
+        obj.put("budget", 65536);
+        String aggregateDebugReportingString =
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
+        AggregateDebugReporting aggregateDebugReporting =
+                new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
+                        .build();
+        assertThat(new BigInteger("0", 16)).isEqualTo(aggregateDebugReporting.getKeyPiece());
+        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(65536);
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_emptyKeyPiece_returnDefaultValue()
+            throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        JSONObject obj = new JSONObject();
+        obj.put("key_piece", "");
+        obj.put("budget", 65536);
+        String aggregateDebugReportingString =
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
+        AggregateDebugReporting aggregateDebugReporting =
+                new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
+                        .build();
+        assertThat(new BigInteger("0", 16)).isEqualTo(aggregateDebugReporting.getKeyPiece());
+        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(65536);
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_invalidKeyPiece_fails() throws JSONException {
+        JSONObject obj = new JSONObject();
+        obj.put("key_piece", "1x3");
+        obj.put("budget", 65536);
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+                .isFalse();
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_emptyOrigin_fails() throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        JSONObject obj = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "");
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+                .isFalse();
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_originNotInAllowList_fails()
+            throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        JSONObject obj = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination1.test");
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+                .isFalse();
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_originInAllowList_succeeds()
+            throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        JSONObject obj = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        String aggregateDebugReportingString =
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
+        AggregateDebugReporting aggregateDebugReporting =
+                new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
+                        .build();
+        assertThat(new BigInteger("3", 16)).isEqualTo(aggregateDebugReporting.getKeyPiece());
+        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(65536);
+        assertThat(Uri.parse("https://cloud.coordination.test"))
+                .isEqualTo(aggregateDebugReporting.getAggregationCoordinatorOrigin());
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_emptyDebugData_succeeds()
+            throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        JSONObject obj = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        obj.put("debug_data", new JSONArray());
+        String aggregateDebugReportingString =
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
+        AggregateDebugReporting aggregateDebugReporting =
+                new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
+                        .build();
+        assertThat(new BigInteger("3", 16)).isEqualTo(aggregateDebugReporting.getKeyPiece());
+        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(65536);
+        assertThat(Uri.parse("https://cloud.coordination.test"))
+                .isEqualTo(aggregateDebugReporting.getAggregationCoordinatorOrigin());
+        assertThat(aggregateDebugReporting.getAggregateDebugReportDataList().isEmpty()).isTrue();
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_emptyDebugDataObject_fails()
+            throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        JSONObject obj = new JSONObject();
+        JSONArray emptyData = new JSONArray();
+        emptyData.put(new JSONObject());
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        obj.put("debug_data", emptyData);
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+                .isFalse();
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_emptyDebugDataKeyPiece_fails()
+            throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        JSONObject obj = new JSONObject();
+        JSONObject dataObj1 = new JSONObject();
+        JSONObject dataObj2 = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        dataObj1.put("key_piece", "0x3");
+        dataObj1.put("value", 65536);
+        dataObj1.put("type", new JSONArray(Arrays.asList("source-noised")));
+        dataObj2.put("key_piece", "");
+        dataObj2.put("value", 65536);
+        dataObj2.put("type", new JSONArray(Arrays.asList("source-max-event-states-limit")));
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+                .isFalse();
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_invalidDebugDataKeyPiece_fails()
+            throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        JSONObject obj = new JSONObject();
+        JSONObject dataObj1 = new JSONObject();
+        JSONObject dataObj2 = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        dataObj1.put("key_piece", "0x3");
+        dataObj1.put("value", 65536);
+        dataObj1.put("type", new JSONArray(Arrays.asList("source-noised")));
+        dataObj2.put("key_piece", "1x3");
+        dataObj2.put("value", 65536);
+        dataObj2.put("type", new JSONArray(Arrays.asList("source-max-event-states-limit")));
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+                .isFalse();
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_valueExceedsLowerLimit_fails()
+            throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        JSONObject obj = new JSONObject();
+        JSONObject dataObj1 = new JSONObject();
+        JSONObject dataObj2 = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        dataObj1.put("key_piece", "0x3");
+        dataObj1.put("value", 65536);
+        dataObj1.put("type", new JSONArray(Arrays.asList("source-noised")));
+        dataObj2.put("key_piece", "0x3");
+        dataObj2.put("value", 0);
+        dataObj2.put("type", new JSONArray(Arrays.asList("source-max-event-states-limit")));
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+                .isFalse();
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_valueExceedsUpperLimit_fails()
+            throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        JSONObject obj = new JSONObject();
+        JSONObject dataObj1 = new JSONObject();
+        JSONObject dataObj2 = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        dataObj1.put("key_piece", "0x3");
+        dataObj1.put("value", 65536);
+        dataObj1.put("type", new JSONArray(Arrays.asList("source-noised")));
+        dataObj2.put("key_piece", "0x3");
+        dataObj2.put("value", 65537);
+        dataObj2.put("type", new JSONArray(Arrays.asList("source-max-event-states-limit")));
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+                .isFalse();
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_invalidType_fails() throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        JSONObject obj = new JSONObject();
+        JSONObject dataObj1 = new JSONObject();
+        JSONObject dataObj2 = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        dataObj1.put("key_piece", "0x3");
+        dataObj1.put("value", 65536);
+        dataObj1.put("type", new JSONArray(Arrays.asList("source-noised")));
+        dataObj2.put("key_piece", "0x3");
+        dataObj2.put("value", 65536);
+        dataObj2.put(
+                "type",
+                new JSONArray(
+                        Arrays.asList("source-max-event-states-limit", "invalid-report-type")));
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+                .isFalse();
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_duplicateTypesInTheSameObject_fails()
+            throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        JSONObject obj = new JSONObject();
+        JSONObject dataObj1 = new JSONObject();
+        JSONObject dataObj2 = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        dataObj1.put("key_piece", "0x3");
+        dataObj1.put("value", 65536);
+        dataObj1.put("type", new JSONArray(Arrays.asList("source-noised")));
+        dataObj2.put("key_piece", "0x3");
+        dataObj2.put("value", 65536);
+        dataObj2.put(
+                "type",
+                new JSONArray(
+                        Arrays.asList(
+                                "source-max-event-states-limit",
+                                "source-storage-limit",
+                                "source-max-event-states-limit")));
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+                .isFalse();
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_duplicateTypesInDifferentObjects_fails()
+            throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        JSONObject obj = new JSONObject();
+        JSONObject dataObj1 = new JSONObject();
+        JSONObject dataObj2 = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        dataObj1.put("key_piece", "0x3");
+        dataObj1.put("value", 65536);
+        dataObj1.put("type", new JSONArray(Arrays.asList("source-noised")));
+        dataObj2.put("key_piece", "0x3");
+        dataObj2.put("value", 65536);
+        dataObj2.put(
+                "type",
+                new JSONArray(Arrays.asList("source-max-event-states-limit", "source-noised")));
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+                .isFalse();
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_defaultReportType_succeeds()
+            throws JSONException {
+        // Setup
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        JSONObject obj = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        JSONObject dataObj1 = new JSONObject();
+        JSONObject dataObj2 = new JSONObject();
+        dataObj1.put("key_piece", "0x3");
+        dataObj1.put("value", 65536);
+        dataObj2.put("key_piece", "0x3");
+        dataObj2.put("value", 65536);
+        JSONArray types1 = new JSONArray(Arrays.asList("source-noised"));
+        JSONArray types2 =
+                new JSONArray(Arrays.asList("source-max-event-states-limit", "unspecified"));
+        dataObj1.put("types", types1);
+        dataObj2.put("types", types2);
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
+
+        // Execution
+        String aggregateDebugReportingString =
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
+        AggregateDebugReporting aggregateDebugReporting =
+                new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
+                        .build();
+
+        // Assertion
+        assertThat(new BigInteger("3", 16)).isEqualTo(aggregateDebugReporting.getKeyPiece());
+        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(65536);
+        assertThat(Uri.parse("https://cloud.coordination.test"))
+                .isEqualTo(aggregateDebugReporting.getAggregationCoordinatorOrigin());
+        AggregateDebugReportData expectedDebugData1 =
+                new AggregateDebugReportData.Builder(
+                                /* reportType= */ new HashSet<>(Arrays.asList("source-noised")),
+                                /* keyPiece= */ new BigInteger("3", 16),
+                                /* value= */ 65536)
+                        .build();
+        AggregateDebugReportData expectedDebugData2 =
+                new AggregateDebugReportData.Builder(
+                                /* reportType= */ new HashSet<>(
+                                        Arrays.asList(
+                                                "source-max-event-states-limit", "unspecified")),
+                                /* keyPiece= */ new BigInteger("3", 16),
+                                /* value= */ 65536)
+                        .build();
+
+        assertThat(expectedDebugData1)
+                .isEqualTo(aggregateDebugReporting.getAggregateDebugReportDataList().get(0));
+        assertThat(expectedDebugData2)
+                .isEqualTo(aggregateDebugReporting.getAggregateDebugReportDataList().get(1));
+    }
+
+    @Test
+    public void getValidAggregateDebugReportingString_noDuplicatesTypes_succeeds()
+            throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        JSONObject obj = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        JSONObject dataObj1 = new JSONObject();
+        JSONObject dataObj2 = new JSONObject();
+        dataObj1.put("key_piece", "0x3");
+        dataObj1.put("value", 65536);
+        dataObj2.put("key_piece", "0x3");
+        dataObj2.put("value", 65536);
+        JSONArray types1 = new JSONArray(Arrays.asList("source-noised"));
+        JSONArray types2 =
+                new JSONArray(
+                        Arrays.asList(
+                                "source-max-event-states-limit",
+                                "source-scopes-channel-capacity-limit"));
+        dataObj1.put("types", types1);
+        dataObj2.put("types", types2);
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
+        String aggregateDebugReportingString =
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
+        AggregateDebugReporting aggregateDebugReporting =
+                new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
+                        .build();
+        assertThat(new BigInteger("3", 16)).isEqualTo(aggregateDebugReporting.getKeyPiece());
+        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(65536);
+        assertThat(Uri.parse("https://cloud.coordination.test"))
+                .isEqualTo(aggregateDebugReporting.getAggregationCoordinatorOrigin());
+        AggregateDebugReportData validDebugData1 =
+                new AggregateDebugReportData.Builder(
+                                /* reportType= */ new HashSet<>(Arrays.asList("source-noised")),
+                                /* keyPiece= */ new BigInteger("3", 16),
+                                /* value= */ 65536)
+                        .build();
+        AggregateDebugReportData validDebugData2 =
+                new AggregateDebugReportData.Builder(
+                                /* reportType= */ new HashSet<>(
+                                        Arrays.asList(
+                                                "source-max-event-states-limit",
+                                                "source-scopes-channel-capacity-limit")),
+                                /* keyPiece= */ new BigInteger("3", 16),
+                                /* value= */ 65536)
+                        .build();
+        assertThat(Arrays.asList(validDebugData1, validDebugData2))
+                .isEqualTo(aggregateDebugReporting.getAggregateDebugReportDataList());
     }
 
     private Map<String, List<String>> createHeadersMap() {

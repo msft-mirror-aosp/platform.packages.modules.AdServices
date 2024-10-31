@@ -18,7 +18,7 @@ package com.android.adservices.data.shared.migration;
 
 import static com.android.adservices.common.DbTestUtil.getDbHelperForTest;
 
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
 
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
@@ -28,16 +28,13 @@ import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.shared.SharedDbHelper;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-@RunWith(MockitoJUnitRunner.class)
-public class SharedDbMigratorV3Test extends SharedDbMigratorTestBase {
+public final class SharedDbMigratorV3Test extends SharedDbMigratorTestBase {
 
     /**
      * @return shared db target version.
@@ -61,7 +58,7 @@ public class SharedDbMigratorV3Test extends SharedDbMigratorTestBase {
         // Set up
         SharedDbHelper dbHelper =
                 new SharedDbHelper(
-                        sContext, SHARED_DATABASE_NAME_FOR_MIGRATION, 2, getDbHelperForTest());
+                        mContext, SHARED_DATABASE_NAME_FOR_MIGRATION, 2, getDbHelperForTest());
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         Map<String, List<ContentValues>> fakeData = createFakeDataV2();
         MigrationTestHelper.populateDb(db, fakeData);
@@ -70,13 +67,15 @@ public class SharedDbMigratorV3Test extends SharedDbMigratorTestBase {
         getTestSubject().performMigration(db, 2, 3);
 
         // Assertion
-        assertTrue(SharedDbHelper.hasAllTables(db, EnrollmentTables.ENROLLMENT_TABLES));
-        assertTrue(SharedDbHelper.hasAllTables(db, EncryptionKeyTables.ENCRYPTION_KEY_TABLES));
-        assertTrue(
-                MigrationHelpers.isColumnPresent(
-                        db,
-                        EncryptionKeyTables.EncryptionKeyContract.TABLE,
-                        EncryptionKeyTables.EncryptionKeyContract.LAST_FETCH_TIME));
+        assertThat(SharedDbHelper.hasAllTables(db, EnrollmentTables.ENROLLMENT_TABLES)).isTrue();
+        assertThat(SharedDbHelper.hasAllTables(db, EncryptionKeyTables.ENCRYPTION_KEY_TABLES))
+                .isTrue();
+        assertThat(
+                        MigrationHelpers.isColumnPresent(
+                                db,
+                                EncryptionKeyTables.EncryptionKeyContract.TABLE,
+                                EncryptionKeyTables.EncryptionKeyContract.LAST_FETCH_TIME))
+                .isTrue();
         MigrationTestHelper.verifyDataInDb(db, fakeData);
     }
 
@@ -98,7 +97,7 @@ public class SharedDbMigratorV3Test extends SharedDbMigratorTestBase {
         // Set up
         SharedDbHelper dbHelper =
                 new SharedDbHelper(
-                        sContext, SHARED_DATABASE_NAME_FOR_MIGRATION, 3, getDbHelperForTest());
+                        mContext, SHARED_DATABASE_NAME_FOR_MIGRATION, 3, getDbHelperForTest());
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         Map<String, List<ContentValues>> fakeData = createFakeDataV2();
         MigrationTestHelper.populateDb(db, fakeData);
@@ -107,13 +106,15 @@ public class SharedDbMigratorV3Test extends SharedDbMigratorTestBase {
         getTestSubject().performMigration(db, 3, 3);
 
         // Assertion
-        assertTrue(SharedDbHelper.hasAllTables(db, EnrollmentTables.ENROLLMENT_TABLES));
-        assertTrue(SharedDbHelper.hasAllTables(db, EncryptionKeyTables.ENCRYPTION_KEY_TABLES));
-        assertTrue(
-                MigrationHelpers.isColumnPresent(
-                        db,
-                        EncryptionKeyTables.EncryptionKeyContract.TABLE,
-                        EncryptionKeyTables.EncryptionKeyContract.LAST_FETCH_TIME));
+        assertThat(SharedDbHelper.hasAllTables(db, EnrollmentTables.ENROLLMENT_TABLES)).isTrue();
+        assertThat(SharedDbHelper.hasAllTables(db, EncryptionKeyTables.ENCRYPTION_KEY_TABLES))
+                .isTrue();
+        assertThat(
+                        MigrationHelpers.isColumnPresent(
+                                db,
+                                EncryptionKeyTables.EncryptionKeyContract.TABLE,
+                                EncryptionKeyTables.EncryptionKeyContract.LAST_FETCH_TIME))
+                .isTrue();
         MigrationTestHelper.verifyDataInDb(db, fakeData);
     }
 }

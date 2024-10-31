@@ -39,6 +39,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.concurrent.Future;
@@ -104,13 +105,13 @@ public final class EventReportingJobService extends JobService {
                                     FlagsFactory.getFlags()
                                             .getMeasurementMaxEventReportUploadRetryWindowMs();
                             new EventReportingJobHandler(
-                                            DatastoreManagerFactory.getDatastoreManager(
-                                                    getApplicationContext()),
+                                            DatastoreManagerFactory.getDatastoreManager(),
                                             FlagsFactory.getFlags(),
                                             AdServicesLoggerImpl.getInstance(),
                                             ReportingStatus.ReportType.EVENT,
                                             ReportingStatus.UploadMethod.REGULAR,
-                                            getApplicationContext())
+                                            getApplicationContext(),
+                                            new AndroidTimeSource())
                                     .performScheduledPendingReportsInWindow(
                                             System.currentTimeMillis()
                                                     - maxEventReportUploadRetryWindowMs,

@@ -18,24 +18,28 @@ package android.adservices.rootcts;
 
 import android.app.job.JobScheduler;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.util.Log;
 
+import com.android.adservices.shared.testing.BroadcastReceiverSyncCallback;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.Assume;
 
 import java.util.Objects;
 
-class BackgroundJobHelper {
+public final class BackgroundJobHelper {
 
     private static final String TAG = "BackgroundJobHelper";
     private static final String PACKAGE = "com.google.android.adservices.api";
     private static final long MAX_TIMEOUT_MS = 16000;
+    private Context mContext;
 
     private final JobScheduler mJobScheduler;
 
     BackgroundJobHelper(Context context) {
+        mContext = context;
         mJobScheduler = context.getSystemService(JobScheduler.class);
         // ExtServices has a different package name for U. Currently only run on S+.
         Assume.assumeTrue(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S);
@@ -70,11 +74,57 @@ class BackgroundJobHelper {
         return false;
     }
 
+    /**
+     * Runs the adservices background job with the given job ID. This method runs the background job
+     * and then waits till it receives the broadcast intent indicating the completion of the
+     * background job.
+     *
+     * @param jobId ID of the job to run.
+     * @param intentActionToWait Expected intent action.
+     * @return the intent received from the broadcast.
+     */
+    Intent runJobWithBroadcastIntent(int jobId, String intentActionToWait) throws Exception {
+        runScheduleJobCommand(jobId);
+        BroadcastReceiverSyncCallback callback =
+                new BroadcastReceiverSyncCallback(mContext, intentActionToWait, 31_000);
+        return callback.assertResultReceived();
+    }
+
+    /**
+     * Runs the adservices background job with the given job ID. This method runs the background job
+     * and then waits till it receives the broadcast intent indicating the completion of the
+     * background job. This method takes timeout as an argument.
+     *
+     * @param jobId ID of the job to run.
+     * @param intentActionToWait Expected intent action.
+     * @param timeoutMs timeout in milliseconds
+     */
+    void runJobWithBroadcastIntentWithTimeout(int jobId, String intentActionToWait, long timeoutMs)
+            throws Exception {
+        runScheduleJobCommand(jobId);
+        BroadcastReceiverSyncCallback callback =
+                new BroadcastReceiverSyncCallback(mContext, intentActionToWait, timeoutMs);
+        callback.assertResultReceived();
+    }
+
     private void runScheduleJobCommand(int jobId) {
         ShellUtils.runShellCommand("cmd jobscheduler run --force %s %s", PACKAGE, jobId);
     }
 
     private boolean isJobPending(int jobId) {
         return !Objects.isNull(mJobScheduler.getPendingJob(jobId));
+    }
+
+    /**
+     * This method checks whether background job with the given jobId is scheduled.
+     *
+     * @param jobId jobId for the background job service in the adservices packages
+     * @return true if the Background job is scheduled, false otherwise.
+     */
+    public boolean isJobScheduled(int jobId) {
+        String outputMessages =
+                ShellUtils.runShellCommand(
+                        "cmd jobscheduler get-job-state -u 0  %s %s", PACKAGE, jobId);
+        return outputMessages.contains("waiting");
     }
 }

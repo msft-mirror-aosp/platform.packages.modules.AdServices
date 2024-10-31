@@ -55,6 +55,9 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -66,7 +69,20 @@ import java.util.Set;
 /** Data Access Object for the EnrollmentData. */
 public class EnrollmentDao implements IEnrollmentDao {
 
-    private static EnrollmentDao sSingleton;
+    private static volatile EnrollmentDao sSingleton;
+    private static Supplier<EnrollmentDao> sEnrollmentDaoSingletonSupplier =
+            Suppliers.memoize(
+                    () -> {
+                        Flags flags = FlagsFactory.getFlags();
+                        return new EnrollmentDao(
+                                ApplicationContextSingleton.get(),
+                                SharedDbHelper.getInstance(),
+                                flags,
+                                flags.isEnableEnrollmentTestSeed(),
+                                AdServicesLoggerImpl.getInstance(),
+                                EnrollmentUtil.getInstance());
+                    });
+
     private final SharedDbHelper mDbHelper;
     private final Context mContext;
     private final Flags mFlags;
@@ -109,26 +125,26 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     /** Returns an instance of the EnrollmentDao given a context. */
     public static EnrollmentDao getInstance() {
-        synchronized (EnrollmentDao.class) {
-            if (sSingleton == null) {
-                Flags flags = FlagsFactory.getFlags();
-                sSingleton =
-                        new EnrollmentDao(
-                                ApplicationContextSingleton.get(),
-                                SharedDbHelper.getInstance(),
-                                flags,
-                                flags.isEnableEnrollmentTestSeed(),
-                                AdServicesLoggerImpl.getInstance(),
-                                EnrollmentUtil.getInstance());
+        if (sSingleton == null) {
+            synchronized (EnrollmentDao.class) {
+                if (sSingleton == null) {
+                    sSingleton = sEnrollmentDaoSingletonSupplier.get();
+                }
             }
-            return sSingleton;
         }
+        return sSingleton;
+    }
+
+    /**
+     * Returns the singleton supplier of the EnrollmentDao given a context for Lazy Initialization.
+     */
+    public static Supplier<EnrollmentDao> getSingletonSupplier() {
+        return sEnrollmentDaoSingletonSupplier;
     }
 
     @VisibleForTesting
     boolean isSeeded() {
-        SharedPreferences prefs =
-                mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
+        SharedPreferences prefs = getPrefs(mContext);
         boolean isSeeded = prefs.getBoolean(IS_SEEDED, false);
         LogUtil.v("Persisted enrollment database seed status: %s", isSeeded);
         return isSeeded;
@@ -147,8 +163,7 @@ public class EnrollmentDao implements IEnrollmentDao {
             LogUtil.v("Enrollment database seed insertion status: %s", success);
 
             if (success) {
-                SharedPreferences prefs =
-                        mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
+                SharedPreferences prefs = getPrefs(mContext);
                 SharedPreferences.Editor edit = prefs.edit();
                 edit.putBoolean(IS_SEEDED, true);
                 if (!edit.commit()) {
@@ -169,8 +184,7 @@ public class EnrollmentDao implements IEnrollmentDao {
     void unSeed() {
         LogUtil.v("Clearing enrollment database seed status");
 
-        SharedPreferences prefs =
-                mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
+        SharedPreferences prefs = getPrefs(mContext);
         SharedPreferences.Editor edit = prefs.edit();
         edit.putBoolean(IS_SEEDED, false);
         if (!edit.commit()) {
@@ -203,13 +217,13 @@ public class EnrollmentDao implements IEnrollmentDao {
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
-                        /*columns=*/ null,
-                        /*selection=*/ null,
-                        /*selectionArgs=*/ null,
-                        /*groupBy=*/ null,
-                        /*having=*/ null,
-                        /*orderBy=*/ null,
-                        /*limit=*/ null)) {
+                        /* columns= */ null,
+                        /* selection= */ null,
+                        /* selectionArgs= */ null,
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ null,
+                        /* limit= */ null)) {
             if (cursor == null || cursor.getCount() == 0) {
                 mEnrollmentUtil.logTransactionStatsNoResult(
                         mLogger,
@@ -260,13 +274,13 @@ public class EnrollmentDao implements IEnrollmentDao {
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
-                        /*columns=*/ null,
+                        /* columns= */ null,
                         EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID + " = ? ",
                         new String[] {enrollmentId},
-                        /*groupBy=*/ null,
-                        /*having=*/ null,
-                        /*orderBy=*/ null,
-                        /*limit=*/ null)) {
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ null,
+                        /* limit= */ null)) {
             if (cursor == null || cursor.getCount() == 0) {
                 LogUtil.d("Failed to match enrollment for enrollment ID \"%s\"", enrollmentId);
                 mEnrollmentUtil.logTransactionStatsNoResult(
@@ -362,8 +376,7 @@ public class EnrollmentDao implements IEnrollmentDao {
             }
 
             while (cursor.moveToNext()) {
-                EnrollmentData data =
-                        SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
+                EnrollmentData data = SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
                 if (validateAttributionUrl(
                                 data.getAttributionSourceRegistrationUrl(), registrationBaseUri)
                         || validateAttributionUrl(
@@ -578,20 +591,20 @@ public class EnrollmentDao implements IEnrollmentDao {
 
         try (Cursor cursor =
                 db.query(
-                        /*distinct=*/ true,
-                        /*table=*/ EnrollmentTables.EnrollmentDataContract.TABLE,
-                        /*columns=*/ new String[] {
+                        /* distinct= */ true,
+                        /* table= */ EnrollmentTables.EnrollmentDataContract.TABLE,
+                        /* columns= */ new String[] {
                             EnrollmentTables.EnrollmentDataContract
                                     .REMARKETING_RESPONSE_BASED_REGISTRATION_URL
                         },
-                        /*selection=*/ EnrollmentTables.EnrollmentDataContract
+                        /* selection= */ EnrollmentTables.EnrollmentDataContract
                                         .REMARKETING_RESPONSE_BASED_REGISTRATION_URL
                                 + " IS NOT NULL",
-                        /*selectionArgs=*/ null,
-                        /*groupBy=*/ null,
-                        /*having=*/ null,
-                        /*orderBy=*/ null,
-                        /*limit=*/ null)) {
+                        /* selectionArgs= */ null,
+                        /* groupBy= */ null,
+                        /* having= */ null,
+                        /* orderBy= */ null,
+                        /* limit= */ null)) {
             if (cursor == null || cursor.getCount() <= 0) {
                 LogUtil.d("Failed to find any FLEDGE-enrolled ad techs");
                 mEnrollmentUtil.logTransactionStatsNoResult(
@@ -1280,7 +1293,7 @@ public class EnrollmentDao implements IEnrollmentDao {
         try {
             db.insertWithOnConflict(
                     EnrollmentTables.EnrollmentDataContract.TABLE,
-                    /*nullColumnHack=*/ null,
+                    /* nullColumnHack= */ null,
                     values,
                     SQLiteDatabase.CONFLICT_REPLACE);
         } catch (SQLException e) {
@@ -1716,5 +1729,10 @@ public class EnrollmentDao implements IEnrollmentDao {
         // and enrolled_site columns, and supportsEnrollmentAPISchemaColumns is used to ensure table
         // contains enrolled_apis and enrolled_site columns
         return mFlags.getEnrollmentApiBasedSchemaEnabled() && supportsEnrollmentAPISchemaColumns();
+    }
+
+    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
+    private static SharedPreferences getPrefs(Context context) {
+        return context.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
     }
 }

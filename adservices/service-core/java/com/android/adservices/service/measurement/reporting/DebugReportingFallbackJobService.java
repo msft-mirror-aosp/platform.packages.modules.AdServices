@@ -41,6 +41,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.time.Clock;
@@ -191,15 +192,16 @@ public class DebugReportingFallbackJobService extends JobService {
                         "DebugReportingFallbackJobService",
                         () -> {
                             DatastoreManager datastoreManager =
-                                    DatastoreManagerFactory.getDatastoreManager(
-                                            getApplicationContext());
+                                    DatastoreManagerFactory.getDatastoreManager();
+                            AndroidTimeSource timeSource = new AndroidTimeSource();
                             new EventReportingJobHandler(
                                             datastoreManager,
                                             FlagsFactory.getFlags(),
                                             AdServicesLoggerImpl.getInstance(),
                                             ReportingStatus.ReportType.DEBUG_EVENT,
                                             ReportingStatus.UploadMethod.FALLBACK,
-                                            getApplicationContext())
+                                            getApplicationContext(),
+                                            timeSource)
                                     .setIsDebugInstance(true)
                                     .performScheduledPendingReportsInWindow(0, 0);
                             new AggregateReportingJobHandler(
@@ -210,7 +212,8 @@ public class DebugReportingFallbackJobService extends JobService {
                                             AdServicesLoggerImpl.getInstance(),
                                             ReportingStatus.ReportType.DEBUG_AGGREGATE,
                                             ReportingStatus.UploadMethod.FALLBACK,
-                                            getApplicationContext())
+                                            getApplicationContext(),
+                                            timeSource)
                                     .setIsDebugInstance(true)
                                     .performScheduledPendingReportsInWindow(0, 0);
                         });
