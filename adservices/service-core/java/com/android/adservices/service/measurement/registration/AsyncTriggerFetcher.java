@@ -495,12 +495,16 @@ public class AsyncTriggerFetcher {
             }
             if (maybeValidAggregatableValues instanceof JSONObject) {
                 if (!isValidAggregateValues(
-                        (JSONObject) maybeValidAggregatableValues, filteringIdMaxBytes)) {
+                        (JSONObject) maybeValidAggregatableValues,
+                        filteringIdMaxBytes,
+                        asyncFetchStatus)) {
                     return false;
                 }
             } else {
                 if (!isValidAggregatableValuesJsonArray(
-                        (JSONArray) maybeValidAggregatableValues, filteringIdMaxBytes)) {
+                        (JSONArray) maybeValidAggregatableValues,
+                        filteringIdMaxBytes,
+                        asyncFetchStatus)) {
                     return false;
                 }
                 if (mFlags.getMeasurementEnableAggregateValueFilters()) {
@@ -985,11 +989,14 @@ public class AsyncTriggerFetcher {
     }
 
     /**
-     * Returns true if all values in aggregatable_values are valid.
-     * Default Case: {"campaignCounts":1664}
-     * Flexible Contribution Filtering: {"campaignCounts": {"value": 1664, "filtering_id: 123}}
+     * Returns true if all values in aggregatable_values are valid. Default Case:
+     * {"campaignCounts":1664} Flexible Contribution Filtering: {"campaignCounts": {"value": 1664,
+     * "filtering_id: 123}}
      */
-    private boolean isValidAggregateValues(JSONObject aggregateValues, Integer filteringIdMaxBytes)
+    private boolean isValidAggregateValues(
+            JSONObject aggregateValues,
+            Integer filteringIdMaxBytes,
+            AsyncFetchStatus asyncFetchStatus)
             throws JSONException {
         if (!mFlags.getMeasurementEnableUpdateTriggerHeaderLimit()
                 && aggregateValues.length()
@@ -1011,7 +1018,8 @@ public class AsyncTriggerFetcher {
             Object value = aggregateValues.get(id);
             if (value instanceof JSONObject) {
                 if (!mFlags.getMeasurementEnableFlexibleContributionFiltering()
-                        || !isValidAggregateValueObj((JSONObject) value, filteringIdMaxBytes)) {
+                        || !isValidAggregateValueObj(
+                                (JSONObject) value, filteringIdMaxBytes, asyncFetchStatus)) {
                     return false;
                 }
             } else if (!isValidAggregatableValuesValue(value)) {
@@ -1039,20 +1047,17 @@ public class AsyncTriggerFetcher {
     }
 
     /**
-     * Returns true if JSONArray aggregatable_values is valid.
-     * Aggregate Values Filtering: [{
-     *   "values": {"campaignCounts": 32768},
-     *   "filters": {"category": ["filter_1"]},
-     *   "not_filters":{"category": ["filter_2"]}
-     * }]
-     * Flexible Contribution Filtering: [{
-     *   "values":{"campaignCounts": {"value": 32768, "filtering_id": 123}},
-     *   "filters": {"category": ["filter_1"]},
-     *   "not_filters": {"category": ["filter_2"]}
-     * }]
+     * Returns true if JSONArray aggregatable_values is valid. Aggregate Values Filtering: [{
+     * "values": {"campaignCounts": 32768}, "filters": {"category": ["filter_1"]},
+     * "not_filters":{"category": ["filter_2"]} }] Flexible Contribution Filtering: [{
+     * "values":{"campaignCounts": {"value": 32768, "filtering_id": 123}}, "filters": {"category":
+     * ["filter_1"]}, "not_filters": {"category": ["filter_2"]} }]
      */
     private boolean isValidAggregatableValuesJsonArray(
-            JSONArray aggregatableValuesArr, Integer filteringIdMaxBytes) throws JSONException {
+            JSONArray aggregatableValuesArr,
+            Integer filteringIdMaxBytes,
+            AsyncFetchStatus asyncFetchStatus)
+            throws JSONException {
         boolean shouldCheckFilterSize = !mFlags.getMeasurementEnableUpdateTriggerHeaderLimit();
         for (int i = 0; i < aggregatableValuesArr.length(); i++) {
             JSONObject aggregatableValuesObj = aggregatableValuesArr.getJSONObject(i);
@@ -1061,7 +1066,8 @@ public class AsyncTriggerFetcher {
                     || !isValidAggregateValues(
                             aggregatableValuesObj.getJSONObject(
                                     AggregatableValuesConfigContract.VALUES),
-                            filteringIdMaxBytes)) {
+                            filteringIdMaxBytes,
+                            asyncFetchStatus)) {
                 LoggerFactory.getMeasurementLogger()
                         .d(
                                 "AGGREGATABLE_VALUES: %s is null or invalid.",
@@ -1100,7 +1106,8 @@ public class AsyncTriggerFetcher {
     }
 
     /** Returns true if filtering_id in inclusive range of 0-255^maxBytes. */
-    private boolean isValidFilteringId(JSONObject value, Integer maxBytes) {
+    private boolean isValidFilteringId(
+            JSONObject value, Integer maxBytes, AsyncFetchStatus asyncFetchStatus) {
         Optional<UnsignedLong> maybeFilteringId =
                 FetcherUtil.extractUnsignedLong(value, AggregatableKeyValueContract.FILTERING_ID);
         if (!maybeFilteringId.isPresent()) {
@@ -1118,6 +1125,7 @@ public class AsyncTriggerFetcher {
                     .e(String.format("Aggregatable Values: filtering_id is out of bounds"));
             return false;
         }
+        asyncFetchStatus.setIsTriggerFilteringIdConfigured(true);
         return true;
     }
 
@@ -1125,7 +1133,8 @@ public class AsyncTriggerFetcher {
      * Returns true if JSONObject has valid value and filtering_id
      * Input looks like: {“value”: 32768, “filtering_id”: 123}
      */
-    private boolean isValidAggregateValueObj(JSONObject obj, Integer filteringIdMaxBytes)
+    private boolean isValidAggregateValueObj(
+            JSONObject obj, Integer filteringIdMaxBytes, AsyncFetchStatus asyncFetchStatus)
             throws JSONException {
         // Validate value
         if (obj.isNull(AggregatableKeyValueContract.VALUE)
@@ -1139,7 +1148,7 @@ public class AsyncTriggerFetcher {
         }
         // Validate filtering_id
         if (!obj.isNull(AggregatableKeyValueContract.FILTERING_ID)
-                && (!isValidFilteringId(obj, filteringIdMaxBytes))) {
+                && (!isValidFilteringId(obj, filteringIdMaxBytes, asyncFetchStatus))) {
             return false;
         }
         return true;
