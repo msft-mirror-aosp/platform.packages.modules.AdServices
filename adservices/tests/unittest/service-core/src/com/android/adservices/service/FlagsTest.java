@@ -33,6 +33,7 @@ import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
+import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW;
@@ -1019,6 +1020,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFeatureFlag(
                 "FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS",
                 Flags::getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests);
+    }
+
+    @Test
+    public void testGetFledgeScheduleCustomAudienceUpdateMaxBytes() {
+        testFlag(
+                "getFledgeScheduleCustomAudienceUpdateMaxBytes()",
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES,
+                Flags::getFledgeScheduleCustomAudienceUpdateMaxBytes);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

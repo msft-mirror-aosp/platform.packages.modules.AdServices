@@ -40,6 +40,7 @@ public final class MeasurementTables {
         MeasurementTables.SourceContract.TABLE,
         MeasurementTables.SourceDestination.TABLE,
         SourceAttributionScopeContract.TABLE,
+        SourceNamedBudgetContract.TABLE,
         MeasurementTables.TriggerContract.TABLE,
         MeasurementTables.EventReportContract.TABLE,
         MeasurementTables.AggregateReport.TABLE,
@@ -169,6 +170,15 @@ public final class MeasurementTables {
         String ATTRIBUTION_SCOPE = "attribution_scope";
     }
 
+    /** Contract for sub-table for aggregatable named budgets in Source. */
+    public interface SourceNamedBudgetContract {
+        String TABLE = MSMT_TABLE_PREFIX + "source_named_budget";
+        String SOURCE_ID = "source_id";
+        String NAME = "name";
+        String BUDGET = "budget";
+        String AGGREGATE_CONTRIBUTIONS = "aggregate_contributions";
+    }
+
     /** Contract for Trigger. */
     public interface TriggerContract {
         String TABLE = MSMT_TABLE_PREFIX + "trigger";
@@ -202,6 +212,7 @@ public final class MeasurementTables {
         String ATTRIBUTION_SCOPES = "attribution_scope";
         String AGGREGATABLE_FILTERING_ID_MAX_BYTES = "aggregatable_filtering_id_max_bytes";
         String AGGREGATE_DEBUG_REPORTING = "aggregate_debug_reporting";
+        String NAMED_BUDGETS = "named_budgets";
     }
 
     /** Contract for EventReport. */
@@ -625,6 +636,27 @@ public final class MeasurementTables {
                     + ") ON DELETE CASCADE "
                     + ")";
 
+    public static final String CREATE_TABLE_SOURCE_NAMED_BUDGET_LATEST =
+            "CREATE TABLE "
+                    + SourceNamedBudgetContract.TABLE
+                    + " ("
+                    + SourceNamedBudgetContract.SOURCE_ID
+                    + " TEXT, "
+                    + SourceNamedBudgetContract.NAME
+                    + " TEXT, "
+                    + SourceNamedBudgetContract.BUDGET
+                    + " INTEGER, "
+                    + SourceNamedBudgetContract.AGGREGATE_CONTRIBUTIONS
+                    + " INTEGER, "
+                    + "FOREIGN KEY ("
+                    + SourceNamedBudgetContract.SOURCE_ID
+                    + ") REFERENCES "
+                    + SourceContract.TABLE
+                    + "("
+                    + SourceContract.ID
+                    + ") ON DELETE CASCADE "
+                    + ")";
+
     public static final String CREATE_TABLE_TRIGGER_V6 =
             "CREATE TABLE "
                     + TriggerContract.TABLE
@@ -730,7 +762,9 @@ public final class MeasurementTables {
                     + TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES
                     + " INTEGER, "
                     + TriggerContract.AGGREGATE_DEBUG_REPORTING
-                    + " TEXT "
+                    + " TEXT, "
+                    + TriggerContract.NAMED_BUDGETS
+                    + " TEXT"
                     + ")";
 
     // Only used in V3
@@ -1269,6 +1303,26 @@ public final class MeasurementTables {
                 + ")",
         "CREATE INDEX "
                 + INDEX_PREFIX
+                + SourceNamedBudgetContract.TABLE
+                + "_s_n"
+                + " ON "
+                + SourceNamedBudgetContract.TABLE
+                + "("
+                + SourceNamedBudgetContract.SOURCE_ID
+                + ", "
+                + SourceNamedBudgetContract.NAME
+                + ")",
+        "CREATE INDEX "
+                + INDEX_PREFIX
+                + SourceNamedBudgetContract.TABLE
+                + "_s"
+                + " ON "
+                + SourceNamedBudgetContract.TABLE
+                + "("
+                + SourceNamedBudgetContract.SOURCE_ID
+                + ")",
+        "CREATE INDEX "
+                + INDEX_PREFIX
                 + TriggerContract.TABLE
                 + "_ad_ei_tt "
                 + "ON "
@@ -1444,6 +1498,7 @@ public final class MeasurementTables {
                             CREATE_TABLE_SOURCE_LATEST,
                             CREATE_TABLE_SOURCE_DESTINATION_LATEST,
                             CREATE_TABLE_SOURCE_ATTRIBUTION_SCOPE_LATEST,
+                            CREATE_TABLE_SOURCE_NAMED_BUDGET_LATEST,
                             CREATE_TABLE_TRIGGER_LATEST,
                             CREATE_TABLE_EVENT_REPORT_LATEST,
                             CREATE_TABLE_ATTRIBUTION_LATEST,
