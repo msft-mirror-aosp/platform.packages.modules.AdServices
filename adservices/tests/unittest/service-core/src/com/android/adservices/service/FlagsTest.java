@@ -30,6 +30,7 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
+import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
@@ -1074,6 +1075,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Test
     public void testGetAdIdMigrationEnabled() {
         testFeatureFlag("DEFAULT_AD_ID_MIGRATION_ENABLED", Flags::getAdIdMigrationEnabled);
+    }
+
+    @Test
+    public void testGetFledgeCustomAudiencePerBuyerMaxCount() {
+        testFlag(
+                "getFledgeCustomAudiencePerBuyerMaxCount",
+                FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT,
+                Flags::getFledgeCustomAudiencePerBuyerMaxCount);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {
