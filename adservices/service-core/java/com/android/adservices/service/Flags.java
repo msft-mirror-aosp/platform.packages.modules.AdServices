@@ -984,6 +984,7 @@ public interface Flags extends ModuleSharedFlags {
     long FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT = 1000L;
     long FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT = 1000L;
+    @ConfigFlag long FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT = 4000L;
     long FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS = 60L * 24L * 60L * 60L * 1000L; // 60 days
     long FLEDGE_CUSTOM_AUDIENCE_MAX_ACTIVATION_DELAY_IN_MS =
             60L * 24L * 60L * 60L * 1000L; // 60 days
@@ -1029,6 +1030,11 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the maximum number of apps can have access to custom audience. */
     default long getFledgeCustomAudienceMaxOwnerCount() {
         return FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT;
+    }
+
+    /** Returns the maximum number of custom audiences per buyer ad tech. */
+    default long getFledgeCustomAudiencePerBuyerMaxCount() {
+        return FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT;
     }
 
     /**
