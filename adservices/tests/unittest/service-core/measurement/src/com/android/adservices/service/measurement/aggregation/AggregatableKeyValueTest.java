@@ -19,6 +19,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import org.junit.Test;
 
 /** Unit tests for {@link AggregatableKeyValue} */
@@ -36,6 +38,12 @@ public final class AggregatableKeyValueTest {
         final AggregatableKeyValue aggregatableKeyValue2 = createSimpleAggregatableKeyValue();
         assertThat(aggregatableKeyValue1.hashCode()).isEqualTo(aggregatableKeyValue2.hashCode());
         assertThat(aggregatableKeyValue1).isEqualTo(aggregatableKeyValue2);
+
+        final AggregatableKeyValue aggKeyValueWithFilteringId1 = createAggregatableKeyValue();
+        final AggregatableKeyValue aggKeyValueWithFilteringId2 = createAggregatableKeyValue();
+        assertThat(aggKeyValueWithFilteringId1.hashCode())
+                .isEqualTo(aggKeyValueWithFilteringId2.hashCode());
+        assertThat(aggKeyValueWithFilteringId1).isEqualTo(aggKeyValueWithFilteringId2);
     }
 
     @Test
@@ -45,11 +53,28 @@ public final class AggregatableKeyValueTest {
                 new AggregatableKeyValue.Builder(1663).build();
         assertThat(aggregatableKeyValue1.hashCode()).isNotEqualTo(aggregatableKeyValue2.hashCode());
         assertThat(aggregatableKeyValue1).isNotEqualTo(aggregatableKeyValue2);
+
+        final AggregatableKeyValue aggKeyValueWithFilteringId1 = createAggregatableKeyValue();
+        final AggregatableKeyValue aggKeyValueWithFilteringId2 =
+                new AggregatableKeyValue.Builder(1663)
+                        .setFilteringId(new UnsignedLong("123"))
+                        .build();
+        assertThat(aggKeyValueWithFilteringId1.hashCode())
+                .isNotEqualTo(aggKeyValueWithFilteringId2.hashCode());
+        assertThat(aggKeyValueWithFilteringId1).isNotEqualTo(aggKeyValueWithFilteringId2);
     }
 
     private AggregatableKeyValue createSimpleAggregatableKeyValue() {
         int value = 1664;
         AggregatableKeyValue aggregatableKeyValue = new AggregatableKeyValue.Builder(value).build();
+        return aggregatableKeyValue;
+    }
+
+    private AggregatableKeyValue createAggregatableKeyValue() {
+        int value = 1664;
+        UnsignedLong filteringId = new UnsignedLong("123");
+        AggregatableKeyValue aggregatableKeyValue =
+                new AggregatableKeyValue.Builder(value).setFilteringId(filteringId).build();
         return aggregatableKeyValue;
     }
 }

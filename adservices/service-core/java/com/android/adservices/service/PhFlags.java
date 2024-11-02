@@ -1061,6 +1061,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getFledgeCustomAudiencePerBuyerMaxCount() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT,
+                FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT);
+    }
+
+    @Override
     public long getFledgeCustomAudienceDefaultExpireInMs() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS,
@@ -1470,6 +1477,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
                 FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE);
+    }
+
+    @Override
+    public int getFledgeScheduleCustomAudienceUpdateMaxBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES,
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES);
     }
 
     @Override
@@ -4671,6 +4685,11 @@ public final class PhFlags implements Flags {
                         + getFledgeCustomAudiencePerAppMaxCount());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT
+                        + " = "
+                        + getFledgeCustomAudiencePerBuyerMaxCount());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED
                         + " = "
                         + getFledgeAppPackageNameLoggingEnabled());
@@ -5193,6 +5212,11 @@ public final class PhFlags implements Flags {
                                 .KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE
                         + " = "
                         + getFledgeScheduleCustomAudienceMinDelayMinsOverride());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES
+                        + " = "
+                        + getFledgeScheduleCustomAudienceUpdateMaxBytes());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE

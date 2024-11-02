@@ -39,4 +39,12 @@ public interface Flags {
     default boolean getEnableCelForSystemServer() {
         return CLIENT_ERROR_LOGGING__ENABLE_CEL_FOR_SYSTEM_SERVER;
     }
+
+    /** Feature flag to enable AtomicFileDataStore update API for system service. */
+    boolean ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API_IN_SYSTEM_SERVER = false;
+
+    /** Returns whether atomic file datastore batch update Api is enabled in system server. */
+    default boolean getEnableAtomicFileDatastoreBatchUpdateApiInSystemServer() {
+        return ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API_IN_SYSTEM_SERVER;
+    }
 }
