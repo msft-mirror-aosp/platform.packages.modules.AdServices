@@ -260,6 +260,11 @@ public class ContentValueFixtures {
                 "{\"budget\":1024,\"key_piece\":\"0x1\",\"debug_data\":[{\"types\":"
                     + " [\"source-destination-limit\"],\"key_piece\": \"0x123\",\"value\": 123}],"
                     + "\"aggregation_coordinator_origin\":\"https://coordinator.example.test\"}";
+
+        // Added in V45
+        public static final String NAMED_BUDGETS =
+                "{\"name\": \"biddable\", \"filters\": { \"2\": [\"1234\", "
+                        + "\"234\"]}, \"not_filters\": { \"1\": [\"78\", \"891\"]}}";
     }
 
     public static class AttributionValues {
@@ -359,6 +364,9 @@ public class ContentValueFixtures {
 
         // Added in V43
         public static final String API = "attribution-reporting";
+
+        // Added in V44
+        public static final Integer AGGREGATABLE_FILTERING_ID_MAX_BYTES = 1;
     }
 
     public static class AggregateEncryptionKeyValues {
@@ -1134,6 +1142,18 @@ public class ContentValueFixtures {
         return values;
     }
 
+    /** Get ContentValues for V44 */
+    public static ContentValues generateTriggerContentValuesV44() {
+        return generateTriggerContentValuesV42();
+    }
+
+    /** Get ContentValues for V45 */
+    public static ContentValues generateTriggerContentValuesV45() {
+        ContentValues values = generateTriggerContentValuesV44();
+        values.put(MeasurementTables.TriggerContract.NAMED_BUDGETS, TriggerValues.NAMED_BUDGETS);
+        return values;
+    }
+
     public static ContentValues generateAttributionContentValuesV1() {
         ContentValues attribution = new ContentValues();
 
@@ -1593,6 +1613,15 @@ public class ContentValueFixtures {
         ContentValues values = generateAggregateReportContentValuesV33();
         values.put(
                 MeasurementTables.AggregateReport.TRIGGER_TIME, AggregateReportValues.TRIGGER_TIME);
+        return values;
+    }
+
+    /** Returns content values for aggregate report version 44 */
+    public static ContentValues generateAggregateReportContentValuesV44() {
+        ContentValues values = generateAggregateReportContentValuesV41();
+        values.put(
+                MeasurementTables.AggregateReport.AGGREGATABLE_FILTERING_ID_MAX_BYTES,
+                AggregateReportValues.AGGREGATABLE_FILTERING_ID_MAX_BYTES);
         return values;
     }
 

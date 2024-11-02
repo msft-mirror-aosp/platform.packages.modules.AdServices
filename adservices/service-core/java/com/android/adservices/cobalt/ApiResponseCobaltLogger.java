@@ -73,6 +73,7 @@ public final class ApiResponseCobaltLogger {
      * @param apiCode the api name code in int
      * @param responseCode the response code in int
      */
+    @SuppressWarnings("FutureReturnValueIgnored") // TODO(b/323263328): Remove @SuppressWarnings.
     public void logResponse(String appPackageName, int apiCode, int responseCode) {
         if (!isEnabled()) {
             LogUtil.w("Skip logging because Cobalt is disabled.");

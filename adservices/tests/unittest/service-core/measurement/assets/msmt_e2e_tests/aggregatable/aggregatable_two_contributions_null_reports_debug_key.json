@@ -131,10 +131,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -153,10 +154,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -175,10 +177,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -197,10 +200,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -219,10 +223,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -241,10 +246,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -263,10 +269,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -285,10 +292,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -307,10 +315,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -329,10 +338,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -351,10 +361,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -373,10 +384,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -395,10 +407,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -417,10 +430,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -439,10 +453,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -461,10 +476,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -483,10 +499,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -505,10 +522,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -527,10 +545,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -549,10 +568,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -571,10 +591,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -593,10 +614,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -615,10 +637,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -637,10 +660,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -659,10 +683,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -681,10 +706,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -703,10 +729,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -725,10 +752,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -747,10 +775,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -769,10 +798,11 @@
           },
           "aggregation_coordinator_origin": "https://coordinator.test",
           "histograms": [
-            {
-              "key": "0x0",
-              "value": 0
-            }
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }
@@ -798,7 +828,10 @@
             {
               "key": "0xa85",
               "value": 1664
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "8971346783"
         }

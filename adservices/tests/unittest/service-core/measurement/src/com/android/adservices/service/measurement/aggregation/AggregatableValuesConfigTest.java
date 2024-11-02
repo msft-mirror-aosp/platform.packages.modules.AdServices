@@ -22,6 +22,7 @@ import static org.mockito.Mockito.when;
 import androidx.test.filters.SmallTest;
 
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -42,24 +43,9 @@ public final class AggregatableValuesConfigTest {
     @Mock Flags mFlags;
 
     @Test
-    public void testBuilderWithJsonObject_success() throws Exception {
-        // Build values
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("campaignCounts", 32768);
-        jsonObject.put("geoValue", 1664);
-        AggregatableValuesConfig aggregatableValuesConfig =
-                new AggregatableValuesConfig.Builder(jsonObject).build();
-        assertThat(aggregatableValuesConfig.getValues()).isNotNull();
-        assertThat(aggregatableValuesConfig.getValues().size()).isEqualTo(2);
-        assertThat(aggregatableValuesConfig.getValues().get("campaignCounts").getValue())
-                .isEqualTo(32768);
-        assertThat(aggregatableValuesConfig.getValues().get("geoValue").getValue()).isEqualTo(1664);
-    }
-
-    @Test
     public void testBuilderWithJsonObjectFromArray_success() throws Exception {
         when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
-        AggregatableValuesConfig aggregatableValuesConfig = createSimpleAggregatableValuesConfig();
+        AggregatableValuesConfig aggregatableValuesConfig = createAggregatableValuesConfigWithoutFilteringId();
         assertThat(aggregatableValuesConfig.getValues()).isNotNull();
         assertThat(aggregatableValuesConfig.getValues().size()).isEqualTo(2);
         assertThat(aggregatableValuesConfig.getValues().get("campaignCounts").getValue())
@@ -73,11 +59,29 @@ public final class AggregatableValuesConfigTest {
     }
 
     @Test
+    public void testBuilderWithJsonObjectWithFilteringIds_success() throws Exception {
+        when(mFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        AggregatableValuesConfig aggregatableValuesConfig =
+                createAggregatableValuesConfigWithFilteringId();
+        Map<String, Integer> expectedConfigValuesMap = new HashMap<>();
+        expectedConfigValuesMap.put("campaignCounts", 32768);
+        expectedConfigValuesMap.put("geoValue", 1664);
+        assertThat(aggregatableValuesConfig.getConfigValuesMap())
+                .isEqualTo(expectedConfigValuesMap);
+        assertThat(aggregatableValuesConfig.getValues().get("campaignCounts").getFilteringId())
+                .isEqualTo(new UnsignedLong("123"));
+        assertThat(aggregatableValuesConfig.getValues().get("geoValue").getFilteringId())
+                .isEqualTo(UnsignedLong.ZERO);
+        assertThat(aggregatableValuesConfig.getFilterSet().size()).isEqualTo(1);
+        assertThat(aggregatableValuesConfig.getNotFilterSet().size()).isEqualTo(1);
+    }
+
+    @Test
     public void testHashCode_equals() throws Exception {
         final AggregatableValuesConfig aggregatableValuesConfig1 =
-                createSimpleAggregatableValuesConfig();
+                createAggregatableValuesConfigWithoutFilteringId();
         final AggregatableValuesConfig aggregatableValuesConfig2 =
-                createSimpleAggregatableValuesConfig();
+                createAggregatableValuesConfigWithoutFilteringId();
         assertThat(aggregatableValuesConfig1.hashCode())
                 .isEqualTo(aggregatableValuesConfig2.hashCode());
         assertThat(aggregatableValuesConfig1).isEqualTo(aggregatableValuesConfig2);
@@ -86,7 +90,7 @@ public final class AggregatableValuesConfigTest {
     @Test
     public void testHashCode_notEquals() throws Exception {
         final AggregatableValuesConfig aggregatableValuesConfig1 =
-                createSimpleAggregatableValuesConfig();
+                createAggregatableValuesConfigWithoutFilteringId();
         JSONObject jsonObj1Values = new JSONObject();
         jsonObj1Values.put("campaignCounts", 32768);
         jsonObj1Values.put("geoValue", 1664);
@@ -103,27 +107,52 @@ public final class AggregatableValuesConfigTest {
         Map<String, Integer> expectedConfigValuesMap = new HashMap<>();
         expectedConfigValuesMap.put("campaignCounts", 32768);
         expectedConfigValuesMap.put("geoValue", 1664);
-        AggregatableValuesConfig aggregatableValuesConfig = createSimpleAggregatableValuesConfig();
+        AggregatableValuesConfig aggregatableValuesConfig = createAggregatableValuesConfigWithoutFilteringId();
         assertThat(aggregatableValuesConfig.getConfigValuesMap())
                 .isEqualTo(expectedConfigValuesMap);
     }
 
-    private AggregatableValuesConfig createSimpleAggregatableValuesConfig() throws Exception {
-        // Build values
-        JSONObject jsonObj1Values = new JSONObject();
-        jsonObj1Values.put("campaignCounts", 32768);
-        jsonObj1Values.put("geoValue", 1664);
-        // Build filter_set and not_filter_set
+    private AggregatableValuesConfig createAggregatableValuesConfigWithoutFilteringId() throws Exception {
+        JSONObject values = new JSONObject();
+        values.put("campaignCounts", 32768);
+        values.put("geoValue", 1664);
+
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("values", values);
+        jsonObj.put("filters", createFilters());
+        jsonObj.put("not_filters", createNotFilters());
+        return new AggregatableValuesConfig.Builder(jsonObj, mFlags).build();
+    }
+
+    private AggregatableValuesConfig createAggregatableValuesConfigWithFilteringId()
+            throws Exception {
+        JSONObject campaignCountsValue = new JSONObject();
+        campaignCountsValue.put(AggregatableKeyValue.AggregatableKeyValueContract.VALUE, 32768);
+        campaignCountsValue.put(
+                AggregatableKeyValue.AggregatableKeyValueContract.FILTERING_ID,
+                new UnsignedLong("123"));
+        JSONObject values = new JSONObject();
+        values.put("campaignCounts", campaignCountsValue);
+        values.put("geoValue", 1664);
+
+        JSONObject jsonObj = new JSONObject();
+        jsonObj.put("values", values);
+        jsonObj.put("filters", createFilters());
+        jsonObj.put("not_filters", createNotFilters());
+        return new AggregatableValuesConfig.Builder(jsonObj, mFlags).build();
+    }
+
+    private JSONObject createFilters() throws Exception {
         JSONObject filterMapJson = new JSONObject();
         filterMapJson.put("conversion", new JSONArray(List.of("electronics")));
         filterMapJson.put("product", new JSONArray(List.of("1234", "2345")));
+        return filterMapJson;
+    }
+
+    private JSONObject createNotFilters() throws Exception {
         JSONObject notFilterMapJson = new JSONObject();
         notFilterMapJson.put("product", new JSONArray(List.of("1234", "2345")));
-        // Put into json object
-        JSONObject jsonObj = new JSONObject();
-        jsonObj.put("values", jsonObj1Values);
-        jsonObj.put("filters", filterMapJson);
-        jsonObj.put("not_filters", notFilterMapJson);
-        return new AggregatableValuesConfig.Builder(jsonObj, mFlags).build();
+        return notFilterMapJson;
     }
+
 }

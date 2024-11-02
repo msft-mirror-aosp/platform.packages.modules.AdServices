@@ -489,6 +489,8 @@ public class AggregateReportingJobHandler {
                                 ? "enabled"
                                 : null)
                 .setTriggerContextId(aggregateReport.getTriggerContextId())
+                .setAggregatableFilteringIdMaxBytes(
+                        aggregateReport.getAggregatableFilteringIdMaxBytes())
                 .build()
                 .toJson(key, mFlags);
     }

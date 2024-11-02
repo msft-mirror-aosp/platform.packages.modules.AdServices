@@ -175,8 +175,7 @@ public final class AggregatePayloadGeneratorTest {
 
     @Test
     public void testGenerateAttributionReport_filterSetMatches_withPayloadPadding()
-            throws JSONException {
-        when(mFlags.getMeasurementEnableAggregatableReportPayloadPadding()).thenReturn(true);
+            throws Exception {
         when(mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration()).thenReturn(5);
         // Build AggregatableAttributionSource.
         TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
@@ -269,7 +268,7 @@ public final class AggregatePayloadGeneratorTest {
 
     @Test
     public void testGenerateAttributionReport_insideLookbackWindow_filterSetMatches()
-            throws JSONException {
+            throws Exception {
         doReturn(true).when(mFlags).getMeasurementEnableLookbackWindowFilter();
         // Build AggregatableAttributionSource.
         JSONObject aggregatableSource = new JSONObject();
@@ -352,7 +351,7 @@ public final class AggregatePayloadGeneratorTest {
 
     @Test
     public void testGenerateAttributionReport_twoContributions_filterSetDoesNotMatch()
-            throws JSONException {
+            throws Exception {
         // Build AggregatableAttributionSource.
         TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put("campaignCounts", BigInteger.valueOf(345L));
@@ -441,7 +440,7 @@ public final class AggregatePayloadGeneratorTest {
     }
 
     @Test
-    public void testGenerateAttributionReport_twoContributions_success() throws JSONException {
+    public void testGenerateAttributionReport_twoContributions_success() throws Exception {
         // Build AggregatableAttributionSource.
         TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put("campaignCounts", BigInteger.valueOf(345L));
@@ -509,7 +508,7 @@ public final class AggregatePayloadGeneratorTest {
     }
 
     @Test
-    public void testGenerateAttributionReport_ordersByAggregationKeyIds() throws JSONException {
+    public void testGenerateAttributionReport_ordersByAggregationKeyIds() throws Exception {
         // Build AggregatableAttributionSource.
         TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put("geoValue", BigInteger.valueOf(5L));
@@ -653,7 +652,7 @@ public final class AggregatePayloadGeneratorTest {
     }
 
     @Test
-    public void testGenerateAttributionReportMoreTriggerDataSuccessfully() throws JSONException {
+    public void testGenerateAttributionReportMoreTriggerDataSuccessfully() throws Exception {
         // Build AggregatableAttributionSource.
         TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
         aggregatableSource.put("campaignCounts", BigInteger.valueOf(345L));
@@ -1282,10 +1281,10 @@ public final class AggregatePayloadGeneratorTest {
         // Build unmatchedAggregatableValuesConfig. Filters do not match, do not apply to
         // contributions.
         JSONObject geoValue = new JSONObject().put("geoValue", 4);
-        JSONObject invalidFilters = new JSONObject().put("product", new JSONArray().put("12345"));
+        JSONObject unmatchedFilters = new JSONObject().put("product", new JSONArray().put("12345"));
         JSONObject builderObj = new JSONObject();
         builderObj.put("values", geoValue);
-        builderObj.put("filters", invalidFilters);
+        builderObj.put("filters", unmatchedFilters);
         AggregatableValuesConfig unmatchedAggregatableValuesConfig =
                 new AggregatableValuesConfig.Builder(builderObj, mFlags).build();
         // Build matchedAggregatableValuesConfig. Filters match, apply to contributions
@@ -1427,8 +1426,8 @@ public final class AggregatePayloadGeneratorTest {
                                 List.of(aggregatableValuesConfig, aggregatableValuesConfig2))
                         .build();
         Filter filter = new Filter(mFlags);
-        Optional<Map<String, Integer>> valueMap =
-                mAggregatePayloadGenerator.getMatchedValueMap(
+        Optional<Map<String, AggregatableKeyValue>> valueMap =
+                mAggregatePayloadGenerator.getMatchedAggregatableKeyValueMap(
                         attributionTrigger, sourceFilter, filter);
         assertThat(valueMap).isEqualTo(Optional.empty());
     }
@@ -1462,14 +1461,14 @@ public final class AggregatePayloadGeneratorTest {
                                 List.of(aggregatableValuesConfig, invalidAggregatableValuesConfig))
                         .build();
         Filter filter = new Filter(mFlags);
-        Optional<Map<String, Integer>> valueMap =
-                mAggregatePayloadGenerator.getMatchedValueMap(
+        Optional<Map<String, AggregatableKeyValue>> valueMap =
+                mAggregatePayloadGenerator.getMatchedAggregatableKeyValueMap(
                         attributionTrigger, sourceFilter, filter);
         assertThat(valueMap.get().keySet().contains("campaignCounts")).isTrue();
     }
 
     @Test
-    public void getMatchedValueMap_returnsFromValueMap_success() {
+    public void getMatchedValueMap_returnsFromValueMap_success() throws Exception {
         when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         FilterMap sourceFilter =
                 new FilterMap.Builder()
@@ -1483,10 +1482,70 @@ public final class AggregatePayloadGeneratorTest {
                                 List.of(new AggregatableValuesConfig.Builder(values).build()))
                         .build();
         Filter filter = new Filter(mFlags);
-        Optional<Map<String, Integer>> valueMap =
-                mAggregatePayloadGenerator.getMatchedValueMap(
+        Optional<Map<String, AggregatableKeyValue>> valueMap =
+                mAggregatePayloadGenerator.getMatchedAggregatableKeyValueMap(
                         attributionTrigger, sourceFilter, filter);
         assertThat(valueMap.get().keySet().contains("campaignCounts")).isTrue();
+    }
+
+    @Test
+    public void generateAttributionReport_flexibleFilteringJsonArray_createsNoContribution()
+            throws Exception {
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        when(mFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        // Build AggregatableAttributionSource.
+        TreeMap<String, BigInteger> aggregatableSource = new TreeMap<>();
+        aggregatableSource.put("campaignCounts", BigInteger.valueOf(345L));
+        aggregatableSource.put("geoValue", BigInteger.valueOf(5L));
+        Map<String, List<String>> sourceFilterMap = new HashMap<>();
+        sourceFilterMap.put("product", Arrays.asList("1234"));
+        FilterMap sourceFilter =
+                new FilterMap.Builder().setAttributionFilterMap(sourceFilterMap).build();
+        AggregatableAttributionSource attributionSource =
+                new AggregatableAttributionSource.Builder()
+                        .setAggregatableSource(aggregatableSource)
+                        .setFilterMap(sourceFilter)
+                        .build();
+        // Build AggregatableAttributionTrigger.
+        List<AggregateTriggerData> triggerDataList = new ArrayList<>();
+        // Apply this key_piece to "campaignCounts".
+        triggerDataList.add(
+                new AggregateTriggerData.Builder()
+                        .setKey(BigInteger.valueOf(1024L))
+                        .setSourceKeys(new HashSet<>(Collections.singletonList("campaignCounts")))
+                        .build());
+        // Apply this key_piece to "geoValue".
+        triggerDataList.add(
+                new AggregateTriggerData.Builder()
+                        .setKey(BigInteger.valueOf(2688L))
+                        .setSourceKeys(new HashSet<>(Arrays.asList("geoValue", "nonMatch")))
+                        .build());
+        // Build unmatchedAggregatableValuesConfig. Filters do not match, do not apply to
+        // contributions.
+        JSONObject geoValue = new JSONObject().put("geoValue", 4);
+        JSONObject invalidFilters = new JSONObject().put("product", new JSONArray().put("12345"));
+        JSONObject builderObj = new JSONObject();
+        builderObj.put("values", geoValue);
+        builderObj.put("filters", invalidFilters);
+        AggregatableValuesConfig unmatchedAggregatableValuesConfig =
+                new AggregatableValuesConfig.Builder(builderObj, mFlags).build();
+        AggregatableAttributionTrigger attributionTrigger =
+                new AggregatableAttributionTrigger.Builder()
+                        .setTriggerData(triggerDataList)
+                        .setValueConfigs(List.of(unmatchedAggregatableValuesConfig))
+                        .build();
+        // Generate Histogram
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregatableAttributionSource(attributionSource)
+                        .build();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAggregatableAttributionTrigger(attributionTrigger)
+                        .build();
+        Optional<List<AggregateHistogramContribution>> aggregateHistogramContributions =
+                mAggregatePayloadGenerator.generateAttributionReport(source, trigger);
+        assertThat(aggregateHistogramContributions).isEqualTo(Optional.empty());
     }
 
     @Test
@@ -1522,8 +1581,8 @@ public final class AggregatePayloadGeneratorTest {
                                         matchedAggregatableValuesConfig))
                         .build();
         Filter filter = new Filter(mFlags);
-        Optional<Map<String, Integer>> valueMap =
-                mAggregatePayloadGenerator.getMatchedValueMap(
+        Optional<Map<String, AggregatableKeyValue>> valueMap =
+                mAggregatePayloadGenerator.getMatchedAggregatableKeyValueMap(
                         attributionTrigger, sourceFilter, filter);
         assertThat(valueMap.get().keySet().contains("geoValue")).isTrue();
     }
@@ -1535,7 +1594,7 @@ public final class AggregatePayloadGeneratorTest {
         return values;
     }
 
-    private List<AggregatableValuesConfig> createSimpleAggregatableValuesConfig() {
+    private List<AggregatableValuesConfig> createSimpleAggregatableValuesConfig() throws Exception {
         return List.of(new AggregatableValuesConfig.Builder(createSimpleValuesMap()).build());
     }
 }

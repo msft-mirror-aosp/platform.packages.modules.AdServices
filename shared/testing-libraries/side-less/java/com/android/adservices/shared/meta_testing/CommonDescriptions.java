@@ -66,4 +66,17 @@ public final class CommonDescriptions {
     @SetSdkSandboxStateEnabled(true)
     public static class ASubClassDisablesDeviceConfigUntilRebootAndAlsoEnablesSdkSandbox
             extends AClassDisablesDeviceConfigUntilReboot {}
+
+    /** A "typical" superclass, like a "root" CTS class" - it only disables sync mode. */
+    @SetSyncDisabledModeForTest
+    public static class ATypicalSuperClass {}
+
+    /** A "typical" subclass - it extends superclass and don't have any annotation. */
+    public static class ATypicalSubclass extends ATypicalSuperClass {}
+
+    @SetSdkSandboxStateEnabled
+    public interface AnInterfaceEnablesSdkSandbox {}
+
+    public static class ATypicalSubclassThatImplementsAnInterfaceThatEnablesSdkSandbox
+            extends ATypicalSuperClass implements AnInterfaceEnablesSdkSandbox {}
 }

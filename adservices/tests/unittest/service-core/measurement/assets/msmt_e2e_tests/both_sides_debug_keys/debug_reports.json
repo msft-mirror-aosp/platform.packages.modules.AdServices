@@ -1,0 +1,343 @@
+{
+  "description": "Aggregate reports with both side debug keys enforcement",
+  "phflags_override": {
+    "Measurement__enable_both_side_debug_keys_in_reports": "true"
+  },
+  "input": {
+    "sources": [
+      // Source A: Debug permission is (true) and debug key is (present).
+      {
+        "timestamp": "0",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "source.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-source",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "destination": "android-app://destination.test",
+                "source_event_id": "123",
+                "aggregation_keys": {
+                  "a": "0x159",
+                  "b": "0x5"
+                },
+                "debug_key": "12345"
+              }
+            }
+          }
+        ]
+      },
+      // Source B: Debug permission is (true) and debug key is (present).
+      {
+        "timestamp": "10000",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "source.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-source",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Source": {
+                "destination": "android-app://destination.test",
+                "source_event_id": "456",
+                "aggregation_keys": {
+                  "a": "0x159",
+                  "b": "0x5"
+                },
+                "debug_key": "54321"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "triggers": [
+      // Trigger A: Debug permission is (true) and debug key is (present).
+      // Generate verbose debug report due to insufficient aggregatable budget.
+      {
+        "timestamp": "1000",
+        "registration_request": {
+          "registrant": "destination.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_trigger_data": [
+                  {
+                    "source_keys": ["a"],
+                    "key_piece": "0x400"
+                  },
+                  {
+                    "source_keys": ["b"],
+                    "key_piece": "0xA80"
+                  }
+                ],
+                "aggregatable_values": {
+                  "a": 65530,
+                  "b": 7
+                },
+                "debug_key": "6789",
+                "debug_reporting": true
+              }
+            }
+          }
+        ]
+      },
+      // Trigger B: Debug permission is (false or not set) and debug key is (not present).
+      {
+        "timestamp": "2000",
+        "registration_request": {
+          "registrant": "destination.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_trigger_data": [
+                  {
+                    "source_keys": ["a"],
+                    "key_piece": "0x400"
+                  }
+                ],
+                "aggregatable_values": {
+                  "a": 65535
+                }
+              }
+            }
+          }
+        ]
+      },
+      // Trigger C: Debug permission is (false) and debug key is (not present).
+      // Insufficient aggregatable budget verbose debug report not generated
+      // since debug_permission is not set.
+      {
+        "timestamp": "3000",
+        "registration_request": {
+          "registrant": "destination.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_trigger_data": [
+                  {
+                    "source_keys": ["b"],
+                    "key_piece": "0xa80"
+                  }
+                ],
+                "aggregatable_values": {
+                  "a": 2
+                },
+                "debug_reporting": true
+              }
+            }
+          }
+        ]
+      },
+      // Trigger C: Debug permission is (false or not set) and debug key is (not present).
+      {
+        "timestamp": "4000",
+        "registration_request": {
+          "registrant": "destination.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_trigger_data": [
+                  {
+                    "source_keys": ["b"],
+                    "key_piece": "0xa80"
+                  }
+                ],
+                "aggregatable_values": {
+                  "b": 1
+                }
+              }
+            }
+          }
+        ]
+      },
+      // Trigger D: Debug permission is (false or not set) and debug key is (not present).
+      {
+        "timestamp": "11000",
+        "registration_request": {
+          "registrant": "destination.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_trigger_data": [
+                  {
+                    "source_keys": ["b"],
+                    "key_piece": "0xa80"
+                  }
+                ],
+                "aggregatable_values": {
+                  "b": 65536
+                }
+              }
+            }
+          }
+        ]
+      },
+      // Trigger E: Debug permission is (true) and debug key is (not present).
+      // Generate verbose debug report due to insufficient aggregatable budget.
+      {
+        "timestamp": "12000",
+        "registration_request": {
+          "registrant": "destination.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "has_ad_id_permission": true,
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_trigger_data": [
+                  {
+                    "source_keys": ["b"],
+                    "key_piece": "0xa81"
+                  }
+                ],
+                "aggregatable_values": {
+                  "b": 1
+                },
+                "debug_reporting": true
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "aggregatable_results": [
+      // Report (Source A + Trigger B): Trigger does not have debug key permissions or debug key values -> no debug keys present in report
+      {
+        "report_time": "3602000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://destination.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "3602",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x559",
+              "value": 65535
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ]
+        }
+      },
+      // Report (Source A + Trigger D): Trigger does not have debug key permissions or debug key values -> no debug keys present in report
+      {
+        "report_time": "3604000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://destination.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "3604",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0xa85",
+              "value": 1
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ]
+        }
+      },
+      // Report (Source B + Trigger E): Trigger does not have debug key permissions or debug key values -> no debug keys present in report
+      {
+        "report_time": "3611000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://destination.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "3611",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0xa85",
+              "value": 65536
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ]
+        }
+      }
+    ],
+    "verbose_debug_reports": [
+      // Report (Source A + Trigger A): Privacy change only affects event and aggregate reports
+      {
+        "report_time": "1000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/verbose",
+        "payload": [
+          {
+            "type": "trigger-aggregate-insufficient-budget",
+            "body": {
+              "source_event_id": "123",
+              "attribution_destination": "android-app://destination.test",
+              "source_site": "android-app://source.test",
+              "limit": "65536",
+              "source_debug_key": "12345",
+              "trigger_debug_key": "6789"
+            }
+          }
+        ]
+      },
+      // Report (Source B + Trigger F): Privacy change only affects event and aggregate reports
+      {
+        "report_time": "12000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/verbose",
+        "payload": [
+          {
+            "type": "trigger-aggregate-insufficient-budget",
+            "body": {
+              "source_event_id": "456",
+              "attribution_destination": "android-app://destination.test",
+              "source_site": "android-app://source.test",
+              "limit": "65536",
+              "source_debug_key": "54321"
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

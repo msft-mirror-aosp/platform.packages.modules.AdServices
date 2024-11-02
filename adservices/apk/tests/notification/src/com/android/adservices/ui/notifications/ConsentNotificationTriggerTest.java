@@ -141,6 +141,8 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         doReturn(false).when(mMockDebugFlags).getConsentNotificationActivityDebugMode();
         doReturn("").when(mMockFlags).getDebugUx();
         cancelAllPreviousNotifications();
+        AdservicesTestHelper.installTestApp(TEST_NON_PRIVILEGED_APP_APK_PATH);
+        AdservicesTestHelper.installTestApp(TEST_PRIVILEGED_APP_APK_PATH);
     }
 
     @After
@@ -148,6 +150,9 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
         ApkTestUtil.takeScreenshot(sDevice, getClass().getSimpleName() + "_" + getTestName() + "_");
 
         AdservicesTestHelper.killAdservicesProcess(mSpyContext);
+
+        AdservicesTestHelper.uninstallTestApp(TEST_NON_PRIVILEGED_APP_NAME);
+        AdservicesTestHelper.uninstallTestApp(TEST_PRIVILEGED_APP_NAME);
     }
 
     @Test
@@ -429,8 +434,6 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
 
     @Test
     public void testNotificationActivityIntent_gaUxFlagEnabled() throws Exception {
-        AdservicesTestHelper.installTestApp(TEST_NON_PRIVILEGED_APP_APK_PATH);
-        AdservicesTestHelper.installTestApp(TEST_PRIVILEGED_APP_APK_PATH);
         when(mMockFlags.getAdServicesConsentBusinessLogicMigrationEnabled()).thenReturn(true);
         when(mMockFlags.isEeaDevice()).thenReturn(true);
         when(mMockUxStatesManager.getFlag(KEY_GA_UX_FEATURE_ENABLED)).thenReturn(true);

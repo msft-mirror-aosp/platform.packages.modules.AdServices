@@ -303,6 +303,10 @@ public abstract class AbstractDbIntegrationTest {
         mFlagsMap.putIfAbsent(
                 FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME,
                 "0.0");
+        // Limit the number of aggregate keys because histograms are padded with many 0 valued
+        // buckets. This helps keep the test file shorter.
+        mFlagsMap.putIfAbsent(
+                FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION, "5");
     }
 
     private static Map<String, String> getFlagsMap(JSONObject testObj) throws JSONException {

@@ -97,7 +97,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELE
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_EXPIRED_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DELETE_UNINSTALLED_JOB_PERSISTED;
-import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME;
@@ -984,13 +983,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getMeasurementEnableAggregatableReportPayloadPadding() {
-        return getDeviceConfigFlag(
-                KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING,
-                MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING);
-    }
-
-    @Override
     public boolean getMeasurementEnableDestinationRateLimit() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_DESTINATION_RATE_LIMIT,
@@ -1066,6 +1058,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT,
                 FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT);
+    }
+
+    @Override
+    public long getFledgeCustomAudiencePerBuyerMaxCount() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT,
+                FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT);
     }
 
     @Override
@@ -1478,6 +1477,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
                 FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE);
+    }
+
+    @Override
+    public int getFledgeScheduleCustomAudienceUpdateMaxBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES,
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES);
     }
 
     @Override
@@ -4679,6 +4685,11 @@ public final class PhFlags implements Flags {
                         + getFledgeCustomAudiencePerAppMaxCount());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT
+                        + " = "
+                        + getFledgeCustomAudiencePerBuyerMaxCount());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED
                         + " = "
                         + getFledgeAppPackageNameLoggingEnabled());
@@ -5203,6 +5214,11 @@ public final class PhFlags implements Flags {
                         + getFledgeScheduleCustomAudienceMinDelayMinsOverride());
         writer.println(
                 "\t"
+                        + FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES
+                        + " = "
+                        + getFledgeScheduleCustomAudienceUpdateMaxBytes());
+        writer.println(
+                "\t"
                         + FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE
                         + " = "
                         + getEnforceForegroundStatusForFledgeOverrides());
@@ -5710,11 +5726,6 @@ public final class PhFlags implements Flags {
                         + KEY_MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS
                         + " = "
                         + getMeasurementReportingJobServiceBatchWindowMillis());
-        writer.println(
-                "\t"
-                        + KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING
-                        + " = "
-                        + getMeasurementEnableAggregatableReportPayloadPadding());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS

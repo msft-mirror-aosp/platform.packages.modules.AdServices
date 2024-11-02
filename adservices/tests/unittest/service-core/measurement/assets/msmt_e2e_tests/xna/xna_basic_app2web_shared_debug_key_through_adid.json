@@ -221,7 +221,10 @@
             {
               "key": "0xb85",
               "value": 1664
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "112",
           "trigger_debug_key": "211"
@@ -252,7 +255,10 @@
             {
               "key": "0xb85",
               "value": 1664
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "112",
           "trigger_debug_key": "211"

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import com.google.common.collect.ImmutableSet;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -26,13 +28,25 @@ public class AggregatableNamedBudgets {
     private Map<String, BudgetAndContribution> mNameToBudgetAndAggregateContribution =
             new HashMap<>();
 
-    private static class BudgetAndContribution {
-        public int mAggregateContribution;
-        public int mBudget;
+    public static class BudgetAndContribution {
+        private int mAggregateContribution;
+        private final int mBudget;
 
-        BudgetAndContribution(int budget) {
+        public BudgetAndContribution(int budget) {
             mAggregateContribution = 0;
             mBudget = budget;
+        }
+
+        public int getBudget() {
+            return mBudget;
+        }
+
+        public int getAggregateContribution() {
+            return mAggregateContribution;
+        }
+
+        public void setAggregateContribution(int contribution) {
+            mAggregateContribution = contribution;
         }
 
         @Override
@@ -56,7 +70,7 @@ public class AggregatableNamedBudgets {
      */
     public Optional<Integer> maybeGetBudget(String name) {
         if (mNameToBudgetAndAggregateContribution.containsKey(name)) {
-            return Optional.of(mNameToBudgetAndAggregateContribution.get(name).mBudget);
+            return Optional.of(mNameToBudgetAndAggregateContribution.get(name).getBudget());
         }
         return Optional.empty();
     }
@@ -67,7 +81,7 @@ public class AggregatableNamedBudgets {
     public Optional<Integer> maybeGetContribution(String name) {
         if (mNameToBudgetAndAggregateContribution.containsKey(name)) {
             return Optional.of(
-                    mNameToBudgetAndAggregateContribution.get(name).mAggregateContribution);
+                    mNameToBudgetAndAggregateContribution.get(name).getAggregateContribution());
         }
         return Optional.empty();
     }
@@ -76,13 +90,20 @@ public class AggregatableNamedBudgets {
      * @return whether the contribution was successfully added to the named budget or not
      */
     public boolean setContribution(String name, int contribution) {
-        if (contribution > mNameToBudgetAndAggregateContribution.get(name).mBudget) {
+        if (contribution > mNameToBudgetAndAggregateContribution.get(name).getBudget()) {
             return false;
         }
 
         // Set mAggregateContribution to contribution for the named budget.
-        mNameToBudgetAndAggregateContribution.get(name).mAggregateContribution = contribution;
+        mNameToBudgetAndAggregateContribution.get(name).setAggregateContribution(contribution);
         return true;
+    }
+
+    /**
+     * @return the names of the budgets
+     */
+    public ImmutableSet<String> getBudgetNames() {
+        return ImmutableSet.copyOf(mNameToBudgetAndAggregateContribution.keySet());
     }
 
     /** Set budget for the named budget's aggregate contributions */

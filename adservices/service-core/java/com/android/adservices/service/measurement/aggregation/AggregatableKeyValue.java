@@ -15,14 +15,20 @@
  */
 package com.android.adservices.service.measurement.aggregation;
 
+import android.annotation.Nullable;
+
+import com.android.adservices.service.measurement.util.UnsignedLong;
+
 import java.util.Objects;
 
 /** POJO for AggregatableKeyValue */
 public class AggregatableKeyValue {
-    int mValue;
+    private final int mValue;
+    private final UnsignedLong mFilteringId;
 
     private AggregatableKeyValue(AggregatableKeyValue.Builder builder) {
         mValue = builder.mValue;
+        mFilteringId = builder.mFilteringId;
     }
 
     /** Returns the int value of aggregatable_value's value. */
@@ -30,24 +36,39 @@ public class AggregatableKeyValue {
         return mValue;
     }
 
+    /** Returns the filtering id. */
+    @Nullable
+    public UnsignedLong getFilteringId() {
+        return mFilteringId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof AggregatableKeyValue)) return false;
         AggregatableKeyValue that = (AggregatableKeyValue) o;
-        return mValue == that.mValue;
+        return mValue == that.mValue && Objects.equals(mFilteringId, that.mFilteringId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mValue);
+        return Objects.hash(mValue, mFilteringId);
     }
 
     public static final class Builder {
         private int mValue;
+        private UnsignedLong mFilteringId;
 
+        // This will throw JSONException if a JSONObject was previously persisted, and flag
+        // MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING gets set to false.
         public Builder(int value) {
             mValue = value;
+        }
+
+        /** {@link AggregatableKeyValue#getFilteringId()} */
+        public AggregatableKeyValue.Builder setFilteringId(UnsignedLong filteringId) {
+            mFilteringId = filteringId;
+            return this;
         }
 
         /** Build the {@link AggregatableKeyValue}. */

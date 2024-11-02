@@ -19,6 +19,7 @@ package com.android.adservices.service.customaudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceToLeave;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdateRequest;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedStats;
 
 import com.google.common.util.concurrent.FluentFuture;
 
@@ -40,7 +41,8 @@ public interface ScheduleCustomAudienceUpdateStrategy {
             String owner,
             boolean allowScheduleInResponse,
             JSONObject updateResponseJson,
-            DevContext devContext);
+            DevContext devContext,
+            ScheduledCustomAudienceUpdatePerformedStats.Builder statsBuilder);
 
     /** Prepares the request body of the fetch update call */
     String prepareFetchUpdateRequestBody(

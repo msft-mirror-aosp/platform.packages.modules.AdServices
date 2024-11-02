@@ -479,7 +479,11 @@
             {
               "key": "0x33",
               "value": 333
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "111",
           "trigger_debug_key": "333"
@@ -503,7 +507,11 @@
             {
               "key": "0x22",
               "value": 222
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "222",
           "trigger_debug_key": "222"
@@ -528,7 +536,11 @@
             {
               "key": "0x44",
               "value": 444
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "444",
           "trigger_debug_key": "444"
@@ -553,7 +565,11 @@
             {
               "key": "0x11",
               "value": 111
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "111",
           "trigger_debug_key": "111"
@@ -578,7 +594,11 @@
             {
               "key": "0x67",
               "value": 666
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "333",
           "trigger_debug_key": "666"
@@ -605,7 +625,11 @@
             {
               "key": "0x33",
               "value": 333
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "111",
           "trigger_debug_key": "333"
@@ -629,7 +653,11 @@
             {
               "key": "0x22",
               "value": 222
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "222",
           "trigger_debug_key": "222"
@@ -653,7 +681,11 @@
             {
               "key": "0x44",
               "value": 444
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "444",
           "trigger_debug_key": "444"
@@ -677,7 +709,11 @@
             {
               "key": "0x11",
               "value": 111
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "111",
           "trigger_debug_key": "111"
@@ -701,7 +737,11 @@
             {
               "key": "0x67",
               "value": 666
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "333",
           "trigger_debug_key": "666"

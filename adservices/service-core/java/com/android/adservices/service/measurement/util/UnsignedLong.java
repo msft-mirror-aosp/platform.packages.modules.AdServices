@@ -26,6 +26,7 @@ import java.util.Objects;
  */
 public class UnsignedLong implements Comparable<UnsignedLong> {
     private final Long mValue;
+    public static final UnsignedLong ZERO = new UnsignedLong("0");
 
     public UnsignedLong(@NonNull Long value) {
         Validation.validateNonNull(value);

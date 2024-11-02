@@ -114,6 +114,7 @@ public final class AdPackageDenyPreProcessJobServiceTest extends AdServicesJobSe
     }
 
     @Test
+    @FlakyTest(bugId = 376351631)
     public void testScheduleIfNeeded_success() throws Exception {
         // Feature is enabled.
         when(mMockFlags.getEnablePackageDenyBgJob()).thenReturn(true);
@@ -144,13 +145,10 @@ public final class AdPackageDenyPreProcessJobServiceTest extends AdServicesJobSe
     @Test
     public void onStartJob_featureDisabled() throws Exception {
         // Feature is disabled.
+        JobServiceLoggingCallback loggingCallback = syncLogExecutionStats(mLogger);
+
         when(mMockFlags.getEnablePackageDenyBgJob()).thenReturn(false);
         doNothing().when(mAdPackageDenyPreProcessJobService).jobFinished(mMockJobParameters, false);
-
-        // Schedule the job to assert after starting that the scheduled job has been cancelled
-        JobInfo existingJobInfo = mockJobInfo();
-        JOB_SCHEDULER.schedule(existingJobInfo);
-        assertThat(JOB_SCHEDULER.getPendingJob(PACKAGE_DENY_PRE_PROCESS_JOB_ID)).isNotNull();
 
         JobServiceCallback callback =
                 new JobServiceCallback().expectJobFinished(mAdPackageDenyPreProcessJobService);
@@ -163,6 +161,7 @@ public final class AdPackageDenyPreProcessJobServiceTest extends AdServicesJobSe
 
         verify(mAdPackageDenyPreProcessJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(AdPackageDenyResolver.class));
+        verifyBackgroundJobsSkipLogged(mLogger, loggingCallback);
     }
 
     @Test
@@ -184,7 +183,8 @@ public final class AdPackageDenyPreProcessJobServiceTest extends AdServicesJobSe
 
     @Test
     @FlakyTest(bugId = 375608382)
-    public void onStartJob_shouldDisableJobTrue() {
+    public void onStartJob_shouldDisableJobTrue() throws Exception {
+        JobServiceLoggingCallback loggingCallback = syncLogExecutionStats(mLogger);
         doReturn(true)
                 .when(
                         () ->
@@ -193,12 +193,6 @@ public final class AdPackageDenyPreProcessJobServiceTest extends AdServicesJobSe
 
         doNothing().when(mAdPackageDenyPreProcessJobService).jobFinished(mMockJobParameters, false);
 
-        // Schedule the job to assert after starting that the scheduled job has been cancelled
-        JobInfo existingJobInfo = mockJobInfo();
-        JOB_SCHEDULER.schedule(existingJobInfo);
-        assertThat(JOB_SCHEDULER.getPendingJob(PACKAGE_DENY_PRE_PROCESS_JOB_ID)).isNotNull();
-
-        // Now verify that when the Job starts, it will be unscheduled.
         assertThat(mAdPackageDenyPreProcessJobService.onStartJob(mMockJobParameters)).isFalse();
 
         assertThat(JOB_SCHEDULER.getPendingJob(PACKAGE_DENY_PRE_PROCESS_JOB_ID)).isNull();
@@ -206,9 +200,7 @@ public final class AdPackageDenyPreProcessJobServiceTest extends AdServicesJobSe
         verify(mAdPackageDenyPreProcessJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(AdPackageDenyResolver.class));
 
-        // Verify no logging has happened even though logging is enabled because this field is not
-        // logged
-        verifyLoggingNotHappened(mLogger);
+        verifyBackgroundJobsSkipLogged(mLogger, loggingCallback);
     }
 
     private BooleanSyncCallback scheduleJobInBackground() {

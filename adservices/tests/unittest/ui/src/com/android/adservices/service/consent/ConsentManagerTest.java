@@ -126,6 +126,7 @@ import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
@@ -243,6 +244,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Mock private AppInstallDao mAppInstallDaoMock;
     @Mock private ProtectedSignalsDao mProtectedSignalsDaoMock;
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
+    @Mock private EncodedPayloadDao mEncodedPayloadDaoMock;
     @Mock private UiStatsLogger mUiStatsLoggerMock;
     @Mock private AppUpdateManager mAppUpdateManagerMock;
     @Mock private CacheManager mCacheManagerMock;
@@ -816,6 +818,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
+        verify(mEncodedPayloadDaoMock).deleteAllEncodedPayloads();
         verify(mUserProfileIdManagerMock).deleteId();
     }
 
@@ -837,6 +840,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verifyZeroInteractions(mProtectedSignalsDaoMock);
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
+        verifyZeroInteractions(mEncodedPayloadDaoMock);
         verify(mUserProfileIdManagerMock).deleteId();
     }
 
@@ -859,6 +863,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verifyZeroInteractions(mFrequencyCapDaoMock);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
+        verify(mEncodedPayloadDaoMock).deleteAllEncodedPayloads();
         verify(mUserProfileIdManagerMock).deleteId();
     }
 
@@ -881,6 +886,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
         verifyZeroInteractions(mAppInstallDaoMock);
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
+        verify(mEncodedPayloadDaoMock).deleteAllEncodedPayloads();
         verify(mUserProfileIdManagerMock).deleteId();
     }
 
@@ -900,6 +906,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
+        verify(mEncodedPayloadDaoMock).deleteAllEncodedPayloads();
         verify(mUserProfileIdManagerMock).deleteId();
         verify(mUserProfileIdManagerMock).getOrCreateId();
     }
@@ -962,6 +969,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verifyZeroInteractions(mProtectedSignalsDaoMock);
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
+        verifyZeroInteractions(mEncodedPayloadDaoMock);
         verify(mUserProfileIdManagerMock).deleteId();
         verify(mUserProfileIdManagerMock).getOrCreateId();
     }
@@ -1644,6 +1652,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doNothing()
                 .when(mCustomAudienceDaoMock)
                 .deleteCustomAudienceDataByOwner(any(), anyBoolean());
+
         mConsentManager.enable(mSpyContext);
         assertTrue(mConsentManager.getConsent().isGiven());
 
@@ -2013,6 +2022,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock, times(2)).deleteAllSignals();
         verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
+        verify(mEncodedPayloadDaoMock, times(2)).deleteAllEncodedPayloads();
     }
 
     @Test
@@ -2034,6 +2044,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
+        verify(mEncodedPayloadDaoMock).deleteAllEncodedPayloads();
     }
 
     @Test
@@ -2094,6 +2105,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock, times(2)).deleteAllSignals();
         verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
+        verify(mEncodedPayloadDaoMock, times(2)).deleteAllEncodedPayloads();
     }
 
     @Test
@@ -2163,6 +2175,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock, times(2)).deleteAllSignals();
         verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
+        verify(mEncodedPayloadDaoMock, times(2)).deleteAllEncodedPayloads();
     }
 
     @Test
@@ -2184,6 +2197,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
+        verify(mEncodedPayloadDaoMock).deleteAllEncodedPayloads();
     }
 
     @Test
@@ -2246,6 +2260,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
+        verify(mEncodedPayloadDaoMock).deleteAllEncodedPayloads();
     }
 
     @Test
@@ -3068,6 +3083,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         mAppInstallDaoMock,
                         mProtectedSignalsDaoMock,
                         mFrequencyCapDaoMock,
+                        mEncodedPayloadDaoMock,
                         mAdServicesManager,
                         mConsentDatastore,
                         mAppSearchConsentManagerMock,
@@ -3565,6 +3581,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 mAppInstallDaoMock,
                 mProtectedSignalsDaoMock,
                 mFrequencyCapDaoMock,
+                mEncodedPayloadDaoMock,
                 mAdServicesManager,
                 mConsentDatastore,
                 mAppSearchConsentManagerMock,

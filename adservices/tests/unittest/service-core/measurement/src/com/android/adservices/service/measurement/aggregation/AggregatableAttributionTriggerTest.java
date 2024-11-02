@@ -31,7 +31,6 @@ import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -74,7 +73,7 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     private AggregatableAttributionTrigger createExampleWithValues(
-            List<AggregateDeduplicationKey> aggregateDeduplicationKeys) {
+            List<AggregateDeduplicationKey> aggregateDeduplicationKeys) throws Exception {
         List<AggregateTriggerData> aggregateTriggerDataList = createAggregateTriggerData();
         AggregateTriggerData attributionTriggerData1 = aggregateTriggerDataList.get(0);
         AggregateTriggerData attributionTriggerData2 = aggregateTriggerDataList.get(1);
@@ -98,7 +97,8 @@ public final class AggregatableAttributionTriggerTest {
 
     private AggregatableAttributionTrigger createExampleWithValues(
             List<AggregateDeduplicationKey> aggregateDeduplicationKeys,
-            List<AggregatableNamedBudget> aggregatableNamedBudgets) {
+            List<AggregatableNamedBudget> aggregatableNamedBudgets)
+            throws Exception {
         List<AggregateTriggerData> aggregateTriggerDataList = createAggregateTriggerData();
         AggregateTriggerData attributionTriggerData1 = aggregateTriggerDataList.get(0);
         AggregateTriggerData attributionTriggerData2 = aggregateTriggerDataList.get(1);
@@ -213,7 +213,7 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     @Test
-    public void testGetNamedBudgets() throws JSONException {
+    public void testGetNamedBudgets() throws Exception {
         JSONObject filterMap1 = new JSONObject();
         filterMap1.put("2", new JSONArray(Arrays.asList("1234", "234")));
         JSONArray filterSet1 = new JSONArray();
@@ -245,7 +245,7 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     @Test
-    public void testGetNamedBudgets_nullNamedBudget() {
+    public void testGetNamedBudgets_nullNamedBudget() throws Exception {
         AggregatableAttributionTrigger attributionTrigger =
                 createExampleWithValues(
                         /* aggregateDeduplicationKeys= */ null,
@@ -296,7 +296,7 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     @Test
-    public void testExtractDedupKey_bothKeysHaveMatchingFilters() {
+    public void testExtractDedupKey_bothKeysHaveMatchingFilters() throws Exception {
         Map<String, List<String>> triggerFilterMap1 = new HashMap<>();
         triggerFilterMap1.put(
                 "conversion_subdomain", Collections.singletonList("electronics.megastore"));
@@ -341,7 +341,7 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     @Test
-    public void testExtractDedupKey_secondKeyMatches_firstKeyHasInvalidFilters() {
+    public void testExtractDedupKey_secondKeyMatches_firstKeyHasInvalidFilters() throws Exception {
         Map<String, List<String>> triggerFilterMap1 = new HashMap<>();
         triggerFilterMap1.put(
                 "conversion_subdomain", Collections.singletonList("electronics.ministore"));
@@ -406,7 +406,8 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     @Test
-    public void testExtractDedupKey_secondKeyMatches_firstKeyHasInvalidNotFilters() {
+    public void testExtractDedupKey_secondKeyMatches_firstKeyHasInvalidNotFilters()
+            throws Exception {
         Map<String, List<String>> triggerFilterMap1 = new HashMap<>();
         triggerFilterMap1.put("product", Arrays.asList("1234", "234"));
         Map<String, List<String>> notTriggerFilterMap1 = new HashMap<>();
@@ -467,7 +468,7 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     @Test
-    public void testExtractDedupKey_noFiltersInFirstKey() {
+    public void testExtractDedupKey_noFiltersInFirstKey() throws Exception {
         AggregateDeduplicationKey aggregateDeduplicationKey1 =
                 new AggregateDeduplicationKey.Builder()
                         .setDeduplicationKey(new UnsignedLong(10L))
@@ -503,7 +504,7 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     @Test
-    public void testExtractDedupKey_noKeysMatch() {
+    public void testExtractDedupKey_noKeysMatch() throws Exception {
         Map<String, List<String>> triggerFilterMap1 = new HashMap<>();
         triggerFilterMap1.put(
                 "conversion_subdomain", Collections.singletonList("electronics.ministore"));
@@ -547,7 +548,7 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     @Test
-    public void testExtractDedupKey_secondKeyMatches_nullDedupKey() {
+    public void testExtractDedupKey_secondKeyMatches_nullDedupKey() throws Exception {
         Map<String, List<String>> triggerFilterMap1 = new HashMap<>();
         triggerFilterMap1.put("product", Arrays.asList("1234", "234"));
         Map<String, List<String>> notTriggerFilterMap1 = new HashMap<>();
@@ -606,7 +607,8 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     @Test
-    public void testExtractDedupKey_lookbackWindowEnabledAndEmptyDedupKeys_returnsEmpty() {
+    public void testExtractDedupKey_lookbackWindowEnabledAndEmptyDedupKeys_returnsEmpty()
+            throws Exception {
         when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         AggregateDeduplicationKey aggregateDeduplicationKey1 =
                 new AggregateDeduplicationKey.Builder()
@@ -649,7 +651,7 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     @Test
-    public void testExtractNamedBudget_bothNamedBudgetsHaveMatchingFilters() throws JSONException {
+    public void testExtractNamedBudget_bothNamedBudgetsHaveMatchingFilters() throws Exception {
         // Set up
         JSONObject budgetObj1 = new JSONObject();
         budgetObj1.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME1);
@@ -689,7 +691,7 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     @Test
-    public void testExtractNamedBudget_firstNamedBudgetHasUnmatchedFilters() throws JSONException {
+    public void testExtractNamedBudget_firstNamedBudgetHasUnmatchedFilters() throws Exception {
         // Set up
         JSONObject budgetObj1 = new JSONObject();
         budgetObj1.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME1);
@@ -744,8 +746,7 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     @Test
-    public void testExtractNamedBudget_firstNamedBudgetHasUnmatchedNotFilters()
-            throws JSONException {
+    public void testExtractNamedBudget_firstNamedBudgetHasUnmatchedNotFilters() throws Exception {
         // Set up
         JSONObject budgetObj1 = new JSONObject();
         budgetObj1.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME1);
@@ -798,7 +799,7 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     @Test
-    public void testExtractNamedBudget_noFiltersInFirstNamedBudget() throws JSONException {
+    public void testExtractNamedBudget_noFiltersInFirstNamedBudget() throws Exception {
         JSONObject budgetObj1 = new JSONObject();
         budgetObj1.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME1);
         AggregatableNamedBudget aggregatableNamedBudget1 =
@@ -831,7 +832,7 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     @Test
-    public void testExtractNamedBudget_noNamedBudgetsMatch() throws JSONException {
+    public void testExtractNamedBudget_noNamedBudgetsMatch() throws Exception {
         JSONObject budgetObj1 = new JSONObject();
         budgetObj1.put(AggregatableNamedBudget.NamedBudgetContract.NAME, BUDGET_NAME1);
         JSONObject filterMap1 = new JSONObject();
@@ -869,7 +870,7 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     @Test
-    public void testExtractNamedBudget_nullNamedBudgets() {
+    public void testExtractNamedBudget_nullNamedBudgets() throws Exception {
         Map<String, List<String>> sourceFilterMap = new HashMap<>();
         sourceFilterMap.put("1", Collections.singletonList("509"));
         sourceFilterMap.put("2", Arrays.asList("1234", "234"));
@@ -885,7 +886,7 @@ public final class AggregatableAttributionTriggerTest {
     }
 
     @Test
-    public void testExtractNamedBudget_emptyNamedBudgets() {
+    public void testExtractNamedBudget_emptyNamedBudgets() throws Exception {
         Map<String, List<String>> sourceFilterMap = new HashMap<>();
         sourceFilterMap.put("1", Collections.singletonList("509"));
         sourceFilterMap.put("2", Arrays.asList("1234", "234"));

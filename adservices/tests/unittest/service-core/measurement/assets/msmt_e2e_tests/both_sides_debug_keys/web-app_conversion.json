@@ -1,0 +1,155 @@
+{
+  "description": "web-app conversion with both side debug keys enforcement",
+  "phflags_override": {
+    "measurement_debug_key_ad_id_matching_enrollment_blocklist": "",
+    "Measurement__enable_both_side_debug_keys_in_reports": "true"
+  },
+  "input": {
+    "web_sources": [
+      // Source A (Web): Debug permission is (true) and debug key is (present).
+      {
+        "timestamp": "1",
+        "registration_request": {
+          "source_origin": "android-app://example.test",
+          "source_type": "navigation",
+          "app_destination": "android-app://com.example1.test",
+          "registrant": "example.test",
+          "source_params": [{
+            "attribution_src_url": "https://www.ad-tech1.test"
+          }]
+        },
+        "responses": [{
+          "url": "https://www.ad-tech1.test",
+          "debug_permission": true,
+          "response": {
+            "Attribution-Reporting-Register-Source": {
+              "source_event_id": "1",
+              "destination": "android-app://com.example1.test",
+              "debug_key": "123",
+              "debug_ad_id": "9e2c3718906d618c5745ecc69971f083e9b249029c123486d949c453e55cb882"
+            }
+          }
+        }]
+      },
+      // Source B (Web): Debug permission is (true) and debug key is (present).
+      {
+        "timestamp": "2",
+        "registration_request": {
+          "source_origin": "android-app://example.test",
+          "source_type": "navigation",
+          "app_destination": "android-app://com.example2.test",
+          "registrant": "example.test",
+          "source_params": [{
+            "attribution_src_url": "https://www.ad-tech1.test"
+          }]
+        },
+        "responses": [{
+          "url": "https://www.ad-tech1.test",
+          "debug_permission": true,
+          "response": {
+            "Attribution-Reporting-Register-Source": {
+              "source_event_id": "1",
+              "destination": "android-app://com.example2.test",
+              "debug_key": "45",
+              "debug_ad_id": "9e2c3718906d618c5745ecc69971f083e9b249029c123486d949c453e55cb882"
+            }
+          }
+        }]
+      }
+    ],
+    "triggers" : [
+      // Trigger A (App): debug permission is (true) and debug key is (present).
+      {
+        "timestamp": "1000",
+        "registration_request": {
+          "registrant": "com.example1.test",
+          "platform_ad_id": "12345678-1234-1234-1234-123456789012"
+        },
+        "responses": [{
+          "url": "https://www.ad-tech1.test",
+          "has_ad_id_permission": true,
+          "response": {
+            "Attribution-Reporting-Register-Trigger": {
+              "event_trigger_data": [
+                {
+                  "trigger_data": "2"
+                }
+              ],
+              "debug_key": "678"
+            }
+          }
+        }]
+      },
+      // Trigger A (App): debug permission is (true) and debug key is (not present).
+      {
+        "timestamp": "2000",
+        "registration_request": {
+          "registrant": "com.example2.test",
+          "platform_ad_id": "12345678-1234-1234-1234-123456789012"
+        },
+        "responses": [{
+          "url": "https://www.ad-tech1.test",
+          "has_ad_id_permission": true,
+          "response": {
+            "Attribution-Reporting-Register-Trigger": {
+              "event_trigger_data": [
+                {
+                  "trigger_data": "2"
+                }
+              ]
+            }
+          }
+        }]
+      }
+    ]
+  },
+  "output": {
+    "event_level_results": [
+      // Report (Source A + Trigger A)
+      {
+        "report_time": "172800001",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
+        "payload": {
+          "attribution_destination": "android-app://com.example1.test",
+          "scheduled_report_time": "172800",
+          "source_event_id": "1",
+          "trigger_data": "2",
+          "source_type": "navigation",
+          "randomized_trigger_rate": 0.0024263,
+          "source_debug_key": "123",
+          "trigger_debug_key": "678"
+        }
+      },
+      // Report (Source B + Trigger B)
+      {
+        "report_time": "172800002",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
+        "payload": {
+          "attribution_destination": "android-app://com.example2.test",
+          "scheduled_report_time": "172800",
+          "source_event_id": "1",
+          "trigger_data": "2",
+          "source_type": "navigation",
+          "randomized_trigger_rate": 0.0024263
+        }
+      }
+    ],
+    "debug_event_level_results": [
+      // Report (Source A + Trigger A)
+      {
+        "report_time": "1000",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-event-attribution",
+        "payload": {
+          "attribution_destination": "android-app://com.example1.test",
+          "scheduled_report_time": "172800",
+          "source_event_id": "1",
+          "trigger_data": "2",
+          "source_type": "navigation",
+          "randomized_trigger_rate": 0.0024263,
+          "source_debug_key": "123",
+          "trigger_debug_key": "678"
+        }
+      }
+    ]
+  }
+}

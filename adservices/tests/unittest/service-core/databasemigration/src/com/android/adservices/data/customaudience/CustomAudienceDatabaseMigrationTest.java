@@ -273,8 +273,12 @@ public class CustomAudienceDatabaseMigrationTest {
         assertFalse(info.columns.containsKey("allow_schedule_in_response"));
 
         // Table added in v10 should not exist, yet.
-        TableInfo info2 = TableInfo.read(db, DBCustomAudienceToLeave.TABLE_NAME);
-        assertFalse(info2.columns.containsKey("name"));
+        cursor =
+                db.query(
+                        String.format(
+                                QUERY_TABLES_FROM_SQL_MASTER, DBCustomAudienceToLeave.TABLE_NAME));
+        assertEquals(0, cursor.getCount());
+        cursor.close();
 
         // Close DB before attempting migrations.
         db.close();
@@ -287,8 +291,12 @@ public class CustomAudienceDatabaseMigrationTest {
         assertTrue(info.columns.containsKey("allow_schedule_in_response"));
 
         // Table added in v10 should exist.
-        info2 = TableInfo.read(db, DBCustomAudienceToLeave.TABLE_NAME);
-        assertTrue(info2.columns.containsKey("name"));
+        cursor =
+                db.query(
+                        String.format(
+                                QUERY_TABLES_FROM_SQL_MASTER, DBCustomAudienceToLeave.TABLE_NAME));
+        assertEquals(1, cursor.getCount());
+        cursor.close();
 
         // Check if value of the new column has the default value for already existing columns and
         // assert success.

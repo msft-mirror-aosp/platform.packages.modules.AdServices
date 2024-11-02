@@ -221,7 +221,11 @@
             {
               "key": "0x11",
               "value": 111
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "111",
           "trigger_debug_key": "333"
@@ -244,7 +248,11 @@
             {
               "key": "0x11",
               "value": 222
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "111"
         },
@@ -267,7 +275,11 @@
             {
               "key": "0x11",
               "value": 333
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "111",
           "trigger_debug_key": "444"
@@ -290,7 +302,11 @@
             {
               "key": "0x12",
               "value": 444
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "555"
         },
@@ -312,7 +328,11 @@
             {
               "key": "0x13",
               "value": 555
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "trigger_debug_key": "666"
         },
@@ -337,7 +357,11 @@
             {
               "key": "0x11",
               "value": 111
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "111",
           "trigger_debug_key": "333",
@@ -362,7 +386,11 @@
             {
               "key": "0x11",
               "value": 333
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "111",
           "trigger_debug_key": "444",

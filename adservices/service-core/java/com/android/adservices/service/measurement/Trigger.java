@@ -425,6 +425,20 @@ public class Trigger {
         return mAggregatableFilteringIdMaxBytes;
     }
 
+    /** Returns if the report for this Trigger should be sent immediately or with a delay. */
+    public boolean shouldAddDelay(Flags flags) {
+        boolean isNonNullTriggerContextId = mTriggerContextId != null;
+        boolean isNonNullFilteringIdAndNonDefaultFilteringIdMaxBytes =
+                flags.getMeasurementEnableFlexibleContributionFiltering()
+                        && mAggregatableFilteringIdMaxBytes != null
+                        && mAggregatableFilteringIdMaxBytes
+                                != Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES;
+        if (isNonNullTriggerContextId || isNonNullFilteringIdAndNonDefaultFilteringIdMaxBytes) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
@@ -523,7 +537,8 @@ public class Trigger {
         } else {
             // Default case: Convert value from integer to AggregatableKeyValue.
             AggregatableValuesConfig aggregatableValuesConfig =
-                    new AggregatableValuesConfig.Builder(new JSONObject(mAggregateValuesString))
+                    new AggregatableValuesConfig.Builder(
+                                    new JSONObject(mAggregateValuesString), flags)
                             .build();
             aggregatableAttributionTriggerBuilder.setValueConfigs(
                     List.of(aggregatableValuesConfig));
