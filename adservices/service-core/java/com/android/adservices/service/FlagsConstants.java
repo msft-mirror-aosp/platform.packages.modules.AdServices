@@ -532,6 +532,8 @@ public final class FlagsConstants {
             "fledge_custom_audience_per_app_max_count";
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT =
             "fledge_custom_audience_max_owner_count";
+    public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT =
+            "Fledge__custom_audience_per_buyer_max_count";
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS =
             // Flag key is in days, but the flag is used functionally as milliseconds; DO NOT FIX
             "fledge_custom_audience_default_expire_in_days";
