@@ -631,6 +631,23 @@ public class AsyncTriggerFetcher {
         Trigger.SourceRegistrationTimeConfig sourceRegistrationTimeConfig =
                 getSourceRegistrationTimeConfig(json);
 
+        if (filteringIdMaxBytes != null
+                && filteringIdMaxBytes != mFlags.getMeasurementDefaultFilteringIdMaxBytes()
+                && Trigger.SourceRegistrationTimeConfig.INCLUDE.equals(
+                        sourceRegistrationTimeConfig)) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            String.format(
+                                    "AsyncTriggerFetcher: Invalid %s in %s header when %s"
+                                            + " has a value of %s",
+                                    TriggerHeaderContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES,
+                                    TriggerHeaderContract
+                                            .HEADER_ATTRIBUTION_REPORTING_REGISTER_TRIGGER,
+                                    TriggerHeaderContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME,
+                                    Trigger.SourceRegistrationTimeConfig.INCLUDE.name()));
+            return false;
+        }
+
         builder.setAggregatableSourceRegistrationTimeConfig(sourceRegistrationTimeConfig);
 
         if (!json.isNull(TriggerHeaderContract.TRIGGER_CONTEXT_ID)) {
