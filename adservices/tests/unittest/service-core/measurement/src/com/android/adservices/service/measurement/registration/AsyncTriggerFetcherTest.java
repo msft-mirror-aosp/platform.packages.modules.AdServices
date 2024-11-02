@@ -3384,6 +3384,80 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    public void
+            testTriggerRequest_DefaultFilteringIdMaxBytes_SourceRegisterationTimeInclude_succeeds()
+                    throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_source_registration_time\": \""
+                                                + Trigger.SourceRegistrationTimeConfig.INCLUDE
+                                                        .name()
+                                                + "\""
+                                                + ","
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 1
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isTrue();
+    }
+
+    @Test
+    public void
+            testTriggerRequest_NonDefaultFilteringIdMaxBytes_SourceRegisterationTimeInclude_fails()
+                    throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_source_registration_time\": \""
+                                                + Trigger.SourceRegistrationTimeConfig.INCLUDE
+                                                        .name()
+                                                + "\""
+                                                + ","
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 2
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
+    }
+
+    @Test
     public void testTriggerRequest_filterMapIncludesNullValue_fails() throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         String filters = "[{\"something\":[\"val1\", null]}";

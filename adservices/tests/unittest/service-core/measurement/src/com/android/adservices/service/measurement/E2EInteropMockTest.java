@@ -279,6 +279,9 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                     entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING, "true"),
                     entry(
                             FlagsConstants.KEY_MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS,
+                            "true"),
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING,
                             "true"));
 
     @Parameterized.Parameters(name = "{3}")
