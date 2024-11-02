@@ -359,6 +359,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.TriggerContract.AGGREGATE_DEBUG_REPORTING,
                 builder::setAggregateDebugReportingString);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.NAMED_BUDGETS,
+                builder::setNamedBudgetsString);
         return builder.build();
     }
 

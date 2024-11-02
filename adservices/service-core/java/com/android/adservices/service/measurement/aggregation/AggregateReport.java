@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import static com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator.POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION;
+
 import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.net.Uri;
@@ -310,6 +312,20 @@ public class AggregateReport {
         return mAggregatableFilteringIdMaxBytes;
     }
 
+    /** Returns if the report for this Trigger should be sent immediately or with a delay. */
+    public static boolean isDelayed(Trigger trigger, Flags flags) {
+        boolean isNonNullTriggerContextId = trigger.getTriggerContextId() != null;
+        boolean isNonNullFilteringIdAndNonDefaultFilteringIdMaxBytes =
+                flags.getMeasurementEnableFlexibleContributionFiltering()
+                        && trigger.getAggregatableFilteringIdMaxBytes() != null
+                        && trigger.getAggregatableFilteringIdMaxBytes()
+                        != Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES;
+        if (isNonNullTriggerContextId || isNonNullFilteringIdAndNonDefaultFilteringIdMaxBytes) {
+            return false;
+        }
+        return true;
+    }
+
     /**
      * Generates String for debugCleartextPayload. JSON for format : { "operation": "histogram",
      * "data": [{ "bucket": 1369, "value": 32768 }, { "bucket": 3461, "value": 1664 }] }
@@ -569,14 +585,21 @@ public class AggregateReport {
                 throws JSONException {
             mAttributionReport.mId = UUID.randomUUID().toString();
             long reportTime = trigger.getTriggerTime();
-            if (trigger.getTriggerContextId() == null) {
+            if (isDelayed(trigger, flags)) {
                 reportTime += delay;
             }
-            AggregateHistogramContribution paddingContribution =
-                    new AggregateHistogramContribution.Builder().setPaddingContribution().build();
+
+            AggregateHistogramContribution.Builder paddingContributionBuilder =
+                    new AggregateHistogramContribution.Builder();
+            if (apiVersion.equals(POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION)) {
+                paddingContributionBuilder.setPaddingContributionWithFilteringId();
+            } else {
+                paddingContributionBuilder.setPaddingContribution();
+            }
 
             String debugPayload =
-                    AggregateReport.generateDebugPayload(List.of(paddingContribution));
+                    AggregateReport.generateDebugPayload(
+                            List.of(paddingContributionBuilder.build()));
 
             mAttributionReport.mApiVersion = apiVersion;
             mAttributionReport.mPublisher = Uri.EMPTY;

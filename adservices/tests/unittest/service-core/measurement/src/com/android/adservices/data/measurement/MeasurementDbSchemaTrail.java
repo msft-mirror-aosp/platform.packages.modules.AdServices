@@ -2139,6 +2139,72 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT "
                     + ")";
 
+    public static final String CREATE_TABLE_TRIGGER_V45 =
+            "CREATE TABLE "
+                    + TriggerContract.TABLE
+                    + " ("
+                    + TriggerContract.ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + TriggerContract.ATTRIBUTION_DESTINATION
+                    + " TEXT, "
+                    + TriggerContract.DESTINATION_TYPE
+                    + " INTEGER, "
+                    + TriggerContract.ENROLLMENT_ID
+                    + " TEXT, "
+                    + TriggerContract.TRIGGER_TIME
+                    + " INTEGER, "
+                    + TriggerContract.EVENT_TRIGGERS
+                    + " TEXT, "
+                    + TriggerContract.STATUS
+                    + " INTEGER, "
+                    + TriggerContract.REGISTRANT
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATE_TRIGGER_DATA
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATE_VALUES
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS
+                    + " TEXT, "
+                    + TriggerContract.FILTERS
+                    + " TEXT, "
+                    + TriggerContract.NOT_FILTERS
+                    + " TEXT, "
+                    + TriggerContract.DEBUG_KEY
+                    + " INTEGER, "
+                    + TriggerContract.DEBUG_REPORTING
+                    + " INTEGER, "
+                    + TriggerContract.AD_ID_PERMISSION
+                    + " INTEGER, "
+                    + TriggerContract.AR_DEBUG_PERMISSION
+                    + " INTEGER, "
+                    + TriggerContract.ATTRIBUTION_CONFIG
+                    + " TEXT, "
+                    + TriggerContract.X_NETWORK_KEY_MAPPING
+                    + " TEXT, "
+                    + TriggerContract.DEBUG_JOIN_KEY
+                    + " TEXT, "
+                    + TriggerContract.PLATFORM_AD_ID
+                    + " TEXT, "
+                    + TriggerContract.DEBUG_AD_ID
+                    + " TEXT, "
+                    + TriggerContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATION_COORDINATOR_ORIGIN
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG
+                    + " TEXT, "
+                    + TriggerContract.TRIGGER_CONTEXT_ID
+                    + " TEXT, "
+                    + TriggerContract.ATTRIBUTION_SCOPES
+                    + " TEXT, "
+                    + TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES
+                    + " INTEGER, "
+                    + TriggerContract.AGGREGATE_DEBUG_REPORTING
+                    + " TEXT, "
+                    + TriggerContract.NAMED_BUDGETS
+                    + " TEXT "
+                    + ")";
+
     public static final String CREATE_TABLE_SOURCE_ATTRIBUTION_SCOPE_V34 =
             "CREATE TABLE "
                     + SourceAttributionScopeContract.TABLE
@@ -2149,6 +2215,27 @@ public class MeasurementDbSchemaTrail {
                     + " TEXT, "
                     + "FOREIGN KEY ("
                     + SourceDestination.SOURCE_ID
+                    + ") REFERENCES "
+                    + SourceContract.TABLE
+                    + "("
+                    + SourceContract.ID
+                    + ") ON DELETE CASCADE "
+                    + ")";
+
+    public static final String CREATE_TABLE_SOURCE_NAMED_BUDGET_V45 =
+            "CREATE TABLE "
+                    + MeasurementTables.SourceNamedBudgetContract.TABLE
+                    + " ("
+                    + MeasurementTables.SourceNamedBudgetContract.SOURCE_ID
+                    + " TEXT, "
+                    + MeasurementTables.SourceNamedBudgetContract.NAME
+                    + " TEXT, "
+                    + MeasurementTables.SourceNamedBudgetContract.BUDGET
+                    + " INTEGER, "
+                    + MeasurementTables.SourceNamedBudgetContract.AGGREGATE_CONTRIBUTIONS
+                    + " INTEGER, "
+                    + "FOREIGN KEY ("
+                    + MeasurementTables.SourceNamedBudgetContract.SOURCE_ID
                     + ") REFERENCES "
                     + SourceContract.TABLE
                     + "("
@@ -3681,6 +3768,31 @@ public class MeasurementDbSchemaTrail {
                             + AppReportHistoryContract.APP_DESTINATION
                             + ")");
 
+    private static final Map<String, String> CREATE_INDEXES_V44_V45 =
+            ImmutableMap.of(
+                    INDEX_PREFIX + MeasurementTables.SourceNamedBudgetContract.TABLE + "_s_n",
+                    "CREATE INDEX "
+                            + INDEX_PREFIX
+                            + MeasurementTables.SourceNamedBudgetContract.TABLE
+                            + "_s_n"
+                            + " ON "
+                            + MeasurementTables.SourceNamedBudgetContract.TABLE
+                            + "("
+                            + MeasurementTables.SourceNamedBudgetContract.SOURCE_ID
+                            + ", "
+                            + MeasurementTables.SourceNamedBudgetContract.NAME
+                            + ")",
+                    INDEX_PREFIX + MeasurementTables.SourceNamedBudgetContract.TABLE + "_s",
+                    "CREATE INDEX "
+                            + INDEX_PREFIX
+                            + MeasurementTables.SourceNamedBudgetContract.TABLE
+                            + "_s"
+                            + " ON "
+                            + MeasurementTables.SourceNamedBudgetContract.TABLE
+                            + "("
+                            + MeasurementTables.SourceNamedBudgetContract.SOURCE_ID
+                            + ")");
+
     private static Map<String, String> getCreateStatementByTableV7() {
         return CREATE_STATEMENT_BY_TABLE_V6;
     }
@@ -3932,6 +4044,15 @@ public class MeasurementDbSchemaTrail {
         return createStatements;
     }
 
+    private static Map<String, String> getCreateStatementByTableV45() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV44());
+        createStatements.put(MeasurementTables.TriggerContract.TABLE, CREATE_TABLE_TRIGGER_V45);
+        createStatements.put(
+                MeasurementTables.SourceNamedBudgetContract.TABLE,
+                CREATE_TABLE_SOURCE_NAMED_BUDGET_V45);
+        return createStatements;
+    }
+
     private static Map<String, String> getCreateIndexesV7() {
         Map<String, String> createIndexes = new HashMap<>();
         createIndexes.putAll(CREATE_INDEXES_V6);
@@ -4098,6 +4219,12 @@ public class MeasurementDbSchemaTrail {
         return getCreateIndexesV43();
     }
 
+    private static Map<String, String> getCreateIndexesV45() {
+        Map<String, String> createIndexes = getCreateIndexesV44();
+        createIndexes.putAll(CREATE_INDEXES_V44_V45);
+        return createIndexes;
+    }
+
     private static final Map<Integer, Collection<String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
             new ImmutableMap.Builder<Integer, Collection<String>>()
                     .put(6, CREATE_STATEMENT_BY_TABLE_V6.values())
@@ -4139,6 +4266,7 @@ public class MeasurementDbSchemaTrail {
                     .put(42, getCreateStatementByTableV42().values())
                     .put(43, getCreateStatementByTableV43().values())
                     .put(44, getCreateStatementByTableV44().values())
+                    .put(45, getCreateStatementByTableV45().values())
                     .build();
 
     private static final Map<Integer, Collection<String>> CREATE_INDEXES_STATEMENTS_BY_VERSION =
@@ -4182,6 +4310,7 @@ public class MeasurementDbSchemaTrail {
                     .put(42, getCreateIndexesV42().values())
                     .put(43, getCreateIndexesV43().values())
                     .put(44, getCreateIndexesV44().values())
+                    .put(45, getCreateIndexesV45().values())
                     .build();
 
     /**

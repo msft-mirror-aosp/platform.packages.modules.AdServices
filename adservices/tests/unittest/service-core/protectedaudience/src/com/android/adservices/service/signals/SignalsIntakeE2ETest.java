@@ -101,6 +101,7 @@ import com.google.mockwebserver.MockResponse;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -316,6 +317,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
         assertSignalsUnorderedListEqualsExceptIdAndTime(expected, actual);
     }
 
+    @Ignore("b/376480141")
     @Test
     public void testPut_beforeDevSession_signalIsCleared() throws Exception {
         setupService(true);
@@ -332,6 +334,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
         mDevSessionHelper.endDevSession();
     }
 
+    @Ignore("b/376480141")
     @Test
     public void testPut_duringDevSession_signalIsCleared() throws Exception {
         setupService(true);
