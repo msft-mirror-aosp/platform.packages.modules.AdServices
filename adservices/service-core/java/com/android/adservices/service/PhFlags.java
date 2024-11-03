@@ -1061,6 +1061,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public long getFledgeCustomAudiencePerBuyerMaxCount() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT,
+                FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT);
+    }
+
+    @Override
     public long getFledgeCustomAudienceDefaultExpireInMs() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS,
@@ -4676,6 +4683,11 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT
                         + " = "
                         + getFledgeCustomAudiencePerAppMaxCount());
+        writer.println(
+                "\t"
+                        + FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT
+                        + " = "
+                        + getFledgeCustomAudiencePerBuyerMaxCount());
         writer.println(
                 "\t"
                         + FlagsConstants.KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED
