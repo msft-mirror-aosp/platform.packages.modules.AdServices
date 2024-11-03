@@ -24,6 +24,7 @@ import static com.android.adservices.flags.Flags.FLAG_ENABLE_ADSERVICES_API_ENAB
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_DUMP_EFFECTIVE_TARGET_SDK_VERSION;
 import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE;
@@ -115,7 +116,14 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                     // using the effective target SDK version when deciding which allowlist should
                     // be used to apply the restrictions. If any regression is observed, this
                     // feature can be rolled back
-                    FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS);
+                    FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS,
+
+                    // This flag is used to guard the component ads feature from an API Level. There
+                    // will be two internal PH flags to guard the feature internally, one for the on
+                    // device auction and
+                    // one for the server auction
+                    // TODO:(b/377791969) move to NON_CANONICAL_FLAGS when PH flags are added
+                    FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS);
 
     /**
      * Map used by {@link #testAllAconfigFlagsAreMapped()} - key is the {@code aconfig} flag name,
