@@ -50,6 +50,7 @@ import static org.junit.Assert.fail;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
 import static java.util.concurrent.TimeUnit.DAYS;
 
@@ -71,6 +72,7 @@ import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.measurement.AggregatableNamedBudgets;
 import com.android.adservices.service.measurement.AsyncRegistrationFixture;
 import com.android.adservices.service.measurement.AsyncRegistrationFixture.ValidAsyncRegistrationParams;
 import com.android.adservices.service.measurement.AttributedTrigger;
@@ -129,7 +131,6 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -623,6 +624,86 @@ public class MeasurementDaoTest {
                         ImmutableMultiset.copyOf(validSource.getWebDestinations())
                                 .equals(ImmutableMultiset.copyOf(destinations.second)))
                 .isTrue();
+    }
+
+    @Test
+    public void testInsertSource_aggregatableNamedBudgetsEnabled_success() {
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
+        when(mFlags.getMeasurementDbSizeLimit()).thenReturn(MEASUREMENT_DB_SIZE_LIMIT);
+
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("budget1", 400);
+        aggregatableNamedBudgets.setContribution("budget1", 150);
+        aggregatableNamedBudgets.createContributionBudget("budget2", 750);
+        aggregatableNamedBudgets.setContribution("budget2", 320);
+        Source validSource =
+                insertSourceForAggregatableNamedBudgets(
+                        aggregatableNamedBudgets,
+                        SOURCE_EVENT_TIME,
+                        List.of(WEB_ONE_DESTINATION, WEB_TWO_DESTINATION),
+                        List.of(APP_ONE_DESTINATION));
+
+        AggregatableNamedBudgets.BudgetAndContribution daoBudgetAndContribution1 =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao
+                                                .getSourceAggregatableNamedBudgetAndContribution(
+                                                        validSource.getId(), "budget1"))
+                        .get();
+        assertThat(daoBudgetAndContribution1.getAggregateContribution())
+                .isEqualTo(
+                        validSource
+                                .getAggregatableNamedBudgets()
+                                .maybeGetContribution("budget1")
+                                .get());
+        assertThat(daoBudgetAndContribution1.getBudget())
+                .isEqualTo(
+                        validSource.getAggregatableNamedBudgets().maybeGetBudget("budget1").get());
+        AggregatableNamedBudgets.BudgetAndContribution daoBudgetAndContribution2 =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao
+                                                .getSourceAggregatableNamedBudgetAndContribution(
+                                                        validSource.getId(), "budget2"))
+                        .get();
+        assertThat(daoBudgetAndContribution2.getAggregateContribution())
+                .isEqualTo(
+                        validSource
+                                .getAggregatableNamedBudgets()
+                                .maybeGetContribution("budget2")
+                                .get());
+        assertThat(daoBudgetAndContribution2.getBudget())
+                .isEqualTo(
+                        validSource.getAggregatableNamedBudgets().maybeGetBudget("budget2").get());
+    }
+
+    @Test
+    public void testInsertSource_aggregatableNamedBudgetsDisabled_relatedDataNotInserted() {
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(false);
+        when(mFlags.getMeasurementDbSizeLimit()).thenReturn(MEASUREMENT_DB_SIZE_LIMIT);
+
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("budget3", 470);
+        aggregatableNamedBudgets.setContribution("budget3", 153);
+        Source validSource =
+                insertSourceForAggregatableNamedBudgets(
+                        aggregatableNamedBudgets,
+                        SOURCE_EVENT_TIME,
+                        List.of(WEB_ONE_DESTINATION, WEB_TWO_DESTINATION),
+                        List.of(APP_ONE_DESTINATION));
+
+        Optional<AggregatableNamedBudgets.BudgetAndContribution> daoBudgetAndContribution =
+                mDatastoreManager.runInTransactionWithResult(
+                        measurementDao ->
+                                measurementDao.getSourceAggregatableNamedBudgetAndContribution(
+                                        validSource.getId(), "budget3"));
+        assertThat(daoBudgetAndContribution).isEmpty();
     }
 
     private void insertSourceReachingDbSizeLimit(long dbSize, long dbSizeMaxLimit) {
@@ -5428,6 +5509,35 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void testInsertAggregateReport_withAggregatableFilteringIdMaxBytes() {
+        AggregateReport.Builder builder = AggregateReportFixture.getValidAggregateReportBuilder();
+        builder.setAggregatableFilteringIdMaxBytes(2);
+        AggregateReport aggregateReportWithAggregatableFilteringIdMaxBytes = builder.build();
+        mDatastoreManager.runInTransaction(
+                (dao) ->
+                        dao.insertAggregateReport(
+                                aggregateReportWithAggregatableFilteringIdMaxBytes));
+
+        try (Cursor cursor =
+                MeasurementDbHelper.getInstance()
+                        .getReadableDatabase()
+                        .query(
+                                MeasurementTables.AggregateReport.TABLE,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null,
+                                null)) {
+            assertTrue(cursor.moveToNext());
+            AggregateReport aggregateReport = SqliteObjectMapper.constructAggregateReport(cursor);
+            assertNotNull(aggregateReport);
+            assertNotNull(aggregateReport.getId());
+            assertEquals(aggregateReportWithAggregatableFilteringIdMaxBytes, aggregateReport);
+        }
+    }
+
+    @Test
     public void testDeleteAllMeasurementDataWithEmptyList() {
         SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
 
@@ -10142,6 +10252,81 @@ public class MeasurementDaoTest {
     }
 
     @Test
+    public void testUpdateSourceAggregatableNamedBudgets_updatesBudgets() {
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
+        when(mFlags.getMeasurementDbSizeLimit()).thenReturn(MEASUREMENT_DB_SIZE_LIMIT);
+
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("budget1", 400);
+        aggregatableNamedBudgets.setContribution("budget1", 150);
+        Source validSource =
+                insertSourceForAggregatableNamedBudgets(
+                        aggregatableNamedBudgets,
+                        SOURCE_EVENT_TIME,
+                        List.of(WEB_ONE_DESTINATION, WEB_TWO_DESTINATION),
+                        List.of(APP_ONE_DESTINATION));
+        validSource.getAggregatableNamedBudgets().setContribution("budget1", 340);
+        mDatastoreManager.runInTransaction(
+                (dao) -> dao.updateSourceAggregatableNamedBudgets(validSource, "budget1"));
+
+        AggregatableNamedBudgets.BudgetAndContribution daoBudgetAndContribution =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao
+                                                .getSourceAggregatableNamedBudgetAndContribution(
+                                                        validSource.getId(), "budget1"))
+                        .get();
+        AggregatableNamedBudgets.BudgetAndContribution expectedBudgetAndContribution =
+                new AggregatableNamedBudgets.BudgetAndContribution(400);
+        expectedBudgetAndContribution.setAggregateContribution(340);
+        assertThat(daoBudgetAndContribution).isEqualTo(expectedBudgetAndContribution);
+    }
+
+    @Test
+    public void testUpdateSourceAggregatableNamedBudgets_budgetRowDoesNotExistCreatesNewRow() {
+        mFlags = mock(Flags.class);
+        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
+        when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
+        when(mFlags.getMeasurementDbSizeLimit()).thenReturn(MEASUREMENT_DB_SIZE_LIMIT);
+
+        Source validSource = SourceFixture.getValidSource();
+        mDatastoreManager.runInTransaction((dao) -> dao.insertSource(validSource));
+        assertThat(validSource.getAggregatableNamedBudgets()).isNull();
+
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        Source finalSource =
+                Source.Builder.from(validSource)
+                        .setAggregatableNamedBudgets(aggregatableNamedBudgets)
+                        .build();
+        finalSource.getAggregatableNamedBudgets().createContributionBudget("budget1", 100);
+        finalSource.getAggregatableNamedBudgets().setContribution("budget1", 70);
+        mDatastoreManager.runInTransaction(
+                (dao) -> dao.updateSourceAggregatableNamedBudgets(finalSource, "budget1"));
+
+        Source sourceAfterUpdate =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao -> measurementDao.getSource(validSource.getId()))
+                        .get();
+
+        AggregatableNamedBudgets.BudgetAndContribution daoBudgetAndContribution =
+                mDatastoreManager
+                        .runInTransactionWithResult(
+                                measurementDao ->
+                                        measurementDao
+                                                .getSourceAggregatableNamedBudgetAndContribution(
+                                                        sourceAfterUpdate.getId(), "budget1"))
+                        .get();
+        AggregatableNamedBudgets.BudgetAndContribution expectedBudgetAndContribution =
+                new AggregatableNamedBudgets.BudgetAndContribution(100);
+        expectedBudgetAndContribution.setAggregateContribution(70);
+        assertThat(daoBudgetAndContribution).isEqualTo(expectedBudgetAndContribution);
+    }
+
+    @Test
     public void testPersistAndRetrieveSource_handlesPreExistingNegativeValues() {
         // Setup
         SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
@@ -13354,23 +13539,61 @@ public class MeasurementDaoTest {
                         .setStatus(status)
                         .setRegistrationId(registrationId)
                         .build();
-        AtomicReference<String> insertedSourceId = new AtomicReference<>();
+
         mDatastoreManager.runInTransaction(
                 (dao) -> {
-                    insertedSourceId.set(dao.insertSource(validSource));
-                    Source insertedSource = dao.getSource(insertedSourceId.get());
+                    dao.insertSource(validSource);
+                    Source insertedSource = dao.getSource(validSource.getId());
                     boolean attributionScopeEnabled = mFlags.getMeasurementEnableAttributionScope();
                     assertThat(insertedSource.getMaxEventStates())
                             .isEqualTo(attributionScopeEnabled ? maxEventStates : null);
                     assertThat(insertedSource.getAttributionScopeLimit())
                             .isEqualTo(attributionScopeEnabled ? attributionScopeLimit : null);
-                    assertThat(dao.getSourceAttributionScopes(insertedSourceId.get()))
+                    assertThat(dao.getSourceAttributionScopes(validSource.getId()))
                             .containsExactlyElementsIn(
                                     (!attributionScopeEnabled || attributionScopes == null)
                                             ? List.of()
                                             : attributionScopes);
                 });
-        return Source.Builder.from(validSource).setId(insertedSourceId.get()).build();
+        return validSource;
+    }
+
+    private Source insertSourceForAggregatableNamedBudgets(
+            AggregatableNamedBudgets aggregatableNamedBudgets,
+            long eventTime,
+            List<Uri> webDestinations,
+            List<Uri> appDestinations) {
+        Source validSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventTime(eventTime)
+                        .setWebDestinations(webDestinations)
+                        .setAppDestinations(appDestinations)
+                        .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN)
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setStatus(Source.Status.ACTIVE)
+                        .setRegistrationId(SourceFixture.ValidSourceParams.REGISTRATION_ID)
+                        .setAggregatableNamedBudgets(aggregatableNamedBudgets)
+                        .build();
+
+        mDatastoreManager.runInTransaction((dao) -> dao.insertSource(validSource));
+        return validSource;
+    }
+
+    private Source insertSourceForPopulatingAggregatableNamedBudgets(
+            long eventTime, List<Uri> webDestinations, List<Uri> appDestinations) {
+        Source validSource =
+                SourceFixture.getValidSourceBuilder()
+                        .setEventTime(eventTime)
+                        .setWebDestinations(webDestinations)
+                        .setAppDestinations(appDestinations)
+                        .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN)
+                        .setSourceType(Source.SourceType.EVENT)
+                        .setStatus(Source.Status.ACTIVE)
+                        .setRegistrationId(SourceFixture.ValidSourceParams.REGISTRATION_ID)
+                        .build();
+
+        mDatastoreManager.runInTransaction((dao) -> dao.insertSource(validSource));
+        return validSource;
     }
 
     private void insertTriggerForPackageName(Uri... registrants) {

@@ -18,6 +18,7 @@ package com.android.adservices.service.stats;
 
 import android.annotation.Nullable;
 
+import com.android.adservices.cobalt.ApiResponseCobaltLogger;
 import com.android.adservices.cobalt.AppNameApiErrorLogger;
 import com.android.adservices.cobalt.MeasurementCobaltLogger;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -91,6 +92,7 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
 
         cobaltLogAppNameApiError(
                 packageName, apiCallStats.getApiName(), apiCallStats.getResultCode());
+        cobaltLogApiResponse(packageName, apiCallStats.getApiName(), apiCallStats.getResultCode());
     }
 
     @Override
@@ -112,6 +114,7 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
                 apiName, appPackageName, resultCode, latencyMs);
 
         cobaltLogAppNameApiError(appPackageName, apiName, resultCode);
+        cobaltLogApiResponse(appPackageName, apiName, resultCode);
     }
 
     @Override
@@ -463,7 +466,8 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
     }
 
     /** Logs api call error status using {@code CobaltLogger}. */
-    @VisibleForTesting // used by testCobaltLogAppNameApiError_nullPackageName only
+    @VisibleForTesting
+    // used by testCobaltLogAppNameApiError_nullPackageName only
     void cobaltLogAppNameApiError(String appPackageName, int apiName, int errorCode) {
         // Callers should have checked for appPackageName already, but it doesn't hurt to double
         // check (otherwise it would have been thrown on background
@@ -476,6 +480,21 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
                             AppNameApiErrorLogger.getInstance();
 
                     appNameApiErrorLogger.logErrorOccurrence(appPackageName, apiName, errorCode);
+                });
+    }
+
+    /** Logs api call response using {@code CobaltLogger}. */
+    @VisibleForTesting
+    void cobaltLogApiResponse(String appPackageName, int apiName, int responseCode) {
+        // Callers should have checked for appPackageName already, but it doesn't hurt to double
+        // check (otherwise it would have been thrown on background
+        Objects.requireNonNull(
+                appPackageName, "INTERNAL ERROR: caller didn't check for null appPackageName");
+
+        sBlockingExecutor.execute(
+                () -> {
+                    ApiResponseCobaltLogger.getInstance()
+                            .logResponse(appPackageName, apiName, responseCode);
                 });
     }
 

@@ -28,6 +28,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_IS_GET_ADSERVICE
 import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStatesResponse;
+import android.adservices.common.AdServicesStates;
 import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
 import android.adservices.common.UpdateAdServicesModuleStatesParams;
@@ -163,6 +164,7 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
         expect.that(params.getModuleStateMap().get(MEASUREMENT)).isEqualTo(MODULE_STATE_ENABLED);
         expect.that(params.getNotificationType()).isEqualTo(NotificationType.NOTIFICATION_ONGOING);
+        expect.that(params.getModuleState(MEASUREMENT)).isEqualTo(MODULE_STATE_ENABLED);
 
         mCommonManager.requestAdServicesModuleOverrides(params, CALLBACK_EXECUTOR, receiver);
     }
@@ -182,7 +184,30 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
 
         // last set value should be the returned value
         expect.that(params.getUserChoice(TOPICS)).isEqualTo(USER_CHOICE_OPTED_OUT);
+        expect.that(params.getUserChoiceMap().get(TOPICS)).isEqualTo(USER_CHOICE_OPTED_OUT);
 
         mCommonManager.requestAdServicesModuleUserChoices(params, CALLBACK_EXECUTOR, receiver);
+    }
+
+    @Test
+    public void testEnableAdservices() {
+        OutcomeReceiverForTests<Boolean> receiver = new OutcomeReceiverForTests<>();
+
+        AdServicesStates state =
+                new AdServicesStates.Builder()
+                        .setU18Account(false)
+                        .setAdIdEnabled(true)
+                        .setAdultAccount(true)
+                        .setPrivacySandboxUiEnabled(true)
+                        .setPrivacySandboxUiRequest(true)
+                        .build();
+
+        expect.that(state.isU18Account()).isFalse();
+        expect.that(state.isAdIdEnabled()).isTrue();
+        expect.that(state.isAdultAccount()).isTrue();
+        expect.that(state.isPrivacySandboxUiEnabled()).isTrue();
+        expect.that(state.isPrivacySandboxUiRequest()).isTrue();
+
+        mCommonManager.enableAdServices(state, CALLBACK_EXECUTOR, receiver);
     }
 }
