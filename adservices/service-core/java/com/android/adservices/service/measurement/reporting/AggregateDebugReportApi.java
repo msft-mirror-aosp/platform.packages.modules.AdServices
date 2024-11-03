@@ -35,8 +35,10 @@ import com.android.adservices.service.measurement.aggregation.AggregateDebugRepo
 import com.android.adservices.service.measurement.aggregation.AggregateDebugReportRecord;
 import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
+import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
 
@@ -57,9 +59,6 @@ import java.util.stream.IntStream;
  */
 public class AggregateDebugReportApi {
     public static final String AGGREGATE_DEBUG_REPORT_API = "attribution-reporting-debug";
-    // TODO(b/364768862): Bump this to 1.0 based on flexible contribution filtering flag
-    private static final String PRE_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "0.1";
-    private static final String POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "1.0";
     private final Flags mFlags;
 
     public AggregateDebugReportApi(Flags flags) {
@@ -460,7 +459,7 @@ public class AggregateDebugReportApi {
                 // We don't want to deliver regular aggregate reports
                 .setStatus(AggregateReport.Status.MARKED_TO_DELETE)
                 .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
-                .setApiVersion(getApiVersion())
+                .setApiVersion(AggregatePayloadGenerator.getApiVersion(mFlags))
                 .setSourceId(null)
                 .setTriggerId(trigger.getId())
                 .setRegistrationOrigin(trigger.getRegistrationOrigin())
@@ -483,7 +482,7 @@ public class AggregateDebugReportApi {
                 // We don't want to deliver regular aggregate reports for ADRs
                 .setStatus(AggregateReport.Status.MARKED_TO_DELETE)
                 .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
-                .setApiVersion(getApiVersion())
+                .setApiVersion(AggregatePayloadGenerator.getApiVersion(mFlags))
                 .setSourceId(sourceId)
                 .setTriggerId(null)
                 .setRegistrationOrigin(source.getRegistrationOrigin())
@@ -509,7 +508,7 @@ public class AggregateDebugReportApi {
                 // We don't want to deliver regular aggregate reports
                 .setStatus(AggregateReport.Status.MARKED_TO_DELETE)
                 .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
-                .setApiVersion(getApiVersion())
+                .setApiVersion(AggregatePayloadGenerator.getApiVersion(mFlags))
                 // As source/trigger registration might have failed
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())
@@ -568,12 +567,16 @@ public class AggregateDebugReportApi {
                 : Collections.min(source.getAppDestinations());
     }
 
-    private static AggregateHistogramContribution createContributions(
+    private AggregateHistogramContribution createContributions(
             AggregateDebugReportData errorDebugReportingData, BigInteger keyPiece) {
-        return new AggregateHistogramContribution.Builder()
-                .setKey(keyPiece.or(errorDebugReportingData.getKeyPiece()))
-                .setValue(errorDebugReportingData.getValue())
-                .build();
+        AggregateHistogramContribution.Builder aggregateHistogramContributionBuilder =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(keyPiece.or(errorDebugReportingData.getKeyPiece()))
+                        .setValue(errorDebugReportingData.getValue());
+        if (mFlags.getMeasurementEnableFlexibleContributionFiltering()) {
+            aggregateHistogramContributionBuilder.setId(UnsignedLong.ZERO);
+        }
+        return aggregateHistogramContributionBuilder.build();
     }
 
     private static int sumContributions(List<AggregateHistogramContribution> contributions) {
@@ -643,7 +646,7 @@ public class AggregateDebugReportApi {
                                 Collections.singletonList(createPaddingContribution())));
         return new AggregateReport.Builder()
                 .setId(UUID.randomUUID().toString())
-                .setApiVersion(getApiVersion())
+                .setApiVersion(AggregatePayloadGenerator.getApiVersion(mFlags))
                 // exclude by default
                 .setSourceRegistrationTime(null)
                 .setDebugCleartextPayload(debugPayload)
@@ -659,17 +662,22 @@ public class AggregateDebugReportApi {
     private List<AggregateHistogramContribution> getPaddedContributions(
             List<AggregateHistogramContribution> contributions) {
         List<AggregateHistogramContribution> paddedContributions = new ArrayList<>(contributions);
-        if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
-            IntStream.range(
-                            contributions.size(),
-                            mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
-                    .forEach(i -> paddedContributions.add(createPaddingContribution()));
-        }
+        IntStream.range(
+                        contributions.size(),
+                        mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
+                .forEach(i -> paddedContributions.add(createPaddingContribution()));
         return paddedContributions;
     }
 
     private AggregateHistogramContribution createPaddingContribution() {
-        return new AggregateHistogramContribution.Builder().setPaddingContribution().build();
+        AggregateHistogramContribution.Builder aggregateHistogramContributionBuilder =
+                new AggregateHistogramContribution.Builder();
+        if (mFlags.getMeasurementEnableFlexibleContributionFiltering()) {
+            aggregateHistogramContributionBuilder.setPaddingContributionWithFilteringId();
+        } else {
+            aggregateHistogramContributionBuilder.setPaddingContribution();
+        }
+        return aggregateHistogramContributionBuilder.build();
     }
 
     private static Optional<Uri> extractBaseUri(Uri uri) {
@@ -677,12 +685,5 @@ public class AggregateDebugReportApi {
             return Optional.of(BaseUriExtractor.getBaseUri(uri));
         }
         return WebAddresses.topPrivateDomainAndScheme(uri);
-    }
-
-    private String getApiVersion() {
-        if (mFlags.getMeasurementEnableFlexibleContributionFiltering()) {
-            return POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION;
-        }
-        return PRE_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION;
     }
 }
