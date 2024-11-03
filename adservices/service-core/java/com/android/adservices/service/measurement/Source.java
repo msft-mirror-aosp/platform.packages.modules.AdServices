@@ -1412,6 +1412,12 @@ public class Source {
         mAttributionScopes = attributionScopes;
     }
 
+    /** Sets the aggregatable named budgets. */
+    public void setAggregatableNamedBudgets(
+            @Nullable AggregatableNamedBudgets aggregatableNamedBudgets) {
+        mAggregatableNamedBudgets = aggregatableNamedBudgets;
+    }
+
     /** Returns the attribution scope limit for the source. It should be positive. */
     @Nullable
     public Long getAttributionScopeLimit() {

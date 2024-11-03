@@ -501,9 +501,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_REPORTING_JOB_PERSISTED =
             "measurement_reporting_job_persisted";
 
-    public static final String KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING =
-            "measurement_enable_aggregatable_report_payload_padding";
-
     public static final String KEY_MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES =
             "key_measurement_enable_session_stable_kill_switches";
 
@@ -535,6 +532,8 @@ public final class FlagsConstants {
             "fledge_custom_audience_per_app_max_count";
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT =
             "fledge_custom_audience_max_owner_count";
+    public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT =
+            "Fledge__custom_audience_per_buyer_max_count";
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_DEFAULT_EXPIRE_IN_MS =
             // Flag key is in days, but the flag is used functionally as milliseconds; DO NOT FIX
             "fledge_custom_audience_default_expire_in_days";
@@ -676,6 +675,8 @@ public final class FlagsConstants {
             "fledge_schedule_custom_audience_update_job_flex_ms";
     public static final String KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE =
             "fledge_schedule_custom_audience_update_min_delay_mins_override";
+    public static final String KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES =
+            "Fledge__schedule_custom_audience_update_max_bytes";
 
     // FLEDGE Ad Counter Histogram keys
     public static final String KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT =

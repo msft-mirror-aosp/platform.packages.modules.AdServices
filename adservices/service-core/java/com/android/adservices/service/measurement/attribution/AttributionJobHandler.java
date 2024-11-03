@@ -18,6 +18,7 @@ package com.android.adservices.service.measurement.attribution;
 
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN;
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
+import static com.android.adservices.service.measurement.aggregation.AggregateReport.isDelayed;
 import static com.android.adservices.service.measurement.attribution.AttributionStatus.AttributionResult;
 import static com.android.adservices.service.measurement.attribution.AttributionStatus.FailureType;
 import static com.android.adservices.service.measurement.util.Time.roundDownToDay;
@@ -41,6 +42,7 @@ import com.android.adservices.service.AdServicesConfig;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
+import com.android.adservices.service.measurement.AggregatableNamedBudgets.BudgetAndContribution;
 import com.android.adservices.service.measurement.AttributedTrigger;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.AttributionConfig;
@@ -105,7 +107,6 @@ import java.util.stream.Collectors;
 class AttributionJobHandler {
 
     @VisibleForTesting static final String API = "attribution-reporting";
-    private static final String API_VERSION = "0.1";
     private static final String AGGREGATE_REPORT_DELAY_DELIMITER = ",";
     private final DatastoreManager mDatastoreManager;
     private final DebugReportApi mDebugReportApi;
@@ -255,12 +256,19 @@ class AttributionJobHandler {
                             return;
                         }
                     } catch (JSONException e) {
+                        ignoreTrigger(trigger, measurementDao);
+                        setAndLogAttributionStatus(
+                                attributionStatus,
+                                AttributionResult.NOT_ATTRIBUTED,
+                                FailureType.TRIGGER_IGNORED,
+                                enrollmentId);
                         LoggerFactory.getMeasurementLogger()
                                 .e(
                                         e,
                                         "JSONException when trigger attribution for"
                                                 + " trigger with ID: "
                                                 + trigger.getId());
+                        return;
                     }
 
                     if (mFlags.getMeasurementEnableInstallAttributionOnS()) {
@@ -615,7 +623,7 @@ class AttributionJobHandler {
             }
 
             long scheduledReportTime = trigger.getTriggerTime();
-            if (trigger.getTriggerContextId() == null) {
+            if (trigger.shouldAddDelay(mFlags)) {
                 scheduledReportTime += getAggregateReportDelay();
             }
             Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -644,7 +652,7 @@ class AttributionJobHandler {
                                             .build())
                             .setStatus(AggregateReport.Status.PENDING)
                             .setDebugReportStatus(debugReportStatus)
-                            .setApiVersion(getApiVersion())
+                            .setApiVersion(AggregatePayloadGenerator.getApiVersion(mFlags))
                             .setSourceDebugKey(sourceDebugKey)
                             .setTriggerDebugKey(triggerDebugKey)
                             .setSourceId(source.getId())
@@ -652,7 +660,9 @@ class AttributionJobHandler {
                             .setRegistrationOrigin(trigger.getRegistrationOrigin())
                             .setTriggerContextId(trigger.getTriggerContextId())
                             .setTriggerTime(trigger.getTriggerTime())
-                            .setApi(API);
+                            .setApi(API)
+                            .setAggregatableFilteringIdMaxBytes(
+                                    trigger.getAggregatableFilteringIdMaxBytes());
             if (mFlags.getMeasurementEnableMinReportLifespanForUninstall()) {
                 aggregateReportBuilder.setTriggerTime(trigger.getTriggerTime());
             }
@@ -680,7 +690,11 @@ class AttributionJobHandler {
             }
 
             finalizeAggregateReportCreation(
-                    source, aggregateDeduplicationKeyOptional, aggregateReport, measurementDao);
+                    source,
+                    aggregateDeduplicationKeyOptional,
+                    maybeNamedBudget,
+                    aggregateReport,
+                    measurementDao);
             incrementAggregateReportCountBy(attributionStatus, 1);
             if (aggregateReport.getDebugReportStatus()
                     == AggregateReport.DebugReportStatus.PENDING) {
@@ -701,13 +715,6 @@ class AttributionJobHandler {
                                     + " parse aggregate fields.");
             return TriggeringStatus.DROPPED;
         }
-    }
-
-    private String getApiVersion() {
-        if (mFlags.getMeasurementEnableFlexibleContributionFiltering()) {
-            return "1.0";
-        }
-        return API_VERSION;
     }
 
     @Nullable
@@ -754,10 +761,10 @@ class AttributionJobHandler {
     private void generateNullAggregateReportExcludingSourceRegistrationTime(
             IMeasurementDao measurementDao, Trigger trigger, AttributionStatus attributionStatus)
             throws DatastoreException, JSONException {
-        float nullRate =
-                trigger.getTriggerContextId() == null
-                        ? mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime()
-                        : 1.0F;
+        float nullRate = mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime();
+        if (!isDelayed(trigger,mFlags)) {
+            nullRate = 1.0F;
+        }
         if (getRandom() < nullRate) {
                 AggregateReport nullReport =
                         // Although the WICG spec states the trigger time should be used here, we
@@ -819,20 +826,24 @@ class AttributionJobHandler {
                                 trigger,
                                 sourceTime,
                                 getAggregateReportDelay(),
-                                getApiVersion(),
+                                AggregatePayloadGenerator.getApiVersion(mFlags),
                                 API,
                                 mFlags);
 
-        if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
-            AggregateHistogramContribution paddingContribution =
-                    new AggregateHistogramContribution.Builder().setPaddingContribution().build();
+        AggregateHistogramContribution.Builder paddingContributionBuilder =
+                new AggregateHistogramContribution.Builder();
+
+        if (mFlags.getMeasurementEnableFlexibleContributionFiltering()) {
+            paddingContributionBuilder.setPaddingContributionWithFilteringId();
+        } else {
+            paddingContributionBuilder.setPaddingContribution();
+        }
             List<AggregateHistogramContribution> contributions = new ArrayList<>();
-            contributions.add(paddingContribution);
+        contributions.add(paddingContributionBuilder.build());
             AggregatePayloadGenerator generator = new AggregatePayloadGenerator(mFlags);
-            generator.padContributions(contributions, paddingContribution);
+        generator.padContributions(contributions, paddingContributionBuilder.build());
             nullReportBuilder.setDebugCleartextPayload(
                     AggregateReport.generateDebugPayload(contributions));
-        }
 
         return nullReportBuilder.build();
     }
@@ -1522,6 +1533,7 @@ class AttributionJobHandler {
     private static void finalizeAggregateReportCreation(
             Source source,
             Optional<AggregateDeduplicationKey> aggregateDeduplicationKeyOptional,
+            Optional<String> maybeNamedBudget,
             AggregateReport aggregateReport,
             IMeasurementDao measurementDao)
             throws DatastoreException {
@@ -1535,6 +1547,9 @@ class AttributionJobHandler {
             // source
             measurementDao.updateSourceAggregateContributions(source);
             measurementDao.updateSourceAggregateReportDedupKeys(source);
+            if (maybeNamedBudget.isPresent()) {
+                measurementDao.updateSourceAggregatableNamedBudgets(source, maybeNamedBudget.get());
+            }
         }
         measurementDao.insertAggregateReport(aggregateReport);
     }
@@ -1748,20 +1763,27 @@ class AttributionJobHandler {
             @Nullable String matchedNamedBudget,
             int desiredContributions)
             throws DatastoreException {
-        if (matchedNamedBudget == null
-                || source.getAggregatableNamedBudgets()
-                        .maybeGetContribution(matchedNamedBudget)
-                        .isEmpty()) {
+        if (matchedNamedBudget == null) {
+            return true;
+        }
+        BudgetAndContribution budgetAndContribution =
+                measurementDao.getSourceAggregatableNamedBudgetAndContribution(
+                        source.getId(), matchedNamedBudget);
+        if (budgetAndContribution == null) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "AttributionJobHandler::"
+                                    + "validateAndUpdateNamedBudgetContributions "
+                                    + " budget not found in database. Source ID: %s ;"
+                                    + " Trigger ID: %s ; Budget: %s ",
+                            source.getId(), trigger.getId(), matchedNamedBudget);
             return true;
         }
 
         int totalContributions =
                 Math.addExact(
-                        desiredContributions,
-                        source.getAggregatableNamedBudgets()
-                                .maybeGetContribution(matchedNamedBudget)
-                                .get());
-        int budget = source.getAggregatableNamedBudgets().maybeGetBudget(matchedNamedBudget).get();
+                        desiredContributions, budgetAndContribution.getAggregateContribution());
+        int budget = budgetAndContribution.getBudget();
         if (totalContributions > budget) {
             // When histogram value is greater than matchedNamedBudget's budget,
             // generate verbose debug report, record the actual histogram value.
@@ -1778,7 +1800,7 @@ class AttributionJobHandler {
                             "AttributionJobHandler::"
                                     + "validateAndUpdateNamedBudgetContributions "
                                     + " contribution exceeded bound. Source ID: %s ;"
-                                    + " Trigger ID: %s ; Bucket: %s ",
+                                    + " Trigger ID: %s ; Budget: %s ",
                             source.getId(), trigger.getId(), matchedNamedBudget);
             return false;
         }
