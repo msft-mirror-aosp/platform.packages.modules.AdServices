@@ -235,6 +235,7 @@ import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_MAX_OW
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B;
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
+import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
 import static com.android.adservices.service.Flags.FLEDGE_DATA_VERSION_HEADER_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_DATA_VERSION_HEADER_METRICS_ENABLED;
@@ -726,6 +727,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AU
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DEBUG_REPORTI_SENDER_JOB_MAX_TIMEOUT_MS;
@@ -2176,6 +2178,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT,
                 FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT,
                 Flags::getFledgeCustomAudienceMaxOwnerCount);
+    }
+
+    @Test
+    public void testGetFledgeCustomAudiencePerBuyerMaxCount() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT,
+                FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT,
+                Flags::getFledgeCustomAudiencePerBuyerMaxCount);
     }
 
     @Test
