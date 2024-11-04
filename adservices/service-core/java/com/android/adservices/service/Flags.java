@@ -5844,6 +5844,17 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
     }
 
+    /**
+     * Feature flag to enable enrollment configuration v3 delivery (mdd download + database
+     * population).
+     */
+    @FeatureFlag boolean DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB = false;
+
+    /** Enables enrollment configuration v3 delivery (mdd download + database population). */
+    default boolean getEnableEnrollmentConfigV3Db() {
+        return DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB;
+    }
+
     /** Feature flag to enable AtomicFileDataStore update API for adservices apk. */
     @FeatureFlag boolean DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API = false;
 

@@ -372,6 +372,12 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetEnableEnrollmentConfigV3Db() {
+        testFeatureFlag(
+                "DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB", Flags::getEnableEnrollmentConfigV3Db);
+    }
+
+    @Test
     public void testGetSharedDatabaseSchemaVersion4Enabled() {
         testFeatureFlag(
                 "SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED",
