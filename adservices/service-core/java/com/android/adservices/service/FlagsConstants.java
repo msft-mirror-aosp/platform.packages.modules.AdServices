@@ -1674,4 +1674,12 @@ public final class FlagsConstants {
 
     /** Key to enable Ad Id migration. */
     public static final String KEY_AD_ID_MIGRATION_ENABLED = "ad_id_migration_enabled";
+
+    /** Key to enable report event for component seller as one of the destination. */
+    public static final String KEY_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER =
+            "FLEDGE__enable_report_event_for_component_seller";
+
+    /** Key to enable winning seller id field in ad selection outcome */
+    public static final String KEY_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME =
+            "FLEDGE__enable_winning_seller_id_in_ad_selection_outcome";
 }
