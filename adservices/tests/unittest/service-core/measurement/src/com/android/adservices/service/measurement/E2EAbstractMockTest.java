@@ -691,8 +691,8 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
         return result;
     }
 
-    private static JSONObject getActualAggregatablePayloadForTest(
-            JSONObject sharedInfo, JSONObject data) throws JSONException {
+    private JSONObject getActualAggregatablePayloadForTest(JSONObject sharedInfo, JSONObject data)
+            throws JSONException {
         String payload =
                 data.getJSONArray("aggregation_service_payloads")
                         .getJSONObject(0)
@@ -741,8 +741,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
         return aggregateJson;
     }
 
-    private static JSONArray getActualAggregateHistograms(byte[] encodedCborPayload)
-            throws JSONException {
+    JSONArray getActualAggregateHistograms(byte[] encodedCborPayload) throws JSONException {
         List<JSONObject> result = new ArrayList<>();
 
         try {
