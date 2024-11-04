@@ -25,11 +25,15 @@ import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.AndroidExtendedMockitoMocker;
 import com.android.adservices.mockito.AndroidStaticMocker;
 import com.android.adservices.mockito.LogInterceptor;
+import com.android.adservices.mockito.StaticClassChecker;
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.testing.CallSuper;
 
 import org.junit.Rule;
 
+// NOTE: currently no subclass needs a custom mocker; once they do, this class should be split
+// into a SharedMockerLessExtendededMockitoTestCase (similar to AdServiceExtendedMockitoTestCase /
+// AdServicesMockerLessExtendedMockitoTestCase)
 // TODO(b/335935200): fix this
 @DisabledOnRavenwood(reason = "Uses ExtendedMockito")
 public abstract class SharedExtendedMockitoTestCase extends SharedUnitTestCase {
@@ -43,9 +47,6 @@ public abstract class SharedExtendedMockitoTestCase extends SharedUnitTestCase {
 
     protected final Context mMockContext = mock(Context.class);
     protected final ModuleSharedFlags mMockFlags = mock(ModuleSharedFlags.class);
-
-    private static final String REASON_SESSION_MANAGED_BY_RULE =
-            "mockito session is automatically managed by a @Rule";
 
     // TODO(b/361555631): rename to testSharedExtendedMockitoTestCaseFixtures() and annotate it with
     // @MetaTest
@@ -61,8 +62,8 @@ public abstract class SharedExtendedMockitoTestCase extends SharedUnitTestCase {
 
         private final AndroidStaticMocker mAndroidMocker;
 
-        private Mocker(AdServicesExtendedMockitoRule rule) {
-            mAndroidMocker = new AndroidExtendedMockitoMocker(rule);
+        Mocker(StaticClassChecker checker) {
+            mAndroidMocker = new AndroidExtendedMockitoMocker(checker);
         }
 
         // AndroidStaticMocker methods
@@ -95,6 +96,11 @@ public abstract class SharedExtendedMockitoTestCase extends SharedUnitTestCase {
         @Override
         public void mockSdkLevelR() {
             mAndroidMocker.mockSdkLevelR();
+        }
+
+        @Override
+        public void mockSdkLevelS() {
+            mAndroidMocker.mockSdkLevelS();
         }
 
         @Override

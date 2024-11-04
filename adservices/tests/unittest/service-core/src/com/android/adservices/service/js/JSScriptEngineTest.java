@@ -43,8 +43,6 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
-
 import androidx.annotation.NonNull;
 import androidx.javascriptengine.IsolateStartupParameters;
 import androidx.javascriptengine.JavaScriptConsoleCallback;
@@ -63,7 +61,6 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.profiling.JSScriptEngineLogConstants;
 import com.android.adservices.service.profiling.Profiler;
 import com.android.adservices.service.profiling.StopWatch;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -99,7 +96,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-@RequiresSdkLevelAtLeastS()
+// NOTE: must use the Application context, not the Instrumentation context from sContext
 public final class JSScriptEngineTest extends AdServicesExtendedMockitoTestCase {
 
     /**
@@ -115,8 +112,6 @@ public final class JSScriptEngineTest extends AdServicesExtendedMockitoTestCase 
      */
     public static final String WASM_MODULE = "simple_test_functions.wasm";
 
-    // This needs to be the Application context, not the Instrumentation context from sContext
-    private static final Context APPLICATION_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final Profiler sMockProfiler = mock(Profiler.class);
     private static final StopWatch sSandboxInitWatch = mock(StopWatch.class);
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -131,8 +126,7 @@ public final class JSScriptEngineTest extends AdServicesExtendedMockitoTestCase 
             IsolateSettings.forMaxHeapSizeEnforcementEnabled(mDefaultIsolateConsoleMessageInLogs);
     private final RetryStrategy mNoOpRetryStrategy = new NoOpRetryStrategyImpl();
 
-
-    @Mock JSScriptEngine.JavaScriptSandboxProvider mMockSandboxProvider;
+    @Mock private JSScriptEngine.JavaScriptSandboxProvider mMockSandboxProvider;
     @Mock private StopWatch mIsolateCreateWatch;
     @Mock private StopWatch mJavaExecutionWatch;
     @Mock private JavaScriptSandbox mMockedSandbox;
@@ -144,9 +138,7 @@ public final class JSScriptEngineTest extends AdServicesExtendedMockitoTestCase 
                 .thenReturn(sSandboxInitWatch);
         doNothing().when(sSandboxInitWatch).stop();
         if (JSScriptEngine.AvailabilityChecker.isJSSandboxAvailable()) {
-            sJSScriptEngine =
-                    JSScriptEngine.getInstanceForTesting(
-                            APPLICATION_CONTEXT, sMockProfiler, sLogger);
+            sJSScriptEngine = JSScriptEngine.getInstanceForTesting(sMockProfiler, sLogger);
             sIsConfigurableHeapSizeSupported =
                     sJSScriptEngine
                             .isConfigurableHeapSizeSupported()
@@ -168,8 +160,16 @@ public final class JSScriptEngineTest extends AdServicesExtendedMockitoTestCase 
 
         FluentFuture<JavaScriptSandbox> futureInstance =
                 FluentFuture.from(Futures.immediateFuture(mMockedSandbox));
-        when(mMockSandboxProvider.getFutureInstance(APPLICATION_CONTEXT))
-                .thenReturn(futureInstance);
+        when(mMockSandboxProvider.getFutureInstance(mAppContext)).thenReturn(futureInstance);
+    }
+
+    @Test
+    public void testGetInstanceForTesting_failsIfCalledTwice() {
+        assumeTrue("sJSScriptEngine not set on @BeforeClass", sJSScriptEngine != null);
+
+        assertThrows(
+                IllegalStateException.class,
+                () -> JSScriptEngine.getInstanceForTesting(sMockProfiler, sLogger));
     }
 
     @Test
@@ -180,7 +180,7 @@ public final class JSScriptEngineTest extends AdServicesExtendedMockitoTestCase 
         ThrowingRunnable getFutureInstance =
                 () ->
                         new JSScriptEngine.JavaScriptSandboxProvider(sMockProfiler, sLogger)
-                                .getFutureInstance(APPLICATION_CONTEXT)
+                                .getFutureInstance(mAppContext)
                                 .get();
 
             Exception futureException = assertThrows(ExecutionException.class, getFutureInstance);
@@ -198,7 +198,7 @@ public final class JSScriptEngineTest extends AdServicesExtendedMockitoTestCase 
                 () ->
                         callJSEngine(
                                 JSScriptEngine.createNewInstanceForTesting(
-                                        APPLICATION_CONTEXT,
+                                        mAppContext,
                                         new JSScriptEngine.JavaScriptSandboxProvider(
                                                 sMockProfiler, sLogger),
                                         sMockProfiler,
@@ -948,7 +948,7 @@ public final class JSScriptEngineTest extends AdServicesExtendedMockitoTestCase 
 
         JSScriptEngine engine =
                 JSScriptEngine.createNewInstanceForTesting(
-                        APPLICATION_CONTEXT, mMockSandboxProvider, sMockProfiler, sLogger);
+                        mAppContext, mMockSandboxProvider, sMockProfiler, sLogger);
         ListenableFuture<String> jsExecutionFuture =
                 engine.evaluate(
                         "function test() { return \"hello world\"; }",
@@ -1252,7 +1252,7 @@ public final class JSScriptEngineTest extends AdServicesExtendedMockitoTestCase 
     }
 
     private byte[] readBinaryAsset(@NonNull String assetName) throws IOException {
-        InputStream inputStream = APPLICATION_CONTEXT.getAssets().open(assetName);
+        InputStream inputStream = mAppContext.getAssets().open(assetName);
         return SdkLevel.isAtLeastT()
                 ? inputStream.readAllBytes()
                 : ByteStreams.toByteArray(inputStream);

@@ -18,42 +18,31 @@ package com.android.adservices.service.topics;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
-
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import com.google.common.collect.ImmutableMap;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
 
-/**
- * TopicId to TopicName utility test {@link TopicIdNameUtil}
- */
-public class TopicIdNameUtilTest {
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
+/** TopicId to TopicName utility test {@link TopicIdNameUtil} */
+public final class TopicIdNameUtilTest extends AdServicesUnitTestCase {
     private static TopicIdNameUtil sTopicIdNameUtil;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setUp() throws IOException {
-        sTopicIdNameUtil = new TopicIdNameUtil(sContext);
+        sTopicIdNameUtil = new TopicIdNameUtil(mContext);
     }
 
     @Test
-    public void checkLoadedTopicIdToNameMap() throws IOException {
+    public void checkLoadedTopicIdToNameMap() {
         ImmutableMap<Integer, String> topicIdToName = sTopicIdNameUtil.retrieveTopicIdToName();
 
         // Check size of map
         // The topicId to topicName file contains 446 topics.
-        assertThat(topicIdToName.size()).isEqualTo(446);
+        assertThat(topicIdToName).hasSize(446);
 
         // Check some topicIds to topicNames in the map
         assertThat(topicIdToName.get(10046)).isEqualTo(

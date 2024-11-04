@@ -344,7 +344,8 @@
                 ],
                 "x_network_key_mapping": {
                   "enrollment-id-ad-tech2.test": "0x2"
-                }
+                },
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -376,7 +377,11 @@
             {
               "key": "0x2559",
               "value": 32768
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       }

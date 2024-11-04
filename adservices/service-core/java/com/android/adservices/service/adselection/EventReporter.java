@@ -41,6 +41,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -84,6 +85,7 @@ public abstract class EventReporter {
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull final AdServicesLogger mAdServicesLogger;
     @NonNull final Flags mFlags;
+    @NonNull final DebugFlags mDebugFlags;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     private int mCallerUid;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
@@ -97,6 +99,7 @@ public abstract class EventReporter {
             @NonNull ExecutorService backgroundExecutorService,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull Flags flags,
+            @NonNull DebugFlags debugFlags,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             int callerUid,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
@@ -108,6 +111,7 @@ public abstract class EventReporter {
         Objects.requireNonNull(backgroundExecutorService);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(fledgeAuthorizationFilter);
         Objects.requireNonNull(devContext);
@@ -118,6 +122,7 @@ public abstract class EventReporter {
         mBackgroundExecutorService = MoreExecutors.listeningDecorator(backgroundExecutorService);
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mCallerUid = callerUid;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
@@ -151,7 +156,7 @@ public abstract class EventReporter {
                     input.getCallerPackageName(),
                     mFlags.getEnforceForegroundStatusForFledgeReportInteraction(),
                     true,
-                    !mFlags.getConsentNotificationDebugMode(),
+                    !mDebugFlags.getConsentNotificationDebugMode(),
                     mCallerUid,
                     LOGGING_API_NAME,
                     Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,

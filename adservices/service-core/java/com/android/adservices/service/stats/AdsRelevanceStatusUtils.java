@@ -16,6 +16,14 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+
 import android.annotation.IntDef;
 
 import java.lang.annotation.Retention;
@@ -167,6 +175,84 @@ public class AdsRelevanceStatusUtils {
     /** The topics epoch job battery constraint is battery not low. */
     public static final int TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW = 2;
 
+    /** Schedule ca update failure during http call. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_HTTP_CALL = 0;
+
+    /** Schedule ca update failure during join custom audience. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_JOIN_CA = 1;
+
+    /** Schedule ca update failure during leaving custom audience. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_LEAVE_CA = 2;
+
+    /** Schedule ca update failure during scheduling ca update for second hop. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_SCHEDULE_CA_UPDATE = 3;
+
+    /** Unknown failure during schedule custom audience update by the background job. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_UNKNOWN = 0;
+
+    /** Http error during schedule custom audience update by the background job. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_UNKNOWN_ERROR = 1;
+
+    /**
+     * Http server error during schedule custom audience update by the background job. Error code
+     * indicating that the user has sent too many requests in a given amount of time and the service
+     * received an HTTP 429 status code
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_TOO_MANY_REQUESTS = 2;
+
+    /**
+     * Http server error during schedule custom audience update by the background job. Error code
+     * indicating that the service received an HTTP 3xx status code
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_REDIRECTION = 3;
+
+    /**
+     * Http server error during schedule custom audience update by the background job. Error code
+     * indicating that the service received an HTTP 4xx status code
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CLIENT_ERROR = 4;
+
+    /**
+     * Http server error during schedule custom audience update by the background job. Error code
+     * indicating that the service received an HTTP 5xx.
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_SERVER_ERROR = 5;
+
+    /** Json error during schedule custom audience update by the background job. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR = 6;
+
+    /** Internal error during schedule custom audience update by the background job. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR = 7;
+
+    /**
+     * Used for logging IO Exception thrown by the AdServicesHttpsClient. This exception is thrown
+     * by IOException.
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_IO_EXCEPTION = 8;
+
+    /**
+     * Used for logging HttpContentSizeException thrown by the AdServicesHttpsClient. This exception
+     * is thrown when the http response is exceeds the maximum permitted value.
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CONTENT_SIZE_ERROR = 9;
+
+    /** Unknown status for existing update in the database. */
+    public static final int SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_UNKNOWN = 0;
+
+    /** Schedule custom audience request overwriting an already existing update in the database. */
+    public static final int
+            SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE = 1;
+
+    /** No existing update in the database present in the database. */
+    public static final int SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE = 2;
+
+    /**
+     * Schedule custom audience request rejected because of an already existing update in the
+     * database.
+     */
+    public static final int SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE =
+            3;
+
     /** The kind of winner did the beacon come from. */
     @IntDef(
             prefix = {"BEACON_SOURCE_"},
@@ -272,6 +358,45 @@ public class AdsRelevanceStatusUtils {
     @Retention(RetentionPolicy.SOURCE)
     public @interface ServerAuctionCoordinatorSource {}
 
+    @IntDef(
+            prefix = {"SCHEDULE_CUSTOM_AUDIENCE_UPDATE_EXISTING_UPDATE_STATUS_"},
+            value = {
+                SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_UNKNOWN,
+                SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE,
+                SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE,
+                SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ScheduleCustomAudienceUpdateExistingUpdateStatus {}
+
+    @IntDef(
+            prefix = {"SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION"},
+            value = {
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_HTTP_CALL,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_JOIN_CA,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_LEAVE_CA,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_SCHEDULE_CA_UPDATE
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ScheduleCustomAudienceUpdatePerformedFailureAction {}
+
+    @IntDef(
+            prefix = {"SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE"},
+            value = {
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_UNKNOWN,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_UNKNOWN_ERROR,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_TOO_MANY_REQUESTS,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_REDIRECTION,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CLIENT_ERROR,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_SERVER_ERROR,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_IO_EXCEPTION,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CONTENT_SIZE_ERROR
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ScheduleCustomAudienceUpdatePerformedFailureType {}
+
     /** Returns the size bucket for a raw value. */
     @Size
     public static int computeSize(long rawSize, long[] buckets) {
@@ -342,4 +467,24 @@ public class AdsRelevanceStatusUtils {
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface TopicsEpochJobBatteryConstraint {}
+
+    /**
+     * Returns the Cel PP API name ID from AdServices API name ID.
+     */
+    public static int getCelPpApiNameId(int apiNameLoggingId) {
+        int celPpApiNameId = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+        switch (apiNameLoggingId) {
+            case AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA:
+                celPpApiNameId = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
+                break;
+            case AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT:
+                celPpApiNameId =
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
+                break;
+            case AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS:
+                celPpApiNameId = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+                break;
+        }
+        return celPpApiNameId;
+    }
 }

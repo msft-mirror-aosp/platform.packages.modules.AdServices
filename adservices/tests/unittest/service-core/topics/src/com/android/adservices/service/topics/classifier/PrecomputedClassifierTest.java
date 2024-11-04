@@ -16,38 +16,30 @@
 
 package com.android.adservices.service.topics.classifier;
 
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.topics.Topic;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
 import com.android.adservices.service.topics.CacheManager;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStorage;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.mobiledatadownload.ClientConfigProto.ClientFile;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -59,8 +51,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /** Precomputed Topics Classifier Test {@link PrecomputedClassifier}. */
-public class PrecomputedClassifierTest {
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(ModelManager.class)
+public final class PrecomputedClassifierTest extends AdServicesExtendedMockitoTestCase {
     private static final String LABELS_FILE_PATH = "classifier/labels_topics.txt";
     private static final String APPS_FILE_PATH = "classifier/precomputed_app_list.csv";
     private static final String CLASSIFIER_ASSETS_METADATA_FILE_PATH =
@@ -71,31 +64,18 @@ public class PrecomputedClassifierTest {
     private PrecomputedClassifier sPrecomputedClassifier;
     private ModelManager mModelManager;
     @Mock private CacheManager mCacheManager;
-    private MockitoSession mMockitoSession = null;
     @Mock private SynchronousFileStorage mMockFileStorage;
     @Mock Map<String, ClientFile> mMockDownloadedFiles;
     @Mock AdServicesLogger mLogger;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setUp() throws IOException {
-        MockitoAnnotations.initMocks(this);
-        mMockitoSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(ModelManager.class)
-                        .initMocks(this)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-
-        ExtendedMockito.doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-        ExtendedMockito.doReturn(null).when(() -> ModelManager.getDownloadedFiles());
+        mocker.mockGetFlagsForTesting();
+        doReturn(null).when(ModelManager::getDownloadedFiles);
 
         mModelManager =
                 new ModelManager(
-                        sContext,
+                        mContext,
                         LABELS_FILE_PATH,
                         APPS_FILE_PATH,
                         CLASSIFIER_ASSETS_METADATA_FILE_PATH,
@@ -105,13 +85,6 @@ public class PrecomputedClassifierTest {
                         mMockDownloadedFiles);
         sPrecomputedClassifier = new PrecomputedClassifier(mModelManager, mCacheManager, mLogger);
         when(mCacheManager.getTopicsWithRevokedConsent()).thenReturn(ImmutableList.of());
-    }
-
-    @After
-    public void tearDown() {
-        if (mMockitoSession != null) {
-            mMockitoSession.finishMocking();
-        }
     }
 
     @Test
@@ -128,8 +101,7 @@ public class PrecomputedClassifierTest {
 
         Map<String, List<Topic>> testResponse =
                 sPrecomputedClassifier.classify(
-                        new HashSet<>(
-                                Arrays.asList("com.example.adservices.samples.topics.sampleapp")));
+                        new HashSet<>(List.of("com.example.adservices.samples.topics.sampleapp")));
 
         // The correct response body should be exactly the same as expectedAppTopicsResponse
         assertThat(testResponse).isEqualTo(expectedAppTopicsResponse);
@@ -159,7 +131,7 @@ public class PrecomputedClassifierTest {
                 ArgumentCaptor.forClass(EpochComputationClassifierStats.class);
         // Check the non-existing app "random_app"
         Map<String, List<Topic>> testResponse =
-                sPrecomputedClassifier.classify(new HashSet<>(Arrays.asList("random_app")));
+                sPrecomputedClassifier.classify(new HashSet<>(List.of("random_app")));
 
         // The topics list of "random_app" should be empty
         assertThat(testResponse.get("random_app")).isEmpty();
@@ -271,14 +243,15 @@ public class PrecomputedClassifierTest {
                 sPrecomputedClassifier.getTopTopics(
                         appTopics, /* numberOfTopTopics= */ 5, /* numberOfRandomTopics= */ 1);
 
-        assertThat(testResponse.get(0)).isEqualTo(createRealTopic(1));
-        assertThat(testResponse.get(1)).isEqualTo(createRealTopic(2));
-        assertThat(testResponse.get(2)).isEqualTo(createRealTopic(3));
-        assertThat(testResponse.get(3)).isEqualTo(createRealTopic(4));
-        assertThat(testResponse.get(4)).isEqualTo(createRealTopic(5));
+        assertThat(testResponse).hasSize(6);
+        expect.that(testResponse.get(0)).isEqualTo(createRealTopic(1));
+        expect.that(testResponse.get(1)).isEqualTo(createRealTopic(2));
+        expect.that(testResponse.get(2)).isEqualTo(createRealTopic(3));
+        expect.that(testResponse.get(3)).isEqualTo(createRealTopic(4));
+        expect.that(testResponse.get(4)).isEqualTo(createRealTopic(5));
         // Check the random topic is not empty
         // The random topic is at the end
-        assertThat(testResponse.get(5)).isNotNull();
+        expect.that(testResponse.get(5)).isNotNull();
     }
 
     // Creates a dummy topic.  Not suitable for tests where

@@ -16,6 +16,10 @@
 
 package com.android.adservices.ui.notifications;
 
+import static android.adservices.common.AdServicesCommonManager.ACTION_VIEW_ADSERVICES_CONSENT_PAGE;
+import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE;
+import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT;
+
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED;
@@ -33,6 +37,8 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.os.Build;
 
 import androidx.annotation.NonNull;
@@ -42,6 +48,8 @@ import androidx.core.app.NotificationManagerCompat;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.UiStatsLogger;
@@ -49,10 +57,12 @@ import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.ui.OTAResourcesManager;
 import com.android.adservices.ui.UxUtil;
 
+import java.util.List;
+
 /** Provides methods which can be used to display Privacy Sandbox consent notification. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationTrigger {
+
     /* Random integer for NotificationCompat purposes. */
     public static final int NOTIFICATION_ID = 67920;
     private static final String CHANNEL_ID = "PRIVACY_SANDBOX_CHANNEL";
@@ -190,10 +200,8 @@ public class ConsentNotificationTrigger {
         if (isUxStatesReady(context)) {
             switch (UxUtil.getUx(context)) {
                 case GA_UX:
-                    if (isPasRenotifyUser(consentManager)
-                            && !isOtaRvcMsmtEnabledUser(consentManager)) {
-                        // Is PAS renotify user AND Not adult user from Rvc with measurement
-                        // enabled, respect previous consents.
+                    if (isPasRenotifyUser(consentManager)) {
+                        // Is PAS renotify user, respect previous consents.
                         break;
                     }
                     setUpGaConsent(context, isEuDevice, consentManager);
@@ -238,14 +246,9 @@ public class ConsentNotificationTrigger {
                                 == MANUAL_INTERACTIONS_RECORDED);
     }
 
-    private static boolean isOtaRvcMsmtEnabledUser(ConsentManager consentManager) {
-        return consentManager.isOtaAdultUserFromRvc()
-                && consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
-    }
-
     private static Notification getGaV2ConsentNotification(
             @NonNull Context context, boolean isEuDevice) {
-        Intent intent = new Intent(context, ConsentNotificationActivity.class);
+        Intent intent = getNotificationIntent(context);
 
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(
@@ -290,7 +293,7 @@ public class ConsentNotificationTrigger {
      */
     private static Notification getConsentNotification(
             @NonNull Context context, boolean isEuDevice) {
-        Intent intent = new Intent(context, ConsentNotificationActivity.class);
+        Intent intent = getNotificationIntent(context);
 
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(
@@ -329,7 +332,7 @@ public class ConsentNotificationTrigger {
      * @param context {@link Context} which is used to prepare a {@link NotificationCompat}.
      */
     private static Notification getU18ConsentNotification(@NonNull Context context) {
-        Intent intent = new Intent(context, ConsentNotificationActivity.class);
+        Intent intent = getNotificationIntent(context);
 
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(
@@ -353,11 +356,13 @@ public class ConsentNotificationTrigger {
     private static Notification getPasConsentNotification(
             @NonNull Context context, ConsentManager consentManager, boolean isEuDevice) {
         boolean isRenotify = isFledgeOrMsmtEnabled(consentManager);
-        Intent intent = new Intent(context, ConsentNotificationActivity.class);
+        Intent intent = getNotificationIntent(context);
         intent.putExtra(IS_RENOTIFY_KEY, isRenotify);
-        // isEuDevice argument here includes AdId disabled ROW users, which cannot be obtained
-        // within the notification activity from DeviceRegionProvider.
-        intent.putExtra(IS_STRICT_CONSENT_BEHAVIOR, isEuDevice);
+        if (!FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled()) {
+            // isEuDevice argument here includes AdId disabled ROW users, which cannot be obtained
+            // within the notification activity from DeviceRegionProvider.
+            intent.putExtra(IS_STRICT_CONSENT_BEHAVIOR, isEuDevice);
+        }
 
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(
@@ -411,6 +416,38 @@ public class ConsentNotificationTrigger {
         NotificationManager notificationManager =
                 context.getSystemService(NotificationManager.class);
         notificationManager.createNotificationChannel(channel);
+    }
+
+    private static Intent getNotificationIntent(Context context) {
+        if (FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled()) {
+            Intent intent = new Intent(ACTION_VIEW_ADSERVICES_CONSENT_PAGE);
+            PackageManager pm = context.getPackageManager();
+            List<ResolveInfo> activities = pm.queryIntentActivities(intent, 0);
+            for (ResolveInfo resolveInfo : activities) {
+                String packageName = resolveInfo.activityInfo.packageName;
+                if (PermissionHelper.hasPermission(context, packageName, MODIFY_ADSERVICES_STATE)
+                        || PermissionHelper.hasPermission(
+                                context, packageName, MODIFY_ADSERVICES_STATE_COMPAT)) {
+                    LogUtil.d(
+                            "Matching Activity found for %s action in : %s",
+                            ACTION_VIEW_ADSERVICES_CONSENT_PAGE, packageName);
+                    return intent.setPackage(packageName);
+                }
+                LogUtil.w(
+                        "Matching Activity found for %s action in : %s, but it has neither %s nor"
+                                + " %s permission",
+                        ACTION_VIEW_ADSERVICES_CONSENT_PAGE,
+                        packageName,
+                        MODIFY_ADSERVICES_STATE,
+                        MODIFY_ADSERVICES_STATE_COMPAT);
+            }
+            LogUtil.w(
+                    "No activity available in system image to handle "
+                            + "%s action. Falling back to "
+                            + "ConsentNotificationActivity",
+                    ACTION_VIEW_ADSERVICES_CONSENT_PAGE);
+        }
+        return new Intent(context, ConsentNotificationActivity.class);
     }
 
     private static void setUpGaConsent(

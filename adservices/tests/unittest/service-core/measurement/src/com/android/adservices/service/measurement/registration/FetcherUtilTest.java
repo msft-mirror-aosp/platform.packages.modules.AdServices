@@ -474,6 +474,46 @@ public final class FetcherUtilTest {
     }
 
     @Test
+    public void extractIntegralInt_posIntegralNumber_success() throws Exception {
+        JSONObject jsonObj = new JSONObject().put(KEY, 2147483647);
+        assertWithMessage("extractIntegralInt(2147483647)")
+                .that(FetcherUtil.extractIntegralInt(jsonObj, KEY))
+                .isEqualTo(Optional.of(Integer.valueOf(2147483647)));
+    }
+
+    @Test
+    public void extractIntegralInt_negativeIntegralNumber_success() throws Exception {
+        JSONObject jsonObj = new JSONObject().put(KEY, -2147483648);
+        assertWithMessage("extractIntegralInt(-2147483648)")
+                .that(FetcherUtil.extractIntegralInt(jsonObj, KEY))
+                .isEqualTo(Optional.of(Integer.valueOf(-2147483648)));
+    }
+
+    @Test
+    public void extractIntegralInt_zeroInput_success() throws Exception {
+        JSONObject jsonObj = new JSONObject().put(KEY, 0);
+        assertWithMessage("extractIntegralInt(0)")
+                .that(FetcherUtil.extractIntegralInt(jsonObj, KEY))
+                .isEqualTo(Optional.of(Integer.valueOf(0)));
+    }
+
+    @Test
+    public void extractIntegralInt_inputAboveMaxInt_fails() throws Exception {
+        JSONObject jsonObj = new JSONObject().put(KEY, 2147483648L);
+        assertWithMessage("extractIntegralInt(2147483648)")
+                .that(FetcherUtil.extractIntegralInt(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void extractIntegralInt_inputBelowMinInt_fails() throws Exception {
+        JSONObject jsonObj = new JSONObject().put(KEY, -2147483649L);
+        assertWithMessage("extractIntegralInt(-2147483649)")
+                .that(FetcherUtil.extractIntegralInt(jsonObj, KEY))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
     public void testIsValidAggregateKeyId_valid() {
         assertTrue(FetcherUtil.isValidAggregateKeyId("abcd"));
     }
@@ -1482,6 +1522,7 @@ public final class FetcherUtilTest {
                                                 false,
                                                 0,
                                                 false,
+                                                false,
                                                 false)
                                         .setAdTechDomain(null)
                                         .build()),
@@ -1530,6 +1571,7 @@ public final class FetcherUtilTest {
                                                 false,
                                                 false,
                                                 0,
+                                                false,
                                                 false,
                                                 false)
                                         .setAdTechDomain(REGISTRATION_URI.toString())
@@ -1582,6 +1624,7 @@ public final class FetcherUtilTest {
                                                 false,
                                                 false,
                                                 0,
+                                                false,
                                                 false,
                                                 false)
                                         .setAdTechDomain(null)
@@ -1704,7 +1747,7 @@ public final class FetcherUtilTest {
         when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
         JSONObject obj = new JSONObject();
         String aggregateDebugReportingString =
-                FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).get();
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
         AggregateDebugReporting aggregateDebugReporting =
                 new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
                         .build();
@@ -1721,7 +1764,7 @@ public final class FetcherUtilTest {
         JSONObject obj = new JSONObject();
         obj.put("budget", 65536);
         String aggregateDebugReportingString =
-                FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).get();
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
         AggregateDebugReporting aggregateDebugReporting =
                 new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
                         .build();
@@ -1737,7 +1780,7 @@ public final class FetcherUtilTest {
         obj.put("key_piece", "");
         obj.put("budget", 65536);
         String aggregateDebugReportingString =
-                FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).get();
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
         AggregateDebugReporting aggregateDebugReporting =
                 new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
                         .build();
@@ -1750,29 +1793,7 @@ public final class FetcherUtilTest {
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "1x3");
         obj.put("budget", 65536);
-        assertThat(FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).isPresent())
-                .isFalse();
-    }
-
-    @Test
-    public void getValidAggregateDebugReportingString_budgetExceedsLowerLimit_fails()
-            throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        JSONObject obj = new JSONObject();
-        obj.put("key_piece", "0x3");
-        obj.put("budget", 0);
-        assertThat(FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).isPresent())
-                .isFalse();
-    }
-
-    @Test
-    public void getValidAggregateDebugReportingString_budgetExceedsUpperLimit_fails()
-            throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        JSONObject obj = new JSONObject();
-        obj.put("key_piece", "0x3");
-        obj.put("budget", 65537);
-        assertThat(FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).isPresent())
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
                 .isFalse();
     }
 
@@ -1785,7 +1806,7 @@ public final class FetcherUtilTest {
         obj.put("key_piece", "0x3");
         obj.put("budget", 65536);
         obj.put("aggregation_coordinator_origin", "");
-        assertThat(FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).isPresent())
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
                 .isFalse();
     }
 
@@ -1799,7 +1820,7 @@ public final class FetcherUtilTest {
         obj.put("key_piece", "0x3");
         obj.put("budget", 65536);
         obj.put("aggregation_coordinator_origin", "https://cloud.coordination1.test");
-        assertThat(FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).isPresent())
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
                 .isFalse();
     }
 
@@ -1814,7 +1835,7 @@ public final class FetcherUtilTest {
         obj.put("budget", 65536);
         obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
         String aggregateDebugReportingString =
-                FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).get();
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
         AggregateDebugReporting aggregateDebugReporting =
                 new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
                         .build();
@@ -1836,7 +1857,7 @@ public final class FetcherUtilTest {
         obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
         obj.put("debug_data", new JSONArray());
         String aggregateDebugReportingString =
-                FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).get();
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
         AggregateDebugReporting aggregateDebugReporting =
                 new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
                         .build();
@@ -1860,7 +1881,7 @@ public final class FetcherUtilTest {
         obj.put("budget", 65536);
         obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
         obj.put("debug_data", emptyData);
-        assertThat(FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).isPresent())
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
                 .isFalse();
     }
 
@@ -1883,7 +1904,7 @@ public final class FetcherUtilTest {
         dataObj2.put("value", 65536);
         dataObj2.put("type", new JSONArray(Arrays.asList("source-max-event-states-limit")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).isPresent())
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
                 .isFalse();
     }
 
@@ -1906,7 +1927,7 @@ public final class FetcherUtilTest {
         dataObj2.put("value", 65536);
         dataObj2.put("type", new JSONArray(Arrays.asList("source-max-event-states-limit")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).isPresent())
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
                 .isFalse();
     }
 
@@ -1929,7 +1950,7 @@ public final class FetcherUtilTest {
         dataObj2.put("value", 0);
         dataObj2.put("type", new JSONArray(Arrays.asList("source-max-event-states-limit")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).isPresent())
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
                 .isFalse();
     }
 
@@ -1952,7 +1973,7 @@ public final class FetcherUtilTest {
         dataObj2.put("value", 65537);
         dataObj2.put("type", new JSONArray(Arrays.asList("source-max-event-states-limit")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).isPresent())
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
                 .isFalse();
     }
 
@@ -1977,7 +1998,7 @@ public final class FetcherUtilTest {
                 new JSONArray(
                         Arrays.asList("source-max-event-states-limit", "invalid-report-type")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).isPresent())
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
                 .isFalse();
     }
 
@@ -2006,7 +2027,7 @@ public final class FetcherUtilTest {
                                 "source-storage-limit",
                                 "source-max-event-states-limit")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).isPresent())
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
                 .isFalse();
     }
 
@@ -2031,7 +2052,7 @@ public final class FetcherUtilTest {
                 "type",
                 new JSONArray(Arrays.asList("source-max-event-states-limit", "source-noised")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).isPresent())
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
                 .isFalse();
     }
 
@@ -2061,7 +2082,7 @@ public final class FetcherUtilTest {
 
         // Execution
         String aggregateDebugReportingString =
-                FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).get();
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
         AggregateDebugReporting aggregateDebugReporting =
                 new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
                         .build();
@@ -2118,7 +2139,7 @@ public final class FetcherUtilTest {
         dataObj2.put("types", types2);
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
         String aggregateDebugReportingString =
-                FetcherUtil.getValidAggregateDebugReportingString(obj, mFlags).get();
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
         AggregateDebugReporting aggregateDebugReporting =
                 new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
                         .build();

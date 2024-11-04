@@ -25,9 +25,7 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.net.Uri;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -55,9 +53,6 @@ public class DebugReportProcessorTest {
 
     public static final double AD_BID_1 = 1.0;
     public static final double AD_BID_2 = 2.0;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void singleBuyerSessionSuccessfulCase_returnsWinUri() {
@@ -159,7 +154,6 @@ public class DebugReportProcessorTest {
         DebugReport debugReport =
                 DebugReport.builder()
                         .setLossDebugReportUri(Uri.parse("http://example.com"))
-                        .setLossDebugReportUri(Uri.parse("http://example.com"))
                         .setCustomAudienceSignals(newDefaultCustomAudienceSignals().build())
                         .build();
 
@@ -180,7 +174,6 @@ public class DebugReportProcessorTest {
         PostAuctionSignals signals = newDefaultPostAuctionSignals().build();
         DebugReport debugReport =
                 DebugReport.builder()
-                        .setLossDebugReportUri(overlyLongUri)
                         .setLossDebugReportUri(overlyLongUri)
                         .setCustomAudienceSignals(newDefaultCustomAudienceSignals().build())
                         .build();

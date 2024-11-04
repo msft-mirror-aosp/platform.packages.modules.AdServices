@@ -81,15 +81,34 @@ public final class AdServicesExtDataServiceCtsTest {
                 new int[] {}, // Fake service implementation ignores this parameter.
                 putReceiver);
 
-        putReceiver.assertResultReceived();
+        putReceiver.assertFailureReceived();
 
         // Get updated AdExt data
         SyncAdExtTestCallback getReceiver = new SyncAdExtTestCallback();
         service.getAdServicesExtData(getReceiver);
 
-        GetAdServicesExtDataResult result = getReceiver.assertResultReceived();
-        assertThat(result).isNotNull();
-        assertThat(result.getAdServicesExtDataParams()).isEqualTo(paramsToUpdate);
+        String error = getReceiver.assertFailureReceived();
+        assertThat(error).isNotEmpty();
+    }
+
+    @Test
+    public void testAdServicesExtDataParams() {
+        AdServicesExtDataParams adServicesExtDataParams =
+                new AdServicesExtDataParams(
+                        /* isNotificationDisplayed= */ BOOLEAN_TRUE,
+                        /* isMeasurementConsented= */ BOOLEAN_FALSE,
+                        /* isU18Account= */ BOOLEAN_TRUE,
+                        /* isAdultAccount= */ BOOLEAN_FALSE,
+                        /* manualInteractionWithConsentStatus= */ STATE_UNKNOWN,
+                        /* measurementRollbackApexVersion= */ 200L);
+
+        assertThat(adServicesExtDataParams.getIsNotificationDisplayed()).isEqualTo(BOOLEAN_TRUE);
+        assertThat(adServicesExtDataParams.getIsMeasurementConsented()).isEqualTo(BOOLEAN_FALSE);
+        assertThat(adServicesExtDataParams.getIsU18Account()).isEqualTo(BOOLEAN_TRUE);
+        assertThat(adServicesExtDataParams.getIsAdultAccount()).isEqualTo(BOOLEAN_FALSE);
+        assertThat(adServicesExtDataParams.getManualInteractionWithConsentStatus())
+                .isEqualTo(STATE_UNKNOWN);
+        assertThat(adServicesExtDataParams.getMeasurementRollbackApexVersion()).isEqualTo(200L);
     }
 
     private static final class SyncAdExtTestCallback

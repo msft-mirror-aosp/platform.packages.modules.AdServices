@@ -43,10 +43,13 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.MeasurementTables.SourceAttributionScopeContract;
 import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import com.android.adservices.data.measurement.MeasurementTables.SourceDestination;
+import com.android.adservices.data.measurement.MeasurementTables.SourceNamedBudgetContract;
 import com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
+import com.android.adservices.service.measurement.AggregatableNamedBudgets;
+import com.android.adservices.service.measurement.AggregatableNamedBudgets.BudgetAndContribution;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -163,6 +166,7 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 TriggerContract.AGGREGATE_DEBUG_REPORTING,
                 trigger.getAggregateDebugReportingString());
+        values.put(TriggerContract.NAMED_BUDGETS, trigger.getNamedBudgetsString());
 
         long rowId =
                 mSQLTransaction
@@ -259,6 +263,46 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    @Nullable
+    public BudgetAndContribution getSourceAggregatableNamedBudgetAndContribution(
+            String sourceId, String matchedBudgetName) throws DatastoreException {
+        Objects.requireNonNull(sourceId, "sourceId cannot be null");
+        Objects.requireNonNull(matchedBudgetName, "matchedBudgetName cannot be null");
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                SourceNamedBudgetContract.TABLE,
+                                new String[] {
+                                    SourceNamedBudgetContract.BUDGET,
+                                    SourceNamedBudgetContract.AGGREGATE_CONTRIBUTIONS
+                                },
+                                SourceNamedBudgetContract.SOURCE_ID
+                                        + " = ? AND "
+                                        + SourceNamedBudgetContract.NAME
+                                        + " = ?",
+                                new String[] {sourceId, matchedBudgetName},
+                                /* groupBy= */ null,
+                                /* having= */ null,
+                                /* orderBy= */ null,
+                                /* limit= */ null)) {
+            if (cursor.moveToNext()) {
+                BudgetAndContribution budgetAndContribution =
+                        new BudgetAndContribution(
+                                cursor.getInt(
+                                        cursor.getColumnIndexOrThrow(
+                                                SourceNamedBudgetContract.BUDGET)));
+                budgetAndContribution.setAggregateContribution(
+                        cursor.getInt(
+                                cursor.getColumnIndexOrThrow(
+                                        SourceNamedBudgetContract.AGGREGATE_CONTRIBUTIONS)));
+                return budgetAndContribution;
+            }
+            return null;
+        }
+    }
+
+    @Override
     public List<String> getSourceAttributionScopes(@NonNull String sourceId)
             throws DatastoreException {
         try (Cursor cursor =
@@ -285,7 +329,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public Set<String> getNavigationAttributionScopesForRegistration(
+    public Optional<Set<String>> getAttributionScopesForRegistration(
             @NonNull String registrationId, @NonNull String registrationOrigin)
             throws DatastoreException {
         // Joins Source, SourceDestination and SourceAttributionScope tables on source id.
@@ -306,20 +350,25 @@ class MeasurementDao implements IMeasurementDao {
                         SourceContract.REGISTRATION_ID
                                 + " = "
                                 + DatabaseUtils.sqlEscapeString(registrationId),
-                        SourceContract.SOURCE_TYPE
-                                + " = "
-                                + DatabaseUtils.sqlEscapeString(
-                                        String.valueOf(Source.SourceType.NAVIGATION)),
                         SourceContract.REGISTRATION_ORIGIN
                                 + " = "
                                 + DatabaseUtils.sqlEscapeString(registrationOrigin));
 
-        String query =
+        String countQuery =
+                String.format(
+                        Locale.ENGLISH,
+                        "SELECT COUNT(*) FROM %1$s WHERE " + sourceWhereStatement,
+                        MeasurementTables.SourceContract.TABLE);
+        if (DatabaseUtils.longForQuery(mSQLTransaction.getDatabase(), countQuery, null) == 0) {
+            return Optional.empty();
+        }
+
+        String scopesQuery =
                 String.format(
                         Locale.ENGLISH,
                         "SELECT DISTINCT %1$s" + joinString + " WHERE " + sourceWhereStatement,
                         SourceAttributionScopeContract.ATTRIBUTION_SCOPE);
-        try (Cursor cursor = mSQLTransaction.getDatabase().rawQuery(query, null)) {
+        try (Cursor cursor = mSQLTransaction.getDatabase().rawQuery(scopesQuery, null)) {
             Set<String> attributionScopes = new HashSet<>();
             while (cursor.moveToNext()) {
                 attributionScopes.add(
@@ -327,7 +376,7 @@ class MeasurementDao implements IMeasurementDao {
                                 cursor.getColumnIndexOrThrow(
                                         SourceAttributionScopeContract.ATTRIBUTION_SCOPE)));
             }
-            return attributionScopes;
+            return Optional.of(attributionScopes);
         }
     }
 
@@ -895,6 +944,41 @@ class MeasurementDao implements IMeasurementDao {
                 }
             }
         }
+
+        if (flags.getMeasurementEnableAggregatableNamedBudgets()
+                && source.getAggregatableNamedBudgets() != null) {
+            AggregatableNamedBudgets aggregatableNamedBudgets =
+                    source.getAggregatableNamedBudgets();
+
+            for (String name : aggregatableNamedBudgets.getBudgetNames()) {
+                ContentValues namedBudgetValues = new ContentValues();
+                namedBudgetValues.put(SourceNamedBudgetContract.SOURCE_ID, source.getId());
+                namedBudgetValues.put(SourceNamedBudgetContract.NAME, name);
+                namedBudgetValues.put(
+                        SourceNamedBudgetContract.BUDGET,
+                        aggregatableNamedBudgets.maybeGetBudget(name).get());
+                namedBudgetValues.put(
+                        SourceNamedBudgetContract.AGGREGATE_CONTRIBUTIONS,
+                        aggregatableNamedBudgets.maybeGetContribution(name).get());
+
+                long namedBudgetRowId =
+                        mSQLTransaction
+                                .getDatabase()
+                                .insert(
+                                        SourceNamedBudgetContract.TABLE,
+                                        /* nullColumnHack= */ null,
+                                        namedBudgetValues);
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "MeasurementDao: insertSource: insert"
+                                        + " sourceAggregatableNamedBudgets: rowId="
+                                        + namedBudgetRowId);
+                if (namedBudgetRowId == -1) {
+                    throw new DatastoreException(
+                            "Source insertion failed on aggregatable named budgets.");
+                }
+            }
+        }
         return source.getId();
     }
 
@@ -1112,6 +1196,49 @@ class MeasurementDao implements IMeasurementDao {
                                 new String[] {sourceId});
         if (rows != 1) {
             throw new DatastoreException("Source  event attribution status update failed.");
+        }
+    }
+
+    @Override
+    public void updateSourceAggregatableNamedBudgets(Source source, String budgetName)
+            throws DatastoreException {
+        Objects.requireNonNull(source, "source cannot be null");
+        Objects.requireNonNull(budgetName, "budgetName cannot be null");
+        AggregatableNamedBudgets aggregatableNamedBudgets = source.getAggregatableNamedBudgets();
+        ContentValues values = new ContentValues();
+        values.put(
+                SourceNamedBudgetContract.BUDGET,
+                aggregatableNamedBudgets.maybeGetBudget(budgetName).get());
+        values.put(
+                SourceNamedBudgetContract.AGGREGATE_CONTRIBUTIONS,
+                aggregatableNamedBudgets.maybeGetContribution(budgetName).get());
+
+        long rows =
+                mSQLTransaction
+                        .getDatabase()
+                        .update(
+                                SourceNamedBudgetContract.TABLE,
+                                values,
+                                SourceNamedBudgetContract.SOURCE_ID
+                                        + " = ? AND "
+                                        + SourceNamedBudgetContract.NAME
+                                        + " = ?",
+                                new String[] {source.getId(), budgetName});
+
+        if (rows == 0) {
+            // No rows updated, so insert a new row
+            values.put(SourceNamedBudgetContract.NAME, budgetName);
+            values.put(SourceNamedBudgetContract.SOURCE_ID, source.getId());
+            long newRowId =
+                    mSQLTransaction
+                            .getDatabase()
+                            .insert(SourceNamedBudgetContract.TABLE, null, values);
+
+            if (newRowId == -1) {
+                throw new DatastoreException("Source aggregatable named budgets insert failed.");
+            }
+        } else if (rows != 1) {
+            throw new DatastoreException("Source aggregatable named budgets update failed.");
         }
     }
 
@@ -1842,7 +1969,7 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public Integer countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+    public Integer countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
             Uri registrationOrigin,
             Uri publisher,
             @EventSurfaceType int publisherType,
@@ -1854,16 +1981,16 @@ class MeasurementDao implements IMeasurementDao {
         String query =
                 String.format(
                         Locale.ENGLISH,
-                        "SELECT COUNT (*) FROM %1$s "
-                                + "WHERE %2$s AND "
-                                + "%3$s = ? AND "
-                                + "%4$s != ? AND "
+                        "SELECT COUNT (DISTINCT %1$s) FROM %2$s "
+                                + "WHERE %3$s AND "
+                                + "%4$s = ? AND "
+                                + "%1$s != ? AND "
                                 + "%5$s > ?",
+                        SourceContract.REGISTRATION_ORIGIN,
                         SourceContract.TABLE,
                         getPublisherWhereStatement(
                                 publisher, publisherType, SourceContract.PUBLISHER),
                         SourceContract.ENROLLMENT_ID,
-                        SourceContract.REGISTRATION_ORIGIN,
                         SourceContract.EVENT_TIME);
 
         return (int)
@@ -2838,6 +2965,9 @@ class MeasurementDao implements IMeasurementDao {
         values.put(
                 MeasurementTables.AggregateReport.TRIGGER_TIME, aggregateReport.getTriggerTime());
         values.put(MeasurementTables.AggregateReport.API, aggregateReport.getApi());
+        values.put(
+                MeasurementTables.AggregateReport.AGGREGATABLE_FILTERING_ID_MAX_BYTES,
+                aggregateReport.getAggregatableFilteringIdMaxBytes());
         long rowId =
                 mSQLTransaction
                         .getDatabase()
@@ -3483,6 +3613,37 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public boolean existsActiveSourcesWithDestination(Uri attributionDestination, long eventTime)
+            throws DatastoreException {
+        String whereStatement =
+                String.format(
+                        SourceContract.STATUS
+                                + " = "
+                                + Source.Status.ACTIVE
+                                + " AND "
+                                + SourceContract.EXPIRY_TIME
+                                + " > %1$s",
+                        eventTime);
+
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .rawQuery(
+                                selectSourceIdsByDestinations(
+                                        List.of(
+                                                Pair.create(
+                                                        EventSurfaceType.APP,
+                                                        attributionDestination.toString())),
+                                        whereStatement),
+                                null)) {
+            if (cursor.getCount() > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
     public KeyValueData getKeyValueData(@NonNull String key, @NonNull DataType dataType)
             throws DatastoreException {
         String value = null;
@@ -3912,8 +4073,7 @@ class MeasurementDao implements IMeasurementDao {
                             postfixMatch);
         }
 
-        if (FlagsFactory.getFlags().getMeasurementNullAggregateReportEnabled()
-                && tableName.equals(MeasurementTables.AggregateReport.TABLE)) {
+        if (tableName.equals(MeasurementTables.AggregateReport.TABLE)) {
             query +=
                     String.format(
                             Locale.ENGLISH,
@@ -3931,7 +4091,7 @@ class MeasurementDao implements IMeasurementDao {
         String query =
                 String.format(
                         Locale.ENGLISH,
-                        "SELECT SUM(%2$s) FROM %1$s WHERE %3$s AND %4$s >= ?",
+                        "SELECT SUM(%2$s) FROM %1$s WHERE %3$s AND %4$s > ?",
                         AggregatableDebugReportBudgetTrackerContract.TABLE,
                         AggregatableDebugReportBudgetTrackerContract.CONTRIBUTIONS,
                         getPublisherWhereStatement(

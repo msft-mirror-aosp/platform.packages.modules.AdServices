@@ -114,8 +114,7 @@ public final class AggregateFallbackReportingJobService extends JobService {
                                             - AdServicesConfig
                                                     .getMeasurementAggregateMainReportingJobPeriodMs();
                             DatastoreManager datastoreManager =
-                                    DatastoreManagerFactory.getDatastoreManager(
-                                            getApplicationContext());
+                                    DatastoreManagerFactory.getDatastoreManager();
                             new AggregateReportingJobHandler(
                                             datastoreManager,
                                             new AggregateEncryptionKeyManager(

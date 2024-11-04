@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement;
 import static com.android.adservices.service.measurement.Source.DEFAULT_MAX_EVENT_STATES;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -108,6 +109,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         assertNull(source.getAttributedTriggers());
         assertNull(source.getAggregateDebugReportingString());
         assertEquals(0, source.getAggregateDebugReportContributions());
+        assertNull(source.getAggregatableNamedBudgets());
     }
 
     @Test
@@ -135,6 +137,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         String aggregateDebugReportingString =
                 SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT;
         int aggregateDebugReportContributions = 1024;
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
         assertEquals(
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -195,6 +198,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setEventLevelEpsilon(event_level_epsilon)
                         .setAggregateDebugReportingString(aggregateDebugReportingString)
                         .setAggregateDebugReportContributions(aggregateDebugReportContributions)
+                        .setAggregatableNamedBudgets(aggregatableNamedBudgets)
                         .build(),
                 new Source.Builder()
                         .setEnrollmentId("enrollment-id")
@@ -255,6 +259,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .setEventLevelEpsilon(event_level_epsilon)
                         .setAggregateDebugReportingString(aggregateDebugReportingString)
                         .setAggregateDebugReportContributions(aggregateDebugReportContributions)
+                        .setAggregatableNamedBudgets(aggregatableNamedBudgets)
                         .build());
     }
 
@@ -972,7 +977,7 @@ public final class SourceTest extends AdServicesMockitoTestCase {
                         .build();
         AggregateDebugReportData debugData2 =
                 new AggregateDebugReportData.Builder(
-                                Collections.singleton(DebugReportApi.Type.DEFAULT.getValue()),
+                                Collections.singleton(DebugReportApi.Type.UNSPECIFIED.getValue()),
                                 new BigInteger("222", 16),
                                 222)
                         .build();
@@ -2389,5 +2394,159 @@ public final class SourceTest extends AdServicesMockitoTestCase {
         Double epsilonRetrievedConfigured =
                 withEpsilonConfigured.getConditionalEventLevelEpsilon(mMockFlags);
         assertEquals(10D, epsilonRetrievedConfigured, 0.0);
+    }
+
+    @Test
+    public void testGetInformationGainThreshold_dualDestination_event() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setSourceType(Source.SourceType.EVENT)
+                        .build();
+        when(mMockFlags.getMeasurementEnableCoarseEventReportDestinations()).thenReturn(false);
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainDualDestinationEvent())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT);
+
+        float thresholdRetrieved = source.getInformationGainThreshold(mMockFlags);
+        verify(mMockFlags).getMeasurementFlexApiMaxInformationGainDualDestinationEvent();
+        assertWithMessage("getInformationGainThreshold() dual destination event")
+                .that(thresholdRetrieved)
+                .isEqualTo(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_EVENT);
+    }
+
+    @Test
+    public void testGetInformationGainThreshold_dualDestination_navigation() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAppDestinations(List.of(Uri.parse("android-app://com.destination1")))
+                        .setWebDestinations(
+                                List.of(WebUtil.validUri("https://web-destination1.test")))
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .build();
+        when(mMockFlags.getMeasurementEnableCoarseEventReportDestinations()).thenReturn(false);
+        float infoGn = Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION;
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainDualDestinationNavigation())
+                .thenReturn(infoGn);
+
+        float thresholdRetrieved = source.getInformationGainThreshold(mMockFlags);
+        verify(mMockFlags).getMeasurementFlexApiMaxInformationGainDualDestinationNavigation();
+        assertWithMessage("getInformationGainThreshold() dual destination nav")
+                .that(thresholdRetrieved)
+                .isEqualTo(infoGn);
+    }
+
+    @Test
+    public void testGetInformationGainThreshold_singleDestination_event() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.EVENT)
+                        .build();
+        when(mMockFlags.getMeasurementEnableCoarseEventReportDestinations()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainEvent())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
+
+        float thresholdRetrieved = source.getInformationGainThreshold(mMockFlags);
+        verify(mMockFlags).getMeasurementFlexApiMaxInformationGainEvent();
+        assertWithMessage("getInformationGainThreshold() single destination event")
+                .that(thresholdRetrieved)
+                .isEqualTo(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT);
+    }
+
+    @Test
+    public void testGetInformationGainThreshold_singleDestination_navigation() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setSourceType(Source.SourceType.NAVIGATION)
+                        .build();
+        when(mMockFlags.getMeasurementEnableCoarseEventReportDestinations()).thenReturn(true);
+        when(mMockFlags.getMeasurementFlexApiMaxInformationGainNavigation())
+                .thenReturn(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION);
+
+        float thresholdRetrieved = source.getInformationGainThreshold(mMockFlags);
+        verify(mMockFlags).getMeasurementFlexApiMaxInformationGainNavigation();
+        assertWithMessage("getInformationGainThreshold() single destination nav")
+                .that(thresholdRetrieved)
+                .isEqualTo(Flags.MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_NAVIGATION);
+    }
+
+    @Test
+    public void testGetNamedBudgets() {
+        Source source =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setAggregatableNamedBudgets(new AggregatableNamedBudgets())
+                        .build();
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 50);
+        aggregatableNamedBudgets.createContributionBudget("name2", 40);
+        aggregatableNamedBudgets.setContribution("name1", 5);
+
+        source.getAggregatableNamedBudgets().createContributionBudget("name1", 50);
+        source.getAggregatableNamedBudgets().createContributionBudget("name2", 40);
+        source.getAggregatableNamedBudgets().setContribution("name1", 5);
+
+        assertThat(source.getAggregatableNamedBudgets()).isEqualTo(aggregatableNamedBudgets);
+    }
+
+    @Test
+    public void testCreateAndMaybeGetBudget() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 10);
+        aggregatableNamedBudgets.createContributionBudget("name2", 20);
+        aggregatableNamedBudgets.createContributionBudget("name3", 5);
+
+        assertThat(aggregatableNamedBudgets.maybeGetBudget("name1").get()).isEqualTo(10);
+        assertThat(aggregatableNamedBudgets.maybeGetBudget("name2").get()).isEqualTo(20);
+        assertThat(aggregatableNamedBudgets.maybeGetBudget("name3").get()).isEqualTo(5);
+    }
+
+    @Test
+    public void testMaybeGetBudget_namedBudgetDoesNotExist() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+
+        assertThat(aggregatableNamedBudgets.maybeGetBudget("name1")).isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void testSetContribution_success() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 100);
+
+        assertThat(aggregatableNamedBudgets.setContribution("name1", 90)).isTrue();
+    }
+
+    @Test
+    public void testSetContribution_contributionOverCapacity_fail() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 100);
+        aggregatableNamedBudgets.setContribution("name1", 65);
+
+        assertThat(aggregatableNamedBudgets.setContribution("name1", 105)).isFalse();
+    }
+
+    @Test
+    public void testMaybeGetContributions() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 100);
+
+        aggregatableNamedBudgets.setContribution("name1", 60);
+        assertThat(aggregatableNamedBudgets.maybeGetContribution("name1").get()).isEqualTo(60);
+    }
+
+    @Test
+    public void testMaybeGetContributions_bucketDoesNotExist() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+
+        assertThat(aggregatableNamedBudgets.maybeGetContribution("name1"))
+                .isEqualTo(Optional.empty());
+    }
+
+    @Test
+    public void testMaybeGetContributions_bucketHasNoContributions() {
+        AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
+        aggregatableNamedBudgets.createContributionBudget("name1", 100);
+
+        assertThat(aggregatableNamedBudgets.maybeGetContribution("name1").get()).isEqualTo(0);
     }
 }

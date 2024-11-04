@@ -110,7 +110,8 @@
                   "campaignCounts": 32768,
                   "geoValue": 1664,
                   "thirdSource": 100
-                }
+                },
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": [
@@ -161,7 +162,8 @@
                   "campaignCounts": 32768,
                   "geoValue": 1664,
                   "thirdSource": 100
-                }
+                },
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -209,7 +211,8 @@
                   "campaignCounts": 32768,
                   "geoValue": 1664,
                   "thirdSource": 100
-                }
+                },
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -262,7 +265,9 @@
             {
               "key": "0x100",
               "value": "100"
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       }

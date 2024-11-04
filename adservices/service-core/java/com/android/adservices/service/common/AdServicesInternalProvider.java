@@ -15,14 +15,24 @@
  */
 package com.android.adservices.service.common;
 
+import android.app.Application;
+import android.app.adservices.AdServicesManager;
 import android.content.Context;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.DebugFlags;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.common.ApplicationContextProvider;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import java.util.Objects;
+
+import javax.annotation.Nullable;
 
 /**
  * Provider used to set the application context singleton and other common stuff (like dumping data
@@ -30,22 +40,78 @@ import java.io.PrintWriter;
  */
 public final class AdServicesInternalProvider extends ApplicationContextProvider {
 
-    @Override
-    public boolean onCreate() {
-        LogUtil.d("AdServicesInternalProvider.onCreate()");
-        return super.onCreate();
+    @VisibleForTesting static final String DUMP_ARG_FULL_QUIET = "--quiet";
+    @VisibleForTesting static final String DUMP_ARG_SHORT_QUIET = "-q";
+
+    private final Flags mFlags;
+
+    // NOTE: currently only used on tests (to mock dump()), so it's null in production
+    @Nullable private final Throttler mThrottler;
+
+    public AdServicesInternalProvider() {
+        this(FlagsFactory.getFlags(), /* throttler= */ null);
+    }
+
+    @VisibleForTesting
+    AdServicesInternalProvider(Flags flags, @Nullable Throttler throttler) {
+        mFlags = Objects.requireNonNull(flags, "flags cannot be null");
+        mThrottler = throttler;
     }
 
     @Override
+    protected void setApplicationContext(Context context) {
+        if (mFlags.getDeveloperModeFeatureEnabled()) {
+            ApplicationContextSingleton.setAs(new AdServicesApplicationContext(context));
+            return;
+        }
+        super.setApplicationContext(context);
+    }
+
+    @SuppressWarnings("NewApi")
+    @Override
     public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
+        boolean quiet = false;
+        if (args != null) {
+            for (int i = 0; i < args.length; i++) {
+                String arg = args[i];
+                switch (arg) {
+                    case DUMP_ARG_SHORT_QUIET:
+                    case DUMP_ARG_FULL_QUIET:
+                        quiet = true;
+                        break;
+                    default:
+                        LogUtil.w("invalid arg at index %d: %s", i, arg);
+                }
+            }
+        }
+
+        writer.printf("App process: %s\n", Application.getProcessName());
+
         try {
             Context appContext = ApplicationContextSingleton.get();
-            writer.printf("ApplicationContextSingleton: %s\n", appContext);
+            writer.printf("ApplicationContext: %s\n", appContext);
             if (appContext != null) {
+                if (appContext instanceof AdServicesApplicationContext) {
+                    ((AdServicesApplicationContext) appContext).dump(writer, args);
+                }
                 AppManifestConfigMetricsLogger.dump(appContext, writer);
             }
         } catch (Exception e) {
             writer.printf("Failed to get ApplicationContextSingleton: %s\n", e);
+        }
+
+        AdServicesManager.dump(writer);
+
+        if (!quiet) {
+            writer.printf("\nFlags (from %s):\n", mFlags.getClass().getName());
+            mFlags.dump(writer, args);
+
+            DebugFlags debugFlags = DebugFlags.getInstance();
+            writer.printf("\nDebugFlags (from %s):\n", debugFlags.getClass().getName());
+            debugFlags.dump(writer);
+
+            Throttler throttler = mThrottler == null ? Throttler.getInstance() : mThrottler;
+            throttler.dump(writer);
         }
     }
 }

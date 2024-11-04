@@ -19,7 +19,6 @@ package com.android.adservices.cobalt;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.cobalt.testing.logging.FakeCobaltOperationLogger;
 
 import org.junit.Test;
@@ -27,7 +26,6 @@ import org.junit.Test;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@RequiresSdkLevelAtLeastS
 public final class CobaltDataServiceFactoryTest extends AdServicesUnitTestCase {
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool();
 

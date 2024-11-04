@@ -180,7 +180,7 @@ public final class DebugReportSenderWorker {
         Uri debugReportUri = dbAdSelectionDebugReport.getDebugReportUri();
         DevContext devContext =
                 DevContext.builder()
-                        .setDevOptionsEnabled(dbAdSelectionDebugReport.getDevOptionsEnabled())
+                        .setDeviceDevOptionsEnabled(dbAdSelectionDebugReport.getDevOptionsEnabled())
                         .build();
         sLogger.v("Sending debug report %s", debugReportUri);
         try {

@@ -107,8 +107,7 @@ public final class AggregateReportingJobService extends JobService {
                                     FlagsFactory.getFlags()
                                             .getMeasurementMaxAggregateReportUploadRetryWindowMs();
                             DatastoreManager datastoreManager =
-                                    DatastoreManagerFactory.getDatastoreManager(
-                                            getApplicationContext());
+                                    DatastoreManagerFactory.getDatastoreManager();
                             new AggregateReportingJobHandler(
                                             datastoreManager,
                                             new AggregateEncryptionKeyManager(

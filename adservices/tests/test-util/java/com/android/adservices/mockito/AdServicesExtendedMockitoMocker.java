@@ -17,6 +17,7 @@ package com.android.adservices.mockito;
 
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -42,7 +43,8 @@ public final class AdServicesExtendedMockitoMocker extends AbstractStaticMocker
 
     @Override
     public void mockGetFlags(Flags mockedFlags) {
-        logV("mockGetFlags(%s)", Objects.requireNonNull(mockedFlags, "Flags cannot be null"));
+        Objects.requireNonNull(mockedFlags, "Flags cannot be null");
+        logV("mockGetFlags(%s)", mockedFlags);
         assertSpiedOrMocked(FlagsFactory.class);
         doReturn(mockedFlags).when(FlagsFactory::getFlags);
     }
@@ -53,33 +55,38 @@ public final class AdServicesExtendedMockitoMocker extends AbstractStaticMocker
     }
 
     @Override
+    public void mockGetDebugFlags(DebugFlags mockedDebugFlags) {
+        Objects.requireNonNull(mockedDebugFlags, "DebugFlags cannot be null");
+        logV("mockGetDebugFlags(%s)", mockedDebugFlags);
+        assertSpiedOrMocked(DebugFlags.class);
+        doReturn(mockedDebugFlags).when(DebugFlags::getInstance);
+    }
+
+    @Override
+    @SuppressWarnings("NewApi")
     public void mockSpeJobScheduler(AdServicesJobScheduler mockedAdServicesJobScheduler) {
-        logV(
-                "mockSpeJobScheduler(%s)",
-                Objects.requireNonNull(
-                        mockedAdServicesJobScheduler, "AdServicesJobScheduler cannot be null"));
+        Objects.requireNonNull(
+                mockedAdServicesJobScheduler, "AdServicesJobScheduler cannot be null");
+        logV("mockSpeJobScheduler(%s)", mockedAdServicesJobScheduler);
         assertSpiedOrMocked(AdServicesJobScheduler.class);
         doReturn(mockedAdServicesJobScheduler).when(AdServicesJobScheduler::getInstance);
     }
 
     @Override
+    @SuppressWarnings("NewApi")
     public void mockAdServicesJobServiceFactory(
             AdServicesJobServiceFactory mockedAdServicesJobServiceFactory) {
-        logV(
-                "mockAdServicesJobServiceFactory(%s)",
-                Objects.requireNonNull(
-                        mockedAdServicesJobServiceFactory,
-                        "AdServicesJobServiceFactory cannot be null"));
+        Objects.requireNonNull(
+                mockedAdServicesJobServiceFactory, "AdServicesJobServiceFactory cannot be null");
+        logV("mockAdServicesJobServiceFactory(%s)", mockedAdServicesJobServiceFactory);
         assertSpiedOrMocked(AdServicesJobServiceFactory.class);
         doReturn(mockedAdServicesJobServiceFactory).when(AdServicesJobServiceFactory::getInstance);
     }
 
     @Override
     public void mockAdServicesLoggerImpl(AdServicesLoggerImpl mockedAdServicesLoggerImpl) {
-        logV(
-                "mockAdServicesLoggerImpl(%s)",
-                Objects.requireNonNull(
-                        mockedAdServicesLoggerImpl, "AdServicesLoggerImpl cannot be null"));
+        Objects.requireNonNull(mockedAdServicesLoggerImpl, "AdServicesLoggerImpl cannot be null");
+        logV("mockAdServicesLoggerImpl(%s)", mockedAdServicesLoggerImpl);
         assertSpiedOrMocked(AdServicesLoggerImpl.class);
         doReturn(mockedAdServicesLoggerImpl).when(AdServicesLoggerImpl::getInstance);
     }

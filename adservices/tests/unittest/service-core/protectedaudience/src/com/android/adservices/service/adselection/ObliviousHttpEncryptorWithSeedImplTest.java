@@ -38,7 +38,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKeyManager;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.devapi.DevContext;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.io.BaseEncoding;
@@ -53,7 +52,6 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.concurrent.ExecutorService;
 
 @SpyStatic(FlagsFactory.class)
-@RequiresSdkLevelAtLeastS
 public final class ObliviousHttpEncryptorWithSeedImplTest
         extends AdServicesExtendedMockitoTestCase {
     private static final String SERVER_PUBLIC_KEY =
@@ -71,7 +69,7 @@ public final class ObliviousHttpEncryptorWithSeedImplTest
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
                         .build()
                         .encryptionContextDao();
-        mDevContext = DevContext.builder(mPackageName).setDevOptionsEnabled(true).build();
+        mDevContext = DevContext.builder(mPackageName).setDeviceDevOptionsEnabled(true).build();
 
         mocker.mockGetFlags(mMockFlags);
     }
