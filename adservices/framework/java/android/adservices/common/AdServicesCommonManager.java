@@ -49,6 +49,7 @@ import com.android.adservices.flags.Flags;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
+import java.util.stream.Collectors;
 
 /**
  * AdServicesCommonManager contains APIs common across the various AdServices. It provides two
@@ -290,7 +291,8 @@ public class AdServicesCommonManager {
     /**
      * Activity Action: Open the consent landing page activity. In the activity, user consent
      * choices can be set, depending on user action, by calling {@link
-     * #requestAdServicesModuleUserChoices()}.
+     * #requestAdServicesModuleUserChoices()}. The action must be defined as an intent-filter in
+     * AndroidManifest.xml in order to receive Intents from the platform.
      *
      * <p>Input: nothing
      *
@@ -298,6 +300,7 @@ public class AdServicesCommonManager {
      *
      * @hide
      */
+    @SystemApi
     @SdkConstant(SdkConstantType.ACTIVITY_INTENT_ACTION)
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
@@ -315,8 +318,7 @@ public class AdServicesCommonManager {
      * shown to the user to notify them of these changes. The NotificationType can be Ongoing,
      * Regular, or None.
      *
-     * @param adServicesModuleStateList parcel containing state information for modules.
-     * @param notificationType parcel containing notification type.
+     * @param updateParams object containing state information for modules and notification type.
      * @param executor the executor for the callback.
      * @param callback callback function to confirm modules overrides is set up correctly.
      * @hide
@@ -325,13 +327,12 @@ public class AdServicesCommonManager {
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void requestAdServicesModuleOverrides(
-            @NonNull List<AdServicesModuleState> adServicesModuleStateList,
-            @NotificationType.NotificationTypeCode int notificationType,
+            @NonNull UpdateAdServicesModuleStatesParams updateParams,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull AdServicesOutcomeReceiver<Void, Exception> callback) {
-        Objects.requireNonNull(adServicesModuleStateList);
-        Objects.requireNonNull(executor);
-        Objects.requireNonNull(callback);
+        Objects.requireNonNull(updateParams, "updateParams cannot be null");
+        Objects.requireNonNull(executor, "executor cannot be null");
+        Objects.requireNonNull(callback, "callback cannot be null");
 
         if (invokeCallbackOnErrorOnRvc(callback)) {
             return;
@@ -339,9 +340,16 @@ public class AdServicesCommonManager {
 
         final IAdServicesCommonService service = getService();
         try {
+            List<AdServicesModuleState> adServicesModuleStateList =
+                    updateParams.getModuleStateMap().entrySet().stream()
+                            .map(
+                                    entry ->
+                                            new AdServicesModuleState(
+                                                    entry.getKey(), entry.getValue()))
+                            .collect(Collectors.toList());
             service.requestAdServicesModuleOverrides(
                     adServicesModuleStateList,
-                    notificationType,
+                    updateParams.getNotificationType(),
                     new IRequestAdServicesModuleOverridesCallback.Stub() {
                         @Override
                         public void onSuccess() throws RemoteException {
@@ -369,7 +377,7 @@ public class AdServicesCommonManager {
      * etc). The user consent controls whether the PPAPIs associated with that module can operate or
      * not.
      *
-     * @param adServicesModuleUserChoiceList parcel containing user choices for modules.
+     * @param updateParams object containing user choices for modules.
      * @param executor the executor for the callback.
      * @param callback callback function to confirm module user choice is set up correctly.
      * @hide
@@ -378,12 +386,12 @@ public class AdServicesCommonManager {
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void requestAdServicesModuleUserChoices(
-            @NonNull List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList,
+            @NonNull UpdateAdServicesUserChoicesParams updateParams,
             @NonNull @CallbackExecutor Executor executor,
             @NonNull AdServicesOutcomeReceiver<Void, Exception> callback) {
-        Objects.requireNonNull(adServicesModuleUserChoiceList);
-        Objects.requireNonNull(executor);
-        Objects.requireNonNull(callback);
+        Objects.requireNonNull(updateParams, "updateParams cannot be null");
+        Objects.requireNonNull(executor, "executor cannot be null");
+        Objects.requireNonNull(callback, "callback cannot be null");
 
         if (invokeCallbackOnErrorOnRvc(callback)) {
             return;
@@ -391,8 +399,16 @@ public class AdServicesCommonManager {
 
         final IAdServicesCommonService service = getService();
         try {
+            // TODO(b/375672670): pass param directly to Impl
+            List<AdServicesModuleUserChoice> adServicesUserChoiceList =
+                    updateParams.getUserChoiceMap().entrySet().stream()
+                            .map(
+                                    entry ->
+                                            new AdServicesModuleUserChoice(
+                                                    entry.getKey(), entry.getValue()))
+                            .collect(Collectors.toList());
             service.requestAdServicesModuleUserChoices(
-                    adServicesModuleUserChoiceList,
+                    adServicesUserChoiceList,
                     new IRequestAdServicesModuleUserChoicesCallback.Stub() {
                         @Override
                         public void onSuccess() throws RemoteException {

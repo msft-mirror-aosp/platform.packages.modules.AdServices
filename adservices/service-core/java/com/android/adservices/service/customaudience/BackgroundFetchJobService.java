@@ -56,7 +56,6 @@ import java.util.concurrent.TimeoutException;
  * Background fetch for FLEDGE Custom Audience API, executing periodic garbage collection and custom
  * audience updates.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class BackgroundFetchJobService extends JobService {
     private static final int FLEDGE_BACKGROUND_FETCH_JOB_ID =

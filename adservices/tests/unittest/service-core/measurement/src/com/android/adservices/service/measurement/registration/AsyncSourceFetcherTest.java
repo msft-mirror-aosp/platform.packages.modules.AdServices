@@ -257,8 +257,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 .thenReturn(Flags.MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS);
         when(mMockFlags.getMeasurementPrivacyEpsilon())
                 .thenReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
-        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity())
-                .thenReturn(false);
+        when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(false);
     }
 
     @Test
@@ -267,6 +266,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         doReturn(5000L).when(mMockFlags).getMaxResponseBasedRegistrationPayloadSizeBytes();
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -341,6 +341,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 false,
                                                 0,
                                                 false,
+                                                false,
                                                 false)
                                         .setAdTechDomain(null)
                                         .build()),
@@ -362,6 +363,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                         any(), anyString(), any(), any(), any()));
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -414,6 +416,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -459,6 +462,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -497,6 +501,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -545,6 +550,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -593,6 +599,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         new JSONArray(destinations);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -624,6 +631,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -653,6 +661,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -678,18 +687,19 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void testFetchSource_validAggregateContribution_success() throws Exception {
+    public void testFetchSource_validNamedBudget_success() throws Exception {
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
-        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
-        when(mMockFlags.getMeasurementMaxAggregatableBucketsPerSourceRegistration())
-                .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION);
-        when(mMockFlags.getMeasurementMaxLengthPerAggregatableBucket())
-                .thenReturn(Flags.MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET);
+        when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxNamedBudgetsPerSourceRegistration())
+                .thenReturn(Flags.MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION);
+        when(mMockFlags.getMeasurementMaxLengthPerBudgetName())
+                .thenReturn(Flags.MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME);
         when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource())
                 .thenReturn(MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -699,9 +709,10 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + "  \"destination\": \""
                                                 + DEFAULT_DESTINATION
                                                 + "\","
-                                                + "  \"aggregatable_bucket_max_budget\": {"
+                                                + "  \"named_budgets\": {"
                                                 + "    \"key1\": 32768,"
-                                                + "    \"key2\": 30000"
+                                                + "    \"key2\": 0,"
+                                                + "    \"key3\": 30000"
                                                 + "  },"
                                                 + "  \"priority\": \""
                                                 + DEFAULT_PRIORITY
@@ -723,58 +734,37 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirects);
 
         // Assertion
-        assertWithMessage("asyncFetchStatus.getResponseStatus()")
-                .that(asyncFetchStatus.getResponseStatus())
+        assertThat(asyncFetchStatus.getResponseStatus())
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
-        assertWithMessage("fetch.isPresent()").that(fetch.isPresent()).isTrue();
+        assertThat(fetch.isPresent()).isTrue();
         Source result = fetch.get();
-        assertWithMessage("result.getEnrollmentId()")
-                .that(result.getEnrollmentId())
-                .isEqualTo(ENROLLMENT_ID);
-        assertWithMessage("result.getAppDestinations().get(0).toString()")
-                .that(result.getAppDestinations().get(0).toString())
-                .isEqualTo(DEFAULT_DESTINATION);
-        assertWithMessage("result.getRegistrationOrigin().toString()")
-                .that(result.getRegistrationOrigin().toString())
-                .isEqualTo(DEFAULT_REGISTRATION);
-        assertWithMessage("result.getPriority()")
-                .that(result.getPriority())
-                .isEqualTo(DEFAULT_PRIORITY);
-        assertWithMessage("result.getEventId()")
-                .that(result.getEventId())
-                .isEqualTo(DEFAULT_EVENT_ID);
-        assertWithMessage("result.getAggregateContribution().maybeGetBucketCapacity(\"key1\")")
-                .that(result.getAggregateContributionBuckets().maybeGetBucketCapacity("key1").get())
+        assertThat(result.getEnrollmentId()).isEqualTo(ENROLLMENT_ID);
+        assertThat(result.getAppDestinations().get(0).toString()).isEqualTo(DEFAULT_DESTINATION);
+        assertThat(result.getRegistrationOrigin().toString()).isEqualTo(DEFAULT_REGISTRATION);
+        assertThat(result.getPriority()).isEqualTo(DEFAULT_PRIORITY);
+        assertThat(result.getEventId()).isEqualTo(DEFAULT_EVENT_ID);
+        assertThat(result.getAggregatableNamedBudgets().maybeGetBudget("key1").get())
                 .isEqualTo(32768);
-        assertWithMessage("result.getAggregateContribution().maybeGetBucketCapacity(\"key2\")")
-                .that(result.getAggregateContributionBuckets().maybeGetBucketCapacity("key2").get())
-                .isEqualTo(30000);
-        assertWithMessage(
-                        "result.getAggregateContribution().maybeGetBucketContributions"
-                                + "(\"key1\")")
-                .that(
-                        result.getAggregateContributionBuckets()
-                                .maybeGetBucketContribution("key1")
-                                .get())
+        assertThat(result.getAggregatableNamedBudgets().maybeGetBudget("key2").get())
                 .isEqualTo(0);
-        assertWithMessage(
-                        "result.getAggregateContribution().maybeGetBucketContributions"
-                                + "(\"key2\")")
-                .that(
-                        result.getAggregateContributionBuckets()
-                                .maybeGetBucketContribution("key2")
-                                .get())
+        assertThat(result.getAggregatableNamedBudgets().maybeGetBudget("key3").get())
+                .isEqualTo(30000);
+        assertThat(result.getAggregatableNamedBudgets().maybeGetContribution("key1").get())
+                .isEqualTo(0);
+        assertThat(result.getAggregatableNamedBudgets().maybeGetContribution("key2").get())
+                .isEqualTo(0);
+        assertThat(result.getAggregatableNamedBudgets().maybeGetContribution("key3").get())
                 .isEqualTo(0);
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
-    public void testFetchSource_validAggregateContributionWithEnableFlagOff_success()
-            throws Exception {
+    public void testFetchSource_validNamedBudgetWithEnableFlagOff_success() throws Exception {
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -784,7 +774,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + "  \"destination\": \""
                                                 + DEFAULT_DESTINATION
                                                 + "\","
-                                                + "  \"aggregatable_bucket_max_budget\": {"
+                                                + "  \"named_budgets\": {"
                                                 + "    \"key1\": 32768,"
                                                 + "    \"key2\": 30000"
                                                 + "  },"
@@ -808,51 +798,37 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirects);
 
         // Assertion
-        assertWithMessage("asyncFetchStatus.getResponseStatus()")
-                .that(asyncFetchStatus.getResponseStatus())
+        assertThat(asyncFetchStatus.getResponseStatus())
                 .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
-        assertWithMessage("fetch.isPresent()").that(fetch.isPresent()).isTrue();
+        assertThat(fetch.isPresent()).isTrue();
         Source result = fetch.get();
-        assertWithMessage("result.getEnrollmentId()")
-                .that(result.getEnrollmentId())
-                .isEqualTo(ENROLLMENT_ID);
-        assertWithMessage("result.getAppDestinations().get(0).toString()")
-                .that(result.getAppDestinations().get(0).toString())
-                .isEqualTo(DEFAULT_DESTINATION);
-        assertWithMessage("result.getRegistrationOrigin().toString()")
-                .that(result.getRegistrationOrigin().toString())
-                .isEqualTo(DEFAULT_REGISTRATION);
-        assertWithMessage("result.getPriority()")
-                .that(result.getPriority())
-                .isEqualTo(DEFAULT_PRIORITY);
-        assertWithMessage("result.getEventId()")
-                .that(result.getEventId())
-                .isEqualTo(DEFAULT_EVENT_ID);
-        assertWithMessage("result.getAggregateContributionBuckets()")
-                .that(result.getAggregateContributionBuckets())
-                .isNull();
+        assertThat(result.getEnrollmentId()).isEqualTo(ENROLLMENT_ID);
+        assertThat(result.getAppDestinations().get(0).toString()).isEqualTo(DEFAULT_DESTINATION);
+        assertThat(result.getRegistrationOrigin().toString()).isEqualTo(DEFAULT_REGISTRATION);
+        assertThat(result.getPriority()).isEqualTo(DEFAULT_PRIORITY);
+        assertThat(result.getEventId()).isEqualTo(DEFAULT_EVENT_ID);
+        assertThat(result.getAggregatableNamedBudgets()).isNull();
         verify(mUrlConnection).setRequestMethod("POST");
     }
 
     @Test
-    public void testFetchSource_moreAggregateBucketsThanAllowed_fails() throws Exception {
+    public void testFetchSource_moreNamedBudgetsThanAllowed_fails() throws Exception {
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
-        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
-        when(mMockFlags.getMeasurementMaxAggregatableBucketsPerSourceRegistration())
-                .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION);
+        when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxNamedBudgetsPerSourceRegistration())
+                .thenReturn(Flags.MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
 
         // Set up JSON
         Map<String, List<String>> headerFields = new HashMap<>();
         headerFields.put("Attribution-Reporting-Register-Source", new ArrayList<>());
         StringBuilder jsonBuilder = new StringBuilder("{");
         jsonBuilder.append("\"destination\": \"").append(DEFAULT_DESTINATION).append("\",");
-        jsonBuilder.append("\"aggregatable_bucket_max_budget\": {");
-        for (int i = 0;
-                i <= Flags.MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION;
-                i++) {
+        jsonBuilder.append("\"named_budgets\": {");
+        for (int i = 0; i <= Flags.MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION; i++) {
             jsonBuilder.append("\"key").append(i).append("\": 30,");
         }
         jsonBuilder.deleteCharAt(jsonBuilder.length() - 1); // Remove the last comma
@@ -885,16 +861,17 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void testFetchSource_invalidAggregateBucketId_fails() throws Exception {
+    public void testFetchSource_invalidBudgetName_fails() throws Exception {
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
-        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
-        when(mMockFlags.getMeasurementMaxAggregatableBucketsPerSourceRegistration())
-                .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION);
-        when(mMockFlags.getMeasurementMaxLengthPerAggregatableBucket())
-                .thenReturn(Flags.MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET);
+        when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxNamedBudgetsPerSourceRegistration())
+                .thenReturn(Flags.MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION);
+        when(mMockFlags.getMeasurementMaxLengthPerBudgetName())
+                .thenReturn(Flags.MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -904,7 +881,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + "  \"destination\": \""
                                                 + DEFAULT_DESTINATION
                                                 + "\","
-                                                + "  \"aggregatable_bucket_max_budget\": {"
+                                                + "  \"named_budgets\": {"
                                                 + "    \"key1\": 32768,"
                                                 + "    \"key1235467890123456789012345678"
                                                 + "9012345678901234567890\":"
@@ -941,18 +918,19 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void testFetchSource_aggregationBucketBudgetIsZero_fails() throws Exception {
+    public void testFetchSource_namedBudgetIsNegative_fails() throws Exception {
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
-        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
-        when(mMockFlags.getMeasurementMaxAggregatableBucketsPerSourceRegistration())
-                .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION);
-        when(mMockFlags.getMeasurementMaxLengthPerAggregatableBucket())
-                .thenReturn(Flags.MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET);
+        when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxNamedBudgetsPerSourceRegistration())
+                .thenReturn(Flags.MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION);
+        when(mMockFlags.getMeasurementMaxLengthPerBudgetName())
+                .thenReturn(Flags.MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME);
         when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource())
                 .thenReturn(MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -962,63 +940,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + "  \"destination\": \""
                                                 + DEFAULT_DESTINATION
                                                 + "\","
-                                                + "  \"aggregatable_bucket_max_budget\": {"
-                                                + "    \"key1\": 0,"
-                                                + "    \"key2\": 32768"
-                                                + "  },"
-                                                + "  \"priority\": \""
-                                                + DEFAULT_PRIORITY
-                                                + "\","
-                                                + "  \"expiry\": \""
-                                                + DEFAULT_EXPIRY
-                                                + "\","
-                                                + "  \"source_event_id\": \""
-                                                + DEFAULT_EVENT_ID
-                                                + "\""
-                                                + "}")));
-
-        AsyncRedirects asyncRedirects = new AsyncRedirects();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-
-        // Execution
-        AsyncRegistration asyncRegistration = appSourceRegistrationRequest(request);
-        Optional<Source> fetch =
-                mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirects);
-
-        // Assertion
-        assertWithMessage("asyncFetchStatus.getResponseStatus()")
-                .that(asyncFetchStatus.getResponseStatus())
-                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
-        assertWithMessage("asyncFetchStatus.getEntityStatus()")
-                .that(asyncFetchStatus.getEntityStatus())
-                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
-        assertWithMessage("fetch.isPresent()").that(fetch.isPresent()).isFalse();
-        verify(mUrlConnection).setRequestMethod("POST");
-    }
-
-    @Test
-    public void testFetchSource_aggregationBucketBudgetIsNegative_fails() throws Exception {
-        RegistrationRequest request =
-                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
-        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
-        when(mMockFlags.getMeasurementMaxAggregatableBucketsPerSourceRegistration())
-                .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION);
-        when(mMockFlags.getMeasurementMaxLengthPerAggregatableBucket())
-                .thenReturn(Flags.MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET);
-        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource())
-                .thenReturn(MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Source",
-                                List.of(
-                                        "{"
-                                                + "  \"destination\": \""
-                                                + DEFAULT_DESTINATION
-                                                + "\","
-                                                + "  \"aggregatable_bucket_max_budget\": {"
+                                                + "  \"named_budgets\": {"
                                                 + "    \"key1\": 32768,"
                                                 + "    \"key2\": -30000"
                                                 + "  },"
@@ -1053,18 +975,19 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    public void testFetchSource_aggregationBucketBudgetAboveCap_fails() throws Exception {
+    public void testFetchSource_namedBudgetAboveCap_fails() throws Exception {
         RegistrationRequest request =
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
-        when(mMockFlags.getMeasurementEnableAggregateContributionBudgetCapacity()).thenReturn(true);
-        when(mMockFlags.getMeasurementMaxAggregatableBucketsPerSourceRegistration())
-                .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATABLE_BUCKETS_PER_SOURCE_REGISTRATION);
-        when(mMockFlags.getMeasurementMaxLengthPerAggregatableBucket())
-                .thenReturn(Flags.MEASUREMENT_MAX_LENGTH_PER_AGGREGATABLE_BUCKET);
+        when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxNamedBudgetsPerSourceRegistration())
+                .thenReturn(Flags.MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION);
+        when(mMockFlags.getMeasurementMaxLengthPerBudgetName())
+                .thenReturn(Flags.MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME);
         when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource())
                 .thenReturn(MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1074,7 +997,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + "  \"destination\": \""
                                                 + DEFAULT_DESTINATION
                                                 + "\","
-                                                + "  \"aggregatable_bucket_max_budget\": {"
+                                                + "  \"named_budgets\": {"
                                                 + "    \"key1\": 65537"
                                                 + "  },"
                                                 + "  \"priority\": \""
@@ -1113,6 +1036,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1156,6 +1080,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1200,6 +1125,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1307,6 +1233,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1339,6 +1266,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         // Opt-in header error debug report by adding header "Attribution-Reporting-Info";
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -1377,6 +1305,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         // Opt-in header error debug report by adding header "Attribution-Reporting-Info";
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -1408,6 +1337,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         // Didn't opt-in header error debug report by adding header "Attribution-Reporting-Info";
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Map.of(headerName, List.of(headerWithJsonError)));
@@ -1434,6 +1364,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         // Invalid opt-in string for header error debug report.
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -1463,6 +1394,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         // The header fields have only attribution reporting info header and have no registration
         // header or redirect header.
         when(mUrlConnection.getHeaderFields())
@@ -1486,6 +1418,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields()).thenReturn(Collections.emptyMap());
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
@@ -1506,6 +1439,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1533,6 +1467,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1576,6 +1511,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1604,6 +1540,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1644,6 +1581,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1687,6 +1625,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1731,6 +1670,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1776,6 +1716,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1823,6 +1764,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, getInputEvent());
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1865,6 +1807,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1905,6 +1848,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1947,6 +1891,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -1990,6 +1935,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2034,6 +1980,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2077,6 +2024,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2111,6 +2059,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2141,6 +2090,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2171,6 +2121,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2199,6 +2150,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2229,6 +2181,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2259,6 +2212,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2289,6 +2243,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2319,6 +2274,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2374,6 +2330,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2412,6 +2369,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2454,6 +2412,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2496,6 +2455,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2539,6 +2499,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2581,6 +2542,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2624,6 +2586,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2664,6 +2627,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2706,6 +2670,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2748,6 +2713,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2790,6 +2756,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2832,6 +2799,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2873,6 +2841,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2914,6 +2883,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2955,6 +2925,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -2996,6 +2967,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3036,6 +3008,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(500);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         Map<String, List<String>> headersSecondRequest = new HashMap<>();
         headersSecondRequest.put(
                 "Attribution-Reporting-Register-Source",
@@ -3074,6 +3047,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         Map<String, List<String>> headersFirstRequest = new HashMap<>();
         headersFirstRequest.put("Attribution-Reporting-Register-Source", List.of("{}"));
         headersFirstRequest.put("Attribution-Reporting-Info", List.of("report-header-errors"));
@@ -3131,6 +3105,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         // Registration header is missing on first request.
         Map<String, List<String>> headersFirstRequest = new HashMap<>();
         headersFirstRequest.put("Attribution-Reporting-Info", List.of("report-header-errors"));
@@ -3178,6 +3153,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         Map<String, List<String>> headersFirstRequest = new HashMap<>();
         headersFirstRequest.put(
                 "Attribution-Reporting-Register-Source",
@@ -3229,6 +3205,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         Map<String, List<String>> headersFirstRequest = new HashMap<>();
         headersFirstRequest.put(
                 "Attribution-Reporting-Register-Source",
@@ -3282,6 +3259,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate both 'list' and 'location' type headers
@@ -3325,6 +3303,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate only 'location' type header
@@ -3356,6 +3335,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(AsyncRedirects.REDIRECT_LIST_HEADER_KEY, List.of(LIST_TYPE_REDIRECT_URI));
@@ -3384,6 +3364,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mMockFlags.getMeasurementEnableReinstallReattribution()).thenReturn(false);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -3421,6 +3402,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mMockFlags.getMeasurementEnableReinstallReattribution()).thenReturn(true);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -3460,6 +3442,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mMockFlags.getMeasurementEnableReinstallReattribution()).thenReturn(true);
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -3496,6 +3479,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mMockFlags.getMeasurementEnableReinstallReattribution()).thenReturn(true);
         when(mMockFlags.getMeasurementMaxReinstallReattributionWindowSeconds()).thenReturn(100L);
         when(mUrlConnection.getHeaderFields())
@@ -3534,6 +3518,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(
@@ -3567,6 +3552,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(
@@ -3612,6 +3598,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         // Populate only redirect behavior header with no actual redirect
@@ -3641,6 +3628,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(AsyncRedirects.REDIRECT_LIST_HEADER_KEY, List.of(LIST_TYPE_REDIRECT_URI));
@@ -3678,6 +3666,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(
@@ -3709,6 +3698,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(302);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         Map<String, List<String>> headers = getDefaultHeaders();
 
         headers.put(
@@ -3744,6 +3734,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 "  \"filter_data\": {\"product\":[\"1234\",\"2345\"], \"ctid\":[\"id\"]} \n";
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3787,6 +3778,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 "\"filter_data\":{\"product\":[\"1234\",\"2345\"],\"source_type\":[\"event\"]}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3820,6 +3812,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 "\"filter_data\":{\"product\":[\"1234\",\"2345\"],\"_abc_reserved\":[\"event\"]}";
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3853,6 +3846,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 "  \"filter_data\": {\"product\":\"1234\",\"2345\"], \"ctid\":[\"id\"]} \n";
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3890,6 +3884,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         String filterData = "  \"filter_data\": " + filters + "\n";
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3924,6 +3919,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         + "\":[\"id\"]} \n";
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3965,6 +3961,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         String filterData = "  \"filter_data\": " + filters + " \n";
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -3999,6 +3996,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         + "\"], \"ctid\":[\"id\"]} \n";
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4032,6 +4030,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         + "\"_lookback_window\": 123} \n";
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4062,6 +4061,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4112,6 +4112,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4150,6 +4151,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4187,6 +4189,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4227,6 +4230,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4257,6 +4261,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4288,6 +4293,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4322,6 +4328,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4353,6 +4360,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(any(URL.class));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4389,6 +4397,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4439,6 +4448,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4487,6 +4497,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4538,6 +4549,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4589,6 +4601,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4624,6 +4637,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4663,6 +4677,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4706,6 +4721,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4750,6 +4766,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4795,6 +4812,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4837,6 +4855,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4877,6 +4896,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4920,6 +4940,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -4963,6 +4984,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5006,6 +5028,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5051,6 +5074,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5103,6 +5127,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5155,6 +5180,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         // Its validation will fail due to destination mismatch
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -5199,6 +5225,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         String aggregateSource = "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}";
         String filterData = "{\"product\":[\"1234\",\"2345\"]," + "\"ctid\":[\"id\"]}";
         when(mUrlConnection.getHeaderFields())
@@ -5256,6 +5283,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         String aggregateSource = "{\"campaignCounts\" : \"0x159\", \"geoValue\" : \"0x5\"}";
         String filterData = "{\"product\":[\"1234\",\"2345\"]," + "\"ctid\":[\"id\"]}";
         when(mUrlConnection.getHeaderFields())
@@ -5318,6 +5346,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         String filterData = "{\"product\":[\"1234\",\"2345\"]," + "\"ctid\":[\"id\"]}";
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -5362,6 +5391,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5419,6 +5449,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5477,6 +5508,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         WEB_DESTINATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         String filterData = "{\"product\":[\"1234\",\"2345\"]," + "\"ctid\":[\"id\"]}";
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -5529,6 +5561,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         /* webDestination= */ null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5576,6 +5609,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         WEB_DESTINATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5631,6 +5665,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         WEB_DESTINATION_WITH_SUBDOMAIN);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5686,6 +5721,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         WEB_DESTINATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5738,6 +5774,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         WEB_DESTINATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5775,6 +5812,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5827,6 +5865,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5863,6 +5902,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5907,6 +5947,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 false,
                                                 0,
                                                 false,
+                                                false,
                                                 false)
                                         .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
                                         .build()),
@@ -5918,6 +5959,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -5974,6 +6016,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6030,6 +6073,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(uri);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(uri));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(uri));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6066,6 +6110,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(uri);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(uri));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(uri));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6100,6 +6145,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequestWithAdId(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6156,6 +6202,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6213,6 +6260,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6270,6 +6318,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(REGISTRATION_URI_1.toString()));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6324,6 +6373,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(uri));
         doReturn(true).when(mMockFlags).isDisableMeasurementEnrollmentCheck();
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(uri));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6361,6 +6411,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(uri));
         doReturn(true).when(mMockFlags).isDisableMeasurementEnrollmentCheck();
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(uri));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6398,6 +6449,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(uri));
         doReturn(true).when(mMockFlags).isDisableMeasurementEnrollmentCheck();
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(uri));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6434,6 +6486,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(false).when(mMockFlags).getMeasurementEnableCoarseEventReportDestinations();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -6472,6 +6525,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableCoarseEventReportDestinations();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -6510,6 +6564,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(false).when(mMockFlags).getMeasurementEnableSharedSourceDebugKey();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -6549,6 +6604,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableSharedSourceDebugKey();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -6588,6 +6644,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(false).when(mMockFlags).getMeasurementEnableSharedFilterDataKeysXNA();
 
         when(mUrlConnection.getHeaderFields())
@@ -6628,6 +6685,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableSharedFilterDataKeysXNA();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -6667,6 +6725,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -6701,6 +6760,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
         doReturn(5).when(mMockFlags).getMeasurementFlexApiMaxEventReportWindows();
@@ -6749,6 +6809,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -6817,6 +6878,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, getInputEvent());
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -6884,6 +6946,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, getInputEvent());
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -6953,6 +7016,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, getInputEvent());
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -7025,6 +7089,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -7090,6 +7155,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -7158,6 +7224,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -7225,6 +7292,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementEnableV1SourceTriggerData();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -7278,6 +7346,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementEnableV1SourceTriggerData();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -7327,6 +7396,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementEnableV1SourceTriggerData();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -7375,6 +7445,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementEnableV1SourceTriggerData();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -7436,6 +7507,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -7490,6 +7562,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -7572,6 +7645,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -7636,6 +7710,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -7685,6 +7760,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -7745,6 +7821,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -7814,6 +7891,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementEnableV1SourceTriggerData();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -7869,6 +7947,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -7913,6 +7992,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementEnableV1SourceTriggerData();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -7968,6 +8048,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -8024,6 +8105,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -8077,6 +8159,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -8133,6 +8216,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -8187,6 +8271,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -8230,6 +8315,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementEnableV1SourceTriggerData();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -8283,6 +8369,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -8325,6 +8412,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementEnableV1SourceTriggerData();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -8382,6 +8470,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -8445,6 +8534,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableV1SourceTriggerData();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -8498,6 +8588,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -8541,6 +8632,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementEnableV1SourceTriggerData();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -8598,6 +8690,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -8660,6 +8753,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementEnableV1SourceTriggerData();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -8712,6 +8806,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -8768,6 +8863,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -8823,6 +8919,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -8878,6 +8975,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -8922,6 +9020,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementEnableV1SourceTriggerData();
         doReturn(true).when(mMockFlags).getMeasurementEnableTriggerDataMatching();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
@@ -8988,6 +9087,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -9055,6 +9155,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -9115,6 +9216,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -9198,6 +9300,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -9278,6 +9381,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(false).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -9332,6 +9436,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         Arrays.asList(SOURCE_REGISTRATION_1), DEFAULT_TOP_ORIGIN, null, null);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(false).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -9400,6 +9505,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -9473,6 +9579,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(8).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -9545,6 +9652,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -9595,6 +9703,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
         when(mUrlConnection.getHeaderFields())
@@ -9629,6 +9738,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
         when(mUrlConnection.getHeaderFields())
@@ -9664,6 +9774,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
         when(mUrlConnection.getHeaderFields())
@@ -9705,6 +9816,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -9746,6 +9858,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -9790,6 +9903,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -9844,6 +9958,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -9891,6 +10006,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -9929,6 +10045,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -9966,6 +10083,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -10003,6 +10121,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -10042,6 +10161,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -10081,6 +10201,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -10119,6 +10240,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(8).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         when(mUrlConnection.getHeaderFields())
@@ -10159,6 +10281,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -10206,6 +10329,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -10259,6 +10383,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(32).when(mMockFlags).getMeasurementFlexApiMaxTriggerDataCardinality();
         doReturn(20).when(mMockFlags).getMeasurementFlexApiMaxEventReports();
@@ -10311,6 +10436,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -10359,6 +10485,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         doReturn(5).when(mMockFlags).getMeasurementFlexApiMaxEventReportWindows();
         when(mUrlConnection.getHeaderFields())
@@ -10405,6 +10532,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -10450,6 +10578,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         doReturn(true).when(mMockFlags).getMeasurementFlexibleEventReportingApiEnabled();
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
@@ -10489,6 +10618,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getOutputStream()).thenReturn(outputStream);
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -10522,6 +10652,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         when(mMockFlags.getFledgeMeasurementReportAndRegisterEventApiEnabled()).thenReturn(true);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -10556,6 +10687,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getOutputStream()).thenReturn(outputStream);
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -10590,6 +10722,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         when(mMockFlags.getFledgeMeasurementReportAndRegisterEventApiEnabled()).thenReturn(false);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -10622,6 +10755,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -10655,6 +10789,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -10693,6 +10828,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -10732,6 +10868,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -10768,6 +10905,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -10805,6 +10943,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -10843,6 +10982,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -10879,6 +11019,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -10917,6 +11058,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -10952,6 +11094,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -10983,6 +11126,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11014,6 +11158,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11046,6 +11191,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11078,6 +11224,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11110,6 +11257,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11142,6 +11290,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11175,6 +11324,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11214,6 +11364,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11252,6 +11403,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11290,6 +11442,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11328,6 +11481,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11366,6 +11520,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11404,6 +11559,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11442,6 +11598,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                 buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11485,6 +11642,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
 
@@ -11517,6 +11675,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
 
@@ -11542,6 +11701,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
 
@@ -11574,6 +11734,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11611,6 +11772,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11647,6 +11809,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11682,6 +11845,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(
@@ -11735,6 +11899,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
 
@@ -11783,6 +11948,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
 
@@ -11832,6 +11998,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
 
@@ -11904,6 +12071,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
 
@@ -11954,6 +12122,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
 
@@ -11994,6 +12163,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
 
@@ -12031,6 +12201,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
 
@@ -12069,6 +12240,7 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
 

@@ -15,8 +15,6 @@
  */
 package com.android.adservices.common;
 
-import com.android.adservices.shared.testing.device.DeviceConfig;
-import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
 import com.android.adservices.shared.testing.flags.HostSideFlagsPreparerClassRule;
 
 // TODO(b/347083260): add unit tests (there's no host-side test project for it yet)
@@ -27,14 +25,6 @@ import com.android.adservices.shared.testing.flags.HostSideFlagsPreparerClassRul
  * <p>See {@link com.android.adservices.shared.testing.flags.AbstractFlagsPreparerClassRule} for
  * actual documentation.
  */
-public final class AdServicesHostSideFlagsPreparerClassRule extends HostSideFlagsPreparerClassRule {
-
-    public AdServicesHostSideFlagsPreparerClassRule() {
-        super();
-    }
-
-    public AdServicesHostSideFlagsPreparerClassRule(
-            DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
-        super(deviceConfig, mode);
-    }
+public final class AdServicesHostSideFlagsPreparerClassRule
+        extends HostSideFlagsPreparerClassRule<AdServicesHostSideFlagsPreparerClassRule> {
 }

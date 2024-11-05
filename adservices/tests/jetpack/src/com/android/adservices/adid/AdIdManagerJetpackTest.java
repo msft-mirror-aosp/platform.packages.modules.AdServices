@@ -67,6 +67,5 @@ public class AdIdManagerJetpackTest {
                 AdIdManagerFutures.from(ApplicationProvider.getApplicationContext());
         AdId adId = adIdManager.getAdIdAsync().get();
         assertThat(adId.getAdId()).isNotEmpty();
-        assertThat(adId.isLimitAdTrackingEnabled()).isNotNull();
     }
 }

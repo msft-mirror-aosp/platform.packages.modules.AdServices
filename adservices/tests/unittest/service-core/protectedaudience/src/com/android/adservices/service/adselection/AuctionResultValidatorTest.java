@@ -39,14 +39,13 @@ import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.ValidatorTestUtil;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
 import java.util.Collection;
+import java.util.Locale;
 
 @SetErrorLogUtilDefaultParams(
         throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
@@ -75,9 +74,6 @@ public class AuctionResultValidatorTest extends AdServicesExtendedMockitoTestCas
                 .setBid(VALID_BID);
     }
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setUp() {
         mAuctionResultValidator =
@@ -99,7 +95,7 @@ public class AuctionResultValidatorTest extends AdServicesExtendedMockitoTestCas
                 mAuctionResultValidator.getValidationViolations(
                         getValidAuctionResultBuilder().setBid(negativeBid).build());
         ValidatorTestUtil.assertViolationContainsOnly(
-                violations, String.format(String.format(NEGATIVE_BID, negativeBid)));
+                violations, String.format(Locale.US, NEGATIVE_BID, negativeBid));
     }
 
     @Test
@@ -109,7 +105,7 @@ public class AuctionResultValidatorTest extends AdServicesExtendedMockitoTestCas
                 mAuctionResultValidator.getValidationViolations(
                         getValidAuctionResultBuilder().setScore(negativeScore).build());
         ValidatorTestUtil.assertViolationContainsOnly(
-                violations, String.format(String.format(NEGATIVE_SCORE, negativeScore)));
+                violations, String.format(Locale.US, NEGATIVE_SCORE, negativeScore));
     }
 
     @Test

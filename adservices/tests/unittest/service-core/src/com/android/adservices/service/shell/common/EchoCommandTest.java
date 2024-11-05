@@ -36,18 +36,6 @@ public final class EchoCommandTest extends ShellCommandTestCase<EchoCommand> {
         // empty message
         runAndExpectInvalidArgument(
                 echoCommand, HELP_ECHO, ShellCommandStats.COMMAND_ECHO, CMD_ECHO, "");
-        // more than 1 arg
-        runAndExpectInvalidArgument(
-                echoCommand,
-                HELP_ECHO,
-                ShellCommandStats.COMMAND_ECHO,
-                CMD_ECHO,
-                "4",
-                "8",
-                "15",
-                "16",
-                "23",
-                "42");
     }
 
     @Test
@@ -55,6 +43,13 @@ public final class EchoCommandTest extends ShellCommandTestCase<EchoCommand> {
         Result actualResult = run(new EchoCommand(), CMD_ECHO, "108");
 
         expectSuccess(actualResult, "108\n", ShellCommandStats.COMMAND_ECHO);
+    }
+
+    @Test
+    public void testRun_multipleArgs_valid() {
+        Result actualResult = run(new EchoCommand(), CMD_ECHO, "I", "am", "Groot");
+
+        expectSuccess(actualResult, "I am Groot\n", ShellCommandStats.COMMAND_ECHO);
     }
 
     @Test

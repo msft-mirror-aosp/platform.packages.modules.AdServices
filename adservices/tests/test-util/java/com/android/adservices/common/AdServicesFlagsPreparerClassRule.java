@@ -15,9 +15,11 @@
  */
 package com.android.adservices.common;
 
+import com.android.adservices.shared.testing.SdkSandbox;
 import com.android.adservices.shared.testing.device.DeviceConfig;
-import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
 import com.android.adservices.shared.testing.flags.DeviceSideFlagsPreparerClassRule;
+
+import com.google.common.annotations.VisibleForTesting;
 
 /**
  * Adservices-specific, device-side implementation of {@link
@@ -26,14 +28,16 @@ import com.android.adservices.shared.testing.flags.DeviceSideFlagsPreparerClassR
  * <p>See {@link com.android.adservices.shared.testing.flags.AbstractFlagsPreparerClassRule} for
  * actual documentation.
  */
-public final class AdServicesFlagsPreparerClassRule extends DeviceSideFlagsPreparerClassRule {
+public final class AdServicesFlagsPreparerClassRule
+        extends DeviceSideFlagsPreparerClassRule<AdServicesFlagsPreparerClassRule> {
 
+    /** Default constructor, uses default {@link DeviceConfig} and {@link SdkSandbox}. */
     public AdServicesFlagsPreparerClassRule() {
         super();
     }
 
-    public AdServicesFlagsPreparerClassRule(
-            DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
-        super(deviceConfig, mode);
+    @VisibleForTesting
+    AdServicesFlagsPreparerClassRule(SdkSandbox sdkSandbox, DeviceConfig deviceConfig) {
+        super(sdkSandbox, deviceConfig);
     }
 }

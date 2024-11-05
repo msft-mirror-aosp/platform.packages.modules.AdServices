@@ -16,8 +16,8 @@
 package com.android.adservices.shared.testing.flags;
 
 import com.android.adservices.shared.meta_testing.AbstractFlagsPreparerClassRuleTestCase;
-import com.android.adservices.shared.testing.Logger.RealLogger;
-import com.android.adservices.shared.testing.StandardStreamsLogger;
+import com.android.adservices.shared.testing.DynamicLogger;
+import com.android.adservices.shared.testing.SdkSandbox;
 import com.android.adservices.shared.testing.device.DeviceConfig;
 import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
 import com.android.adservices.shared.testing.flags.AbstractFlagsPreparerClassRuleTest.FakeFlagsPreparerClassRule;
@@ -44,20 +44,15 @@ public final class AbstractFlagsPreparerClassRuleTest
         extends AbstractFlagsPreparerClassRuleTestCase<FakeFlagsPreparerClassRule> {
 
     @Override
-    protected FakeFlagsPreparerClassRule newRule(
-            DeviceConfig deviceConfig, SyncDisabledModeForTest syncMode) {
-        return new FakeFlagsPreparerClassRule(deviceConfig, syncMode);
+    protected FakeFlagsPreparerClassRule newRule(SdkSandbox sdkSandbox, DeviceConfig deviceConfig) {
+        return new FakeFlagsPreparerClassRule(sdkSandbox, deviceConfig);
     }
 
-    public static final class FakeFlagsPreparerClassRule extends AbstractFlagsPreparerClassRule {
+    public static final class FakeFlagsPreparerClassRule
+            extends AbstractFlagsPreparerClassRule<FakeFlagsPreparerClassRule> {
 
-        FakeFlagsPreparerClassRule(
-                RealLogger realLogger, DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
-            super(realLogger, deviceConfig, mode);
-        }
-
-        FakeFlagsPreparerClassRule(DeviceConfig deviceConfig, SyncDisabledModeForTest mode) {
-            this(StandardStreamsLogger.getInstance(), deviceConfig, mode);
+        FakeFlagsPreparerClassRule(SdkSandbox sdkSandbox, DeviceConfig deviceConfig) {
+            super(DynamicLogger.getInstance(), sdkSandbox, deviceConfig);
         }
     }
 }

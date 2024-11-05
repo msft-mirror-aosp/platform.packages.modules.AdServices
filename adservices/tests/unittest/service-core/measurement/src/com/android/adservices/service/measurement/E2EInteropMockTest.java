@@ -56,7 +56,7 @@ import java.util.function.Supplier;
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop GitHub commit
- * 3967cb751a9f347b39ae835be608bf3dff21f4b7.
+ * c0f2cf42fa9c1463a1c6d9d1a5ed547bc4b4e972.
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EAbstractMockTest {
@@ -69,7 +69,6 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         "aggregatable_debug_reports.json",
                         "aggregatable_debug_reports_limits.json",
                         "aggregatable_debug_reports_with_filtering_ids.json",
-                        "source_destination_limit_aggregatable_debug.json",
                         "aggregatable_dedup_key.json",
                         "aggregatable_large_key.json",
                         "aggregatable_report_source_registration_time.json",
@@ -80,6 +79,13 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         "aggregatable_values_filtering.json",
                         "aggregatable_with_event_disabled.json",
                         "aggregation_coordinator_origin.json",
+                        "aggregation_key_identifier_length.json",
+                        "attribution_scopes_max_event_states_limit.json",
+                        "attribution_scopes_navigation_limit_no_scopes.json",
+                        "attribution_scopes_navigation_limit_with_scopes.json",
+                        "attribution_scopes_null_scopes_removes_data.json",
+                        "attribution_scopes_older_scopes_removed_2.json",
+                        "attribution_scopes_parsing_failures.json",
                         "basic_aggregatable.json",
                         "clamp_aggregatable_report_window.json",
                         "clamp_event_report_window.json",
@@ -94,10 +100,12 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         "event_level_trigger_filter_data.json",
                         "event_report_window.json",
                         "event_report_windows.json",
+                        "event_report_windows_int_max.json",
                         "expired_source.json",
                         "fenced.json",
                         "filter_data_validation.json",
                         "header_presence.json",
+                        "lookback_window_int_max.json",
                         "lookback_window_precision.json",
                         "max_aggregatable_reports_per_source.json",
                         "max_event_level_reports_per_source.json",
@@ -105,14 +113,17 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         "null_aggregatable_report.json",
                         "os_debug_reports.json",
                         "preferred_platform.json",
+                        "prio_dup.json",
                         "rate_limit_max_attributions.json",
                         "rate_limit_max_reporting_origins_per_source_reporting_site.json",
                         "redirect_source_trigger.json",
+                        "source_destination_limit_aggregatable_debug.json",
                         "source_destination_limit_fifo.json",
                         "source_destination_limit_fifo_rate_limits.json",
                         "source_registration_limits.json",
                         "source_storage_limit_expiry.json",
                         "success_debug_aggregatable.json",
+                        "success_debug_event_level.json",
                         "top_level_filter_data.json",
                         "unsuitable_response_url.json",
                         "verbose_debug_report_multiple_data.json");
@@ -208,7 +219,10 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                             FlagsConstants.KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE),
                     entry(
                             "max_aggregatable_debug_budget_per_context_site",
-                            FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW));
+                            FlagsConstants.KEY_MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW),
+                    entry(
+                            "max_aggregatable_reports_per_source",
+                            FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE));
 
     private static String preprocessor(String json) {
         // In a header response provided in string format, .test could also be surrounded by escaped
@@ -225,13 +239,8 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
     private static final Map<String, String> sPhFlagsForInterop =
             Map.ofEntries(
                     entry(
-                            FlagsConstants
-                                    .KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED,
-                            "true"),
-                    entry(
                             FlagsConstants.KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED,
                             "true"),
-                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID, "true"),
                     entry(
                             FlagsConstants
                                     .KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING,
@@ -258,7 +267,6 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                             "11.46173"),
                     entry(FlagsConstants.KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM, "1"),
                     entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_LOOKBACK_WINDOW_FILTER, "true"),
-                    entry(FlagsConstants.KEY_MEASUREMENT_NULL_AGGREGATE_REPORT_ENABLED, "true"),
                     entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT, "true"),
                     entry(
                             FlagsConstants.KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE,
@@ -268,7 +276,13 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                                     .KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT,
                             "true"),
                     entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS, "true"),
-                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING, "true"));
+                    entry(FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING, "true"),
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS,
+                            "true"),
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING,
+                            "true"));
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> getData() throws IOException, JSONException {
@@ -288,12 +302,12 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                 paramsProvider,
                 name,
                 ((Supplier<Map<String, String>>)
-                                () -> {
-                                    for (String key : sPhFlagsForInterop.keySet()) {
-                                        phFlagsMap.putIfAbsent(key, sPhFlagsForInterop.get(key));
-                                    }
-                                    return phFlagsMap;
-                                })
+                        () -> {
+                            for (String key : sPhFlagsForInterop.keySet()) {
+                                phFlagsMap.putIfAbsent(key, sPhFlagsForInterop.get(key));
+                            }
+                            return phFlagsMap;
+                        })
                         .get());
         mAttributionHelper = TestObjectProvider.getAttributionJobHandler(mDatastoreManager, mFlags);
         mMeasurementImpl =

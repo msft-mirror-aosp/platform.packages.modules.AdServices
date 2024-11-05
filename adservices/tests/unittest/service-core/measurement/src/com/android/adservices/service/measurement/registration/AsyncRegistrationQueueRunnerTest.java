@@ -311,6 +311,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .thenReturn(Flags.MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES);
         when(mMockFlags.getMeasurementPrivacyEpsilon())
                 .thenReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
+        when(mMockFlags.getMeasurementEnableBothSideDebugKeysInReports()).thenReturn(false);
         when(mMeasurementDao.insertSource(any())).thenReturn(DEFAULT_SOURCE_ID);
         when(mSpyContext.getPackageManager()).thenReturn(mPackageManager);
     }
@@ -2781,6 +2782,24 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     }
 
     @Test
+    public void insertSource_enableBothSidesDebugKeysPrivacy_fakeReportHasNoDebugKey()
+            throws DatastoreException {
+        // Setup
+        when(mMockFlags.getMeasurementEnableBothSideDebugKeysInReports()).thenReturn(true);
+        Source source =
+                spy(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setAppDestinations(
+                                        SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                                .setWebDestinations(
+                                        SourceFixture.ValidSourceParams.WEB_DESTINATIONS)
+                                .setAdIdPermission(true)
+                                .setDebugKey(SourceFixture.ValidSourceParams.DEBUG_KEY)
+                                .build());
+        commonTestDebugKeyPresenceInFakeReport(source, null);
+    }
+
+    @Test
     public void insertSource_withFakeReportsNeverAppAttribution_accountsForFakeReportAttribution()
             throws DatastoreException {
         // Setup
@@ -3727,6 +3746,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .thenReturn("");
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
         when(mUrlConnection.getHeaderFields())
                 .thenReturn(
                         Map.of(

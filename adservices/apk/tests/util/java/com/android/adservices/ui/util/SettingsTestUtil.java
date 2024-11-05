@@ -24,9 +24,9 @@ import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
 import static com.android.adservices.ui.util.AdServicesUiTestCase.LAUNCH_TIMEOUT;
+import static com.android.adservices.ui.util.ApkTestUtil.assertNotNull;
 import static com.android.adservices.ui.util.ApkTestUtil.getConsentSwitch;
 
-import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.content.Intent;
@@ -40,6 +40,8 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+
+import java.util.concurrent.TimeUnit;
 
 /** Util class for Settings tests. */
 public final class SettingsTestUtil {
@@ -72,26 +74,6 @@ public final class SettingsTestUtil {
         assertNotNull(appButton, R.string.settingsUI_apps_ga_title);
     }
 
-    public static void settingsRemoveMainToggleAndMeasurementEntryTestRvcUxUtil(UiDevice device) {
-        ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
-
-        UiObject2 appButton =
-                ApkTestUtil.scrollTo(device, R.string.settingsUI_measurement_view_title);
-        assertNotNull(appButton, R.string.settingsUI_measurement_view_title);
-
-        // make sure we are on the main settings page
-        ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_title);
-
-        // verify have entered to measurement page
-        UiObject2 measurementSwitch =
-                ApkTestUtil.getElement(device, R.string.settingsUI_measurement_switch_title);
-        assertNotNull(measurementSwitch, R.string.settingsUI_measurement_switch_title);
-
-        pressBack(device);
-        // verify back to the main page
-        assertNotNull(appButton, R.string.settingsUI_measurement_view_title);
-    }
-
     public static void measurementDialogTestUtil(UiDevice device, AdServicesFlagsSetterRule flags)
             throws RemoteException {
         flags.setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, true);
@@ -101,13 +83,13 @@ public final class SettingsTestUtil {
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_title);
 
         // click reset
-        SettingsTestUtil.clickResetButton(device);
+        ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_reset_title);
         UiObject2 resetButton =
                 ApkTestUtil.getElement(device, R.string.settingsUI_measurement_view_reset_title);
         assertNotNull(resetButton, R.string.settingsUI_measurement_view_reset_title);
 
         // click reset again
-        SettingsTestUtil.clickResetButton(device);
+        ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_reset_title);
         resetButton =
                 ApkTestUtil.getElement(device, R.string.settingsUI_measurement_view_reset_title);
         assertNotNull(resetButton, R.string.settingsUI_measurement_view_reset_title);
@@ -125,16 +107,16 @@ public final class SettingsTestUtil {
         if (topicsToggle.isChecked()) {
             topicsToggle.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         }
-        assertToggleState(topicsToggle, /* checked= */ false);
+        ApkTestUtil.assertToggleState(topicsToggle, /* checked= */ false);
         pressBack(device);
 
         // 2) enable Topics API
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_topics_ga_title);
 
         topicsToggle = getConsentSwitch(device);
-        assertToggleState(topicsToggle, /* checked= */ false);
+        ApkTestUtil.assertToggleState(topicsToggle, /* checked= */ false);
         topicsToggle.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
-        assertToggleState(topicsToggle, /* checked= */ true);
+        ApkTestUtil.assertToggleState(topicsToggle, /* checked= */ true);
         pressBack(device);
 
         // 3) check if Topics API is enabled
@@ -143,7 +125,7 @@ public final class SettingsTestUtil {
         device.setOrientationLeft();
         device.setOrientationNatural();
         topicsToggle = getConsentSwitch(device);
-        assertToggleState(topicsToggle, /* checked= */ true);
+        ApkTestUtil.assertToggleState(topicsToggle, /* checked= */ true);
         pressBack(device);
     }
 
@@ -159,16 +141,16 @@ public final class SettingsTestUtil {
         if (fledgeToggle.isChecked()) {
             fledgeToggle.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         }
-        assertToggleState(fledgeToggle, /* checked= */ false);
+        ApkTestUtil.assertToggleState(fledgeToggle, /* checked= */ false);
         pressBack(device);
 
         // 2) enable Fledge API
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_apps_ga_title);
 
         fledgeToggle = getConsentSwitch(device);
-        assertToggleState(fledgeToggle, /* checked= */ false);
+        ApkTestUtil.assertToggleState(fledgeToggle, /* checked= */ false);
         fledgeToggle.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
-        assertToggleState(fledgeToggle, /* checked= */ true);
+        ApkTestUtil.assertToggleState(fledgeToggle, /* checked= */ true);
         pressBack(device);
 
         // 3) check if Fledge API is enabled
@@ -177,7 +159,7 @@ public final class SettingsTestUtil {
         device.setOrientationLeft();
         device.setOrientationNatural();
         fledgeToggle = getConsentSwitch(device);
-        assertToggleState(fledgeToggle, /* checked= */ true);
+        ApkTestUtil.assertToggleState(fledgeToggle, /* checked= */ true);
         pressBack(device);
     }
 
@@ -194,16 +176,16 @@ public final class SettingsTestUtil {
             measurementToggle.clickAndWait(
                     Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         }
-        assertToggleState(measurementToggle, /* checked= */ false);
+        ApkTestUtil.assertToggleState(measurementToggle, /* checked= */ false);
         pressBack(device);
 
         // 2) enable Measurement API
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_title);
 
         measurementToggle = getConsentSwitch(device);
-        assertToggleState(measurementToggle, /* checked= */ false);
+        ApkTestUtil.assertToggleState(measurementToggle, /* checked= */ false);
         measurementToggle.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
-        assertToggleState(measurementToggle, /* checked= */ true);
+        ApkTestUtil.assertToggleState(measurementToggle, /* checked= */ true);
         pressBack(device);
 
         // 3) check if Measurement API is enabled
@@ -212,7 +194,7 @@ public final class SettingsTestUtil {
         device.setOrientationLeft();
         device.setOrientationNatural();
         measurementToggle = getConsentSwitch(device);
-        assertToggleState(measurementToggle, /* checked= */ true);
+        ApkTestUtil.assertToggleState(measurementToggle, /* checked= */ true);
         pressBack(device);
     }
 
@@ -271,7 +253,7 @@ public final class SettingsTestUtil {
             positiveButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
             topicsToggle = getConsentSwitch(device);
-            assertToggleState(topicsToggle, /* checked= */ false);
+            ApkTestUtil.assertToggleState(topicsToggle, /* checked= */ false);
             // then turn it on again
             topicsToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             UiObject2 dialogOptInTitle =
@@ -282,7 +264,7 @@ public final class SettingsTestUtil {
             okButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
             topicsToggle = getConsentSwitch(device);
-            assertToggleState(topicsToggle, /* checked= */ true);
+            ApkTestUtil.assertToggleState(topicsToggle, /* checked= */ true);
         } else {
             // turn it on
             topicsToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
@@ -294,7 +276,7 @@ public final class SettingsTestUtil {
             okButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
             topicsToggle = getConsentSwitch(device);
-            assertToggleState(topicsToggle, /* checked= */ true);
+            ApkTestUtil.assertToggleState(topicsToggle, /* checked= */ true);
             // then turn it off
             topicsToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             UiObject2 dialogOptOutTitle =
@@ -306,7 +288,7 @@ public final class SettingsTestUtil {
             positiveButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
             topicsToggle = getConsentSwitch(device);
-            assertToggleState(topicsToggle, /* checked= */ false);
+            ApkTestUtil.assertToggleState(topicsToggle, /* checked= */ false);
         }
     }
 
@@ -329,7 +311,7 @@ public final class SettingsTestUtil {
             positiveButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
             appsToggle = getConsentSwitch(device);
-            assertToggleState(appsToggle, /* checked= */ false);
+            ApkTestUtil.assertToggleState(appsToggle, /* checked= */ false);
             // then turn it on again
             appsToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             UiObject2 dialogOptInTitle =
@@ -340,7 +322,7 @@ public final class SettingsTestUtil {
             okButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
             appsToggle = getConsentSwitch(device);
-            assertToggleState(appsToggle, /* checked= */ true);
+            ApkTestUtil.assertToggleState(appsToggle, /* checked= */ true);
         } else {
             // turn it on
             appsToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
@@ -352,7 +334,7 @@ public final class SettingsTestUtil {
             okButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
             appsToggle = getConsentSwitch(device);
-            assertToggleState(appsToggle, /* checked= */ true);
+            ApkTestUtil.assertToggleState(appsToggle, /* checked= */ true);
             // then turn it off
             appsToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             UiObject2 dialogOptOutTitle =
@@ -364,7 +346,7 @@ public final class SettingsTestUtil {
             positiveButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
             appsToggle = getConsentSwitch(device);
-            assertToggleState(appsToggle, /* checked= */ false);
+            ApkTestUtil.assertToggleState(appsToggle, /* checked= */ false);
         }
     }
 
@@ -386,13 +368,11 @@ public final class SettingsTestUtil {
             UiObject2 positiveButton =
                     ApkTestUtil.getElement(
                             device, R.string.settingsUI_dialog_opt_out_positive_text);
-            assertNotNull(
-                    dialogOptOutTitle,
-                    R.string.settingsUI_dialog_measurement_opt_out_title);
+            assertNotNull(dialogOptOutTitle, R.string.settingsUI_dialog_measurement_opt_out_title);
             positiveButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
             measurementToggle = getConsentSwitch(device);
-            assertToggleState(measurementToggle, /* checked= */ false);
+            ApkTestUtil.assertToggleState(measurementToggle, /* checked= */ false);
             // then turn it on again
             measurementToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             UiObject2 dialogOptInTitle =
@@ -404,7 +384,7 @@ public final class SettingsTestUtil {
             okButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
             measurementToggle = getConsentSwitch(device);
-            assertToggleState(measurementToggle, /* checked= */ true);
+            ApkTestUtil.assertToggleState(measurementToggle, /* checked= */ true);
         } else {
             // turn it on
             measurementToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
@@ -417,7 +397,7 @@ public final class SettingsTestUtil {
             okButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
             measurementToggle = getConsentSwitch(device);
-            assertToggleState(measurementToggle, /* checked= */ true);
+            ApkTestUtil.assertToggleState(measurementToggle, /* checked= */ true);
             // then turn it off
             measurementToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             UiObject2 dialogOptOutTitle =
@@ -426,13 +406,11 @@ public final class SettingsTestUtil {
             UiObject2 positiveButton =
                     ApkTestUtil.getElement(
                             device, R.string.settingsUI_dialog_opt_out_positive_text);
-            assertNotNull(
-                    dialogOptOutTitle,
-                    R.string.settingsUI_dialog_measurement_opt_out_title);
+            assertNotNull(dialogOptOutTitle, R.string.settingsUI_dialog_measurement_opt_out_title);
             positiveButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
             measurementToggle = getConsentSwitch(device);
-            assertToggleState(measurementToggle, /* checked= */ false);
+            ApkTestUtil.assertToggleState(measurementToggle, /* checked= */ false);
         }
     }
 
@@ -461,17 +439,17 @@ public final class SettingsTestUtil {
         if (fledgeToggle.isChecked()) {
             fledgeToggle.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         }
-        assertThat(fledgeToggle.isChecked()).isFalse();
+        assertWithMessage("fledge toggle checked").that(fledgeToggle.isChecked()).isFalse();
         device.pressBack();
 
         // 2) enable Fledge API
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_apps_ga_title);
 
         fledgeToggle = getConsentSwitch(device);
-        assertThat(fledgeToggle.isChecked()).isFalse();
+        assertWithMessage("fledge toggle checked").that(fledgeToggle.isChecked()).isFalse();
         fledgeToggle.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         fledgeToggle = getConsentSwitch(device);
-        assertThat(fledgeToggle.isChecked()).isTrue();
+        assertWithMessage("fledge toggle checked").that(fledgeToggle.isChecked()).isTrue();
         device.pressBack();
 
         // 3) check if Fledge API is enabled
@@ -480,7 +458,7 @@ public final class SettingsTestUtil {
         device.setOrientationLeft();
         device.setOrientationNatural();
         fledgeToggle = getConsentSwitch(device);
-        assertThat(fledgeToggle.isChecked()).isTrue();
+        assertWithMessage("fledge toggle checked").that(fledgeToggle.isChecked()).isTrue();
 
         // 4) check text is PAS text
         UiObject2 bodyText =
@@ -496,11 +474,12 @@ public final class SettingsTestUtil {
                 .equals(ApkTestUtil.getString(R.string.settingsUI_subtitle_consent_off))) {
             ApkTestUtil.scrollToAndClick(device, stringIdOfTitle);
             UiObject2 toggle = getConsentSwitch(device);
-            assertToggleState(toggle, /* checked= */ false);
+            ApkTestUtil.assertToggleState(toggle, /* checked= */ false);
             toggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             pressBack(device);
             subtitle = ApkTestUtil.scrollTo(device, regexResId);
-            assertThat(
+            assertWithMessage("subtitle equals")
+                    .that(
                             subtitle.getText()
                                     .equals(
                                             ApkTestUtil.getString(
@@ -509,39 +488,17 @@ public final class SettingsTestUtil {
         } else {
             ApkTestUtil.scrollToAndClick(device, stringIdOfTitle);
             UiObject2 toggle = getConsentSwitch(device);
-            assertToggleState(toggle, /* checked= */ true);
+            ApkTestUtil.assertToggleState(toggle, /* checked= */ true);
             toggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             pressBack(device);
             subtitle = ApkTestUtil.scrollTo(device, regexResId);
-            assertThat(
+            assertWithMessage("subtitle equals")
+                    .that(
                             subtitle.getText()
                                     .equals(
                                             ApkTestUtil.getString(
                                                     R.string.settingsUI_subtitle_consent_off)))
                     .isTrue();
-        }
-    }
-
-    public static void clickResetButton(UiDevice device) {
-        // R Msmt UI is not scrollable
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.R) {
-            ApkTestUtil.click(device, R.string.settingsUI_measurement_view_reset_title);
-        } else {
-            ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_reset_title);
-        }
-    }
-
-    private static void assertNotNull(UiObject2 object, int resId) {
-        assertWithMessage("Button with text %s ", ApkTestUtil.getString(resId))
-                .that(object)
-                .isNotNull();
-    }
-
-    private static void assertToggleState(UiObject2 toggleSwitch, boolean checked) {
-        if (checked) {
-            assertWithMessage("Toggle switch checked").that(toggleSwitch.isChecked()).isTrue();
-        } else {
-            assertWithMessage("Toggle switch checked").that(toggleSwitch.isChecked()).isFalse();
         }
     }
 
@@ -555,5 +512,14 @@ public final class SettingsTestUtil {
     public static boolean isSettingsIntentInstalled() {
         Intent intent = ApkTestUtil.getIntent(PRIVACY_SANDBOX_UI);
         return ApkTestUtil.isIntentInstalled(intent);
+    }
+
+    /** check component enabled and wait for it before tests start */
+    public static void setupBeforeTests() throws InterruptedException {
+        // Check intent component enabled, if not, sleep for 1 min for bootCompleteReceiver to get
+        // invoked on S
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU && !isSettingsIntentInstalled()) {
+            TimeUnit.SECONDS.sleep(60);
+        }
     }
 }

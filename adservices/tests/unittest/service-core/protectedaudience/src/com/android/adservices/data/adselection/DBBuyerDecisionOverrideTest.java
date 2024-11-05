@@ -22,9 +22,6 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 public class DBBuyerDecisionOverrideTest {
@@ -34,9 +31,6 @@ public class DBBuyerDecisionOverrideTest {
     private static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
     private static final String DECISION_LOGIC_JS =
             "function test() { return \"hello world\"; " + "var randomSymbols = \"+-:;'.\"\"}";
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildDBBuyerDecisionOverride() {

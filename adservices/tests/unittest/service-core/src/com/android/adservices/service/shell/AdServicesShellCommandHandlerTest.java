@@ -50,6 +50,7 @@ import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurat
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.devapi.DevSessionController;
+import com.android.adservices.service.devapi.DevSessionDataStore;
 import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
 import com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand;
 import com.android.adservices.service.shell.adselection.ViewAuctionResultCommand;
@@ -117,6 +118,7 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
     @Mock private SignalsProviderAndArgumentFactory mSignalsProviderAndArgumentFactory;
     @Mock private AdSelectionEntryDao mAdSelectionEntryDao;
     @Mock private DevSessionController mDevSessionSetter;
+    @Mock private DevSessionDataStore mDevSessionDataStore;
 
     private ShellCommandFactorySupplier mShellCommandFactorySupplier;
 
@@ -143,7 +145,8 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                         mEncoderLogicMetadataDao,
                         mConsentedDebugConfigurationGenerator,
                         mAdSelectionEntryDao,
-                        mDevSessionSetter);
+                        mDevSessionSetter,
+                        mDevSessionDataStore);
         mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier, mAdServicesLogger, mClock);
     }
 
@@ -202,8 +205,6 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
         expectInvalidArgument(HELP_ECHO, CMD_ECHO);
         // empty message
         expectInvalidArgument(HELP_ECHO, CMD_ECHO, "");
-        // more than 1 arg
-        expectInvalidArgument(HELP_ECHO, CMD_ECHO, "4", "8", "15", "16", "23", "42");
     }
 
     @Test

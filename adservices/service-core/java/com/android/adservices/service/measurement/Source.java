@@ -126,7 +126,7 @@ public class Source {
     @Nullable private String mAggregateDebugReportingString;
     @Nullable private AggregateDebugReporting mAggregateDebugReporting;
     private int mAggregateDebugReportContributions;
-    @Nullable private AggregateContributionBuckets mAggregateContributionBuckets;
+    @Nullable private AggregatableNamedBudgets mAggregatableNamedBudgets;
 
     /**
      * Parses and returns the event_report_windows Returns null if parsing fails or if there is no
@@ -688,8 +688,7 @@ public class Source {
                 && Objects.equals(
                         mAggregateDebugReportingString, source.mAggregateDebugReportingString)
                 && mAggregateDebugReportContributions == source.mAggregateDebugReportContributions
-                && Objects.equals(
-                        mAggregateContributionBuckets, source.mAggregateContributionBuckets);
+                && Objects.equals(mAggregatableNamedBudgets, source.mAggregatableNamedBudgets);
     }
 
     @Override
@@ -748,7 +747,7 @@ public class Source {
                 mEventLevelEpsilon,
                 mAggregateDebugReportingString,
                 mAggregateDebugReportContributions,
-                mAggregateContributionBuckets);
+                mAggregatableNamedBudgets);
     }
 
     public void setAttributionMode(@AttributionMode int attributionMode) {
@@ -1413,6 +1412,12 @@ public class Source {
         mAttributionScopes = attributionScopes;
     }
 
+    /** Sets the aggregatable named budgets. */
+    public void setAggregatableNamedBudgets(
+            @Nullable AggregatableNamedBudgets aggregatableNamedBudgets) {
+        mAggregatableNamedBudgets = aggregatableNamedBudgets;
+    }
+
     /** Returns the attribution scope limit for the source. It should be positive. */
     @Nullable
     public Long getAttributionScopeLimit() {
@@ -1471,11 +1476,11 @@ public class Source {
     }
 
     /**
-     * @return the aggregate contribution object
+     * @return the aggregatable named budgets object
      */
     @Nullable
-    public AggregateContributionBuckets getAggregateContributionBuckets() {
-        return mAggregateContributionBuckets;
+    public AggregatableNamedBudgets getAggregatableNamedBudgets() {
+        return mAggregatableNamedBudgets;
     }
 
     /** Builder for {@link Source}. */
@@ -1549,7 +1554,7 @@ public class Source {
             builder.setAggregateDebugReportingString(copyFrom.mAggregateDebugReportingString);
             builder.setAggregateDebugReportContributions(
                     copyFrom.mAggregateDebugReportContributions);
-            builder.setAggregateContributionBuckets(copyFrom.mAggregateContributionBuckets);
+            builder.setAggregatableNamedBudgets(copyFrom.mAggregatableNamedBudgets);
             return builder;
         }
 
@@ -1976,11 +1981,11 @@ public class Source {
             return this;
         }
 
-        /** See {@link Source#getAggregateContributionBuckets()}. */
+        /** See {@link Source#getAggregatableNamedBudgets()}. */
         @NonNull
-        public Builder setAggregateContributionBuckets(
-                @Nullable AggregateContributionBuckets aggregateContributionBuckets) {
-            mBuilding.mAggregateContributionBuckets = aggregateContributionBuckets;
+        public Builder setAggregatableNamedBudgets(
+                @Nullable AggregatableNamedBudgets aggregatableNamedBudgets) {
+            mBuilding.mAggregatableNamedBudgets = aggregatableNamedBudgets;
             return this;
         }
 

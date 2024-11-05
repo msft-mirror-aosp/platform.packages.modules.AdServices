@@ -74,4 +74,21 @@ public final class FakeCobaltOperationLoggerTest extends AdServicesUnitTestCase 
         assertThat(mLogger.getNumEventVectorBufferMaxExceededOccurrences(METRIC_ID_1, REPORT_ID_1))
                 .isEqualTo(0);
     }
+
+    @Test
+    public void testLogUploadFailure_success() throws Exception {
+        mLogger.logUploadFailure();
+        mLogger.logUploadFailure();
+        assertThat(mLogger.getNumUploadSuccessOccurrences()).isEqualTo(0);
+        assertThat(mLogger.getNumUploadFailureOccurrences()).isEqualTo(2);
+    }
+
+    @Test
+    public void testLogUploadSuccess_success() throws Exception {
+        mLogger.logUploadSuccess();
+        mLogger.logUploadSuccess();
+
+        assertThat(mLogger.getNumUploadSuccessOccurrences()).isEqualTo(2);
+        assertThat(mLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
+    }
 }

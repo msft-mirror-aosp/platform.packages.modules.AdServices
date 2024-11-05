@@ -16,20 +16,34 @@
 package com.android.adservices.shared.testing.flags;
 
 import com.android.adservices.shared.meta_testing.DeviceSideFlagsPreparerClassRuleTestCase;
+import com.android.adservices.shared.testing.SdkSandbox;
 import com.android.adservices.shared.testing.device.DeviceConfig;
-import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
+import com.android.adservices.shared.testing.flags.DeviceSideFlagsPreparerClassRuleTest.ConcreteDeviceSideFlagsPreparerClassRule;
 
 public final class DeviceSideFlagsPreparerClassRuleTest
-        extends DeviceSideFlagsPreparerClassRuleTestCase<DeviceSideFlagsPreparerClassRule> {
+        extends DeviceSideFlagsPreparerClassRuleTestCase<ConcreteDeviceSideFlagsPreparerClassRule> {
 
     @Override
-    protected DeviceSideFlagsPreparerClassRule newRule() {
-        return new DeviceSideFlagsPreparerClassRule() {};
+    protected ConcreteDeviceSideFlagsPreparerClassRule newRule() {
+        return new ConcreteDeviceSideFlagsPreparerClassRule();
     }
 
     @Override
-    protected DeviceSideFlagsPreparerClassRule newRule(
-            DeviceConfig deviceConfig, SyncDisabledModeForTest syncMode) {
-        return new DeviceSideFlagsPreparerClassRule(deviceConfig, syncMode) {};
+    protected ConcreteDeviceSideFlagsPreparerClassRule newRule(
+            SdkSandbox sdkSandbox, DeviceConfig deviceConfig) {
+        return new ConcreteDeviceSideFlagsPreparerClassRule(sdkSandbox, deviceConfig);
+    }
+
+    public static final class ConcreteDeviceSideFlagsPreparerClassRule
+            extends DeviceSideFlagsPreparerClassRule<ConcreteDeviceSideFlagsPreparerClassRule> {
+
+        public ConcreteDeviceSideFlagsPreparerClassRule() {
+            super();
+        }
+
+        public ConcreteDeviceSideFlagsPreparerClassRule(
+                SdkSandbox sdkSandbox, DeviceConfig deviceConfig) {
+            super(sdkSandbox, deviceConfig);
+        }
     }
 }

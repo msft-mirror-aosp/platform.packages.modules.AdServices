@@ -41,12 +41,15 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.io.PrintWriter;
 
 public final class AdServicesInternalProviderTest extends AdServicesExtendedMockitoTestCase {
 
     private AdServicesInternalProvider mProvider;
+
+    @Mock private Throttler mMockThrottler;
 
     @Before
     @After
@@ -56,7 +59,7 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
 
     @Before
     public void setFixtures() {
-        mProvider = new AdServicesInternalProvider(mMockFlags);
+        mProvider = new AdServicesInternalProvider(mMockFlags, mMockThrottler);
     }
 
     @Test
@@ -183,6 +186,16 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
     }
 
     @Test
+    public void testDump_includesThrottlerDump() throws Exception {
+        String expectedDump = "Slow ride, take it easy!";
+        mockThrottlerDump(expectedDump);
+
+        String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
+
+        assertWithMessage("content of dump()").that(dump).contains(expectedDump);
+    }
+
+    @Test
     @MockStatic(DebugFlags.class)
     public void testDump_argShortQuiet() throws Exception {
         testDumpQuiet(DUMP_ARG_SHORT_QUIET);
@@ -199,12 +212,15 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
         mockFlagsDump(flagsDump);
         String debugFlagsDump = "Don't bother me, I'm debuggy";
         mockDebugFlagsDump(debugFlagsDump);
+        String throttlerDump = "Don't bother me, I'm throttled";
+        mockThrottlerDump(throttlerDump);
 
         String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, new String[] {arg}));
 
         // Don't need to assert everything that's dumped, just what it isn't...
         assertWithMessage("content of dump()").that(dump).doesNotContain(flagsDump);
         assertWithMessage("content of dump()").that(dump).doesNotContain(debugFlagsDump);
+        assertWithMessage("content of dump()").that(dump).doesNotContain(throttlerDump);
     }
 
     private void initializeProvider(Context context) {
@@ -240,5 +256,16 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
                         })
                 .when(mMockFlags)
                 .dump(any(), eq(args));
+    }
+
+    private void mockThrottlerDump(String dump) {
+        doAnswer(
+                        (inv) -> {
+                            mLog.d("%s", MockitoHelper.toString(inv));
+                            ((PrintWriter) inv.getArgument(0)).println(dump);
+                            return null;
+                        })
+                .when(mMockThrottler)
+                .dump(any());
     }
 }

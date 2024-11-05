@@ -63,6 +63,7 @@ import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.data.topics.Topic;
@@ -150,6 +151,7 @@ public class ConsentManager {
     private final AppInstallDao mAppInstallDao;
     private final ProtectedSignalsDao mProtectedSignalsDao;
     private final FrequencyCapDao mFrequencyCapDao;
+    private final EncodedPayloadDao mEncodedPayloadDao;
     private final AdServicesManager mAdServicesManager;
     private final int mConsentSourceOfTruth;
     private final AppSearchConsentManager mAppSearchConsentManager;
@@ -168,6 +170,7 @@ public class ConsentManager {
             @NonNull AppInstallDao appInstallDao,
             @NonNull ProtectedSignalsDao protectedSignalsDao,
             @NonNull FrequencyCapDao frequencyCapDao,
+            @NonNull EncodedPayloadDao encodedPayloadDao,
             @NonNull AdServicesManager adServicesManager,
             @NonNull AtomicFileDatastore atomicFileDatastore,
             @NonNull AppSearchConsentManager appSearchConsentManager,
@@ -190,6 +193,8 @@ public class ConsentManager {
                 Objects.requireNonNull(protectedSignalsDao, "protectedSignalsDao cannot be null");
         mFrequencyCapDao =
                 Objects.requireNonNull(frequencyCapDao, "frequencyCapDao cannot be null");
+        mEncodedPayloadDao =
+                Objects.requireNonNull(encodedPayloadDao, "encodedPayloadDao cannot be null");
         mDatastore =
                 Objects.requireNonNull(atomicFileDatastore, "atomicFileDatastore cannot be null");
         mUserProfileIdManager =
@@ -239,9 +244,8 @@ public class ConsentManager {
                             AppConsentDao.getSingletonSupplier();
 
                     // It is possible that the old value of the flag lingers after OTA until the
-                    // first
-                    // PH sync. In that case, we should not use the stale value, but use the default
-                    // instead. The next PH sync will restore the T+ value.
+                    // first PH sync. In that case, we should not use the stale value, but use the
+                    // default instead. The next PH sync will restore the T+ value.
                     if (SdkLevel.isAtLeastT() && consentSourceOfTruth == Flags.APPSEARCH_ONLY) {
                         consentSourceOfTruth = Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
                     }
@@ -280,6 +284,7 @@ public class ConsentManager {
                                     SharedStorageDatabase.getInstance().appInstallDao(),
                                     ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
                                     SharedStorageDatabase.getInstance().frequencyCapDao(),
+                                    ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
                                     adServicesManager,
                                     datastore,
                                     appSearchConsentManager,
@@ -522,16 +527,6 @@ public class ConsentManager {
     }
 
     /**
-     * Returns whether the user is adult user who OTA from R.
-     *
-     * @return true if user is adult user who OTA from R, otherwise false.
-     */
-    public boolean isOtaAdultUserFromRvc() {
-        // TODO: b/364295966 REMOVE
-        return false;
-    }
-
-    /**
      * Proxy call to {@link TopicsWorker} to get {@link ImmutableList} of {@link Topic}s which could
      * be returned to the {@link TopicsWorker} clients.
      *
@@ -768,6 +763,7 @@ public class ConsentManager {
         }
         if (mFlags.getProtectedSignalsCleanupEnabled()) {
             asyncExecute(mProtectedSignalsDao::deleteAllSignals);
+            asyncExecute(mEncodedPayloadDao::deleteAllEncodedPayloads);
         }
     }
 
@@ -801,6 +797,7 @@ public class ConsentManager {
         }
         if (mFlags.getProtectedSignalsCleanupEnabled()) {
             asyncExecute(mProtectedSignalsDao::deleteAllSignals);
+            asyncExecute(mEncodedPayloadDao::deleteAllEncodedPayloads);
         }
     }
 
@@ -1300,8 +1297,24 @@ public class ConsentManager {
                 /* errorLogger= */ null);
     }
 
-    private void setPrivacySandboxFeatureTypeInApp(PrivacySandboxFeatureType currentFeatureType)
+    @VisibleForTesting
+    void setPrivacySandboxFeatureTypeInApp(PrivacySandboxFeatureType currentFeatureType)
             throws IOException {
+        if (FlagsFactory.getFlags().getEnableAtomicFileDatastoreBatchUpdateApi()) {
+            mDatastore.update(
+                    updateOperation -> {
+                        for (PrivacySandboxFeatureType featureType :
+                                PrivacySandboxFeatureType.values()) {
+                            if (featureType.name().equals(currentFeatureType.name())) {
+                                updateOperation.putBoolean(featureType.name(), true);
+                            } else {
+                                updateOperation.putBoolean(featureType.name(), false);
+                            }
+                        }
+                    });
+            return;
+        }
+
         for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
             if (featureType.name().equals(currentFeatureType.name())) {
                 mDatastore.putBoolean(featureType.name(), true);
@@ -1455,6 +1468,23 @@ public class ConsentManager {
             // TODO(b/259607624): implement a method in the datastore which would support
             // this exact scenario - if the value is null, return default value provided
             // in the parameter (similar to SP apply etc.)
+            if (FlagsFactory.getFlags().getEnableAtomicFileDatastoreBatchUpdateApi()) {
+                atomicFileDatastore.update(
+                        updateOperation -> {
+                            updateOperation.putBooleanIfNew(
+                                    ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, false);
+                            updateOperation.putBooleanIfNew(
+                                    ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
+                            updateOperation.putBooleanIfNew(
+                                    ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, false);
+                            updateOperation.putBooleanIfNew(
+                                    ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE, false);
+                            updateOperation.putBooleanIfNew(
+                                    ConsentConstants.PAS_NOTIFICATION_OPENED, false);
+                        });
+                return atomicFileDatastore;
+            }
+
             if (atomicFileDatastore.getBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE)
                     == null) {
                 atomicFileDatastore.putBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, false);
@@ -1499,9 +1529,8 @@ public class ConsentManager {
         Objects.requireNonNull(context, "context cannot be null");
         // On R/S, handleConsentMigrationIfNeeded should never be executed.
         // It is a T+ feature. On T+, this function should only execute if it's within the
-        // AdServices
-        // APK and not ExtServices. So check if it's within ExtServices, and bail out if that's the
-        // case on any platform.
+        // AdServices APK and not ExtServices. So check if it's within ExtServices, and bail out if
+        // that's the case on any platform.
         String packageName = context.getPackageName();
         if (packageName != null && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
             LogUtil.d("Aborting attempt to migrate consent in ExtServices");
@@ -1887,10 +1916,8 @@ public class ConsentManager {
         try {
             // This should be called only once after OTA (if flag is enabled). If we did not record
             // showing the notification on T+ yet and we have shown the notification on S- (as
-            // recorded
-            // in AppSearch), initialize T+ consent data so that we don't show notification twice
-            // (after
-            // OTA upgrade).
+            // recorded in AppSearch), initialize T+ consent data so that we don't show notification
+            // twice (after OTA upgrade).
             SharedPreferences sharedPreferences = getPrefs(context);
             // If we did not migrate notification data, we should not attempt to migrate anything.
             if (!appSearchConsentManager.migrateConsentDataIfNeeded(
@@ -2539,7 +2566,7 @@ public class ConsentManager {
             ThrowableGetter<T> systemServiceGetter, /* MUST pass lambdas instead of method
             references for back compat. */
             ThrowableGetter<T> appSearchGetter, /* MUST pass lambdas instead of method references
-             for back compat. */
+            for back compat. */
             ErrorLogger errorLogger) {
         Trace.beginSection("ConsentManager#ReadOperation");
         mReadWriteLock.readLock().lock();

@@ -35,7 +35,6 @@ import com.android.settingslib.collapsingtoolbar.CollapsingToolbarBaseActivity;
  * This class is the base class for all other activities. We need an activity for each page in order
  * for {@link CollapsingToolbarBaseActivity} to work properly.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivity
         implements UxSelector {

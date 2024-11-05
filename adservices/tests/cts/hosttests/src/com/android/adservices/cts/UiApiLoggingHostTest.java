@@ -25,6 +25,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWIT
 import static com.android.os.adservices.AdservicesExtensionAtoms.AD_SERVICES_SETTINGS_USAGE_REPORTED_FIELD_NUMBER;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -34,7 +35,6 @@ import android.cts.statsdatom.lib.ReportUtils;
 import com.android.adservices.common.AdServicesHostSideTestCase;
 import com.android.adservices.shared.testing.BackgroundLogReceiver;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.internal.os.StatsdConfigProto.StatsdConfig;
@@ -71,7 +71,6 @@ import java.util.function.Predicate;
 @SetFlagEnabled(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK)
 @SetFlagEnabled(KEY_GA_UX_FEATURE_ENABLED)
 @EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
-@RequiresSdkLevelAtLeastS(reason = "Cannot run on R with Consent Source of truth removed")
 public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
     private static final String CLASS =
             "com.android.adservices.ui.settings.activities.AdServicesSettingsMainActivity";
@@ -128,7 +127,9 @@ public final class UiApiLoggingHostTest extends AdServicesHostSideTestCase {
         List<EventMetricData> data = ReportUtils.getEventMetricDataList(device, registry);
 
         // We trigger only one event from activity, should only see one event in the list
-        assertThat(data).hasSize(1);
+        assertWithMessage("number of logs generated for the activity is not correct")
+                .that(data)
+                .hasSize(1);
 
         // Verify the log event data
         AdServicesSettingsUsageReported adServicesSettingsUsageReported =

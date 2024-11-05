@@ -51,8 +51,10 @@ public final class NotificationActivityTestUtil {
     private NotificationActivityTestUtil() {}
 
     public static void setupBeforeTests() throws InterruptedException {
-        // sleep for 1 min for bootCompleteReceiver to get invoked on S-
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+        // Check intent component enabled, if not, sleep for 1 min for bootCompleteReceiver to get
+        // invoked on S-
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+                && !isNotificationIntentInstalled(true)) {
             TimeUnit.SECONDS.sleep(60);
         }
     }
@@ -62,14 +64,6 @@ public final class NotificationActivityTestUtil {
             throws InterruptedException {
         Intent intent = getNotificationIntent(isEUActivity);
         sContext.startActivity(intent);
-        device.wait(Until.hasObject(By.pkg(NOTIFICATION_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
-    }
-
-    /** Start the activity with context provided. */
-    public static void startActivity(Context context, boolean isEUActivity, UiDevice device)
-            throws InterruptedException {
-        Intent intent = getNotificationIntent(isEUActivity);
-        context.startActivity(intent);
         device.wait(Until.hasObject(By.pkg(NOTIFICATION_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
     }
 
@@ -129,12 +123,6 @@ public final class NotificationActivityTestUtil {
     /** Check if intent has package and activity installed. */
     public static boolean isNotificationIntentInstalled(boolean isEUActivity) {
         Intent intent = getNotificationIntent(isEUActivity);
-        return ApkTestUtil.isIntentInstalled(intent);
-    }
-
-    /** Check if intent has package and activity installed with context. */
-    public static boolean isNotificationIntentInstalled(Context context, boolean isEUActivity) {
-        Intent intent = getNotificationIntent(isEUActivity);
-        return ApkTestUtil.isIntentInstalled(context, intent);
+        return ApkTestUtil.isIntentInstalled(sContext, intent);
     }
 }

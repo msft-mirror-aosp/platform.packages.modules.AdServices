@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static junit.framework.Assert.assertFalse;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -70,9 +72,10 @@ public class AggregateReportBodyTest {
     private static final String REPORTING_ORIGIN = "https://adtech.domain";
 
     private static final String COORDINATOR_ORIGIN = "https://coordinator.origin";
-    private static final String DEBUG_CLEARTEXT_PAYLOAD = "{\"operation\":\"histogram\","
-            + "\"data\":[{\"bucket\":\"1369\",\"value\":32768},{\"bucket\":\"3461\","
-            + "\"value\":1664}]}";
+    private static final String DEBUG_CLEARTEXT_PAYLOAD =
+            "{\"operation\":\"histogram\","
+                    + "\"data\":[{\"bucket\":\"1369\",\"value\":32768,\"id\":\"0\"},"
+                    + "{\"bucket\":\"3461\",\"value\":1664}]}";
     private Flags mMockFlags;
 
     @Rule
@@ -145,6 +148,22 @@ public class AggregateReportBodyTest {
                 .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
                 .setDebugMode(null)
                 .build();
+    }
+
+    private AggregateReportBody.Builder createAggregateReportBodyWithNullSourceRegistrationTime() {
+        return new AggregateReportBody.Builder()
+                .setAttributionDestination(ATTRIBUTION_DESTINATION)
+                .setSourceRegistrationTime(null)
+                .setScheduledReportTime(SCHEDULED_REPORT_TIME)
+                .setApi(API_ATTRIBUTION_REPORTING)
+                .setApiVersion(VERSION)
+                .setReportId(REPORT_ID)
+                .setReportingOrigin(REPORTING_ORIGIN)
+                .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD)
+                .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
+                .setDebugMode("enabled");
     }
 
     @Before
@@ -340,6 +359,18 @@ public class AggregateReportBodyTest {
         JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
 
         assertNull(sharedInfoJson.opt("debug_mode"));
+    }
+
+    @Test
+    public void testAggregationServicePayloadsJsonSerializationWithNullSourceRegistrationTime()
+            throws Exception {
+        AggregateReportBody aggregateReport =
+                createAggregateReportBodyWithNullSourceRegistrationTime().build();
+
+        JSONObject sharedInfoJson = aggregateReport.sharedInfoToJson();
+
+        assertFalse(
+                sharedInfoJson.has(AggregateReportBody.SharedInfoKeys.SOURCE_REGISTRATION_TIME));
     }
 
     private void assertEncodedDebugPayload(JSONObject aggregateServicePayloads) throws Exception {

@@ -31,7 +31,6 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.runner.AndroidJUnit4;
 
 import com.android.cobalt.CobaltPeriodicJob;
-import com.android.cobalt.crypto.Encrypter;
 import com.android.cobalt.data.CobaltDatabase;
 import com.android.cobalt.data.DataService;
 import com.android.cobalt.data.EventVector;
@@ -39,10 +38,9 @@ import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.data.TestOnlyDao;
 import com.android.cobalt.domain.Project;
 import com.android.cobalt.domain.ReportIdentifier;
-import com.android.cobalt.logging.CobaltOperationLogger;
 import com.android.cobalt.observations.PrivacyGenerator;
 import com.android.cobalt.system.SystemData;
-import com.android.cobalt.testing.crypto.NoOpEncrypter;
+import com.android.cobalt.testing.crypto.FakeEncrypter;
 import com.android.cobalt.testing.logging.FakeCobaltOperationLogger;
 import com.android.cobalt.testing.observations.ConstantFakeSecureRandom;
 import com.android.cobalt.testing.observations.ObservationFactory;
@@ -247,9 +245,9 @@ public class CobaltPeriodicJobImplTest {
     private FakeSystemClock mClock;
     private SystemData mSystemData;
     private NoOpUploader mUploader;
-    private Encrypter mEncrypter;
+    private FakeEncrypter mEncrypter;
     private CobaltPeriodicJob mPeriodicJob;
-    private CobaltOperationLogger mOperationLogger;
+    private FakeCobaltOperationLogger mOperationLogger;
     private ImmutableList<ReportIdentifier> mReportsToIgnore = ImmutableList.of();
     private boolean mEnabled = true;
 
@@ -294,7 +292,7 @@ public class CobaltPeriodicJobImplTest {
         mClock = new FakeSystemClock();
         mSystemData = new SystemData(APP_VERSION);
         mUploader = new NoOpUploader();
-        mEncrypter = new NoOpEncrypter();
+        mEncrypter = new FakeEncrypter();
         mPeriodicJob =
                 new CobaltPeriodicJobImpl(
                         mProject,
@@ -338,9 +336,11 @@ public class CobaltPeriodicJobImplTest {
         // Trigger the CobaltPeriodicJob for the LOG_TIME day.
         mPeriodicJob.generateAggregatedObservations().get();
 
-        // Verify no observations were generated, but the upload was marked done and logger was
-        // recorded as enabled.
+        // Verify no observations were generated, but the upload was marked done, upload success was
+        // logged and logger was recorded as enabled.
         assertThat(mUploader.getSentEnvelopes()).isEmpty();
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(1);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
         assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
         assertThat(mTestOnlyDao.getInitialEnabledTime()).isEqualTo(Optional.of(ENABLED_TIME));
     }
@@ -354,9 +354,11 @@ public class CobaltPeriodicJobImplTest {
         mClock.set(UPLOAD_TIME);
         mPeriodicJob.generateAggregatedObservations().get();
 
-        // Verify no observations were stored/sent but the uploader was told it's done and last sent
-        // day index was updated.
+        // Verify no observations were stored/sent but the uploader was told it's done, upload
+        // success was logged and last sent day index was updated.
         assertThat(mUploader.getSentEnvelopes()).isEmpty();
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(1);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
         assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
         assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
                 .isEqualTo(Optional.of(LOG_TIME_DAY));
@@ -411,6 +413,8 @@ public class CobaltPeriodicJobImplTest {
                                         .setObservation(OBSERVATION_1)
                                         .setContributionId(RANDOM_BYTES)
                                         .build()));
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(1);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
         assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
     }
 
@@ -470,6 +474,8 @@ public class CobaltPeriodicJobImplTest {
                                         .setObservation(observation)
                                         .setContributionId(RANDOM_BYTES)
                                         .build()));
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(1);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
         assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
     }
 
@@ -547,6 +553,8 @@ public class CobaltPeriodicJobImplTest {
                                         .setObservation(OBSERVATION_3)
                                         .setContributionId(RANDOM_BYTES)
                                         .build()));
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(1);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
         assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
     }
 
@@ -631,6 +639,8 @@ public class CobaltPeriodicJobImplTest {
                 .containsAtLeastEntriesIn(getObservationsIn(sentEnvelopes.get(1)));
         assertThat(getObservationsIn(sentEnvelopes.get(0)))
                 .isNotEqualTo(getObservationsIn(sentEnvelopes.get(1)));
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(1);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
         assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
     }
 
@@ -693,6 +703,8 @@ public class CobaltPeriodicJobImplTest {
                                                                 .build())
                                                 .setContributionId(RANDOM_BYTES)
                                                 .build()));
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(1);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
         assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
     }
 
@@ -768,6 +780,8 @@ public class CobaltPeriodicJobImplTest {
                                                         .build())
                                         .setContributionId(RANDOM_BYTES)
                                         .build()));
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(1);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
         assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
     }
 
@@ -846,6 +860,8 @@ public class CobaltPeriodicJobImplTest {
                                                         .createReportParticipationObservation(
                                                                 RANDOM_BYTES))
                                         .build()));
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(1);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
         assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
     }
 
@@ -895,6 +911,11 @@ public class CobaltPeriodicJobImplTest {
                 .isEqualTo(Optional.of(LOG_TIME_DAY - 1));
         assertThat(mTestOnlyDao.getObservationBatches()).isEmpty();
         assertThat(mTestOnlyDao.getStartDisabledTime()).isEqualTo(Optional.of(UPLOAD_TIME));
+
+        // Verify upload was not marked as done, no upload status is logged.
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(0);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(0);
     }
 
     @Test
@@ -948,6 +969,11 @@ public class CobaltPeriodicJobImplTest {
                 .isEqualTo(Optional.of(CLEANUP_DAY));
         assertThat(mTestOnlyDao.getAggregatedReportIds()).isEmpty();
         assertThat(mTestOnlyDao.getDayIndices()).isEmpty();
+
+        // Verify upload was marked as done twice and upload success was logged twice.
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(2);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(2);
     }
 
     @Test
@@ -987,8 +1013,11 @@ public class CobaltPeriodicJobImplTest {
         mClock.set(UPLOAD_TIME);
         mPeriodicJob.generateAggregatedObservations().get();
 
-        // Verify no observations were stored/sent, but the uploader was told it's done.
+        // Verify no observations were stored/sent, but the uploader was told it's done and upload
+        // success was logged.
         assertThat(mUploader.getSentEnvelopes()).isEmpty();
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(1);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
         assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
         assertThat(mTestOnlyDao.getReportKeys()).doesNotContain(REPORT_3);
         assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
@@ -1034,6 +1063,8 @@ public class CobaltPeriodicJobImplTest {
         // Verify no observations were stored/sent the report to exclude is removed from the
         // database.
         assertThat(mUploader.getSentEnvelopes()).isEmpty();
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(1);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
         assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
         assertThat(mTestOnlyDao.getReportKeys()).doesNotContain(REPORT_4);
         assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_1))
@@ -1203,6 +1234,8 @@ public class CobaltPeriodicJobImplTest {
         ImmutableList<Envelope> sentEnvelopes = mUploader.getSentEnvelopes();
         assertThat(sentEnvelopes).hasSize(1);
         assertThat(apiKeysOf(sentEnvelopes)).containsExactly(API_KEY);
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(1);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
         assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
 
         // The reports share metadata excluding the report id and system profile fields.
@@ -1383,6 +1416,8 @@ public class CobaltPeriodicJobImplTest {
         ImmutableList<Envelope> sentEnvelopes = mUploader.getSentEnvelopes();
         assertThat(sentEnvelopes).hasSize(1);
         assertThat(apiKeysOf(sentEnvelopes)).containsExactly(API_KEY);
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(1);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
         assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
 
         // The reports share metadata excluding the metric id, report id, and system profile fields.
@@ -1475,6 +1510,11 @@ public class CobaltPeriodicJobImplTest {
                 .isEqualTo(Optional.of(LOG_TIME_DAY));
         assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_4))
                 .isEqualTo(Optional.of(LOG_TIME_DAY));
+
+        // Verify upload was marked as done and upload success was logged.
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(1);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
     }
 
     @Test
@@ -1524,5 +1564,71 @@ public class CobaltPeriodicJobImplTest {
                 .isEqualTo(Optional.of(LOG_TIME_DAY + 1));
         assertThat(mTestOnlyDao.queryLastSentDayIndex(REPORT_4))
                 .isEqualTo(Optional.of(LOG_TIME_DAY + 1));
+
+        // Verify upload was marked as done twice and upload success was logged twice.
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(2);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(0);
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(2);
+    }
+
+    @Test
+    public void testGenerateAggregatedObservations_envelopeEncryptionException_uploadFailureLogged()
+            throws Exception {
+        // Setup the classes.
+        manualSetUp();
+
+        // Set encrypter to throw exception on encrypting envelope.
+        mEncrypter.setThrowOnEncryptEnvelope();
+
+        // Mark a Count report as having occurred on the previous day.
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        LOG_TIME_DAY,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 0,
+                        /* count= */ EVENT_COUNT_1)
+                .get();
+
+        // Trigger the CobaltPeriodicJob for the current day.
+        mClock.set(UPLOAD_TIME);
+        mPeriodicJob.generateAggregatedObservations().get();
+
+        // Verify the upload was marked done and upload failure was logged.
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(0);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(1);
+    }
+
+    @Test
+    public void
+            testGenerateAggregatedObservations_observationEncryptionException_uploadFailureLogged()
+                    throws Exception {
+        // Setup the classes.
+        manualSetUp();
+
+        // Set encrypter to throw exception on encrypting observation.
+        mEncrypter.setThrowOnEncryptObservation();
+
+        // Mark a Count report as having occurred on the previous day.
+        mDataService
+                .aggregateCount(
+                        REPORT_1,
+                        LOG_TIME_DAY,
+                        SYSTEM_PROFILE_1,
+                        EVENT_VECTOR_1,
+                        /* eventVectorBufferMax= */ 0,
+                        /* count= */ EVENT_COUNT_1)
+                .get();
+
+        // Trigger the CobaltPeriodicJob for the current day.
+        mClock.set(UPLOAD_TIME);
+        mPeriodicJob.generateAggregatedObservations().get();
+
+        // Verify the upload was marked done and upload failure was logged.
+        assertThat(mUploader.getUploadDoneCount()).isEqualTo(1);
+        assertThat(mOperationLogger.getNumUploadSuccessOccurrences()).isEqualTo(0);
+        assertThat(mOperationLogger.getNumUploadFailureOccurrences()).isEqualTo(1);
     }
 }
