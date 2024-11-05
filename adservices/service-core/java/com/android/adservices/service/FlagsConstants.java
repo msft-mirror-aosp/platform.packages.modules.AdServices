@@ -1664,6 +1664,14 @@ public final class FlagsConstants {
     public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD =
             "PackageDeny__enable_package_deny_job_on_mdd_download";
 
+    /** Key for package deny enable package installed filtering */
+    public static final String KEY_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER =
+            "PackageDeny__enable_installed_package_filter";
+
+    /** Key for package dny background job period in millis */
+    public static final String KEY_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS =
+            "PackageDeny__background_job_period_millis";
+
     /** Key for MDD Package Deny registry manifest file url */
     public static final String KEY_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL =
             "DownloadConfig__default_mdd_package_deny_manifest_file_url";

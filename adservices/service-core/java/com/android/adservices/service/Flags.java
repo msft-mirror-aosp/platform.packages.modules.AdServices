@@ -5855,6 +5855,24 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB;
     }
 
+    @FeatureFlag boolean DEFAULT_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER = false;
+
+    /**
+     * @return whether to enable use of filtering of deny list based on installed packages
+     */
+    default boolean getPackageDenyEnableInstalledPackageFilter() {
+        return DEFAULT_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER;
+    }
+
+    @FeatureFlag long DEFAULT_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS = 43_200_000; // 12 hours
+
+    /**
+     * @return package dny background job period in millis
+     */
+    default long getPackageDenyBackgroundJobPeriodMillis() {
+        return DEFAULT_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS;
+    }
+
     /** Feature flag to enable AtomicFileDataStore update API for adservices apk. */
     @FeatureFlag boolean DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API = false;
 
