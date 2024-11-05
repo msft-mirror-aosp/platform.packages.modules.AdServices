@@ -31,6 +31,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENCODED_ERROR_CO
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_PROTO_FILE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE;
@@ -7248,6 +7249,13 @@ public final class PhFlags implements Flags {
     public boolean getEnrollmentApiBasedSchemaEnabled() {
         return getDeviceConfigFlag(
                 KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED, ENROLLMENT_API_BASED_SCHEMA_ENABLED);
+    }
+
+    @Override
+    public boolean getEnableEnrollmentConfigV3Db() {
+        return getDeviceConfigFlag(
+                KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB,
+                DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB);
     }
 
     @Override
