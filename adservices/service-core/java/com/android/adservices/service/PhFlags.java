@@ -37,6 +37,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_S
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION;
@@ -6135,6 +6137,16 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED
                         + " = "
                         + getUiDialogFragmentEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER
+                        + " = "
+                        + getEnableReportEventForComponentSeller());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME
+                        + " = "
+                        + getEnableWinningSellerIdInAdSelectionOutcome());
     }
 
     @VisibleForTesting
@@ -7484,5 +7496,19 @@ public final class PhFlags implements Flags {
     public boolean getAdIdMigrationEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_AD_ID_MIGRATION_ENABLED, DEFAULT_AD_ID_MIGRATION_ENABLED);
+    }
+
+    @Override
+    public boolean getEnableReportEventForComponentSeller() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER,
+                DEFAULT_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER);
+    }
+
+    @Override
+    public boolean getEnableWinningSellerIdInAdSelectionOutcome() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME,
+                DEFAULT_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME);
     }
 }
