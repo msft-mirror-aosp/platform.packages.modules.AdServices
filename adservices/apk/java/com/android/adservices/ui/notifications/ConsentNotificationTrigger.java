@@ -56,12 +56,17 @@ import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.ui.OTAResourcesManager;
 import com.android.adservices.ui.UxUtil;
+import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.List;
 
 /** Provides methods which can be used to display Privacy Sandbox consent notification. */
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationTrigger {
+
+    @VisibleForTesting
+    public static final String ACTION_ADSERVICES_NOTIFICATION_DISPLAYED =
+            "android.adservices.common.action.ADSERVICES_NOTIFICATION_DISPLAYED";
 
     /* Random integer for NotificationCompat purposes. */
     public static final int NOTIFICATION_ID = 67920;
@@ -106,11 +111,17 @@ public class ConsentNotificationTrigger {
                 getNotification(context, isEuDevice, gaUxFeatureEnabled, consentManager);
 
         notificationManager.notify(NOTIFICATION_ID, notification);
+        if (FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled()) {
+            LogUtil.d("Sending broadcast about notification being displayed.");
+            context.sendBroadcast(new Intent(ACTION_ADSERVICES_NOTIFICATION_DISPLAYED));
+        }
         recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
 
         // must setup consents after recording notification displayed data to ensure accurate UX in
         // logs
-        setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
+        if (!FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled()) {
+            setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
+        }
         UiStatsLogger.logNotificationDisplayed();
         LogUtil.d("Notification was displayed.");
     }
