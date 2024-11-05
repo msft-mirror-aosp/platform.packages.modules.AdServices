@@ -39,6 +39,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.download.MddJob;
 import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -78,9 +79,7 @@ public class ConsentNotificationJobService extends JobService {
         long deadline = calculateDeadline(Calendar.getInstance(TimeZone.getDefault()));
         LogUtil.d("initial delay is " + initialDelay + ", deadline is " + deadline);
 
-        SharedPreferences sharedPref =
-                context.getSharedPreferences(
-                        ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
+        SharedPreferences sharedPref = getPrefs(context);
 
         long currentTimestamp = System.currentTimeMillis();
         long firstEntryRequestTimestamp =
@@ -116,7 +115,8 @@ public class ConsentNotificationJobService extends JobService {
 
     static long calculateInitialDelay(Calendar calendar) {
         Flags flags = FlagsFactory.getFlags();
-        if (flags.getConsentNotificationDebugMode()) {
+        DebugFlags debugFlags = DebugFlags.getInstance();
+        if (debugFlags.getConsentNotificationDebugMode()) {
             LogUtil.d("Debug mode is enabled. Setting initial delay to 0");
             return 0L;
         }
@@ -149,7 +149,8 @@ public class ConsentNotificationJobService extends JobService {
 
     static long calculateDeadline(Calendar calendar) {
         Flags flags = FlagsFactory.getFlags();
-        if (flags.getConsentNotificationDebugMode()) {
+        DebugFlags debugFlags = DebugFlags.getInstance();
+        if (debugFlags.getConsentNotificationDebugMode()) {
             LogUtil.d("Debug mode is enabled. Setting initial delay to 0");
             return 0L;
         }
@@ -235,7 +236,7 @@ public class ConsentNotificationJobService extends JobService {
                             try {
                                 boolean gaUxEnabled =
                                         FlagsFactory.getFlags().getGaUxFeatureEnabled();
-                                if (!FlagsFactory.getFlags().getConsentNotificationDebugMode()
+                                if (!DebugFlags.getInstance().getConsentNotificationDebugMode()
                                         && reConsentStatus
                                         && !gaUxEnabled) {
                                     LogUtil.d("already notified, return back");
@@ -339,5 +340,11 @@ public class ConsentNotificationJobService extends JobService {
         }
         LogUtil.d("OTA resources are not yet downloaded.");
         return;
+    }
+
+    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
+    private static SharedPreferences getPrefs(Context context) {
+        return context.getSharedPreferences(
+                ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
     }
 }

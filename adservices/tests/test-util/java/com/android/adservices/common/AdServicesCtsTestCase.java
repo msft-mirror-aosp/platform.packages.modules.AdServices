@@ -16,7 +16,10 @@
 package com.android.adservices.common;
 
 import com.android.adservices.common.annotations.SetDefaultLogcatTags;
+import com.android.adservices.shared.testing.CallSuper;
+import com.android.adservices.shared.testing.annotations.SetSyncDisabledModeForTest;
 
+import org.junit.ClassRule;
 import org.junit.Rule;
 
 /**
@@ -29,6 +32,7 @@ import org.junit.Rule;
  * {@code SdkLevelSupportRule}, as that rule cannot be defined here yet.
  */
 @SetDefaultLogcatTags
+@SetSyncDisabledModeForTest
 public abstract class AdServicesCtsTestCase extends AdServicesTestCase {
 
     // TODO(b/295321663): move these constants (and those from LogFactory
@@ -40,6 +44,10 @@ public abstract class AdServicesCtsTestCase extends AdServicesTestCase {
     protected static final String LOGCAT_TAG_UI = LOGCAT_TAG_ADSERVICES + ".ui";
     protected static final String LOGCAT_TAG_ADID = LOGCAT_TAG_ADSERVICES + ".adid";
     protected static final String LOGCAT_TAG_APPSETID = LOGCAT_TAG_ADSERVICES + ".appsetid";
+
+    @ClassRule
+    public static final AdServicesFlagsPreparerClassRule sFlagsPreparer =
+            new AdServicesFlagsPreparerClassRule();
 
     @Rule(order = 5)
     public final AdServicesFlagsSetterRule flags = getAdServicesFlagsSetterRule();
@@ -54,5 +62,14 @@ public abstract class AdServicesCtsTestCase extends AdServicesTestCase {
      */
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
         return AdServicesFlagsSetterRule.newInstance();
+    }
+
+    @CallSuper
+    @Override
+    protected void assertValidTestCaseFixtures() throws Exception {
+        super.assertValidTestCaseFixtures();
+
+        assertTestClassHasNoFieldsFromSuperclass(
+                AdServicesCtsTestCase.class, "sFlagsPreparer", "flags");
     }
 }

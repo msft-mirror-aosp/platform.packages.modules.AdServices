@@ -43,7 +43,9 @@ filegroup {
         "java/com/android/adservices/shared/testing/flags/AbstractFlagsPreparerClassRuleTest.java",
         "java/com/android/adservices/shared/testing/AbstractRuleTest.java",
         "java/com/android/adservices/shared/testing/AbstractSdkLevelSupportedRuleTest.java",
-        "java/com/android/adservices/shared/testing/SharedSidelessTestCase.java",
+        // NOTE: ideally AbstractSdkLevelSupportedRuleTestCase should be on meta_testing for consistency,
+        // but it has too many other dependencies (as it was spun from AbstractSdkLevelSupportedRuleTest)
+        "java/com/android/adservices/shared/testing/AbstractSdkLevelSupportedRuleTestCase.java",
     ],
     visibility: [
         "//packages/modules/AdServices/shared/tests:__subpackages__",

@@ -38,6 +38,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.api.R;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -49,7 +50,6 @@ import com.android.adservices.ui.settings.activities.AdServicesSettingsMainActiv
  * Fragment for the confirmation view after accepting or rejecting to be part of Privacy Sandbox
  * Beta.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
     public static final String INFO_VIEW_EXPANDED =
@@ -63,6 +63,7 @@ public class ConsentNotificationGaV2Screen1Fragment extends Fragment {
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View inflatedView;
         mIsEUDevice = UxUtil.isEeaDevice(requireActivity());
+        LoggerFactory.getUILogger().d("screen1 get isEuDevice is %b", mIsEUDevice);
         if (mIsEUDevice) {
             inflatedView = inflater.inflate(
                     R.layout.consent_notification_screen_1_ga_v2_eu, container, false);

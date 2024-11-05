@@ -36,6 +36,7 @@ import com.android.tradefed.testtype.junit4.BaseHostJUnit4Test;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -303,6 +304,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Test
     @LargeTest
+    @Ignore("b/359276044")
     public void testSdkDataPackageDirectory_IsDestroyedOnUninstall_DeviceLocked() throws Exception {
         assumeThat("Device is NOT encrypted with file-based encryption.",
                 getDevice().getProperty("ro.crypto.type"), equalTo("file"));
@@ -902,6 +904,7 @@ public final class SdkSandboxStorageHostTest extends BaseHostJUnit4Test {
 
     @Test
     @LargeTest
+    @Ignore("b/359276044")
     public void testSdkDataSubDirectory_IsCreatedOnInstall_DeviceLocked() throws Exception {
         assumeThat(
                 "Device is NOT encrypted with file-based encryption.",

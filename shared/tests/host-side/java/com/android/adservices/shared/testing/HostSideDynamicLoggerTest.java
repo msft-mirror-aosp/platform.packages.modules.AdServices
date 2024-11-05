@@ -80,7 +80,8 @@ public final class HostSideDynamicLoggerTest extends HostSideTestCase {
         expect.withMessage("1st line")
                 .that(
                         logEntry.message.startsWith(
-                                getExpectedMessage(LogLevel.WTF, mThrowable.toString()) + "\n"));
+                                getExpectedMessage(LogLevel.WTF, mThrowable.toString()) + "\n"))
+                .isTrue();
     }
 
     @Test
@@ -207,7 +208,8 @@ public final class HostSideDynamicLoggerTest extends HostSideTestCase {
         expect.withMessage("1st line of 2nd logged message")
                 .that(
                         secondEntry.message.startsWith(
-                                getExpectedMessage(level, throwable.toString()) + "\n"));
+                                getExpectedMessage(level, throwable.toString()) + "\n"))
+                .isTrue();
     }
 
     /**

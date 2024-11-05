@@ -126,6 +126,7 @@ public class Source {
     @Nullable private String mAggregateDebugReportingString;
     @Nullable private AggregateDebugReporting mAggregateDebugReporting;
     private int mAggregateDebugReportContributions;
+    @Nullable private AggregatableNamedBudgets mAggregatableNamedBudgets;
 
     /**
      * Parses and returns the event_report_windows Returns null if parsing fails or if there is no
@@ -313,7 +314,11 @@ public class Source {
         return isFlexLiteApiValueValid(flags);
     }
 
-    private double getInformationGainThreshold(Flags flags) {
+    /**
+     * @param flags flag values
+     * @return the information gain threshold for a single attribution source
+     */
+    public float getInformationGainThreshold(Flags flags) {
         if (getDestinationTypeMultiplier(flags) == 2) {
             return mSourceType == SourceType.EVENT
                     ? flags.getMeasurementFlexApiMaxInformationGainDualDestinationEvent()
@@ -326,7 +331,7 @@ public class Source {
 
     /**
      * @param flags flag values
-     * @return the information gain thereshold for attribution scopes.
+     * @return the information gain threshold for attribution scopes.
      */
     public double getAttributionScopeInfoGainThreshold(Flags flags) {
         if (getDestinationTypeMultiplier(flags) == 2) {
@@ -682,7 +687,8 @@ public class Source {
                 && Objects.equals(mEventLevelEpsilon, source.mEventLevelEpsilon)
                 && Objects.equals(
                         mAggregateDebugReportingString, source.mAggregateDebugReportingString)
-                && mAggregateDebugReportContributions == source.mAggregateDebugReportContributions;
+                && mAggregateDebugReportContributions == source.mAggregateDebugReportContributions
+                && Objects.equals(mAggregatableNamedBudgets, source.mAggregatableNamedBudgets);
     }
 
     @Override
@@ -740,7 +746,8 @@ public class Source {
                 mDestinationLimitAlgorithm,
                 mEventLevelEpsilon,
                 mAggregateDebugReportingString,
-                mAggregateDebugReportContributions);
+                mAggregateDebugReportContributions,
+                mAggregatableNamedBudgets);
     }
 
     public void setAttributionMode(@AttributionMode int attributionMode) {
@@ -1405,6 +1412,12 @@ public class Source {
         mAttributionScopes = attributionScopes;
     }
 
+    /** Sets the aggregatable named budgets. */
+    public void setAggregatableNamedBudgets(
+            @Nullable AggregatableNamedBudgets aggregatableNamedBudgets) {
+        mAggregatableNamedBudgets = aggregatableNamedBudgets;
+    }
+
     /** Returns the attribution scope limit for the source. It should be positive. */
     @Nullable
     public Long getAttributionScopeLimit() {
@@ -1460,6 +1473,14 @@ public class Source {
     /** Returns the aggregate debug reporting contributions */
     public int getAggregateDebugReportContributions() {
         return mAggregateDebugReportContributions;
+    }
+
+    /**
+     * @return the aggregatable named budgets object
+     */
+    @Nullable
+    public AggregatableNamedBudgets getAggregatableNamedBudgets() {
+        return mAggregatableNamedBudgets;
     }
 
     /** Builder for {@link Source}. */
@@ -1533,6 +1554,7 @@ public class Source {
             builder.setAggregateDebugReportingString(copyFrom.mAggregateDebugReportingString);
             builder.setAggregateDebugReportContributions(
                     copyFrom.mAggregateDebugReportContributions);
+            builder.setAggregatableNamedBudgets(copyFrom.mAggregatableNamedBudgets);
             return builder;
         }
 
@@ -1956,6 +1978,14 @@ public class Source {
         public Builder setAggregateDebugReportContributions(
                 int aggregateDebugReportingContributions) {
             mBuilding.mAggregateDebugReportContributions = aggregateDebugReportingContributions;
+            return this;
+        }
+
+        /** See {@link Source#getAggregatableNamedBudgets()}. */
+        @NonNull
+        public Builder setAggregatableNamedBudgets(
+                @Nullable AggregatableNamedBudgets aggregatableNamedBudgets) {
+            mBuilding.mAggregatableNamedBudgets = aggregatableNamedBudgets;
             return this;
         }
 

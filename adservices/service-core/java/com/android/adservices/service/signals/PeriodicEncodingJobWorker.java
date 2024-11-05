@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FAILED_PER_BUYER_ENCODING;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+
 import android.adservices.common.AdTechIdentifier;
 import android.content.Context;
 
@@ -28,6 +31,7 @@ import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -194,7 +198,6 @@ public final class PeriodicEncodingJobWorker {
                         ? new EncodingJobRunStatsLoggerImpl(
                         mAdServicesLogger, EncodingJobRunStats.builder())
                         : new EncodingJobRunStatsLoggerNoLoggingImpl();
-
         FluentFuture<List<DBEncoderLogicMetadata>> buyersWithRegisteredEncoders =
                 FluentFuture.from(
                         mBackgroundExecutor.submit(mEncoderLogicHandler::getAllRegisteredEncoders));
@@ -283,6 +286,10 @@ public final class PeriodicEncodingJobWorker {
                         (e) -> {
                             handleFailedPerBuyerEncoding(metadata);
                             encodingJobRunStatsLogger.addOneSignalEncodingFailures();
+                            ErrorLogUtil.e(
+                                    e,
+                                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FAILED_PER_BUYER_ENCODING,
+                                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
                             return null;
                         },
                         mLightWeightExecutor);
@@ -290,6 +297,7 @@ public final class PeriodicEncodingJobWorker {
 
     // TODO(b/294900119) We should do the update of encoding logic in a separate job, & remove this
     FluentFuture<Void> doUpdateEncodersForBuyers(List<AdTechIdentifier> buyers) {
+        sLogger.d("Updating encoders for buyers");
         int traceCookie = Tracing.beginAsyncSection(Tracing.UPDATE_ENCODERS_FOR_BUYERS);
 
         List<ListenableFuture<Boolean>> encoderUpdates =

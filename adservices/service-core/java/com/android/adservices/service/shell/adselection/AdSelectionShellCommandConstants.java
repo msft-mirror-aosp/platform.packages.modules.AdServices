@@ -24,6 +24,7 @@ public final class AdSelectionShellCommandConstants {
     static final int FIRST_ARG_FOR_PARSING = 2;
 
     public static final String BUYER = "--buyer";
+    public static final String APP_PACKAGE = "--app-package";
     public static final String AD_SELECTION_ID = "--ad-selection-id";
 
     public static final String OUTPUT_PROTO_FIELD_NAME = "output_proto";

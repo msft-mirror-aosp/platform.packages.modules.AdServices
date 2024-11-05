@@ -197,7 +197,8 @@
                     "expiry": "172801"
                   }
                 ],
-                "debug_key": "211"
+                "debug_key": "211",
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -234,7 +235,10 @@
             {
               "key": "0xb85",
               "value": 1664
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "112",
           "trigger_debug_key": "211"
@@ -265,7 +269,10 @@
             {
               "key": "0xb85",
               "value": 1664
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key": "112",
           "trigger_debug_key": "211"

@@ -28,7 +28,6 @@ import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.sdksandbox.helpers.PackageManagerHelper;
 
 import org.junit.After;
@@ -196,6 +195,31 @@ public class SdkSandboxRestrictionManagerUnitTest extends DeviceSupportedBaseTes
 
         assertThat(mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid))
                 .isEqualTo(35);
+    }
+
+    @Test
+    public void testGetEffectiveTargetSdkVersion_cachedValueReturned() throws Exception {
+        Mockito.when(mInjector.getCurrentSdkLevel()).thenReturn(35);
+        mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid);
+        mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid);
+
+        // Verify that the second call returns the cached value and does not call
+        // PackageManagerHelper#getPackageNamesForUid for the second call
+        Mockito.verify(mPackageManagerHelper, Mockito.times(1))
+                .getPackageNamesForUid(mClientAppUid);
+    }
+
+    @Test
+    public void testGetEffectiveTargetSdkVersion_cachedCleared() throws Exception {
+        Mockito.when(mInjector.getCurrentSdkLevel()).thenReturn(35);
+        mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid);
+        mSdkSandboxRestrictionManager.clearEffectiveTargetSdkVersion(mClientAppUid);
+        mSdkSandboxRestrictionManager.getEffectiveTargetSdkVersion(mClientAppUid);
+
+        // Verify that the second call calls PackageManagerHelper#getPackageNamesForUid because the
+        // information was cleared
+        Mockito.verify(mPackageManagerHelper, Mockito.times(2))
+                .getPackageNamesForUid(mClientAppUid);
     }
 
     static class FakeInjector extends SdkSandboxRestrictionManager.Injector {

@@ -18,7 +18,6 @@ package android.adservices.common;
 
 import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
-import android.annotation.SystemApi;
 
 import com.android.adservices.flags.Flags;
 
@@ -33,29 +32,26 @@ import java.lang.annotation.RetentionPolicy;
  *
  * @hide
  */
-@SystemApi
 @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
 public final class Module {
-    /** Unknown module. */
-    public static final int UNKNOWN = 0;
 
     /** Measurement module. */
-    public static final int MEASUREMENT = 1;
+    public static final int MEASUREMENT = 0;
 
     /** Privacy Sandbox module. */
-    public static final int PROTECTED_AUDIENCE = 2;
+    public static final int PROTECTED_AUDIENCE = 1;
 
     /** Privacy Sandbox Attribution module. */
-    public static final int PROTECTED_APP_SIGNALS = 3;
+    public static final int PROTECTED_APP_SIGNALS = 2;
 
     /** Topics module. */
-    public static final int TOPICS = 4;
+    public static final int TOPICS = 3;
 
     /** On-device Personalization(ODP) module. */
-    public static final int ON_DEVICE_PERSONALIZATION = 5;
+    public static final int ON_DEVICE_PERSONALIZATION = 4;
 
     /** ADID module. */
-    public static final int ADID = 6;
+    public static final int ADID = 5;
 
     /** Default Contractor, make it private so that it won't show in the system-current.txt */
     private Module() {}
@@ -67,7 +63,6 @@ public final class Module {
      */
     @IntDef(
             value = {
-                UNKNOWN,
                 MEASUREMENT,
                 PROTECTED_AUDIENCE,
                 PROTECTED_APP_SIGNALS,
@@ -77,4 +72,24 @@ public final class Module {
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ModuleCode {}
+
+    /**
+     * Validates a module.
+     *
+     * @param module module to validate
+     * @return module
+     */
+    @ModuleCode
+    static int validate(@ModuleCode int module) {
+        return switch (module) {
+            case ADID,
+                            MEASUREMENT,
+                            ON_DEVICE_PERSONALIZATION,
+                            PROTECTED_APP_SIGNALS,
+                            PROTECTED_AUDIENCE,
+                            TOPICS ->
+                    module;
+            default -> throw new IllegalArgumentException("Invalid Module Code:" + module);
+        };
+    }
 }

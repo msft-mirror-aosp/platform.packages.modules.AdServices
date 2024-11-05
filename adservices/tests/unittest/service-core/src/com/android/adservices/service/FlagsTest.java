@@ -19,24 +19,23 @@ package com.android.adservices.service;
 import static com.android.adservices.service.Flags.AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.Flags.APPSEARCH_ONLY;
 import static com.android.adservices.service.Flags.COBALT__IGNORED_REPORT_ID_LIST;
-import static com.android.adservices.service.Flags.DEFAULT_ADEXT_READ_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.DEFAULT_ADEXT_WRITE_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_TTL_MS;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
+import static com.android.adservices.service.Flags.DEFAULT_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
-import static com.android.adservices.service.Flags.ENABLE_ADEXT_SERVICE_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
-import static com.android.adservices.service.Flags.ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
+import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
+import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW;
@@ -54,6 +53,8 @@ import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_PERSISTED;
@@ -62,11 +63,9 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_REQ
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
-import static com.android.adservices.service.Flags.PPAPI_AND_ADEXT_SERVICE;
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
-import static com.android.adservices.shared.testing.AndroidSdk.RVC;
 import static com.android.adservices.shared.testing.AndroidSdk.SC;
 import static com.android.adservices.shared.testing.AndroidSdk.SC_V2;
 
@@ -75,7 +74,6 @@ import android.util.Log;
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.common.flags.ConfigFlag;
 import com.android.adservices.shared.common.flags.FeatureFlag;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 import com.android.internal.util.Preconditions;
@@ -115,12 +113,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
     @Test
-    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testConsentSourceOfTruth_isR() {
-        assertConsentSourceOfTruth(PPAPI_AND_ADEXT_SERVICE);
-    }
-
-    @Test
     @RequiresSdkRange(atLeast = SC, atMost = SC_V2, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testConsentSourceOfTruth_isS() {
         assertConsentSourceOfTruth(APPSEARCH_ONLY);
@@ -140,12 +132,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         expect.withMessage("getConsentSourceOfTruth()")
                 .that(mFlags.getConsentSourceOfTruth())
                 .isEqualTo(expected);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testBlockedTopicsConsentSourceOfTruth_isR() {
-        assertBlockedTopicsSourceOfTruth(PPAPI_AND_ADEXT_SERVICE);
     }
 
     @Test
@@ -171,12 +157,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableAppsearchConsentData_isR() {
-        assertEnableAppsearchConsentData(false);
-    }
-
-    @Test
     @RequiresSdkRange(atLeast = SC, atMost = SC_V2, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
     public void testEnableAppsearchConsentData_isS() {
         assertEnableAppsearchConsentData(true);
@@ -195,50 +175,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
 
         expect.withMessage("getEnableAppsearchConsentData()")
                 .that(mFlags.getEnableAppsearchConsentData())
-                .isEqualTo(expected);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableAdExtServiceConsentData_isR() {
-        assertEnableAdExtServiceConsentData(true);
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastS(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableAdExtServiceConsentData_isAtLeastS() {
-        assertEnableAdExtServiceConsentData(false);
-    }
-
-    private void assertEnableAdExtServiceConsentData(boolean expected) {
-        expect.withMessage("ENABLE_ADEXT_SERVICE_CONSENT_DATA")
-                .that(ENABLE_ADEXT_SERVICE_CONSENT_DATA)
-                .isEqualTo(expected);
-
-        expect.withMessage("getEnableAdExtServiceConsentData()")
-                .that(mFlags.getEnableAdExtServiceConsentData())
-                .isEqualTo(expected);
-    }
-
-    @Test
-    @RequiresSdkRange(atMost = RVC, reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableMigrationFromAdExtService_isR() {
-        assertEnableMigrationFromAdExtService(false);
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastS(reason = REASON_TO_NOT_MOCK_SDK_LEVEL)
-    public void testEnableMigrationFromAdExtService_isAtLeastS() {
-        assertEnableMigrationFromAdExtService(true);
-    }
-
-    private void assertEnableMigrationFromAdExtService(boolean expected) {
-        expect.withMessage("ENABLE_MIGRATION_FROM_ADEXT_SERVICE")
-                .that(ENABLE_MIGRATION_FROM_ADEXT_SERVICE)
-                .isEqualTo(expected);
-
-        expect.withMessage("getEnableMigrationFromAdExtService()")
-                .that(mFlags.getEnableMigrationFromAdExtService())
                 .isEqualTo(expected);
     }
 
@@ -323,6 +259,21 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Test
     public void testGetEnablePackageDenyBgJob() {
         testFeatureFlag("DEFAULT_ENABLE_PACKAGE_DENY_BG_JOB", Flags::getEnablePackageDenyBgJob);
+    }
+
+    @Test
+    public void testGetEnableInstalledPackageFilter() {
+        testFeatureFlag(
+                "DEFAULT_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER",
+                Flags::getPackageDenyEnableInstalledPackageFilter);
+    }
+
+    @Test
+    public void testGetBackgroundJobPeriodMillis() {
+        testFlag(
+                "getBackgroundJobPeriodMillis",
+                DEFAULT_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS,
+                Flags::getPackageDenyBackgroundJobPeriodMillis);
     }
 
     @Test
@@ -437,6 +388,12 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetEnableEnrollmentConfigV3Db() {
+        testFeatureFlag(
+                "DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB", Flags::getEnableEnrollmentConfigV3Db);
+    }
+
+    @Test
     public void testGetSharedDatabaseSchemaVersion4Enabled() {
         testFeatureFlag(
                 "SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED",
@@ -449,6 +406,22 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getJobSchedulingLoggingEnabled()",
                 DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED,
                 Flags::getJobSchedulingLoggingEnabled);
+    }
+
+    @Test
+    public void testGetMeasurementMaxLengthPerBudgetName() {
+        testFlag(
+                "getMeasurementMaxLengthPerBudgetName()",
+                MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME,
+                Flags::getMeasurementMaxLengthPerBudgetName);
+    }
+
+    @Test
+    public void testGetMeasurementMaxNamedBudgetsPerSourceRegistration() {
+        testFlag(
+                "getMeasurementMaxNamedBudgetsPerSourceRegistration()",
+                MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION,
+                Flags::getMeasurementMaxNamedBudgetsPerSourceRegistration);
     }
 
     @Test
@@ -500,6 +473,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableInstallAttributionOnS() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_INSTALL_ATTRIBUTION_ON_S",
+                Flags::getMeasurementEnableInstallAttributionOnS);
+    }
+
+    @Test
     public void testGetMeasurementEnableDestinationLimitPriority() {
         testFeatureFlag(
                 "MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY",
@@ -532,6 +512,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFeatureFlag(
                 "MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS",
                 Flags::getMeasurementEnableAggregateValueFilters);
+    }
+
+    @Test
+    public void testGetMeasurementEnableAggregatableNamedBudgets() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS",
+                Flags::getMeasurementEnableAggregatableNamedBudgets);
     }
 
     @Test
@@ -612,6 +599,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetCobaltEnableApiCallResponseLogging() {
+        testFeatureFlag(
+                "COBALT__ENABLE_API_CALL_RESPONSE_LOGGING",
+                Flags::getCobaltEnableApiCallResponseLogging);
+    }
+
+    @Test
     public void testGetRNotificationDefaultConsentFixEnabled() {
         testFeatureFlag(
                 "DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED",
@@ -639,6 +633,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED",
                 /* defaultValue */ false,
                 Flags::getTopicsEpochJobBatteryConstraintLoggingEnabled);
+    }
+
+    @Test
+    public void testGetTopicsCleanDBWhenEpochJobSettingsChanged() {
+        testFlag(
+                "TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED",
+                /* defaultValue */ false,
+                Flags::getTopicsCleanDBWhenEpochJobSettingsChanged);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -813,22 +815,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testGetAdExtWriteTimeoutMs() {
-        testFlag(
-                "getAdExtWriteTimeoutMs()",
-                DEFAULT_ADEXT_WRITE_TIMEOUT_MS,
-                Flags::getAdExtWriteTimeoutMs);
-    }
-
-    @Test
-    public void testGetAdExtReadTimeoutMs() {
-        testFlag(
-                "getAdExtReadTimeoutMs()",
-                DEFAULT_ADEXT_READ_TIMEOUT_MS,
-                Flags::getAdExtReadTimeoutMs);
-    }
-
-    @Test
     public void testGetAdServicesApiV2MigrationEnabled() {
         testFeatureFlag(
                 "DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED",
@@ -967,6 +953,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnableBothSideDebugKeysInReports() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS",
+                Flags::getMeasurementEnableBothSideDebugKeysInReports);
+    }
+
+    @Test
     public void testGetFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
         testFlag(
                 "getFledgeGetAdSelectionDataBuyerInputCreatorVersion",
@@ -1045,6 +1038,21 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getMeasurementMaxAdrCountPerSource);
     }
 
+    @Test
+    public void testGetFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
+        testFeatureFlag(
+                "FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS",
+                Flags::getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests);
+    }
+
+    @Test
+    public void testGetFledgeScheduleCustomAudienceUpdateMaxBytes() {
+        testFlag(
+                "getFledgeScheduleCustomAudienceUpdateMaxBytes()",
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES,
+                Flags::getFledgeScheduleCustomAudienceUpdateMaxBytes);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Internal helpers and tests - do not add new tests for flags following this point.          //
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1077,6 +1085,26 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     @Test
     public void testGetAdIdCacheTtl() {
         testFlag("getAdIdCacheTtl()", DEFAULT_ADID_CACHE_TTL_MS, Flags::getAdIdCacheTtlMs);
+    }
+
+    @Test
+    public void testGetEnableAtomicFileDatastoreBatchUpdateApi() {
+        testFeatureFlag(
+                "DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API",
+                Flags::getEnableAtomicFileDatastoreBatchUpdateApi);
+    }
+
+    @Test
+    public void testGetAdIdMigrationEnabled() {
+        testFeatureFlag("DEFAULT_AD_ID_MIGRATION_ENABLED", Flags::getAdIdMigrationEnabled);
+    }
+
+    @Test
+    public void testGetFledgeCustomAudiencePerBuyerMaxCount() {
+        testFlag(
+                "getFledgeCustomAudiencePerBuyerMaxCount",
+                FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT,
+                Flags::getFledgeCustomAudiencePerBuyerMaxCount);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {

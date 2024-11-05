@@ -54,20 +54,32 @@ public final class ApplicationContextSingleton {
      * Sets the application context singleton (as the {@link Context#getApplicationContext()
      * application context} from {@code context}).
      *
-     * @throws IllegalStateException if the singleton was already {@link #set(Context) set} and it
-     *     is not the same as the {@link Context#getApplicationContext() application context} from
-     *     {@code context}).
+     * @throws IllegalStateException if the singleton was already set (by this method or {@link
+     *     #setAs(Context)}) and the effective application context is different.
      */
     public static void set(Context context) {
-        Context appContext =
-                Objects.requireNonNull(context, "context cannot be null").getApplicationContext();
-
+        Objects.requireNonNull(context, "context cannot be null");
+        Context appContext = context.getApplicationContext();
         Preconditions.checkArgument(
                 appContext != null, "Context (%s) does not have an application context", context);
+        set("set()", appContext);
+    }
 
+    /**
+     * Sets the application context singleton as the {@code context}).
+     *
+     * @throws IllegalStateException if the singleton was already set (by this method or {@link
+     *     #set(Context)}) and the effective application context is different.
+     */
+    public static void setAs(Context context) {
+        Objects.requireNonNull(context, "context cannot be null");
+        set("setAs()", context);
+    }
+
+    private static void set(String methodName, Context appContext) {
         // Set if it's not set yet
         if (sContext.compareAndSet(null, appContext)) {
-            LogUtil.i("Set singleton context as %s", appContext);
+            LogUtil.i("%s: set singleton context as %s", methodName, appContext);
             return;
         }
 
@@ -78,14 +90,14 @@ public final class ApplicationContextSingleton {
             throw new IllegalStateException(
                     "Trying to set app context as "
                             + appContext
-                            + " (from "
-                            + context
-                            + "), when it was already set as "
+                            + " when it was already set as "
                             + currentAppContext);
         }
     }
 
-    // TODO(b/285300419): make it package protected so it's only accessed by rule
+    // TODO(b/285300419): make it package protected so it's only accessed by rule - would need to
+    // move the rule to this package, which currently would be a pain (as all testing artifacts
+    // are under c.a.a.shared.testing packages)
     /**
      * Gets the application context, returning {@code null} if it's not set yet.
      *
@@ -98,20 +110,17 @@ public final class ApplicationContextSingleton {
         return context;
     }
 
+    // TODO(b/285300419): make it package protected so it's only accessed by rule
     /**
-     * Sets the application context singleton as the given {@code context} "as is", without doing
-     * any check.
+     * Sets the application context singleton as the given {@code context}, without doing any check.
      *
-     * <p>Should only be used on unit tests or some exceptional cases (like from {@code
-     * SystemServer}) - most production code should call {@link #set(Context)} instead.
-     *
-     * @return the same context
+     * <p>Should only be used on unit tests - production code should call {@link #set(Context)
+     * instead.
      */
     @VisibleForTesting
-    public static Context setAsIs(Context context) {
-        LogUtil.i("setAsIs(): from %s to %s.", sContext.get(), context);
+    public static void setForTests(Context context) {
+        LogUtil.i("setForTests(): from %s to %s.", sContext.get(), context);
         sContext.set(context);
-        return context;
     }
 
     private ApplicationContextSingleton() {

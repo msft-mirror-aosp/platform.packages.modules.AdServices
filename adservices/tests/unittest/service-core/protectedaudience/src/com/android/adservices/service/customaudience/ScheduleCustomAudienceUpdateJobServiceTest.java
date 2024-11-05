@@ -51,7 +51,6 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -70,7 +69,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 @MockStatic(ConsentManager.class)
 @SpyStatic(ScheduleCustomAudienceUpdateJobService.class)
@@ -137,7 +135,8 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                 };
         mocker.mockGetFlags(flagsWithScheduleUpdateDisabled);
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(mContext, flagsWithScheduleUpdateDisabled);
+                mocker.mockNoOpAdServicesJobServiceLogger(
+                        mContext, flagsWithScheduleUpdateDisabled);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobFlagDisabled();
@@ -204,7 +203,7 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                 };
         mocker.mockGetFlags(flagsWithGaUxEnabled);
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(mContext, flagsWithGaUxEnabled);
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, flagsWithGaUxEnabled);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
@@ -319,7 +318,8 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                     }
                 };
         mocker.mockGetFlags(flags);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, flags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, flags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -348,7 +348,8 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
                     }
                 };
         mocker.mockGetFlags(flags);
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, flags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, flags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -456,7 +457,8 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
 
     @Test
     public void testOnStopJob() throws InterruptedException {
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         doReturn(mUpdateWorker).when(ScheduleCustomAudienceUpdateWorker::getInstance);
@@ -609,7 +611,8 @@ public final class ScheduleCustomAudienceUpdateJobServiceTest extends AdServices
 
     @Test
     public void testOnStartJobShouldDisableJobTrue() {
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
 
         doReturn(true)
                 .when(

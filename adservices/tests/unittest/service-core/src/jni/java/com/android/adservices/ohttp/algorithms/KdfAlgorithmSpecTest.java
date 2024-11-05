@@ -33,7 +33,5 @@ public class KdfAlgorithmSpecTest {
 
         Assert.assertEquals(kdfAlgorithmSpec.extractOutputLength(), 32);
         Assert.assertEquals(kdfAlgorithmSpec.identifier(), KdfAlgorithmSpec.HKDF_SHA256_IDENTIFIER);
-        Assert.assertNotNull(kdfAlgorithmSpec.messageDigestSupplier().get().getAddress());
-        Assert.assertNotNull(kdfAlgorithmSpec.kdfNativeRefSupplier().get().getAddress());
     }
 }

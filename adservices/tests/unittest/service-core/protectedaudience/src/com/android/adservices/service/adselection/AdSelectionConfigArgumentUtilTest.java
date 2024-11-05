@@ -30,13 +30,10 @@ import android.net.Uri;
 
 import androidx.test.filters.SmallTest;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import org.json.JSONException;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.stream.Collectors;
@@ -61,9 +58,6 @@ public class AdSelectionConfigArgumentUtilTest {
                                     BUYER_2,
                                     AdSelectionSignals.fromString("{\"buyer_signals\":2}")))
                     .build();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testConversionToScriptArgument() throws JSONException {

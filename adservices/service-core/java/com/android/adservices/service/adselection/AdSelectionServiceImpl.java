@@ -28,6 +28,12 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_AUCTION_SERVER_API_NOT_AVAILABLE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_GET_CALLING_UID_ILLEGAL_STATE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
@@ -113,6 +119,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
 import com.android.adservices.service.stats.ReportImpressionExecutionLoggerFactory;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
@@ -166,6 +173,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     @NonNull private final DevContextFilter mDevContextFilter;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
     @NonNull private final FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
@@ -206,6 +214,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull Context context,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull Flags flags,
+            @NonNull DebugFlags debugFlags,
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
@@ -237,6 +246,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(scheduledExecutor);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(adFilteringFeatureFactory);
         Objects.requireNonNull(consentManager);
         Objects.requireNonNull(multiCloudSupportStrategy);
@@ -262,6 +272,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mContext = context;
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mCallingAppUidSupplier = callingAppUidSupplier;
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
@@ -305,6 +316,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 context,
                 AdServicesLoggerImpl.getInstance(),
                 FlagsFactory.getFlags(),
+                DebugFlags.getInstance(),
                 CallingAppUidSupplierBinderImpl.create(),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
                 new AdSelectionServiceFilter(
@@ -402,6 +414,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     inputParams.getCallerPackageName(),
                     STATUS_KILLSWITCH_ENABLED,
                     /*latencyMs=*/ 0);
+            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_AUCTION_SERVER_API_NOT_AVAILABLE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
             throw new IllegalStateException(AUCTION_SERVER_API_IS_NOT_AVAILABLE);
         }
 
@@ -416,6 +432,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     inputParams.getCallerPackageName(),
                     STATUS_INVALID_ARGUMENT,
                     /*latencyMs=*/ 0);
+            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
             // Rethrow because we want to fail fast
             throw e;
         }
@@ -468,6 +488,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     inputParams.getCallerPackageName(),
                     STATUS_KILLSWITCH_ENABLED,
                     /* latencyMs= */ 0);
+            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_AUCTION_SERVER_API_NOT_AVAILABLE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             throw new IllegalStateException(AUCTION_SERVER_API_IS_NOT_AVAILABLE);
         }
 
@@ -482,6 +506,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     inputParams.getCallerPackageName(),
                     STATUS_INVALID_ARGUMENT,
                     /*latencyMs=*/ 0);
+            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             // Rethrow because we want to fail fast
             throw e;
         }
@@ -660,6 +688,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 AdServicesExecutors.getBlockingExecutor(),
                                                 mScheduledExecutor,
                                                 mFlags,
+                                                mDebugFlags,
                                                 callingUid,
                                                 devContext,
                                                 auctionServerDebugReporting,
@@ -699,6 +728,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                                 AdServicesExecutors.getBlockingExecutor(),
                                                 mScheduledExecutor,
                                                 mFlags,
+                                                mDebugFlags,
                                                 callingUid,
                                                 devContext,
                                                 AuctionServerDebugReporting
@@ -823,6 +853,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesLogger,
                         devContext,
                         mFlags,
+                        mDebugFlags,
                         adSelectionExecutionLogger,
                         mAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory.getFrequencyCapAdFilterer(),
@@ -952,6 +983,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                             devContext,
                             mAdServicesLogger,
                             mFlags,
+                            mDebugFlags,
                             mAdSelectionServiceFilter,
                             mFledgeAuthorizationFilter,
                             mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
@@ -1030,6 +1062,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                                 mBackgroundExecutor,
                                 mAdServicesLogger,
                                 mFlags,
+                                mDebugFlags,
                                 mAdSelectionServiceFilter,
                                 callerUid,
                                 mFledgeAuthorizationFilter,
@@ -1162,7 +1195,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),
@@ -1215,7 +1248,17 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     callerAppPackageName,
                     STATUS_INTERNAL_ERROR,
                     /*latencyMs=*/ 0);
+            logGetCallingUidCEL(apiNameLoggingId);
             throw illegalStateException;
+        }
+    }
+
+    private void logGetCallingUidCEL(int apiNameLoggingId) {
+        int celApiNameId = AdsRelevanceStatusUtils.getCelPpApiNameId(apiNameLoggingId);
+        if (celApiNameId != AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED) {
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_GET_CALLING_UID_ILLEGAL_STATE,
+                    celApiNameId);
         }
     }
 
@@ -1239,7 +1282,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),
@@ -1292,7 +1335,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),
@@ -1349,7 +1392,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),
@@ -1403,7 +1446,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),
@@ -1455,7 +1498,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),
@@ -1508,7 +1551,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),
@@ -1551,7 +1594,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),
@@ -1591,7 +1634,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),
@@ -1621,7 +1664,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     public void destroy() {
         sLogger.i("Shutting down AdSelectionService");
         try {
-            JSScriptEngine jsScriptEngine = JSScriptEngine.getInstance(sLogger);
+            JSScriptEngine jsScriptEngine = JSScriptEngine.getInstance();
             jsScriptEngine.shutdown();
         } catch (JSSandboxIsNotAvailableException exception) {
             sLogger.i("Java script sandbox is not available, not shutting down JSScriptEngine.");

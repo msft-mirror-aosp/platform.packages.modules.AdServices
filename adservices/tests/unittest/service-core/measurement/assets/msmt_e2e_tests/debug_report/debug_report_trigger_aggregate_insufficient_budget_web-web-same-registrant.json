@@ -61,7 +61,8 @@
                 "b": 7
               },
               "debug_reporting": true,
-              "debug_key": "8971346781"
+              "debug_key": "8971346781",
+              "aggregatable_source_registration_time": "INCLUDE"
             }
           }
         }]
@@ -92,7 +93,8 @@
                 "a": 65535
               },
               "debug_reporting": true,
-              "debug_key": "8971346782"
+              "debug_key": "8971346782",
+              "aggregatable_source_registration_time": "INCLUDE"
             }
           }
         }]
@@ -117,7 +119,11 @@
             {
               "key": "0x559",
               "value": 65535
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key" : "347982378",
           "trigger_debug_key": "8971346782"
@@ -143,7 +149,11 @@
             {
               "key": "0x559",
               "value": 65535
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ],
           "source_debug_key" : "347982378",
           "trigger_debug_key": "8971346782"

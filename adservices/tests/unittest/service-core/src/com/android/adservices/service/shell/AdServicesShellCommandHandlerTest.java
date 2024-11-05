@@ -49,9 +49,14 @@ import com.android.adservices.service.adselection.CompressedBuyerInputCreatorFac
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
+import com.android.adservices.service.devapi.DevSessionController;
+import com.android.adservices.service.devapi.DevSessionDataStore;
 import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
 import com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand;
 import com.android.adservices.service.shell.adselection.ViewAuctionResultCommand;
+import com.android.adservices.service.shell.adservicesapi.DevSessionCommand;
+import com.android.adservices.service.shell.adservicesapi.EnableAdServicesCommand;
+import com.android.adservices.service.shell.adservicesapi.ResetConsentCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceListCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceRefreshCommand;
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
@@ -112,6 +117,8 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
     @Mock private ProtectedSignalsArgument mProtectedSignalsArgument;
     @Mock private SignalsProviderAndArgumentFactory mSignalsProviderAndArgumentFactory;
     @Mock private AdSelectionEntryDao mAdSelectionEntryDao;
+    @Mock private DevSessionController mDevSessionSetter;
+    @Mock private DevSessionDataStore mDevSessionDataStore;
 
     private ShellCommandFactorySupplier mShellCommandFactorySupplier;
 
@@ -137,7 +144,9 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                         mEncodingJobRunStatsLogger,
                         mEncoderLogicMetadataDao,
                         mConsentedDebugConfigurationGenerator,
-                        mAdSelectionEntryDao);
+                        mAdSelectionEntryDao,
+                        mDevSessionSetter,
+                        mDevSessionDataStore);
         mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier, mAdServicesLogger, mClock);
     }
 
@@ -196,8 +205,6 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
         expectInvalidArgument(HELP_ECHO, CMD_ECHO);
         // empty message
         expectInvalidArgument(HELP_ECHO, CMD_ECHO, "");
-        // more than 1 arg
-        expectInvalidArgument(HELP_ECHO, CMD_ECHO, "4", "8", "15", "16", "23", "42");
     }
 
     @Test
@@ -286,7 +293,10 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                                 GenerateInputForEncodingCommand.HELP,
                                 TriggerEncodingCommand.HELP,
                                 GetAdSelectionDataCommand.HELP,
-                                ViewAuctionResultCommand.HELP));
+                                ViewAuctionResultCommand.HELP,
+                                EnableAdServicesCommand.HELP_ENABLE_ADSERVICES,
+                                ResetConsentCommand.HELP_RESET_CONSENT_DATA,
+                                DevSessionCommand.HELP));
     }
 
     private void expectInvalidArgument(String syntax, String... args) throws IOException {

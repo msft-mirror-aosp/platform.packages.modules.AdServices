@@ -52,7 +52,6 @@ import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -73,7 +72,6 @@ import java.util.concurrent.TimeoutException;
 // The actual scheduling of the job needs to be mocked out because the test application does
 // not have the required permissions to schedule the job with the constraints requested by
 // the BackgroundFetchJobService, and adding them is non-trivial.
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 @MockStatic(ConsentManager.class)
 @MockStatic(BackgroundFetchJob.class)
@@ -120,7 +118,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         mocker.mockGetFlags(mFlagsWithDisabledBgF);
 
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(mContext, mFlagsWithDisabledBgF);
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mFlagsWithDisabledBgF);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -163,7 +161,8 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         FlagsWithEnabledBgFGaUxEnabled flags = new FlagsWithEnabledBgFGaUxEnabled();
         mocker.mockGetFlags(flags);
 
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, flags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, flags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
@@ -203,7 +202,8 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         mocker.mockGetFlags(flagsWithEnabledBgFGaUxDisabled);
 
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(mContext, flagsWithEnabledBgFGaUxDisabled);
+                mocker.mockNoOpAdServicesJobServiceLogger(
+                        mContext, flagsWithEnabledBgFGaUxDisabled);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -218,7 +218,8 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         mocker.mockGetFlags(flagsWithEnabledBgFGaUxDisabled);
 
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(mContext, flagsWithEnabledBgFGaUxDisabled);
+                mocker.mockNoOpAdServicesJobServiceLogger(
+                        mContext, flagsWithEnabledBgFGaUxDisabled);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -294,7 +295,8 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
 
     @Test
     public void testOnStopJob() throws InterruptedException {
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStopJobCallsStopWork();
@@ -403,7 +405,8 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
 
     @Test
     public void testOnStartJobShouldDisableJobTrue() {
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
 
         doReturn(true)
                 .when(
