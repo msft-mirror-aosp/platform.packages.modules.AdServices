@@ -61,6 +61,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -87,7 +88,7 @@ public class AsyncTriggerFetcher {
     private final IOdpDelegationWrapper mOdpWrapper;
     private final DatastoreManager mDatastoreManager;
     private final DebugReportApi mDebugReportApi;
-    private static final double ONE_BYTE = Math.pow(2, 8);
+    private static final long ONE_BYTE = (long) Math.pow(2, 8);
 
     public AsyncTriggerFetcher(Context context) {
         this(
@@ -1127,19 +1128,18 @@ public class AsyncTriggerFetcher {
             JSONObject value, Integer maxBytes, AsyncFetchStatus asyncFetchStatus) {
         Optional<UnsignedLong> maybeFilteringId =
                 FetcherUtil.extractUnsignedLong(value, AggregatableKeyValueContract.FILTERING_ID);
-        if (!maybeFilteringId.isPresent()) {
+        if (maybeFilteringId.isEmpty()) {
             LoggerFactory.getMeasurementLogger()
-                    .d(
-                            "Aggregatable Values: Unable to extract %s.",
-                            AggregatableKeyValueContract.FILTERING_ID);
+                    .e(
+                            String.format(
+                                    "AGGREGATABLE_VALUES: filtering_id is not an unsigned long"
+                                            + " string"));
             return false;
         }
-        UnsignedLong filteringId = maybeFilteringId.get();
-        UnsignedLong lowerBound = new UnsignedLong(0L);
-        UnsignedLong upperBound = new UnsignedLong((long) Math.pow(ONE_BYTE, maxBytes));
-        if (filteringId.compareTo(lowerBound) < 0 || filteringId.compareTo(upperBound) >= 0) {
+        BigInteger filteringId = new BigInteger(maybeFilteringId.get().toString());
+        if (filteringId.compareTo(BigInteger.valueOf(ONE_BYTE).pow(maxBytes)) >= 0) {
             LoggerFactory.getMeasurementLogger()
-                    .e(String.format("Aggregatable Values: filtering_id is out of bounds"));
+                    .e(String.format("AGGREGATABLE_VALUES: filtering_id is out of bounds"));
             return false;
         }
         asyncFetchStatus.setIsTriggerFilteringIdConfigured(true);
