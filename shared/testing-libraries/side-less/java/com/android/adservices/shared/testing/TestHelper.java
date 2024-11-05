@@ -18,7 +18,10 @@ package com.android.adservices.shared.testing;
 import org.junit.runner.Description;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 
 /** Provides helpers for generic test-related tasks. */
 public final class TestHelper {
@@ -26,7 +29,10 @@ public final class TestHelper {
 
     private static final Logger sLogger = new Logger(DynamicLogger.getInstance(), TestHelper.class);
 
-    // TODO(b/315339283): use in other places
+    // TODO(b/318893752): merge most getAnnotation() methods so the logic is defined in just one
+    // place (in a follow-up CL, so unit tests don't change)
+
+    // TODO(b/318893752): use in other places
     /** Gets the given annotation from the test, its class, or its ancestors. */
     @Nullable
     public static <T extends Annotation> T getAnnotation(
@@ -55,7 +61,7 @@ public final class TestHelper {
      * Gets the given annotation from the test class, its ancestors, or any of the implemented
      * interface(s).
      */
-    // TODO(b/315339283): use in other places
+    // TODO(b/318893752): use in other places
     @Nullable
     public static <T extends Annotation> T getAnnotation(
             Class<?> testClass, Class<T> annotationClass) {
@@ -67,6 +73,55 @@ public final class TestHelper {
                     "getAnnotation(%s, %s): returning %s", testClass, annotationClass, annotation);
         }
         return annotation;
+    }
+
+    // TODO(b/318893752): use in other places
+    /** Gets the given annotations from the test, its class, or its ancestors, in this order. */
+    public static List<Annotation> getAnnotations(
+            Description test, Function<Annotation, Boolean> filter) {
+        Objects.requireNonNull(test, "test (Description) cannot be null");
+        Objects.requireNonNull(filter, "filter cannot be null");
+
+        List<Annotation> annotations = new ArrayList<>();
+        for (var annotation : test.getAnnotations()) {
+            if (filter.apply(annotation)) {
+                if (VERBOSE) {
+                    sLogger.v(
+                            "getAnnotations(%s): adding annotation (%s) from test itself (%s)",
+                            test, annotation, getTestName(test));
+                }
+                annotations.add(annotation);
+            }
+        }
+
+        var testClass = test.getTestClass();
+        while (testClass != null) {
+            for (var annotation : testClass.getAnnotations()) {
+                if (filter.apply(annotation)) {
+                    if (VERBOSE) {
+                        sLogger.v(
+                                "getAnnotations(%s): adding annotation (%s) from class (%s)",
+                                test, annotation, testClass.getSimpleName());
+                    }
+                    annotations.add(annotation);
+                }
+            }
+            for (Class<?> classInterface : testClass.getInterfaces()) {
+                for (var annotation : classInterface.getAnnotations()) {
+                    if (filter.apply(annotation)) {
+                        if (VERBOSE) {
+                            sLogger.v(
+                                    "getAnnotations(%s): adding annotation (%s) from interface"
+                                            + " (%s)",
+                                    test, annotation, classInterface.getSimpleName());
+                        }
+                        annotations.add(annotation);
+                    }
+                }
+            }
+            testClass = testClass.getSuperclass();
+        }
+        return annotations;
     }
 
     @Nullable
