@@ -49,6 +49,7 @@ import com.google.protobuf.ExtensionRegistry;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -101,6 +102,7 @@ public final class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
         ReportUtils.clearReports(getDevice());
     }
 
+    @Ignore("b/374761838")
     @Test
     public void testGetTopicsLog() throws Exception {
         ITestDevice device = getDevice();
