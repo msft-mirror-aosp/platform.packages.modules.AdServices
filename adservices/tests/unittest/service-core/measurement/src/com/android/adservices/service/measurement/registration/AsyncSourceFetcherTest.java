@@ -711,7 +711,8 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + "\","
                                                 + "  \"named_budgets\": {"
                                                 + "    \"key1\": 32768,"
-                                                + "    \"key2\": 30000"
+                                                + "    \"key2\": 0,"
+                                                + "    \"key3\": 30000"
                                                 + "  },"
                                                 + "  \"priority\": \""
                                                 + DEFAULT_PRIORITY
@@ -745,10 +746,14 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
         assertThat(result.getAggregatableNamedBudgets().maybeGetBudget("key1").get())
                 .isEqualTo(32768);
         assertThat(result.getAggregatableNamedBudgets().maybeGetBudget("key2").get())
+                .isEqualTo(0);
+        assertThat(result.getAggregatableNamedBudgets().maybeGetBudget("key3").get())
                 .isEqualTo(30000);
         assertThat(result.getAggregatableNamedBudgets().maybeGetContribution("key1").get())
                 .isEqualTo(0);
         assertThat(result.getAggregatableNamedBudgets().maybeGetContribution("key2").get())
+                .isEqualTo(0);
+        assertThat(result.getAggregatableNamedBudgets().maybeGetContribution("key3").get())
                 .isEqualTo(0);
         verify(mUrlConnection).setRequestMethod("POST");
     }
@@ -881,63 +886,6 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                                                 + "    \"key1235467890123456789012345678"
                                                 + "9012345678901234567890\":"
                                                 + " 30000"
-                                                + "  },"
-                                                + "  \"priority\": \""
-                                                + DEFAULT_PRIORITY
-                                                + "\","
-                                                + "  \"expiry\": \""
-                                                + DEFAULT_EXPIRY
-                                                + "\","
-                                                + "  \"source_event_id\": \""
-                                                + DEFAULT_EVENT_ID
-                                                + "\""
-                                                + "}")));
-
-        AsyncRedirects asyncRedirects = new AsyncRedirects();
-        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
-
-        // Execution
-        AsyncRegistration asyncRegistration = appSourceRegistrationRequest(request);
-        Optional<Source> fetch =
-                mFetcher.fetchSource(asyncRegistration, asyncFetchStatus, asyncRedirects);
-
-        // Assertion
-        assertWithMessage("asyncFetchStatus.getResponseStatus()")
-                .that(asyncFetchStatus.getResponseStatus())
-                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
-        assertWithMessage("asyncFetchStatus.getEntityStatus()")
-                .that(asyncFetchStatus.getEntityStatus())
-                .isEqualTo(AsyncFetchStatus.EntityStatus.VALIDATION_ERROR);
-        assertWithMessage("fetch.isPresent()").that(fetch.isPresent()).isFalse();
-        verify(mUrlConnection).setRequestMethod("POST");
-    }
-
-    @Test
-    public void testFetchSource_namedBudgetIsZero_fails() throws Exception {
-        RegistrationRequest request =
-                buildDefaultRegistrationRequestBuilder(DEFAULT_REGISTRATION).build();
-        when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
-        when(mMockFlags.getMeasurementMaxNamedBudgetsPerSourceRegistration())
-                .thenReturn(Flags.MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION);
-        when(mMockFlags.getMeasurementMaxLengthPerBudgetName())
-                .thenReturn(Flags.MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME);
-        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource())
-                .thenReturn(MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE);
-        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
-        when(mUrlConnection.getResponseCode()).thenReturn(200);
-        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
-        when(mUrlConnection.getHeaderFields())
-                .thenReturn(
-                        Map.of(
-                                "Attribution-Reporting-Register-Source",
-                                List.of(
-                                        "{"
-                                                + "  \"destination\": \""
-                                                + DEFAULT_DESTINATION
-                                                + "\","
-                                                + "  \"named_budgets\": {"
-                                                + "    \"key1\": 0,"
-                                                + "    \"key2\": 32768"
                                                 + "  },"
                                                 + "  \"priority\": \""
                                                 + DEFAULT_PRIORITY
