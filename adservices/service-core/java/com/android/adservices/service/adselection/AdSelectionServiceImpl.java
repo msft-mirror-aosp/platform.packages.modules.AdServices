@@ -84,7 +84,6 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -415,7 +414,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     inputParams.getCallerPackageName(),
                     STATUS_KILLSWITCH_ENABLED,
                     /*latencyMs=*/ 0);
-            ErrorLogUtil.e(
+            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_AUCTION_SERVER_API_NOT_AVAILABLE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
             throw new IllegalStateException(AUCTION_SERVER_API_IS_NOT_AVAILABLE);
@@ -432,8 +432,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     inputParams.getCallerPackageName(),
                     STATUS_INVALID_ARGUMENT,
                     /*latencyMs=*/ 0);
-            ErrorLogUtil.e(
-                    e,
+            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
             // Rethrow because we want to fail fast
@@ -488,7 +488,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     inputParams.getCallerPackageName(),
                     STATUS_KILLSWITCH_ENABLED,
                     /* latencyMs= */ 0);
-            ErrorLogUtil.e(
+            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_AUCTION_SERVER_API_NOT_AVAILABLE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             throw new IllegalStateException(AUCTION_SERVER_API_IS_NOT_AVAILABLE);
@@ -505,8 +506,8 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     inputParams.getCallerPackageName(),
                     STATUS_INVALID_ARGUMENT,
                     /*latencyMs=*/ 0);
-            ErrorLogUtil.e(
-                    e,
+            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             // Rethrow because we want to fail fast
@@ -1255,7 +1256,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     private void logGetCallingUidCEL(int apiNameLoggingId) {
         int celApiNameId = AdsRelevanceStatusUtils.getCelPpApiNameId(apiNameLoggingId);
         if (celApiNameId != AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED) {
-            ErrorLogUtil.e(
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_GET_CALLING_UID_ILLEGAL_STATE,
                     celApiNameId);
         }

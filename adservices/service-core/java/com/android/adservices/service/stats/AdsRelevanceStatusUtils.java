@@ -25,6 +25,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
 
 import android.annotation.IntDef;
+import android.os.Binder;
+
+import com.android.adservices.errorlogging.ErrorLogUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -486,5 +489,31 @@ public class AdsRelevanceStatusUtils {
                 break;
         }
         return celPpApiNameId;
+    }
+
+    /**
+     * Clean the caller's identity and log CEL.
+     * TODO(b/376542959): this is a temporary solution for CEL logs inside the Binder thread.
+     */
+    public static void logCelInsideBinderThread(int errorCode, int ppapiName) {
+        long token = Binder.clearCallingIdentity();
+        try {
+            ErrorLogUtil.e(errorCode, ppapiName);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
+    }
+
+    /**
+     * Clean the caller's identity and log CEL.
+     * TODO(b/376542959): this is a temporary solution for CEL logs inside the Binder thread.
+     */
+    public static void logCelInsideBinderThread(Throwable tr, int errorCode, int ppapiName) {
+        long token = Binder.clearCallingIdentity();
+        try {
+            ErrorLogUtil.e(tr, errorCode, ppapiName);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
     }
 }
