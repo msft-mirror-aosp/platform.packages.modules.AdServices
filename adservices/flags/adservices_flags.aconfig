@@ -86,12 +86,18 @@ flag {
 }
 
 flag {
+    name: "fledge_enable_report_event_for_component_seller"
+    namespace: "adservices_aconfig"
+    bug: "377279411"
+    description: "Enables component seller as one of the destination for reporting event."
+}
+
+flag {
     name: "fledge_enable_winning_seller_id_in_ad_selection_outcome"
     namespace: "adservices"
     bug: "377279411"
     description: "Enables winning seller id in AdSelectionOutcome in persistAdSelectionResult/selectAds API."
 }
-
 
 flag {
     name: "fledge_schedule_custom_audience_update_enabled"
