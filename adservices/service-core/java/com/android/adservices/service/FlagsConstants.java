@@ -1156,6 +1156,8 @@ public final class FlagsConstants {
     public static final String KEY_MDD_ENROLLMENT_MANIFEST_FILE_URL =
             "mdd_enrollment_manifest_file_url";
     public static final String KEY_ENROLLMENT_PROTO_FILE_ENABLED = "enrollment_proto_file_enabled";
+    public static final String KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB =
+            "ConfigDelivery__enable_enrollment_config_v3_db";
 
     // New Feature Flags
     public static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED =
@@ -1662,6 +1664,14 @@ public final class FlagsConstants {
     public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD =
             "PackageDeny__enable_package_deny_job_on_mdd_download";
 
+    /** Key for package deny enable package installed filtering */
+    public static final String KEY_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER =
+            "PackageDeny__enable_installed_package_filter";
+
+    /** Key for package dny background job period in millis */
+    public static final String KEY_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS =
+            "PackageDeny__background_job_period_millis";
+
     /** Key for MDD Package Deny registry manifest file url */
     public static final String KEY_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL =
             "DownloadConfig__default_mdd_package_deny_manifest_file_url";
@@ -1672,4 +1682,12 @@ public final class FlagsConstants {
 
     /** Key to enable Ad Id migration. */
     public static final String KEY_AD_ID_MIGRATION_ENABLED = "ad_id_migration_enabled";
+
+    /** Key to enable report event for component seller as one of the destination. */
+    public static final String KEY_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER =
+            "FLEDGE__enable_report_event_for_component_seller";
+
+    /** Key to enable winning seller id field in ad selection outcome */
+    public static final String KEY_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME =
+            "FLEDGE__enable_winning_seller_id_in_ad_selection_outcome";
 }
