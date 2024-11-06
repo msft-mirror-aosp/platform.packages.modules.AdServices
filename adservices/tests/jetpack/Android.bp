@@ -75,6 +75,7 @@ java_defaults {
         "framework-sdksandbox.impl",
         "adservices-test-fixtures",
         "adservices-test-utility",
+        "adservices-cts-test-utility",
     ],
     libs: [
         "android.test.base.stubs.system",

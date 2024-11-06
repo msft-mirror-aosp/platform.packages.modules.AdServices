@@ -21,22 +21,18 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.PartialCustomAudience;
 import android.os.Parcel;
 
-import androidx.test.filters.SmallTest;
-
 import com.android.adservices.service.FlagsConstants;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
-import com.google.common.truth.Expect;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Instant;
 
-@SmallTest
+@RequiresSdkLevelAtLeastS
 @SetFlagEnabled(FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
-public class PartialCustomAudienceTest {
+public final class PartialCustomAudienceTest extends CtsAdServicesDeviceTestCase {
     private static final String VALID_CA_NAME = "running_shoes";
     private static final Instant VALID_ACTIVATION_TIME = CommonFixture.FIXED_NOW;
     private static final Instant VALID_EXPIRATION_TIME = CommonFixture.FIXED_NEXT_ONE_DAY;
@@ -49,12 +45,6 @@ public class PartialCustomAudienceTest {
                     .setActivationTime(VALID_ACTIVATION_TIME)
                     .setUserBiddingSignals(VALID_BIDDING_SIGNALS)
                     .build();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Rule(order = 1)
-    public final Expect expect = Expect.create();
 
     @Test
     public void testBuildValidPartialCARequest_AllSetters_Success() {
@@ -105,28 +95,8 @@ public class PartialCustomAudienceTest {
                         .setUserBiddingSignals(VALID_BIDDING_SIGNALS)
                         .build();
 
-        expect.that(partialCa1).isEqualTo(partialCa2);
-    }
-
-    @Test
-    public void testHashCodeSame() {
-        PartialCustomAudience partialCa1 =
-                new PartialCustomAudience.Builder(VALID_CA_NAME)
-                        .setExpirationTime(VALID_EXPIRATION_TIME)
-                        .setActivationTime(VALID_ACTIVATION_TIME)
-                        .setUserBiddingSignals(VALID_BIDDING_SIGNALS)
-                        .build();
-
-        PartialCustomAudience partialCa2 =
-                new PartialCustomAudience.Builder(VALID_CA_NAME)
-                        .setExpirationTime(VALID_EXPIRATION_TIME)
-                        .setActivationTime(VALID_ACTIVATION_TIME)
-                        .setUserBiddingSignals(VALID_BIDDING_SIGNALS)
-                        .build();
-        expect.that(VALID_PARTIAL_CA.getActivationTime()).isEqualTo(VALID_ACTIVATION_TIME);
-        expect.that(VALID_PARTIAL_CA.getExpirationTime()).isEqualTo(VALID_EXPIRATION_TIME);
-        expect.that(VALID_PARTIAL_CA.getUserBiddingSignals()).isEqualTo(VALID_BIDDING_SIGNALS);
-        expect.that(partialCa1.hashCode()).isEqualTo(partialCa2.hashCode());
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(partialCa1, partialCa2);
     }
 
     @Test
@@ -139,7 +109,7 @@ public class PartialCustomAudienceTest {
                                 + "activationTime=%s, expirationTime=%s"
                                 + ", userBiddingSignals={\"a\":\"b\"}}",
                         VALID_ACTIVATION_TIME, VALID_EXPIRATION_TIME);
-        expect.that(expected).isEqualTo(ca.toString());
+        expect.that(ca.toString()).isEqualTo(expected);
     }
 
     @Test

@@ -30,6 +30,7 @@ import com.android.adservices.service.measurement.KeyValueData;
 import com.android.adservices.service.measurement.KeyValueData.DataType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReportRecord;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
@@ -79,6 +80,18 @@ public interface IMeasurementDao {
     List<String> getSourceAttributionScopes(@NonNull String sourceId) throws DatastoreException;
 
     /**
+     * Queries and returns the {@link Source}'s attribution scopes for a given source registration
+     * and reporting origin.
+     *
+     * @param registrationId ID of the registration.
+     * @param registrationOrigin source registration origin.
+     * @return a list of attribution scopes.
+     */
+    Set<String> getNavigationAttributionScopesForRegistration(
+            @NonNull String registrationId, @NonNull String registrationOrigin)
+            throws DatastoreException;
+
+    /**
      * Updates existing sources based on the following criteria for attribution scope:
      *
      * <ol>
@@ -126,9 +139,11 @@ public interface IMeasurementDao {
      * Fetches the count of aggregate reports for the provided source id.
      *
      * @param sourceId source id
-     * @return number of aggregate reports in the database attributed to the provided source id.
+     * @param api aggregate report API
+     * @return number of aggregate reports in the database attributed to the provided source id and
+     *     with provided api value.
      */
-    int getNumAggregateReportsPerSource(@NonNull String sourceId) throws DatastoreException;
+    int countNumAggregateReportsPerSource(String sourceId, String api) throws DatastoreException;
 
     /**
      * Fetches the count of event reports for the provided destination.
@@ -219,10 +234,10 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
-     * Gets the count of sources in the source table in a time period before event time with
-     * matching publisher, enrollment; excluding the given registration origin.
+     * Gets the count of distinct reporting origins in the source table in a time period before
+     * event time with matching publisher, enrollment; excluding the given registration origin.
      */
-    Integer countSourcesPerPublisherXEnrollmentExcludingRegOrigin(
+    Integer countDistinctRegOriginPerPublisherXEnrollmentExclRegOrigin(
             Uri registrationOrigin,
             Uri publisher,
             @EventSurfaceType int publisherType,
@@ -308,11 +323,18 @@ public interface IMeasurementDao {
     void updateSourceAggregateReportDedupKeys(@NonNull Source source) throws DatastoreException;
 
     /**
-     * Updates the value of aggregate contributions for the corresponding {@link Source}
+     * Updates the value of aggregate contributions for the corresponding {@link Source}.
      *
      * @param source the {@link Source} object.
      */
     void updateSourceAggregateContributions(@NonNull Source source) throws DatastoreException;
+
+    /**
+     * Updates the value of aggregate debug contributions for the corresponding {@link Source}.
+     *
+     * @param source the {@link Source} object.
+     */
+    void updateSourceAggregateDebugContributions(@NonNull Source source) throws DatastoreException;
 
     /**
      * Returns list of all the reports associated with the {@link Source}.
@@ -442,7 +464,8 @@ public interface IMeasurementDao {
     void deleteExpiredRecords(
             long earliestValidInsertion,
             int registrationRetryLimit,
-            @Nullable Long earliestValidAppReportInsertion)
+            @Nullable Long earliestValidAppReportInsertion,
+            long earliestValidAggregateDebugReportInsertion)
             throws DatastoreException;
 
     /**
@@ -473,6 +496,12 @@ public interface IMeasurementDao {
 
     /** Remove aggregate encryption keys from the datastore older than {@code expiry}. */
     void deleteExpiredAggregateEncryptionKeys(long expiry) throws DatastoreException;
+
+    /** Delete Event Report from datastore. */
+    void deleteEventReport(EventReport eventReport) throws DatastoreException;
+
+    /** Delete Aggregate Report from datastore. */
+    void deleteAggregateReport(AggregateReport aggregateReport) throws DatastoreException;
 
     /** Save unencrypted aggregate payload to the datastore. */
     void insertAggregateReport(AggregateReport payload) throws DatastoreException;
@@ -675,6 +704,34 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Returns a pair of lists of sources matching registrant, publishers and also in the provided
+     * time frame. If 24 hours plus the most recent trigger time of all reports attributed to the
+     * source is less than the current time then the source is in the first pair. If greater than or
+     * equal to the current time then the source is in the second pair. It matches registrant.
+     *
+     * @param registrant registrant to match except matching) data
+     * @param eventTime time of uninstall event
+     * @return pair of lists of source IDs
+     * @throws DatastoreException database transaction level issues
+     */
+    Pair<List<String>, List<String>> fetchMatchingSourcesUninstall(
+            @NonNull Uri registrant, long eventTime) throws DatastoreException;
+
+    /**
+     * Returns a pair of lists of triggers matching registrant, publishers and also in the provided
+     * time frame. If 24 hours plus the most recent trigger time of all reports attributed to the
+     * trigger is less than the current time then the trigger is in the first pair. If greater than
+     * or equal to the current time then the trigger is in the second pair. It matches registrant.
+     *
+     * @param registrant registrant to match except matching) data
+     * @param eventTime time of uninstall event
+     * @return pair of lists of trigger IDs
+     * @throws DatastoreException database transaction level issues
+     */
+    Pair<List<String>, List<String>> fetchMatchingTriggersUninstall(
+            @NonNull Uri registrant, long eventTime) throws DatastoreException;
+
+    /**
      * Returns list of async registrations matching registrant and top origins in the provided time
      * frame. It matches registrant and time range (start & end) irrespective of the {@code
      * matchBehavior}. In the resulting set, if matchBehavior is {@link
@@ -767,6 +824,16 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Insert an entry of {@link AggregateDebugReportRecord} into the {@link
+     * MeasurementTables.AggregatableDebugReportBudgetTrackerContract#TABLE} which tracks budget
+     * limits for aggregate debug reports.
+     *
+     * @param aggregateDebugReportRecord
+     */
+    void insertAggregateDebugReportRecord(AggregateDebugReportRecord aggregateDebugReportRecord)
+            throws DatastoreException;
+
+    /**
      * Returns the number of unique navigation sources by reporting origin and registration id.
      *
      * @param reportingOrigin the reporting origin to match.
@@ -779,8 +846,9 @@ public interface IMeasurementDao {
 
     /**
      * Let matchingSources be unexpired sources that match the provided publisher, publisher type
-     * destination surface type and enrollmentId. Pick and return the sources that have the least
-     * recently used destination excluding the provided list of destinations.
+     * destination surface type and enrollmentId. Pick and return the sources that have the lowest
+     * destination priority value or secondarily the least recently used destination excluding the
+     * provided list of destinations.
      *
      * @param publisher publisher to match
      * @param publisherType publisher surface type, i.e. app/web to match
@@ -788,10 +856,10 @@ public interface IMeasurementDao {
      * @param excludedDestinations destinations to exclude while matching
      * @param destinationType destination type app/web
      * @param windowEndTime selected sources' expiry needs to be greater than this time
-     * @return sources with least recently used destination
+     * @return sources with least recently used destination along with the priority value
      * @throws DatastoreException when accessing the DB fails
      */
-    List<String> fetchSourceIdsForLruDestinationXEnrollmentXPublisher(
+    Pair<Long, List<String>> fetchSourceIdsForLowestPriorityDestinationXEnrollmentXPublisher(
             Uri publisher,
             int publisherType,
             String enrollmentId,
@@ -811,6 +879,17 @@ public interface IMeasurementDao {
             throws DatastoreException;
 
     /**
+     * Deletes pending fake event reports for the provided sources. Attributions are not deleted.
+     *
+     * @param sourceIds sources to consider to query the pending reports
+     * @param currentTimeStamp it's practically the current time stamp, we delete only those reports
+     *     that have trigger time in future indicating that they are fake
+     * @throws DatastoreException when deletion fails
+     */
+    void deleteFutureFakeEventReportsForSources(List<String> sourceIds, long currentTimeStamp)
+            throws DatastoreException;
+
+    /**
      * Return the timestamp of the latest pending report (Event or Aggregate) in the batching
      * window. The batching window is calculated as the earliest report's timestamp + batchWindow.
      * If there are no reports, return null.
@@ -820,4 +899,26 @@ public interface IMeasurementDao {
      * @throws DatastoreException when SQLite issue occurs
      */
     Long getLatestReportTimeInBatchWindow(long batchWindow) throws DatastoreException;
+
+    /**
+     * Get total aggregate debug report budget per publisher x after window start time stamp.
+     *
+     * @param publisher publisher to match
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    int sumAggregateDebugReportBudgetXPublisherXWindow(
+            Uri publisher, @EventSurfaceType int publisherType, long windowStartTime)
+            throws DatastoreException;
+
+    /**
+     * Get total aggregate debug report budget per reporting publisher x origin x after window start
+     * time stamp.
+     *
+     * @param publisher publisher to match
+     * @param origin origin to match
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    int sumAggregateDebugReportBudgetXOriginXPublisherXWindow(
+            Uri publisher, @EventSurfaceType int publisherType, Uri origin, long windowStartTime)
+            throws DatastoreException;
 }

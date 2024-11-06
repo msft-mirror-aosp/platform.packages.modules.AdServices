@@ -20,21 +20,30 @@ import static com.android.adservices.service.js.JSScriptEngineCommonConstants.JS
 import static com.android.adservices.service.js.JSScriptEngineCommonConstants.JS_SCRIPT_STATUS_SUCCESS;
 import static com.android.adservices.service.js.JSScriptEngineCommonConstants.RESULTS_FIELD_NAME;
 import static com.android.adservices.service.js.JSScriptEngineCommonConstants.STATUS_FIELD_NAME;
-import static com.android.adservices.service.signals.ProtectedSignalsArgumentUtil.getArgumentsFromRawSignalsAndMaxSize;
 import static com.android.adservices.service.signals.SignalsDriverLogicGenerator.ENCODE_SIGNALS_DRIVER_FUNCTION_NAME;
 import static com.android.adservices.service.signals.SignalsDriverLogicGenerator.getCombinedDriverAndEncodingLogic;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_EMPTY_SCRIPT_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_JS_EXECUTION_STATUS_UNSUCCESSFUL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_MALFORMED_ENCODED_PAYLOAD;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NULL_ENCODING_SCRIPT_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_PROCESSING_JSON_VERSION_OF_SIGNALS_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_PROCESS_ENCODED_PAYLOAD_RESULT_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OTHER_FAILURE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR;
 
 import android.annotation.NonNull;
+import android.os.Trace;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -59,29 +68,25 @@ public final class SignalsScriptEngine {
     private final JSScriptEngine mJsEngine;
     // Used for the Futures.transform calls to compose futures.
     private final Executor mExecutor = MoreExecutors.directExecutor();
-    private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
     private final Supplier<Long> mMaxHeapSizeBytesSupplier;
     private final RetryStrategy mRetryStrategy;
     private final Supplier<Boolean> mIsolateConsoleMessageInLogsEnabled;
 
     public SignalsScriptEngine(
-            Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
             Supplier<Long> maxHeapSizeBytesSupplier,
             RetryStrategy retryStrategy,
             Supplier<Boolean> isolateConsoleMessageInLogsEnabled) {
-        mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
         mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mRetryStrategy = retryStrategy;
         mIsolateConsoleMessageInLogsEnabled = isolateConsoleMessageInLogsEnabled;
-        mJsEngine = JSScriptEngine.getInstance(sLogger);
+        mJsEngine = JSScriptEngine.getInstance();
     }
 
     /**
      * Injects buyer provided encodeSignals() logic into a driver JS. The driver script first
-     * un-marshals the signals, which would be marshaled by {@link ProtectedSignalsArgumentUtil},
-     * and then invokes the buyer provided encoding logic. The script marshals the Uint8Array
-     * returned by encodeSignals as HEX string and converts it into the byte[] returned by this
-     * method.
+     * un-marshals the signals, which would be marshaled by {@link ProtectedSignalsArgument}, and
+     * then invokes the buyer provided encoding logic. The script marshals the Uint8Array returned
+     * by encodeSignals as HEX string and converts it into the byte[] returned by this method.
      *
      * @param encodingLogic The buyer provided encoding logic
      * @param rawSignals The signals fetched from buyer delegation
@@ -93,24 +98,37 @@ public final class SignalsScriptEngine {
             @NonNull String encodingLogic,
             @NonNull Map<String, List<ProtectedSignal>> rawSignals,
             int maxSize,
-            @NonNull EncodingExecutionLogHelper logHelper)
+            @NonNull EncodingExecutionLogHelper logHelper,
+            ProtectedSignalsArgument protectedSignalsArgument)
             throws IllegalStateException {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.ENCODE_SIGNALS);
 
         logHelper.startClock();
         if (rawSignals.isEmpty()) {
             logHelper.setStatus(JS_RUN_STATUS_OTHER_FAILURE);
             logHelper.finish();
+            Tracing.endAsyncSection(Tracing.ENCODE_SIGNALS, traceCookie);
             return Futures.immediateFuture(new byte[0]);
         }
 
         String combinedDriverAndEncodingLogic = getCombinedDriverAndEncodingLogic(encodingLogic);
         ImmutableList<JSScriptArgument> args;
         try {
-            args = getArgumentsFromRawSignalsAndMaxSize(rawSignals, maxSize);
+            Trace.beginSection(Tracing.ENCODE_SIGNALS + ":convert signals to JS");
+            args =
+                    protectedSignalsArgument.getArgumentsFromRawSignalsAndMaxSize(
+                            rawSignals, maxSize);
         } catch (JSONException e) {
             logHelper.setStatus(JS_RUN_STATUS_OTHER_FAILURE);
             logHelper.finish();
-            throw new IllegalStateException("Exception processing JSON version of signals");
+            Tracing.endAsyncSection(Tracing.ENCODE_SIGNALS, traceCookie);
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_PROCESSING_JSON_VERSION_OF_SIGNALS_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
+            throw new IllegalStateException("Exception processing JSON version of signals", e);
+        } finally {
+            Trace.endSection();
         }
 
         return FluentFuture.from(
@@ -119,28 +137,41 @@ public final class SignalsScriptEngine {
                                 args,
                                 ENCODE_SIGNALS_DRIVER_FUNCTION_NAME,
                                 buildIsolateSettings(
-                                        mEnforceMaxHeapSizeFeatureSupplier,
                                         mMaxHeapSizeBytesSupplier,
                                         mIsolateConsoleMessageInLogsEnabled),
                                 mRetryStrategy))
                 .transform(
-                        encodingResult -> handleEncodingOutput(encodingResult, logHelper),
+                        encodingResult -> {
+                            byte[] result = handleEncodingOutput(encodingResult, logHelper);
+                            Tracing.endAsyncSection(Tracing.ENCODE_SIGNALS, traceCookie);
+                            return result;
+                        },
                         mExecutor);
     }
 
     @VisibleForTesting
     byte[] handleEncodingOutput(String encodingScriptResult, EncodingExecutionLogHelper logHelper)
             throws IllegalStateException {
-
         if (encodingScriptResult == null || encodingScriptResult.isEmpty()) {
             logHelper.setStatus(JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR);
             logHelper.finish();
+            if (encodingScriptResult == null) {
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NULL_ENCODING_SCRIPT_RESULT,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
+            } else if (encodingScriptResult.isEmpty()) {
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_EMPTY_SCRIPT_RESULT,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
+            }
             throw new IllegalStateException(
                     "The encoding script either doesn't contain the required function or the"
                             + " function returned null");
         }
 
         try {
+            Trace.beginSection(Tracing.CONVERT_JS_OUTPUT_TO_BINARY);
+
             JSONObject jsonResult = new JSONObject(encodingScriptResult);
             int status = jsonResult.getInt(STATUS_FIELD_NAME);
             String result = jsonResult.getString(RESULTS_FIELD_NAME);
@@ -150,6 +181,9 @@ public final class SignalsScriptEngine {
                 sLogger.v(errorMsg);
                 logHelper.setStatus(JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT);
                 logHelper.finish();
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_JS_EXECUTION_STATUS_UNSUCCESSFUL,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
                 throw new IllegalStateException(errorMsg);
             }
 
@@ -158,13 +192,23 @@ public final class SignalsScriptEngine {
             } catch (IllegalArgumentException e) {
                 logHelper.setStatus(JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR);
                 logHelper.finish();
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_MALFORMED_ENCODED_PAYLOAD,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
                 throw new IllegalStateException("Malformed encoded payload.", e);
             }
         } catch (JSONException e) {
             logHelper.setStatus(JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR);
             logHelper.finish();
             sLogger.e("Could not extract the Encoded Payload result");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_PROCESS_ENCODED_PAYLOAD_RESULT_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
             throw new IllegalStateException("Exception processing result from encoding");
+        } finally {
+            Trace.endSection();
         }
     }
 
@@ -189,11 +233,9 @@ public final class SignalsScriptEngine {
     }
 
     private static IsolateSettings buildIsolateSettings(
-            Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
             Supplier<Long> maxHeapSizeBytesSupplier,
             Supplier<Boolean> isolateConsoleMessageInLogsEnabled) {
         return IsolateSettings.builder()
-                .setEnforceMaxHeapSizeFeature(enforceMaxHeapSizeFeatureSupplier.get())
                 .setMaxHeapSizeBytes(maxHeapSizeBytesSupplier.get())
                 .setIsolateConsoleMessageInLogsEnabled(isolateConsoleMessageInLogsEnabled.get())
                 .build();

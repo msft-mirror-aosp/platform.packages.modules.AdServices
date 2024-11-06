@@ -113,7 +113,7 @@ public class BackgroundFetchJobService extends JobService {
         LoggerFactory.getFledgeLogger()
                 .d("Starting FLEDGE background fetch job at %s", jobStartTime.toString());
 
-        BackgroundFetchWorker.getInstance(this)
+        BackgroundFetchWorker.getInstance()
                 .runBackgroundFetch()
                 .addCallback(
                         new FutureCallback<Void>() {
@@ -169,18 +169,6 @@ public class BackgroundFetchJobService extends JobService {
                         },
                         AdServicesExecutors.getLightWeightExecutor());
 
-        // Reschedule jobs with SPE if it's enabled. Note scheduled jobs by this
-        // BackgroundFetchJobService will be cancelled for the same job ID.
-        //
-        // Also for a job with Flex Period, it will NOT execute immediately after rescheduling it.
-        // Reschedule it here to let the execution complete and the next cycle will execute with
-        // the BackgroundFetchJob.schedule().
-        if (flags.getSpeOnBackgroundFetchJobEnabled()) {
-            LoggerFactory.getFledgeLogger()
-                    .d("SPE is enabled. Reschedule BackgroundFetchJobService with SPE framework.");
-            BackgroundFetchJob.schedule(flags);
-        }
-
         return true;
     }
 
@@ -203,7 +191,7 @@ public class BackgroundFetchJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LoggerFactory.getFledgeLogger().d("BackgroundFetchJobService.onStopJob");
-        BackgroundFetchWorker.getInstance(this).stopWork();
+        BackgroundFetchWorker.getInstance().stopWork();
 
         boolean shouldRetry = true;
 

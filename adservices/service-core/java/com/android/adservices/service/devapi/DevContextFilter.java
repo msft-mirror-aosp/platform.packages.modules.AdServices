@@ -30,6 +30,7 @@ import com.android.adservices.service.common.compat.BuildCompatUtils;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -37,12 +38,28 @@ import java.util.Objects;
  * API.
  */
 public class DevContextFilter {
+
+    @VisibleForTesting
+    static final String PACKAGE_NAME_FOR_DISABLED_DEVELOPER_MODE_TEMPLATE =
+            "dev.context.for.app.with.uid_%d.when.developer_mode.is.off";
+
+    @VisibleForTesting
+    static final String PACKAGE_NAME_WHEN_LOOKUP_FAILED_TEMPLATE =
+            "dev.context.for.unknown.app.with.uid_%d";
+
     private final ContentResolver mContentResolver;
     private final AppPackageNameRetriever mAppPackageNameRetriever;
     private final PackageManager mPackageManager;
 
+    /**
+     * Construct a DevContextFilter.
+     *
+     * @param contentResolver The system content resolver to use.
+     * @param packageManager The system package manager to use.
+     * @param appPackageNameRetriever An instance of a class to fetch app package names.
+     */
     @VisibleForTesting
-    DevContextFilter(
+    public DevContextFilter(
             @NonNull ContentResolver contentResolver,
             @NonNull PackageManager packageManager,
             @NonNull AppPackageNameRetriever appPackageNameRetriever) {
@@ -101,31 +118,59 @@ public class DevContextFilter {
      */
     @VisibleForTesting
     public DevContext createDevContext(int callingAppUid) {
+        String callingAppPackage = null;
+        // TODO(b/363472834): Propagate developer mode state from the DB.
+        DevContext.Builder builder = DevContext.builder().setDevSessionActive(false);
+
         if (!isDeveloperMode()) {
-            LogUtil.v("Developer mode is disabled, creating dev context as disabled");
-            return DevContext.createForDevOptionsDisabled();
+            // Since developer mode is off, we don't want to look up the app name; OTOH, we need to
+            // set a non-null package name otherwise tests could fail
+            callingAppPackage =
+                    String.format(
+                            Locale.ENGLISH,
+                            PACKAGE_NAME_FOR_DISABLED_DEVELOPER_MODE_TEMPLATE,
+                            callingAppUid);
+            LogUtil.v(
+                    "createDevContext(%d): developer mode is disabled, creating DevContext as"
+                            + " disabled and using package name %s",
+                    callingAppUid, callingAppPackage);
+            return builder.setCallingAppPackageName(callingAppPackage)
+                    .setDeviceDevOptionsEnabled(false)
+                    .build();
         }
 
         try {
-            String callingAppPackage =
-                    mAppPackageNameRetriever.getAppPackageNameForUid(callingAppUid);
-            if (!isDebuggable(callingAppPackage)) {
-                LogUtil.v("Not debuggable, creating dev context as disabled");
-                return DevContext.createForDevOptionsDisabled();
-            }
-
-            LogUtil.v("Creating Dev Context for calling app with package " + callingAppPackage);
-            return DevContext.builder()
-                    .setDevOptionsEnabled(true)
-                    .setCallingAppPackageName(callingAppPackage)
-                    .build();
+            callingAppPackage = mAppPackageNameRetriever.getAppPackageNameForUid(callingAppUid);
         } catch (IllegalArgumentException e) {
+            callingAppPackage =
+                    String.format(
+                            Locale.ENGLISH,
+                            PACKAGE_NAME_WHEN_LOOKUP_FAILED_TEMPLATE,
+                            callingAppUid);
             LogUtil.w(
-                    "Unable to retrieve the package name for UID %d. Creating a DevContext with "
-                            + "developer options disabled.",
-                    callingAppUid);
-            return DevContext.createForDevOptionsDisabled();
+                    e,
+                    "Unable to retrieve the package name for UID %d - should NOT happen on"
+                        + " production, just in unit tests. Creating a DevContext with developer"
+                        + " options disabled and using package name %s.",
+                    callingAppUid,
+                    callingAppPackage);
+            return builder.setCallingAppPackageName(callingAppPackage)
+                    .setDeviceDevOptionsEnabled(false)
+                    .build();
         }
+        builder.setCallingAppPackageName(callingAppPackage);
+        if (!isDebuggable(callingAppPackage)) {
+            LogUtil.v(
+                    "createDevContext(%d): app %s not debuggable, creating DevContext as disabled",
+                    callingAppUid, callingAppPackage);
+            builder.setDeviceDevOptionsEnabled(false);
+        } else {
+            LogUtil.v(
+                    "createDevContext(%d): creating DevContext for calling app with package %s",
+                    callingAppUid, callingAppPackage);
+            builder.setDeviceDevOptionsEnabled(true);
+        }
+        return builder.build();
     }
 
     /**

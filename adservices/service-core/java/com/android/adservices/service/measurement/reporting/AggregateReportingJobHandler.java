@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.measurement.reporting.ReportingStatus.FailureStatus;
+import static com.android.adservices.service.measurement.reporting.ReportingStatus.UploadStatus;
+import static com.android.adservices.service.measurement.util.Time.roundDownToDay;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_ENCRYPTION_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR;
@@ -23,7 +26,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MESUREMENT_REPORTS_UPLOADED;
 
-import android.adservices.common.AdServicesStatusUtils;
+import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
 import android.util.Pair;
@@ -35,13 +38,18 @@ import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.exception.CryptoException;
+import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.KeyValueData;
+import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.util.Applications;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementReportsStats;
 import com.android.internal.annotations.VisibleForTesting;
+
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -59,16 +67,42 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class AggregateReportingJobHandler {
+    private static final int MAX_HTTP_SUCCESS_CODE = 299;
+
+    /** {@link Uri} where attribution-success aggregate reports are sent with a delay. */
+    @VisibleForTesting
+    public static final String AGGREGATE_ATTRIBUTION_REPORT_URI_PATH =
+            ".well-known/attribution-reporting/report-aggregate-attribution";
+
+    /**
+     * {@link Uri} where debug attribution-success aggregate reports are sent, which are essentially
+     * a copy of regular trigger attribution aggregate reports, but sent immediately.
+     */
+    @VisibleForTesting
+    public static final String DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH =
+            ".well-known/attribution-reporting/debug/report-aggregate-attribution";
+
+    /**
+     * {@link Uri} where registration/attribution error related aggregate debug reports are sent
+     * that consume from source level L1 budget.
+     */
+    @VisibleForTesting
+    public static final String AGGREGATE_DEBUG_REPORT_URI_PATH =
+            ".well-known/attribution-reporting/debug/report-aggregate-debug";
+
+    /** "0" is the convention for indicating an excluded source registration time. */
+    public static final String EXCLUDED_SOURCE_REGISTRATION_TIME = "0";
 
     private final DatastoreManager mDatastoreManager;
     private final AggregateEncryptionKeyManager mAggregateEncryptionKeyManager;
     private boolean mIsDebugInstance;
     private final Flags mFlags;
-    private ReportingStatus.ReportType mReportType;
-    private ReportingStatus.UploadMethod mUploadMethod;
+    private final ReportingStatus.ReportType mReportType;
+    private final ReportingStatus.UploadMethod mUploadMethod;
     private final AdServicesLogger mLogger;
 
     private final Context mContext;
+    private final AndroidTimeSource mTimeSource;
 
     AggregateReportingJobHandler(
             DatastoreManager datastoreManager,
@@ -77,7 +111,8 @@ public class AggregateReportingJobHandler {
             AdServicesLogger logger,
             ReportingStatus.ReportType reportType,
             ReportingStatus.UploadMethod uploadMethod,
-            Context context) {
+            Context context,
+            AndroidTimeSource timeSource) {
         mDatastoreManager = datastoreManager;
         mAggregateEncryptionKeyManager = aggregateEncryptionKeyManager;
         mFlags = flags;
@@ -85,6 +120,7 @@ public class AggregateReportingJobHandler {
         mReportType = reportType;
         mUploadMethod = uploadMethod;
         mContext = context;
+        mTimeSource = timeSource;
     }
 
     @VisibleForTesting
@@ -93,7 +129,8 @@ public class AggregateReportingJobHandler {
             AggregateEncryptionKeyManager aggregateEncryptionKeyManager,
             Flags flags,
             AdServicesLogger logger,
-            Context context) {
+            Context context,
+            AndroidTimeSource timeSource) {
         this(
                 datastoreManager,
                 aggregateEncryptionKeyManager,
@@ -101,7 +138,8 @@ public class AggregateReportingJobHandler {
                 logger,
                 ReportingStatus.ReportType.UNKNOWN,
                 ReportingStatus.UploadMethod.UNKNOWN,
-                context);
+                context,
+                timeSource);
     }
 
     /**
@@ -136,7 +174,7 @@ public class AggregateReportingJobHandler {
                                         windowStartTime, windowEndTime);
                             }
                         });
-        if (!pendingAggregateReportsInWindowOpt.isPresent()) {
+        if (pendingAggregateReportsInWindowOpt.isEmpty()) {
             // Failure during aggregate report retrieval
             return true;
         }
@@ -168,13 +206,9 @@ public class AggregateReportingJobHandler {
                     reportingStatus.setReportType(mReportType);
                     reportingStatus.setUploadMethod(mUploadMethod);
                     final String aggregateReportId = reportIds.get(i);
-                    @AdServicesStatusUtils.StatusCode
-                    int result = performReport(aggregateReportId, keys.get(i), reportingStatus);
+                    performReport(aggregateReportId, keys.get(i), reportingStatus);
 
-                    if (result == AdServicesStatusUtils.STATUS_SUCCESS) {
-                        reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.SUCCESS);
-                    } else {
-                        reportingStatus.setUploadStatus(ReportingStatus.UploadStatus.FAILURE);
+                    if (reportingStatus.getUploadStatus() == UploadStatus.FAILURE) {
                         mDatastoreManager.runInTransaction(
                                 (dao) -> {
                                     int retryCount =
@@ -188,8 +222,6 @@ public class AggregateReportingJobHandler {
                                     reportingStatus.setRetryCount(retryCount);
                                 });
                     }
-                    logReportingStats(reportingStatus);
-
                 }
             } else {
                 LoggerFactory.getMeasurementLogger()
@@ -224,82 +256,133 @@ public class AggregateReportingJobHandler {
      *
      * @param aggregateReportId for the datastore id of the {@link AggregateReport}
      * @param key used for encrypting report payload
-     * @return success
      */
-    @AdServicesStatusUtils.StatusCode
-    synchronized int performReport(
+    synchronized void performReport(
             String aggregateReportId, AggregateEncryptionKey key, ReportingStatus reportingStatus) {
+        String enrollmentId = null;
         Optional<AggregateReport> aggregateReportOpt =
                 mDatastoreManager.runInTransactionWithResult((dao)
                         -> dao.getAggregateReport(aggregateReportId));
-        if (!aggregateReportOpt.isPresent()) {
+        if (aggregateReportOpt.isEmpty()) {
             LoggerFactory.getMeasurementLogger().d("Aggregate report not found");
-            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_FOUND);
-            return AdServicesStatusUtils.STATUS_IO_ERROR;
+            setAndLogReportingStatus(
+                    reportingStatus,
+                    UploadStatus.FAILURE,
+                    FailureStatus.REPORT_NOT_FOUND,
+                    enrollmentId);
+            return;
         }
         AggregateReport aggregateReport = aggregateReportOpt.get();
+        enrollmentId = aggregateReport.getEnrollmentId();
         reportingStatus.setReportingDelay(
-                System.currentTimeMillis() - aggregateReport.getScheduledReportTime());
+                mTimeSource.currentTimeMillis() - aggregateReport.getScheduledReportTime());
         reportingStatus.setSourceRegistrant(getAppPackageName(aggregateReport));
         if (mIsDebugInstance
                 && aggregateReport.getDebugReportStatus()
                         != AggregateReport.DebugReportStatus.PENDING) {
             LoggerFactory.getMeasurementLogger().d("Debugging status is not pending");
-            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_PENDING);
-            return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+            setAndLogReportingStatus(
+                    reportingStatus,
+                    UploadStatus.FAILURE,
+                    FailureStatus.REPORT_NOT_PENDING,
+                    enrollmentId);
+            return;
         }
+
         if (!mIsDebugInstance && aggregateReport.getStatus() != AggregateReport.Status.PENDING) {
-            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.REPORT_NOT_PENDING);
-            return AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+            setAndLogReportingStatus(
+                    reportingStatus,
+                    UploadStatus.FAILURE,
+                    FailureStatus.REPORT_NOT_PENDING,
+                    enrollmentId);
+            return;
         }
+
+        // Aggregate Report on device for more than minimum lifespan
+        if (mFlags.getMeasurementEnableMinReportLifespanForUninstall()
+                && aggregateReportCreatedBeforeLifespan(aggregateReport.getTriggerTime())
+                && (!anyPublisherAppInstalled(aggregateReport)
+                        || !anyTriggerDestinationAppInstalled(aggregateReport))) {
+            mDatastoreManager.runInTransaction(dao -> dao.deleteAggregateReport(aggregateReport));
+            setAndLogReportingStatus(
+                    reportingStatus,
+                    UploadStatus.FAILURE,
+                    FailureStatus.APP_UNINSTALLED_OR_OUTSIDE_WINDOW,
+                    enrollmentId);
+            return;
+        }
+
         try {
             Uri reportingOrigin = aggregateReport.getRegistrationOrigin();
             JSONObject aggregateReportJsonBody =
                     createReportJsonPayload(aggregateReport, reportingOrigin, key);
-            int returnCode = makeHttpPostRequest(reportingOrigin, aggregateReportJsonBody);
-            if (returnCode >= HttpURLConnection.HTTP_OK
-                    && returnCode <= 299) {
-                boolean success =
-                        mDatastoreManager.runInTransaction(
-                                (dao) -> {
-                                    if (mIsDebugInstance) {
-                                        dao.markAggregateDebugReportDelivered(aggregateReportId);
-                                    } else {
-                                        dao.markAggregateReportStatus(
-                                                aggregateReportId,
-                                                AggregateReport.Status.DELIVERED);
-                                    }
-                                    if (mFlags.getMeasurementEnableReinstallReattribution()) {
-                                        updateAppReportHistory(aggregateReport, dao);
-                                    }
-                                });
-
-                if (success) {
-                    return AdServicesStatusUtils.STATUS_SUCCESS;
-                } else {
-                    reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.DATASTORE);
-                    return AdServicesStatusUtils.STATUS_IO_ERROR;
-                }
-            } else {
-                reportingStatus.setFailureStatus(
-                        ReportingStatus.FailureStatus.UNSUCCESSFUL_HTTP_RESPONSE_CODE);
-                return AdServicesStatusUtils.STATUS_IO_ERROR;
+            Boolean triggerDebugHeaderAvailable = null;
+            if (mFlags.getMeasurementEnableTriggerDebugSignal()) {
+                Optional<Boolean> hasTriggerDebugSignal =
+                        mDatastoreManager.runInTransactionWithResult(
+                                (dao) -> getTriggerDebugAvailability(aggregateReport, dao));
+                triggerDebugHeaderAvailable = hasTriggerDebugSignal.orElse(null);
             }
+
+            int returnCode =
+                    makeHttpPostRequest(
+                            reportingOrigin,
+                            aggregateReportJsonBody,
+                            triggerDebugHeaderAvailable,
+                            aggregateReport.getApi());
+
+            // Code outside [200, 299] is a failure according to HTTP protocol.
+            if (returnCode < HttpURLConnection.HTTP_OK || returnCode > MAX_HTTP_SUCCESS_CODE) {
+                setAndLogReportingStatus(
+                        reportingStatus,
+                        UploadStatus.FAILURE,
+                        FailureStatus.UNSUCCESSFUL_HTTP_RESPONSE_CODE,
+                        enrollmentId);
+                return;
+            }
+
+            boolean success =
+                    mDatastoreManager.runInTransaction(
+                            (dao) -> {
+                                if (mIsDebugInstance) {
+                                    dao.markAggregateDebugReportDelivered(aggregateReportId);
+                                } else {
+                                    dao.markAggregateReportStatus(
+                                            aggregateReportId, AggregateReport.Status.DELIVERED);
+                                }
+                                if (mFlags.getMeasurementEnableReinstallReattribution()) {
+                                    updateAppReportHistory(aggregateReport, dao);
+                                }
+                            });
+            if (!success) {
+                setAndLogReportingStatus(
+                        reportingStatus,
+                        UploadStatus.FAILURE,
+                        FailureStatus.DATASTORE,
+                        enrollmentId);
+                return;
+            }
+
+            setAndLogReportingStatus(
+                    reportingStatus, UploadStatus.SUCCESS, FailureStatus.UNKNOWN, enrollmentId);
+
         } catch (IOException e) {
             LoggerFactory.getMeasurementLogger()
                     .d(e, "Network error occurred when attempting to deliver aggregate report.");
-            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.NETWORK);
-            // TODO(b/298330312): Change to defined error codes
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
-            return AdServicesStatusUtils.STATUS_IO_ERROR;
+            setAndLogReportingStatus(
+                    reportingStatus, UploadStatus.FAILURE, FailureStatus.NETWORK, enrollmentId);
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
                     .d(e, "Serialization error occurred at aggregate report delivery.");
-            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.SERIALIZATION_ERROR);
-            // TODO(b/298330312): Change to defined error codes
+            setAndLogReportingStatus(
+                    reportingStatus,
+                    UploadStatus.FAILURE,
+                    FailureStatus.SERIALIZATION_ERROR,
+                    enrollmentId);
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR,
@@ -320,11 +403,13 @@ public class AggregateReportingJobHandler {
                 throw new IllegalStateException(
                         "Serialization error occurred at aggregate report delivery", e);
             }
-            return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } catch (CryptoException e) {
             LoggerFactory.getMeasurementLogger().e(e, e.toString());
-            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.ENCRYPTION_ERROR);
-            // TODO(b/298330312): Change to defined error codes
+            setAndLogReportingStatus(
+                    reportingStatus,
+                    UploadStatus.FAILURE,
+                    FailureStatus.ENCRYPTION_ERROR,
+                    enrollmentId);
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_ENCRYPTION_ERROR,
@@ -334,11 +419,10 @@ public class AggregateReportingJobHandler {
                             < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
                 throw e;
             }
-            return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         } catch (Exception e) {
             LoggerFactory.getMeasurementLogger().e(e, e.toString());
-            reportingStatus.setFailureStatus(ReportingStatus.FailureStatus.UNKNOWN);
-            // TODO(b/298330312): Change to defined error codes
+            setAndLogReportingStatus(
+                    reportingStatus, UploadStatus.FAILURE, FailureStatus.UNKNOWN, enrollmentId);
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR,
@@ -348,7 +432,6 @@ public class AggregateReportingJobHandler {
                             < mFlags.getMeasurementThrowUnknownExceptionSamplingRate()) {
                 throw e;
             }
-            return AdServicesStatusUtils.STATUS_UNKNOWN_ERROR;
         }
     }
 
@@ -356,7 +439,7 @@ public class AggregateReportingJobHandler {
             throws DatastoreException {
         Pair<List<Uri>, List<Uri>> destinations =
                 dao.getSourceDestinations(aggregateReport.getSourceId());
-        List<Uri> appDestinations = destinations.second;
+        List<Uri> appDestinations = destinations.first;
         if (appDestinations.isEmpty()
                 || !appDestinations.get(0).equals(aggregateReport.getAttributionDestination())
                 || aggregateReport.isFakeReport()) {
@@ -365,28 +448,39 @@ public class AggregateReportingJobHandler {
         dao.insertOrUpdateAppReportHistory(
                 appDestinations.get(0),
                 aggregateReport.getRegistrationOrigin(),
-                System.currentTimeMillis());
+                aggregateReport.getScheduledReportTime());
+    }
+
+    private boolean aggregateReportCreatedBeforeLifespan(long triggerTime) {
+        return triggerTime
+                        + TimeUnit.SECONDS.toMillis(
+                                mFlags.getMeasurementMinReportLifespanForUninstallSeconds())
+                < mTimeSource.currentTimeMillis();
+    }
+
+    private boolean anyTriggerDestinationAppInstalled(AggregateReport aggregateReport) {
+        return Applications.anyAppsInstalled(
+                mContext, List.of(aggregateReport.getAttributionDestination()));
+    }
+
+    private boolean anyPublisherAppInstalled(AggregateReport aggregateReport) {
+        return Applications.anyAppsInstalled(mContext, List.of(aggregateReport.getPublisher()));
     }
 
     /** Creates the JSON payload for the POST request from the AggregateReport. */
     @VisibleForTesting
     JSONObject createReportJsonPayload(AggregateReport aggregateReport, Uri reportingOrigin,
             AggregateEncryptionKey key) throws JSONException {
-        String sourceRegistrationTimeStr =
-                aggregateReport.getSourceRegistrationTime() == null
-                        ? null
-                        : String.valueOf(
-                                TimeUnit.MILLISECONDS.toSeconds(
-                                        aggregateReport.getSourceRegistrationTime()));
         return new AggregateReportBody.Builder()
                 .setReportId(aggregateReport.getId())
                 .setAttributionDestination(aggregateReport.getAttributionDestination().toString())
-                .setSourceRegistrationTime(sourceRegistrationTimeStr)
+                .setSourceRegistrationTime(getSourceRegistrationTimeStr(aggregateReport))
                 .setScheduledReportTime(
                         String.valueOf(
                                 TimeUnit.MILLISECONDS.toSeconds(
                                         aggregateReport.getScheduledReportTime())))
                 .setApiVersion(aggregateReport.getApiVersion())
+                .setApi(aggregateReport.getApi())
                 .setReportingOrigin(reportingOrigin.toString())
                 .setDebugCleartextPayload(aggregateReport.getDebugCleartextPayload())
                 .setSourceDebugKey(aggregateReport.getSourceDebugKey())
@@ -402,18 +496,80 @@ public class AggregateReportingJobHandler {
                 .toJson(key, mFlags);
     }
 
-    /**
-     * Makes the POST request to the reporting URL.
-     */
-    @VisibleForTesting
-    public int makeHttpPostRequest(Uri adTechDomain, JSONObject aggregateReportBody)
-            throws IOException {
-        AggregateReportSender aggregateReportSender =
-                new AggregateReportSender(mIsDebugInstance, mContext);
-        return aggregateReportSender.sendReport(adTechDomain, aggregateReportBody);
+    private String getSourceRegistrationTimeStr(AggregateReport aggregateReport) {
+        if (aggregateReport.getSourceRegistrationTime() == null) {
+            if (AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API.equals(
+                    aggregateReport.getApi())) {
+                return null;
+            }
+            if (mFlags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled()) {
+                // A null source registration time implies the source registration time was not set.
+                // We normally include this in the JSON serialization anyway, but when the feature
+                // flag for making source registration time optional is enabled, send a value
+                // indicating exclusion.
+                return EXCLUDED_SOURCE_REGISTRATION_TIME;
+            }
+            return null;
+        }
+
+        return String.valueOf(
+                TimeUnit.MILLISECONDS.toSeconds(
+                        roundDownToDay(aggregateReport.getSourceRegistrationTime())));
     }
 
-    private void logReportingStats(ReportingStatus reportingStatus) {
+    /** Makes the POST request to the reporting URL. */
+    @VisibleForTesting
+    public int makeHttpPostRequest(
+            Uri adTechDomain,
+            JSONObject aggregateReportBody,
+            @Nullable Boolean hasTriggerDebug,
+            String api)
+            throws IOException {
+        AggregateReportSender aggregateReportSender =
+                new AggregateReportSender(mContext, getReportUriPath(api));
+        Map<String, String> headers =
+                hasTriggerDebug == null
+                        ? null
+                        : Map.of("Trigger-Debugging-Available", hasTriggerDebug.toString());
+        return aggregateReportSender.sendReportWithHeaders(
+                adTechDomain, aggregateReportBody, headers);
+    }
+
+    @VisibleForTesting
+    String getReportUriPath(String api) {
+        if (!mIsDebugInstance) {
+            return AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
+        }
+
+        if (AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API.equals(api)) {
+            return AGGREGATE_DEBUG_REPORT_URI_PATH;
+        }
+
+        return DEBUG_AGGREGATE_ATTRIBUTION_REPORT_URI_PATH;
+    }
+
+    @Nullable
+    private Boolean getTriggerDebugAvailability(
+            AggregateReport aggregateReport, IMeasurementDao dao) throws DatastoreException {
+        Trigger trigger = dao.getTrigger(aggregateReport.getTriggerId());
+        // Only set the header when the conversion happens on web.
+        if (trigger.getDestinationType() == EventSurfaceType.APP) {
+            return null;
+        }
+        return trigger.hasArDebugPermission();
+    }
+
+    private void setAndLogReportingStatus(
+            ReportingStatus reportingStatus,
+            ReportingStatus.UploadStatus uploadStatus,
+            ReportingStatus.FailureStatus failureStatus,
+            String enrollmentId) {
+        reportingStatus.setFailureStatus(failureStatus);
+        reportingStatus.setUploadStatus(uploadStatus);
+        logReportingStats(reportingStatus, enrollmentId);
+    }
+
+    private void logReportingStats(ReportingStatus reportingStatus, String enrollmentId) {
         mLogger.logMeasurementReports(
                 new MeasurementReportsStats.Builder()
                         .setCode(AD_SERVICES_MESUREMENT_REPORTS_UPLOADED)
@@ -424,6 +580,7 @@ public class AggregateReportingJobHandler {
                         .setReportingDelay(reportingStatus.getReportingDelay())
                         .setSourceRegistrant(reportingStatus.getSourceRegistrant())
                         .setRetryCount(reportingStatus.getRetryCount())
-                        .build());
+                        .build(),
+                enrollmentId);
     }
 }

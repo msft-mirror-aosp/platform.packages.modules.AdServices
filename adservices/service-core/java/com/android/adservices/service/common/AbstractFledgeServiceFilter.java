@@ -93,6 +93,22 @@ public abstract class AbstractFledgeServiceFilter {
     }
 
     /**
+     * Asserts that the enrollment job should be scheduled. This will happen if the UX consent
+     * notification was displayed, or the user opted into one of the APIs.
+     *
+     * @throws ConsentManager.RevokedConsentException if the enrollment job should not be scheduled
+     */
+    protected void assertEnrollmentShouldBeScheduled(
+            boolean enforceConsent,
+            boolean enforceNotificationShown,
+            String callerPackageName,
+            int apiName)
+            throws ConsentManager.RevokedConsentException {
+        mFledgeConsentFilter.assertEnrollmentShouldBeScheduled(
+                enforceConsent, enforceNotificationShown, callerPackageName, apiName);
+    }
+
+    /**
      * Asserts that the caller has the appropriate foreground status.
      *
      * @throws AppImportanceFilter.WrongCallingApplicationStateException if the foreground check
@@ -155,7 +171,7 @@ public abstract class AbstractFledgeServiceFilter {
         Uri adTechUri = Uri.parse("https://" + adTech.toString());
         boolean isLocalhostAddress =
                 WebAddresses.isLocalhost(adTechUri) || WebAddresses.isLocalhostIp(adTechUri);
-        boolean isDeveloperMode = devContext.getDevOptionsEnabled();
+        boolean isDeveloperMode = devContext.getDeviceDevOptionsEnabled();
         if (isLocalhostAddress && isDeveloperMode) {
             // Skip check for localhost and 127.0.0.1 addresses for debuggable CTS.
             return;
@@ -201,6 +217,7 @@ public abstract class AbstractFledgeServiceFilter {
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
      * @param enforceConsent whether to enforce a consent check
+     * @param enforceNotificationShown whether to enforce a UX notification check
      * @throws FilterException if any filter assertion fails and wraps the exception thrown by the
      *     failing filter
      */
@@ -209,6 +226,7 @@ public abstract class AbstractFledgeServiceFilter {
             @NonNull String callerPackageName,
             boolean enforceForeground,
             boolean enforceConsent,
+            boolean enforceNotificationShown,
             int callerUid,
             int apiName,
             @NonNull Throttler.ApiKey apiKey,

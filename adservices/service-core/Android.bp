@@ -178,6 +178,7 @@ android_library {
         "adservices-proto-lite",
         "adservices-grpclib-lite",
         "adservices-shared-common",
+        "adservices-shared-datastore",
         "adservices-shared-error-logging",
         "adservices-shared-spe",
         "adservices-shared-storage",
@@ -192,7 +193,6 @@ android_library {
     lint: {
         extra_check_modules: ["AdServicesProdLintChecker"],
         baseline_filename: "lint-baseline.xml",
-
     },
 }
 

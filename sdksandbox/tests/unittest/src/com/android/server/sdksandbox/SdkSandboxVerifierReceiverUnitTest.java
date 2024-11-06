@@ -16,7 +16,7 @@
 
 package com.android.server.sdksandbox;
 
-import static com.android.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_DEX_VERIFIER;
+import static com.android.sdksandbox.flags.Flags.FLAG_SDK_SANDBOX_VERIFY_SDK_DEX_FILES;
 
 import android.Manifest;
 import android.content.Context;
@@ -35,6 +35,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSessionBuilder;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.sdksandbox.verifier.SdkDexVerifier;
 
 import org.junit.Before;
@@ -49,7 +50,7 @@ import java.io.File;
 
 /** Unit tests for {@link SdkSandboxVerifierReceiver}. */
 @RunWith(JUnit4.class)
-public class SdkSandboxVerifierReceiverUnitTest {
+public class SdkSandboxVerifierReceiverUnitTest extends DeviceSupportedBaseTest {
 
     private static final Intent VERIFY_INTENT =
             new Intent().setData(Uri.fromFile(new File("sdk.apk")));
@@ -62,7 +63,7 @@ public class SdkSandboxVerifierReceiverUnitTest {
     private SdkDexVerifier mSpyDexVerifier;
     private Handler mSpyHandler;
 
-    @Rule
+    @Rule(order = 0)
     public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     @Before
@@ -91,7 +92,7 @@ public class SdkSandboxVerifierReceiverUnitTest {
     }
 
     @Test
-    @RequiresFlagsEnabled(FLAG_SDK_SANDBOX_DEX_VERIFIER)
+    @RequiresFlagsEnabled(FLAG_SDK_SANDBOX_VERIFY_SDK_DEX_FILES)
     public void verifierBroadcastReceived_startsDexParsing() {
         MockitoSession staticMockSession = null;
         try {
@@ -113,7 +114,7 @@ public class SdkSandboxVerifierReceiverUnitTest {
     }
 
     @Test
-    @RequiresFlagsEnabled(FLAG_SDK_SANDBOX_DEX_VERIFIER)
+    @RequiresFlagsEnabled(FLAG_SDK_SANDBOX_VERIFY_SDK_DEX_FILES)
     public void verifierBroadcastReceived_doesNotStartDexParsing() {
         MockitoSession staticMockSession = null;
         try {

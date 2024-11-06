@@ -78,14 +78,14 @@ public class UxEngineUtil {
     public void startBackgroundTasksUponConsent(
             PrivacySandboxUxCollection ux, Context context, Flags flags) {
         // TODO(b/308520219): Properly start measurement background jobs for U18 users
-            switch (ux) {
-                case GA_UX, BETA_UX -> {
+        switch (ux) {
+            case GA_UX, BETA_UX -> {
                 if (ConsentManager.getInstance().getConsent().isGiven()) {
                     PackageChangedReceiver.enableReceiver(context, flags);
                     BackgroundJobsManager.scheduleAllBackgroundJobs(context);
                 }
             }
-                case U18_UX, RVC_UX -> {
+            case U18_UX -> {
                 if (ConsentManager.getInstance()
                         .getConsent(AdServicesApiType.MEASUREMENTS)
                         .isGiven()) {
@@ -93,6 +93,9 @@ public class UxEngineUtil {
                     // MDD jobs are included and also have U18-specific logic.
                     BackgroundJobsManager.scheduleMeasurementBackgroundJobs(context);
                 }
+            }
+            case UNSUPPORTED_UX -> {
+                // No action
             }
         }
     }

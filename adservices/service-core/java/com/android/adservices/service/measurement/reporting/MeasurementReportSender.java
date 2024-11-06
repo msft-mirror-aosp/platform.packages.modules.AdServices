@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import android.annotation.Nullable;
 import android.content.Context;
 import android.net.Uri;
 
@@ -31,6 +32,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Map;
 
 /**
  * Class to send reports by making a non-credentialed secure HTTP POST request to the reporting
@@ -43,15 +45,16 @@ public abstract class MeasurementReportSender {
         mNetworkConnection = new MeasurementHttpClient(context);
     }
 
-    /**
-     * Sends an event report to the reporting origin.
-     */
-    public int sendReport(Uri adTechDomain, JSONObject reportJson)
+    /** Sends an event report to the reporting origin with headers. */
+    public int sendReportWithHeaders(
+            Uri adTechDomain, JSONObject reportJson, @Nullable Map<String, String> headers)
             throws IOException {
         int returnCode;
         URL reportingFullUrl = createReportingFullUrl(adTechDomain);
-
         HttpURLConnection urlConnection = createHttpUrlConnection(reportingFullUrl);
+        if (headers != null && !headers.isEmpty()) {
+            headers.forEach(urlConnection::setRequestProperty);
+        }
         returnCode = sendReportPostRequest(urlConnection, reportJson);
         return returnCode;
     }

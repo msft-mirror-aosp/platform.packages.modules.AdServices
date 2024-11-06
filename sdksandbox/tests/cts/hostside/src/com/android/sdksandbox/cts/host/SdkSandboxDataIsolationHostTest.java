@@ -17,11 +17,12 @@
 package com.android.sdksandbox.cts.host;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.hosttestutils.AdoptableStorageUtils;
-import android.app.sdksandbox.hosttestutils.DeviceSupportHostUtils;
+import android.app.sdksandbox.hosttestutils.SdkSandboxDeviceSupportedHostRule;
 import android.app.sdksandbox.hosttestutils.SecondaryUserUtils;
 import android.platform.test.annotations.LargeTest;
 
@@ -31,11 +32,16 @@ import com.android.tradefed.testtype.junit4.DeviceTestRunOptions;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(DeviceJUnit4ClassRunner.class)
 public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
+
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedHostRule deviceSupportRule =
+            new SdkSandboxDeviceSupportedHostRule(this);
 
     private static final String APP_PACKAGE = "com.android.sdksandbox.cts.app";
     private static final String APP_APK = "CtsSdkSandboxHostTestApp.apk";
@@ -46,7 +52,6 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
 
     private final SecondaryUserUtils mUserUtils = new SecondaryUserUtils(this);
     private final AdoptableStorageUtils mAdoptableUtils = new AdoptableStorageUtils(this);
-    private final DeviceSupportHostUtils mDeviceSupportUtils = new DeviceSupportHostUtils(this);
 
     /**
      * Runs the given phase of a test by calling into the device. Throws an exception if the test
@@ -71,8 +76,6 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
 
     @Before
     public void setUp() throws Exception {
-        assumeTrue("Device supports SdkSandbox", mDeviceSupportUtils.isSdkSandboxSupported());
-
         // These tests run on system user
         uninstallPackage(APP_PACKAGE);
         uninstallPackage(APP_2_PACKAGE);
@@ -150,9 +153,10 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
             final String uuid = mAdoptableUtils.createNewVolume();
 
             // Move second package to the newly created volume
-            assertSuccess(
+            String result =
                     getDevice()
-                            .executeShellCommand("pm move-package " + APP_2_PACKAGE + " " + uuid));
+                            .executeShellCommand("pm move-package " + APP_2_PACKAGE + " " + uuid);
+            assertWithMessage("Command failed: pm move-package").that(result).startsWith("Success");
 
             runPhase(
                     "testSdkSandboxDataIsolation_CannotVerifyAcrossVolumes",
@@ -160,12 +164,6 @@ public class SdkSandboxDataIsolationHostTest extends BaseHostJUnit4Test {
                     uuid);
         } finally {
             mAdoptableUtils.cleanUpVolume();
-        }
-    }
-
-    private static void assertSuccess(String str) {
-        if (str == null || !str.startsWith("Success")) {
-            throw new AssertionError("Expected success string but found " + str);
         }
     }
 }

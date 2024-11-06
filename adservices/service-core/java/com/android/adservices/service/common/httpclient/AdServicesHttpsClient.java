@@ -183,7 +183,7 @@ public class AdServicesHttpsClient {
         urlConnection.setReadTimeout(mReadTimeoutMs);
         // Setting true explicitly to follow redirects
         Uri uri = Uri.parse(url.toString());
-        if (WebAddresses.isLocalhost(uri) && devContext.getDevOptionsEnabled()) {
+        if (WebAddresses.isLocalhost(uri) && devContext.getDeviceDevOptionsEnabled()) {
             LogUtil.v("Using unsafe HTTPS for url %s", url.toString());
             urlConnection.setSSLSocketFactory(getUnsafeSslSocketFactory());
         } else if (WebAddresses.isLocalhost(uri)) {
@@ -191,7 +191,7 @@ public class AdServicesHttpsClient {
                     String.format(
                             "Using normal HTTPS without unsafe SSL socket factory for a localhost"
                                     + " address, DevOptionsEnabled: %s, CallingPackageName: %s",
-                            devContext.getDevOptionsEnabled(),
+                            devContext.getDeviceDevOptionsEnabled(),
                             devContext.getCallingAppPackageName()));
         }
         urlConnection.setInstanceFollowRedirects(true);
@@ -324,7 +324,7 @@ public class AdServicesHttpsClient {
                                 + " use cache: "
                                 + request.getUseCache()
                                 + " dev context: "
-                                + request.getDevContext().getDevOptionsEnabled());
+                                + request.getDevContext().getDeviceDevOptionsEnabled());
         if (request.getRequestProperties() != null) {
             logBuilder
                     .append(" request properties: ")
@@ -435,12 +435,17 @@ public class AdServicesHttpsClient {
         }
     }
 
-    private Map<String, List<String>> pickRequiredHeaderFields(
+    @VisibleForTesting
+    Map<String, List<String>> pickRequiredHeaderFields(
             Map<String, List<String>> allHeaderFields, ImmutableSet<String> requiredHeaderKeys) {
         HashMap<String, List<String>> result = new HashMap<>();
+        // Using lower case matching as headers are case-insensitive per
+        // https://datatracker.ietf.org/doc/html/rfc2616#section-4.2
+        Map<String, List<String>> lowerCaseHeaders = convertKeysToLowerCase(allHeaderFields);
         for (String headerKey : requiredHeaderKeys) {
-            if (allHeaderFields.containsKey(headerKey)) {
-                List<String> headerValues = new ArrayList<>(allHeaderFields.get(headerKey));
+            List<String> headerValues =
+                    new ArrayList<>(getHeaderValues(lowerCaseHeaders, headerKey));
+            if (!headerValues.isEmpty()) {
                 LogUtil.v(
                         String.format(
                                 "Found header: %s in response headers with value as %s",
@@ -450,6 +455,28 @@ public class AdServicesHttpsClient {
         }
         LogUtil.v("requiredHeaderFields: " + result);
         return result;
+    }
+
+    private List<String> getHeaderValues(
+            Map<String, List<String>> allHeaderFields, String requiredField) {
+        if (Objects.isNull(requiredField)) {
+            return List.of();
+        }
+        List<String> result = allHeaderFields.get(requiredField.toLowerCase());
+        return Objects.nonNull(result) ? result : List.of();
+    }
+
+    public static Map<String, List<String>> convertKeysToLowerCase(
+            Map<String, List<String>> inputMap) {
+        if (inputMap == null) {
+            return null;
+        }
+        Map<String, List<String>> resultMap = new HashMap<>();
+        inputMap.forEach(
+                (key, value) ->
+                        resultMap.put(Objects.nonNull(key) ? key.toLowerCase() : null, value));
+
+        return resultMap;
     }
 
     private AdServicesHttpClientResponse getResultsFromCache(URL url) {
@@ -495,7 +522,7 @@ public class AdServicesHttpsClient {
             throws IOException, AdServicesNetworkException {
         LogUtil.v(
                 "doGetAndReadNothing to: \"%s\", dev context: %s",
-                url.toString(), devContext.getDevOptionsEnabled());
+                url.toString(), devContext.getDeviceDevOptionsEnabled());
         HttpsURLConnection urlConnection;
 
         try {

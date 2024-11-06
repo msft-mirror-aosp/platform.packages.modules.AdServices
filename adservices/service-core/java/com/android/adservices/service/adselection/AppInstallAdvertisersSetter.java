@@ -39,6 +39,7 @@ import com.android.adservices.data.adselection.DBAppInstallPermissions;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AdTechIdentifierValidator;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
@@ -74,6 +75,7 @@ public class AppInstallAdvertisersSetter {
     private final int mCallerUid;
     private DevContext mDevContext;
     @NonNull private final Flags mFlags;
+    private final boolean mEnforceNotificationShown;
 
     public AppInstallAdvertisersSetter(
             @NonNull AppInstallDao appInstallDao,
@@ -100,6 +102,8 @@ public class AppInstallAdvertisersSetter {
         mConsentManager = consentManager;
         mDevContext = devContext;
         mFlags = flags;
+        mEnforceNotificationShown =
+                !BinderFlagReader.readFlag(mFlags::getConsentNotificationDebugMode);
     }
 
     /**
@@ -263,6 +267,7 @@ public class AppInstallAdvertisersSetter {
                 callerPackageName,
                 true,
                 false,
+                mEnforceNotificationShown,
                 mCallerUid,
                 AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS,
                 FLEDGE_API_SET_APP_INSTALL_ADVERTISERS,

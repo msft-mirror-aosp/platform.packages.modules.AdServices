@@ -18,16 +18,11 @@ package android.adservices.rootcts;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
+import com.android.adservices.common.AdServicesCtsTestCase;
 
 import org.testng.annotations.Test;
 
-public class BackgroundJobHelperTest {
-
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
-
+public class BackgroundJobHelperTest extends AdServicesCtsTestCase {
     @Test
     public void testScheduleImmediate_withKnownGoodJobId_smokeTest() throws InterruptedException {
         BackgroundJobHelper backgroundJobHelper = new BackgroundJobHelper(sContext);

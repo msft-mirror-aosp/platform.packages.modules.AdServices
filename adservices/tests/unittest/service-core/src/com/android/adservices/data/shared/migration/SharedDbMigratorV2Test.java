@@ -16,9 +16,9 @@
 
 package com.android.adservices.data.shared.migration;
 
-import static com.android.adservices.data.DbTestUtil.getDbHelperForTest;
+import static com.android.adservices.common.DbTestUtil.getDbHelperForTest;
 
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
 
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
@@ -28,16 +28,13 @@ import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.shared.SharedDbHelper;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-@RunWith(MockitoJUnitRunner.class)
-public class SharedDbMigratorV2Test extends SharedDbMigratorTestBase {
+public final class SharedDbMigratorV2Test extends SharedDbMigratorTestBase {
 
     /**
      * @return shared db target version.
@@ -61,7 +58,7 @@ public class SharedDbMigratorV2Test extends SharedDbMigratorTestBase {
         // Set up
         SharedDbHelper dbHelper =
                 new SharedDbHelper(
-                        sContext, SHARED_DATABASE_NAME_FOR_MIGRATION, 1, getDbHelperForTest());
+                        mContext, SHARED_DATABASE_NAME_FOR_MIGRATION, 1, getDbHelperForTest());
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         Map<String, List<ContentValues>> fakeData = createFakeDataV1();
         MigrationTestHelper.populateDb(db, fakeData);
@@ -70,8 +67,9 @@ public class SharedDbMigratorV2Test extends SharedDbMigratorTestBase {
         getTestSubject().performMigration(db, 1, 2);
 
         // Assertion
-        assertTrue(SharedDbHelper.hasAllTables(db, EnrollmentTables.ENROLLMENT_TABLES));
-        assertTrue(SharedDbHelper.hasAllTables(db, EncryptionKeyTables.ENCRYPTION_KEY_TABLES));
+        assertThat(SharedDbHelper.hasAllTables(db, EnrollmentTables.ENROLLMENT_TABLES)).isTrue();
+        assertThat(SharedDbHelper.hasAllTables(db, EncryptionKeyTables.ENCRYPTION_KEY_TABLES))
+                .isTrue();
         MigrationTestHelper.verifyDataInDb(db, fakeData);
     }
 

@@ -24,30 +24,25 @@ import android.adservices.customaudience.PartialCustomAudience;
 import android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest;
 import android.net.Uri;
 
-import androidx.test.filters.SmallTest;
-
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
-@SmallTest
-public class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUnitTestCase {
-    public static Uri VALID_UPDATE_URI_1 =
+@RequiresSdkLevelAtLeastS
+public final class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUnitTestCase {
+    public static final Uri VALID_UPDATE_URI_1 =
             CustomAudienceFixture.getValidFetchUriByBuyer(CommonFixture.VALID_BUYER_1, "1");
-    public static Duration VALID_DELAY = Duration.ofMinutes(100);
-    public static PartialCustomAudience VALID_PARTIAL_CA =
+    public static final Duration VALID_DELAY = Duration.ofMinutes(100);
+    public static final PartialCustomAudience VALID_PARTIAL_CA =
             new PartialCustomAudience.Builder("fake_ca").build();
-    public static List<PartialCustomAudience> VALID_PARTIAL_CA_LIST = List.of(VALID_PARTIAL_CA);
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+    public static final List<PartialCustomAudience> VALID_PARTIAL_CA_LIST =
+            List.of(VALID_PARTIAL_CA);
 
     @Test
     public void testBuildValidRequest_All_Success() {
@@ -166,7 +161,6 @@ public class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUnitTestC
 
     @Test
     public void testEquals_Same() {
-        EqualsTester et = new EqualsTester(expect);
         ScheduleCustomAudienceUpdateRequest request1 =
                 new ScheduleCustomAudienceUpdateRequest.Builder(
                                 VALID_UPDATE_URI_1, VALID_DELAY, VALID_PARTIAL_CA_LIST)
@@ -177,6 +171,7 @@ public class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUnitTestC
                                 VALID_UPDATE_URI_1, VALID_DELAY, VALID_PARTIAL_CA_LIST)
                         .build();
 
+        EqualsTester et = new EqualsTester(expect);
         et.expectObjectsAreEqual(request2, request1);
     }
 
@@ -197,42 +192,6 @@ public class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUnitTestC
     }
 
     @Test
-    public void testHashCode_Same() {
-        int request1Hash =
-                new ScheduleCustomAudienceUpdateRequest.Builder(
-                                VALID_UPDATE_URI_1, VALID_DELAY, VALID_PARTIAL_CA_LIST)
-                        .setShouldReplacePendingUpdates(true)
-                        .build()
-                        .hashCode();
-
-        int request2Hash =
-                new ScheduleCustomAudienceUpdateRequest.Builder(
-                                VALID_UPDATE_URI_1, VALID_DELAY, VALID_PARTIAL_CA_LIST)
-                        .setShouldReplacePendingUpdates(true)
-                        .build()
-                        .hashCode();
-
-        expect.withMessage("Object hash").that(request1Hash == request2Hash).isTrue();
-    }
-
-    @Test
-    public void testHashCode_Different() {
-        int request1Hash =
-                new ScheduleCustomAudienceUpdateRequest.Builder(
-                                VALID_UPDATE_URI_1, VALID_DELAY, VALID_PARTIAL_CA_LIST)
-                        .build()
-                        .hashCode();
-
-        int request2Hash =
-                new ScheduleCustomAudienceUpdateRequest.Builder(
-                                VALID_UPDATE_URI_1, VALID_DELAY, Collections.emptyList())
-                        .build()
-                        .hashCode();
-
-        expect.withMessage("Object hash").that(request1Hash == request2Hash).isFalse();
-    }
-
-    @Test
     public void testToString() {
         String request =
                 new ScheduleCustomAudienceUpdateRequest.Builder(
@@ -241,19 +200,16 @@ public class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUnitTestC
                         .build()
                         .toString();
 
-        String requestString = request.toString();
         expect.withMessage("toString()")
-                .that(requestString)
+                .that(request)
                 .contains("ScheduleCustomAudienceUpdateRequest");
+        expect.withMessage("toString()").that(request).contains("mUpdateUri=" + VALID_UPDATE_URI_1);
+        expect.withMessage("toString()").that(request).contains("mMinDelay=" + VALID_DELAY);
         expect.withMessage("toString()")
-                .that(requestString)
-                .contains("mUpdateUri=" + VALID_UPDATE_URI_1);
-        expect.withMessage("toString()").that(requestString).contains("mMinDelay=" + VALID_DELAY);
-        expect.withMessage("toString()")
-                .that(requestString)
+                .that(request)
                 .contains("mPartialCustomAudienceList=" + VALID_PARTIAL_CA_LIST);
         expect.withMessage("toString()")
-                .that(requestString)
+                .that(request)
                 .contains("mShouldReplacePendingUpdates=" + true);
     }
 }
