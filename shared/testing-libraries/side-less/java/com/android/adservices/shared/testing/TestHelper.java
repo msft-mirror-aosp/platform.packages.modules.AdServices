@@ -29,10 +29,6 @@ public final class TestHelper {
 
     private static final Logger sLogger = new Logger(DynamicLogger.getInstance(), TestHelper.class);
 
-    // TODO(b/318893752): merge most getAnnotation() methods so the logic is defined in just one
-    // place (in a follow-up CL, so unit tests don't change)
-
-    // TODO(b/318893752): use in other places
     /** Gets the given annotation from the test, its class, or its ancestors. */
     @Nullable
     public static <T extends Annotation> T getAnnotation(
@@ -40,34 +36,34 @@ public final class TestHelper {
         Objects.requireNonNull(test, "test (Description) cannot be null");
         Objects.requireNonNull(annotationClass, "annotationClass cannot be null");
 
-        T annotation = test.getAnnotation(annotationClass);
-        if (annotation != null) {
-            if (VERBOSE) {
-                sLogger.v(
-                        "getAnnotation(%s, %s): returning annotation (%s) from test itself (%s)",
-                        test, annotationClass, annotation, getTestName(test));
-            }
-            return annotation;
+        Function<Annotation, Boolean> filter = a -> annotationClass.isInstance(a);
+
+        // Try from test method first...
+        List<Annotation> annotations = new ArrayList<>();
+        getAnnotations(annotations, test, filter);
+        if (!annotations.isEmpty()) {
+            return annotationClass.cast(annotations.get(0));
         }
-        Class<?> testClass = test.getTestClass();
-        annotation = getAnnotationInternal(testClass, annotationClass);
-        if (VERBOSE) {
-            sLogger.v("getAnnotation(%s, %s): returning %s", test, annotationClass, annotation);
-        }
-        return annotation;
+        // ...then from class hierarchy
+        getAnnotations(annotations, test.getTestClass(), filter);
+        return annotations.isEmpty() ? null : annotationClass.cast(annotations.get(0));
     }
 
     /**
      * Gets the given annotation from the test class, its ancestors, or any of the implemented
      * interface(s).
      */
-    // TODO(b/318893752): use in other places
     @Nullable
     public static <T extends Annotation> T getAnnotation(
             Class<?> testClass, Class<T> annotationClass) {
         Objects.requireNonNull(testClass, "test class cannot be null");
         Objects.requireNonNull(annotationClass, "annotationClass cannot be null");
-        T annotation = getAnnotationInternal(testClass, annotationClass);
+
+        Function<Annotation, Boolean> filter = a -> annotationClass.isInstance(a);
+        List<Annotation> annotations = new ArrayList<>();
+        getAnnotations(annotations, testClass, filter);
+        T annotation = annotations.isEmpty() ? null : annotationClass.cast(annotations.get(0));
+
         if (VERBOSE) {
             sLogger.v(
                     "getAnnotation(%s, %s): returning %s", testClass, annotationClass, annotation);
@@ -75,7 +71,6 @@ public final class TestHelper {
         return annotation;
     }
 
-    // TODO(b/318893752): use in other places
     /** Gets the given annotations from the test, its class, or its ancestors, in this order. */
     public static List<Annotation> getAnnotations(
             Description test, Function<Annotation, Boolean> filter) {
@@ -83,6 +78,17 @@ public final class TestHelper {
         Objects.requireNonNull(filter, "filter cannot be null");
 
         List<Annotation> annotations = new ArrayList<>();
+        getAnnotations(annotations, test, filter);
+        getAnnotations(annotations, test.getTestClass(), filter);
+
+        if (VERBOSE) {
+            sLogger.v("getAnnotations(%s): returning %s", test, annotations);
+        }
+        return annotations;
+    }
+
+    private static void getAnnotations(
+            List<Annotation> annotations, Description test, Function<Annotation, Boolean> filter) {
         for (var annotation : test.getAnnotations()) {
             if (filter.apply(annotation)) {
                 if (VERBOSE) {
@@ -93,15 +99,19 @@ public final class TestHelper {
                 annotations.add(annotation);
             }
         }
+    }
 
-        var testClass = test.getTestClass();
+    private static void getAnnotations(
+            List<Annotation> annotations,
+            Class<?> testClass,
+            Function<Annotation, Boolean> filter) {
         while (testClass != null) {
             for (var annotation : testClass.getAnnotations()) {
                 if (filter.apply(annotation)) {
                     if (VERBOSE) {
                         sLogger.v(
-                                "getAnnotations(%s): adding annotation (%s) from class (%s)",
-                                test, annotation, testClass.getSimpleName());
+                                "getAnnotations(): adding annotation (%s) from class (%s)",
+                                annotation, testClass.getSimpleName());
                     }
                     annotations.add(annotation);
                 }
@@ -111,9 +121,8 @@ public final class TestHelper {
                     if (filter.apply(annotation)) {
                         if (VERBOSE) {
                             sLogger.v(
-                                    "getAnnotations(%s): adding annotation (%s) from interface"
-                                            + " (%s)",
-                                    test, annotation, classInterface.getSimpleName());
+                                    "getAnnotations(): adding annotation (%s) from interface (%s)",
+                                    annotation, classInterface.getSimpleName());
                         }
                         annotations.add(annotation);
                     }
@@ -121,46 +130,6 @@ public final class TestHelper {
             }
             testClass = testClass.getSuperclass();
         }
-        return annotations;
-    }
-
-    @Nullable
-    private static <T extends Annotation> T getAnnotationInternal(
-            Class<?> testClass, Class<T> annotationClass) {
-        T annotation = null;
-        while (testClass != null) {
-            annotation = testClass.getAnnotation(annotationClass);
-            if (annotation != null) {
-                if (VERBOSE) {
-                    sLogger.v(
-                            "getAnnotationInternal(%s): returning annotation (%s) from (%s)",
-                            annotationClass.getSimpleName(), annotation, testClass);
-                }
-                return annotation;
-            }
-
-            for (Class<?> classInterface : testClass.getInterfaces()) {
-                annotation = classInterface.getAnnotation(annotationClass);
-                if (annotation != null) {
-                    if (VERBOSE) {
-                        sLogger.v(
-                                "getAnnotationInternal(%s): returning annotation (%s) from "
-                                        + "interface (%s)",
-                                annotationClass.getSimpleName(), annotation, classInterface);
-                    }
-                    return annotation;
-                }
-            }
-
-            if (VERBOSE) {
-                sLogger.v(
-                        "getAnnotationInternal(%s): not found on class %s or any implemented "
-                                + "interfaces, will try superclass (%s)",
-                        annotationClass.getSimpleName(), testClass, testClass.getSuperclass());
-            }
-            testClass = testClass.getSuperclass();
-        }
-        return null;
     }
 
     // TODO(b/315339283): use in other places
