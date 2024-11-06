@@ -44,6 +44,7 @@ public class AbstractTestAction {
     protected static final String WEB_DESTINATION =
             replaceTestDomain("https://rb-example-destination.test");
     protected static final String SOURCE_PATH = "/source";
+    protected static final String TRIGGER_PATH = "/trigger";
     protected static final MeasurementManager MEASUREMENT_MANAGER =
             (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
                     ? CONTEXT.getSystemService(MeasurementManager.class)
