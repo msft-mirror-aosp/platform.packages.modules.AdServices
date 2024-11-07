@@ -168,11 +168,14 @@ public final class AdPackageDenyPreProcessJobService extends JobService {
     }
 
     private static JobInfo buildJobInfo(Context context) {
+        // TODO(b/374326249) move periodic flex time config to flags
+        long flexIntervalMillis = 60 * 60 * 1000; // 1 hr
         return new JobInfo.Builder(
                         AD_PACKAGE_DENY_PRE_PROCESS_JOB.getJobId(),
                         new ComponentName(context, AdPackageDenyPreProcessJobService.class))
-                // TODO(b/374326249) move periodic time config to flags
-                .setPeriodic(12 * 60 * 60 * 1000) // Setting it to run every 12 hrs.
+                .setPeriodic(
+                        FlagsFactory.getFlags().getPackageDenyBackgroundJobPeriodMillis(),
+                        flexIntervalMillis)
                 .setPersisted(true)
                 .build();
     }

@@ -5889,6 +5889,20 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_AD_ID_MIGRATION_ENABLED;
     }
 
+    boolean DEFAULT_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER = false;
+
+    /** Returns if component seller as one of the destination in report event is enabled. */
+    default boolean getEnableReportEventForComponentSeller() {
+        return DEFAULT_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER;
+    }
+
+    boolean DEFAULT_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME = false;
+
+    /** Returns if the winning seller id in AdSelectionOutcome is enabled. */
+    default boolean getEnableWinningSellerIdInAdSelectionOutcome() {
+        return DEFAULT_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
     ////////////////////////////////////////////////////////////////////////////////////////////////
