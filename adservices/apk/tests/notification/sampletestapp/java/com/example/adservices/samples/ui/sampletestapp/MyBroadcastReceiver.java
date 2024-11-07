@@ -15,7 +15,7 @@
  */
 package com.example.adservices.samples.ui.sampletestapp;
 
-import static com.android.adservices.ui.notifications.ConsentNotificationTrigger.ACTION_ADSERVICES_NOTIFICATION_DISPLAYED;
+import static android.adservices.common.AdServicesCommonManager.ACTION_ADSERVICES_NOTIFICATION_DISPLAYED;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
