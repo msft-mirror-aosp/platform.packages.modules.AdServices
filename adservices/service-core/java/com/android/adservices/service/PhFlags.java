@@ -23,6 +23,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODU
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITE_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB;
 import static com.android.adservices.service.FlagsConstants.KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS;
@@ -31,12 +32,13 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENCODED_ERROR_CO
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_PROTO_FILE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION;
@@ -6135,6 +6137,16 @@ public final class PhFlags implements Flags {
                         + FlagsConstants.KEY_UI_DIALOG_FRAGMENT_ENABLED
                         + " = "
                         + getUiDialogFragmentEnabled());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER
+                        + " = "
+                        + getEnableReportEventForComponentSeller());
+        writer.println(
+                "\t"
+                        + KEY_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME
+                        + " = "
+                        + getEnableWinningSellerIdInAdSelectionOutcome());
     }
 
     @VisibleForTesting
@@ -7441,6 +7453,20 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getPackageDenyEnableInstalledPackageFilter() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER,
+                DEFAULT_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER);
+    }
+
+    @Override
+    public long getPackageDenyBackgroundJobPeriodMillis() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS,
+                DEFAULT_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS);
+    }
+
+    @Override
     public boolean getEnablePackageDenyJobOnMddDownload() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD,
@@ -7470,5 +7496,19 @@ public final class PhFlags implements Flags {
     public boolean getAdIdMigrationEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_AD_ID_MIGRATION_ENABLED, DEFAULT_AD_ID_MIGRATION_ENABLED);
+    }
+
+    @Override
+    public boolean getEnableReportEventForComponentSeller() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER,
+                DEFAULT_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER);
+    }
+
+    @Override
+    public boolean getEnableWinningSellerIdInAdSelectionOutcome() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME,
+                DEFAULT_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME);
     }
 }

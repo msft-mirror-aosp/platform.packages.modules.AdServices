@@ -72,15 +72,17 @@ import static com.android.adservices.service.Flags.DEFAULT_ENABLE_AD_SERVICES_SY
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_BACK_COMPAT_INIT;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_CONSENT_MANAGER_V2;
+import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_PACKAGE_DENY_BG_JOB;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_PACKAGE_DENY_MDD;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_PACKAGE_DENY_SERVICE;
+import static com.android.adservices.service.Flags.DEFAULT_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_TABLET_REGION_FIX;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION;
+import static com.android.adservices.service.Flags.DEFAULT_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME;
 import static com.android.adservices.service.Flags.DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED;
-import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB;
 import static com.android.adservices.service.Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS;
 import static com.android.adservices.service.Flags.DEFAULT_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
@@ -108,6 +110,8 @@ import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PLATFORM_
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
 import static com.android.adservices.service.Flags.DEFAULT_NOTIFICATION_DISMISSED_ON_CLICK;
+import static com.android.adservices.service.Flags.DEFAULT_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS;
+import static com.android.adservices.service.Flags.DEFAULT_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
@@ -740,7 +744,9 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DEBUG_REP
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_BATCH_DELAY_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH;
@@ -1034,6 +1040,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MSMT_REGISTRATIO
 import static com.android.adservices.service.FlagsConstants.KEY_MSMT_REPORTING_COBALT_LOGGING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK;
 import static com.android.adservices.service.FlagsConstants.KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY;
+import static com.android.adservices.service.FlagsConstants.KEY_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS;
+import static com.android.adservices.service.FlagsConstants.KEY_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER;
 import static com.android.adservices.service.FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_BG_JOB;
 import static com.android.adservices.service.FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD;
 import static com.android.adservices.service.FlagsConstants.KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD;
@@ -5865,6 +5873,22 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testGetEnableInstalledPackageFilter() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER,
+                DEFAULT_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER,
+                Flags::getPackageDenyEnableInstalledPackageFilter);
+    }
+
+    @Test
+    public void testGetBackgroundJobPeriodMillis() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS,
+                DEFAULT_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS,
+                Flags::getPackageDenyBackgroundJobPeriodMillis);
+    }
+
+    @Test
     public void testGetMddPackageDenyRegistryManifestFileUrl() {
         mFlagsTestHelper.testConfigFlag(
                 KEY_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL,
@@ -5892,6 +5916,22 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_AD_ID_MIGRATION_ENABLED,
                 DEFAULT_AD_ID_MIGRATION_ENABLED,
                 Flags::getAdIdMigrationEnabled);
+    }
+
+    @Test
+    public void testGetEnableReportEventForComponentSeller() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER,
+                DEFAULT_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER,
+                Flags::getEnableReportEventForComponentSeller);
+    }
+
+    @Test
+    public void testGetEnableWinningSellerIdInAdSelectionOutcome() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME,
+                DEFAULT_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME,
+                Flags::getEnableWinningSellerIdInAdSelectionOutcome);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

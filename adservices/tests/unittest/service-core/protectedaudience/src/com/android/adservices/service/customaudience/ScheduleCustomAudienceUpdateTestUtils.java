@@ -210,6 +210,29 @@ public class ScheduleCustomAudienceUpdateTestUtils {
         return responseJson;
     }
 
+    /**
+     * Creates a JSON response that is expected to be returned from the server for update. The join
+     * custom audiences in this request have invalid expiration time.
+     */
+    public static JSONObject createJsonResponsePayloadWithInvalidExpirationTime(
+            AdTechIdentifier buyer, String owner, List<String> joinCustomAudienceNames)
+            throws JSONException {
+
+        JSONObject responseJson = new JSONObject();
+
+        JSONArray joinCustomAudienceArray = new JSONArray();
+        for (int i = 0; i < joinCustomAudienceNames.size(); i++) {
+            JSONObject generatedCa =
+                    generateCustomAudienceWithNameWithInvalidExpirationTime(
+                            buyer, owner, joinCustomAudienceNames.get(i));
+            joinCustomAudienceArray.put(i, generatedCa);
+        }
+
+        responseJson.put(JOIN_CUSTOM_AUDIENCE_KEY, joinCustomAudienceArray);
+
+        return responseJson;
+    }
+
     /** Creates a JSON response that is expected to be returned from the server for update */
     public static JSONObject createJsonResponsePayloadWithScheduleRequests(
             AdTechIdentifier buyer,
@@ -453,6 +476,29 @@ public class ScheduleCustomAudienceUpdateTestUtils {
                 name,
                 ca.getActivationTime(),
                 ca.getExpirationTime(),
+                ca.getDailyUpdateUri(),
+                ca.getBiddingLogicUri(),
+                AdSelectionSignals.EMPTY.toString(),
+                DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build(),
+                Collections.emptyList(),
+                false);
+    }
+
+    /**
+     * Creates a CustomAudience JSONObject with the given buyer, owner and name and with invalid
+     * expiration date.
+     */
+    public static JSONObject generateCustomAudienceWithNameWithInvalidExpirationTime(
+            AdTechIdentifier buyer, String owner, String name) throws JSONException {
+
+        CustomAudience ca =
+                CustomAudienceFixture.getValidBuilderForBuyer(buyer).setName(name).build();
+        return CustomAudienceBlobFixture.asJSONObject(
+                owner,
+                ca.getBuyer(),
+                name,
+                ca.getActivationTime(),
+                CustomAudienceFixture.INVALID_NOW_EXPIRATION_TIME,
                 ca.getDailyUpdateUri(),
                 ca.getBiddingLogicUri(),
                 AdSelectionSignals.EMPTY.toString(),
