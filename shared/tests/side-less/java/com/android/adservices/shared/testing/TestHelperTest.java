@@ -17,10 +17,13 @@ package com.android.adservices.shared.testing;
 
 import static com.android.adservices.shared.meta_testing.CommonDescriptions.newTestMethodForClassRule;
 import static com.android.adservices.shared.testing.TestHelper.getAnnotation;
+import static com.android.adservices.shared.testing.TestHelper.getAnnotations;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.runner.Description.createSuiteDescription;
+import static org.junit.runner.Description.createTestDescription;
 
 import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassHasNoNothingAtAll;
 import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
@@ -30,14 +33,30 @@ import com.google.auto.value.AutoAnnotation;
 import org.junit.Test;
 import org.junit.runner.Description;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.function.Function;
 
 public final class TestHelperTest extends SharedSidelessTestCase {
+
+    // Used to create a test Description
+    private static final String TEST_NAME = "The name is Case, Test Case!";
+
+    private static final String VALUE_ON_METHOD = "I annotate, therefore I am!";
+    private static final String VALUE_ON_CLASS = "A class has an annotation!";
+    private static final String VALUE_ON_SUPERCLASS = "A class has an annotation and a parent!";
+    private static final String VALUE_ON_GRAND_SUPERCLASS =
+            "A superclass of a superclass of a class has an annotation!";
+    private static final String VALUE_ON_INTERFACE = "An interface has an annotation!";
+
     private final Description mNotTestDescription =
             newTestMethodForClassRule(AClassHasNoNothingAtAll.class);
+
+    private final Function<Annotation, Boolean> mDaRealAnnotationFilta =
+            a -> DaRealAnnotation.class.isInstance(a);
 
     @Test
     public void testGetTestName_null() {
@@ -46,17 +65,16 @@ public final class TestHelperTest extends SharedSidelessTestCase {
 
     @Test
     public void testGetTestName_testMethod() {
-        Description test =
-                Description.createTestDescription(AClassHasNoNothingAtAll.class, "butItHasATest");
+        Description test = createTestDescription(AClassHasNoNothingAtAll.class, TEST_NAME);
 
         expect.withMessage("getTestName(%s)", test)
                 .that(TestHelper.getTestName(test))
-                .isEqualTo("AClassHasNoNothingAtAll#butItHasATest()");
+                .isEqualTo("AClassHasNoNothingAtAll#The name is Case, Test Case!()");
     }
 
     @Test
     public void testGetTestName_testClass() {
-        Description test = Description.createSuiteDescription(AClassHasNoNothingAtAll.class);
+        Description test = createSuiteDescription(AClassHasNoNothingAtAll.class);
 
         expect.withMessage("getTestName(%s)", test)
                 .that(TestHelper.getTestName(test))
@@ -65,7 +83,7 @@ public final class TestHelperTest extends SharedSidelessTestCase {
 
     @Test
     public void testGetAnnotation_null() {
-        Description test = Description.createSuiteDescription(AClassHasNoNothingAtAll.class);
+        Description test = createTestDescription(AClassHasNoNothingAtAll.class, TEST_NAME);
 
         assertThrows(
                 NullPointerException.class, () -> getAnnotation(test, /* annotationClass= */ null));
@@ -76,7 +94,7 @@ public final class TestHelperTest extends SharedSidelessTestCase {
 
     @Test
     public void testGetAnnotation_notSetAnywhere() {
-        Description test = Description.createSuiteDescription(AClassHasNoNothingAtAll.class);
+        Description test = createTestDescription(AClassHasNoNothingAtAll.class, TEST_NAME);
 
         expect.withMessage("getAnnotation(%s)", test)
                 .that(getAnnotation(test, DaRealAnnotation.class))
@@ -86,83 +104,65 @@ public final class TestHelperTest extends SharedSidelessTestCase {
     @Test
     public void testGetAnnotation_fromMethod() {
         Description test =
-                Description.createSuiteDescription(
+                createTestDescription(
                         AClassHasAnAnnotationAndAParent.class,
-                        newDaFakeAnnotation("I annotate, therefore I am!"));
+                        TEST_NAME,
+                        newDaFakeAnnotation(VALUE_ON_METHOD));
 
         DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
 
-        assertWithMessage("getAnnotation(%s)", test).that(annotation).isNotNull();
-        expect.withMessage("getAnnotation(%s).value()", test)
-                .that(annotation.value())
-                .isEqualTo("I annotate, therefore I am!");
+        assertDaRealAnnotation(annotation, "annotation from method", VALUE_ON_METHOD);
     }
 
     @Test
     public void testGetAnnotation_fromClass() {
-        Description test =
-                Description.createSuiteDescription(AClassHasAnAnnotationAndAParent.class);
+        Description test = createTestDescription(AClassHasAnAnnotationAndAParent.class, TEST_NAME);
 
         DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
 
-        assertWithMessage("getAnnotation(%s)", test).that(annotation).isNotNull();
-        expect.withMessage("getAnnotation(%s).value()", test)
-                .that(annotation.value())
-                .isEqualTo("A class has an annotation and a parent!");
+        assertDaRealAnnotation(annotation, "annotation from class", VALUE_ON_SUPERCLASS);
     }
 
     @Test
     public void testGetAnnotation_fromParentClass() {
         Description test =
-                Description.createSuiteDescription(AClassHasNoAnnotationButItsParentDoes.class);
+                createTestDescription(AClassHasNoAnnotationButItsParentDoes.class, TEST_NAME);
 
         DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
 
-        assertWithMessage("getAnnotation(%s)", test).that(annotation).isNotNull();
-        expect.withMessage("getAnnotation(%s).value()", test)
-                .that(annotation.value())
-                .isEqualTo("A class has an annotation!");
+        assertDaRealAnnotation(annotation, "annotation from superclass", VALUE_ON_CLASS);
     }
 
     @Test
     public void testGetAnnotation_fromImplementedInterface() {
         Description test =
-                Description.createSuiteDescription(AClassHasNoAnnotationButItsInterfaceDoes.class);
+                createTestDescription(AClassHasNoAnnotationButItsInterfaceDoes.class, TEST_NAME);
 
         DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
 
-        assertWithMessage("getAnnotation(%s)", test).that(annotation).isNotNull();
-        expect.withMessage("getAnnotation(%s).value()", test)
-                .that(annotation.value())
-                .isEqualTo("An interface has an annotation!");
+        assertDaRealAnnotation(annotation, "annotation from interface", VALUE_ON_INTERFACE);
     }
 
     @Test
     public void testGetAnnotation_fromParentsImplementedInterface() {
         Description test =
-                Description.createSuiteDescription(
-                        AClassHasNoAnnotationButItsParentsInterfaceDoes.class);
+                createTestDescription(
+                        AClassHasNoAnnotationButItsParentsInterfaceDoes.class, TEST_NAME);
 
         DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
 
-        assertWithMessage("getAnnotation(%s)", test).that(annotation).isNotNull();
-        expect.withMessage("getAnnotation(%s).value()", test)
-                .that(annotation.value())
-                .isEqualTo("An interface has an annotation!");
+        assertDaRealAnnotation(
+                annotation, "annotation from parent's interface", VALUE_ON_INTERFACE);
     }
 
     @Test
     public void testGetAnnotation_fromGrandParentClass() {
         Description test =
-                Description.createSuiteDescription(
-                        AClassHasNoAnnotationButItsGrandParentDoes.class);
+                createTestDescription(AClassHasNoAnnotationButItsGrandParentDoes.class, TEST_NAME);
 
         DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
 
-        assertWithMessage("getAnnotation(%s)", test).that(annotation).isNotNull();
-        expect.withMessage("getAnnotation(%s).value()", test)
-                .that(annotation.value())
-                .isEqualTo("A class has an annotation!");
+        assertDaRealAnnotation(annotation, "annotation from class", VALUE_ON_CLASS);
     }
 
     @Test
@@ -190,10 +190,7 @@ public final class TestHelperTest extends SharedSidelessTestCase {
 
         DaRealAnnotation annotation = getAnnotation(testClass, DaRealAnnotation.class);
 
-        assertWithMessage("getAnnotation(%s)", testClass).that(annotation).isNotNull();
-        expect.withMessage("getAnnotation(%s).value()", testClass)
-                .that(annotation.value())
-                .isEqualTo("A class has an annotation and a parent!");
+        assertDaRealAnnotation(annotation, "annotation from parent class", VALUE_ON_SUPERCLASS);
     }
 
     @Test
@@ -202,10 +199,7 @@ public final class TestHelperTest extends SharedSidelessTestCase {
 
         DaRealAnnotation annotation = getAnnotation(testClass, DaRealAnnotation.class);
 
-        assertWithMessage("getAnnotation(%s)", testClass).that(annotation).isNotNull();
-        expect.withMessage("getAnnotation(%s).value()", testClass)
-                .that(annotation.value())
-                .isEqualTo("A class has an annotation!");
+        assertDaRealAnnotation(annotation, "annotation from class", VALUE_ON_CLASS);
     }
 
     @Test
@@ -214,10 +208,124 @@ public final class TestHelperTest extends SharedSidelessTestCase {
 
         DaRealAnnotation annotation = getAnnotation(testClass, DaRealAnnotation.class);
 
-        assertWithMessage("getAnnotation(%s)", testClass).that(annotation).isNotNull();
-        expect.withMessage("getAnnotation(%s).value()", testClass)
-                .that(annotation.value())
-                .isEqualTo("A class has an annotation!");
+        assertDaRealAnnotation(annotation, "annotation from class", VALUE_ON_CLASS);
+    }
+
+    @Test
+    public void testGetAnnotations_null() {
+        Description test = createTestDescription(AClassHasNoNothingAtAll.class, TEST_NAME);
+
+        assertThrows(NullPointerException.class, () -> getAnnotations(test, /* filter= */ null));
+        assertThrows(
+                NullPointerException.class,
+                () -> getAnnotations(/* test= */ null, mDaRealAnnotationFilta));
+    }
+
+    @Test
+    public void testGetAnnotations_notSetAnywhere() {
+        Description test = createTestDescription(AClassHasNoNothingAtAll.class, TEST_NAME);
+
+        expect.withMessage("getAnnotations(%s)", test)
+                .that(getAnnotations(test, mDaRealAnnotationFilta))
+                .isEmpty();
+    }
+
+    @Test
+    public void testGetAnnotations_fromMethodOnly() {
+        Description test =
+                createTestDescription(
+                        AClassHasNoNothingAtAll.class,
+                        TEST_NAME,
+                        newDaFakeAnnotation(VALUE_ON_METHOD));
+
+        var annotations = getAnnotations(test, mDaRealAnnotationFilta);
+
+        assertWithMessage("getAnnotations(%s)", test).that(annotations).isNotNull();
+        assertWithMessage("getAnnotations(%s)", test).that(annotations).hasSize(1);
+
+        assertDaRealAnnotation(annotations.get(0), "method annotation", VALUE_ON_METHOD);
+    }
+
+    @Test
+    public void testGetAnnotations_fromClassOnly() {
+        Description test = createTestDescription(AClassHasAnAnnotation.class, TEST_NAME);
+
+        var annotations = getAnnotations(test, mDaRealAnnotationFilta);
+
+        assertWithMessage("getAnnotations(%s)", test).that(annotations).isNotNull();
+        assertWithMessage("getAnnotations(%s)", test).that(annotations).hasSize(1);
+
+        assertDaRealAnnotation(annotations.get(0), "class annotation", VALUE_ON_CLASS);
+    }
+
+    @Test
+    public void testGetAnnotations_fromInterfaceOnly() {
+        Description test =
+                createTestDescription(
+                        AClassHasNoAnnotationButItsParentsInterfaceDoes.class, TEST_NAME);
+
+        var annotations = getAnnotations(test, mDaRealAnnotationFilta);
+
+        assertWithMessage("getAnnotations(%s)", test).that(annotations).isNotNull();
+        assertWithMessage("getAnnotations(%s)", test).that(annotations).hasSize(1);
+
+        assertDaRealAnnotation(annotations.get(0), "interface annotation", VALUE_ON_INTERFACE);
+    }
+
+    @Test
+    public void testGetAnnotations_fromSuperClassOnly() {
+        Description test = createTestDescription(AClassHasAnAnnotation.class, TEST_NAME);
+
+        var annotations = getAnnotations(test, mDaRealAnnotationFilta);
+
+        assertWithMessage("getAnnotations(%s)", test).that(annotations).isNotNull();
+        assertWithMessage("getAnnotations(%s)", test).that(annotations).hasSize(1);
+
+        var annotation = annotations.get(0);
+        assertWithMessage("annotation").that(annotation).isInstanceOf(DaRealAnnotation.class);
+
+        DaRealAnnotation daRealAnnotation = (DaRealAnnotation) annotation;
+        expect.withMessage("annotation.value")
+                .that(daRealAnnotation.value())
+                .isEqualTo(VALUE_ON_CLASS);
+    }
+
+    @Test
+    public void testGetAnnotations_fromMethodAndClass() {
+        Description test =
+                Description.createTestDescription(
+                        AClassHasAnAnnotation.class, "test", newDaFakeAnnotation(VALUE_ON_METHOD));
+
+        var annotations = getAnnotations(test, mDaRealAnnotationFilta);
+
+        assertWithMessage("getAnnotations(%s)", test).that(annotations).isNotNull();
+        assertWithMessage("getAnnotations(%s)", test).that(annotations).hasSize(2);
+
+        assertDaRealAnnotation(annotations.get(0), "method annotation", VALUE_ON_METHOD);
+        assertDaRealAnnotation(annotations.get(1), "class annotation", VALUE_ON_CLASS);
+    }
+
+    @Test
+    public void testGetAnnotations_fromEverywhere() {
+        Description test =
+                Description.createTestDescription(
+                        AClassWithEverything.class, "test", newDaFakeAnnotation(VALUE_ON_METHOD));
+
+        var annotations = getAnnotations(test, mDaRealAnnotationFilta);
+
+        assertWithMessage("getAnnotations(%s)", test).that(annotations).isNotNull();
+        assertWithMessage("getAnnotations(%s)", test).that(annotations).hasSize(7);
+
+        assertDaRealAnnotation(annotations.get(0), "method annotation", VALUE_ON_METHOD);
+        assertDaRealAnnotation(annotations.get(1), "class annotation", VALUE_ON_CLASS);
+        assertDaRealAnnotation(annotations.get(2), "interface annotation", VALUE_ON_INTERFACE);
+        assertDaRealAnnotation(annotations.get(3), "superclass annotation", VALUE_ON_SUPERCLASS);
+        assertDaRealAnnotation(
+                annotations.get(4), "superclass interface annotation", VALUE_ON_INTERFACE);
+        assertDaRealAnnotation(
+                annotations.get(5), "grand-superclass annotation", VALUE_ON_GRAND_SUPERCLASS);
+        assertDaRealAnnotation(
+                annotations.get(6), "grand-superclass interface annotation", VALUE_ON_INTERFACE);
     }
 
     @Test
@@ -237,7 +345,7 @@ public final class TestHelperTest extends SharedSidelessTestCase {
     @Test
     public void testThrowIfNotTest_withTestDescription_throwsNoException() {
         Description test =
-                Description.createTestDescription(AClassHasNoNothingAtAll.class, "butItHasATest");
+                Description.createTestDescription(AClassHasNoNothingAtAll.class, TEST_NAME);
 
         // No exception should be thrown for test.
         TestHelper.throwIfNotTest(test);
@@ -246,7 +354,7 @@ public final class TestHelperTest extends SharedSidelessTestCase {
     @Test
     public void testThrowIfTest_withNonTestDescription_throwsException() {
         Description test =
-                Description.createTestDescription(AClassHasNoNothingAtAll.class, "butItHasATest");
+                Description.createTestDescription(AClassHasNoNothingAtAll.class, TEST_NAME);
 
         Exception exception =
                 assertThrows(IllegalStateException.class, () -> TestHelper.throwIfTest(test));
@@ -264,16 +372,25 @@ public final class TestHelperTest extends SharedSidelessTestCase {
         TestHelper.throwIfTest(mNotTestDescription);
     }
 
-    @DaRealAnnotation("A class has an annotation!")
+    private void assertDaRealAnnotation(
+            Annotation annotation, String description, String expectedValue) {
+        assertWithMessage(description).that(annotation).isInstanceOf(DaRealAnnotation.class);
+        DaRealAnnotation daRealAnnotation = (DaRealAnnotation) annotation;
+        expect.withMessage("value of %s", description)
+                .that(daRealAnnotation.value())
+                .isEqualTo(expectedValue);
+    }
+
+    @DaRealAnnotation(VALUE_ON_CLASS)
     private static class AClassHasAnAnnotation {}
 
-    @DaRealAnnotation("An interface has an annotation!")
+    @DaRealAnnotation(VALUE_ON_INTERFACE)
     private interface AnInterfaceHasAnAnnotation {}
 
     private static class AClassHasNoAnnotationButItsInterfaceDoes
             implements AnInterfaceHasAnAnnotation {}
 
-    @DaRealAnnotation("A class has an annotation and a parent!")
+    @DaRealAnnotation(VALUE_ON_SUPERCLASS)
     private static class AClassHasAnAnnotationAndAParent extends AClassHasAnAnnotation {}
 
     private static class AClassHasNoAnnotationButItsParentDoes extends AClassHasAnAnnotation {}
@@ -283,6 +400,19 @@ public final class TestHelperTest extends SharedSidelessTestCase {
 
     private static class AClassHasNoAnnotationButItsGrandParentDoes
             extends AClassHasNoAnnotationButItsParentDoes {}
+
+    @DaRealAnnotation(VALUE_ON_GRAND_SUPERCLASS)
+    private static class AGrandParentClassHasAnAnnotationAndAnInterface
+            implements AnInterfaceHasAnAnnotation {}
+
+    @DaRealAnnotation(VALUE_ON_SUPERCLASS)
+    private static class AParentClassHasAnAnnotationAndAnInterface
+            extends AGrandParentClassHasAnAnnotationAndAnInterface
+            implements AnInterfaceHasAnAnnotation {}
+
+    @DaRealAnnotation(VALUE_ON_CLASS)
+    private static class AClassWithEverything extends AParentClassHasAnAnnotationAndAnInterface
+            implements AnInterfaceHasAnAnnotation {}
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target({ElementType.METHOD, ElementType.TYPE})
