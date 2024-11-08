@@ -160,7 +160,9 @@ public final class RollbackHandlingManager {
         String prefix4 = prefix3 + DUMP_PREFIX;
         for (int i = 0; i < mapSize; i++) {
             writer.printf("%s deletion API type %d:\n", prefix3, mAtomicFileDatastoreMap.keyAt(i));
-            mAtomicFileDatastoreMap.valueAt(i).dump(writer, prefix4);
+            mAtomicFileDatastoreMap
+                    .valueAt(i)
+                    .dump(writer, prefix4, AtomicFileDatastore.DUMP_ARGS_INCLUDE_CONTENTS_ONLY);
         }
     }
 
