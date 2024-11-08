@@ -107,6 +107,13 @@ flag {
 }
 
 flag {
+    name: "fledge_enable_schedule_custom_audience_default_partial_custom_audiences_constructor"
+    namespace: "adservices_aconfig"
+    bug: "377383709"
+    description: "Enables the new constructor that does not require partial custom audiences in the request."
+}
+
+flag {
     name: "fledge_server_auction_multi_cloud_enabled"
     namespace: "adservices"
     bug: "323888604"
