@@ -119,14 +119,14 @@ public class AggregateCryptoConverter {
      * @param payload json string of histogram data. Example: {operation: histogram, data: [bucket:
      *     1, value: 2]}
      * @param sharedInfo plain value that will be shared with receiver
-     * @param filteringIdMaxBytes int value used to limit size of filtering ids and allocate byte []
+     * @param maxBytes int value used to allocate byte array
      * @throws CryptoException if any exception is encountered
      */
     public static String encrypt(
             @NonNull String publicKeyBase64Encoded,
             @NonNull String payload,
             @Nullable String sharedInfo,
-            int filteringIdMaxBytes)
+            int maxBytes)
             throws CryptoException {
         try {
             Objects.requireNonNull(payload);
@@ -139,7 +139,7 @@ public class AggregateCryptoConverter {
             }
 
             // Encode with Cbor
-            final byte[] payloadCborEncoded = encodeWithCbor(contributions, filteringIdMaxBytes);
+            final byte[] payloadCborEncoded = encodeWithCbor(contributions, maxBytes);
 
             // Get public key
             final byte[] publicKey = sBase64Decoder.decode(publicKeyBase64Encoded);
@@ -196,9 +196,9 @@ public class AggregateCryptoConverter {
      * encryption.
      *
      * @param payload json string of histogram data
-     * @param filteringIdMaxBytes int value used to limit size of filtering ids and allocate byte []
+     * @param maxBytes int value used to allocate byte array
      */
-    public static String encode(@NonNull String payload, int filteringIdMaxBytes) {
+    public static String encode(@NonNull String payload, int maxBytes) {
         try {
             Objects.requireNonNull(payload);
 
@@ -209,7 +209,7 @@ public class AggregateCryptoConverter {
             }
 
             // Encode with Cbor
-            final byte[] payloadCborEncoded = encodeWithCbor(contributions, filteringIdMaxBytes);
+            final byte[] payloadCborEncoded = encodeWithCbor(contributions, maxBytes);
 
             // Encode with Base 64
             return encodeWithBase64(payloadCborEncoded);
@@ -286,9 +286,26 @@ public class AggregateCryptoConverter {
         return outputStream.toByteArray();
     }
 
+    /**
+     * Returns the unsigned value of BigInteger in a byte array.
+     *
+     * @param byteSize Bytes to for array
+     * @param value BigInteger value to copy from
+     */
+    private static byte[] getByteArrayForBigInteger(int byteSize, BigInteger value) {
+        final byte[] byteArray = new byte[byteSize];
+        final byte[] sourceByteArray = value.toByteArray();
+        final int bytesExcludingSignId = (int) Math.ceil(value.bitLength() / 8d);
+        final int length = Math.min(bytesExcludingSignId, byteSize);
+        final int position = byteArray.length - length;
+        final int srcPosExcludingSign = sourceByteArray[0] == 0 ? 1 : 0;
+        System.arraycopy(sourceByteArray, srcPosExcludingSign, byteArray, position, length);
+        return byteArray;
+    }
+
     @VisibleForTesting
     static byte[] encodeWithCbor(
-            List<AggregateHistogramContribution> contributions, int filteringIdMaxBytes)
+            List<AggregateHistogramContribution> contributions, int filteringIdByteSize)
             throws CborException {
         final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         final CborBuilder cborBuilder = new CborBuilder();
@@ -301,31 +318,17 @@ public class AggregateCryptoConverter {
                     ByteBuffer.allocate(AGGREGATE_HISTOGRAM_VALUE_BYTE_SIZE)
                             .putInt(contribution.getValue())
                             .array();
-            final byte[] bucket = new byte[AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE];
-            final byte[] src = contribution.getKey().toByteArray();
-            final int bytesExcludingSign = (int) Math.ceil(contribution.getKey().bitLength() / 8d);
-            final int length = Math.min(bytesExcludingSign, AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE);
-            final int position = bucket.length - length;
-            // Excluding sign bit that BigInteger#toByteArray adds to the first element of the array
-            final int srcPosExcludingSign = src[0] == 0 ? 1 : 0;
-            System.arraycopy(src, srcPosExcludingSign, bucket, position, length);
+            final byte[] bucketByteArray =
+                    getByteArrayForBigInteger(
+                            AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE, contribution.getKey());
 
             final Map dataMap = new Map();
-            dataMap.put(new UnicodeString(BUCKET), new ByteString(bucket));
+            dataMap.put(new UnicodeString(BUCKET), new ByteString(bucketByteArray));
             dataMap.put(new UnicodeString(VALUE), new ByteString(value));
             if (contribution.getId() != null) {
-                final byte[] id =
-                        ByteBuffer.allocate(filteringIdMaxBytes)
-                                .put(
-                                        ByteBuffer.allocate(Long.BYTES)
-                                                .putLong(
-                                                        Long.valueOf(
-                                                                contribution.getId().toString()))
-                                                .array(),
-                                        Long.BYTES - filteringIdMaxBytes,
-                                        filteringIdMaxBytes)
-                                .array();
-                dataMap.put(new UnicodeString(ID), new ByteString(id));
+                BigInteger id = new BigInteger(contribution.getId().toString());
+                final byte[] idByteArray = getByteArrayForBigInteger(filteringIdByteSize, id);
+                dataMap.put(new UnicodeString(ID), new ByteString(idByteArray));
             }
             dataArray.add(dataMap);
         }
