@@ -209,6 +209,7 @@ package android.adservices.adselection {
     method @NonNull public String getKey();
     method public int getReportingDestinations();
     field public static final int FLAG_REPORTING_DESTINATION_BUYER = 2; // 0x2
+    field @FlaggedApi("com.android.adservices.flags.fledge_enable_report_event_for_component_seller") public static final int FLAG_REPORTING_DESTINATION_COMPONENT_SELLER = 4; // 0x4
     field public static final int FLAG_REPORTING_DESTINATION_SELLER = 1; // 0x1
   }
 
