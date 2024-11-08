@@ -88,6 +88,7 @@ package android.adservices.adselection {
   public class AdSelectionOutcome {
     method @NonNull public long getAdSelectionId();
     method @NonNull public android.net.Uri getRenderUri();
+    method @FlaggedApi("com.android.adservices.flags.fledge_enable_winning_seller_id_in_ad_selection_outcome") @NonNull public android.adservices.common.AdTechIdentifier getWinningSeller();
     method public boolean hasOutcome();
     field @NonNull public static final android.adservices.adselection.AdSelectionOutcome NO_OUTCOME;
   }
