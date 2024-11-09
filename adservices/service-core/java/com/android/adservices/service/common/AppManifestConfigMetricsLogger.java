@@ -72,7 +72,9 @@ public final class AppManifestConfigMetricsLogger {
         AdServicesExecutors.getBackgroundExecutor().execute(() -> handleLogUsage(call));
     }
 
-    private static void handleLogUsage(AppManifestConfigCall call) {
+    // Exposing so tests call it directly to avoid race conditions
+    @VisibleForTesting
+    static void handleLogUsage(AppManifestConfigCall call) {
         Context context = ApplicationContextSingleton.get();
         try {
             @Result int newValue = call.result;
