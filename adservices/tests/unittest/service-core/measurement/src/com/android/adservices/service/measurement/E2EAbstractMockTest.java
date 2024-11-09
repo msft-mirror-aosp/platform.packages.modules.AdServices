@@ -38,6 +38,7 @@ import android.content.ContentResolver;
 import android.net.Uri;
 import android.os.RemoteException;
 
+import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.HpkeJni;
@@ -489,6 +490,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                         mFlags);
 
         processActualDebugAggregateReports(
+                timestamp,
                 (List<AggregateReport>) aggregateCaptures[0],
                 (List<Uri>) aggregateCaptures[1],
                 (List<JSONObject>) aggregateCaptures[2]);
@@ -635,26 +637,34 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
             List<JSONObject> payloads)
             throws JSONException {
         List<JSONObject> aggregateReportObjects =
-                getActualAggregateReportObjects(aggregateReports, destinations, payloads, 0L);
+                getActualAggregateReportObjects(aggregateReports, destinations, payloads,
+                        /* timestamp= */ null);
         mActualOutput.mAggregateReportObjects.addAll(aggregateReportObjects);
     }
 
     void processActualDebugAggregateReports(
+            long triggerOrSourceTime,
             List<AggregateReport> aggregateReports,
             List<Uri> destinations,
             List<JSONObject> payloads)
             throws JSONException {
         List<JSONObject> aggregateReportObjects =
                 getActualAggregateReportObjects(aggregateReports, destinations, payloads,
-                        TimeUnit.HOURS.toMillis(1));
+                        Long.valueOf(triggerOrSourceTime));
         mActualOutput.mDebugAggregateReportObjects.addAll(aggregateReportObjects);
     }
 
+    /**
+     * Collects aggregate reports as JSON objects. The timestamp parameter allows callers with
+     * non-debug reports to pass null to associate report time with scheduled report time in the
+     * record. Callers with debug reports can provide a non-null timestamp to have report time
+     * associated with the relevant source or trigger time at which the report would be sent.
+     */
     private List<JSONObject> getActualAggregateReportObjects(
             List<AggregateReport> aggregateReports,
             List<Uri> destinations,
             List<JSONObject> payloads,
-            long reportDelay)
+            @Nullable Long timestamp)
             throws JSONException {
         List<JSONObject> result = new ArrayList<>();
         for (int i = 0; i < destinations.size(); i++) {
@@ -664,22 +674,11 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
                             .put(
                                     TestFormatJsonMapping.REPORT_TIME_KEY,
                                     String.valueOf(
-                                            aggregateReports
-                                                            .get(i)
-                                                            .getApi()
-                                                            .equals("attribution-reporting-debug")
+                                            timestamp == null
                                                     ? aggregateReports
                                                             .get(i)
                                                             .getScheduledReportTime()
-                                                    : aggregateReports
-                                                                    .get(i)
-                                                                    .getScheduledReportTime()
-                                                            // Debug aggregate reports have the same
-                                                            // scheduled
-                                                            // report time as regular aggregate
-                                                            // reports but are
-                                                            // sent without delay.
-                                                            - reportDelay))
+                                                    : timestamp.longValue()))
                             .put(
                                     TestFormatJsonMapping.REPORT_TO_KEY,
                                     destinations.get(i).toString())
@@ -691,8 +690,8 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
         return result;
     }
 
-    private static JSONObject getActualAggregatablePayloadForTest(
-            JSONObject sharedInfo, JSONObject data) throws JSONException {
+    private JSONObject getActualAggregatablePayloadForTest(JSONObject sharedInfo, JSONObject data)
+            throws JSONException {
         String payload =
                 data.getJSONArray("aggregation_service_payloads")
                         .getJSONObject(0)
@@ -741,8 +740,7 @@ public abstract class E2EAbstractMockTest extends E2EAbstractTest {
         return aggregateJson;
     }
 
-    private static JSONArray getActualAggregateHistograms(byte[] encodedCborPayload)
-            throws JSONException {
+    JSONArray getActualAggregateHistograms(byte[] encodedCborPayload) throws JSONException {
         List<JSONObject> result = new ArrayList<>();
 
         try {

@@ -39,8 +39,13 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.download.MobileDataDownloadFactory;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.proto.ApiDenyGroupsForPackage;
+import com.android.adservices.service.proto.ApiDenyGroupsForPackageVersions;
+import com.android.adservices.service.proto.ApiGroups;
 import com.android.adservices.service.proto.ApiGroupsCache;
 import com.android.adservices.service.proto.PackageToApiDenyGroupsCacheMap;
+import com.android.adservices.service.proto.PackageToApiDenyGroupsMap;
+import com.android.adservices.service.proto.PackageType;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -49,6 +54,7 @@ import com.google.android.libraries.mobiledatadownload.file.SynchronousFileStora
 import com.google.common.util.concurrent.Futures;
 import com.google.mobiledatadownload.ClientConfigProto;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -80,6 +86,7 @@ public final class AdPackageDenyResolverTest extends AdServicesExtendedMockitoTe
         doReturn(mMockFileStorage).when(MobileDataDownloadFactory::getFileStorage);
         doReturn(mMockMdd).when(() -> (MobileDataDownloadFactory.getMdd(any())));
         createDataStoreForTesting();
+        createInstalledPackagesMapForTesting();
         mAdDenyPackageResolver =
                 AdPackageDenyResolver.newInstanceForTests(
                         mMockMdd, mMockFileStorage, mMockPackageDenyCacheDataStore, true);
@@ -103,9 +110,25 @@ public final class AdPackageDenyResolverTest extends AdServicesExtendedMockitoTe
     }
 
     @Test
-    public void testLoadDenyDataFromMdd_success() throws Exception {
+    public void testLoadDenyDataFromMdd_withoutFilter_success() throws Exception {
+        when(mMockFlags.getPackageDenyEnableInstalledPackageFilter()).thenReturn(false);
         mockTestMddFile(TEST_FILE);
-        createInstalledPackagesMapForTesting();
+        when(mMockPackageDenyCacheDataStore.updateDataAsync(any()))
+                .thenReturn(
+                        Futures.immediateFuture(
+                                PackageToApiDenyGroupsCacheMap.newBuilder().build()));
+        expect.withMessage("test_loadDenyDataFromMdd_success")
+                .that(
+                        mAdDenyPackageResolver
+                                .loadDenyDataFromMdd()
+                                .get(TIMEOUT, TimeUnit.MILLISECONDS))
+                .isEqualTo(AdPackageDenyResolver.PackageDenyMddProcessStatus.SUCCESS);
+    }
+
+    @Test
+    public void testLoadDenyDataFromMdd_withFilter_success() throws Exception {
+        mockTestMddFile(TEST_FILE);
+        when(mMockFlags.getPackageDenyEnableInstalledPackageFilter()).thenReturn(true);
         when(mMockPackageDenyCacheDataStore.updateDataAsync(any()))
                 .thenReturn(
                         Futures.immediateFuture(
@@ -126,7 +149,6 @@ public final class AdPackageDenyResolverTest extends AdServicesExtendedMockitoTe
             ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
     public void testUpdateCache_FutureInterruptedException() throws Exception {
         mockTestMddFile(TEST_FILE);
-        createInstalledPackagesMapForTesting();
         when(mMockPackageDenyCacheDataStore.updateDataAsync(any()))
                 .thenReturn(Futures.immediateFailedFuture(new InterruptedException()));
 
@@ -146,8 +168,8 @@ public final class AdPackageDenyResolverTest extends AdServicesExtendedMockitoTe
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_DENY_PROCESS_ERROR_FAILED_FILTERING_INSTALLED_PACKAGES,
             ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
     public void testInstalledPackages_Exception() throws Exception {
+        when(mMockFlags.getPackageDenyEnableInstalledPackageFilter()).thenReturn(true);
         mockTestMddFile(TEST_FILE);
-        createInstalledPackagesMapForTesting();
         PackageManager mockPackageManager = mock(PackageManager.class);
         when(mSpyContext.getPackageManager()).thenReturn(mockPackageManager);
         when(mockPackageManager.getInstalledApplications(anyInt()))
@@ -231,7 +253,6 @@ public final class AdPackageDenyResolverTest extends AdServicesExtendedMockitoTe
     public void testReadFile_incorrect_format() throws Exception {
         createDataStoreForTesting();
         mockTestMddFile(TEST_FILE_FAIL);
-        createInstalledPackagesMapForTesting();
 
         expect.withMessage("test_readFile_incorrect_format")
                 .that(
@@ -261,6 +282,34 @@ public final class AdPackageDenyResolverTest extends AdServicesExtendedMockitoTe
                 .isEqualTo(AdPackageDenyResolver.PackageDenyMddProcessStatus.DISABLED);
     }
 
+    @Test
+    public void test_filter_package_install() {
+        when(mMockFlags.getPackageDenyEnableInstalledPackageFilter()).thenReturn(true);
+        PackageToApiDenyGroupsCacheMap actual =
+                mAdDenyPackageResolver.convertToCacheMap(
+                        createPackageToApiDenyGroupsMapForTesting());
+        Assert.assertTrue(
+                "app1 should be present",
+                actual.getAppToApiDenyGroupsCacheMap().containsKey("app1"));
+        Assert.assertFalse(
+                "app_not_installed should not be present",
+                actual.getAppToApiDenyGroupsCacheMap().containsKey("app_not_installed"));
+    }
+
+    @Test
+    public void test_no_filter_package_install() {
+        when(mMockFlags.getPackageDenyEnableInstalledPackageFilter()).thenReturn(false);
+        PackageToApiDenyGroupsCacheMap actual =
+                mAdDenyPackageResolver.convertToCacheMap(
+                        createPackageToApiDenyGroupsMapForTesting());
+        Assert.assertTrue(
+                "app1 should be present",
+                actual.getAppToApiDenyGroupsCacheMap().containsKey("app1"));
+        Assert.assertTrue(
+                "app_not_installed should be present",
+                actual.getAppToApiDenyGroupsCacheMap().containsKey("app_not_installed"));
+    }
+
     private void createDataStoreForTesting() {
         when(mMockPackageDenyCacheDataStore.getDataAsync())
                 .thenReturn(
@@ -287,6 +336,37 @@ public final class AdPackageDenyResolverTest extends AdServicesExtendedMockitoTe
                                                         .addAllApiGroup(List.of("d1"))
                                                         .build())
                                         .build()));
+    }
+
+    private PackageToApiDenyGroupsMap createPackageToApiDenyGroupsMapForTesting() {
+        return PackageToApiDenyGroupsMap.newBuilder()
+                .putMap(
+                        "app1",
+                        ApiDenyGroupsForPackage.newBuilder()
+                                .setPackageType(PackageType.APP)
+                                .addApiDenyGroupsForPackageVersions(
+                                        ApiDenyGroupsForPackageVersions.newBuilder()
+                                                .setApiGroups(
+                                                        ApiGroups.newBuilder()
+                                                                .addApiGroup("a1")
+                                                                .addApiGroup("a2")
+                                                                .build())
+                                                .build())
+                                .build())
+                .putMap(
+                        "app_not_installed",
+                        ApiDenyGroupsForPackage.newBuilder()
+                                .setPackageType(PackageType.APP)
+                                .addApiDenyGroupsForPackageVersions(
+                                        ApiDenyGroupsForPackageVersions.newBuilder()
+                                                .setApiGroups(
+                                                        ApiGroups.newBuilder()
+                                                                .addApiGroup("a1")
+                                                                .addApiGroup("a2")
+                                                                .build())
+                                                .build())
+                                .build())
+                .build();
     }
 
     private void createInstalledPackagesMapForTesting()

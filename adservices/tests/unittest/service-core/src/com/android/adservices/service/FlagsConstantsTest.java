@@ -25,6 +25,7 @@ import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AD_SELECTION_FILTER
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_DEFAULT_PARTIAL_CUSTOM_AUDIENCES_CONSTRUCTOR;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_DUMP_EFFECTIVE_TARGET_SDK_VERSION;
 import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE;
@@ -128,7 +129,11 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                     // device auction and
                     // one for the server auction
                     // TODO:(b/377791969) move to NON_CANONICAL_FLAGS when PH flags are added
-                    FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS);
+                    FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS,
+
+                    // This flag is used to guard a feature using an updated constructor, there are
+                    // no accompanying service changes.
+                    FLAG_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_DEFAULT_PARTIAL_CUSTOM_AUDIENCES_CONSTRUCTOR);
 
     /**
      * Map used by {@link #testAllAconfigFlagsAreMapped()} - key is the {@code aconfig} flag name,
