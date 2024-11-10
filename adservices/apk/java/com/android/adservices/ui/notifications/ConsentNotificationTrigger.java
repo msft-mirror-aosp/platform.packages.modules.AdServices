@@ -16,6 +16,7 @@
 
 package com.android.adservices.ui.notifications;
 
+import static android.adservices.common.AdServicesCommonManager.ACTION_ADSERVICES_NOTIFICATION_DISPLAYED;
 import static android.adservices.common.AdServicesCommonManager.ACTION_VIEW_ADSERVICES_CONSENT_PAGE;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE_COMPAT;
@@ -106,11 +107,17 @@ public class ConsentNotificationTrigger {
                 getNotification(context, isEuDevice, gaUxFeatureEnabled, consentManager);
 
         notificationManager.notify(NOTIFICATION_ID, notification);
+        if (FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled()) {
+            LogUtil.d("Sending broadcast about notification being displayed.");
+            context.sendBroadcast(new Intent(ACTION_ADSERVICES_NOTIFICATION_DISPLAYED));
+        }
         recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
 
         // must setup consents after recording notification displayed data to ensure accurate UX in
         // logs
-        setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
+        if (!FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled()) {
+            setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
+        }
         UiStatsLogger.logNotificationDisplayed();
         LogUtil.d("Notification was displayed.");
     }

@@ -83,7 +83,6 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -512,8 +511,7 @@ public final class MeasurementImplTest extends AdServicesExtendedMockitoTestCase
 
     @Test
     @RequiresSdkLevelAtLeastT()
-    @Ignore("b/372689706")
-    public void testDeletePackageRecords_success_recordsDeletionInSystemServer() {
+    public void testDeletePackageRecords_success_recordsDeletionInSystemServer_T() {
         doReturn(false).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
         mocker.mockGetFlags(mMockFlags);
 
@@ -521,13 +519,40 @@ public final class MeasurementImplTest extends AdServicesExtendedMockitoTestCase
         ExtendedMockito.doReturn(mockAdServicesManager)
                 .when(() -> AdServicesManager.getInstance(any()));
 
-        doReturn(Optional.of(true)).when(mDatastoreManager).runInTransactionWithResult(any());
-        doReturn(true).when(mDatastoreManager).runInTransaction(any());
+        doReturn(Optional.of(Collections.singletonList(DEFAULT_URI)))
+                .when(mDatastoreManager)
+                .runInTransactionWithResult(any());
+        doReturn(true).when(mMeasurementDataDeleter).deleteAppUninstalledData(any(), anyLong());
 
         doDeletePackageRecords();
 
         Mockito.verify(mockAdServicesManager)
                 .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+    }
+
+    @Test
+    @MockStatic(SdkLevel.class)
+    public void testDeletePackageRecords_success_recordsDeletionInSystemServer_S() {
+        doReturn(false).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
+        mocker.mockGetFlags(mMockFlags);
+        mocker.mockSdkLevelS();
+
+        MeasurementRollbackCompatManager mockRollbackManager =
+                Mockito.mock(MeasurementRollbackCompatManager.class);
+        ExtendedMockito.doReturn(mockRollbackManager)
+                .when(
+                        () ->
+                                MeasurementRollbackCompatManager.getInstance(
+                                        any(), eq(AdServicesManager.MEASUREMENT_DELETION)));
+
+        doReturn(Optional.of(Collections.singletonList(DEFAULT_URI)))
+                .when(mDatastoreManager)
+                .runInTransactionWithResult(any());
+        doReturn(true).when(mMeasurementDataDeleter).deleteAppUninstalledData(any(), anyLong());
+
+        doDeletePackageRecords();
+
+        Mockito.verify(mockRollbackManager).recordAdServicesDeletionOccurred();
     }
 
     @Test
@@ -627,9 +652,8 @@ public final class MeasurementImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
-    @RequiresSdkLevelAtLeastT()
-    @Ignore("b/372689706")
-    public void testDeleteAllUninstalledMeasurementData_success_recordsDeletionInSystemServer() {
+    @RequiresSdkLevelAtLeastT
+    public void testDeleteAllUninstalledMeasurementData_success_recordsDeletionInSystemServer_T() {
         doReturn(false).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
         mocker.mockGetFlags(mMockFlags);
 
@@ -637,14 +661,42 @@ public final class MeasurementImplTest extends AdServicesExtendedMockitoTestCase
         ExtendedMockito.doReturn(mockAdServicesManager)
                 .when(() -> AdServicesManager.getInstance(any()));
 
-        doReturn(Optional.of(true)).when(mDatastoreManager).runInTransactionWithResult(any());
-        doReturn(true).when(mDatastoreManager).runInTransaction(any());
+        doReturn(Optional.of(Collections.singletonList(DEFAULT_URI)))
+                .when(mDatastoreManager)
+                .runInTransactionWithResult(any());
+        doReturn(true).when(mMeasurementDataDeleter).deleteAppUninstalledData(any(), anyLong());
 
         MeasurementImpl measurement = createMeasurementImpl();
         measurement.deleteAllUninstalledMeasurementData();
 
         Mockito.verify(mockAdServicesManager)
                 .recordAdServicesDeletionOccurred(AdServicesManager.MEASUREMENT_DELETION);
+    }
+
+    @Test
+    @MockStatic(SdkLevel.class)
+    public void testDeleteAllUninstalledMeasurementData_success_recordsDeletionInSystemServer_S() {
+        doReturn(false).when(mMockFlags).getMeasurementRollbackDeletionKillSwitch();
+        mocker.mockGetFlags(mMockFlags);
+        mocker.mockSdkLevelS();
+
+        MeasurementRollbackCompatManager mockRollbackManager =
+                Mockito.mock(MeasurementRollbackCompatManager.class);
+        ExtendedMockito.doReturn(mockRollbackManager)
+                .when(
+                        () ->
+                                MeasurementRollbackCompatManager.getInstance(
+                                        any(), eq(AdServicesManager.MEASUREMENT_DELETION)));
+
+        doReturn(Optional.of(Collections.singletonList(DEFAULT_URI)))
+                .when(mDatastoreManager)
+                .runInTransactionWithResult(any());
+        doReturn(true).when(mMeasurementDataDeleter).deleteAppUninstalledData(any(), anyLong());
+
+        MeasurementImpl measurement = createMeasurementImpl();
+        measurement.deleteAllUninstalledMeasurementData();
+
+        Mockito.verify(mockRollbackManager).recordAdServicesDeletionOccurred();
     }
 
     @Test

@@ -15,19 +15,34 @@
  */
 package com.example.adservices.samples.ui.sampletestapp;
 
+import static android.adservices.common.AdServicesCommonManager.ACTION_ADSERVICES_NOTIFICATION_DISPLAYED;
+
+import static com.example.adservices.samples.ui.sampletestapp.MyBroadcastReceiver.TAG;
+
+import android.content.Context;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 /**
  * Android application activity that is guarded by
- * "android.adservices.common.action.VIEW_ADSERVICES_CONSENT_PAGE" action filter, and has system
- * privileges. This is opened when the above intent is fired on notification click.
+ * "android.adservices.common.action.VIEW_ADSERVICES_CONSENT_PAGE" action filter. This is opened
+ * when the above intent is fired on notification click.
  */
 public final class MainActivity extends AppCompatActivity {
+    private final MyBroadcastReceiver mReceiver = new MyBroadcastReceiver();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ACTION_ADSERVICES_NOTIFICATION_DISPLAYED);
+        Context context = getApplicationContext();
+        ContextCompat.registerReceiver(context, mReceiver, filter, ContextCompat.RECEIVER_EXPORTED);
+        Log.d(TAG, "BroadcastReceiver Registered");
     }
 }

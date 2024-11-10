@@ -21,7 +21,6 @@ import static com.android.adservices.data.measurement.MeasurementTables.Aggregat
 import static com.android.adservices.data.measurement.MeasurementTables.AppReportHistoryContract;
 import static com.android.adservices.data.measurement.MeasurementTables.AsyncRegistrationContract;
 import static com.android.adservices.data.measurement.MeasurementTables.AttributionContract;
-import static com.android.adservices.data.measurement.MeasurementTables.CREATE_TABLE_APP_REPORT_HISTORY_LATEST;
 import static com.android.adservices.data.measurement.MeasurementTables.DebugReportContract;
 import static com.android.adservices.data.measurement.MeasurementTables.EventReportContract;
 import static com.android.adservices.data.measurement.MeasurementTables.INDEX_PREFIX;
@@ -3504,6 +3503,22 @@ public class MeasurementDbSchemaTrail {
                     + ") ON DELETE CASCADE"
                     + ")";
 
+    public static final String CREATE_TABLE_APP_REPORT_HISTORY_V37 =
+            "CREATE TABLE "
+                    + AppReportHistoryContract.TABLE
+                    + " ("
+                    + AppReportHistoryContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + AppReportHistoryContract.APP_DESTINATION
+                    + " TEXT, "
+                    + AppReportHistoryContract.LAST_REPORT_DELIVERED_TIME
+                    + " INTEGER, "
+                    + "PRIMARY KEY("
+                    + AppReportHistoryContract.REGISTRATION_ORIGIN
+                    + ", "
+                    + AppReportHistoryContract.APP_DESTINATION
+                    + "))";
+
     private static final Map<String, String> CREATE_STATEMENT_BY_TABLE_V6 =
             ImmutableMap.of(
                     SourceContract.TABLE, CREATE_TABLE_SOURCE_V6,
@@ -3990,7 +4005,7 @@ public class MeasurementDbSchemaTrail {
         Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV36());
         createStatements.put(
                 MeasurementTables.AppReportHistoryContract.TABLE,
-                CREATE_TABLE_APP_REPORT_HISTORY_LATEST);
+                CREATE_TABLE_APP_REPORT_HISTORY_V37);
         return createStatements;
     }
 

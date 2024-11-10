@@ -69,6 +69,11 @@ import java.util.stream.Collectors;
 public class AtomicFileDatastore {
     public static final int NO_PREVIOUS_VERSION = -1;
 
+    /**
+     * Argument to {@link #dump(PrintWriter, String, String[])} so it includes the database content.
+     */
+    public static final String DUMP_ARG_INCLUDE_CONTENTS = "--include_contents";
+
     private final int mDatastoreVersion;
     private final AdServicesErrorLogger mAdServicesErrorLogger;
 
@@ -669,20 +674,37 @@ public class AtomicFileDatastore {
         }
     }
 
-    /** Dumps its internal state. */
+    // TODO(b/299942046): refactor usage or remove @Deprecated
+    /**
+     * Dumps its internal state.
+     *
+     * @deprecated use {@link #dump(PrintWriter, String, String[])} instead
+     */
+    @Deprecated
     public void dump(PrintWriter writer, String prefix) {
+        dump(writer, prefix, /* args= */ null);
+    }
+
+    /** Dumps its internal state. */
+    public void dump(PrintWriter writer, String prefix, @Nullable String[] args) {
         writer.printf("%smDatastoreVersion: %d\n", prefix, mDatastoreVersion);
         writer.printf("%smPreviousStoredVersion: %d\n", prefix, mPreviousStoredVersion);
         writer.printf("%smVersionKey: %s\n", prefix, mVersionKey);
         writer.printf("%smAtomicFile: %s", prefix, mAtomicFile.getBaseFile().getAbsolutePath());
         if (SdkLevel.isAtLeastS()) {
-            writer.printf(" (last modified at %d)", mAtomicFile.getLastModifiedTime());
+            writer.printf(" (last modified at %d)\n", mAtomicFile.getLastModifiedTime());
         }
-        int size = mLocalMap.size();
-        writer.printf(":\n%s%d entries\n", prefix, size);
 
-        // TODO(b/299942046): decide whether it's ok to dump the entries themselves (perhaps passing
-        // an argument).
+        boolean dumpAll = args != null && args[0].equals(DUMP_ARG_INCLUDE_CONTENTS);
+        int size = mLocalMap.size();
+        writer.printf("%s%d entries", prefix, size);
+        if (!dumpAll || size == 0) {
+            writer.println();
+            return;
+        }
+        writer.println(":");
+        String prefix2 = prefix + prefix;
+        mLocalMap.forEach((k, v) -> writer.printf("%s%s: %s\n", prefix2, k, v));
     }
 
     /** Returns the version that was written prior to the device starting. */
