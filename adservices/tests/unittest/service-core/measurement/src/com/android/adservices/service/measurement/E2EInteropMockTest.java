@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.BUCKET;
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.ID;
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.VALUE;
+
 import static java.util.Map.entry;
 
 import android.adservices.measurement.RegistrationRequest;
@@ -30,15 +34,21 @@ import com.android.adservices.service.measurement.actions.ReportObjects;
 import com.android.adservices.service.measurement.registration.AsyncFetchStatus;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.util.Enrollment;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import com.google.common.collect.ImmutableSet;
 
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -50,37 +60,33 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 
+import co.nstant.in.cbor.CborDecoder;
+import co.nstant.in.cbor.CborException;
+import co.nstant.in.cbor.model.Array;
+import co.nstant.in.cbor.model.ByteString;
+import co.nstant.in.cbor.model.DataItem;
+import co.nstant.in.cbor.model.UnicodeString;
+
 /**
  * End-to-end test from source and trigger registration to attribution reporting, using mocked HTTP
  * requests.
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop GitHub commit
- * c0f2cf42fa9c1463a1c6d9d1a5ed547bc4b4e972.
+ * I73cec5ed92bac54689c169577273785174cd0af2.
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EAbstractMockTest {
     static {
         sTestsToSkip =
                 ImmutableSet.of(
-                        "aggregatable_budget.json",
-                        "aggregatable_contributions_creation.json",
                         "aggregatable_contributions_with_filtering_ids.json",
                         "aggregatable_debug_reports.json",
-                        "aggregatable_debug_reports_limits.json",
-                        "aggregatable_debug_reports_with_filtering_ids.json",
                         "aggregatable_dedup_key.json",
-                        "aggregatable_large_key.json",
-                        "aggregatable_report_source_registration_time.json",
-                        "aggregatable_report_trigger_context_id.json",
                         "aggregatable_report_window.json",
                         "aggregatable_reports_fake_source.json",
-                        "aggregatable_storage_limit.json",
-                        "aggregatable_values_filtering.json",
-                        "aggregatable_with_event_disabled.json",
                         "aggregation_coordinator_origin.json",
                         "aggregation_key_identifier_length.json",
-                        "attribution_scopes_max_event_states_limit.json",
                         "attribution_scopes_navigation_limit_no_scopes.json",
                         "attribution_scopes_navigation_limit_with_scopes.json",
                         "attribution_scopes_null_scopes_removes_data.json",
@@ -96,7 +102,6 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         "destination_validation.json",
                         "event_level_epsilon.json",
                         "event_level_report_time.json",
-                        "event_level_storage_limit.json",
                         "event_level_trigger_filter_data.json",
                         "event_report_window.json",
                         "event_report_windows.json",
@@ -107,9 +112,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         "header_presence.json",
                         "lookback_window_int_max.json",
                         "lookback_window_precision.json",
-                        "max_aggregatable_reports_per_source.json",
                         "max_event_level_reports_per_source.json",
-                        "multiple_destinations.json",
                         "null_aggregatable_report.json",
                         "os_debug_reports.json",
                         "preferred_platform.json",
@@ -117,14 +120,10 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         "rate_limit_max_attributions.json",
                         "rate_limit_max_reporting_origins_per_source_reporting_site.json",
                         "redirect_source_trigger.json",
-                        "source_destination_limit_aggregatable_debug.json",
                         "source_destination_limit_fifo.json",
                         "source_destination_limit_fifo_rate_limits.json",
                         "source_registration_limits.json",
                         "source_storage_limit_expiry.json",
-                        "success_debug_aggregatable.json",
-                        "success_debug_event_level.json",
-                        "top_level_filter_data.json",
                         "unsuitable_response_url.json",
                         "verbose_debug_report_multiple_data.json");
     }
@@ -282,6 +281,9 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                             "true"),
                     entry(
                             FlagsConstants.KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING,
+                            "true"),
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS,
                             "true"));
 
     @Parameterized.Parameters(name = "{3}")
@@ -372,6 +374,55 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
         // Attribution can happen up to an hour after registration call, due to AsyncRegistration
         processActualDebugReportJob(triggerRegistration.mTimestamp, TimeUnit.MINUTES.toMillis(30));
         processActualDebugReportApiJob(triggerRegistration.mTimestamp);
+    }
+
+    @Override
+    JSONArray getActualAggregateHistograms(byte[] encodedCborPayload) throws JSONException {
+        List<JSONObject> result = new ArrayList<>();
+
+        try {
+            final List<DataItem> dataItems =
+                    new CborDecoder(new ByteArrayInputStream(encodedCborPayload)).decode();
+            final co.nstant.in.cbor.model.Map payload =
+                    (co.nstant.in.cbor.model.Map) dataItems.get(0);
+            final Array payloadArray = (Array) payload.get(new UnicodeString("data"));
+            List<DataItem> contributions = payloadArray.getDataItems();
+            for (int i = 0; i < contributions.size(); i++) {
+                co.nstant.in.cbor.model.Map m = (co.nstant.in.cbor.model.Map) contributions.get(i);
+                JSONObject histogram = new JSONObject();
+                String value =
+                        "0x"
+                                + new BigInteger(
+                                                1,
+                                                ((ByteString) m.get(new UnicodeString(BUCKET)))
+                                                        .getBytes())
+                                        .toString(16);
+                // Skip contribution padding
+                if (i > 0 && value.equals("0x0")) {
+                    continue;
+                }
+                histogram.put(AggregateHistogramKeys.BUCKET, value);
+                histogram.put(
+                        AggregateHistogramKeys.VALUE,
+                        new BigInteger(1, ((ByteString) m.get(new UnicodeString(VALUE))).getBytes())
+                                .intValue());
+                if (m.get(new UnicodeString(AggregateHistogramKeys.ID)) != null) {
+                    UnsignedLong id =
+                            new UnsignedLong(
+                                    new BigInteger(
+                                                    1,
+                                                    ((ByteString) m.get(new UnicodeString(ID)))
+                                                            .getBytes())
+                                            .longValue());
+                    histogram.put(ID, id);
+                }
+                result.add(histogram);
+            }
+        } catch (CborException e) {
+            throw new JSONException(e);
+        }
+
+        return new JSONArray(result);
     }
 
     private void insertSourceOrAssertUnparsable(

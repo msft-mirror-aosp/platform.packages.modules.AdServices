@@ -39,6 +39,7 @@ import static com.android.adservices.service.customaudience.ScheduleCustomAudien
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.VALID_BIDDING_SIGNALS;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayload;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadInvalidJoinCA;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithInvalidExpirationTime;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithScheduleRequests;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutJoinCA;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutLeaveCA;
@@ -3780,6 +3781,95 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         assertWithMessage("Number of number of partial custom audience in request")
                 .that(performedStats.getNumberOfPartialCustomAudienceInRequest())
                 .isEqualTo(partialCustomAudienceList.size());
+    }
+
+    @Test
+    public void testPerformScheduledUpdates_exceptionDueToInvalidExpirationTime_logsCorrectly()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1);
+
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClientMock,
+                        mFakeFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
+                        mAdServicesLoggerMock);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                UPDATE,
+                Collections.emptyList(),
+                Collections.emptyList(),
+                false,
+                mScheduleAttemptedBuilder);
+
+        String responsePayload =
+                createJsonResponsePayloadWithInvalidExpirationTime(
+                                UPDATE.getBuyer(),
+                                UPDATE.getOwner(),
+                                partialCustomAudienceList.stream()
+                                        .map(ca -> ca.getName())
+                                        .collect(Collectors.toList()))
+                        .toString();
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responsePayload)
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        Void ignored =
+                mHandler.performScheduledUpdates(UPDATE.getScheduledTime().plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesHttpsClientMock).performRequestGetResponseInPlainString(any());
+
+        List<DBScheduledCustomAudienceUpdate> customAudienceScheduledUpdatesInDB =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(UPDATE.getOwner());
+        // Scheduled updates should be deleted from the database.
+        assertEquals(0, customAudienceScheduledUpdatesInDB.size());
+
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedFailureStats(
+                        mScheduleCAFailureStatsCaptor.capture());
+        ScheduledCustomAudienceUpdatePerformedFailureStats loggedStats =
+                mScheduleCAFailureStatsCaptor.getValue();
+        assertWithMessage("Failure action")
+                .that(loggedStats.getFailureAction())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_JOIN_CA);
+        assertWithMessage("Failure type")
+                .that(loggedStats.getFailureType())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR);
+
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedStats(
+                        mScheduleCAUpdatePerformedStatsCaptor.capture());
+        ScheduledCustomAudienceUpdatePerformedStats performedStats =
+                mScheduleCAUpdatePerformedStatsCaptor.getValue();
+        assertWithMessage("Number of custom audience joined")
+                .that(performedStats.getNumberOfCustomAudienceJoined())
+                .isEqualTo(0);
+        assertWithMessage("Number of join custom audience in response")
+                .that(performedStats.getNumberOfJoinCustomAudienceInResponse())
+                .isEqualTo(1);
+        assertWithMessage("Number of leave custom audience in response")
+                .that(performedStats.getNumberOfLeaveCustomAudienceInResponse())
+                .isEqualTo(0);
+        assertWithMessage("Number of custom audiences left")
+                .that(performedStats.getNumberOfCustomAudienceLeft())
+                .isEqualTo(0);
+        assertWithMessage("Number of number of partial custom audience in request")
+                .that(performedStats.getNumberOfPartialCustomAudienceInRequest())
+                .isEqualTo(0);
     }
 
     @Test

@@ -720,9 +720,9 @@ public class AsyncSourceFetcher {
                 return Optional.empty();
             }
             int intBudget = maybeIntBudget.get();
-            if (intBudget <= 0) {
+            if (intBudget < 0) {
                 LoggerFactory.getMeasurementLogger()
-                        .d("parseAggregatableNamedBudgets: budget is non positive. %s", intBudget);
+                        .d("parseAggregatableNamedBudgets: budget is negative. %s", intBudget);
                 return Optional.empty();
             }
             if (intBudget > mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()) {

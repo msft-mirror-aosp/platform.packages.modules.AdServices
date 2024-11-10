@@ -24,6 +24,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -60,6 +61,13 @@ public class AggregateCryptoConverterTest {
                     + "{\"bucket\": \"3\", \"value\":4}"
                     + "]}";
 
+    private static final String DEFAULT_PAYLOAD_WITH_FILTERING_ID =
+            "{\"operation\":\"histogram\", "
+                    + "\"data\": ["
+                    + "{\"bucket\": \"1\", \"value\":2, \"id\":\"15445556313182349289\"},"
+                    + "{\"bucket\": \"3\", \"value\":4, \"id\":\"18446744073709551615\"}"
+                    + "]}";
+
     private static final String PADDED_PAYLOAD1 =
             "{\"operation\":\"histogram\", "
                     + "\"data\": ["
@@ -85,6 +93,18 @@ public class AggregateCryptoConverterTest {
         String result =
                 AggregateCryptoConverter.encrypt(
                         AggregateCryptoFixture.getPublicKeyBase64(), DEFAULT_PAYLOAD, SHARED_INFO);
+        assertNotNull(result);
+        assertEncryptedPayload(result, SHARED_INFO);
+    }
+
+    @Test
+    public void testEncrypt_successfully_withFilteringId() throws Exception {
+        String result =
+                AggregateCryptoConverter.encrypt(
+                        AggregateCryptoFixture.getPublicKeyBase64(),
+                        DEFAULT_PAYLOAD_WITH_FILTERING_ID,
+                        SHARED_INFO,
+                        /* maxBytes= */ 8);
         assertNotNull(result);
         assertEncryptedPayload(result, SHARED_INFO);
     }
@@ -201,6 +221,15 @@ public class AggregateCryptoConverterTest {
     @Test
     public void testEncode_successfully() throws Exception {
         String result = AggregateCryptoConverter.encode(DEFAULT_PAYLOAD);
+        assertNotNull(result);
+        assertEncodedPayload(result);
+    }
+
+    @Test
+    public void testEncodeWithFilteringIds_successfully() throws Exception {
+        String result =
+                AggregateCryptoConverter.encode(
+                        DEFAULT_PAYLOAD_WITH_FILTERING_ID, /* maxBytes= */ 8);
         assertNotNull(result);
         assertEncodedPayload(result);
     }
@@ -348,6 +377,7 @@ public class AggregateCryptoConverterTest {
 
         assertEquals(3, payloadArray.getDataItems().size());
         assertEquals("histogram", payload.get(new UnicodeString("operation")).toString());
+        assertEquals(2, getBytesLength((Map) payloadArray.getDataItems().get(0), ID));
         assertTrue(
                 payloadArray.getDataItems().stream()
                         .anyMatch(
@@ -369,6 +399,39 @@ public class AggregateCryptoConverterTest {
                                         isFound((Map) i, BUCKET, "3")
                                                 && isFound((Map) i, VALUE, "4")
                                                 && isFound((Map) i, ID, "65535")));
+    }
+
+    @Test
+    public void testEncodeWithCbor_largeFilteringId_successfully() throws Exception {
+        final List<AggregateHistogramContribution> contributions = new ArrayList<>();
+        final AggregateHistogramContribution contribution =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger("1"))
+                        .setValue(2)
+                        .setId(new UnsignedLong("18446744073709551615"))
+                        .build();
+        contributions.add(contribution);
+
+        final byte[] encoded =
+                AggregateCryptoConverter.encodeWithCbor(
+                        contributions, /* maxBytes= */ 8);
+
+        final List<DataItem> dataItems =
+                new CborDecoder(new ByteArrayInputStream(encoded)).decode();
+
+        final Map payload = (Map) dataItems.get(0);
+        final Array payloadArray = (Array) payload.get(new UnicodeString("data"));
+
+        assertEquals(1, payloadArray.getDataItems().size());
+        assertEquals("histogram", payload.get(new UnicodeString("operation")).toString());
+        assertTrue(
+                payloadArray.getDataItems().stream()
+                        .anyMatch(
+                                i ->
+                                        isFound((Map) i, BUCKET, "1")
+                                                && isFound((Map) i, VALUE, "2")
+                                                && isFound((Map) i, ID, "18446744073709551615")));
+        assertEquals(8, getBytesLength((Map) payloadArray.getDataItems().get(0), ID));
     }
 
     @Test

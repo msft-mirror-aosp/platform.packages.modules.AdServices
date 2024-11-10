@@ -257,7 +257,6 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
         doReturn(
                         CustomAudienceStats.builder()
                                 .setTotalCustomAudienceCount(1)
-                                .setBuyer(BUYER)
                                 .setOwner(VALID_OWNER)
                                 .setPerOwnerCustomAudienceCount(1)
                                 .setPerBuyerCustomAudienceCount(1)
@@ -265,7 +264,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                                 .setTotalOwnerCount(1)
                                 .build())
                 .when(mCustomAudienceDaoMock)
-                .getCustomAudienceStats(eq(VALID_OWNER));
+                .getCustomAudienceStats(eq(VALID_OWNER), any());
 
         doReturn(false)
                 .when(mCustomAudienceDaoMock)

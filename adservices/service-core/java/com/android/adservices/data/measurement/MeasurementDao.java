@@ -1200,18 +1200,18 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void updateSourceAggregatableNamedBudgets(Source source, String budgetName)
+    public void updateSourceAggregatableNamedBudgetAndContribution(
+            String sourceId, String budgetName, BudgetAndContribution budgetAndContribution)
             throws DatastoreException {
-        Objects.requireNonNull(source, "source cannot be null");
+        Objects.requireNonNull(sourceId, "sourceId cannot be null");
         Objects.requireNonNull(budgetName, "budgetName cannot be null");
-        AggregatableNamedBudgets aggregatableNamedBudgets = source.getAggregatableNamedBudgets();
+        Objects.requireNonNull(budgetAndContribution, "budgetAndContribution cannot be null");
+
         ContentValues values = new ContentValues();
-        values.put(
-                SourceNamedBudgetContract.BUDGET,
-                aggregatableNamedBudgets.maybeGetBudget(budgetName).get());
+        values.put(SourceNamedBudgetContract.BUDGET, budgetAndContribution.getBudget());
         values.put(
                 SourceNamedBudgetContract.AGGREGATE_CONTRIBUTIONS,
-                aggregatableNamedBudgets.maybeGetContribution(budgetName).get());
+                budgetAndContribution.getAggregateContribution());
 
         long rows =
                 mSQLTransaction
@@ -1223,12 +1223,12 @@ class MeasurementDao implements IMeasurementDao {
                                         + " = ? AND "
                                         + SourceNamedBudgetContract.NAME
                                         + " = ?",
-                                new String[] {source.getId(), budgetName});
+                                new String[] {sourceId, budgetName});
 
         if (rows == 0) {
             // No rows updated, so insert a new row
             values.put(SourceNamedBudgetContract.NAME, budgetName);
-            values.put(SourceNamedBudgetContract.SOURCE_ID, source.getId());
+            values.put(SourceNamedBudgetContract.SOURCE_ID, sourceId);
             long newRowId =
                     mSQLTransaction
                             .getDatabase()

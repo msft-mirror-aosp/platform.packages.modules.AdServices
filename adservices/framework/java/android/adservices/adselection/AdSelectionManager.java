@@ -353,6 +353,8 @@ public class AdSelectionManager {
                                                                     resultParcel.getAdSelectionId())
                                                             .setRenderUri(
                                                                     resultParcel.getAdRenderUri())
+                                                            .setWinningSeller(
+                                                                    resultParcel.getWinningSeller())
                                                             .build()));
                         }
 
@@ -457,6 +459,8 @@ public class AdSelectionManager {
                                                                     resultParcel.getAdSelectionId())
                                                             .setRenderUri(
                                                                     resultParcel.getRenderUri())
+                                                            .setWinningSeller(
+                                                                    resultParcel.getWinningSeller())
                                                             .build()));
                         }
 
@@ -570,6 +574,8 @@ public class AdSelectionManager {
                                                                     resultParcel.getAdSelectionId())
                                                             .setRenderUri(
                                                                     resultParcel.getRenderUri())
+                                                            .setWinningSeller(
+                                                                    resultParcel.getWinningSeller())
                                                             .build());
                                         }
                                     });

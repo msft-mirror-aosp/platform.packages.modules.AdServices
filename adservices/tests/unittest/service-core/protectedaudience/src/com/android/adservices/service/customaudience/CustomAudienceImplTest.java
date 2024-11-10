@@ -334,7 +334,8 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
                                 .setTotalOwnerCount(1)
                                 .build())
                 .when(mCustomAudienceDaoMock)
-                .getCustomAudienceStats(eq(CustomAudienceFixture.VALID_OWNER));
+                .getCustomAudienceStats(
+                        eq(CustomAudienceFixture.VALID_OWNER), eq(CommonFixture.VALID_BUYER_1));
 
         CustomAudience customAudienceWithValidSubdomains =
                 CustomAudienceFixture.getValidBuilderWithSubdomainsForBuyer(
@@ -375,7 +376,8 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
                         eq(customAudienceWithValidSubdomains.getDailyUpdateUri()),
                         /* debuggable= */ eq(false));
         verify(mCustomAudienceDaoMock)
-                .getCustomAudienceStats(eq(CustomAudienceFixture.VALID_OWNER));
+                .getCustomAudienceStats(
+                        eq(CustomAudienceFixture.VALID_OWNER), eq(CommonFixture.VALID_BUYER_1));
 
         // Clock called in both CA size validator and on persistence into DB
         verify(mClockMock, times(2)).instant();

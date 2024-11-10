@@ -24,6 +24,9 @@ import java.util.Objects;
 
 /** An Identifier representing an ad buyer or seller. */
 public final class AdTechIdentifier implements Parcelable {
+    /** @hide */
+    public static final AdTechIdentifier UNSET_AD_TECH_IDENTIFIER =
+            AdTechIdentifier.fromString("", false);
 
     @NonNull private final String mIdentifier;
 

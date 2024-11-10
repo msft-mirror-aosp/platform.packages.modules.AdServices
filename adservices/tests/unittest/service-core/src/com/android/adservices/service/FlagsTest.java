@@ -24,6 +24,7 @@ import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
+import static com.android.adservices.service.Flags.DEFAULT_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_TIMEOUT_MS;
@@ -261,6 +262,21 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetEnableInstalledPackageFilter() {
+        testFeatureFlag(
+                "DEFAULT_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER",
+                Flags::getPackageDenyEnableInstalledPackageFilter);
+    }
+
+    @Test
+    public void testGetBackgroundJobPeriodMillis() {
+        testFlag(
+                "getBackgroundJobPeriodMillis",
+                DEFAULT_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS,
+                Flags::getPackageDenyBackgroundJobPeriodMillis);
+    }
+
+    @Test
     public void testGetEnablePackageDenyJobOnMddDownload() {
         testFeatureFlag(
                 "DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD",
@@ -369,6 +385,12 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     public void testGetEnrollmentApiBasedSchemaEnabled() {
         testFeatureFlag(
                 "ENROLLMENT_API_BASED_SCHEMA_ENABLED", Flags::getEnrollmentApiBasedSchemaEnabled);
+    }
+
+    @Test
+    public void testGetEnableEnrollmentConfigV3Db() {
+        testFeatureFlag(
+                "DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB", Flags::getEnableEnrollmentConfigV3Db);
     }
 
     @Test

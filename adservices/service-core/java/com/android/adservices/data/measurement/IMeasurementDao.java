@@ -351,10 +351,15 @@ public interface IMeasurementDao {
     /**
      * Updates the value of aggregatable named budgets for the corresponding {@link Source}.
      *
-     * @param source the {@link Source} object.
+     * @param sourceId the id of the {@link Source} object.
      * @param budgetName the name of the budget to update
+     * @param budgetAndContribution the object containing the information to update for the named
+     *     budget
      */
-    void updateSourceAggregatableNamedBudgets(@NonNull Source source, @NonNull String budgetName)
+    void updateSourceAggregatableNamedBudgetAndContribution(
+            @NonNull String sourceId,
+            @NonNull String budgetName,
+            @NonNull BudgetAndContribution budgetAndContribution)
             throws DatastoreException;
 
     /**

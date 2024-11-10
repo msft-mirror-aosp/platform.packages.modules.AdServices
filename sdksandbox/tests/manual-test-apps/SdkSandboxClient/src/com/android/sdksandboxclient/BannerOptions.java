@@ -26,7 +26,8 @@ public class BannerOptions {
         VIDEO,
         WEBVIEW,
         AD_REFRESH,
-        EDITTEXT
+        EDITTEXT,
+        IMAGE
     }
 
     public enum OnClick {
@@ -47,6 +48,7 @@ public class BannerOptions {
 
     private final ViewType mViewType;
     private final String mVideoUrl;
+    private final String mImageUrl;
     private final OnClick mOnClick;
     private final Placement mPlacement;
     private final AdSize mAdSize;
@@ -69,6 +71,10 @@ public class BannerOptions {
         return mVideoUrl;
     }
 
+    public String getImageUrl() {
+        return mImageUrl;
+    }
+
     public String getmPackageToOpen() {
         return mPackageToOpen;
     }
@@ -80,19 +86,22 @@ public class BannerOptions {
     @Override
     public String toString() {
         return String.format(
-                "BannerOptions { ViewType=%s, VideoUrl=%s, OnClick=%s, Placement=%s AdSize=%s }",
-                mViewType, mVideoUrl, mOnClick, mPlacement, mAdSize);
+                "BannerOptions { ViewType=%s, VideoUrl=%s, ImageUrl=%s, OnClick=%s, Placement=%s"
+                    + " AdSize=%s }",
+                mViewType, mVideoUrl, mImageUrl, mOnClick, mPlacement, mAdSize);
     }
 
     private BannerOptions(
             ViewType viewType,
             String videoUrl,
+            String imageUrl,
             OnClick onClick,
             String packageToOpen,
             Placement placement,
             AdSize adSize) {
         mViewType = viewType;
         mVideoUrl = videoUrl;
+        mImageUrl = imageUrl;
         mOnClick = onClick;
         mPlacement = placement;
         mPackageToOpen = packageToOpen;
@@ -103,6 +112,7 @@ public class BannerOptions {
         return new BannerOptions(
                 ViewType.valueOf(sharedPreferences.getString("banner_view_type", "")),
                 sharedPreferences.getString("banner_video_url", ""),
+                sharedPreferences.getString("banner_image_url", ""),
                 OnClick.valueOf(sharedPreferences.getString("banner_on_click", "")),
                 sharedPreferences.getString("package_to_open", ""),
                 Placement.valueOf(sharedPreferences.getString("banner_placement", "")),

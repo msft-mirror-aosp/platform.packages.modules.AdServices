@@ -19,6 +19,7 @@ package android.adservices.test.scenario.adservices.measurement.load.profiles;
 import android.Manifest;
 import android.adservices.test.longevity.concurrent.ProfileSuite;
 import android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource;
+import android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger;
 import android.adservices.test.scenario.adservices.measurement.load.scenarios.DeviceChangeTime;
 import android.adservices.test.scenario.adservices.measurement.load.scenarios.DeviceExecuteShellCommand;
 import android.adservices.test.scenario.adservices.measurement.load.scenarios.ForceRunJob;
@@ -52,6 +53,7 @@ import java.io.IOException;
 @RunWith(ProfileSuite.class)
 @SuiteClasses({
     CallRegisterSource.class,
+    CallRegisterTrigger.class,
     ForceRunJob.class,
     DeviceChangeTime.class,
     DeviceExecuteShellCommand.class

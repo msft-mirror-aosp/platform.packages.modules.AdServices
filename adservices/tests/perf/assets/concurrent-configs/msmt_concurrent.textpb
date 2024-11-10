@@ -40,24 +40,50 @@ scenarios [
             value: "sdk4"
           }
         ]
+      },
+      {
+        journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+        methodName: "registerTrigger"
+        extras [
+          {
+            key: "sdk_name"
+            value: "sdk4"
+          }
+        ]
       }
     ]
     after_test: STAY_IN_APP
   },
   {
-      at: "19:31:00"
-      journeys [
-        {
-          journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource"
-          methodName: "registerSourceView"
-          extras [
-            {
-              key: "sdk_name"
-              value: "sdk4"
-            }
-          ]
-        }
-      ]
-      after_test: STAY_IN_APP
-    }
+    at: "09:11:00"
+    journeys [
+      {
+        journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger"
+        methodName: "registerTrigger"
+        extras [
+          {
+            key: "sdk_name"
+            value: "sdk4"
+          }
+        ]
+      }
+    ]
+    after_test: STAY_IN_APP
+  },
+  {
+    at: "09:31:00"
+    journeys [
+      {
+        journey: "android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource"
+        methodName: "registerSourceView"
+        extras [
+          {
+            key: "sdk_name"
+            value: "sdk4"
+          }
+        ]
+      }
+    ]
+    after_test: STAY_IN_APP
+  }
 ]

@@ -35,11 +35,9 @@ import android.util.Pair;
 
 import com.android.adservices.shared.SharedExtendedMockitoTestCase;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
-import com.android.modules.utils.build.SdkLevel;
-import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.truth.IterableSubject;
-import com.google.common.truth.StringSubject;
 
 import org.junit.After;
 import org.junit.Before;
@@ -57,6 +55,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase {
+
     private static final String VALID_DIR = sContext.getFilesDir().getAbsolutePath();
     private static final String FILENAME = "AtomicFileDatastoreTest.xml";
 
@@ -70,6 +69,10 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
     private static final String TEST_KEY_6 = "key6";
     private static final String TEST_KEY_7 = "key7";
     private static final String TEST_VERSION_KEY = "version_key";
+
+    private static final String[] DUMP_NO_ARGS = null;
+    private static final String[] DUMP_ARGS_FULL_CONTENTS =
+            new String[] {AtomicFileDatastore.DUMP_ARG_INCLUDE_CONTENTS};
 
     @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
 
@@ -759,7 +762,7 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
     }
 
     @Test
-    public void testDump_noEntries() throws Exception {
+    public void testDump_deprecated_noEntries() throws Exception {
         String prefix = "_";
 
         String dump = dump(pw -> mDatastore.dump(pw, prefix));
@@ -769,25 +772,33 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
     }
 
     @Test
-    @MockStatic(SdkLevel.class)
-    public void testDump_R() throws Exception {
-        dumpTest(/* isAtleastS= */ false);
+    public void testDump_noEntries() throws Exception {
+        String prefix = "_";
+
+        String dump = dump(pw -> mDatastore.dump(pw, prefix, DUMP_NO_ARGS));
+
+        assertCommonDumpContents(dump, prefix);
+        expect.withMessage("contents of dump() (# keys)").that(dump).containsMatch("0 entries\n");
     }
 
     @Test
-    @MockStatic(SdkLevel.class)
-    public void testDump_sPlus() throws Exception {
-        dumpTest(/* isAtleastS= */ true);
+    public void testDump_fullContent_noEntries() throws Exception {
+        String prefix = "_";
+
+        String dump = dump(pw -> mDatastore.dump(pw, prefix, DUMP_ARGS_FULL_CONTENTS));
+
+        assertCommonDumpContents(dump, prefix);
+        expect.withMessage("contents of dump() (# keys)").that(dump).containsMatch("0 entries\n");
     }
 
-    private void dumpTest(boolean isAtleastS) throws Exception {
-        mocker.mockIsAtLeastS(isAtleastS);
-
+    @Test
+    @RequiresSdkLevelAtLeastS(reason = "getLastModifiedTime() is not available on R")
+    public void testDump() throws Exception {
         String keyUnlikelyToBeOnDump = "I can't believe it's dumper!";
         mDatastore.putBoolean(keyUnlikelyToBeOnDump, true);
 
         String prefix = "_";
-        String dump = dump(pw -> mDatastore.dump(pw, prefix));
+        String dump = dump(pw -> mDatastore.dump(pw, prefix, DUMP_NO_ARGS));
         mLog.d("Contents of dump: \n%s", dump);
 
         assertCommonDumpContents(dump, prefix);
@@ -795,14 +806,25 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
         expect.withMessage("contents of dump() (# keys)").that(dump).containsMatch("1 entries\n");
         // Make sure content of datastore itself is not dumped, as it could contain PII
         expect.withMessage("contents of dump()").that(dump).doesNotContain(keyUnlikelyToBeOnDump);
+        expect.withMessage("contents of dump() - atomic file").that(dump).contains("last modified");
+    }
 
-        StringSubject atomicFileSubject =
-                expect.withMessage("contents of dump() - atomic file").that(dump);
-        if (isAtleastS) {
-            atomicFileSubject.contains("last modified");
-        } else {
-            atomicFileSubject.doesNotContain("last modified");
-        }
+    @Test
+    @RequiresSdkLevelAtLeastS(reason = "getLastModifiedTime() is not available on R")
+    public void testDump_fullContent() throws Exception {
+        mDatastore.putBoolean("BOO!", true);
+        mDatastore.putInt("INT?", 42);
+
+        String prefix = "_";
+        String dump = dump(pw -> mDatastore.dump(pw, "_", DUMP_ARGS_FULL_CONTENTS));
+        mLog.d("Contents of dump: \n%s", dump);
+
+        assertCommonDumpContents(dump, prefix);
+
+        expect.withMessage("contents of dump() (# keys)")
+                .that(dump)
+                .containsMatch("_2 entries:\n__BOO\\!: true\n__INT\\?: 42");
+        expect.withMessage("contents of dump() - atomic file").that(dump).contains("last modified");
     }
 
     @Test

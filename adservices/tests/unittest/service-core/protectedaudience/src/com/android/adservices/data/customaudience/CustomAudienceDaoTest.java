@@ -1275,7 +1275,16 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    mCustomAudienceDao.getCustomAudienceStats(null);
+                    mCustomAudienceDao.getCustomAudienceStats(/* owner= */ null, BUYER_1);
+                });
+    }
+
+    @Test
+    public void testGetCustomAudienceStats_nullBuyer() {
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    mCustomAudienceDao.getCustomAudienceStats(OWNER_1, /* buyer= */ null);
                 });
     }
 
@@ -1284,21 +1293,57 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
         doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
 
         verifyCustomAudienceStats(
-                mCustomAudienceDao.getCustomAudienceStats(OWNER_1), OWNER_1, 0, 0, 0);
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_1, BUYER_1),
+                OWNER_1,
+                BUYER_1,
+                /*totalCount*/ 0,
+                /*perOwnerCount*/ 0,
+                /*ownerCount*/ 0,
+                /*perBuyerCount*/ 0);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /* debuggable= */ false);
         verifyCustomAudienceStats(
-                mCustomAudienceDao.getCustomAudienceStats(OWNER_1), OWNER_1, 1, 1, 1);
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_1, BUYER_1),
+                OWNER_1,
+                BUYER_1,
+                /* totalCount= */ 1,
+                /* perOwnerCount= */ 1,
+                /* ownerCount= */ 1,
+                /* perBuyerCount= */ 1);
         verifyCustomAudienceStats(
-                mCustomAudienceDao.getCustomAudienceStats(OWNER_2), OWNER_2, 1, 0, 1);
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_2, BUYER_2),
+                OWNER_2,
+                BUYER_2,
+                /* totalCount= */ 1,
+                /* perOwnerCount= */ 0,
+                /* ownerCount= */ 1,
+                /* perBuyerCount= */ 0);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_1, false);
+                CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_1, /*debuggable*/ false);
         verifyCustomAudienceStats(
-                mCustomAudienceDao.getCustomAudienceStats(OWNER_1), OWNER_1, 2, 1, 2);
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_1, BUYER_1),
+                OWNER_1,
+                BUYER_1,
+                /* totalCount= */ 2,
+                /* perOwnerCount= */ 1,
+                /* ownerCount= */ 2,
+                /* perBuyerCount= */ 1);
         verifyCustomAudienceStats(
-                mCustomAudienceDao.getCustomAudienceStats(OWNER_2), OWNER_2, 2, 1, 2);
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_2, BUYER_2),
+                OWNER_2,
+                BUYER_2,
+                /* totalCount= */ 2,
+                /* perOwnerCount= */ 1,
+                /* ownerCount= */ 2,
+                /* perBuyerCount= */ 1);
         verifyCustomAudienceStats(
-                mCustomAudienceDao.getCustomAudienceStats(OWNER_3), OWNER_3, 2, 0, 2);
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_3, BUYER_3),
+                OWNER_3,
+                BUYER_3,
+                /* totalCount= */ 2,
+                /* perOwnerCount= */ 0,
+                /* ownerCount= */ 2,
+                /* perBuyerCount= */ 0);
     }
 
     @Test(expected = NullPointerException.class)
@@ -3556,12 +3601,28 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
     private void verifyCustomAudienceStats(
             CustomAudienceStats customAudienceStats,
             String owner,
+            AdTechIdentifier buyer,
             int totalCount,
             int perOwnerCount,
-            int ownerCount) {
-        assertEquals(owner, customAudienceStats.getOwner());
-        assertEquals(totalCount, customAudienceStats.getTotalCustomAudienceCount());
-        assertEquals(perOwnerCount, customAudienceStats.getPerOwnerCustomAudienceCount());
-        assertEquals(ownerCount, customAudienceStats.getTotalOwnerCount());
+            int ownerCount,
+            int perBuyerCount) {
+        assertWithMessage("customAudienceStats.getOwner()")
+                .that(customAudienceStats.getOwner())
+                .isEqualTo(owner);
+        assertWithMessage("customAudienceStats.getBuyer()")
+                .that(customAudienceStats.getBuyer())
+                .isEqualTo(buyer);
+        assertWithMessage("customAudienceStats.getTotalCustomAudienceCount()")
+                .that(customAudienceStats.getTotalCustomAudienceCount())
+                .isEqualTo(totalCount);
+        assertWithMessage("customAudienceStats.getPerOwnerCustomAudienceCount()")
+                .that(customAudienceStats.getPerOwnerCustomAudienceCount())
+                .isEqualTo(perOwnerCount);
+        assertWithMessage("customAudienceStats.getTotalOwnerCount()")
+                .that(customAudienceStats.getTotalOwnerCount())
+                .isEqualTo(ownerCount);
+        assertWithMessage("customAudienceStats.getPerBuyerCustomAudienceCount()")
+                .that(customAudienceStats.getPerBuyerCustomAudienceCount())
+                .isEqualTo(perBuyerCount);
     }
 }

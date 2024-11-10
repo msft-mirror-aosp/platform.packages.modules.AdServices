@@ -16,7 +16,6 @@
 
 package com.android.adservices.data.measurement;
 
-import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV11;
 import com.android.adservices.data.measurement.migration.MeasurementTablesDeprecated;
 
 import java.util.Arrays;
@@ -1201,7 +1200,21 @@ public final class MeasurementTables {
             CREATE_TABLE_XNA_IGNORED_SOURCES_V6;
 
     public static final String CREATE_TABLE_KEY_VALUE_STORE_LATEST =
-            MeasurementDbMigratorV11.CREATE_TABLE_KEY_VALUE_DATA_V11;
+            "CREATE TABLE "
+                    + MeasurementTables.KeyValueDataContract.TABLE
+                    + " ("
+                    + MeasurementTables.KeyValueDataContract.DATA_TYPE
+                    + " TEXT NOT NULL, "
+                    + MeasurementTables.KeyValueDataContract.KEY
+                    + " TEXT NOT NULL, "
+                    + MeasurementTables.KeyValueDataContract.VALUE
+                    + " TEXT, "
+                    + " CONSTRAINT type_key_primary_con PRIMARY KEY ( "
+                    + MeasurementTables.KeyValueDataContract.DATA_TYPE
+                    + ", "
+                    + MeasurementTables.KeyValueDataContract.KEY
+                    + " )"
+                    + " )";
 
     public static final String[] CREATE_INDEXES = {
         "CREATE INDEX "

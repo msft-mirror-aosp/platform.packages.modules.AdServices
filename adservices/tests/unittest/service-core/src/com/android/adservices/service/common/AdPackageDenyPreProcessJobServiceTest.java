@@ -35,7 +35,6 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.service.FlagsFactory;
@@ -114,7 +113,6 @@ public final class AdPackageDenyPreProcessJobServiceTest extends AdServicesJobSe
     }
 
     @Test
-    @FlakyTest(bugId = 376351631)
     public void testScheduleIfNeeded_success() throws Exception {
         // Feature is enabled.
         when(mMockFlags.getEnablePackageDenyBgJob()).thenReturn(true);
@@ -182,7 +180,6 @@ public final class AdPackageDenyPreProcessJobServiceTest extends AdServicesJobSe
     }
 
     @Test
-    @FlakyTest(bugId = 375608382)
     public void onStartJob_shouldDisableJobTrue() throws Exception {
         JobServiceLoggingCallback loggingCallback = syncLogExecutionStats(mLogger);
         doReturn(true)

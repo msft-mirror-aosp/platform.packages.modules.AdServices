@@ -34,6 +34,12 @@
             app:title="@string/video_url"
             app:useSimpleSummaryProvider="true"
         />
+        <EditTextPreference
+            app:key="banner_image_url"
+            app:title="@string/image_url"
+            app:useSimpleSummaryProvider="true"
+            android:defaultValue="@string/default_image_url"
+        />
     </PreferenceCategory>
 
     <PreferenceCategory

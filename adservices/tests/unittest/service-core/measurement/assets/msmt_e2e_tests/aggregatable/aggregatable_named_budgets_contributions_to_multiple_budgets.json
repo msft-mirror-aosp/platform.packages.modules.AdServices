@@ -1,0 +1,208 @@
+{
+  "description": "Given one source and two matching triggers, the first trigger makes an aggregate contribution but not to the mismatched budget. Second trigger makes a contribution to the matching budget.",
+  "phflags_override": {
+    "Measurement__enable_aggregatable_named_budgets": "true"
+  },
+  "input": {
+    "sources": [{
+      "registration_request": {
+        "source_type": "navigation",
+        "registrant": "example.1s1.test"
+      },
+      "responses": [{
+        "url": "https://www.ad-tech1.test",
+        "response": {
+          "Attribution-Reporting-Register-Source": {
+            "source_event_id": "1",
+            "destination": "android-app://example.2d1.test",
+            "priority": "100",
+            "expiry": "172801",
+            "filter_data": {
+              "category": ["filter_1", "filter_2"]
+            },
+            "aggregation_keys": {
+              "campaignCounts": "0x159",
+              "geoValue": "0x5"
+            },
+            "named_budgets": {
+              "budget1" : 3000,
+              "budget2" : 30000
+            }
+          },
+          "Location": null,
+          "Attribution-Reporting-Redirect": null
+        }
+      }],
+      "timestamp": "800000000001"
+    }],
+    "triggers": [
+      // Should match with budget1 as budget2's filters do not match
+      {
+      "registration_request": {
+        "registrant": "example.2d1.test"
+      },
+      "responses": [{
+        "url": "https://www.ad-tech1.test",
+        "response": {
+          "Attribution-Reporting-Register-Trigger": {
+            "event_trigger_data": [
+              {
+                "trigger_data": "2",
+                "priority": "101"
+              }
+            ],
+            "aggregatable_trigger_data": [
+              {
+                "key_piece": "0x400",
+                "source_keys": [
+                  "campaignCounts"
+                ]
+              },
+              {
+                "key_piece": "0xA80",
+                "source_keys": [
+                  "geoValue",
+                  "nonMatch"
+                ]
+              }
+            ],
+            "aggregatable_values": {
+              "campaignCounts": 350,
+              "geoValue": 1664
+            },
+            "aggregatable_source_registration_time": "INCLUDE",
+            "named_budgets": [
+              {
+                "name":  "budget2",
+                "not_filters": {"category": ["filter_1"]}
+              },
+              { "name":  "budget1" }
+            ]
+          },
+          "Location": null,
+          "Attribution-Reporting-Redirect": null
+        }
+      }],
+      "timestamp": "800000600001"
+    },
+      // Should match with the first matching budget, budget2
+      {
+        "registration_request": {
+          "registrant": "example.2d1.test"
+        },
+        "responses": [{
+          "url": "https://www.ad-tech1.test",
+          "response": {
+            "Attribution-Reporting-Register-Trigger": {
+              "event_trigger_data": [
+                {
+                  "trigger_data": "3",
+                  "priority": "101"
+                }
+              ],
+              "aggregatable_trigger_data": [
+                {
+                  "key_piece": "0x400",
+                  "source_keys": [
+                    "campaignCounts"
+                  ]
+                },
+                {
+                  "key_piece": "0xA80",
+                  "source_keys": [
+                    "geoValue",
+                    "nonMatch"
+                  ]
+                }
+              ],
+              "aggregatable_values": {
+                "campaignCounts": 20409,
+                "geoValue": 1640
+              },
+              "aggregatable_source_registration_time": "INCLUDE",
+              "named_budgets": [
+                { "name":  "budget2" },
+                { "name":  "budget1"}
+              ]
+            },
+            "Location": null,
+            "Attribution-Reporting-Redirect": null
+          }
+        }],
+        "timestamp": "800001200001"
+      }]
+  },
+  "output": {
+    "event_level_results": [
+      {
+        "report_time": "800172800001",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
+        "payload": {
+          "attribution_destination": "android-app://example.2d1.test",
+          "scheduled_report_time": "800172800",
+          "source_event_id": "1",
+          "trigger_data": "2",
+          "source_type": "navigation",
+          "randomized_trigger_rate": 0.0008051
+        }
+      },
+      {
+        "report_time": "800172800001",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-event-attribution",
+        "payload": {
+          "attribution_destination": "android-app://example.2d1.test",
+          "scheduled_report_time": "800172800",
+          "source_event_id": "1",
+          "trigger_data": "3",
+          "source_type": "navigation",
+          "randomized_trigger_rate": 0.0008051
+        }
+      }
+    ],
+    "aggregatable_results": [{
+      "report_time": "800004200001",
+      "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
+      "payload": {
+        "shared_info": {
+          "api": "attribution-reporting",
+          "attribution_destination": "android-app://example.2d1.test",
+          "reporting_origin": "https://www.ad-tech1.test",
+          "scheduled_report_time": "800004200",
+          "source_registration_time": "799977600",
+          "version": "0.1"
+        },
+        "aggregation_coordinator_origin": "https://coordinator.test",
+        "source_site": "android-app://example.1s1.test",
+        "histograms": [
+          {"key": "0x559", "value": 350},
+          {"key": "0xa85", "value": 1664},
+          {"key": "0x0", "value": 0},
+          {"key": "0x0", "value": 0},
+          {"key": "0x0", "value": 0}
+        ]
+      }
+    },{
+      "report_time": "800004800001",
+      "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
+      "payload": {
+        "shared_info": {
+          "api": "attribution-reporting",
+          "attribution_destination": "android-app://example.2d1.test",
+          "reporting_origin": "https://www.ad-tech1.test",
+          "scheduled_report_time": "800004800",
+          "source_registration_time": "799977600",
+          "version": "0.1"
+        },
+        "aggregation_coordinator_origin": "https://coordinator.test",
+        "source_site": "android-app://example.1s1.test",
+        "histograms": [
+          {"key": "0x559", "value": 20409},
+          {"key": "0xa85", "value": 1640},
+          {"key": "0x0", "value": 0},
+          {"key": "0x0", "value": 0},
+          {"key": "0x0", "value": 0}
+        ]
+      }
+    }]
+  }
+}

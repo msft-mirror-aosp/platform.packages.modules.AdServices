@@ -16,6 +16,9 @@
 
 package com.android.adservices.tests.permissions;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
@@ -26,6 +29,8 @@ import android.adservices.adselection.AdSelectionFromOutcomesConfig;
 import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
 import android.adservices.adselection.AddAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
+import android.adservices.adselection.GetAdSelectionDataRequest;
+import android.adservices.adselection.PersistAdSelectionResultRequest;
 import android.adservices.adselection.RemoveAdSelectionFromOutcomesOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.adselection.ReportEventRequest;
@@ -35,6 +40,7 @@ import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.adselection.TestAdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
 import android.adservices.clients.customaudience.TestAdvertisingCustomAudienceClient;
+import android.adservices.clients.signals.ProtectedSignalsClient;
 import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -43,10 +49,14 @@ import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceRequest;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
+import android.adservices.signals.UpdateSignalsRequest;
 import android.net.Uri;
 
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.DevContextUtils;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 
 import org.junit.Assume;
 import org.junit.Before;
@@ -258,6 +268,52 @@ public final class PermissionsNoPermTest extends CtsAdServicesPermissionsNoPermE
         ExecutionException exception =
                 assertThrows(
                         ExecutionException.class, () -> mAdSelectionClient.selectAds(config).get());
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    @SuppressWarnings("NewApi")
+    @SetFlagFalse(KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH)
+    public void testPermissionNotRequested_getAdSelectionData() {
+        GetAdSelectionDataRequest request =
+                new GetAdSelectionDataRequest.Builder()
+                        .setSeller(AdSelectionConfigFixture.SELLER)
+                        .build();
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.getAdSelectionData(request).get());
+
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    @SuppressWarnings("NewApi")
+    @SetFlagFalse(KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH)
+    public void testPermissionNotRequested_persistAdSelectionResult() {
+        PersistAdSelectionResultRequest request =
+                new PersistAdSelectionResultRequest.Builder()
+                        .setAdSelectionId(1234567890L)
+                        .setSeller(AdTechIdentifier.fromString("fake seller"))
+                        .setAdSelectionResult("fake selection result".getBytes())
+                        .build();
+        AdSelectionClient mAdSelectionClient =
+                new AdSelectionClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mAdSelectionClient.persistAdSelectionResult(request).get());
+
         assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 
@@ -489,6 +545,27 @@ public final class PermissionsNoPermTest extends CtsAdServicesPermissionsNoPermE
                                 testAdSelectionClient
                                         .resetAllAdSelectionFromOutcomesConfigRemoteOverrides()
                                         .get());
+        assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
+    }
+
+    @Test
+    @SuppressWarnings("NewApi")
+    @SetFlagEnabled(KEY_PROTECTED_SIGNALS_ENABLED)
+    @RequiresSdkLevelAtLeastT
+    public void testPermissionNotRequested_updateSignals() {
+        UpdateSignalsRequest request =
+                new UpdateSignalsRequest.Builder(Uri.parse("https://fakeServer/signals")).build();
+        ProtectedSignalsClient mProtectedSignalsClient =
+                new ProtectedSignalsClient.Builder()
+                        .setContext(sContext)
+                        .setExecutor(CALLBACK_EXECUTOR)
+                        .build();
+
+        ExecutionException exception =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> mProtectedSignalsClient.updateSignals(request).get());
+
         assertThat(exception).hasMessageThat().isEqualTo(CALLER_NOT_AUTHORIZED);
     }
 }

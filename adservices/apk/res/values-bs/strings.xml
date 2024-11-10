@@ -303,7 +303,7 @@
     <string name="topic10032" msgid="5492959212920168739">"Dance i elektronska muzika"</string>
     <string name="topic10033" msgid="895853536740398847">"Folk i tradicionalna muzika"</string>
     <string name="topic10034" msgid="4234814709585731313">"Jazz"</string>
-    <string name="topic10035" msgid="4357756001621317728">"Prijenosi i preuzimanja muzike"</string>
+    <string name="topic10035" msgid="4357756001621317728">"Prenosi i preuzimanja muzike"</string>
     <string name="topic10036" msgid="449833307315797283">"Muzički videozapisi"</string>
     <string name="topic10037" msgid="51698216720637667">"Muzički instrumenti"</string>
     <string name="topic10038" msgid="8450729953573104572">"Klaviri i klavijature"</string>
@@ -322,8 +322,8 @@
     <string name="topic10051" msgid="5719726125732251258">"Reggae i karipska muzika"</string>
     <string name="topic10052" msgid="1284902821545612733">"Online galerije slika"</string>
     <string name="topic10053" msgid="5420622301656482567">"Online videozapis"</string>
-    <string name="topic10054" msgid="4562235511593399260">"Prijenos videozapisa uživo"</string>
-    <string name="topic10055" msgid="3752987507076288470">"Prijenos filmova i TV-a"</string>
+    <string name="topic10054" msgid="4562235511593399260">"Prenos videozapisa uživo"</string>
+    <string name="topic10055" msgid="3752987507076288470">"Prenos filmova i TV-a"</string>
     <string name="topic10056" msgid="1316228709578133569">"Opera"</string>
     <string name="topic10057" msgid="3265794667031664331">"TV vodič i upućivanje"</string>
     <string name="topic10058" msgid="8409884272709263707">"TV mreže i stanice"</string>
@@ -458,7 +458,7 @@
     <string name="topic10187" msgid="3321209590831212269">"Računovodstvo i revizija"</string>
     <string name="topic10188" msgid="6091864564976149142">"Priprema i planiranje poreza"</string>
     <string name="topic10189" msgid="5722909809680931661">"Bankarstvo"</string>
-    <string name="topic10190" msgid="4954502185848303449">"Usluge prijenosa novca i bezgotovinski prijenos"</string>
+    <string name="topic10190" msgid="4954502185848303449">"Usluge prenosa novca i bezgotovinski prenos"</string>
     <string name="topic10191" msgid="374364159635356705">"Krediti i pozajmljivanje"</string>
     <string name="topic10192" msgid="4780985034026130257">"Kreditne kartice"</string>
     <string name="topic10193" msgid="5010972379907168829">"Stambeno kreditiranje"</string>

@@ -732,9 +732,9 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
                         + annotation);
     }
 
+    // TODO(b/377592216, 373477535): use TestHelper.getAnnotations() instead (after it has unit or
+    // integration tests)
     private List<Annotation> getAllFlagAnnotations(Description description) {
-        // TODO(b/318893752): Move this to a helper function to scan test method, class and
-        //  superclasses for annotations.
         List<Annotation> result = new ArrayList<>();
         for (Annotation testMethodAnnotation : description.getAnnotations()) {
             if (isFlagAnnotationPresent(testMethodAnnotation)) {

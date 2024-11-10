@@ -219,6 +219,10 @@ public abstract class CustomAudienceDao {
     @Query("SELECT COUNT(*) FROM custom_audience WHERE owner=:owner")
     public abstract long getCustomAudienceCountForOwner(String owner);
 
+    /** Get count of custom audience of a given buyer. */
+    @Query("SELECT COUNT(*) FROM custom_audience WHERE buyer=:buyer")
+    public abstract long getCustomAudienceCountForBuyer(AdTechIdentifier buyer);
+
     /** Get the total number of distinct custom audience owner. */
     @Query("SELECT COUNT(DISTINCT owner) FROM custom_audience")
     public abstract long getCustomAudienceOwnerCount();
@@ -247,19 +251,24 @@ public abstract class CustomAudienceDao {
      */
     @Transaction
     @NonNull
-    public CustomAudienceStats getCustomAudienceStats(@NonNull String owner) {
-        Objects.requireNonNull(owner);
+    public CustomAudienceStats getCustomAudienceStats(
+            @NonNull String owner, @NonNull AdTechIdentifier buyer) {
+        Objects.requireNonNull(owner, "Owner must not be null");
+        Objects.requireNonNull(buyer, "Buyer must not be null");
 
         long customAudienceCount = getCustomAudienceCount();
         long customAudienceCountPerOwner = getCustomAudienceCountForOwner(owner);
         long ownerCount = getCustomAudienceOwnerCount();
+        long customAudienceCountPerBuyer = getCustomAudienceCountForBuyer(buyer);
 
         // TODO(b/255780705): Add buyer and per-buyer stats
         return CustomAudienceStats.builder()
                 .setOwner(owner)
+                .setBuyer(buyer)
                 .setTotalCustomAudienceCount(customAudienceCount)
                 .setPerOwnerCustomAudienceCount(customAudienceCountPerOwner)
                 .setTotalOwnerCount(ownerCount)
+                .setPerBuyerCustomAudienceCount(customAudienceCountPerBuyer)
                 .build();
     }
 

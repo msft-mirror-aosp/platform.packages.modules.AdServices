@@ -200,7 +200,8 @@ public class FledgeAuthorizationFilter {
                 /*latencyMs=*/ 0);
         int celApiNameId = AdsRelevanceStatusUtils.getCelPpApiNameId(apiNameLoggingId);
         if (celApiNameId != AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED) {
-            ErrorLogUtil.e(
+            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_PERMISSION_FAILURE,
                     celApiNameId);
         }
@@ -218,7 +219,8 @@ public class FledgeAuthorizationFilter {
                 /*latencyMs=*/ 0);
         int celApiNameId = AdsRelevanceStatusUtils.getCelPpApiNameId(apiNameLoggingId);
         if (celApiNameId != AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED) {
-            ErrorLogUtil.e(
+            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ANY_PERMISSION_FAILURE,
                     celApiNameId);
         }

@@ -575,7 +575,7 @@ public final class ScheduledUpdatesHandler {
                     logFailureStats(
                             SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_JOIN_CA,
                             SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR);
-                } else if (e instanceof InvalidObjectException) {
+                } else {
                     sLogger.e(e, "Cannot combine response Custom Audience with override");
                     logFailureStats(
                             SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_JOIN_CA,

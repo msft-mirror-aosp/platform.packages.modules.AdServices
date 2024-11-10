@@ -15,7 +15,7 @@
  */
 package com.android.adservices.mockito;
 
-import static com.android.adservices.shared.testing.TestHelper.getAnnotation;
+import static com.android.adservices.shared.testing.TestHelper.getAnnotationFromAnywhere;
 import static com.android.adservices.shared.testing.TestHelper.getTestName;
 
 import android.util.Log;
@@ -72,7 +72,8 @@ public final class ExtendedMockitoInlineCleanerRule implements TestRule {
     private Mode getMode(Description description) {
         Mode mode = mDefaultMode;
         String testName = getTestName(description);
-        ClearInlineMocksMode annotation = getAnnotation(description, ClearInlineMocksMode.class);
+        ClearInlineMocksMode annotation =
+                getAnnotationFromAnywhere(description, ClearInlineMocksMode.class);
         if (annotation != null) {
             mode = annotation.value();
             Log.v(TAG, "getMode(" + testName + "): returning mode from annotation (" + mode + ")");

@@ -10252,7 +10252,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testUpdateSourceAggregatableNamedBudgets_updatesBudgets() {
+    public void testUpdateSourceAggregatableNamedBudgetAndContribution_updatesBudgets() {
         mFlags = mock(Flags.class);
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
@@ -10268,8 +10268,13 @@ public class MeasurementDaoTest {
                         List.of(WEB_ONE_DESTINATION, WEB_TWO_DESTINATION),
                         List.of(APP_ONE_DESTINATION));
         validSource.getAggregatableNamedBudgets().setContribution("budget1", 340);
+        AggregatableNamedBudgets.BudgetAndContribution validSourceBudgetAndContribution =
+                new AggregatableNamedBudgets.BudgetAndContribution(400);
+        validSourceBudgetAndContribution.setAggregateContribution(340);
         mDatastoreManager.runInTransaction(
-                (dao) -> dao.updateSourceAggregatableNamedBudgets(validSource, "budget1"));
+                (dao) ->
+                        dao.updateSourceAggregatableNamedBudgetAndContribution(
+                                validSource.getId(), "budget1", validSourceBudgetAndContribution));
 
         AggregatableNamedBudgets.BudgetAndContribution daoBudgetAndContribution =
                 mDatastoreManager
@@ -10286,7 +10291,8 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testUpdateSourceAggregatableNamedBudgets_budgetRowDoesNotExistCreatesNewRow() {
+    public void
+            testUpdateSourceAggregatableNamedBudgetAndContribution_budgetDoesNotExistCreatesRow() {
         mFlags = mock(Flags.class);
         ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
         when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
@@ -10301,10 +10307,13 @@ public class MeasurementDaoTest {
                 Source.Builder.from(validSource)
                         .setAggregatableNamedBudgets(aggregatableNamedBudgets)
                         .build();
-        finalSource.getAggregatableNamedBudgets().createContributionBudget("budget1", 100);
-        finalSource.getAggregatableNamedBudgets().setContribution("budget1", 70);
+        AggregatableNamedBudgets.BudgetAndContribution sourceBudgetAndContribution =
+                new AggregatableNamedBudgets.BudgetAndContribution(100);
+        sourceBudgetAndContribution.setAggregateContribution(70);
         mDatastoreManager.runInTransaction(
-                (dao) -> dao.updateSourceAggregatableNamedBudgets(finalSource, "budget1"));
+                (dao) ->
+                        dao.updateSourceAggregatableNamedBudgetAndContribution(
+                                finalSource.getId(), "budget1", sourceBudgetAndContribution));
 
         Source sourceAfterUpdate =
                 mDatastoreManager
@@ -10320,10 +10329,7 @@ public class MeasurementDaoTest {
                                                 .getSourceAggregatableNamedBudgetAndContribution(
                                                         sourceAfterUpdate.getId(), "budget1"))
                         .get();
-        AggregatableNamedBudgets.BudgetAndContribution expectedBudgetAndContribution =
-                new AggregatableNamedBudgets.BudgetAndContribution(100);
-        expectedBudgetAndContribution.setAggregateContribution(70);
-        assertThat(daoBudgetAndContribution).isEqualTo(expectedBudgetAndContribution);
+        assertThat(daoBudgetAndContribution).isEqualTo(sourceBudgetAndContribution);
     }
 
     @Test

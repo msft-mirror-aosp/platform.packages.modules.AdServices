@@ -87,6 +87,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLogger;
 import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
@@ -254,8 +255,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                             .build());
             mUpdateSignalsProcessReportedLogger.setAdservicesApiStatusCode(
                     AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
-            ErrorLogUtil.e(
-                    exception,
+            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(exception,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_SERVICE_IMPL_NULL_ARGUMENT,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
             // Rethrow because we want to fail fast
@@ -465,8 +466,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                     AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
             updateSignalsProcessReportedLogger.setAdservicesApiStatusCode(
                     AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
-            ErrorLogUtil.e(
-                    illegalStateException,
+            // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(illegalStateException,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_GET_CALLING_UID_ILLEGAL_STATE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
             throw illegalStateException;

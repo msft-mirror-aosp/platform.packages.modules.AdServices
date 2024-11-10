@@ -280,8 +280,12 @@ public class AdServicesCommonManager {
      * Broadcast action: notify that a consent notification has been displayed to the user, and the
      * user consent choices can be set by calling {@link #requestAdServicesModuleUserChoices()}.
      *
+     * <p>The action must be defined as an intent-filter in AndroidManifest.xml in order to receive
+     * Intents from the platform.
+     *
      * @hide
      */
+    @SystemApi
     @SdkConstant(SdkConstantType.BROADCAST_INTENT_ACTION)
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})

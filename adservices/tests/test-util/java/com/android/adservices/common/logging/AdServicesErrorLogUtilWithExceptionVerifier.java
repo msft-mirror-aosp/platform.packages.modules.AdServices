@@ -66,7 +66,8 @@ public final class AdServicesErrorLogUtilWithExceptionVerifier
     public Set<ErrorLogUtilCall> getExpectedLogCalls(Description description) {
         List<ExpectErrorLogUtilWithExceptionCall> annotations = getAnnotations(description);
         SetErrorLogUtilDefaultParams defaultParams =
-                TestHelper.getAnnotation(description, SetErrorLogUtilDefaultParams.class);
+                TestHelper.getAnnotationFromAnywhere(
+                        description, SetErrorLogUtilDefaultParams.class);
 
         if (annotations.isEmpty()) {
             Log.v(mTag, "No @" + ANNOTATION_NAME + " found over test method.");

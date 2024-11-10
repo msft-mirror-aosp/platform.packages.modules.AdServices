@@ -261,9 +261,7 @@ public final class AdPackageDenyResolver {
                         AdServicesExecutors.getLightWeightExecutor())
                 .transform(this::getMddFile, AdServicesExecutors.getLightWeightExecutor())
                 .transform(this::parseFile, AdServicesExecutors.getBackgroundExecutor())
-                .transform(
-                        this::filterMddDataToInstalledPackages,
-                        AdServicesExecutors.getLightWeightExecutor())
+                .transform(this::convertToCacheMap, AdServicesExecutors.getLightWeightExecutor())
                 .transformAsync(
                         map -> mPackageDenyCacheDataStore.updateDataAsync(data -> map),
                         AdServicesExecutors.getBackgroundExecutor())
@@ -317,13 +315,35 @@ public final class AdPackageDenyResolver {
         }
     }
 
-    private PackageToApiDenyGroupsCacheMap filterMddDataToInstalledPackages(
+    /**
+     * Converts the PackageToApiDenyGroupsMap to PackageToApiDenyGroupsCacheMap based on whether the
+     * package is installed.
+     *
+     * <p>If the enableInstalledPackageFilter flag is enabled, this method retrieves a map of
+     * installed packages and their version codes, and then filters the input
+     * packageToApiDenyGroupsMap to only include entries for installed packages. If the flag is
+     * disabled, the input map is returned without filtering and does not deny based on package
+     * version.
+     *
+     * @param packageToApiDenyGroupsMap The input PackageToApiDenyGroupsMap to filter.
+     * @return The converted PackageToApiDenyGroupsCacheMap.
+     * @throws PackageDenyException if an error occurs during the filtering process, specifically
+     *     with PackageDenyMddProcessStatus#FAILED_FILTERING_INSTALLED_PACKAGES status.
+     */
+    @VisibleForTesting
+    PackageToApiDenyGroupsCacheMap convertToCacheMap(
             PackageToApiDenyGroupsMap packageToApiDenyGroupsMap) {
         try {
-            Map<String, Long> installedPackages =
-                    getInstalledPackageNameToVersionCodeMap(
-                            ApplicationContextSingleton.get().getPackageManager());
-            return getPackageToApiGroupsMapFiltered(packageToApiDenyGroupsMap, installedPackages);
+            if (FlagsFactory.getFlags().getPackageDenyEnableInstalledPackageFilter()) {
+                Map<String, Long> installedPackages =
+                        getInstalledPackageNameToVersionCodeMap(
+                                ApplicationContextSingleton.get().getPackageManager());
+                return getCacheMapFilteredByInstalledPackages(
+                        packageToApiDenyGroupsMap, installedPackages);
+            } else {
+                LogUtil.d("Package installed filter is disabled");
+                return getCacheMapWithoutFilter(packageToApiDenyGroupsMap);
+            }
 
         } catch (Exception e) {
             throw new PackageDenyException(
@@ -354,7 +374,7 @@ public final class AdPackageDenyResolver {
      * @return A PackageToApiDenyGroupsCacheMap containing filtered and optimized API deny group
      *     information for installed packages.
      */
-    private static PackageToApiDenyGroupsCacheMap getPackageToApiGroupsMapFiltered(
+    private static PackageToApiDenyGroupsCacheMap getCacheMapFilteredByInstalledPackages(
             PackageToApiDenyGroupsMap packageToApiDenyGroupsMap,
             Map<String, Long> installedPackages) {
         Map<PackageType, Map<String, List<String>>> map =
@@ -377,8 +397,13 @@ public final class AdPackageDenyResolver {
                                                                         installedPackages.get(
                                                                                 e.getKey()))))));
 
-        LogUtil.d("Installed packages deny map is %s", map);
         // TODO (b/365605754) add error log for unknown package type
+        return getPackageToApiDenyGroupsCacheMap(map);
+    }
+
+    private static PackageToApiDenyGroupsCacheMap getPackageToApiDenyGroupsCacheMap(
+            Map<PackageType, Map<String, List<String>>> map) {
+        LogUtil.d("package deny map for cache is %s", map);
         Map<PackageType, Map<String, ApiGroupsCache>> apiGroupsCacheMap =
                 map.entrySet().stream()
                         .map((e -> Map.entry(e.getKey(), mapToApiGroupsCache(e.getValue()))))
@@ -390,6 +415,30 @@ public final class AdPackageDenyResolver {
                 .putAllSdkToApiDenyGroupsCacheMap(
                         apiGroupsCacheMap.getOrDefault(PackageType.SDK, Collections.emptyMap()))
                 .build();
+    }
+
+    private static PackageToApiDenyGroupsCacheMap getCacheMapWithoutFilter(
+            PackageToApiDenyGroupsMap packageToApiDenyGroupsMap) {
+        Map<PackageType, Map<String, List<String>>> map =
+                packageToApiDenyGroupsMap.getMapMap().entrySet().stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        entry -> entry.getValue().getPackageType(),
+                                        Collectors.mapping(
+                                                entry -> entry,
+                                                Collectors.toMap(
+                                                        Map.Entry::getKey,
+                                                        e -> collectApiGroups(e.getValue())))));
+        return getPackageToApiDenyGroupsCacheMap(map);
+    }
+
+    private static List<String> collectApiGroups(ApiDenyGroupsForPackage apiDenyGroupsForPackage) {
+        return apiDenyGroupsForPackage.getApiDenyGroupsForPackageVersionsList().stream()
+                .flatMap(
+                        appApiDenyGroup ->
+                                appApiDenyGroup.getApiGroups().getApiGroupList().stream())
+                .distinct()
+                .collect(Collectors.toList());
     }
 
     /**
