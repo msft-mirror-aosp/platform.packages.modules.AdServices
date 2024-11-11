@@ -74,6 +74,10 @@ public class AtomicFileDatastore {
      */
     public static final String DUMP_ARG_INCLUDE_CONTENTS = "--include_contents";
 
+    /** Convenience reference to dump args that only contains {@link #DUMP_ARG_INCLUDE_CONTENTS}. */
+    public static final String[] DUMP_ARGS_INCLUDE_CONTENTS_ONLY =
+            new String[] {DUMP_ARG_INCLUDE_CONTENTS};
+
     private final int mDatastoreVersion;
     private final AdServicesErrorLogger mAdServicesErrorLogger;
 
@@ -672,17 +676,6 @@ public class AtomicFileDatastore {
         } finally {
             mWriteLock.unlock();
         }
-    }
-
-    // TODO(b/299942046): refactor usage or remove @Deprecated
-    /**
-     * Dumps its internal state.
-     *
-     * @deprecated use {@link #dump(PrintWriter, String, String[])} instead
-     */
-    @Deprecated
-    public void dump(PrintWriter writer, String prefix) {
-        dump(writer, prefix, /* args= */ null);
     }
 
     /** Dumps its internal state. */
