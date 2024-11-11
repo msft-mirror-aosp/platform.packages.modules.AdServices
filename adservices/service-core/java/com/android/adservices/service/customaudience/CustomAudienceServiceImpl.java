@@ -419,6 +419,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                     mConsentManager,
                                     callerUid,
                                     mFlags,
+                                    mDebugFlags,
                                     mAdServicesLogger,
                                     AdServicesExecutors.getBackgroundExecutor(),
                                     mCustomAudienceServiceFilter,

@@ -6332,9 +6332,6 @@ public final class PhFlags implements Flags {
                 FlagsConstants.KEY_UI_FEATURE_TYPE_LOGGING_ENABLED,
                 isUiFeatureTypeLoggingEnabled());
         uxMap.put(FlagsConstants.KEY_ADSERVICES_ENABLED, getAdServicesEnabled());
-        uxMap.put(
-                DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE,
-                getConsentNotificationDebugMode());
         uxMap.put(FlagsConstants.KEY_U18_UX_ENABLED, getU18UxEnabled());
         uxMap.put(
                 FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK,
@@ -7478,11 +7475,6 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL,
                 DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL);
-    }
-
-    @Override
-    public boolean getConsentNotificationDebugMode() {
-        return DebugFlags.getInstance().getConsentNotificationDebugMode();
     }
 
     @Override
