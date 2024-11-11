@@ -21,8 +21,6 @@ import static android.adservices.common.AdServicesModuleState.ModuleStateCode;
 import static android.adservices.common.Module.ModuleCode;
 import static android.adservices.common.NotificationType.NotificationTypeCode;
 
-import static com.android.internal.annotations.VisibleForTesting.Visibility.PACKAGE;
-
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.SystemApi;
@@ -30,7 +28,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.flags.Flags;
-import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -109,7 +106,6 @@ public final class UpdateAdServicesModuleStatesParams implements Parcelable {
      * @hide
      */
     @NonNull
-    @VisibleForTesting(visibility = PACKAGE)
     public Map<Integer, Integer> getModuleStateMap() {
         Map<Integer, Integer> moduleStatemap = new HashMap<>(mAdServicesModuleStateList.size());
         mAdServicesModuleStateList.forEach(
@@ -120,7 +116,6 @@ public final class UpdateAdServicesModuleStatesParams implements Parcelable {
 
     /** Returns the Notification type associated with this result. */
     @NotificationTypeCode
-    @VisibleForTesting(visibility = PACKAGE)
     public int getNotificationType() {
         return mNotificationType;
     }
