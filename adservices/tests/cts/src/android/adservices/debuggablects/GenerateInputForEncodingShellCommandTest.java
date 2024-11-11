@@ -60,7 +60,7 @@ import java.util.concurrent.TimeUnit;
 @EnableDebugFlag(KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED)
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @RequiresSdkLevelAtLeastT(reason = "Protected App Signals is enabled for T+")
-public final class GenerateInputForEncodingShellCommandTest extends ForegroundDebuggableCtsTest {
+public final class GenerateInputForEncodingShellCommandTest extends AdServicesDebuggableTestCase {
 
     private static final String STATUS_FINISHED = "FINISHED";
     private static final int PAS_API_TIMEOUT_SEC = 10;
@@ -80,10 +80,6 @@ public final class GenerateInputForEncodingShellCommandTest extends ForegroundDe
         flags.setFlag(KEY_PAS_APP_ALLOW_LIST, new String[] {TEST_PACKAGE_NAME}, ",");
 
         AdservicesTestHelper.killAdservicesProcess(mContext);
-
-        if (sdkLevel.isAtLeastT()) {
-            assertForegroundActivityStarted();
-        }
 
         mProtectedSignalsClient =
                 new ProtectedSignalsClient.Builder()
