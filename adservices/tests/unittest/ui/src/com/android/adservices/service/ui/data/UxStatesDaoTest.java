@@ -18,15 +18,11 @@ package com.android.adservices.service.ui.data;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.Mockito.when;
-
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.common.AtomicFileDatastore;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
-import com.android.modules.utils.testing.ExtendedMockitoRule;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -35,15 +31,13 @@ import org.mockito.Mock;
 import java.io.IOException;
 
 /** This test reads and writes to test files under the test app dir instead of using full mocks. */
-@ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
-public final class UxStatesDaoTest extends AdServicesExtendedMockitoTestCase {
+public final class UxStatesDaoTest extends AdServicesMockitoTestCase {
     private UxStatesDao mUxStatesDao;
 
     @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
 
     @Before
     public void setup() throws IOException {
-        mocker.mockGetFlags(mMockFlags);
         AtomicFileDatastore atomicFileDatastore =
                 new AtomicFileDatastore(
                         mContext,
@@ -51,7 +45,6 @@ public final class UxStatesDaoTest extends AdServicesExtendedMockitoTestCase {
                         UxStatesDao.DATASTORE_VERSION,
                         mMockAdServicesErrorLogger);
         mUxStatesDao = new UxStatesDao(atomicFileDatastore);
-        when(mMockFlags.getEnableAtomicFileDatastoreBatchUpdateApi()).thenReturn(false);
     }
 
     @Test
@@ -63,29 +56,7 @@ public final class UxStatesDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void uxTest_datastoreConformance_atomic() {
-        when(mMockFlags.getEnableAtomicFileDatastoreBatchUpdateApi()).thenReturn(true);
-        for (PrivacySandboxUxCollection uxCollection : PrivacySandboxUxCollection.values()) {
-            mUxStatesDao.setUx(uxCollection);
-            assertThat(mUxStatesDao.getUx()).isEqualTo(uxCollection);
-        }
-    }
-
-    @Test
     public void enrollmentChannelTest_datastoreConformance() {
-        for (PrivacySandboxUxCollection uxCollection : PrivacySandboxUxCollection.values()) {
-            for (PrivacySandboxEnrollmentChannelCollection enrollmentChannelCollection :
-                    uxCollection.getEnrollmentChannelCollection()) {
-                mUxStatesDao.setEnrollmentChannel(uxCollection, enrollmentChannelCollection);
-                assertThat(mUxStatesDao.getEnrollmentChannel(uxCollection))
-                        .isEqualTo(enrollmentChannelCollection);
-            }
-        }
-    }
-
-    @Test
-    public void enrollmentChannelTest_datastoreConformance_atomic() {
-        when(mMockFlags.getEnableAtomicFileDatastoreBatchUpdateApi()).thenReturn(true);
         for (PrivacySandboxUxCollection uxCollection : PrivacySandboxUxCollection.values()) {
             for (PrivacySandboxEnrollmentChannelCollection enrollmentChannelCollection :
                     uxCollection.getEnrollmentChannelCollection()) {
