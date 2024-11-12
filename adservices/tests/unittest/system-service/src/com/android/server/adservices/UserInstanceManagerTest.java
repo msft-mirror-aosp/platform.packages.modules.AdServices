@@ -17,7 +17,6 @@
 package com.android.server.adservices;
 
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.server.adservices.data.topics.TopicsTables.DUMMY_MODEL_VERSION;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -25,13 +24,11 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.when;
 
 import android.adservices.topics.Topic;
 import android.app.adservices.topics.TopicParcel;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.modules.utils.testing.ExtendedMockitoRule;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.server.adservices.consent.AppConsentManager;
 import com.android.server.adservices.consent.ConsentManager;
 import com.android.server.adservices.data.topics.TopicsDao;
@@ -51,8 +48,7 @@ import java.util.List;
 import java.util.Set;
 
 /** Tests for {@link UserInstanceManager} */
-@ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
-public final class UserInstanceManagerTest extends AdServicesExtendedMockitoTestCase {
+public final class UserInstanceManagerTest extends AdServicesMockitoTestCase {
 
     private static final String TOPICS_DAO_DUMP = "D'OHump!";
     private static final int TEST_MODULE_VERSION = 339990000;
@@ -65,18 +61,10 @@ public final class UserInstanceManagerTest extends AdServicesExtendedMockitoTest
 
     @Mock private TopicsDao mMockTopicsDao; // used to test dump
 
-    @Mock private Flags mSystemFlags;
-
     @Before
     public void setup() throws IOException {
         mTopicsDao = new TopicsDao(mDBHelper);
         mUserInstanceManager = new UserInstanceManager(mTopicsDao, mTestBasePath);
-        // We add flag control in creating consent manager for atomic transaction, disable it for
-        // testing
-        when(FlagsFactory.getFlags()).thenReturn(mSystemFlags);
-        doReturn(false)
-                .when(mSystemFlags)
-                .getEnableAtomicFileDatastoreBatchUpdateApiInSystemServer();
     }
 
     @After
