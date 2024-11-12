@@ -46,10 +46,8 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 import com.android.adservices.flags.Flags;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
 
 /**
  * AdServicesCommonManager contains APIs common across the various AdServices. It provides two
@@ -344,15 +342,8 @@ public class AdServicesCommonManager {
 
         final IAdServicesCommonService service = getService();
         try {
-            List<AdServicesModuleState> adServicesModuleStateList =
-                    updateParams.getModuleStateMap().entrySet().stream()
-                            .map(
-                                    entry ->
-                                            new AdServicesModuleState(
-                                                    entry.getKey(), entry.getValue()))
-                            .collect(Collectors.toList());
             service.requestAdServicesModuleOverrides(
-                    adServicesModuleStateList,
+                    updateParams,
                     updateParams.getNotificationType(),
                     new IRequestAdServicesModuleOverridesCallback.Stub() {
                         @Override
@@ -403,16 +394,8 @@ public class AdServicesCommonManager {
 
         final IAdServicesCommonService service = getService();
         try {
-            // TODO(b/375672670): pass param directly to Impl
-            List<AdServicesModuleUserChoice> adServicesUserChoiceList =
-                    updateParams.getUserChoiceMap().entrySet().stream()
-                            .map(
-                                    entry ->
-                                            new AdServicesModuleUserChoice(
-                                                    entry.getKey(), entry.getValue()))
-                            .collect(Collectors.toList());
             service.requestAdServicesModuleUserChoices(
-                    adServicesUserChoiceList,
+                    updateParams,
                     new IRequestAdServicesModuleUserChoicesCallback.Stub() {
                         @Override
                         public void onSuccess() throws RemoteException {
