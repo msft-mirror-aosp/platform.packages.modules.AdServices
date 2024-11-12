@@ -609,10 +609,12 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     /** retrieves the default consent of a user. */
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public boolean getDefaultConsent() {
-        return executeGetter(/* defaultReturn= */ false,
-                (userId) -> mUserInstanceManager
-                        .getOrCreateUserConsentManagerInstance(userId)
-                        .getDefaultConsent());
+        return executeGetter(
+                /* defaultReturn */ false,
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserConsentManagerInstance(userId)
+                                .getDefaultConsent());
     }
 
     /** Get the currently running privacy sandbox feature on device. */
@@ -656,10 +658,12 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     @Override
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public List<String> getKnownAppsWithConsent(@NonNull List<String> installedPackages) {
-        return executeGetter(/* defaultReturn= */ List.of(),
-                (userId) -> mUserInstanceManager
-                        .getOrCreateUserAppConsentManagerInstance(userId)
-                        .getKnownAppsWithConsent(installedPackages));
+        return executeGetter(
+                /* defaultReturn */ List.of(),
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserAppConsentManagerInstance(userId)
+                                .getKnownAppsWithConsent(installedPackages));
     }
 
     @Override
@@ -1464,7 +1468,7 @@ public class AdServicesManagerService extends IAdServicesManager.Stub {
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public String getModuleEnrollmentState() {
         return executeGetter(
-                /* defaultReturn= */ "",
+                /* defaultReturn */ "",
                 (userId) ->
                         mUserInstanceManager
                                 .getOrCreateUserConsentManagerInstance(userId)
