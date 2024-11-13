@@ -19,6 +19,7 @@ package com.android.adservices.shared.storage;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_READ_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ATOMIC_FILE_DATASTORE_WRITE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+import static com.android.adservices.shared.storage.AtomicFileDatastore.DUMP_ARGS_INCLUDE_CONTENTS_ONLY;
 import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 
@@ -71,8 +72,6 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
     private static final String TEST_VERSION_KEY = "version_key";
 
     private static final String[] DUMP_NO_ARGS = null;
-    private static final String[] DUMP_ARGS_FULL_CONTENTS =
-            new String[] {AtomicFileDatastore.DUMP_ARG_INCLUDE_CONTENTS};
 
     @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
 
@@ -762,16 +761,6 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
     }
 
     @Test
-    public void testDump_deprecated_noEntries() throws Exception {
-        String prefix = "_";
-
-        String dump = dump(pw -> mDatastore.dump(pw, prefix));
-
-        assertCommonDumpContents(dump, prefix);
-        expect.withMessage("contents of dump() (# keys)").that(dump).containsMatch("0 entries\n");
-    }
-
-    @Test
     public void testDump_noEntries() throws Exception {
         String prefix = "_";
 
@@ -785,7 +774,7 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
     public void testDump_fullContent_noEntries() throws Exception {
         String prefix = "_";
 
-        String dump = dump(pw -> mDatastore.dump(pw, prefix, DUMP_ARGS_FULL_CONTENTS));
+        String dump = dump(pw -> mDatastore.dump(pw, prefix, DUMP_ARGS_INCLUDE_CONTENTS_ONLY));
 
         assertCommonDumpContents(dump, prefix);
         expect.withMessage("contents of dump() (# keys)").that(dump).containsMatch("0 entries\n");
@@ -816,7 +805,7 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
         mDatastore.putInt("INT?", 42);
 
         String prefix = "_";
-        String dump = dump(pw -> mDatastore.dump(pw, "_", DUMP_ARGS_FULL_CONTENTS));
+        String dump = dump(pw -> mDatastore.dump(pw, "_", DUMP_ARGS_INCLUDE_CONTENTS_ONLY));
         mLog.d("Contents of dump: \n%s", dump);
 
         assertCommonDumpContents(dump, prefix);
