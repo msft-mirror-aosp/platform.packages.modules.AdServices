@@ -15,7 +15,6 @@
  */
 package com.android.server.adservices.consent;
 
-import android.annotation.NonNull;
 import android.app.adservices.consent.ConsentParcel;
 
 import com.android.adservices.shared.storage.AtomicFileDatastore;
@@ -84,15 +83,12 @@ public final class ConsentManager {
 
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
 
-    private ConsentManager(@NonNull AtomicFileDatastore datastore) {
-        Objects.requireNonNull(datastore);
-
-        mDatastore = datastore;
+    private ConsentManager(AtomicFileDatastore datastore) {
+        mDatastore = Objects.requireNonNull(datastore, "datastore cannot be null");
     }
 
     /** Create a ConsentManager with base directory and for userIdentifier */
-    @NonNull
-    public static ConsentManager createConsentManager(@NonNull String baseDir, int userIdentifier)
+    public static ConsentManager createConsentManager(String baseDir, int userIdentifier)
             throws IOException {
         Objects.requireNonNull(baseDir, "Base dir must be provided.");
 
@@ -108,7 +104,6 @@ public final class ConsentManager {
         return new ConsentManager(datastore);
     }
 
-    @NonNull
     @VisibleForTesting
     static AtomicFileDatastore createAndInitAtomicFileDatastore(String consentDataStoreDir)
             throws IOException {
@@ -712,6 +707,6 @@ public final class ConsentManager {
         writer.printf("%sConsentManager:\n", prefix);
         String prefix2 = prefix + "  ";
 
-        mDatastore.dump(writer, prefix2);
+        mDatastore.dump(writer, prefix2, /* args= */ null);
     }
 }
