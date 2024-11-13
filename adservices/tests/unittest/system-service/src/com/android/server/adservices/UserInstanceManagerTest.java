@@ -69,6 +69,7 @@ public final class UserInstanceManagerTest extends AdServicesExtendedMockitoTest
 
     @Before
     public void setup() throws IOException {
+        // make 2 below final
         mTopicsDao = new TopicsDao(mDBHelper);
         mUserInstanceManager = new UserInstanceManager(mTopicsDao, mTestBasePath);
         // We add flag control in creating consent manager for atomic transaction, disable it for
@@ -91,10 +92,10 @@ public final class UserInstanceManagerTest extends AdServicesExtendedMockitoTest
     @Test
     public void testGetOrCreateUserConsentManagerInstance() throws IOException {
         ConsentManager consentManager0 =
-                mUserInstanceManager.getOrCreateUserConsentManagerInstance(/* userIdentifier */ 0);
+                mUserInstanceManager.getOrCreateUserConsentManagerInstance(/* userId= */ 0);
 
         ConsentManager consentManager1 =
-                mUserInstanceManager.getOrCreateUserConsentManagerInstance(/* userIdentifier */ 1);
+                mUserInstanceManager.getOrCreateUserConsentManagerInstance(/* userId= */ 1);
 
         AppConsentManager appConsentManager0 =
                 mUserInstanceManager.getOrCreateUserAppConsentManagerInstance(0);
@@ -111,9 +112,7 @@ public final class UserInstanceManagerTest extends AdServicesExtendedMockitoTest
                         1, TEST_MODULE_VERSION);
 
         // One instance per user.
-        assertThat(
-                        mUserInstanceManager.getOrCreateUserConsentManagerInstance(
-                                /* userIdentifier */ 0))
+        assertThat(mUserInstanceManager.getOrCreateUserConsentManagerInstance(/* userId= */ 0))
                 .isNotSameInstanceAs(consentManager1);
         assertThat(mUserInstanceManager.getOrCreateUserAppConsentManagerInstance(0))
                 .isNotSameInstanceAs(appConsentManager1);
@@ -123,13 +122,9 @@ public final class UserInstanceManagerTest extends AdServicesExtendedMockitoTest
                 .isNotSameInstanceAs(rollbackHandlingManager1);
 
         // Creating instance once per user.
-        assertThat(
-                        mUserInstanceManager.getOrCreateUserConsentManagerInstance(
-                                /* userIdentifier */ 0))
+        assertThat(mUserInstanceManager.getOrCreateUserConsentManagerInstance(/* userId= */ 0))
                 .isSameInstanceAs(consentManager0);
-        assertThat(
-                        mUserInstanceManager.getOrCreateUserConsentManagerInstance(
-                                /* userIdentifier */ 1))
+        assertThat(mUserInstanceManager.getOrCreateUserConsentManagerInstance(/* userId= */ 1))
                 .isSameInstanceAs(consentManager1);
         assertThat(mUserInstanceManager.getOrCreateUserAppConsentManagerInstance(0))
                 .isSameInstanceAs(appConsentManager0);
@@ -148,29 +143,29 @@ public final class UserInstanceManagerTest extends AdServicesExtendedMockitoTest
 
     @Test
     public void testGetOrCreateUserBlockedTopicsManagerInstance() {
-        final int user0 = 0;
-        final int user1 = 1;
+        int userId0 = 0;
+        int userId1 = 1;
 
         BlockedTopicsManager blockedTopicsManager0 =
-                mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(user0);
+                mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(userId0);
         BlockedTopicsManager blockedTopicsManager1 =
-                mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(user1);
+                mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(userId1);
 
         // One instance per user.
         assertThat(blockedTopicsManager0).isNotSameInstanceAs(blockedTopicsManager1);
 
         // Creating instance once per user.
-        assertThat(mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(user0))
+        assertThat(mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(userId0))
                 .isSameInstanceAs(blockedTopicsManager0);
-        assertThat(mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(user1))
+        assertThat(mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(userId1))
                 .isSameInstanceAs(blockedTopicsManager1);
     }
 
     @Test
     public void testRecordRemoveBlockedTopicsMultipleUsers() {
-        final int user0 = 0;
-        final int user1 = 1;
-        final TopicParcel topicParcel =
+        int userId0 = 0;
+        int userId1 = 1;
+        TopicParcel topicParcel =
                 new TopicParcel.Builder()
                         .setTopicId(/* topicId */ 1)
                         .setTaxonomyVersion(/* taxonomyVersion */ 1)
@@ -178,9 +173,9 @@ public final class UserInstanceManagerTest extends AdServicesExtendedMockitoTest
                         .build();
 
         BlockedTopicsManager blockedTopicsManager0 =
-                mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(user0);
+                mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(userId0);
         BlockedTopicsManager blockedTopicsManager1 =
-                mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(user1);
+                mUserInstanceManager.getOrCreateUserBlockedTopicsManagerInstance(userId1);
 
         // Record topic for user 0
         blockedTopicsManager0.recordBlockedTopic(List.of(topicParcel));
@@ -188,7 +183,7 @@ public final class UserInstanceManagerTest extends AdServicesExtendedMockitoTest
                 .isEqualTo(List.of(topicParcel));
         assertThat(blockedTopicsManager1.retrieveAllBlockedTopics()).isEmpty();
 
-        // Record topic also for user 1 and remove topic for user0;
+        // Record topic also for user 1 and remove topic for userId0;
         blockedTopicsManager1.recordBlockedTopic(List.of(topicParcel));
         blockedTopicsManager0.removeBlockedTopic(topicParcel);
         assertThat(blockedTopicsManager0.retrieveAllBlockedTopics()).isEmpty();
@@ -198,42 +193,42 @@ public final class UserInstanceManagerTest extends AdServicesExtendedMockitoTest
 
     @Test
     public void testDeleteConsentManagerInstance() throws Exception {
-        int userIdentifier = 0;
-        mUserInstanceManager.getOrCreateUserConsentManagerInstance(userIdentifier);
-        assertThat(mUserInstanceManager.getUserConsentManagerInstance(userIdentifier)).isNotNull();
-        mUserInstanceManager.deleteUserInstance(userIdentifier);
+        int userId = 0;
+        mUserInstanceManager.getOrCreateUserConsentManagerInstance(userId);
+        assertThat(mUserInstanceManager.getUserConsentManagerInstance(userId)).isNotNull();
+        mUserInstanceManager.deleteUserInstance(userId);
 
-        assertThat(mUserInstanceManager.getUserConsentManagerInstance(userIdentifier)).isNull();
+        assertThat(mUserInstanceManager.getUserConsentManagerInstance(userId)).isNull();
     }
 
     @Test
-    public void testDeleteConsentManagerInstance_userIdentifierNotPresent() throws Exception {
-        int userIdentifier = 0;
-        mUserInstanceManager.getOrCreateUserConsentManagerInstance(userIdentifier);
-        assertThat(mUserInstanceManager.getUserConsentManagerInstance(userIdentifier)).isNotNull();
-        int userIdentifierNotPresent = 3;
+    public void testDeleteConsentManagerInstance_userIdNotPresent() throws Exception {
+        int userId = 0;
+        mUserInstanceManager.getOrCreateUserConsentManagerInstance(userId);
+        assertThat(mUserInstanceManager.getUserConsentManagerInstance(userId)).isNotNull();
+        int userIdNotPresent = 3;
 
-        mUserInstanceManager.deleteUserInstance(userIdentifierNotPresent);
+        mUserInstanceManager.deleteUserInstance(userIdNotPresent);
 
-        assertThat(mUserInstanceManager.getUserConsentManagerInstance(userIdentifier)).isNotNull();
+        assertThat(mUserInstanceManager.getUserConsentManagerInstance(userId)).isNotNull();
     }
 
     @Test
     public void testDeleteAllDataWhenDeletingUserInstance() throws Exception {
-        final int topicId1 = 1;
-        final int topicId2 = 2;
-        final int user0 = 0;
-        final int user1 = 1;
-        final long taxonomyVersion = 1L;
-        final long modelVersion = 1L;
+        int topicId1 = 1;
+        int topicId2 = 2;
+        int userId0 = 0;
+        int userId1 = 1;
+        long taxonomyVersion = 1L;
+        long modelVersion = 1L;
         Topic topicToBlock1 = new Topic(taxonomyVersion, modelVersion, topicId1);
         Topic topicToBlock2 = new Topic(taxonomyVersion, modelVersion, topicId2);
-        mTopicsDao.recordBlockedTopic(List.of(topicToBlock1), user0);
-        mTopicsDao.recordBlockedTopic(List.of(topicToBlock2), user0);
-        mTopicsDao.recordBlockedTopic(List.of(topicToBlock1), user1);
+        mTopicsDao.recordBlockedTopic(List.of(topicToBlock1), userId0);
+        mTopicsDao.recordBlockedTopic(List.of(topicToBlock2), userId0);
+        mTopicsDao.recordBlockedTopic(List.of(topicToBlock1), userId1);
 
-        Set<Topic> blockedTopics0 = mTopicsDao.retrieveAllBlockedTopics(user0);
-        Set<Topic> blockedTopics1 = mTopicsDao.retrieveAllBlockedTopics(user1);
+        Set<Topic> blockedTopics0 = mTopicsDao.retrieveAllBlockedTopics(userId0);
+        Set<Topic> blockedTopics1 = mTopicsDao.retrieveAllBlockedTopics(userId1);
 
         // Make sure that what we write to db is equal to what we read from db.
         assertThat(blockedTopics0).hasSize(2);
@@ -241,10 +236,10 @@ public final class UserInstanceManagerTest extends AdServicesExtendedMockitoTest
         assertThat(blockedTopics1).hasSize(1);
         assertThat(blockedTopics1).containsExactly(topicToBlock1);
 
-        mUserInstanceManager.deleteUserInstance(user0);
+        mUserInstanceManager.deleteUserInstance(userId0);
 
         // User 0 should have no blocked topics and User 1 should still have 1 blocked topic
-        assertThat(mTopicsDao.retrieveAllBlockedTopics(user0)).isEmpty();
+        assertThat(mTopicsDao.retrieveAllBlockedTopics(userId0)).isEmpty();
         assertThat(blockedTopics1).hasSize(1);
         assertThat(blockedTopics1).containsExactly(topicToBlock1);
     }
