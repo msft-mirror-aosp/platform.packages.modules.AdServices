@@ -102,6 +102,7 @@ import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.ohttp.algorithms.UnsupportedHpkeAlgorithmException;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
@@ -156,6 +157,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 @SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 @SetErrorLogUtilDefaultParams(
         throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT)
@@ -478,6 +480,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     @Before
     public void setup() throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException {
         mFakeFlags = new PersistAdSelectionResultRunnerTestFlags();
+        mocker.mockGetDebugFlags(mMockDebugFlags);
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
@@ -541,6 +544,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mFakeFlags,
+                        mMockDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -1141,6 +1145,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mFakeFlags,
+                        mMockDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -1240,6 +1245,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mFakeFlags,
+                        mMockDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -1429,6 +1435,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mFakeFlags,
+                        mMockDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -1548,15 +1555,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
     public void testRunner_revokedUserConsent_returnsEmptyResult_UXNotificationEnforcementDisabled()
             throws InterruptedException {
-        Flags flagsWithUXConsentEnforcementDisabled =
-                new PersistAdSelectionResultRunnerTestFlags() {
-                    @Override
-                    public boolean getConsentNotificationDebugMode() {
-                        return true;
-                    }
-                };
-
-        mocker.mockGetFlags(flagsWithUXConsentEnforcementDisabled);
+        mocker.mockGetConsentNotificationDebugMode(true);
+        mocker.mockGetFlags(mFakeFlags);
 
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilterMock)
@@ -1595,7 +1595,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mReportingLimits,
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
-                        flagsWithUXConsentEnforcementDisabled,
+                        mFakeFlags,
+                        mMockDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -1826,6 +1827,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mFakeFlags,
+                        mMockDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -1946,6 +1948,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mFakeFlags,
+                        mMockDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2004,6 +2007,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithKAnonDisabled,
+                        mMockDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2053,6 +2057,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithKAnonEnabled,
+                        mMockDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2099,6 +2104,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithKAnonEnabled,
+                        mMockDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2142,6 +2148,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithKAnonEnabled,
+                        mMockDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2251,6 +2258,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mFakeFlags,
+                        mMockDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2319,11 +2327,6 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
         @Override
         public boolean getPasExtendedMetricsEnabled() {
             return PAS_EXTENDED_METRICS_ENABLED_IN_TEST;
-        }
-
-        @Override
-        public boolean getConsentNotificationDebugMode() {
-            return false;
         }
     }
 
