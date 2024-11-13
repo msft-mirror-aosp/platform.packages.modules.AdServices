@@ -1101,7 +1101,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_RESOURCES
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL;
-import static com.android.adservices.shared.meta_testing.FlagsTestLittleHelper.expectDumpHasAllFlags;
+import static com.android.adservices.shared.meta_testing.FlagsTestLittleHelper.expectDumpHasAllGetters;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -1113,14 +1113,12 @@ import android.util.Log;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.fixture.TestableSystemProperties;
-import com.android.adservices.shared.testing.common.DumpHelper;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.common.collect.ImmutableList;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.stream.Collectors;
@@ -3593,23 +3591,9 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 Flags::getAsyncRegistrationJobQueueIntervalMs);
     }
 
-    // TODO(b/369385082): remove once testDump() is un-ignored
     @Test
-    public void testDump_doesntCrash() throws Exception {
-        // Trigger the dump to verify no crash
-        String dump = DumpHelper.dump((pw) -> mPhFlags.dump(pw, /* args= */ null));
-
-        expect.withMessage("dump()").that(dump).isNotEmpty();
-    }
-
-    @Test
-    @Ignore("TODO(b/369385082): remove @Ignore when all missing values are added")
     public void testDump() throws Exception {
-        expectDumpHasAllFlags(
-                expect,
-                FlagsConstants.class,
-                pw -> mPhFlags.dump(pw, /* args= */ null),
-                flag -> ("\t" + flag.second + " = "));
+        expectDumpHasAllGetters(expect, Flags.class, pw -> mPhFlags.dump(pw, /* args= */ null));
     }
 
     @Test
