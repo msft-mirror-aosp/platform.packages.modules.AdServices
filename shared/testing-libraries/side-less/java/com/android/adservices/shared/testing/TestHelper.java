@@ -29,9 +29,17 @@ public final class TestHelper {
 
     private static final Logger sLogger = new Logger(DynamicLogger.getInstance(), TestHelper.class);
 
-    /** Gets the given annotation from the test, its class, or its ancestors. */
+    /**
+     * Gets the given annotation from the test, its class, its ancestors, or interfaces each of
+     * these classes implements.
+     *
+     * @param test test itself
+     * @param annotationClass type of annotation to look for
+     * @return the annotation defined "closest" to the test (closest would be the one declared in
+     *     the test method), or {@code null} if the annotation is not present anywhere.
+     */
     @Nullable
-    public static <T extends Annotation> T getAnnotation(
+    public static <T extends Annotation> T getAnnotationFromAnywhere(
             Description test, Class<T> annotationClass) {
         Objects.requireNonNull(test, "test (Description) cannot be null");
         Objects.requireNonNull(annotationClass, "annotationClass cannot be null");
@@ -40,28 +48,37 @@ public final class TestHelper {
 
         // Try from test method first...
         List<Annotation> annotations = new ArrayList<>();
-        getAnnotations(annotations, test, filter);
+        addAnnotationsFromTestMethodOnly(annotations, test, filter);
         if (!annotations.isEmpty()) {
             return annotationClass.cast(annotations.get(0));
         }
         // ...then from class hierarchy
-        getAnnotations(annotations, test.getTestClass(), filter);
+        addAnnotationsFromTestTypesOnly(annotations, test.getTestClass(), filter);
         return annotations.isEmpty() ? null : annotationClass.cast(annotations.get(0));
     }
 
     /**
      * Gets the given annotation from the test class, its ancestors, or any of the implemented
      * interface(s).
+     *
+     * <p>This method is similar to {@link #getAnnotationFromAnywhere(Description, Class)}, but it
+     * doesn't look for the annotation in the test method itself, so it's more suitable to be used
+     * by class rules.
+     *
+     * @param testClass class of the test
+     * @param annotationClass type of annotation to look for
+     * @return the annotation defined "closest" to the test (closest would be the one declared in
+     *     the test class), or {@code null} if the annotation is not present anywhere.
      */
     @Nullable
-    public static <T extends Annotation> T getAnnotation(
+    public static <T extends Annotation> T getAnnotationFromTypesOnly(
             Class<?> testClass, Class<T> annotationClass) {
         Objects.requireNonNull(testClass, "test class cannot be null");
         Objects.requireNonNull(annotationClass, "annotationClass cannot be null");
 
         Function<Annotation, Boolean> filter = a -> annotationClass.isInstance(a);
         List<Annotation> annotations = new ArrayList<>();
-        getAnnotations(annotations, testClass, filter);
+        addAnnotationsFromTestTypesOnly(annotations, testClass, filter);
         T annotation = annotations.isEmpty() ? null : annotationClass.cast(annotations.get(0));
 
         if (VERBOSE) {
@@ -71,15 +88,24 @@ public final class TestHelper {
         return annotation;
     }
 
-    /** Gets the given annotations from the test, its class, or its ancestors, in this order. */
-    public static List<Annotation> getAnnotations(
+    /**
+     * Gets the given annotations from the test, its class, its ancestors, or interfaces each of
+     * these classes implements.
+     *
+     * @param test test itself
+     * @param filter object used to defined which annotations to look for (should return {@code
+     *     true} to include an annotation in the result).
+     * @return list of annotations, with the "closest" annotations coming first (closest would be
+     *     the one declared in the test method), or empty if the annotation is not present anywhere.
+     */
+    public static List<Annotation> getAnnotationsFromEverywhere(
             Description test, Function<Annotation, Boolean> filter) {
         Objects.requireNonNull(test, "test (Description) cannot be null");
         Objects.requireNonNull(filter, "filter cannot be null");
 
         List<Annotation> annotations = new ArrayList<>();
-        getAnnotations(annotations, test, filter);
-        getAnnotations(annotations, test.getTestClass(), filter);
+        addAnnotationsFromTestMethodOnly(annotations, test, filter);
+        addAnnotationsFromTestTypesOnly(annotations, test.getTestClass(), filter);
 
         if (VERBOSE) {
             sLogger.v("getAnnotations(%s): returning %s", test, annotations);
@@ -87,7 +113,7 @@ public final class TestHelper {
         return annotations;
     }
 
-    private static void getAnnotations(
+    private static void addAnnotationsFromTestMethodOnly(
             List<Annotation> annotations, Description test, Function<Annotation, Boolean> filter) {
         for (var annotation : test.getAnnotations()) {
             if (filter.apply(annotation)) {
@@ -101,7 +127,7 @@ public final class TestHelper {
         }
     }
 
-    private static void getAnnotations(
+    private static void addAnnotationsFromTestTypesOnly(
             List<Annotation> annotations,
             Class<?> testClass,
             Function<Annotation, Boolean> filter) {

@@ -17,7 +17,7 @@
 package com.android.adservices.mockito;
 
 import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.shouldClearInlineMocksAfterTest;
-import static com.android.adservices.shared.testing.TestHelper.getAnnotation;
+import static com.android.adservices.shared.testing.TestHelper.getAnnotationFromAnywhere;
 
 import android.util.Log;
 
@@ -118,7 +118,8 @@ public final class AdServicesExtendedMockitoRule
 
     @Override
     protected boolean getClearInlineMethodsAtTheEnd(Description description) {
-        ClearInlineMocksMode annotation = getAnnotation(description, ClearInlineMocksMode.class);
+        ClearInlineMocksMode annotation =
+                getAnnotationFromAnywhere(description, ClearInlineMocksMode.class);
         if (annotation != null) {
             boolean shouldClear = shouldClearInlineMocksAfterTest(description, annotation.value());
             Log.d(

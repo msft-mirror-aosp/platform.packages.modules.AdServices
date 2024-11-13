@@ -16,8 +16,9 @@
 package com.android.adservices.shared.testing;
 
 import static com.android.adservices.shared.meta_testing.CommonDescriptions.newTestMethodForClassRule;
-import static com.android.adservices.shared.testing.TestHelper.getAnnotation;
-import static com.android.adservices.shared.testing.TestHelper.getAnnotations;
+import static com.android.adservices.shared.testing.TestHelper.getAnnotationFromAnywhere;
+import static com.android.adservices.shared.testing.TestHelper.getAnnotationFromTypesOnly;
+import static com.android.adservices.shared.testing.TestHelper.getAnnotationsFromEverywhere;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -82,163 +83,170 @@ public final class TestHelperTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testGetAnnotation_null() {
+    public void testGetAnnotationFromAnywhere_null() {
         Description test = createTestDescription(AClassHasNoNothingAtAll.class, TEST_NAME);
 
         assertThrows(
-                NullPointerException.class, () -> getAnnotation(test, /* annotationClass= */ null));
+                NullPointerException.class,
+                () -> getAnnotationFromAnywhere(test, /* annotationClass= */ null));
         assertThrows(
                 NullPointerException.class,
-                () -> getAnnotation((Description) null, DaRealAnnotation.class));
+                () -> getAnnotationFromAnywhere((Description) null, DaRealAnnotation.class));
     }
 
     @Test
-    public void testGetAnnotation_notSetAnywhere() {
+    public void testGetAnnotationFromAnywhere_notSetAnywhere() {
         Description test = createTestDescription(AClassHasNoNothingAtAll.class, TEST_NAME);
 
         expect.withMessage("getAnnotation(%s)", test)
-                .that(getAnnotation(test, DaRealAnnotation.class))
+                .that(getAnnotationFromAnywhere(test, DaRealAnnotation.class))
                 .isNull();
     }
 
     @Test
-    public void testGetAnnotation_fromMethod() {
+    public void testGetAnnotationFromAnywhere_fromMethod() {
         Description test =
                 createTestDescription(
                         AClassHasAnAnnotationAndAParent.class,
                         TEST_NAME,
                         newDaFakeAnnotation(VALUE_ON_METHOD));
 
-        DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
+        DaRealAnnotation annotation = getAnnotationFromAnywhere(test, DaRealAnnotation.class);
 
         assertDaRealAnnotation(annotation, "annotation from method", VALUE_ON_METHOD);
     }
 
     @Test
-    public void testGetAnnotation_fromClass() {
+    public void testGetAnnotationFromAnywhere_fromClass() {
         Description test = createTestDescription(AClassHasAnAnnotationAndAParent.class, TEST_NAME);
 
-        DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
+        DaRealAnnotation annotation = getAnnotationFromAnywhere(test, DaRealAnnotation.class);
 
         assertDaRealAnnotation(annotation, "annotation from class", VALUE_ON_SUPERCLASS);
     }
 
     @Test
-    public void testGetAnnotation_fromParentClass() {
+    public void testGetAnnotationFromAnywhere_fromParentClass() {
         Description test =
                 createTestDescription(AClassHasNoAnnotationButItsParentDoes.class, TEST_NAME);
 
-        DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
+        DaRealAnnotation annotation = getAnnotationFromAnywhere(test, DaRealAnnotation.class);
 
         assertDaRealAnnotation(annotation, "annotation from superclass", VALUE_ON_CLASS);
     }
 
     @Test
-    public void testGetAnnotation_fromImplementedInterface() {
+    public void testGetAnnotationFromAnywhere_fromImplementedInterface() {
         Description test =
                 createTestDescription(AClassHasNoAnnotationButItsInterfaceDoes.class, TEST_NAME);
 
-        DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
+        DaRealAnnotation annotation = getAnnotationFromAnywhere(test, DaRealAnnotation.class);
 
         assertDaRealAnnotation(annotation, "annotation from interface", VALUE_ON_INTERFACE);
     }
 
     @Test
-    public void testGetAnnotation_fromParentsImplementedInterface() {
+    public void testGetAnnotationFromAnywhere_fromParentsImplementedInterface() {
         Description test =
                 createTestDescription(
                         AClassHasNoAnnotationButItsParentsInterfaceDoes.class, TEST_NAME);
 
-        DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
+        DaRealAnnotation annotation = getAnnotationFromAnywhere(test, DaRealAnnotation.class);
 
         assertDaRealAnnotation(
                 annotation, "annotation from parent's interface", VALUE_ON_INTERFACE);
     }
 
     @Test
-    public void testGetAnnotation_fromGrandParentClass() {
+    public void testGetAnnotationFromAnywhere_fromGrandParentClass() {
         Description test =
                 createTestDescription(AClassHasNoAnnotationButItsGrandParentDoes.class, TEST_NAME);
 
-        DaRealAnnotation annotation = getAnnotation(test, DaRealAnnotation.class);
+        DaRealAnnotation annotation = getAnnotationFromAnywhere(test, DaRealAnnotation.class);
 
         assertDaRealAnnotation(annotation, "annotation from class", VALUE_ON_CLASS);
     }
 
     @Test
-    public void testGetAnnotationFromTestClass_null() {
+    public void testGetAnnotationFromTypesOnly_null() {
         assertThrows(
                 NullPointerException.class,
-                () -> getAnnotation(AClassHasNoNothingAtAll.class, /* annotationClass= */ null));
+                () ->
+                        getAnnotationFromTypesOnly(
+                                AClassHasNoNothingAtAll.class, /* annotationClass= */ null));
         assertThrows(
                 NullPointerException.class,
-                () -> getAnnotation(/* testClass= */ (Class<?>) null, DaRealAnnotation.class));
+                () ->
+                        getAnnotationFromTypesOnly(
+                                /* testClass= */ (Class<?>) null, DaRealAnnotation.class));
     }
 
     @Test
-    public void testGetAnnotationFromTestClass_notSetAnywhere() {
+    public void testGetAnnotationFromTypesOnly_notSetAnywhere() {
         Class<?> testClass = AClassHasNoNothingAtAll.class;
 
         expect.withMessage("getAnnotation(%s)", testClass)
-                .that(getAnnotation(testClass, DaRealAnnotation.class))
+                .that(getAnnotationFromTypesOnly(testClass, DaRealAnnotation.class))
                 .isNull();
     }
 
     @Test
-    public void testGetAnnotationFromTestClass_fromClass() {
+    public void testGetAnnotationFromTypesOnly_fromClass() {
         Class<?> testClass = AClassHasAnAnnotationAndAParent.class;
 
-        DaRealAnnotation annotation = getAnnotation(testClass, DaRealAnnotation.class);
+        DaRealAnnotation annotation = getAnnotationFromTypesOnly(testClass, DaRealAnnotation.class);
 
         assertDaRealAnnotation(annotation, "annotation from parent class", VALUE_ON_SUPERCLASS);
     }
 
     @Test
-    public void testGetAnnotationFromTestClass_fromParentClass() {
+    public void testGetAnnotationFromTypesOnly_fromParentClass() {
         Class<?> testClass = AClassHasNoAnnotationButItsParentDoes.class;
 
-        DaRealAnnotation annotation = getAnnotation(testClass, DaRealAnnotation.class);
+        DaRealAnnotation annotation = getAnnotationFromTypesOnly(testClass, DaRealAnnotation.class);
 
         assertDaRealAnnotation(annotation, "annotation from class", VALUE_ON_CLASS);
     }
 
     @Test
-    public void testGetAnnotationFromTestClass_fromGrandParentClass() {
+    public void testGetAnnotationFromTypesOnly_fromGrandParentClass() {
         Class<?> testClass = AClassHasNoAnnotationButItsGrandParentDoes.class;
 
-        DaRealAnnotation annotation = getAnnotation(testClass, DaRealAnnotation.class);
+        DaRealAnnotation annotation = getAnnotationFromTypesOnly(testClass, DaRealAnnotation.class);
 
         assertDaRealAnnotation(annotation, "annotation from class", VALUE_ON_CLASS);
     }
 
     @Test
-    public void testGetAnnotations_null() {
+    public void testGetAnnotationsFromEverywhere_null() {
         Description test = createTestDescription(AClassHasNoNothingAtAll.class, TEST_NAME);
 
-        assertThrows(NullPointerException.class, () -> getAnnotations(test, /* filter= */ null));
         assertThrows(
                 NullPointerException.class,
-                () -> getAnnotations(/* test= */ null, mDaRealAnnotationFilta));
+                () -> getAnnotationsFromEverywhere(test, /* filter= */ null));
+        assertThrows(
+                NullPointerException.class,
+                () -> getAnnotationsFromEverywhere(/* test= */ null, mDaRealAnnotationFilta));
     }
 
     @Test
-    public void testGetAnnotations_notSetAnywhere() {
+    public void testGetAnnotationsFromEverywhere_notSetAnywhere() {
         Description test = createTestDescription(AClassHasNoNothingAtAll.class, TEST_NAME);
 
         expect.withMessage("getAnnotations(%s)", test)
-                .that(getAnnotations(test, mDaRealAnnotationFilta))
+                .that(getAnnotationsFromEverywhere(test, mDaRealAnnotationFilta))
                 .isEmpty();
     }
 
     @Test
-    public void testGetAnnotations_fromMethodOnly() {
+    public void testGetAnnotationsFromEverywhere_fromMethodOnly() {
         Description test =
                 createTestDescription(
                         AClassHasNoNothingAtAll.class,
                         TEST_NAME,
                         newDaFakeAnnotation(VALUE_ON_METHOD));
 
-        var annotations = getAnnotations(test, mDaRealAnnotationFilta);
+        var annotations = getAnnotationsFromEverywhere(test, mDaRealAnnotationFilta);
 
         assertWithMessage("getAnnotations(%s)", test).that(annotations).isNotNull();
         assertWithMessage("getAnnotations(%s)", test).that(annotations).hasSize(1);
@@ -247,10 +255,10 @@ public final class TestHelperTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testGetAnnotations_fromClassOnly() {
+    public void testGetAnnotationsFromEverywhere_fromClassOnly() {
         Description test = createTestDescription(AClassHasAnAnnotation.class, TEST_NAME);
 
-        var annotations = getAnnotations(test, mDaRealAnnotationFilta);
+        var annotations = getAnnotationsFromEverywhere(test, mDaRealAnnotationFilta);
 
         assertWithMessage("getAnnotations(%s)", test).that(annotations).isNotNull();
         assertWithMessage("getAnnotations(%s)", test).that(annotations).hasSize(1);
@@ -259,12 +267,12 @@ public final class TestHelperTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testGetAnnotations_fromInterfaceOnly() {
+    public void testGetAnnotationsFromEverywhere_fromInterfaceOnly() {
         Description test =
                 createTestDescription(
                         AClassHasNoAnnotationButItsParentsInterfaceDoes.class, TEST_NAME);
 
-        var annotations = getAnnotations(test, mDaRealAnnotationFilta);
+        var annotations = getAnnotationsFromEverywhere(test, mDaRealAnnotationFilta);
 
         assertWithMessage("getAnnotations(%s)", test).that(annotations).isNotNull();
         assertWithMessage("getAnnotations(%s)", test).that(annotations).hasSize(1);
@@ -273,10 +281,10 @@ public final class TestHelperTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testGetAnnotations_fromSuperClassOnly() {
+    public void testGetAnnotationsFromEverywhere_fromSuperClassOnly() {
         Description test = createTestDescription(AClassHasAnAnnotation.class, TEST_NAME);
 
-        var annotations = getAnnotations(test, mDaRealAnnotationFilta);
+        var annotations = getAnnotationsFromEverywhere(test, mDaRealAnnotationFilta);
 
         assertWithMessage("getAnnotations(%s)", test).that(annotations).isNotNull();
         assertWithMessage("getAnnotations(%s)", test).that(annotations).hasSize(1);
@@ -291,12 +299,12 @@ public final class TestHelperTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testGetAnnotations_fromMethodAndClass() {
+    public void testGetAnnotationsFromEverywhere_fromMethodAndClass() {
         Description test =
                 Description.createTestDescription(
                         AClassHasAnAnnotation.class, "test", newDaFakeAnnotation(VALUE_ON_METHOD));
 
-        var annotations = getAnnotations(test, mDaRealAnnotationFilta);
+        var annotations = getAnnotationsFromEverywhere(test, mDaRealAnnotationFilta);
 
         assertWithMessage("getAnnotations(%s)", test).that(annotations).isNotNull();
         assertWithMessage("getAnnotations(%s)", test).that(annotations).hasSize(2);
@@ -306,12 +314,12 @@ public final class TestHelperTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testGetAnnotations_fromEverywhere() {
+    public void testGetAnnotationsFromEverywhere_fromEverywhere() {
         Description test =
                 Description.createTestDescription(
                         AClassWithEverything.class, "test", newDaFakeAnnotation(VALUE_ON_METHOD));
 
-        var annotations = getAnnotations(test, mDaRealAnnotationFilta);
+        var annotations = getAnnotationsFromEverywhere(test, mDaRealAnnotationFilta);
 
         assertWithMessage("getAnnotations(%s)", test).that(annotations).isNotNull();
         assertWithMessage("getAnnotations(%s)", test).that(annotations).hasSize(7);

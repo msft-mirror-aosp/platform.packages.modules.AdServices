@@ -16,11 +16,14 @@
 
 package android.adservices.adselection;
 
+import android.adservices.common.AdTechIdentifier;
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
 import android.os.OutcomeReceiver;
 
+import com.android.adservices.flags.Flags;
 import com.android.internal.util.Preconditions;
 
 import java.util.Objects;
@@ -51,17 +54,19 @@ public class AdSelectionOutcome {
 
     private final long mAdSelectionId;
     @NonNull private final Uri mRenderUri;
+    @NonNull private final AdTechIdentifier mWinningSeller;
 
     private AdSelectionOutcome() {
         mAdSelectionId = UNSET_AD_SELECTION_ID;
         mRenderUri = Uri.EMPTY;
+        mWinningSeller = AdTechIdentifier.UNSET_AD_TECH_IDENTIFIER;
     }
 
-    private AdSelectionOutcome(long adSelectionId, @NonNull Uri renderUri) {
-        Objects.requireNonNull(renderUri);
-
+    private AdSelectionOutcome(
+            long adSelectionId, @NonNull Uri renderUri, @NonNull AdTechIdentifier winningSeller) {
         mAdSelectionId = adSelectionId;
-        mRenderUri = renderUri;
+        mRenderUri = Objects.requireNonNull(renderUri, "Render uri cannot be null");
+        mWinningSeller = Objects.requireNonNull(winningSeller, "Winning seller cannot be null");
     }
 
     /** Returns the renderUri that the AdSelection returns. */
@@ -77,6 +82,17 @@ public class AdSelectionOutcome {
     }
 
     /**
+     * Returns the willing seller that won the auction.
+     *
+     * @hide
+     */
+    @FlaggedApi(Flags.FLAG_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME)
+    @NonNull
+    public AdTechIdentifier getWinningSeller() {
+        return mWinningSeller;
+    }
+
+    /**
      * Returns whether the outcome contains results or empty. Empty outcomes' {@code render uris}
      * shouldn't be used.
      */
@@ -89,14 +105,15 @@ public class AdSelectionOutcome {
         if (o instanceof AdSelectionOutcome) {
             AdSelectionOutcome adSelectionOutcome = (AdSelectionOutcome) o;
             return mAdSelectionId == adSelectionOutcome.mAdSelectionId
-                    && Objects.equals(mRenderUri, adSelectionOutcome.mRenderUri);
+                    && Objects.equals(mRenderUri, adSelectionOutcome.mRenderUri)
+                    && Objects.equals(mWinningSeller, adSelectionOutcome.mWinningSeller);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mAdSelectionId, mRenderUri);
+        return Objects.hash(mAdSelectionId, mRenderUri, mWinningSeller);
     }
 
     /**
@@ -105,6 +122,9 @@ public class AdSelectionOutcome {
     public static final class Builder {
         private long mAdSelectionId = UNSET_AD_SELECTION_ID;
         @Nullable private Uri mRenderUri;
+
+        @NonNull
+        private AdTechIdentifier mWinningSeller = AdTechIdentifier.UNSET_AD_TECH_IDENTIFIER;
 
         public Builder() {}
 
@@ -118,9 +138,19 @@ public class AdSelectionOutcome {
         /** Sets the RenderUri. */
         @NonNull
         public AdSelectionOutcome.Builder setRenderUri(@NonNull Uri renderUri) {
-            Objects.requireNonNull(renderUri);
+            mRenderUri = Objects.requireNonNull(renderUri, "Render uri cannot be null");
+            return this;
+        }
 
-            mRenderUri = renderUri;
+        /**
+         * Sets the winning seller.
+         *
+         * @hide
+         */
+        @NonNull
+        public AdSelectionOutcome.Builder setWinningSeller(
+                @NonNull AdTechIdentifier winningSeller) {
+            mWinningSeller = Objects.requireNonNull(winningSeller, "Winning seller cannot be null");
             return this;
         }
 
@@ -133,11 +163,12 @@ public class AdSelectionOutcome {
         @NonNull
         public AdSelectionOutcome build() {
             Objects.requireNonNull(mRenderUri);
+            Objects.requireNonNull(mWinningSeller);
 
             Preconditions.checkArgument(
                     mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
 
-            return new AdSelectionOutcome(mAdSelectionId, mRenderUri);
+            return new AdSelectionOutcome(mAdSelectionId, mRenderUri, mWinningSeller);
         }
     }
 }
