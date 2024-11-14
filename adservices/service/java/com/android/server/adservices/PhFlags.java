@@ -43,7 +43,7 @@ public final class PhFlags implements Flags {
             "ClientErrorLogging__enable_cel_for_system_server";
 
     /** Key to enable AtomicFileDataStore update API for adservices system service. */
-    public static final String KEY_ENABLE_BATCH_UPDATE_API_IN_SYSTEM_SERVER =
+    static final String KEY_ENABLE_BATCH_UPDATE_API_IN_SYSTEM_SERVER =
             "AtomicFileDatastore__enable_batch_update_api_in_system_server";
 
     @Override

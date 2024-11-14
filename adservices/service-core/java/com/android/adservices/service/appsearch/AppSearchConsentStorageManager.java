@@ -335,44 +335,17 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
         boolean wasU18NotificationDisplayed =
                 isU18AppSearchMigrationEnabled && wasU18NotificationDisplayed();
 
-        if (FlagsFactory.getFlags().getEnableAtomicFileDatastoreBatchUpdateApi()) {
-            datastore.update(
-                    updateOperation -> {
-                        if (wasNotificationDisplayed) {
-                            updateOperation.putBoolean(
-                                    ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
-                        }
-                        if (wasGaUxNotificationDisplayed) {
-                            updateOperation.putBoolean(
-                                    ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
-                        }
-                        if (wasU18NotificationDisplayed) {
-                            updateOperation.putBoolean(
-                                    ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, true);
-                        }
-                    });
-            if (wasNotificationDisplayed) {
-                adServicesManager.recordNotificationDisplayed(true);
-            }
-            if (wasGaUxNotificationDisplayed) {
-                adServicesManager.recordGaUxNotificationDisplayed(true);
-            }
-            if (wasU18NotificationDisplayed) {
-                adServicesManager.setU18NotificationDisplayed(true);
-            }
-        } else {
-            if (wasNotificationDisplayed) {
-                datastore.putBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
-                adServicesManager.recordNotificationDisplayed(true);
-            }
-            if (wasGaUxNotificationDisplayed) {
-                datastore.putBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
-                adServicesManager.recordGaUxNotificationDisplayed(true);
-            }
-            if (wasU18NotificationDisplayed) {
-                datastore.putBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, true);
-                adServicesManager.setU18NotificationDisplayed(true);
-            }
+        if (wasNotificationDisplayed) {
+            datastore.putBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
+            adServicesManager.recordNotificationDisplayed(true);
+        }
+        if (wasGaUxNotificationDisplayed) {
+            datastore.putBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
+            adServicesManager.recordGaUxNotificationDisplayed(true);
+        }
+        if (wasU18NotificationDisplayed) {
+            datastore.putBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, true);
+            adServicesManager.setU18NotificationDisplayed(true);
         }
         if (!wasGaUxNotificationDisplayed
                 && !wasNotificationDisplayed
@@ -402,25 +375,11 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
 
         // Migrate the current Privacy Sandbox feature type to PP API and system server.
         PrivacySandboxFeatureType currentFeatureType = getCurrentPrivacySandboxFeature();
-        if (FlagsFactory.getFlags().getEnableAtomicFileDatastoreBatchUpdateApi()) {
-            datastore.update(
-                    updateOperation -> {
-                        for (PrivacySandboxFeatureType featureType :
-                                PrivacySandboxFeatureType.values()) {
-                            if (featureType.name().equals(currentFeatureType.name())) {
-                                updateOperation.putBoolean(featureType.name(), true);
-                            } else {
-                                updateOperation.putBoolean(featureType.name(), false);
-                            }
-                        }
-                    });
-        } else {
-            for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
-                if (featureType.name().equals(currentFeatureType.name())) {
-                    datastore.putBoolean(featureType.name(), true);
-                } else {
-                    datastore.putBoolean(featureType.name(), false);
-                }
+        for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
+            if (featureType.name().equals(currentFeatureType.name())) {
+                datastore.putBoolean(featureType.name(), true);
+            } else {
+                datastore.putBoolean(featureType.name(), false);
             }
         }
 

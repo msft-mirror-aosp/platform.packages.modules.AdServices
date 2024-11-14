@@ -2,16 +2,16 @@
   "auction_config": {
     "auction_signals": "{\"maxFloorCpmUsdMicros\": 6250}",
     "buyer_list": [
-      "cb-test-buyer-5jyy5ulagq-uc.a.run.app"
+      "pas-dp10-test-5jyy5ulagq-uc.a.run.app"
     ],
     "buyer_timeout_ms": 60000,
     "per_buyer_config": {
-      "cb-test-buyer-5jyy5ulagq-uc.a.run.app": {
+      "pas-dp10-test-5jyy5ulagq-uc.a.run.app": {
         "buyer_debug_id": "buyer_123",
         "buyer_signals": "[[42]]"
       }
     },
-    "seller": "https://cb-test-seller-5jyy5ulagq-uc.a.run.app",
+    "seller": "https://ba-seller-5jyy5ulagq-uc.a.run.app",
     "seller_debug_id": "seller_123",
     "seller_signals": "[[72]]"
   },
