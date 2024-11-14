@@ -217,6 +217,11 @@ message AuctionResult {
 
   // Type of the winning ad.
   AdType ad_type = 14;
+
+  // This is etld+1 of the seller that has won the auction. For single seller auction, this will the
+  // etld+1 of that seller. In case of multi seller, it will be etld+1 of the component seller that
+  // that won the auction.
+  string winning_seller = 15;
 }
 
 // The reporting urls registered during the execution of reportResult() and
