@@ -5893,6 +5893,13 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME;
     }
 
+    boolean DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER = false;
+
+    /** Returns if the prod debug feature is enabled for server auctions. */
+    default boolean getEnableProdDebugInAuctionServer() {
+        return DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
     ////////////////////////////////////////////////////////////////////////////////////////////////

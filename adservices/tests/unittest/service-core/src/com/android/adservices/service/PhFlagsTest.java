@@ -118,6 +118,7 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_UX_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER;
 import static com.android.adservices.service.Flags.DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED;
@@ -744,6 +745,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DEBUG_REP
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_PROD_DEBUG_IN_SERVER_AUCTION;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME;
@@ -5916,6 +5918,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME,
                 DEFAULT_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME,
                 Flags::getEnableWinningSellerIdInAdSelectionOutcome);
+    }
+
+    @Test
+    public void testGetEnableProdDebugInAuctionServer() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_ENABLE_PROD_DEBUG_IN_SERVER_AUCTION,
+                DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER,
+                Flags::getEnableProdDebugInAuctionServer);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

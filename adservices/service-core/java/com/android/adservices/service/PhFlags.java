@@ -32,6 +32,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_J
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENROLLMENT_PROTO_FILE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_PROD_DEBUG_IN_SERVER_AUCTION;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION;
@@ -4953,5 +4954,12 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME,
                 DEFAULT_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME);
+    }
+
+    @Override
+    public boolean getEnableProdDebugInAuctionServer() {
+        return getDeviceConfigFlag(
+                KEY_FLEDGE_ENABLE_PROD_DEBUG_IN_SERVER_AUCTION,
+                DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER);
     }
 }
