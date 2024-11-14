@@ -57,8 +57,8 @@ import android.os.Binder;
 import android.os.Handler;
 import android.os.ParcelFileDescriptor;
 import android.os.UserHandle;
-import android.util.ArrayMap;
 import android.util.Log;
+import android.util.SparseArray;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -100,9 +100,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -868,7 +866,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
         disableEnforceAdServicesManagerPermission(service);
 
         // Set the rolled back from package to null, indicating there was not a rollback.
-        doReturn(Collections.emptyMap()).when(service).getAdServicesPackagesRolledBackFrom();
+        doReturn(new SparseArray<>()).when(service).getAdServicesPackagesRolledBackFrom();
 
         doReturn(true).when(service).hasAdServicesDeletionOccurred(anyInt());
 
@@ -1076,7 +1074,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     // Mock the call to get the rolled back from versioned package.
     private void setAdServicesRolledBackFromVersionedPackage(
             AdServicesManagerService service, int version, int rollbackId) {
-        Map<Integer, VersionedPackage> packagesRolledBackFrom = new ArrayMap<>();
+        SparseArray<VersionedPackage> packagesRolledBackFrom = new SparseArray<>();
         VersionedPackage versionedPackage =
                 new VersionedPackage(ADSERVICES_APEX_PACKAGE_NAME, version);
         packagesRolledBackFrom.put(rollbackId, versionedPackage);
@@ -1086,7 +1084,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     // Mock the call to get the rolled back to versioned package.
     private void setAdServicesRolledBackToVersionedPackage(
             AdServicesManagerService service, int version, int rollbackId) {
-        Map<Integer, VersionedPackage> packagesRolledBackTo = new ArrayMap<>();
+        SparseArray<VersionedPackage> packagesRolledBackTo = new SparseArray<>();
         VersionedPackage versionedPackage =
                 new VersionedPackage(ADSERVICES_APEX_PACKAGE_NAME, version);
         packagesRolledBackTo.put(rollbackId, versionedPackage);
