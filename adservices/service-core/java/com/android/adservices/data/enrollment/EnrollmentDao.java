@@ -1731,7 +1731,8 @@ public class EnrollmentDao implements IEnrollmentDao {
         return mFlags.getEnrollmentApiBasedSchemaEnabled() && supportsEnrollmentAPISchemaColumns();
     }
 
-    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings({"AvoidSharedPreferences", "AvoidStaticContext"}) // Legacy usage
     private static SharedPreferences getPrefs(Context context) {
         return context.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
     }
