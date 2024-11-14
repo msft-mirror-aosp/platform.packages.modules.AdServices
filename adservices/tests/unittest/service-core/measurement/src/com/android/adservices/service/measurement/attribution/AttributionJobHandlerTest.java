@@ -6030,7 +6030,6 @@ public class AttributionJobHandlerTest {
     }
 
     @Test
-    @FlakyTest(bugId = 375611436)
     /**
      * The triggerData in the trigger didn't match any one of the trigger data in the source
      * registration. No report generated
