@@ -31,8 +31,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Optional;
-
 /**
  * Class for constructing the report body of an aggregate report.
  */
@@ -101,14 +99,11 @@ public class AggregateReportBody {
     }
 
     /** Returns default or configured filtering id max bytes. */
-    private Optional<Integer> getOrDefaultFilteringIdMaxBytes(Flags flags) {
-        if (flags.getMeasurementEnableFlexibleContributionFiltering()) {
-            if (mAggregatableFilteringIdMaxBytes == null) {
-                return Optional.of(flags.getMeasurementDefaultFilteringIdMaxBytes());
-            }
-            return Optional.of(mAggregatableFilteringIdMaxBytes);
+    private Integer getOrDefaultFilteringIdMaxBytes(Flags flags) {
+        if (mAggregatableFilteringIdMaxBytes == null) {
+            return flags.getMeasurementDefaultFilteringIdMaxBytes();
         }
-        return Optional.empty();
+        return mAggregatableFilteringIdMaxBytes;
     }
 
     /** Generate the JSON serialization of the aggregate report. */
@@ -117,17 +112,14 @@ public class AggregateReportBody {
 
         final String sharedInfo = sharedInfoToJson().toString();
         aggregateBodyJson.put(PayloadBodyKeys.SHARED_INFO, sharedInfo);
-        Optional<Integer> hasFilteringIdMaxBytes = getOrDefaultFilteringIdMaxBytes(flags);
-        if (hasFilteringIdMaxBytes.isPresent()) {
-            aggregateBodyJson.put(
-                    PayloadBodyKeys.AGGREGATION_SERVICE_PAYLOADS,
-                    aggregationServicePayloadsToJson(
-                            sharedInfo, key, hasFilteringIdMaxBytes.get()));
-        } else {
-            aggregateBodyJson.put(
-                    PayloadBodyKeys.AGGREGATION_SERVICE_PAYLOADS,
-                    aggregationServicePayloadsToJson(sharedInfo, key));
-        }
+        Integer filteringIdMaxBytes =
+                flags.getMeasurementEnableFlexibleContributionFiltering()
+                        ? getOrDefaultFilteringIdMaxBytes(flags)
+                        : null;
+        aggregateBodyJson.put(
+                PayloadBodyKeys.AGGREGATION_SERVICE_PAYLOADS,
+                aggregationServicePayloadsToJson(sharedInfo, key, filteringIdMaxBytes));
+
         if (mSourceDebugKey != null) {
             aggregateBodyJson.put(PayloadBodyKeys.SOURCE_DEBUG_KEY, mSourceDebugKey.toString());
         }
@@ -172,32 +164,8 @@ public class AggregateReportBody {
 
     /** Generate the JSON array serialization of the aggregation service payloads field. */
     @VisibleForTesting
-    JSONArray aggregationServicePayloadsToJson(String sharedInfo, AggregateEncryptionKey key)
-            throws JSONException {
-        JSONArray aggregationServicePayloadsJson = new JSONArray();
-
-        final String encryptedPayload =
-                AggregateCryptoConverter.encrypt(
-                        key.getPublicKey(), mDebugCleartextPayload, sharedInfo);
-
-        final JSONObject aggregationServicePayload = new JSONObject();
-        aggregationServicePayload.put(AggregationServicePayloadKeys.PAYLOAD, encryptedPayload);
-        aggregationServicePayload.put(AggregationServicePayloadKeys.KEY_ID, key.getKeyId());
-
-        if (mSourceDebugKey != null && mTriggerDebugKey != null) {
-            aggregationServicePayload.put(
-                    AggregationServicePayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
-                    AggregateCryptoConverter.encode(mDebugCleartextPayload));
-        }
-        aggregationServicePayloadsJson.put(aggregationServicePayload);
-
-        return aggregationServicePayloadsJson;
-    }
-
-    /** Generate the JSON array serialization of the aggregation service payloads field. */
-    @VisibleForTesting
     JSONArray aggregationServicePayloadsToJson(
-            String sharedInfo, AggregateEncryptionKey key, Integer mAggregatableFilteringIdMaxBytes)
+            String sharedInfo, AggregateEncryptionKey key, @Nullable Integer filteringIdMaxBytes)
             throws JSONException {
         JSONArray aggregationServicePayloadsJson = new JSONArray();
         final String encryptedPayload =
@@ -205,7 +173,7 @@ public class AggregateReportBody {
                         key.getPublicKey(),
                         mDebugCleartextPayload,
                         sharedInfo,
-                        mAggregatableFilteringIdMaxBytes);
+                        filteringIdMaxBytes);
 
         final JSONObject aggregationServicePayload = new JSONObject();
         aggregationServicePayload.put(AggregationServicePayloadKeys.PAYLOAD, encryptedPayload);
@@ -214,8 +182,7 @@ public class AggregateReportBody {
         if (mSourceDebugKey != null && mTriggerDebugKey != null) {
             aggregationServicePayload.put(
                     AggregationServicePayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
-                    AggregateCryptoConverter.encode(
-                            mDebugCleartextPayload, mAggregatableFilteringIdMaxBytes));
+                    AggregateCryptoConverter.encode(mDebugCleartextPayload, filteringIdMaxBytes));
         }
         aggregationServicePayloadsJson.put(aggregationServicePayload);
 
