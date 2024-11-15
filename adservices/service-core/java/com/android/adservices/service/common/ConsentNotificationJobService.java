@@ -73,6 +73,8 @@ public class ConsentNotificationJobService extends JobService {
     private UxStatesManager mUxStatesManager;
 
     /** Schedule the Job. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void schedule(Context context, boolean adidEnabled, boolean reConsentStatus) {
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         long initialDelay = calculateInitialDelay(Calendar.getInstance(TimeZone.getDefault()));
@@ -342,7 +344,11 @@ public class ConsentNotificationJobService extends JobService {
         return;
     }
 
-    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
+    @SuppressWarnings({
+        "AvoidSharedPreferences", // Legacy usage
+        "AvoidStaticContext" // Private method, caller uses singleton context
+    })
+    // TODO(b/311183933): Remove passed in Context from static method.
     private static SharedPreferences getPrefs(Context context) {
         return context.getSharedPreferences(
                 ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);

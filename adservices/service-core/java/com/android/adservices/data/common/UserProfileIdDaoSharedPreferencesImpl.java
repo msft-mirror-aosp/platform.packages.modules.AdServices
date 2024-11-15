@@ -98,7 +98,10 @@ public class UserProfileIdDaoSharedPreferencesImpl implements UserProfileIdDao {
         mSharedPreferences.edit().clear().commit();
     }
 
-    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
+    @SuppressWarnings({
+        "AvoidSharedPreferences", // Legacy usage
+        "AvoidStaticContext", // Private method, caller uses singleton context
+    })
     private static SharedPreferences getPrefs(Context context) {
         return context.getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE);
     }
