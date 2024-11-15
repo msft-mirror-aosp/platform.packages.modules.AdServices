@@ -16,7 +16,7 @@
 
 package android.adservices.cts;
 
-import static android.adservices.common.AdServicesModuleState.MODULE_STATE_ENABLED;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_ENABLED;
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT;
 import static android.adservices.common.Module.MEASUREMENT;
 import static android.adservices.common.Module.TOPICS;

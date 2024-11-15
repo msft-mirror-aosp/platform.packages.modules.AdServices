@@ -15,7 +15,7 @@
  */
 package com.android.adservices.tests.enrollment;
 
-import static android.adservices.common.AdServicesModuleState.MODULE_STATE_ENABLED;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_ENABLED;
 import static android.adservices.common.Module.MEASUREMENT;
 
 import static com.android.adservices.service.shell.adservicesapi.AdServicesApiShellCommandFactory.COMMAND_PREFIX;
