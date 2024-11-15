@@ -169,7 +169,6 @@ public final class AppManifestConfigMetricsLogger {
     @SuppressWarnings({
         "NewAdServicesFile", // PREFS_NAME already called FileCompatUtils
         "AvoidSharedPreferences", // Legacy Usage
-        "AvoidStaticContext", // private method, caller uses singleton context
     })
     private static SharedPreferences getPrefs(Context context) {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);

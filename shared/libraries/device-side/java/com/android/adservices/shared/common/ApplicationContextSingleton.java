@@ -78,7 +78,6 @@ public final class ApplicationContextSingleton {
         set("setAs()", context);
     }
 
-    @SuppressWarnings("AvoidStaticContext") // Private method
     private static void set(String methodName, Context appContext) {
         // Set if it's not set yet
         if (sContext.compareAndSet(null, appContext)) {

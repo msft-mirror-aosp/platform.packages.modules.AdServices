@@ -1346,7 +1346,6 @@ public final class ConsentManagerV2 {
     }
 
     /* Returns the region od the device */
-    @SuppressWarnings("AvoidStaticContext") // Private method, caller uses singleton context
     private static int getConsentRegion(Context context) {
         return DeviceRegionProvider.isEuDevice(context)
                 ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
@@ -1354,7 +1353,6 @@ public final class ConsentManagerV2 {
     }
 
     /* Returns an object of ConsentMigrationStats */
-    @SuppressWarnings("AvoidStaticContext") // private method, caller uses singleton context
     private static ConsentMigrationStats getConsentManagerStatsForLogging(
             AppConsents appConsents,
             ConsentMigrationStats.MigrationStatus migrationStatus,

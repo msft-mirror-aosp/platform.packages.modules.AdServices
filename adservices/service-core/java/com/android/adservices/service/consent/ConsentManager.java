@@ -2651,7 +2651,6 @@ public final class ConsentManager {
     }
 
     /* Returns the region od the device */
-    @SuppressWarnings("AvoidStaticContext") // private method, caller uses singleton context
     private static int getConsentRegion(Context context) {
         return DeviceRegionProvider.isEuDevice(context)
                 ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
@@ -2699,10 +2698,7 @@ public final class ConsentManager {
                 "Attempting to %s using APPSEARCH_ONLY consent source of truth!", illegalAction);
     }
 
-    @SuppressWarnings({
-        "AvoidStaticContext", // Private method, caller uses singleton context
-        "AvoidSharedPreferences", // Legacy usage
-    })
+    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
     private static SharedPreferences getPrefs(Context context) {
         return context.getSharedPreferences(
                 ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);

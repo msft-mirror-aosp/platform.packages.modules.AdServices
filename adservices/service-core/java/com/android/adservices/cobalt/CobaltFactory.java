@@ -161,7 +161,6 @@ public final class CobaltFactory {
         return AdServicesExecutors.getScheduler();
     }
 
-    @SuppressWarnings("AvoidStaticContext") // Private method, caller uses singleton context
     private static Project getRegistry(Context context, Flags flags)
             throws CobaltInitializationException {
         if (sSingletonCobaltRegistryProject == null) {
@@ -170,7 +169,6 @@ public final class CobaltFactory {
         return sSingletonCobaltRegistryProject;
     }
 
-    @SuppressWarnings("AvoidStaticContext") // Private method, caller uses singleton context
     private static DataService getDataService(Context context, Flags flags) {
         Objects.requireNonNull(context);
         if (sSingletonDataService == null) {
@@ -193,7 +191,6 @@ public final class CobaltFactory {
         return sSingletonSecureRandom;
     }
 
-    @SuppressWarnings("AvoidStaticContext") // Private method, caller uses singleton context
     private static SystemData getSystemData(Context context) {
         if (sSingletonSystemData == null) {
             sSingletonSystemData = new SystemData(computeApexVersion(context));

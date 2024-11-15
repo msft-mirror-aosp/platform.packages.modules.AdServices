@@ -344,11 +344,7 @@ public class ConsentNotificationJobService extends JobService {
         return;
     }
 
-    @SuppressWarnings({
-        "AvoidSharedPreferences", // Legacy usage
-        "AvoidStaticContext" // Private method, caller uses singleton context
-    })
-    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
     private static SharedPreferences getPrefs(Context context) {
         return context.getSharedPreferences(
                 ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
