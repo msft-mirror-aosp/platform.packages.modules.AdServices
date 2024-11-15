@@ -166,6 +166,32 @@ class StaticContextDetectorTest : LintDetectorTest() {
             .expectClean()
     }
 
+    @Test
+    fun testContextInPrivateStaticMethod_pass() {
+        lint()
+            .files(
+                java(
+                        """
+        package com.android.andservices;
+
+        import android.content.Context;
+
+        class Test {
+          Context mContext;
+          private static test(Context context) {
+            mContext = context;
+          }
+        }
+        """
+                    )
+                    .indented(),
+                *stubs,
+            )
+            .issues(StaticContextDetector.ISSUE)
+            .run()
+            .expectClean()
+    }
+
     private val androidContextStub: TestFile =
         java("""
     package android.content;
