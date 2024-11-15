@@ -19,6 +19,7 @@ import android.app.adservices.consent.ConsentParcel;
 
 import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
+import com.android.server.adservices.FlagsFactory;
 import com.android.server.adservices.LogUtil;
 import com.android.server.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
@@ -116,21 +117,31 @@ public final class ConsentManager {
                         VERSION_KEY,
                         AdServicesErrorLoggerImpl.getInstance());
         datastore.initialize();
-        // TODO(b/259607624): implement a method in the datastore which would support
-        // this exact scenario - if the value is null, return default value provided
-        // in the parameter (similar to SP apply etc.)
-        if (datastore.getBoolean(NOTIFICATION_DISPLAYED_ONCE) == null) {
-            datastore.putBoolean(NOTIFICATION_DISPLAYED_ONCE, false);
+
+        if (FlagsFactory.getFlags().getEnableAtomicFileDatastoreBatchUpdateApiInSystemServer()) {
+            datastore.update(
+                    updateOperation -> {
+                        updateOperation.putBooleanIfNew(NOTIFICATION_DISPLAYED_ONCE, false);
+                        updateOperation.putBooleanIfNew(GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
+                        updateOperation.putBooleanIfNew(TOPICS_CONSENT_PAGE_DISPLAYED, false);
+                        updateOperation.putBooleanIfNew(
+                                FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, false);
+                    });
+        } else {
+            if (datastore.getBoolean(NOTIFICATION_DISPLAYED_ONCE) == null) {
+                datastore.putBoolean(NOTIFICATION_DISPLAYED_ONCE, false);
+            }
+            if (datastore.getBoolean(GA_UX_NOTIFICATION_DISPLAYED_ONCE) == null) {
+                datastore.putBoolean(GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
+            }
+            if (datastore.getBoolean(TOPICS_CONSENT_PAGE_DISPLAYED) == null) {
+                datastore.putBoolean(TOPICS_CONSENT_PAGE_DISPLAYED, false);
+            }
+            if (datastore.getBoolean(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED) == null) {
+                datastore.putBoolean(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, false);
+            }
         }
-        if (datastore.getBoolean(GA_UX_NOTIFICATION_DISPLAYED_ONCE) == null) {
-            datastore.putBoolean(GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
-        }
-        if (datastore.getBoolean(TOPICS_CONSENT_PAGE_DISPLAYED) == null) {
-            datastore.putBoolean(TOPICS_CONSENT_PAGE_DISPLAYED, false);
-        }
-        if (datastore.getBoolean(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED) == null) {
-            datastore.putBoolean(FLEDGE_AND_MSMT_CONSENT_PAGE_DISPLAYED, false);
-        }
+
         return datastore;
     }
 
@@ -156,31 +167,76 @@ public final class ConsentManager {
     public void setConsent(ConsentParcel consentParcel) throws IOException {
         mReadWriteLock.writeLock().lock();
         try {
-            mDatastore.putBoolean(
-                    getConsentApiTypeKey(consentParcel.getConsentApiType()),
-                    consentParcel.isIsGiven());
-            if (consentParcel.getConsentApiType() == ConsentParcel.ALL_API) {
-                // Convert from 1 to 3 consents.
-                mDatastore.putBoolean(
-                        getConsentApiTypeKey(ConsentParcel.TOPICS), consentParcel.isIsGiven());
-                mDatastore.putBoolean(
-                        getConsentApiTypeKey(ConsentParcel.FLEDGE), consentParcel.isIsGiven());
-                mDatastore.putBoolean(
-                        getConsentApiTypeKey(ConsentParcel.MEASUREMENT), consentParcel.isIsGiven());
+            if (FlagsFactory.getFlags()
+                    .getEnableAtomicFileDatastoreBatchUpdateApiInSystemServer()) {
+                mDatastore.update(
+                        updateOperation -> {
+                            updateOperation.putBoolean(
+                                    getConsentApiTypeKey(consentParcel.getConsentApiType()),
+                                    consentParcel.isIsGiven());
+                            if (consentParcel.getConsentApiType() == ConsentParcel.ALL_API) {
+                                // Convert from 1 to 3 consents.
+                                updateOperation.putBoolean(
+                                        getConsentApiTypeKey(ConsentParcel.TOPICS),
+                                        consentParcel.isIsGiven());
+                                updateOperation.putBoolean(
+                                        getConsentApiTypeKey(ConsentParcel.FLEDGE),
+                                        consentParcel.isIsGiven());
+                                updateOperation.putBoolean(
+                                        getConsentApiTypeKey(ConsentParcel.MEASUREMENT),
+                                        consentParcel.isIsGiven());
+                            } else {
+                                // Convert from 3 consents to 1 consent.
+                                if (mDatastore.getBoolean(
+                                                getConsentApiTypeKey(
+                                                        ConsentParcel.TOPICS), /* defaultValue */
+                                                false)
+                                        && mDatastore.getBoolean(
+                                                getConsentApiTypeKey(
+                                                        ConsentParcel.FLEDGE), /* defaultValue */
+                                                false)
+                                        && mDatastore.getBoolean(
+                                                getConsentApiTypeKey(
+                                                        ConsentParcel
+                                                                .MEASUREMENT), /* defaultValue */
+                                                false)) {
+                                    updateOperation.putBoolean(
+                                            getConsentApiTypeKey(ConsentParcel.ALL_API), true);
+                                } else {
+                                    updateOperation.putBoolean(
+                                            getConsentApiTypeKey(ConsentParcel.ALL_API), false);
+                                }
+                            }
+                        });
             } else {
-                // Convert from 3 consents to 1 consent.
-                if (mDatastore.getBoolean(
-                                getConsentApiTypeKey(ConsentParcel.TOPICS), /* defaultValue */
-                                false)
-                        && mDatastore.getBoolean(
-                                getConsentApiTypeKey(ConsentParcel.FLEDGE), /* defaultValue */
-                                false)
-                        && mDatastore.getBoolean(
-                                getConsentApiTypeKey(ConsentParcel.MEASUREMENT), /* defaultValue */
-                                false)) {
-                    mDatastore.putBoolean(getConsentApiTypeKey(ConsentParcel.ALL_API), true);
+                mDatastore.putBoolean(
+                        getConsentApiTypeKey(consentParcel.getConsentApiType()),
+                        consentParcel.isIsGiven());
+                if (consentParcel.getConsentApiType() == ConsentParcel.ALL_API) {
+                    // Convert from 1 to 3 consents.
+                    mDatastore.putBoolean(
+                            getConsentApiTypeKey(ConsentParcel.TOPICS), consentParcel.isIsGiven());
+                    mDatastore.putBoolean(
+                            getConsentApiTypeKey(ConsentParcel.FLEDGE), consentParcel.isIsGiven());
+                    mDatastore.putBoolean(
+                            getConsentApiTypeKey(ConsentParcel.MEASUREMENT),
+                            consentParcel.isIsGiven());
                 } else {
-                    mDatastore.putBoolean(getConsentApiTypeKey(ConsentParcel.ALL_API), false);
+                    // Convert from 3 consents to 1 consent.
+                    if (mDatastore.getBoolean(
+                                    getConsentApiTypeKey(ConsentParcel.TOPICS), /* defaultValue */
+                                    false)
+                            && mDatastore.getBoolean(
+                                    getConsentApiTypeKey(ConsentParcel.FLEDGE), /* defaultValue */
+                                    false)
+                            && mDatastore.getBoolean(
+                                    getConsentApiTypeKey(
+                                            ConsentParcel.MEASUREMENT), /* defaultValue */
+                                    false)) {
+                        mDatastore.putBoolean(getConsentApiTypeKey(ConsentParcel.ALL_API), true);
+                    } else {
+                        mDatastore.putBoolean(getConsentApiTypeKey(ConsentParcel.ALL_API), false);
+                    }
                 }
             }
         } finally {
@@ -322,9 +378,9 @@ public final class ConsentManager {
         } catch (IOException e) {
             LogUtil.e(
                     e,
-                    "Record manual interaction with consent failed due to IOException thrown"
-                            + " by Datastore: "
-                            + e.getMessage());
+                    "Record manual interaction with consent failed due to IOException"
+                            + " thrown by Datastore: %s",
+                    e.getMessage());
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
@@ -398,14 +454,33 @@ public final class ConsentManager {
     public void setCurrentPrivacySandboxFeature(String currentFeatureType) {
         mReadWriteLock.writeLock().lock();
         try {
-            for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
+            if (FlagsFactory.getFlags()
+                    .getEnableAtomicFileDatastoreBatchUpdateApiInSystemServer()) {
                 try {
-                    mDatastore.putBoolean(
-                            featureType.name(), currentFeatureType.equals(featureType.name()));
+                    mDatastore.update(
+                            updateOperation -> {
+                                for (PrivacySandboxFeatureType featureType :
+                                        PrivacySandboxFeatureType.values()) {
+                                    updateOperation.putBoolean(
+                                            featureType.name(),
+                                            currentFeatureType.equals(featureType.name()));
+                                }
+                            });
                 } catch (IOException e) {
                     LogUtil.e(
-                            "IOException caught while saving privacy sandbox feature."
-                                    + e.getMessage());
+                            "IOException caught while saving privacy sandbox feature. %s",
+                            e.getMessage());
+                }
+            } else {
+                for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
+                    try {
+                        mDatastore.putBoolean(
+                                featureType.name(), currentFeatureType.equals(featureType.name()));
+                    } catch (IOException e) {
+                        LogUtil.e(
+                                "IOException caught while saving privacy sandbox feature. %s",
+                                e.getMessage());
+                    }
                 }
             }
         } finally {
@@ -530,18 +605,39 @@ public final class ConsentManager {
     public void setUx(String eligibleUx) {
         mReadWriteLock.writeLock().lock();
         try {
-            Stream.of(PrivacySandboxUxCollection.values())
-                    .forEach(
-                            ux -> {
-                                try {
-                                    mDatastore.putBoolean(
-                                            ux.toString(), ux.toString().equals(eligibleUx));
-                                } catch (IOException e) {
-                                    LogUtil.e(
-                                            "IOException caught while setting the current UX."
-                                                    + e.getMessage());
-                                }
+            if (FlagsFactory.getFlags()
+                    .getEnableAtomicFileDatastoreBatchUpdateApiInSystemServer()) {
+                try {
+                    mDatastore.update(
+                            updateOperation -> {
+                                Stream.of(PrivacySandboxUxCollection.values())
+                                        .forEach(
+                                                ux -> {
+                                                    updateOperation.putBoolean(
+                                                            ux.toString(),
+                                                            ux.toString().equals(eligibleUx));
+                                                });
                             });
+                } catch (IOException e) {
+                    LogUtil.e(
+                            "IOException caught while saving privacy sandbox feature. %s",
+                            e.getMessage());
+                }
+            } else {
+                Stream.of(PrivacySandboxUxCollection.values())
+                        .forEach(
+                                ux -> {
+                                    try {
+                                        mDatastore.putBoolean(
+                                                ux.toString(), ux.toString().equals(eligibleUx));
+                                    } catch (IOException e) {
+                                        LogUtil.e(
+                                                "IOException caught while setting the current UX."
+                                                        + " %s",
+                                                e.getMessage());
+                                    }
+                                });
+            }
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
@@ -565,20 +661,41 @@ public final class ConsentManager {
     public void setEnrollmentChannel(String enrollmentChannel) {
         mReadWriteLock.writeLock().lock();
         try {
-            Stream.of(PrivacySandboxEnrollmentChannelCollection.values())
-                    .forEach(
-                            channel -> {
-                                try {
-                                    mDatastore.putBoolean(
-                                            channel.toString(),
-                                            channel.toString().equals(enrollmentChannel));
-                                } catch (IOException e) {
-                                    LogUtil.e(
-                                            "IOException caught while setting the current "
-                                                    + "enrollment channel."
-                                                    + e.getMessage());
-                                }
+            if (FlagsFactory.getFlags()
+                    .getEnableAtomicFileDatastoreBatchUpdateApiInSystemServer()) {
+                try {
+                    mDatastore.update(
+                            updateOperation -> {
+                                Stream.of(PrivacySandboxEnrollmentChannelCollection.values())
+                                        .forEach(
+                                                channel -> {
+                                                    updateOperation.putBoolean(
+                                                            channel.toString(),
+                                                            channel.toString()
+                                                                    .equals(enrollmentChannel));
+                                                });
                             });
+                } catch (IOException e) {
+                    LogUtil.e(
+                            "IOException caught while saving privacy sandbox feature."
+                                    + e.getMessage());
+                }
+            } else {
+                Stream.of(PrivacySandboxEnrollmentChannelCollection.values())
+                        .forEach(
+                                channel -> {
+                                    try {
+                                        mDatastore.putBoolean(
+                                                channel.toString(),
+                                                channel.toString().equals(enrollmentChannel));
+                                    } catch (IOException e) {
+                                        LogUtil.e(
+                                                "IOException caught while setting the current "
+                                                        + "enrollment channel."
+                                                        + e.getMessage());
+                                    }
+                                });
+            }
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
@@ -669,9 +786,9 @@ public final class ConsentManager {
         } catch (IOException e) {
             LogUtil.e(
                     e,
-                    callerName
-                            + " operation failed due to IOException thrown by Datastore: "
-                            + e.getMessage());
+                    "%s operation failed due to IOException thrown by Datastore: %s",
+                    callerName,
+                    e.getMessage());
         } finally {
             mReadWriteLock.writeLock().unlock();
         }
@@ -694,9 +811,9 @@ public final class ConsentManager {
         } catch (IOException e) {
             LogUtil.e(
                     e,
-                    callerName
-                            + " operation failed due to IOException thrown by Datastore: "
-                            + e.getMessage());
+                    "%s operation failed due to IOException thrown by Datastore: %s",
+                    callerName,
+                    e.getMessage());
         } finally {
             mReadWriteLock.writeLock().unlock();
         }

@@ -110,7 +110,6 @@ import android.os.RemoteException;
 
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -151,6 +150,7 @@ import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdCacheManager;
+import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey;
 import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKeyManager;
@@ -177,7 +177,6 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAuctionInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls.ReportingUrls;
-import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -361,10 +360,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
     @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
     @Mock private AdServicesHttpsClient mMockHttpClient;
     private RetryStrategyFactory mRetryStrategyFactory;
-    private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
-    private ConsentedDebugConfigurationGeneratorFactory
-            mConsentedDebugConfigurationGeneratorFactory;
-    private EgressConfigurationGenerator mEgressConfigurationGenerator;
+    private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
 
     @Before
     public void setUp() {
@@ -434,20 +430,23 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
         mMultiCloudSupportStrategy =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock);
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
-        mConsentedDebugConfigurationDao =
+        ConsentedDebugConfigurationDao consentedDebugConfigurationDao =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
                         .build()
                         .consentedDebugConfigurationDao();
-        mConsentedDebugConfigurationGeneratorFactory =
+        ConsentedDebugConfigurationGeneratorFactory consentedDebugConfigurationGeneratorFactory =
                 new ConsentedDebugConfigurationGeneratorFactory(
-                        false, mConsentedDebugConfigurationDao);
-        mEgressConfigurationGenerator =
-                EgressConfigurationGenerator.createInstance(
-                        true,
-                        mAdIdFetcher,
+                        false, consentedDebugConfigurationDao);
+        mAuctionServerDebugConfigurationGenerator =
+                new AuctionServerDebugConfigurationGenerator(
+                        Flags.ADID_KILL_SWITCH,
                         Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
+                        Flags.FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING,
+                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
+                        Flags.DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER,
+                        mAdIdFetcher,
+                        consentedDebugConfigurationGeneratorFactory.create(),
                         mLightweightExecutorService);
-
         mAdSelectionService = createAdSelectionService();
 
         mPayloadFormatter =
@@ -2100,9 +2099,8 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
@@ -2337,9 +2335,8 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -2436,9 +2433,8 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         mocker.mockGetFlags(mFakeFlags);
@@ -2625,9 +2621,8 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
         mocker.mockGetFlags(mFakeFlags);
@@ -3226,9 +3221,8 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -3337,9 +3331,8 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -4342,9 +4335,8 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                 mUnusedKAnonSignJoinFactory,
                 false,
                 mRetryStrategyFactory,
-                mConsentedDebugConfigurationGeneratorFactory,
-                mEgressConfigurationGenerator,
-                CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                mAuctionServerDebugConfigurationGenerator);
     }
 
     private ProtectedAuctionInput getProtectedAuctionInputFromCipherText(
@@ -4464,9 +4456,8 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -4533,9 +4524,8 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                 mUnusedKAnonSignJoinFactory,
                 false,
                 mRetryStrategyFactory,
-                mConsentedDebugConfigurationGeneratorFactory,
-                mEgressConfigurationGenerator,
-                CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                mAuctionServerDebugConfigurationGenerator);
     }
 
     private AdSelectionService createAdSelectionService(
@@ -4568,9 +4558,8 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                 mUnusedKAnonSignJoinFactory,
                 false,
                 mRetryStrategyFactory,
-                mConsentedDebugConfigurationGeneratorFactory,
-                mEgressConfigurationGenerator,
-                CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                mAuctionServerDebugConfigurationGenerator);
     }
 
     private Map<AdTechIdentifier, BuyerInput> getBuyerInputMapFromDecryptedBytes(
