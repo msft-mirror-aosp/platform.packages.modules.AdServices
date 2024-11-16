@@ -288,6 +288,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
     }
 
     /** Creates a new instance of {@link AdSelectionServiceImpl}. */
+    @SuppressWarnings("AvoidStaticContext") // Factory method
     public static AdSelectionServiceImpl create(@NonNull Context context) {
         return new AdSelectionServiceImpl(context);
     }

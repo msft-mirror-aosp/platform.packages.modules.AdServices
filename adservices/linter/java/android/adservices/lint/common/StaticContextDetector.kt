@@ -44,9 +44,8 @@ class StaticContextDetector : Detector(), SourceCodeScanner {
         return object : UElementHandler() {
             override fun visitMethod(node: UMethod) {
                 val method = node.javaPsi as? PsiMethod ?: return
-                if (!method.isConstructor && method.hasModifierProperty("static")) {
+                if (isNonPrivateStaticMethod(method)) {
                     for (parameter in method.parameterList.parameters) {
-                        //
                         if (isContextType(parameter.type)) {
                             context.report(
                                 issue = ISSUE,
@@ -68,6 +67,12 @@ class StaticContextDetector : Detector(), SourceCodeScanner {
         return type.canonicalText == "android.content.Context"
     }
 
+    private fun isNonPrivateStaticMethod(method: PsiMethod): Boolean {
+        return !method.isConstructor &&
+            method.hasModifierProperty("static") &&
+            !method.hasModifierProperty("private")
+    }
+
     companion object {
         val ISSUE =
             Issue.create(
@@ -75,8 +80,12 @@ class StaticContextDetector : Detector(), SourceCodeScanner {
                 briefDescription = "DO NOT pass a Context on static methods.",
                 explanation =
                     """
-                      DO NOT pass a Context on static methods, but use ApplicationContextSingleton.get() to get the context instead
-                      instead.
+                      DO NOT pass a Context on static methods, but use ApplicationContextSingleton.get()
+                      to get the context instead. If you think it is a valid case to use Context on
+                      static methods, please add @SuppressWarnings("AvoidStaticContext") to suppress
+                      this error and add comments why it can be suppressed. Examples:\n
+                      * Factory methods that return a new object.\n
+                      * UI-related methods that require a UI-specific context.\n
                     """,
                 category = Category.COMPLIANCE,
                 severity = Severity.ERROR,
