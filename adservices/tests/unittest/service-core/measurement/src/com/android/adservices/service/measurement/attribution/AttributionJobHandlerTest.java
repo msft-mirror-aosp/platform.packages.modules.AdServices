@@ -4872,7 +4872,7 @@ public class AttributionJobHandlerTest {
     }
 
     @Test
-    public void performAttributions_invalidAggregateValues_generateEventReportOnly()
+    public void performAttributions_invalidAggValues_generateEventReportOnly()
             throws JSONException, DatastoreException {
         // Setup
         JSONArray triggerData = getAggregateTriggerData();
@@ -9349,7 +9349,7 @@ public class AttributionJobHandlerTest {
     }
 
     @Test
-    public void performAttribution_triggerHasUnsupportedAggregatableValues_returnAndIgnoreTrigger()
+    public void performAttribution_triggerHasUnsupportedAggValues_ignoreTriggerAndGenerateNoReport()
             throws Exception {
         // Setup
         String unsupportedAggregatableValues =
@@ -9381,44 +9381,8 @@ public class AttributionJobHandlerTest {
     }
 
     @Test
-    public void performAttribution_triggerHasUnsupportedAggregatableValues_generatesNoReport()
-            throws JSONException, DatastoreException {
-        // Setup
-        JSONArray triggerData = getAggregateTriggerData();
-        String unsupportedAggregatableValues =
-                "{\"campaignCounts\": {\"value\": 32768, \"filtering_id\": \"1\"}}";
-        Trigger trigger =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setId("triggerId1")
-                        .setTriggerTime(TRIGGER_TIME)
-                        .setStatus(Trigger.Status.PENDING)
-                        .setEventTriggers(getEventTriggers())
-                        .setAggregateTriggerData(triggerData.toString())
-                        .setAggregateValuesString(unsupportedAggregatableValues)
-                        .build();
-        Source source = getAggregateSource();
-        when(mMeasurementDao.getPendingTriggerIds())
-                .thenReturn(Collections.singletonList(trigger.getId()));
-        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
-        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(List.of(source));
-        when(mMeasurementDao.getAttributionsPerRateLimitWindow(anyInt(), any(), any()))
-                .thenReturn(5L);
-        when(mMeasurementDao.getSourceDestinations(source.getId()))
-                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
-        // Execution
-        mHandler.performPendingAttributions();
-        // Assertions
-        verify(mMeasurementDao)
-                .updateTriggerStatus(eq(List.of(trigger.getId())), eq(Trigger.Status.IGNORED));
-        verify(mMeasurementDao, never()).insertAggregateReport(any());
-        verify(mMeasurementDao, never()).insertEventReport(any());
-        verify(mTransaction, times(2)).begin();
-        verify(mTransaction, times(2)).end();
-    }
-
-    @Test
     public void
-            performAttribution_triggerHasUnsupportedAggregatableValuesArr_returnAndIgnoreTrigger()
+            performAttribution_triggerHasUnsupportedAggValuesArr_ignoreTriggerAndGenerateNoReport()
                     throws Exception {
         // Setup
         String unsupportedAggregatableValues =
@@ -9449,44 +9413,6 @@ public class AttributionJobHandlerTest {
                 .updateTriggerStatus(eq(List.of(validTrigger.getId())), eq(Trigger.Status.IGNORED));
         verify(mMeasurementDao, never()).insertAggregateReport(any());
         verify(mMeasurementDao, never()).insertEventReport(any());
-    }
-
-    @Test
-    public void performAttribution_triggerHasUnsupportedAggregatableValuesArr_generateNoReport()
-            throws JSONException, DatastoreException {
-        // Setup
-        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
-        JSONArray triggerData = getAggregateTriggerData();
-        String unsupportedAggregatableValues =
-                "[{\"values\":{\"campaignCounts\":{\"value\":32768, \"filtering_id\":\"123\"},"
-                        + " \"geoValue\":1664}}]";
-        Trigger trigger =
-                TriggerFixture.getValidTriggerBuilder()
-                        .setId("triggerId1")
-                        .setTriggerTime(TRIGGER_TIME)
-                        .setStatus(Trigger.Status.PENDING)
-                        .setEventTriggers(getEventTriggers())
-                        .setAggregateTriggerData(triggerData.toString())
-                        .setAggregateValuesString(unsupportedAggregatableValues)
-                        .build();
-        Source source = getAggregateSource();
-        when(mMeasurementDao.getPendingTriggerIds())
-                .thenReturn(Collections.singletonList(trigger.getId()));
-        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
-        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(List.of(source));
-        when(mMeasurementDao.getAttributionsPerRateLimitWindow(anyInt(), any(), any()))
-                .thenReturn(5L);
-        when(mMeasurementDao.getSourceDestinations(source.getId()))
-                .thenReturn(Pair.create(source.getAppDestinations(), source.getWebDestinations()));
-        // Execution
-        mHandler.performPendingAttributions();
-        // Assertions
-        verify(mMeasurementDao)
-                .updateTriggerStatus(eq(List.of(trigger.getId())), eq(Trigger.Status.IGNORED));
-        verify(mMeasurementDao, never()).insertAggregateReport(any());
-        verify(mMeasurementDao, never()).insertEventReport(any());
-        verify(mTransaction, times(2)).begin();
-        verify(mTransaction, times(2)).end();
     }
 
     private void testNullAggregateReport_noSource(
