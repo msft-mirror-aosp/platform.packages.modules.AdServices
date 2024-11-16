@@ -40,6 +40,8 @@ public class DeviceRegionProvider {
      * @return true if the device should be treated as EU device, otherwise false.
      * @param context {@link Context} of the caller.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static boolean isEuDevice(@NonNull Context context) {
         Objects.requireNonNull(context);
 

@@ -449,6 +449,8 @@ public class MobileDataDownloadFactory {
     }
 
     @VisibleForTesting
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     static ManifestFileGroupPopulator getEncryptionKeysManifestPopulator(
             Context context,
             Flags flags,
