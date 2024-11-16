@@ -1465,6 +1465,8 @@ public final class ConsentManager {
     }
 
     @VisibleForTesting
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     static AtomicFileDatastore createAndInitializeDataStore(
             Context context, AdServicesErrorLogger adServicesErrorLogger) {
         AtomicFileDatastore atomicFileDatastore =
@@ -1530,6 +1532,8 @@ public final class ConsentManager {
     //             system server.
     // PPAPI_AND_SYSTEM_SERVER: migrate consent from PPAPI to system server.
     // SYSTEM_SERVER_ONLY: migrate consent from PPAPI to system server and clear PPAPI consent
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     @VisibleForTesting
     static void handleConsentMigrationIfNeeded(
             Context context,
@@ -1686,8 +1690,10 @@ public final class ConsentManager {
 
     // Perform a one-time migration to migrate existing PPAPI Consent
     @VisibleForTesting
-    // Suppress lint warning for context.getUser in R since this code is unused in R
-    @SuppressWarnings("NewApi")
+    @SuppressWarnings({
+        "NewApi", // Suppress lint warning for context.getUser in R since this code is unused in R
+        "AvoidStaticContext", // TODO(b/311183933): Remove passed in Context from static method.
+    })
     static void migratePpApiConsentToSystemService(
             Context context,
             AtomicFileDatastore datastore,
@@ -1791,6 +1797,8 @@ public final class ConsentManager {
     // Clear PPAPI Consent if fully migrated to use system server consent. This is because system
     // consent cannot be migrated back to PPAPI. This data clearing should only happen once.
     @VisibleForTesting
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     static void clearPpApiConsent(Context context, AtomicFileDatastore datastore) {
         // Exit if PPAPI consent has cleared.
         SharedPreferences sharedPreferences = getPrefs(context);
@@ -1823,6 +1831,8 @@ public final class ConsentManager {
 
     // Set the shared preference to false for given key.
     @VisibleForTesting
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     static void resetSharedPreference(Context context, String sharedPreferenceKey) {
         Objects.requireNonNull(context, "context cannot be null");
         Objects.requireNonNull(sharedPreferenceKey, "sharedPreferenceKey cannot be null");
@@ -1896,6 +1906,8 @@ public final class ConsentManager {
      * written for consent, we need to make sure it is migrated correctly post-OTA in this method.
      */
     @VisibleForTesting
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     static void handleConsentMigrationFromAppSearchIfNeeded(
             Context context,
             AtomicFileDatastore datastore,
@@ -2658,6 +2670,8 @@ public final class ConsentManager {
      * @param context Context of the application
      * @return consentMigrationStats returns ConsentMigrationStats for logging
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static ConsentMigrationStats getConsentManagerStatsForLogging(
             AppConsents appConsents,
             ConsentMigrationStats.MigrationStatus migrationStatus,

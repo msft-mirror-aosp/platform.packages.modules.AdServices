@@ -111,6 +111,8 @@ public final class VerboseDebugReportingJobService extends JobService {
      * @param context the context
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
         if (flags.getMeasurementJobVerboseDebugReportingKillSwitch()) {
@@ -137,6 +139,8 @@ public final class VerboseDebugReportingJobService extends JobService {
         }
     }
 
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         VERBOSE_DEBUG_REPORT_JOB_ID,
