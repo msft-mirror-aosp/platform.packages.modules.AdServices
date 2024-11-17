@@ -45,6 +45,8 @@ public final class Enrollment {
      * @param flags a valid {@code Flags} object
      * @return enrollmentId if enrollment id exists and all validations pass otherwise empty
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static Optional<String> getValidEnrollmentId(
             Uri registrationUri,
             String packageName,

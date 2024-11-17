@@ -63,6 +63,7 @@ public class UxUtil {
     }
 
     /** Returns if UXStates should be used. */
+    @SuppressWarnings("AvoidStaticContext") // UX class
     public static boolean isUxStatesReady(Context context) {
         PrivacySandboxUxCollection ux = getUx(context);
         return FlagsFactory.getFlags().getEnableAdServicesSystemApi()
@@ -71,6 +72,7 @@ public class UxUtil {
     }
 
     /** Returns the current UX. */
+    @SuppressWarnings("AvoidStaticContext") // UX class
     public static PrivacySandboxUxCollection getUx(Context context) {
         if (DebugFlags.getInstance().getConsentNotificationActivityDebugMode()) {
             return Stream.of(PrivacySandboxUxCollection.values())

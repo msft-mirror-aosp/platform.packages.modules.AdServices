@@ -42,6 +42,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.BinderFlagReader;
@@ -105,6 +106,7 @@ public class OutcomeSelectionRunner {
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Context mContext;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
 
     @NonNull private final AdOutcomeSelector mAdOutcomeSelector;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
@@ -134,6 +136,7 @@ public class OutcomeSelectionRunner {
             @NonNull final DevContext devContext,
             @NonNull final Context context,
             @NonNull final Flags flags,
+            @NonNull final DebugFlags debugFlags,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final AdCounterKeyCopier adCounterKeyCopier,
             final int callerUid,
@@ -149,6 +152,7 @@ public class OutcomeSelectionRunner {
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(context);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(adCounterKeyCopier);
         Objects.requireNonNull(retryStrategy);
 
@@ -160,6 +164,7 @@ public class OutcomeSelectionRunner {
         mAdServicesLogger = adServicesLogger;
         mContext = context;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mDevContext = devContext;
 
         boolean cpcBillingEnabled = BinderFlagReader.readFlag(mFlags::getFledgeCpcBillingEnabled);
@@ -196,6 +201,7 @@ public class OutcomeSelectionRunner {
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final Context context,
             @NonNull final Flags flags,
+            @NonNull final DebugFlags debugFlags,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final DevContext devContext,
             boolean shouldUseUnifiedTables) {
@@ -207,6 +213,7 @@ public class OutcomeSelectionRunner {
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(context);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(devContext);
 
@@ -221,6 +228,7 @@ public class OutcomeSelectionRunner {
         mAdServicesLogger = adServicesLogger;
         mContext = context;
         mFlags = flags;
+        mDebugFlags = debugFlags;
 
         mAdOutcomeSelector = adOutcomeSelector;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
@@ -258,7 +266,7 @@ public class OutcomeSelectionRunner {
                                             mFlags
                                                     .getEnforceForegroundStatusForFledgeRunAdSelection(),
                                             true,
-                                            !mFlags.getConsentNotificationDebugMode(),
+                                            !mDebugFlags.getConsentNotificationDebugMode(),
                                             mCallerUid,
                                             AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES,
                                             Throttler.ApiKey.FLEDGE_API_SELECT_ADS,

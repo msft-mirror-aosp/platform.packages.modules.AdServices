@@ -60,6 +60,7 @@ import java.util.concurrent.Future;
  * service when package install/uninstalls occur.
  */
 @RequiresApi(Build.VERSION_CODES.S)
+@SuppressWarnings("AvoidStaticContext") // Helper class
 public class PackageChangedReceiver extends BroadcastReceiver {
 
     /**

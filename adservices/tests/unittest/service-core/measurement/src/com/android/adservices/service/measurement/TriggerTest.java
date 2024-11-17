@@ -883,7 +883,7 @@ public class TriggerTest {
     }
 
     @Test
-    public void testGetAttributionDestinationBaseUri_appDestination() throws JSONException {
+    public void testGetAttributionDestinationBaseUri_appDestination() {
         Trigger trigger = TriggerFixture.getValidTriggerBuilder()
                 .setAttributionDestination(APP_DESTINATION)
                 .setDestinationType(EventSurfaceType.APP)
@@ -892,7 +892,7 @@ public class TriggerTest {
     }
 
     @Test
-    public void testGetAttributionDestinationBaseUri_webDestination() throws JSONException {
+    public void testGetAttributionDestinationBaseUri_webDestination() {
         Trigger trigger = TriggerFixture.getValidTriggerBuilder()
                 .setAttributionDestination(WEB_DESTINATION)
                 .setDestinationType(EventSurfaceType.WEB)
@@ -901,8 +901,7 @@ public class TriggerTest {
     }
 
     @Test
-    public void testGetAttributionDestinationBaseUri_trimsWebDestinationWithSubdomain()
-            throws JSONException {
+    public void testGetAttributionDestinationBaseUri_trimsWebDestinationWithSubdomain() {
         Trigger trigger = TriggerFixture.getValidTriggerBuilder()
                 .setAttributionDestination(WEB_DESTINATION_WITH_SUBDOMAIN)
                 .setDestinationType(EventSurfaceType.WEB)
@@ -911,8 +910,7 @@ public class TriggerTest {
     }
 
     @Test
-    public void testGetAttributionDestinationBaseUri_trimsWebDestinationWithPath()
-            throws JSONException {
+    public void testGetAttributionDestinationBaseUri_trimsWebDestinationWithPath() {
         Trigger trigger = TriggerFixture.getValidTriggerBuilder()
                 .setAttributionDestination(WEB_DESTINATION_WITH_PATH)
                 .setDestinationType(EventSurfaceType.WEB)
@@ -921,8 +919,8 @@ public class TriggerTest {
     }
 
     @Test
-    public void testGetAttributionDestinationBaseUri_trimsWebDestinationWithSubdomainPathQueryFrag()
-            throws JSONException {
+    public void
+            testGetAttributionDestinationBaseUri_trimsWebDestinationWithSubdomainPathQueryFrag() {
         Trigger trigger = TriggerFixture.getValidTriggerBuilder()
                 .setAttributionDestination(WEB_DESTINATION_WITH_SUBDOMAIN_PATH_QUERY_FRAGMENT)
                 .setDestinationType(EventSurfaceType.WEB)
@@ -931,8 +929,7 @@ public class TriggerTest {
     }
 
     @Test
-    public void testGetAttributionDestinationBaseUri_invalidWebDestination()
-            throws JSONException {
+    public void testGetAttributionDestinationBaseUri_invalidWebDestination() {
         Trigger trigger = TriggerFixture.getValidTriggerBuilder()
                 .setAttributionDestination(WEB_DESTINATION_INVALID)
                 .setDestinationType(EventSurfaceType.WEB)
@@ -1105,7 +1102,7 @@ public class TriggerTest {
     }
 
     @Test
-    public void testParseAggregateTrigger_aggValuesJsonArrayAggregateValueFiltersOff_fails()
+    public void testParseAggregateTrigger_aggValuesJsonArrayAggregateValueFiltersOff_returnsEmpty()
             throws JSONException {
         String invalidAggregatableValues =
                 "[ {\"values\": {\"campaignCounts\": {\"value\": 1664}}} ]";
@@ -1119,8 +1116,7 @@ public class TriggerTest {
     }
 
     @Test
-    public void
-            testParseAggregateTrigger_aggregateValuesJsonArrayFlexibleFilterAggUnsupported_fails() {
+    public void testParseAggregateTrigger_aggValuesJsonArrayFlexibleFilterAggUnsupported_throws() {
         when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
         String unsupportedAggregatableValues =
                 "[ {\"values\": {\"campaignCounts\": {\"value\": 1664}}} ]";

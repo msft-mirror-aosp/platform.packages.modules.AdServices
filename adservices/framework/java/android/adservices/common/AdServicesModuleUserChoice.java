@@ -38,13 +38,13 @@ import java.util.Objects;
 public final class AdServicesModuleUserChoice implements Parcelable {
 
     /** Default user choice state */
-    public static final int USER_CHOICE_UNKNOWN = 0;
+    public static final int USER_CHOICE_UNKNOWN = AdServicesCommonManager.USER_CHOICE_UNKNOWN;
 
     /** User opted in state */
-    public static final int USER_CHOICE_OPTED_IN = 1;
+    public static final int USER_CHOICE_OPTED_IN = AdServicesCommonManager.USER_CHOICE_OPTED_IN;
 
     /** User opted out state */
-    public static final int USER_CHOICE_OPTED_OUT = 2;
+    public static final int USER_CHOICE_OPTED_OUT = AdServicesCommonManager.USER_CHOICE_OPTED_OUT;
 
     /**
      * Result codes that are common across various modules.

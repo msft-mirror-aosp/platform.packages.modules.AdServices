@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
@@ -340,6 +341,8 @@ public final class SourceFixture {
                             getValidTriggerSpecsCountBasedWithFewerState().getMaxReports())
                     .build();
         } catch (JSONException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Unable to build Source with non default epsilon.");
             return null;
         }
     }

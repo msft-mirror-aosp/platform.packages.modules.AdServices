@@ -100,6 +100,8 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
     }
 
     /** Gets a new {@link AdSelectionShellCommandFactory} instance. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static AdSelectionShellCommandFactory newInstance(
             DebugFlags debugFlags, Flags flags, Context context) {
         SharedStorageDatabase sharedStorageDatabase = SharedStorageDatabase.getInstance();

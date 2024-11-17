@@ -311,6 +311,8 @@ public class MddJobService extends JobService {
      * @return true if task scheduled successfully, otherwise, return false.
      */
     @VisibleForTesting
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     static boolean scheduleIfNeededMddSingleTask(
             Context context,
             boolean forceSchedule,
@@ -382,6 +384,8 @@ public class MddJobService extends JobService {
     }
 
     /** Schedule MDD background tasks. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     @VisibleForTesting
     static void schedule(
             Context context,

@@ -105,6 +105,8 @@ public class FledgeMaintenanceTasksWorker {
     }
 
     /** Creates a new instance of {@link FledgeMaintenanceTasksWorker}. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static FledgeMaintenanceTasksWorker create(@NonNull Context context) {
         Objects.requireNonNull(context);
         return new FledgeMaintenanceTasksWorker(context);

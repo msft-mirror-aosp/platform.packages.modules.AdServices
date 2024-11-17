@@ -80,6 +80,7 @@ public class ConsentNotificationTrigger {
      *
      * @param context Context which is used to display {@link NotificationCompat}
      */
+    @SuppressWarnings("AvoidStaticContext") // UX class
     public static void showConsentNotification(@NonNull Context context, boolean isEuDevice) {
         LogUtil.d("Started requesting notification.");
         UiStatsLogger.logRequestedNotification();
@@ -122,6 +123,7 @@ public class ConsentNotificationTrigger {
         LogUtil.d("Notification was displayed.");
     }
 
+    @SuppressWarnings("AvoidStaticContext") // UX class
     private static void recordNotificationDisplayed(
             @NonNull Context context, boolean gaUxFeatureEnabled, ConsentManager consentManager) {
         if (UxStatesManager.getInstance().getFlag(KEY_RECORD_MANUAL_INTERACTION_ENABLED)
@@ -157,6 +159,7 @@ public class ConsentNotificationTrigger {
     }
 
     @NonNull
+    @SuppressWarnings("AvoidStaticContext") // UX class
     private static Notification getNotification(
             @NonNull Context context,
             boolean isEuDevice,
@@ -199,6 +202,7 @@ public class ConsentNotificationTrigger {
 
     // setup default consents based on information whether the device is EU or non-EU device and
     // GA UX feature flag is enabled.
+    @SuppressWarnings("AvoidStaticContext") // UX class
     private static void setupConsents(
             @NonNull Context context,
             boolean isEuDevice,
@@ -253,6 +257,7 @@ public class ConsentNotificationTrigger {
                                 == MANUAL_INTERACTIONS_RECORDED);
     }
 
+    @SuppressWarnings("AvoidStaticContext") // UX class
     private static Notification getGaV2ConsentNotification(
             @NonNull Context context, boolean isEuDevice) {
         Intent intent = getNotificationIntent(context);
@@ -298,6 +303,7 @@ public class ConsentNotificationTrigger {
      *
      * @param context {@link Context} which is used to prepare a {@link NotificationCompat}.
      */
+    @SuppressWarnings("AvoidStaticContext") // UX class
     private static Notification getConsentNotification(
             @NonNull Context context, boolean isEuDevice) {
         Intent intent = getNotificationIntent(context);
@@ -338,6 +344,7 @@ public class ConsentNotificationTrigger {
      *
      * @param context {@link Context} which is used to prepare a {@link NotificationCompat}.
      */
+    @SuppressWarnings("AvoidStaticContext") // UX class
     private static Notification getU18ConsentNotification(@NonNull Context context) {
         Intent intent = getNotificationIntent(context);
 
@@ -360,6 +367,7 @@ public class ConsentNotificationTrigger {
                 .build();
     }
 
+    @SuppressWarnings("AvoidStaticContext") // UX class
     private static Notification getPasConsentNotification(
             @NonNull Context context, ConsentManager consentManager, boolean isEuDevice) {
         boolean isRenotify = isFledgeOrMsmtEnabled(consentManager);
@@ -411,6 +419,7 @@ public class ConsentNotificationTrigger {
                 || consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
     }
 
+    @SuppressWarnings("AvoidStaticContext") // UX class
     private static void createNotificationChannel(@NonNull Context context) {
         // TODO (b/230372892): styling -> adjust channels to use Android System labels.
         int importance = NotificationManager.IMPORTANCE_HIGH;
@@ -425,6 +434,7 @@ public class ConsentNotificationTrigger {
         notificationManager.createNotificationChannel(channel);
     }
 
+    @SuppressWarnings("AvoidStaticContext") // UX class
     private static Intent getNotificationIntent(Context context) {
         if (FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled()) {
             Intent intent = new Intent(ACTION_VIEW_ADSERVICES_CONSENT_PAGE);
@@ -457,6 +467,7 @@ public class ConsentNotificationTrigger {
         return new Intent(context, ConsentNotificationActivity.class);
     }
 
+    @SuppressWarnings("AvoidStaticContext") // UX class
     private static void setUpGaConsent(
             @NonNull Context context, boolean isEuDevice, ConsentManager consentManager) {
         if (isEuDevice) {

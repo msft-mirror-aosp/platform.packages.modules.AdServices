@@ -26,6 +26,7 @@ import android.os.Trace;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.AdServicesCommonServiceImpl;
@@ -56,6 +57,7 @@ public class AdServicesCommonService extends Service {
                     new AdServicesCommonServiceImpl(
                             this,
                             FlagsFactory.getFlags(),
+                            DebugFlags.getInstance(),
                             UxEngine.getInstance(),
                             UxStatesManager.getInstance(),
                             AdIdWorker.getInstance(),

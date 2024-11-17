@@ -21,8 +21,6 @@ import static android.adservices.common.AdServicesModuleState.ModuleStateCode;
 import static android.adservices.common.Module.ModuleCode;
 import static android.adservices.common.NotificationType.NotificationTypeCode;
 
-import static com.android.internal.annotations.VisibleForTesting.Visibility.PACKAGE;
-
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.SystemApi;
@@ -30,7 +28,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 import com.android.adservices.flags.Flags;
-import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -92,13 +89,13 @@ public final class UpdateAdServicesModuleStatesParams implements Parcelable {
         out.writeInt(mNotificationType);
     }
 
-    /** Gets the AdServices module state for one module. */
+    /** Gets the last set AdServices module state value for a module. */
     @ModuleStateCode
     public int getModuleState(@ModuleCode int module) {
         Optional<AdServicesModuleState> moduleState =
                 mAdServicesModuleStateList.stream()
                         .filter(element -> element.getModule() == module)
-                        .findFirst();
+                        .reduce((first, second) -> second);
         return moduleState.map(AdServicesModuleState::getModuleState).orElse(MODULE_STATE_UNKNOWN);
     }
 
@@ -109,7 +106,6 @@ public final class UpdateAdServicesModuleStatesParams implements Parcelable {
      * @hide
      */
     @NonNull
-    @VisibleForTesting(visibility = PACKAGE)
     public Map<Integer, Integer> getModuleStateMap() {
         Map<Integer, Integer> moduleStatemap = new HashMap<>(mAdServicesModuleStateList.size());
         mAdServicesModuleStateList.forEach(
@@ -120,7 +116,6 @@ public final class UpdateAdServicesModuleStatesParams implements Parcelable {
 
     /** Returns the Notification type associated with this result. */
     @NotificationTypeCode
-    @VisibleForTesting(visibility = PACKAGE)
     public int getNotificationType() {
         return mNotificationType;
     }
@@ -161,7 +156,10 @@ public final class UpdateAdServicesModuleStatesParams implements Parcelable {
 
         public Builder() {}
 
-        /** Sets the AdServices module state for one module. */
+        /**
+         * Sets the AdServices module state for one module. Will override previous set value if the
+         * given module was set before.
+         */
         @NonNull
         public Builder setModuleState(@ModuleCode int module, @ModuleStateCode int moduleState) {
             this.mAdServicesModuleStateList.add(new AdServicesModuleState(module, moduleState));

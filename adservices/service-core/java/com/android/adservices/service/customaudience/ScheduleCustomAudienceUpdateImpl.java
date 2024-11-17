@@ -37,6 +37,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
@@ -77,6 +78,7 @@ public class ScheduleCustomAudienceUpdateImpl {
     @NonNull private final Context mContext;
     @NonNull private final ConsentManager mConsentManager;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final ListeningExecutorService mBackgroundExecutorService;
     @NonNull private final CustomAudienceServiceFilter mCustomAudienceServiceFilter;
@@ -93,6 +95,7 @@ public class ScheduleCustomAudienceUpdateImpl {
             @NonNull ConsentManager consentManager,
             int callerId,
             @NonNull Flags flags,
+            @NonNull DebugFlags debugFlags,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull ListeningExecutorService backgroundExecutorService,
             @NonNull CustomAudienceServiceFilter customAudienceServiceFilter,
@@ -110,6 +113,7 @@ public class ScheduleCustomAudienceUpdateImpl {
         mEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests =
                 flags.getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests();
         mFlags = flags;
+        mDebugFlags = debugFlags;
     }
 
     /** Schedules a delayed Custom Audience Update */
@@ -204,7 +208,7 @@ public class ScheduleCustomAudienceUpdateImpl {
                                         mDisableFledgeEnrollmentCheck,
                                         mEnforceForegroundStatus,
                                         ENFORCE_CONSENT,
-                                        !mFlags.getConsentNotificationDebugMode(),
+                                        !mDebugFlags.getConsentNotificationDebugMode(),
                                         mCallingAppUid,
                                         API_NAME,
                                         FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE,

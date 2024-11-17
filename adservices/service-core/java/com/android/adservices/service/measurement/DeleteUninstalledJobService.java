@@ -109,6 +109,8 @@ public final class DeleteUninstalledJobService extends JobService {
      * @param context the context
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
         if (flags.getMeasurementJobDeleteUninstalledKillSwitch()) {
@@ -136,6 +138,8 @@ public final class DeleteUninstalledJobService extends JobService {
         }
     }
 
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_DELETE_UNINSTALLED_JOB_ID,

@@ -248,7 +248,7 @@ public class AppConsentManager {
         String prefix3 = prefix2 + DUMP_PREFIX;
 
         writer.printf("%sDatastore:\n", prefix2);
-        mDatastore.dump(writer, prefix3);
+        mDatastore.dump(writer, prefix3, /* args= */ null);
     }
 
     /** tearDown method used for Testing only. */

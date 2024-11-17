@@ -23,6 +23,7 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.shared.common.ApplicationContextProvider;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 
@@ -48,14 +49,19 @@ public final class AdServicesInternalProvider extends ApplicationContextProvider
     // NOTE: currently only used on tests (to mock dump()), so it's null in production
     @Nullable private final Throttler mThrottler;
 
+    // NOTE: currently only used on tests (to mock dump()), so it's null in production
+    @Nullable private final ConsentManager mConsentManager;
+
     public AdServicesInternalProvider() {
-        this(FlagsFactory.getFlags(), /* throttler= */ null);
+        this(FlagsFactory.getFlags(), /* throttler= */ null, /* consentManager= */ null);
     }
 
     @VisibleForTesting
-    AdServicesInternalProvider(Flags flags, @Nullable Throttler throttler) {
+    AdServicesInternalProvider(
+            Flags flags, @Nullable Throttler throttler, @Nullable ConsentManager consentManager) {
         mFlags = Objects.requireNonNull(flags, "flags cannot be null");
         mThrottler = throttler;
+        mConsentManager = consentManager;
     }
 
     @Override
@@ -101,6 +107,10 @@ public final class AdServicesInternalProvider extends ApplicationContextProvider
         }
 
         AdServicesManager.dump(writer);
+
+        ConsentManager consentManager =
+                mConsentManager == null ? ConsentManager.getInstance() : mConsentManager;
+        consentManager.dump(writer, args);
 
         if (!quiet) {
             writer.printf("\nFlags (from %s):\n", mFlags.getClass().getName());

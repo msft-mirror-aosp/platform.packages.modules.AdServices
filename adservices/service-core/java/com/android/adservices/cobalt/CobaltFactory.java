@@ -84,6 +84,8 @@ public final class CobaltFactory {
      *
      * @throws CobaltInitializationException if an unrecoverable errors occurs during initialization
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static CobaltLogger getCobaltLogger(Context context, Flags flags)
             throws CobaltInitializationException {
         Objects.requireNonNull(context);
@@ -114,6 +116,8 @@ public final class CobaltFactory {
      *
      * @throws CobaltInitializationException if an unrecoverable errors occurs during initialization
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static CobaltPeriodicJob getCobaltPeriodicJob(Context context, Flags flags)
             throws CobaltInitializationException {
         Objects.requireNonNull(context);
@@ -244,6 +248,8 @@ public final class CobaltFactory {
      * APEX_VERSION_WHEN_NOT_FOUND} if {@code Adservices} nor {@code Extservices} are not available.
      */
     // TODO(b/323567786): Move this method to a common util class.
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     @VisibleForTesting
     public static String computeApexVersion(Context context) {
         PackageManager packageManager = context.getPackageManager();

@@ -1283,6 +1283,8 @@ public class AsyncTriggerFetcher {
                 : destination;
     }
 
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     private static IOdpDelegationWrapper getOdpDelegationManager(Context context, Flags flags) {
         if (!SdkLevel.isAtLeastT() || !flags.getMeasurementEnableOdpWebTriggerRegistration()) {
             return new NoOdpDelegationWrapper();

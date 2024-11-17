@@ -18,8 +18,8 @@ package android.adservices.common;
 
 
 import android.adservices.common.AdServicesStates;
-import android.adservices.common.AdServicesModuleState;
-import android.adservices.common.AdServicesModuleUserChoice;
+import android.adservices.common.UpdateAdServicesModuleStatesParams;
+import android.adservices.common.UpdateAdServicesUserChoicesParams;
 
 import android.adservices.common.CallerMetadata;
 import android.adservices.common.GetAdServicesCommonStatesParams;
@@ -56,12 +56,12 @@ interface IAdServicesCommonService {
         in IAdServicesCommonStatesCallback callback);
 
     void requestAdServicesModuleOverrides(
-        in List<AdServicesModuleState> adServicesModuleStateList,
+        in UpdateAdServicesModuleStatesParams params,
         in int notificationType,
         in IRequestAdServicesModuleOverridesCallback callback);
 
     void requestAdServicesModuleUserChoices(
-        in List<AdServicesModuleUserChoice> adServicesModuleUserChoiceList,
+        in UpdateAdServicesUserChoicesParams params,
         in IRequestAdServicesModuleUserChoicesCallback callback);
 
 }

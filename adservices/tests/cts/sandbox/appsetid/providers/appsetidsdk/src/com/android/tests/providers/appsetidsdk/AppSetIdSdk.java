@@ -46,14 +46,16 @@ public class AppSetIdSdk extends SandboxedSdkProvider {
 
             AppSetId resultAppSetId = callback.assertResultReceived();
 
-            if (resultAppSetId != null
-                    && resultAppSetId.getId() != null
-                    && !resultAppSetId.getId().isEmpty()) {
+            if (resultAppSetId != null && resultAppSetId.getId() != null) {
                 // Successfully called the getAppSetId
-                Log.d(
-                        TAG,
-                        "Successfully called the getAppSetId. resultAppSetIdString = "
-                                + resultAppSetId.getId());
+                if (resultAppSetId.getId().isEmpty()) {
+                    Log.e(TAG, "AppSetId get empty result");
+                } else {
+                    Log.d(
+                            TAG,
+                            "Successfully called the getAppSetId. resultAppSetIdString = "
+                                    + resultAppSetId.getId());
+                }
                 return new SandboxedSdk(new Binder());
             } else {
                 // Failed to call the getAppSetId

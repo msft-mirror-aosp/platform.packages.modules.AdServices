@@ -187,6 +187,8 @@ public final class AppManifestConfigHelper {
     }
 
     @Nullable
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     private static Integer getAdServicesConfigResourceIdOnExistingPackageOnSPlus(
             Context context, String appPackageName) {
         PackageManager pm = context.getPackageManager();

@@ -104,6 +104,8 @@ public class EncryptionKeyJobService extends JobService {
      * @param context the context
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static boolean scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
         if (FlagsFactory.getFlags().getEncryptionKeyPeriodicFetchKillSwitch()) {
@@ -154,6 +156,8 @@ public class EncryptionKeyJobService extends JobService {
         jobScheduler.schedule(jobInfo);
     }
 
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         ENCRYPTION_KEY_JOB_ID,

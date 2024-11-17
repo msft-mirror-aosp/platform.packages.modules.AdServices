@@ -237,6 +237,7 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
                             .setEnableUnlimitedEgress(IS_UNLIMITED_EGRESS_ENABLED)
                             .setGenerationId(Long.toString(mAdSelectionIdGenerator.generateId()))
                             .setConsentedDebugConfig(getConsentedDebugConfiguration())
+                            .setProdDebug(IS_DEBUG_REPORTING_ENABLED)
                             .build();
         } catch (ExecutionException | InterruptedException | TimeoutException e) {
             err.printf(ERROR_TIMEOUT_DB);
@@ -301,6 +302,7 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
                 .setTopLevelSeller(TOP_LEVEL_SELLER_HINT)
                 .setSeller(SELLER_HINT)
                 .setBuyerKvExperimentGroupId(BUYER_KV_EXPERIMENT_ID_HINT)
+                .setIsDebugEligible(IS_DEBUG_REPORTING_ENABLED)
                 .build();
     }
 

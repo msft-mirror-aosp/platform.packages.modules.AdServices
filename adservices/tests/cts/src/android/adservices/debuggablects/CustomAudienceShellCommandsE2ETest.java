@@ -57,7 +57,7 @@ import java.util.List;
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetPpapiAppAllowList
-public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggableCtsTest {
+public final class CustomAudienceShellCommandsE2ETest extends AdServicesDebuggableTestCase {
     private static final String OWNER = sPackageName;
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
 
@@ -71,10 +71,6 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
     @Before
     public void setUp() throws Exception {
         AdservicesTestHelper.killAdservicesProcess(sContext);
-
-        if (sdkLevel.isAtLeastT()) {
-            assertForegroundActivityStarted();
-        }
 
         mCustomAudienceTestFixture = new CustomAudienceTestFixture(sContext);
         mShirtsCustomAudience =

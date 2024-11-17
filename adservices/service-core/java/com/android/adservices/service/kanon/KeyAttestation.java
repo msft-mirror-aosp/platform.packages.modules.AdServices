@@ -62,6 +62,8 @@ public class KeyAttestation {
     }
 
     /** Creates an instance of {@link KeyAttestation} */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static KeyAttestation create(Context context)
             throws KeyStoreException, NoSuchAlgorithmException, NoSuchProviderException {
         return new KeyAttestation(

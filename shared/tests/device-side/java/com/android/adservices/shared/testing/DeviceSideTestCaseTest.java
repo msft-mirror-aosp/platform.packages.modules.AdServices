@@ -65,6 +65,6 @@ public final class DeviceSideTestCaseTest extends DeviceSideTestCase {
     }
 
     private String getExpectedPackageName() {
-        return isOnRavenwood() ? RAVENWOOD_PACKAGE_NAME : "com.android.adservices.shared.tests";
+        return "com.android.adservices.shared.tests";
     }
 }

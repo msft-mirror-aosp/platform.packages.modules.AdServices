@@ -57,6 +57,8 @@ import java.util.stream.Collectors;
 
 /** Class to manage blocked {@link Topic}s. */
 @RequiresApi(Build.VERSION_CODES.S)
+// TODO(b/311183933): Remove passed in Context from static method.
+@SuppressWarnings("AvoidStaticContext")
 public class BlockedTopicsManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
     private static BlockedTopicsManager sSingleton;

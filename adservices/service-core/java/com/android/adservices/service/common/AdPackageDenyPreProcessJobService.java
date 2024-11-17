@@ -167,6 +167,8 @@ public final class AdPackageDenyPreProcessJobService extends JobService {
         LogUtil.d("Scheduling AdDenyAppPreProcessorJobService job ...");
     }
 
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     private static JobInfo buildJobInfo(Context context) {
         // TODO(b/374326249) move periodic flex time config to flags
         long flexIntervalMillis = 60 * 60 * 1000; // 1 hr

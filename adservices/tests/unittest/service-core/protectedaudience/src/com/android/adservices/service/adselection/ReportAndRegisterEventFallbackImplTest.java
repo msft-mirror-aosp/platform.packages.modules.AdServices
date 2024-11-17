@@ -1623,11 +1623,6 @@ public final class ReportAndRegisterEventFallbackImplTest
         }
 
         @Override
-        public boolean getConsentNotificationDebugMode() {
-            return false;
-        }
-
-        @Override
         public boolean getEnforceForegroundStatusForFledgeReportInteraction() {
             return true;
         }

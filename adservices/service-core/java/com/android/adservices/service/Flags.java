@@ -18,7 +18,6 @@ package com.android.adservices.service;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
 
-import static com.android.adservices.service.DebugFlags.CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_GLOBAL;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_RAMPED_UP;
@@ -2149,15 +2148,6 @@ public interface Flags extends ModuleSharedFlags {
 
     default long getConsentNotificationMinimalDelayBeforeIntervalEnds() {
         return CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS;
-    }
-
-    /**
-     * @deprecated - TODO(b/330796095): remove once all usages of this method are moved to {@link
-     *     DebugFlags}
-     */
-    @Deprecated
-    default boolean getConsentNotificationDebugMode() {
-        return CONSENT_NOTIFICATION_DEBUG_MODE;
     }
 
     /** Available sources of truth to get consent for PPAPI. */
@@ -5901,6 +5891,13 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns if the winning seller id in AdSelectionOutcome is enabled. */
     default boolean getEnableWinningSellerIdInAdSelectionOutcome() {
         return DEFAULT_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME;
+    }
+
+    boolean DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER = false;
+
+    /** Returns if the prod debug feature is enabled for server auctions. */
+    default boolean getEnableProdDebugInAuctionServer() {
+        return DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

@@ -164,6 +164,8 @@ public class PeriodicEncodingJobService extends JobService {
     /**
      * Attempts to schedule the Periodic encoding as a singleton job if it is not already scheduled.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void scheduleIfNeeded(Context context, Flags flags, boolean forceSchedule) {
         LoggerFactory.getFledgeLogger()
                 .v(
@@ -204,6 +206,8 @@ public class PeriodicEncodingJobService extends JobService {
      * <p>Split out from {@link #scheduleIfNeeded(Context, Flags, boolean)} for mockable testing
      */
     @VisibleForTesting
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     protected static void schedule(Context context, Flags flags) {
         if (!flags.getProtectedSignalsPeriodicEncodingEnabled()) {
             LoggerFactory.getFledgeLogger()

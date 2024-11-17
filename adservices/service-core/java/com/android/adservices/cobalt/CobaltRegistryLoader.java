@@ -43,6 +43,8 @@ public final class CobaltRegistryLoader {
      * @return the CobaltRegistry
      */
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static Project getRegistry(Context context, Flags flags)
             throws CobaltInitializationException {
         if (!CobaltRegistryValidated.IS_REGISTRY_VALIDATED) {

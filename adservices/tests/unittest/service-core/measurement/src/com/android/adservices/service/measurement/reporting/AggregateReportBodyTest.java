@@ -37,14 +37,6 @@ import com.android.adservices.service.measurement.aggregation.AggregateEncryptio
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
-import co.nstant.in.cbor.CborDecoder;
-import co.nstant.in.cbor.CborException;
-import co.nstant.in.cbor.model.Array;
-import co.nstant.in.cbor.model.ByteString;
-import co.nstant.in.cbor.model.DataItem;
-import co.nstant.in.cbor.model.Map;
-import co.nstant.in.cbor.model.UnicodeString;
-
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -57,6 +49,14 @@ import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
 import java.util.Base64;
 import java.util.List;
+
+import co.nstant.in.cbor.CborDecoder;
+import co.nstant.in.cbor.CborException;
+import co.nstant.in.cbor.model.Array;
+import co.nstant.in.cbor.model.ByteString;
+import co.nstant.in.cbor.model.DataItem;
+import co.nstant.in.cbor.model.Map;
+import co.nstant.in.cbor.model.UnicodeString;
 
 public class AggregateReportBodyTest {
 
@@ -75,6 +75,11 @@ public class AggregateReportBodyTest {
     private static final String DEBUG_CLEARTEXT_PAYLOAD =
             "{\"operation\":\"histogram\","
                     + "\"data\":[{\"bucket\":\"1369\",\"value\":32768,\"id\":\"0\"},"
+                    + "{\"bucket\":\"3461\",\"value\":1664}]}";
+
+    private static final String DEBUG_CLEARTEXT_PAYLOAD_WITH_CONFIGURED_ID =
+            "{\"operation\":\"histogram\","
+                    + "\"data\":[{\"bucket\":\"1369\",\"value\":32768,\"id\":\"255\"},"
                     + "{\"bucket\":\"3461\",\"value\":1664}]}";
     private Flags mMockFlags;
 
@@ -164,6 +169,23 @@ public class AggregateReportBodyTest {
                 .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
                 .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
                 .setDebugMode("enabled");
+    }
+
+    private AggregateReportBody.Builder createAggregateReportBodyWithAggFilteringIdMaxBytes() {
+        return new AggregateReportBody.Builder()
+                .setAttributionDestination(ATTRIBUTION_DESTINATION)
+                .setSourceRegistrationTime(SOURCE_REGISTRATION_TIME)
+                .setScheduledReportTime(SCHEDULED_REPORT_TIME)
+                .setApi(API_ATTRIBUTION_REPORTING)
+                .setApiVersion(VERSION)
+                .setReportId(REPORT_ID)
+                .setReportingOrigin(REPORTING_ORIGIN)
+                .setDebugCleartextPayload(DEBUG_CLEARTEXT_PAYLOAD_WITH_CONFIGURED_ID)
+                .setSourceDebugKey(SOURCE_DEBUG_KEY)
+                .setTriggerDebugKey(TRIGGER_DEBUG_KEY)
+                .setAggregationCoordinatorOrigin(Uri.parse(COORDINATOR_ORIGIN))
+                .setDebugMode(null)
+                .setAggregatableFilteringIdMaxBytes(8);
     }
 
     @Before
@@ -297,13 +319,33 @@ public class AggregateReportBodyTest {
 
         AggregateEncryptionKey key = AggregateCryptoFixture.getKey();
         JSONArray aggregationServicePayloadsJson =
-                aggregateReport.aggregationServicePayloadsToJson(/* sharedInfo = */ null, key);
+                aggregateReport.aggregationServicePayloadsToJson(
+                        /* sharedInfo= */ null, key, /* filteringIdMaxBytes= */ null);
 
         JSONObject aggregateServicePayloads = aggregationServicePayloadsJson.getJSONObject(0);
 
         assertEquals(key.getKeyId(), aggregateServicePayloads.get("key_id"));
         assertEquals(
-                AggregateCryptoConverter.encode(DEBUG_CLEARTEXT_PAYLOAD),
+                AggregateCryptoConverter.encode(
+                        DEBUG_CLEARTEXT_PAYLOAD, /* filteringIdMaxBytes= */ null),
+                aggregateServicePayloads.opt("debug_cleartext_payload"));
+        assertEncodedDebugPayload(aggregateServicePayloads);
+        assertEncryptedPayload(aggregateServicePayloads);
+    }
+
+    @Test
+    public void testAggregationServicePayloadsJsonSerializationWithFilteringId() throws Exception {
+        AggregateReportBody aggregateReport =
+                createAggregateReportBodyWithAggFilteringIdMaxBytes().build();
+        AggregateEncryptionKey key = AggregateCryptoFixture.getKey();
+        JSONArray aggregationServicePayloadsJson =
+                aggregateReport.aggregationServicePayloadsToJson(
+                        /* sharedInfo= */ null, key, /* filteringIdMaxBytes= */ 8);
+
+        JSONObject aggregateServicePayloads = aggregationServicePayloadsJson.getJSONObject(0);
+        assertEquals(
+                AggregateCryptoConverter.encode(
+                        DEBUG_CLEARTEXT_PAYLOAD_WITH_CONFIGURED_ID, /* filteringIdMaxBytes= */ 8),
                 aggregateServicePayloads.opt("debug_cleartext_payload"));
         assertEncodedDebugPayload(aggregateServicePayloads);
         assertEncryptedPayload(aggregateServicePayloads);
@@ -316,7 +358,8 @@ public class AggregateReportBodyTest {
 
         AggregateEncryptionKey key = AggregateCryptoFixture.getKey();
         JSONArray aggregationServicePayloadsJson =
-                aggregateReport.aggregationServicePayloadsToJson(/* sharedInfo = */ null, key);
+                aggregateReport.aggregationServicePayloadsToJson(
+                        /* sharedInfo= */ null, key, /* filteringIdMaxBytes= */ null);
 
         JSONObject aggregateServicePayloads = aggregationServicePayloadsJson.getJSONObject(0);
 
@@ -332,7 +375,8 @@ public class AggregateReportBodyTest {
 
         AggregateEncryptionKey key = AggregateCryptoFixture.getKey();
         JSONArray aggregationServicePayloadsJson =
-                aggregateReport.aggregationServicePayloadsToJson(/* sharedInfo = */ null, key);
+                aggregateReport.aggregationServicePayloadsToJson(
+                        /* sharedInfo= */ null, key, /* filteringIdMaxBytes= */ null);
 
         JSONObject aggregateServicePayloads = aggregationServicePayloadsJson.getJSONObject(0);
 

@@ -69,7 +69,7 @@ import java.util.concurrent.Executors;
 @EnableDebugFlag(KEY_AD_SELECTION_CLI_ENABLED)
 @EnableDebugFlag(KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED)
 @RequiresSdkLevelAtLeastT(reason = "Protected App Signals is enabled for T+")
-public class TriggerEncodingShellCommandTest extends ForegroundDebuggableCtsTest {
+public class TriggerEncodingShellCommandTest extends AdServicesDebuggableTestCase {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     public static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
     private static final String ACTION_REGISTER_ENCODER_LOGIC_COMPLETE =
@@ -91,10 +91,6 @@ public class TriggerEncodingShellCommandTest extends ForegroundDebuggableCtsTest
     @Before
     public void setUp() throws Exception {
         AdservicesTestHelper.killAdservicesProcess(sContext);
-
-        if (sdkLevel.isAtLeastT()) {
-            assertForegroundActivityStarted();
-        }
 
         mProtectedSignalsClient =
                 new ProtectedSignalsClient.Builder()

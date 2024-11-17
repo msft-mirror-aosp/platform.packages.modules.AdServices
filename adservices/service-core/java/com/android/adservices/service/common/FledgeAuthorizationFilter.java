@@ -95,6 +95,8 @@ public class FledgeAuthorizationFilter {
     }
 
     /** Creates an instance of {@link FledgeAuthorizationFilter}. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static FledgeAuthorizationFilter create(
             @NonNull Context context, @NonNull AdServicesLogger adServicesLogger) {
         Objects.requireNonNull(context);

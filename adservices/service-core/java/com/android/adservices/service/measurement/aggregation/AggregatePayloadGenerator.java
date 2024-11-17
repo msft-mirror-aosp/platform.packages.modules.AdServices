@@ -23,6 +23,7 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.XNetworkData;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
 
@@ -40,7 +41,10 @@ import java.util.stream.IntStream;
  */
 public class AggregatePayloadGenerator {
     private final Flags mFlags;
+    @VisibleForTesting
     public static final String PRE_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "0.1";
+
+    @VisibleForTesting
     public static final String POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "1.0";
 
     public AggregatePayloadGenerator(Flags flags) {

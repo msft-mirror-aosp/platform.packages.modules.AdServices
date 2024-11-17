@@ -79,6 +79,8 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
     }
 
     /** Gets a new {@link CustomAudienceShellCommandFactory} instance . */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static ShellCommandFactory newInstance(
             DebugFlags debugFlags, Flags flags, Context context) {
         CustomAudienceDao customAudienceDao =

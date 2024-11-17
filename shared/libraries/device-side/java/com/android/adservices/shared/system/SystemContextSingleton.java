@@ -65,6 +65,7 @@ public final class SystemContextSingleton {
      * @throws IllegalStateException if the singleton was already {@link #set(Context) set} with a
      *     different context.
      */
+    @SuppressWarnings("AvoidStaticContext")
     public static Context set(Context context) {
         Objects.requireNonNull(context, "context cannot be null");
 
@@ -107,6 +108,7 @@ public final class SystemContextSingleton {
      */
     @VisibleForTesting
     @Nullable
+    @SuppressWarnings("AvoidStaticContext")
     public static Context setForTests(Context context) {
         Context previousContext = sContext;
         logI("setForTests(): from %s to %s.", previousContext, context);

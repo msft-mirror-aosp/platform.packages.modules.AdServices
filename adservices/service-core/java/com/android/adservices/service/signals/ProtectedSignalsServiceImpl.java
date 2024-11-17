@@ -220,6 +220,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
     }
 
     /** Creates a new instance of {@link ProtectedSignalsServiceImpl}. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static ProtectedSignalsServiceImpl create(@NonNull Context context) {
         return new ProtectedSignalsServiceImpl(context);
     }

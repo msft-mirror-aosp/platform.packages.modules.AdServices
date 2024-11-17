@@ -1057,6 +1057,7 @@ public class KAnonCallerImpl implements KAnonCaller {
                             .catchingAsync(
                                     Throwable.class,
                                     e -> {
+                                        sLogger.e(e, "Error while performing the join request");
                                         if (mFlags.getFledgeKAnonLoggingEnabled()) {
                                             boolean wasSuccessful = false;
                                             int totalMessages = 0;

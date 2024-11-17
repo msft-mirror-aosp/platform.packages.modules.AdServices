@@ -73,6 +73,8 @@ public class ConsentNotificationJobService extends JobService {
     private UxStatesManager mUxStatesManager;
 
     /** Schedule the Job. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void schedule(Context context, boolean adidEnabled, boolean reConsentStatus) {
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         long initialDelay = calculateInitialDelay(Calendar.getInstance(TimeZone.getDefault()));

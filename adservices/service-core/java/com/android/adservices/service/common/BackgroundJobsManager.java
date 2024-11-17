@@ -78,6 +78,8 @@ import java.util.Objects;
 
 /** Provides functionality to schedule or unschedule all relevant background jobs. */
 @RequiresApi(Build.VERSION_CODES.S)
+// TODO(b/311183933): Remove passed in Context from static method.
+@SuppressWarnings("AvoidStaticContext")
 public class BackgroundJobsManager {
     /**
      * Tries to schedule all the relevant background jobs.

@@ -24,7 +24,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -92,7 +91,10 @@ public class AggregateCryptoConverterTest {
     public void testEncrypt_successfully() throws Exception {
         String result =
                 AggregateCryptoConverter.encrypt(
-                        AggregateCryptoFixture.getPublicKeyBase64(), DEFAULT_PAYLOAD, SHARED_INFO);
+                        AggregateCryptoFixture.getPublicKeyBase64(),
+                        DEFAULT_PAYLOAD,
+                        SHARED_INFO,
+                        /* filteringIdMaxBytes= */ null);
         assertNotNull(result);
         assertEncryptedPayload(result, SHARED_INFO);
     }
@@ -104,19 +106,25 @@ public class AggregateCryptoConverterTest {
                         AggregateCryptoFixture.getPublicKeyBase64(),
                         DEFAULT_PAYLOAD_WITH_FILTERING_ID,
                         SHARED_INFO,
-                        /* maxBytes= */ 8);
+                        /* filteringIdMaxBytes= */ 8);
         assertNotNull(result);
         assertEncryptedPayload(result, SHARED_INFO);
     }
 
     @Test
-    public void testEncrypt_payloadPadding_sameSize() throws Exception {
+    public void testEncrypt_payloadPadding_sameSize() {
         String result1 =
                 AggregateCryptoConverter.encrypt(
-                        AggregateCryptoFixture.getPublicKeyBase64(), PADDED_PAYLOAD1, SHARED_INFO);
+                        AggregateCryptoFixture.getPublicKeyBase64(),
+                        PADDED_PAYLOAD1,
+                        SHARED_INFO,
+                        /* filteringIdMaxBytes= */ null);
         String result2 =
                 AggregateCryptoConverter.encrypt(
-                        AggregateCryptoFixture.getPublicKeyBase64(), PADDED_PAYLOAD2, SHARED_INFO);
+                        AggregateCryptoFixture.getPublicKeyBase64(),
+                        PADDED_PAYLOAD2,
+                        SHARED_INFO,
+                        /* filteringIdMaxBytes= */ null);
         assertEquals(result1.length(), result2.length());
     }
 
@@ -124,7 +132,10 @@ public class AggregateCryptoConverterTest {
     public void testEncrypt_sharedInfoEmpty_success() throws Exception {
         String result =
                 AggregateCryptoConverter.encrypt(
-                        AggregateCryptoFixture.getPublicKeyBase64(), DEFAULT_PAYLOAD, null);
+                        AggregateCryptoFixture.getPublicKeyBase64(),
+                        DEFAULT_PAYLOAD,
+                        null,
+                        /* filteringIdMaxBytes= */ null);
         assertNotNull(result);
         assertEncryptedPayload(result, "");
     }
@@ -133,7 +144,10 @@ public class AggregateCryptoConverterTest {
     public void testEncrypt_sharedInfoNull_success() throws Exception {
         String result =
                 AggregateCryptoConverter.encrypt(
-                        AggregateCryptoFixture.getPublicKeyBase64(), DEFAULT_PAYLOAD, null);
+                        AggregateCryptoFixture.getPublicKeyBase64(),
+                        DEFAULT_PAYLOAD,
+                        null,
+                        /* filteringIdMaxBytes= */ null);
         assertNotNull(result);
         assertEncryptedPayload(result, null);
     }
@@ -147,7 +161,8 @@ public class AggregateCryptoConverterTest {
                             + "\"data\": [{"
                             + "\"bucket\": \"1\", \"value\":2"
                             + "}]}",
-                    null);
+                    null,
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -163,7 +178,8 @@ public class AggregateCryptoConverterTest {
                             + "\"data\": [{"
                             + "\"bucket\": \"1\", \"value\":2"
                             + "}]}",
-                    null);
+                    null,
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -179,7 +195,8 @@ public class AggregateCryptoConverterTest {
                             + "\"info\": [{"
                             + "\"bucket\": \"1\", \"value\":2"
                             + "}]}",
-                    null);
+                    null,
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -195,7 +212,8 @@ public class AggregateCryptoConverterTest {
                             + "\"data\": [{"
                             + "\"bucket\": \"1\", \"v\":2"
                             + "}]}",
-                    null);
+                    null,
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -211,7 +229,8 @@ public class AggregateCryptoConverterTest {
                             + "\"data\": [{"
                             + "\"b\": 1, \"value\":2"
                             + "}]}",
-                    null);
+                    null,
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -220,7 +239,8 @@ public class AggregateCryptoConverterTest {
 
     @Test
     public void testEncode_successfully() throws Exception {
-        String result = AggregateCryptoConverter.encode(DEFAULT_PAYLOAD);
+        String result =
+                AggregateCryptoConverter.encode(DEFAULT_PAYLOAD, /* filteringIdMaxBytes= */ null);
         assertNotNull(result);
         assertEncodedPayload(result);
     }
@@ -229,7 +249,7 @@ public class AggregateCryptoConverterTest {
     public void testEncodeWithFilteringIds_successfully() throws Exception {
         String result =
                 AggregateCryptoConverter.encode(
-                        DEFAULT_PAYLOAD_WITH_FILTERING_ID, /* maxBytes= */ 8);
+                        DEFAULT_PAYLOAD_WITH_FILTERING_ID, /* filteringIdMaxBytes= */ 8);
         assertNotNull(result);
         assertEncodedPayload(result);
     }
@@ -241,7 +261,8 @@ public class AggregateCryptoConverterTest {
                     "{{\"operation\":\"histogram\", "
                             + "\"data\": [{"
                             + "\"bucket\": \"1\", \"value\":2"
-                            + "}]}");
+                            + "}]}",
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -255,7 +276,8 @@ public class AggregateCryptoConverterTest {
                     "{{\"ops\":\"histogram\", "
                             + "\"data\": [{"
                             + "\"bucket\": \"1\", \"value\":2"
-                            + "}]}");
+                            + "}]}",
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -269,7 +291,8 @@ public class AggregateCryptoConverterTest {
                     "{{\"operation\":\"histogram\", "
                             + "\"info\": [{"
                             + "\"bucket\": \"1\", \"value\":2"
-                            + "}]}");
+                            + "}]}",
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -283,7 +306,8 @@ public class AggregateCryptoConverterTest {
                     "{{\"operation\":\"histogram\", "
                             + "\"data\": [{"
                             + "\"bucket\": \"1\", \"v\":2"
-                            + "}]}");
+                            + "}]}",
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -297,7 +321,8 @@ public class AggregateCryptoConverterTest {
                     "{{\"operation\":\"histogram\", "
                             + "\"data\": [{"
                             + "\"b\": 1, \"value\":2"
-                            + "}]}");
+                            + "}]}",
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -320,7 +345,9 @@ public class AggregateCryptoConverterTest {
         contributions.add(firstContribution);
         contributions.add(secondContribution);
 
-        final byte[] encoded = AggregateCryptoConverter.encodeWithCbor(contributions);
+        final byte[] encoded =
+                AggregateCryptoConverter.encodeWithCbor(
+                        contributions, /* filteringIdMaxBytes= */ null);
         final List<DataItem> dataItems =
                 new CborDecoder(new ByteArrayInputStream(encoded)).decode();
 
@@ -368,7 +395,9 @@ public class AggregateCryptoConverterTest {
         contributions.add(secondContribution);
         contributions.add(thirdContribution);
 
-        final byte[] encoded = AggregateCryptoConverter.encodeWithCbor(contributions, 2);
+        final byte[] encoded =
+                AggregateCryptoConverter.encodeWithCbor(
+                        contributions, /* filteringIdMaxBytes= */ 2);
         final List<DataItem> dataItems =
                 new CborDecoder(new ByteArrayInputStream(encoded)).decode();
 
@@ -414,7 +443,7 @@ public class AggregateCryptoConverterTest {
 
         final byte[] encoded =
                 AggregateCryptoConverter.encodeWithCbor(
-                        contributions, /* maxBytes= */ 8);
+                        contributions, /* filteringIdMaxBytes= */ 8);
 
         final List<DataItem> dataItems =
                 new CborDecoder(new ByteArrayInputStream(encoded)).decode();
@@ -450,7 +479,9 @@ public class AggregateCryptoConverterTest {
         contributions.add(firstContribution);
         contributions.add(secondContribution);
 
-        final byte[] encoded = AggregateCryptoConverter.encodeWithCbor(contributions);
+        final byte[] encoded =
+                AggregateCryptoConverter.encodeWithCbor(
+                        contributions, /* filteringIdMaxBytes= */ null);
         final List<DataItem> dataItems =
                 new CborDecoder(new ByteArrayInputStream(encoded)).decode();
 
@@ -485,7 +516,9 @@ public class AggregateCryptoConverterTest {
                         .build();
         contributions.add(contribution);
 
-        final byte[] encoded = AggregateCryptoConverter.encodeWithCbor(contributions);
+        final byte[] encoded =
+                AggregateCryptoConverter.encodeWithCbor(
+                        contributions, /* filteringIdMaxBytes= */ null);
         final List<DataItem> dataItems =
                 new CborDecoder(new ByteArrayInputStream(encoded)).decode();
 
@@ -528,7 +561,9 @@ public class AggregateCryptoConverterTest {
         contributions.add(secondContribution);
         contributions.add(thirdContribution);
 
-        final byte[] encoded = AggregateCryptoConverter.encodeWithCbor(contributions);
+        final byte[] encoded =
+                AggregateCryptoConverter.encodeWithCbor(
+                        contributions, /* filteringIdMaxBytes= */ null);
         final List<DataItem> dataItems =
                 new CborDecoder(new ByteArrayInputStream(encoded)).decode();
 

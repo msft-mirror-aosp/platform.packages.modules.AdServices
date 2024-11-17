@@ -201,6 +201,8 @@ public class DebugReportSenderJobService extends JobService {
      * <p>The debug report sender job primarily sends debug reports generated for ad selections. It
      * also prunes the ad selection debug report database of any expired data.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
         if (!flags.getFledgeEventLevelDebugReportingEnabled()) {
@@ -234,6 +236,8 @@ public class DebugReportSenderJobService extends JobService {
      * <p>Split out from {@link #scheduleIfNeeded(Context, boolean)} for mockable testing without
      * pesky permissions.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     @VisibleForTesting
     protected static void schedule(Context context, Flags flags) {
         if (!flags.getFledgeEventLevelDebugReportingEnabled()) {

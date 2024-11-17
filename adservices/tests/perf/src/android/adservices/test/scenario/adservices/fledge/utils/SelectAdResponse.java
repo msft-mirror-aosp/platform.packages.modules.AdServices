@@ -22,13 +22,4 @@ package android.adservices.test.scenario.adservices.fledge.utils;
  */
 public class SelectAdResponse {
     public String auctionResultCiphertext;
-
-    @Override
-    public String toString() {
-        return "SelectAdResponse{"
-                + "auctionResultCiphertext='"
-                + auctionResultCiphertext
-                + '\''
-                + '}';
-    }
 }

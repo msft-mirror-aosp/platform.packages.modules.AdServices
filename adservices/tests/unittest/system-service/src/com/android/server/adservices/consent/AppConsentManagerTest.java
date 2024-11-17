@@ -455,7 +455,10 @@ public final class AppConsentManagerTest extends AdServicesMockitoTestCase {
         assertDumpHasPrefix(dump, prefix);
 
         String datastoreDump =
-                dump(pw -> mDatastoreSpy.dump(pw, prefix + DUMP_PREFIX + DUMP_PREFIX));
+                dump(
+                        pw ->
+                                mDatastoreSpy.dump(
+                                        pw, prefix + DUMP_PREFIX + DUMP_PREFIX, /* args= */ null));
         assertWithMessage("content of dump() (datastore)").that(dump).contains(datastoreDump);
     }
 }

@@ -36,22 +36,24 @@ import java.lang.annotation.RetentionPolicy;
 public final class Module {
 
     /** Measurement module. */
-    public static final int MEASUREMENT = 0;
+    public static final int MEASUREMENT = AdServicesCommonManager.MODULE_MEASUREMENT;
 
     /** Privacy Sandbox module. */
-    public static final int PROTECTED_AUDIENCE = 1;
+    public static final int PROTECTED_AUDIENCE = AdServicesCommonManager.MODULE_PROTECTED_AUDIENCE;
 
     /** Privacy Sandbox Attribution module. */
-    public static final int PROTECTED_APP_SIGNALS = 2;
+    public static final int PROTECTED_APP_SIGNALS =
+            AdServicesCommonManager.MODULE_PROTECTED_APP_SIGNALS;
 
     /** Topics module. */
-    public static final int TOPICS = 3;
+    public static final int TOPICS = AdServicesCommonManager.MODULE_TOPICS;
 
     /** On-device Personalization(ODP) module. */
-    public static final int ON_DEVICE_PERSONALIZATION = 4;
+    public static final int ON_DEVICE_PERSONALIZATION =
+            AdServicesCommonManager.MODULE_ON_DEVICE_PERSONALIZATION;
 
     /** ADID module. */
-    public static final int ADID = 5;
+    public static final int ADID = AdServicesCommonManager.MODULE_ADID;
 
     /** Default Contractor, make it private so that it won't show in the system-current.txt */
     private Module() {}

@@ -354,6 +354,8 @@ public final class JSScriptEngine {
      * @return a new JSScriptEngine instance
      */
     @VisibleForTesting
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static JSScriptEngine createNewInstanceForTesting(
             Context context,
             JavaScriptSandboxProvider jsSandboxProvider,

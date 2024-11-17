@@ -39,6 +39,8 @@ public class ScheduleCustomAudienceUpdateStrategyFactory {
      *     enabled.
      * @return An implementation of ScheduleCustomAudienceUpdateStrategy
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static ScheduleCustomAudienceUpdateStrategy createStrategy(
             Context context,
             CustomAudienceDao customAudienceDao,

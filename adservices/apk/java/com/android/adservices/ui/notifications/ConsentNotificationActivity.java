@@ -139,6 +139,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
      * Notification fragments should call this when view is created. Used to keep track of user's
      * current page and log correct page exit if user exits.
      */
+    @SuppressWarnings("AvoidStaticContext") // UX class
     public static void handleAction(NotificationFragmentEnum fragmentAction, Context context) {
         switch (fragmentAction) {
             case LANDING_PAGE_DISPLAYED:

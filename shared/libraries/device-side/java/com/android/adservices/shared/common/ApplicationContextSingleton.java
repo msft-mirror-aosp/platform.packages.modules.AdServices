@@ -57,6 +57,7 @@ public final class ApplicationContextSingleton {
      * @throws IllegalStateException if the singleton was already set (by this method or {@link
      *     #setAs(Context)}) and the effective application context is different.
      */
+    @SuppressWarnings("AvoidStaticContext") // Infra class
     public static void set(Context context) {
         Objects.requireNonNull(context, "context cannot be null");
         Context appContext = context.getApplicationContext();
@@ -71,6 +72,7 @@ public final class ApplicationContextSingleton {
      * @throws IllegalStateException if the singleton was already set (by this method or {@link
      *     #set(Context)}) and the effective application context is different.
      */
+    @SuppressWarnings("AvoidStaticContext") // Infra class
     public static void setAs(Context context) {
         Objects.requireNonNull(context, "context cannot be null");
         set("setAs()", context);
@@ -118,6 +120,7 @@ public final class ApplicationContextSingleton {
      * instead.
      */
     @VisibleForTesting
+    @SuppressWarnings("AvoidStaticContext") // Infra class
     public static void setForTests(Context context) {
         LogUtil.i("setForTests(): from %s to %s.", sContext.get(), context);
         sContext.set(context);

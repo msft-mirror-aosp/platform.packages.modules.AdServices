@@ -37,6 +37,8 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /** Utility class to handle AllowList for Apps and SDKs. */
+// TODO(b/311183933): Remove passed in Context from static method.
+@SuppressWarnings("AvoidStaticContext")
 public class AllowLists {
     @VisibleForTesting public static final String ALLOW_ALL = "*";
     public static final String ALLOW_NONE = "";
@@ -92,6 +94,7 @@ public class AllowLists {
      * @param appPackageName the package name of an app
      * @return true if this app is allowed. Otherwise, it returns false.
      */
+
     public static boolean isSignatureAllowListed(
             @NonNull Context context,
             @NonNull String signatureAllowList,

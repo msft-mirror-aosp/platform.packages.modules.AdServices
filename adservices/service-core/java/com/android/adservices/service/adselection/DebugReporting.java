@@ -65,6 +65,7 @@ public abstract class DebugReporting {
      * @return an instance of debug reporting after checking for is limited ad tracking is enabled
      *     or not.
      */
+    @SuppressWarnings("AvoidStaticContext") // Factory method
     public static ListenableFuture<DebugReporting> createInstance(
             @NonNull Context context,
             @NonNull Flags flags,

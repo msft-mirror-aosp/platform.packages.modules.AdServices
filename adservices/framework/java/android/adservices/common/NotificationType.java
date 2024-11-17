@@ -18,7 +18,6 @@ package android.adservices.common;
 
 import android.annotation.FlaggedApi;
 import android.annotation.IntDef;
-import android.annotation.SystemApi;
 
 import com.android.adservices.flags.Flags;
 
@@ -34,17 +33,16 @@ import java.lang.annotation.RetentionPolicy;
  *
  * @hide
  */
-@SystemApi
 @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
 public final class NotificationType {
     /** Don't show any notification during the enrollment. */
-    public static final int NOTIFICATION_NONE = 0;
+    public static final int NOTIFICATION_NONE = AdServicesCommonManager.NOTIFICATION_NONE;
 
     /** Shows ongoing notification during the enrollment, which user can not dismiss. */
-    public static final int NOTIFICATION_ONGOING = 1;
+    public static final int NOTIFICATION_ONGOING = AdServicesCommonManager.NOTIFICATION_ONGOING;
 
     /** Shows regular notification during the enrollment, which user can dismiss. */
-    public static final int NOTIFICATION_REGULAR = 2;
+    public static final int NOTIFICATION_REGULAR = AdServicesCommonManager.NOTIFICATION_REGULAR;
 
     /** Default Contractor, make it private so that it won't show in the system-current.txt */
     private NotificationType() {}

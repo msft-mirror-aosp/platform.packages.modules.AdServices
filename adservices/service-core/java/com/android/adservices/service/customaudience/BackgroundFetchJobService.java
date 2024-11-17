@@ -238,6 +238,8 @@ public class BackgroundFetchJobService extends JobService {
      * pesky permissions.
      */
     @VisibleForTesting
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     protected static void schedule(Context context, Flags flags) {
         if (!flags.getFledgeBackgroundFetchEnabled()) {
             LoggerFactory.getFledgeLogger()

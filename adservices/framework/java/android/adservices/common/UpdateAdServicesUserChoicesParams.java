@@ -20,8 +20,6 @@ import static android.adservices.common.AdServicesModuleUserChoice.ModuleUserCho
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN;
 import static android.adservices.common.Module.ModuleCode;
 
-import static com.android.internal.annotations.VisibleForTesting.Visibility.PACKAGE;
-
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.SystemApi;
@@ -30,7 +28,6 @@ import android.os.Parcelable;
 import android.util.SparseIntArray;
 
 import com.android.adservices.flags.Flags;
-import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -111,7 +108,6 @@ public final class UpdateAdServicesUserChoicesParams implements Parcelable {
      *
      * @hide
      */
-    @VisibleForTesting(visibility = PACKAGE)
     public Map<Integer, Integer> getUserChoiceMap() {
         int length = mAdServicesUserChoiceList.size();
         Map<Integer, Integer> userChoicemap = new HashMap<>(length);

@@ -169,7 +169,12 @@ public final class RollbackHandlingManagerTest extends AdServicesExtendedMockito
         assertWithMessage("content of dump() (# datastores)").that(dump).contains("1 datastores");
 
         String datastoreDump =
-                dump(pw -> datastore.dump(pw, prefix + DUMP_PREFIX + DUMP_PREFIX + DUMP_PREFIX));
+                dump(
+                        pw ->
+                                datastore.dump(
+                                        pw,
+                                        prefix + DUMP_PREFIX + DUMP_PREFIX + DUMP_PREFIX,
+                                        AtomicFileDatastore.DUMP_ARGS_INCLUDE_CONTENTS_ONLY));
         assertWithMessage("content of dump() (datastore)").that(dump).contains(datastoreDump);
     }
 }
