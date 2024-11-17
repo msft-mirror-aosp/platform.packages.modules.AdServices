@@ -94,6 +94,7 @@ import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -177,6 +178,7 @@ public class PersistAdSelectionResultRunner {
     // TODO(b/291680065): Remove when owner field is returned from B&A
     private final boolean mForceSearchOnAbsentOwner;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
     @NonNull private final AdServicesLogger mAdServicesLogger;
 
     private ReportingRegistrationLimits mReportingLimits;
@@ -206,6 +208,7 @@ public class PersistAdSelectionResultRunner {
             @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final AuctionResultValidator auctionResultValidator,
             @NonNull final Flags flags,
+            @NonNull final DebugFlags debugFlags,
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
             @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory) {
@@ -221,6 +224,7 @@ public class PersistAdSelectionResultRunner {
         Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(auctionResultValidator);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(adsRelevanceExecutionLogger);
         Objects.requireNonNull(kAnonSignJoinFactory);
@@ -240,6 +244,7 @@ public class PersistAdSelectionResultRunner {
         mAdCounterHistogramUpdater = adCounterHistogramUpdater;
         mAuctionResultValidator = auctionResultValidator;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mAdServicesLogger = adServicesLogger;
         mAdsRelevanceExecutionLogger = adsRelevanceExecutionLogger;
         mKAnonSignJoinFactory = kAnonSignJoinFactory;
@@ -269,7 +274,7 @@ public class PersistAdSelectionResultRunner {
                                             inputParams.getCallerPackageName(),
                                             false,
                                             true,
-                                            !mFlags.getConsentNotificationDebugMode(),
+                                            !mDebugFlags.getConsentNotificationDebugMode(),
                                             mCallerUid,
                                             apiName,
                                             Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT,

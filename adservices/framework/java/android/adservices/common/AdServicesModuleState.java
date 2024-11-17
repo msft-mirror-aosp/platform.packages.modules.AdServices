@@ -37,13 +37,13 @@ import java.util.Objects;
 public final class AdServicesModuleState implements Parcelable {
 
     /** Default module state */
-    public static final int MODULE_STATE_UNKNOWN = 0;
+    public static final int MODULE_STATE_UNKNOWN = AdServicesCommonManager.MODULE_STATE_UNKNOWN;
 
     /** Module is available on the device */
-    public static final int MODULE_STATE_ENABLED = 1;
+    public static final int MODULE_STATE_ENABLED = AdServicesCommonManager.MODULE_STATE_ENABLED;
 
     /** Module is not available on the device */
-    public static final int MODULE_STATE_DISABLED = 2;
+    public static final int MODULE_STATE_DISABLED = AdServicesCommonManager.MODULE_STATE_DISABLED;
 
     /**
      * Result codes that are common across various modules.
