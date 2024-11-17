@@ -16,9 +16,9 @@
 
 package com.android.server.adservices.rollback;
 
-import android.annotation.NonNull;
+import android.annotation.UserIdInt;
 import android.app.adservices.AdServicesManager;
-import android.util.ArrayMap;
+import android.util.SparseArray;
 
 import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
@@ -49,26 +49,26 @@ public final class RollbackHandlingManager {
     private final String mDatastoreDir;
     private final int mPackageVersion;
 
-    private final ArrayMap<Integer, AtomicFileDatastore> mAtomicFileDatastoreMap = new ArrayMap<>();
+    // there's just 1 DeletionApiType , so initial capacity is 1
+    private final SparseArray<AtomicFileDatastore> mAtomicFileDatastoreMap = new SparseArray<>(1);
 
-    private RollbackHandlingManager(@NonNull String datastoreDir, int packageVersion) {
-        Objects.requireNonNull(datastoreDir);
+    private RollbackHandlingManager(String datastoreDir, int packageVersion) {
+        Objects.requireNonNull(datastoreDir, "datastoreDir cannot be null");
 
         mDatastoreDir = datastoreDir;
         mPackageVersion = packageVersion;
     }
 
     /** Create a RollbackHandlingManager with base directory and for userIdentifier */
-    @NonNull
     public static RollbackHandlingManager createRollbackHandlingManager(
-            @NonNull String baseDir, int userIdentifier, int packageVersion) throws IOException {
+            String baseDir, @UserIdInt int userId, int packageVersion) throws IOException {
         Objects.requireNonNull(baseDir, "Base dir must be provided.");
 
         // The data store is in the directore with the following path:
         // /data/system/adservices/{user_id}/rollback/
         String rollbackHandlingDataStoreDir =
                 RollbackHandlingDatastoreLocationHelper.getRollbackHandlingDataStoreDirAndCreateDir(
-                        baseDir, userIdentifier);
+                        baseDir, userId);
 
         return new RollbackHandlingManager(rollbackHandlingDataStoreDir, packageVersion);
     }
@@ -160,7 +160,9 @@ public final class RollbackHandlingManager {
         String prefix4 = prefix3 + DUMP_PREFIX;
         for (int i = 0; i < mapSize; i++) {
             writer.printf("%s deletion API type %d:\n", prefix3, mAtomicFileDatastoreMap.keyAt(i));
-            mAtomicFileDatastoreMap.valueAt(i).dump(writer, prefix4);
+            mAtomicFileDatastoreMap
+                    .valueAt(i)
+                    .dump(writer, prefix4, AtomicFileDatastore.DUMP_ARGS_INCLUDE_CONTENTS_ONLY);
         }
     }
 

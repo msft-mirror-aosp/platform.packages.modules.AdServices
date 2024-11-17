@@ -240,6 +240,8 @@ public class CommonClassifierHelper {
      *
      * @return bundled model build_id
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static long getBundledModelBuildId(
             @NonNull Context context, @NonNull String classifierAssetsMetadataPath) {
         InputStream inputStream = null; // InputStream.nullInputStream() is not available on S-.

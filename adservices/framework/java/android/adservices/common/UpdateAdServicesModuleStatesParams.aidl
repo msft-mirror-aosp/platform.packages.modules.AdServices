@@ -20,4 +20,4 @@ package android.adservices.common;
  * Contains data of state for each AdServices modules.
  */
 
-parcelable AdServicesModuleState;
+parcelable UpdateAdServicesModuleStatesParams;

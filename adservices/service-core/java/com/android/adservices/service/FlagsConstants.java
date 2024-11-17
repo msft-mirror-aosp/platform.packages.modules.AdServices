@@ -1690,4 +1690,8 @@ public final class FlagsConstants {
     /** Key to enable winning seller id field in ad selection outcome */
     public static final String KEY_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME =
             "FLEDGE__enable_winning_seller_id_in_ad_selection_outcome";
+
+    /** Key to enable prod debug feature in server auctions */
+    public static final String KEY_FLEDGE_ENABLE_PROD_DEBUG_IN_SERVER_AUCTION =
+            "FLEDGE__enable_prod_debug_in_auction_server";
 }

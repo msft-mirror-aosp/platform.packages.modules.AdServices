@@ -206,6 +206,8 @@ public class BackgroundKeyFetchJobService extends JobService {
      * <p>The key fetch background job fetches fresh encryption key, persists them to
      * EncryptionKeyDb and deletes expired keys.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void scheduleIfNeeded(Context context, Flags flags, boolean forceSchedule) {
         if (!flags.getFledgeAuctionServerBackgroundKeyFetchJobEnabled()) {
             LoggerFactory.getFledgeLogger()
@@ -234,6 +236,8 @@ public class BackgroundKeyFetchJobService extends JobService {
      * <p>Split out from {@link #scheduleIfNeeded(Context, Flags, boolean)} for mockable testing
      * without pesky permissions.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     @VisibleForTesting
     protected static void schedule(Context context, Flags flags) {
         if (!flags.getFledgeAuctionServerBackgroundKeyFetchJobEnabled()) {
