@@ -611,6 +611,12 @@ public final class FlagsConstants {
     public static final String KEY_PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES =
             "key_protected_signals_fetch_signal_updates_max_size_bytes";
 
+    public static final String KEY_FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE =
+            "Fledge__enable_forced_encoding_after_signals_update";
+
+    public static final String KEY_FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS =
+            "Fledge__forced_encoding_after_signals_update_cooldown_seconds";
+
     // FLEDGE Ad Selection keys
     public static final String KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT =
             "fledge_ad_selection_max_concurrent_bidding_count";
