@@ -555,13 +555,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getDeveloperModeFeatureEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_DEVELOPER_MODE_FEATURE_ENABLED,
-                DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED);
-    }
-
-    @Override
     public int getEncryptionKeyNetworkConnectTimeoutMs() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS,
