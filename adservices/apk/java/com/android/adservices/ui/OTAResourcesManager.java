@@ -157,7 +157,6 @@ public class OTAResourcesManager {
     /**
      * This function populates metadata files to a map.
      *
-     * @param context {@link Context}
      * @return A {@link Map} containing downloaded fileId mapped to ClientFile or null if no
      *     downloaded files found.
      */

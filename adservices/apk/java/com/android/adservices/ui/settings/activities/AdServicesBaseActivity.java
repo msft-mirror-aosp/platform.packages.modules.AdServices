@@ -51,8 +51,8 @@ public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivi
                 || FlagsFactory.getFlags().getUiOtaResourcesFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(context, false);
         }
-        if (isUxStatesReady(this)) {
-            mCurUx = initWithUx(this, context);
+        if (isUxStatesReady()) {
+            mCurUx = initWithUx();
         }
     }
 
@@ -62,7 +62,7 @@ public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivi
         // if the intended UX is different from the current UX, then recreate activity to update.
         // This may happen due to non-process stable changes such as PAS notification recorded as
         // displayed in ConsentManager, which requires an updated UX to be displayed.
-        if (isUxStatesReady(this) && getEndUserUx(this) != mCurUx) {
+        if (isUxStatesReady() && getEndUserUx() != mCurUx) {
             recreate();
         }
     }

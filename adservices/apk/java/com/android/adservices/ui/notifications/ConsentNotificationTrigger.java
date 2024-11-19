@@ -132,8 +132,8 @@ public class ConsentNotificationTrigger {
             consentManager.recordUserManualInteractionWithConsent(NO_MANUAL_INTERACTIONS_RECORDED);
         }
 
-        if (isUxStatesReady(context)) {
-            switch (UxUtil.getUx(context)) {
+        if (isUxStatesReady()) {
+            switch (UxUtil.getUx()) {
                 case GA_UX:
                     if (UxStatesManager.getInstance().getFlag(KEY_PAS_UX_ENABLED)) {
                         consentManager.recordPasNotificationDisplayed(true);
@@ -166,8 +166,8 @@ public class ConsentNotificationTrigger {
             boolean gaUxFeatureEnabled,
             ConsentManager consentManager) {
         Notification notification;
-        if (isUxStatesReady(context)) {
-            switch (UxUtil.getUx(context)) {
+        if (isUxStatesReady()) {
+            switch (UxUtil.getUx()) {
                 case GA_UX:
                     if (UxStatesManager.getInstance().getFlag(KEY_PAS_UX_ENABLED)) {
                         notification =
@@ -208,8 +208,8 @@ public class ConsentNotificationTrigger {
             boolean isEuDevice,
             boolean gaUxFeatureEnabled,
             ConsentManager consentManager) {
-        if (isUxStatesReady(context)) {
-            switch (UxUtil.getUx(context)) {
+        if (isUxStatesReady()) {
+            switch (UxUtil.getUx()) {
                 case GA_UX:
                     if (isPasRenotifyUser(consentManager)) {
                         // Is PAS renotify user, respect previous consents.
