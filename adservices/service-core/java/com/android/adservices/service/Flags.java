@@ -1322,6 +1322,26 @@ public interface Flags extends ModuleSharedFlags {
         return PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES;
     }
 
+    @FeatureFlag boolean FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE = false;
+
+    @ConfigFlag
+    long FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS = 4L * 60L * 60L; // 4 hours
+
+    /**
+     * Returns {@code true} if forced encoding directly after a call to updateSignals() is enabled.
+     */
+    default boolean getFledgeEnableForcedEncodingAfterSignalsUpdate() {
+        return FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE;
+    }
+
+    /**
+     * Returns the cooldown period in seconds after any signals encoding during which forced
+     * encoding directly after a call to updateSignals() will not occur.
+     */
+    default long getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds() {
+        return FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS;
+    }
+
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
     int FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT = 9_500;
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT = 1_000;

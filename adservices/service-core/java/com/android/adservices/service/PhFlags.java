@@ -1241,6 +1241,20 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getFledgeEnableForcedEncodingAfterSignalsUpdate() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE,
+                FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE);
+    }
+
+    @Override
+    public long getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS,
+                FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS);
+    }
+
+    @Override
     public int getAdSelectionMaxConcurrentBiddingCount() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT,
