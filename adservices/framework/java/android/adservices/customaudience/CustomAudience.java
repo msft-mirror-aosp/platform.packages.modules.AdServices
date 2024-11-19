@@ -16,6 +16,7 @@
 
 package android.adservices.customaudience;
 
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
 
 import android.adservices.adselection.GetAdSelectionDataRequest;
@@ -357,8 +358,8 @@ public final class CustomAudience implements Parcelable {
      *
      * @return a {@link List} of {@link ComponentAdData} objects representing component ads
      *     currently served by the custom audience
-     * @hide
      */
+    @FlaggedApi(FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
     @NonNull
     public List<ComponentAdData> getComponentAds() {
         return mComponentAds;
@@ -571,9 +572,8 @@ public final class CustomAudience implements Parcelable {
          * Sets the components ads served by the custom audience.
          *
          * <p>See {@link #getComponentAds()} for more information.
-         *
-         * @hide TODO(b/370108832): Replace with flaggedApi
          */
+        @FlaggedApi(FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
         @NonNull
         public CustomAudience.Builder setComponentAds(@NonNull List<ComponentAdData> componentAds) {
             mComponentAds =

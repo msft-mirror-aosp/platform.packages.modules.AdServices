@@ -63,7 +63,7 @@ public final class ComponentAdDataTest extends AdServicesUnitTestCase {
     }
 
     @Test
-    public void testParcelComponentAdDataSuccess() {
+    public void testParcelComponentAdDataSucceeds() {
         ComponentAdData validComponentAdData =
                 new ComponentAdData(VALID_RENDER_URI, AdDataFixture.VALID_RENDER_ID);
 

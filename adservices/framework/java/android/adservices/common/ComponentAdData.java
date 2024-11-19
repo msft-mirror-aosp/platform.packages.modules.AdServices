@@ -16,6 +16,9 @@
 
 package android.adservices.common;
 
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
+
+import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.net.Uri;
 import android.os.Parcel;
@@ -27,9 +30,8 @@ import java.util.Objects;
  * Represents data specific to a component ad that is necessary for ad selection and rendering. This
  * is to support use case for ads composed of multiple pieces, such as an ad displaying multiple
  * products at once.
- *
- * @hide TODO(b/370108832): Replace with flaggedApi
  */
+@FlaggedApi(FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
 public final class ComponentAdData implements Parcelable {
     private final Uri mRenderUri;
     private final String mAdRenderId;
@@ -58,7 +60,6 @@ public final class ComponentAdData implements Parcelable {
      *
      * @param renderUri the URI that points to the component ad's rendering assets.
      * @param adRenderId the component ad render id used for server auctions.
-     * @hide
      */
     public ComponentAdData(@NonNull Uri renderUri, @NonNull String adRenderId) {
         if (adRenderId.isEmpty()) {

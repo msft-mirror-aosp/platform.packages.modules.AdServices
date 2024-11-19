@@ -89,7 +89,7 @@ public final class AdSelectionOutcomeTest extends CtsAdServicesDeviceTestCase {
     }
 
     @Test
-    public void testBuildAdSelectionOutcomeWithAdComponentUris() {
+    public void testBuildAdSelectionOutcomeWithAdComponentUrisSucceeds() {
         AdSelectionOutcome adSelectionOutcome =
                 new AdSelectionOutcome.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
