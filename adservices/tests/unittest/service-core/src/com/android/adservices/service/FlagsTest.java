@@ -81,6 +81,9 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SER
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
+import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP;
+import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES;
+import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
 import static com.android.adservices.shared.testing.AndroidSdk.SC;
@@ -1181,6 +1184,30 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getFledgeUpdateAdCounterHistogramRequestPermitsPerSecond()",
                 FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND,
                 Flags::getFledgeUpdateAdCounterHistogramRequestPermitsPerSecond);
+    }
+
+    @Test
+    public void testGetProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop() {
+        testFlag(
+                "getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop()",
+                PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP,
+                Flags::getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop);
+    }
+
+    @Test
+    public void testGetProtectedSignalsMaxSignalSizePerBuyerBytes() {
+        testFlag(
+                "getProtectedSignalsMaxSignalSizePerBuyerBytes()",
+                PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES,
+                Flags::getProtectedSignalsMaxSignalSizePerBuyerBytes);
+    }
+
+    @Test
+    public void testGetProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes() {
+        testFlag(
+                "getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes()",
+                PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES,
+                Flags::getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
