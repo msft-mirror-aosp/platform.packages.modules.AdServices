@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.devapi;
 
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.DebugFlags;
 import com.android.internal.annotations.VisibleForTesting;
 
 /** Factory that produces {@link DevSessionDataStore}. */
@@ -26,7 +26,7 @@ public class DevSessionDataStoreFactory {
      * @return an instance of {@link DevSessionDataStore}.
      */
     public static DevSessionDataStore get() {
-        return get(FlagsFactory.getFlags().getDeveloperModeFeatureEnabled());
+        return get(DebugFlags.getInstance().getDeveloperSessionFeatureEnabled());
     }
 
     /**
