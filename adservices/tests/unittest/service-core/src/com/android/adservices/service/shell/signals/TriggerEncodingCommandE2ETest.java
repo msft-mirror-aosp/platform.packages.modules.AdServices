@@ -247,7 +247,10 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                         encoderLogicHandler,
                         new EncodingExecutionLogHelperImpl(
                                 logger, Clock.getInstance(), EnrollmentDao.getInstance()),
-                        new EncodingJobRunStatsLoggerImpl(logger, EncodingJobRunStats.builder()),
+                        new EncodingJobRunStatsLoggerImpl(
+                                logger,
+                                EncodingJobRunStats.builder(),
+                                /* FledgeEnableForcedEncodingAfterSignalsUpdate = */ false),
                         mEncoderLogicMetadataDao);
         mProtectedSignalsService =
                 new ProtectedSignalsServiceImpl(
