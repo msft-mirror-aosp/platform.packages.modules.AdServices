@@ -16,13 +16,16 @@
 
 package com.android.adservices.ohttp;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import static org.junit.Assert.assertThrows;
+
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.FlagsFactory;
 import com.android.modules.utils.testing.ExtendedMockitoRule;
 
 import com.google.common.io.BaseEncoding;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -30,7 +33,7 @@ import java.io.IOException;
 import java.security.spec.InvalidKeySpecException;
 
 @ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
-public class ObliviousHttpKeyConfigTest extends AdServicesExtendedMockitoTestCase {
+public final class ObliviousHttpKeyConfigTest extends AdServicesExtendedMockitoTestCase {
 
     @Before
     public void setExpectations() {
@@ -46,75 +49,75 @@ public class ObliviousHttpKeyConfigTest extends AdServicesExtendedMockitoTestCas
 
         ObliviousHttpKeyConfig keyConfig = ObliviousHttpKeyConfig.fromSerializedKeyConfig(bytes);
 
-        Assert.assertEquals(keyConfig.keyId(), 0X01);
-        Assert.assertEquals(keyConfig.kemId(), 0X0020);
+        assertThat(keyConfig.keyId()).isEqualTo(0X01);
+        assertThat(keyConfig.kemId()).isEqualTo(0X0020);
         String publicKeyHex = BaseEncoding.base16().lowerCase().encode(keyConfig.getPublicKey());
-        Assert.assertEquals(
-                publicKeyHex, "31e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e798155");
-        Assert.assertEquals(keyConfig.kdfId(), 0X0001);
-        Assert.assertEquals(keyConfig.aeadId(), 0X0001);
+        assertThat(publicKeyHex)
+                .isEqualTo("31e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e798155");
+        assertThat(keyConfig.kdfId()).isEqualTo(0X0001);
+        assertThat(keyConfig.aeadId()).isEqualTo(0X0001);
     }
 
     @Test
-    public void create_emptyKeyConfig_throwsError() throws InvalidKeySpecException {
+    public void create_emptyKeyConfig_throwsError() {
         String keyConfigHex = "";
         byte[] bytes = BaseEncoding.base16().lowerCase().decode(keyConfigHex);
 
-        Assert.assertThrows(
+        assertThrows(
                 InvalidKeySpecException.class,
                 () -> ObliviousHttpKeyConfig.fromSerializedKeyConfig(bytes));
     }
 
     @Test
-    public void create_wrongKemIdLength_throwsError() throws InvalidKeySpecException {
+    public void create_wrongKemIdLength_throwsError() {
         String keyConfigHex = "0100";
         byte[] bytes = BaseEncoding.base16().lowerCase().decode(keyConfigHex);
 
-        Assert.assertThrows(
+        assertThrows(
                 InvalidKeySpecException.class,
                 () -> ObliviousHttpKeyConfig.fromSerializedKeyConfig(bytes));
     }
 
     @Test
-    public void create_unsupportedKemId_throwsError() throws InvalidKeySpecException {
+    public void create_unsupportedKemId_throwsError() {
         String keyConfigHex = "010002";
         byte[] bytes = BaseEncoding.base16().lowerCase().decode(keyConfigHex);
 
-        Assert.assertThrows(
+        assertThrows(
                 InvalidKeySpecException.class,
                 () -> ObliviousHttpKeyConfig.fromSerializedKeyConfig(bytes));
     }
 
     @Test
-    public void create_wrongPublicKeyLength_throwsError() throws InvalidKeySpecException {
+    public void create_wrongPublicKeyLength_throwsError() {
         String keyConfigHex =
                 "01000231e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e7981";
         byte[] bytes = BaseEncoding.base16().lowerCase().decode(keyConfigHex);
 
-        Assert.assertThrows(
+        assertThrows(
                 InvalidKeySpecException.class,
                 () -> ObliviousHttpKeyConfig.fromSerializedKeyConfig(bytes));
     }
 
     @Test
-    public void create_wrongAlgorithmsLength_throwsError() throws InvalidKeySpecException {
+    public void create_wrongAlgorithmsLength_throwsError() {
         String keyConfigHex =
                 "01000231e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e79815500";
         byte[] bytes = BaseEncoding.base16().lowerCase().decode(keyConfigHex);
 
-        Assert.assertThrows(
+        assertThrows(
                 InvalidKeySpecException.class,
                 () -> ObliviousHttpKeyConfig.fromSerializedKeyConfig(bytes));
     }
 
     @Test
-    public void create_incompleteAlgorithmsList_throwsError() throws InvalidKeySpecException {
+    public void create_incompleteAlgorithmsList_throwsError() {
         String keyConfigHex =
                 "01002031e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e798155"
                         + "000800010001";
         byte[] bytes = BaseEncoding.base16().lowerCase().decode(keyConfigHex);
 
-        Assert.assertThrows(
+        assertThrows(
                 InvalidKeySpecException.class,
                 () -> ObliviousHttpKeyConfig.fromSerializedKeyConfig(bytes));
     }
@@ -129,8 +132,8 @@ public class ObliviousHttpKeyConfigTest extends AdServicesExtendedMockitoTestCas
         ObliviousHttpKeyConfig keyConfig = ObliviousHttpKeyConfig.fromSerializedKeyConfig(bytes);
         byte[] ohttpPayloadHeader = keyConfig.serializeOhttpPayloadHeader();
 
-        Assert.assertEquals(
-                BaseEncoding.base16().lowerCase().encode(ohttpPayloadHeader), "01002000010001");
+        assertThat(BaseEncoding.base16().lowerCase().encode(ohttpPayloadHeader))
+                .isEqualTo("01002000010001");
     }
 
     @Test
@@ -145,9 +148,8 @@ public class ObliviousHttpKeyConfigTest extends AdServicesExtendedMockitoTestCas
         ObliviousHttpKeyConfig keyConfig = ObliviousHttpKeyConfig.fromSerializedKeyConfig(bytes);
         RecipientKeyInfo response = keyConfig.createRecipientKeyInfo(hasMediaTypeChanged);
 
-        Assert.assertEquals(
-                BaseEncoding.base16().lowerCase().encode(response.getBytes()),
-                "6d6573736167652f626874747020726571756573740001002000010001");
+        assertThat(BaseEncoding.base16().lowerCase().encode(response.getBytes()))
+                .isEqualTo("6d6573736167652f626874747020726571756573740001002000010001");
     }
 
     @Test
@@ -162,13 +164,12 @@ public class ObliviousHttpKeyConfigTest extends AdServicesExtendedMockitoTestCas
         ObliviousHttpKeyConfig keyConfig = ObliviousHttpKeyConfig.fromSerializedKeyConfig(bytes);
         RecipientKeyInfo response = keyConfig.createRecipientKeyInfo(hasMediaTypeChanged);
 
-        Assert.assertEquals(
-                "6d6573736167652f61756374696f6e20726571756573740001002000010001",
-                BaseEncoding.base16().lowerCase().encode(response.getBytes()));
+        assertThat(BaseEncoding.base16().lowerCase().encode(response.getBytes()))
+                .isEqualTo("6d6573736167652f61756374696f6e20726571756573740001002000010001");
     }
 
     @Test
-    public void serializeKeyConfigToBytes_fromBuilder_getCorrectSerialization() throws Exception {
+    public void serializeKeyConfigToBytes_fromBuilder_getCorrectSerialization() {
         ObliviousHttpKeyConfig keyConfig =
                 ObliviousHttpKeyConfig.builder()
                         .setKeyId(1)
@@ -188,8 +189,8 @@ public class ObliviousHttpKeyConfigTest extends AdServicesExtendedMockitoTestCas
         String keyConfigHex =
                 "01002031e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e798155"
                         + "000400010001";
-        Assert.assertEquals(
-                BaseEncoding.base16().lowerCase().encode(serializedBytes), keyConfigHex);
+        assertThat(BaseEncoding.base16().lowerCase().encode(serializedBytes))
+                .isEqualTo(keyConfigHex);
     }
 
     @Test
@@ -202,8 +203,8 @@ public class ObliviousHttpKeyConfigTest extends AdServicesExtendedMockitoTestCas
 
         byte[] serializedBytes = keyConfig.serializeKeyConfigToBytes();
 
-        Assert.assertEquals(
-                BaseEncoding.base16().lowerCase().encode(serializedBytes), keyConfigHex);
+        assertThat(BaseEncoding.base16().lowerCase().encode(serializedBytes))
+                .isEqualTo(keyConfigHex);
     }
 
     @Test
@@ -220,7 +221,7 @@ public class ObliviousHttpKeyConfigTest extends AdServicesExtendedMockitoTestCas
         String expectedKeyConfigHex =
                 "01002031e1f05a740102115220e9af918f738674aec95f54db6e04eb705aae8e798155"
                         + "000400010001";
-        Assert.assertEquals(
-                BaseEncoding.base16().lowerCase().encode(serializedBytes), expectedKeyConfigHex);
+        assertThat(BaseEncoding.base16().lowerCase().encode(serializedBytes))
+                .isEqualTo(expectedKeyConfigHex);
     }
 }
