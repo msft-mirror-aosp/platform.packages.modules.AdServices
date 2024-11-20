@@ -19,7 +19,7 @@ package com.android.adservices.adselection;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
 import static com.android.adservices.service.CommonDebugFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_DEVELOPER_MODE_FEATURE_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_DEVELOPER_SESSION_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
@@ -69,7 +69,7 @@ import java.util.concurrent.TimeUnit;
 
 /** Tests to ensure correct behaviour (rejection) from a non-debuggable app during a dev session. */
 @EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
-@SetFlagEnabled(KEY_DEVELOPER_MODE_FEATURE_ENABLED)
+@EnableDebugFlag(KEY_DEVELOPER_SESSION_FEATURE_ENABLED)
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_ENABLED)
 @SetFlagEnabled(KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED)
 @SetFlagDisabled(KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH)
