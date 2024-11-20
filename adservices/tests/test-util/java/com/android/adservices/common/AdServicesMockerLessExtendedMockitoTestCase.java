@@ -310,8 +310,8 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         }
 
         @Override
-        public void mockGetDeveloperModeFeatureEnabled(boolean value) {
-            mAdServicesFlagsMocker.mockGetDeveloperModeFeatureEnabled(value);
+        public void mockGetDeveloperSessionFeatureEnabled(boolean value) {
+            mAdServicesDebugFlagsMocker.mockGetDeveloperSessionFeatureEnabled(value);
         }
 
         // AdServicesDebugFlagsMocker methods
