@@ -3284,23 +3284,23 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Returns true if FLEDGE Custom Audience API methods should require that the calling API is
-     * running in foreground.
+     * Returns true if FLEDGE Custom Audience API methods should require that the caller is running
+     * in foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeCustomAudience() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
     }
 
     /**
-     * Returns true if FetchAndJoin Custom Audience API should require that the calling API is
-     * running in foreground.
+     * Returns true if FetchAndJoin Custom Audience API should require that the caller is running in
+     * foreground.
      */
     default boolean getEnforceForegroundStatusForFetchAndJoinCustomAudience() {
         return ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE;
     }
 
     /**
-     * Returns true if Leave Custom Audience API should require that the calling API is running in
+     * Returns true if Leave Custom Audience API should require that the caller is running in
      * foreground.
      */
     default boolean getEnforceForegroundStatusForLeaveCustomAudience() {
@@ -3308,8 +3308,8 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Returns true if Schedule Custom Audience API should require that the calling API is running
-     * in foreground.
+     * Returns true if Schedule Custom Audience API should require that the caller is running in
+     * foreground.
      */
     default boolean getEnforceForegroundStatusForScheduleCustomAudience() {
         return ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE;
