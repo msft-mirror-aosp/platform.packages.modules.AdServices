@@ -3245,11 +3245,14 @@ public interface Flags extends ModuleSharedFlags {
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE = true;
+    @ConfigFlag boolean ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE = true;
+    @ConfigFlag boolean ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE = true;
+    @ConfigFlag boolean ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE = true;
     boolean ENFORCE_FOREGROUND_STATUS_TOPICS = true;
     boolean ENFORCE_FOREGROUND_STATUS_SIGNALS = true;
 
     /**
-     * Returns true if FLEDGE runAdSelection API should require that the calling API is running in
+     * Returns true if FLEDGE runAdSelection API should require that the caller is running in
      * foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
@@ -3257,7 +3260,7 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Returns true if FLEDGE reportImpression API should require that the calling API is running in
+     * Returns true if FLEDGE reportImpression API should require that the caller is running in
      * foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeReportImpression() {
@@ -3265,8 +3268,8 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Returns true if FLEDGE reportInteraction API should require that the calling API is running
-     * in foreground.
+     * Returns true if FLEDGE reportInteraction API should require that the caller is running in
+     * foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeReportInteraction() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION;
@@ -3274,7 +3277,7 @@ public interface Flags extends ModuleSharedFlags {
 
     /**
      * Returns true if FLEDGE override API methods (for Custom Audience and Ad Selection) should
-     * require that the calling API is running in foreground.
+     * require that the caller is running in foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeOverrides() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES;
@@ -3286,6 +3289,30 @@ public interface Flags extends ModuleSharedFlags {
      */
     default boolean getEnforceForegroundStatusForFledgeCustomAudience() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
+    }
+
+    /**
+     * Returns true if FetchAndJoin Custom Audience API should require that the calling API is
+     * running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForFetchAndJoinCustomAudience() {
+        return ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE;
+    }
+
+    /**
+     * Returns true if Leave Custom Audience API should require that the calling API is running in
+     * foreground.
+     */
+    default boolean getEnforceForegroundStatusForLeaveCustomAudience() {
+        return ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE;
+    }
+
+    /**
+     * Returns true if Schedule Custom Audience API should require that the calling API is running
+     * in foreground.
+     */
+    default boolean getEnforceForegroundStatusForScheduleCustomAudience() {
+        return ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE;
     }
 
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS = true;
