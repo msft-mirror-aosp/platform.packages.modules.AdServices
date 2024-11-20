@@ -581,7 +581,8 @@ package android.adservices.customaudience {
   }
 
   @FlaggedApi("com.android.adservices.flags.fledge_schedule_custom_audience_update_enabled") public static final class ScheduleCustomAudienceUpdateRequest.Builder {
-    ctor public ScheduleCustomAudienceUpdateRequest.Builder(@NonNull android.net.Uri, @NonNull java.time.Duration, @NonNull java.util.List<android.adservices.customaudience.PartialCustomAudience>);
+    ctor @Deprecated public ScheduleCustomAudienceUpdateRequest.Builder(@NonNull android.net.Uri, @NonNull java.time.Duration, @NonNull java.util.List<android.adservices.customaudience.PartialCustomAudience>);
+    ctor @FlaggedApi("com.android.adservices.flags.fledge_enable_schedule_custom_audience_default_partial_custom_audiences_constructor") public ScheduleCustomAudienceUpdateRequest.Builder(@NonNull android.net.Uri, @NonNull java.time.Duration);
     method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest build();
     method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest.Builder setMinDelay(@NonNull java.time.Duration);
     method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest.Builder setPartialCustomAudienceList(@NonNull java.util.List<android.adservices.customaudience.PartialCustomAudience>);
