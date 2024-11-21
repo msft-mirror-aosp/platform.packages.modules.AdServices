@@ -3147,11 +3147,25 @@ public interface Flags extends ModuleSharedFlags {
      */
     float TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND = 1;
 
-    /**
-     * PP API Rate Limit for Fledge Report Interaction API. This is the max allowed QPS for one SDK
-     * to one the Report Interaction API. Negative Value means skipping the rate limiting checking.
+    /*
+     * PP API Rate Limits for Protected Audience/Protected Signals APIs. These are the max allowed
+     * QPS for an app to call a single API. A negative value means skipping the rate limiting
+     * check.
      */
+
+    @ConfigFlag float FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND = 1;
     float FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND = 1;
 
     /** Returns the Sdk Request Permits Per Second. */
     default float getSdkRequestPermitsPerSecond() {
@@ -3203,9 +3217,83 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND;
     }
 
-    /** Returns the Fledge Report Interaction API Request Permits Per Second. */
+    /** Returns the Protected Audience joinCustomAudience() API max request permits per second. */
+    default float getFledgeJoinCustomAudienceRequestPermitsPerSecond() {
+        return FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /**
+     * Returns the Protected Audience fetchAndJoinCustomAudience() API max request permits per
+     * second.
+     */
+    default float getFledgeFetchAndJoinCustomAudienceRequestPermitsPerSecond() {
+        return FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /**
+     * Returns the Protected Audience scheduleCustomAudienceUpdate() API max request permits per
+     * second.
+     */
+    default float getFledgeScheduleCustomAudienceUpdateRequestPermitsPerSecond() {
+        return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Protected Audience leaveCustomAudience() API max request permits per second. */
+    default float getFledgeLeaveCustomAudienceRequestPermitsPerSecond() {
+        return FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Protected Signals updateSignals() API max request permits per second. */
+    default float getFledgeUpdateSignalsRequestPermitsPerSecond() {
+        return FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Protected Audience selectAds() API max request permits per second. */
+    default float getFledgeSelectAdsRequestPermitsPerSecond() {
+        return FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /**
+     * Returns the Protected Audience selectAds() with outcomes API max request permits per second.
+     */
+    default float getFledgeSelectAdsWithOutcomesRequestPermitsPerSecond() {
+        return FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Protected Audience getAdSelectionData() API max request permits per second. */
+    default float getFledgeGetAdSelectionDataRequestPermitsPerSecond() {
+        return FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /**
+     * Returns the Protected Audience persistAdSelectionResult() API max request permits per second.
+     */
+    default float getFledgePersistAdSelectionResultRequestPermitsPerSecond() {
+        return FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Protected Audience reportImpression() API max request permits per second. */
+    default float getFledgeReportImpressionRequestPermitsPerSecond() {
+        return FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Protected Audience reportEvent() API max request permits per second. */
     default float getFledgeReportInteractionRequestPermitsPerSecond() {
         return FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /**
+     * Returns the Protected Audience setAppInstallAdvertisers() API max request permits per second.
+     */
+    default float getFledgeSetAppInstallAdvertisersRequestPermitsPerSecond() {
+        return FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /**
+     * Returns the Protected Audience updateAdCounterHistogram() API max request permits per second.
+     */
+    default float getFledgeUpdateAdCounterHistogramRequestPermitsPerSecond() {
+        return FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND;
     }
 
     // Flags for ad tech enrollment enforcement

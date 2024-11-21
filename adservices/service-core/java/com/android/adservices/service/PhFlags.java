@@ -2216,10 +2216,95 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public float getFledgeJoinCustomAudienceRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeFetchAndJoinCustomAudienceRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeScheduleCustomAudienceUpdateRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants
+                        .KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeLeaveCustomAudienceRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeUpdateSignalsRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeSelectAdsRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeSelectAdsWithOutcomesRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeGetAdSelectionDataRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgePersistAdSelectionResultRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeReportImpressionRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
     public float getFledgeReportInteractionRequestPermitsPerSecond() {
         return getPermitsPerSecond(
                 FlagsConstants.KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND,
                 FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeSetAppInstallAdvertisersRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Override
+    public float getFledgeUpdateAdCounterHistogramRequestPermitsPerSecond() {
+        return getPermitsPerSecond(
+                FlagsConstants.KEY_FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND);
     }
 
     @SuppressWarnings("AvoidSystemPropertiesUsage")
