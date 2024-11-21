@@ -849,6 +849,13 @@ public final class FlagsConstants {
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
             "fledge_ad_selection_enforce_foreground_status_custom_audience";
 
+    public static final String KEY_ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE =
+            "Fledge__enforce_fetch_and_join_custom_audience_foreground_status";
+    public static final String KEY_ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE =
+            "Fledge__enforce_leave_custom_audience_foreground_status";
+    public static final String KEY_ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE =
+            "Fledge__enforce_schedule_custom_audience_foreground_status";
+
     // Protected Signals keys
     public static final String KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED =
             "protected_signals_cleanup_enabled";

@@ -2881,6 +2881,27 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnforceForegroundStatusForFetchAndJoinCustomAudience() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE,
+                ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForLeaveCustomAudience() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE,
+                ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE);
+    }
+
+    @Override
+    public boolean getEnforceForegroundStatusForScheduleCustomAudience() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE,
+                ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE);
+    }
+
+    @Override
     public boolean getFledgeRegisterAdBeaconEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED,
