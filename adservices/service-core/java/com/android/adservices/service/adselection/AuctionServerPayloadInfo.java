@@ -20,12 +20,10 @@ import android.adservices.common.AdTechIdentifier;
 
 import androidx.annotation.NonNull;
 
-import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ConsentedDebugConfiguration;
+import com.android.adservices.service.adselection.debug.AuctionServerDebugConfiguration;
 
 import com.google.auto.value.AutoValue;
 import com.google.common.collect.ImmutableMap;
-
-import java.util.Optional;
 
 /** POJO to hold the payload to be send to bidding and auction servers. */
 @AutoValue
@@ -39,12 +37,8 @@ abstract class AuctionServerPayloadInfo {
 
     abstract long getAdSelectionDataId();
 
-    abstract boolean getDebugReportingEnabled();
-
-    abstract boolean getUnlimitedEgressEnabled();
-
     @NonNull
-    abstract Optional<ConsentedDebugConfiguration> getConsentedDebugConfigurationOptional();
+    abstract AuctionServerDebugConfiguration getAuctionServerDebugConfiguration();
 
     static Builder builder() {
         return new AutoValue_AuctionServerPayloadInfo.Builder();
@@ -61,12 +55,8 @@ abstract class AuctionServerPayloadInfo {
 
         abstract Builder setAdSelectionDataId(long adSelectionDataId);
 
-        abstract Builder setDebugReportingEnabled(boolean isDebugReportingEnabled);
-
-        abstract Builder setUnlimitedEgressEnabled(boolean isUnlimitedEgressEnabled);
-
-        abstract Builder setConsentedDebugConfigurationOptional(
-                @NonNull Optional<ConsentedDebugConfiguration> consentedDebugConfigurationOptional);
+        abstract Builder setAuctionServerDebugConfiguration(
+                @NonNull AuctionServerDebugConfiguration auctionServerDebugConfiguration);
 
         abstract AuctionServerPayloadInfo build();
     }

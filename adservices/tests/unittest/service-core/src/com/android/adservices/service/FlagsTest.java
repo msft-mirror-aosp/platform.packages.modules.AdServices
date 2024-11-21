@@ -31,7 +31,11 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
+import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT;
+import static com.android.adservices.service.Flags.FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
@@ -643,6 +647,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getTopicsCleanDBWhenEpochJobSettingsChanged);
     }
 
+    @Test
+    public void testGetFledgeEnableForcedEncodingAfterSignalsUpdate() {
+        testFeatureFlag(
+                "FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE",
+                Flags::getFledgeEnableForcedEncodingAfterSignalsUpdate);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //
@@ -819,12 +830,6 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFeatureFlag(
                 "DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED",
                 Flags::getAdServicesConsentBusinessLogicMigrationEnabled);
-    }
-
-    @Test
-    public void testGetDeveloperModeFeatureEnabled() {
-        testFeatureFlag(
-                "DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED", Flags::getDeveloperModeFeatureEnabled);
     }
 
     @Test
@@ -1053,6 +1058,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getFledgeScheduleCustomAudienceUpdateMaxBytes);
     }
 
+    @Test
+    public void testGetFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds() {
+        testFlag(
+                "getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds()",
+                FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS,
+                Flags::getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Internal helpers and tests - do not add new tests for flags following this point.          //
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1105,6 +1118,30 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getFledgeCustomAudiencePerBuyerMaxCount",
                 FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT,
                 Flags::getFledgeCustomAudiencePerBuyerMaxCount);
+    }
+
+    @Test
+    public void testGetEnforceForegroundStatusForFetchAndJoinCustomAudience() {
+        testFlag(
+                "getEnforceForegroundStatusForFetchAndJoinCustomAudience",
+                ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE,
+                Flags::getEnforceForegroundStatusForFetchAndJoinCustomAudience);
+    }
+
+    @Test
+    public void testGetEnforceForegroundStatusForLeaveCustomAudience() {
+        testFlag(
+                "getEnforceForegroundStatusForLeaveCustomAudience",
+                ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE,
+                Flags::getEnforceForegroundStatusForLeaveCustomAudience);
+    }
+
+    @Test
+    public void testGetEnforceForegroundStatusForScheduleCustomAudience() {
+        testFlag(
+                "getEnforceForegroundStatusForScheduleCustomAudience",
+                ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE,
+                Flags::getEnforceForegroundStatusForScheduleCustomAudience);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {

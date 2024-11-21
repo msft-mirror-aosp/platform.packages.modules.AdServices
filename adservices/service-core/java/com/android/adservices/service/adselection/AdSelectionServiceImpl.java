@@ -88,6 +88,7 @@ import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdWorker;
+import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -112,7 +113,6 @@ import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.profiling.Tracing;
-import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -190,12 +190,11 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     + " the app is not debuggable.";
     @NonNull private final RetryStrategyFactory mRetryStrategyFactory;
 
-    @NonNull
-    private final ConsentedDebugConfigurationGeneratorFactory
-            mConsentedDebugConfigurationGeneratorFactory;
-
-    @NonNull private final EgressConfigurationGenerator mEgressConfigurationGenerator;
     private final boolean mConsoleMessageInLogsEnabled;
+
+    @NonNull
+    private final AuctionServerDebugConfigurationGenerator
+            mAuctionServerDebugConfigurationGenerator;
 
     @VisibleForTesting
     public AdSelectionServiceImpl(
@@ -226,11 +225,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             @NonNull KAnonSignJoinFactory kAnonSignJoinFactory,
             boolean shouldUseUnifiedTables,
             @NonNull RetryStrategyFactory retryStrategyFactory,
+            boolean consoleMessageInLogsEnabled,
             @NonNull
-                    ConsentedDebugConfigurationGeneratorFactory
-                            consentedDebugConfigurationGeneratorFactory,
-            @NonNull EgressConfigurationGenerator egressConfigurationGenerator,
-            boolean consoleMessageInLogsEnabled) {
+                    AuctionServerDebugConfigurationGenerator
+                            auctionServerDebugConfigurationGenerator) {
         Objects.requireNonNull(context, "Context must be provided.");
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(appInstallDao);
@@ -254,8 +252,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         Objects.requireNonNull(adIdFetcher);
         Objects.requireNonNull(kAnonSignJoinFactory);
         Objects.requireNonNull(retryStrategyFactory);
-        Objects.requireNonNull(consentedDebugConfigurationGeneratorFactory);
-        Objects.requireNonNull(egressConfigurationGenerator);
+        Objects.requireNonNull(auctionServerDebugConfigurationGenerator);
 
         mAdSelectionEntryDao = adSelectionEntryDao;
         mAppInstallDao = appInstallDao;
@@ -286,12 +283,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         mShouldUseUnifiedTables = shouldUseUnifiedTables;
         mKAnonSignJoinFactory = kAnonSignJoinFactory;
         mRetryStrategyFactory = retryStrategyFactory;
-        mConsentedDebugConfigurationGeneratorFactory = consentedDebugConfigurationGeneratorFactory;
-        mEgressConfigurationGenerator = egressConfigurationGenerator;
+        mAuctionServerDebugConfigurationGenerator = auctionServerDebugConfigurationGenerator;
         mConsoleMessageInLogsEnabled = consoleMessageInLogsEnabled;
     }
 
     /** Creates a new instance of {@link AdSelectionServiceImpl}. */
+    @SuppressWarnings("AvoidStaticContext") // Factory method
     public static AdSelectionServiceImpl create(@NonNull Context context) {
         return new AdSelectionServiceImpl(context);
     }
@@ -358,31 +355,41 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         BinderFlagReader.readFlag(
                                 () -> FlagsFactory.getFlags().getAdServicesRetryStrategyEnabled()),
                         AdServicesExecutors.getLightWeightExecutor()),
-                new ConsentedDebugConfigurationGeneratorFactory(
+                BinderFlagReader.readFlag(
+                        () ->
+                                DebugFlags.getInstance()
+                                        .getAdServicesJsIsolateConsoleMessagesInLogsEnabled()),
+                new AuctionServerDebugConfigurationGenerator(
+                        BinderFlagReader.readFlag(
+                                () -> FlagsFactory.getFlags().getAdIdKillSwitch()),
                         BinderFlagReader.readFlag(
                                 () ->
-                                        DebugFlags.getInstance()
-                                                .getFledgeAuctionServerConsentedDebuggingEnabled()),
-                        AdSelectionDatabase.getInstance().consentedDebugConfigurationDao()),
-                EgressConfigurationGenerator.createInstance(
+                                        FlagsFactory.getFlags()
+                                                .getFledgeAuctionServerAdIdFetcherTimeoutMs()),
+                        BinderFlagReader.readFlag(
+                                () ->
+                                        FlagsFactory.getFlags()
+                                                .getFledgeAuctionServerEnableDebugReporting()),
                         BinderFlagReader.readFlag(
                                 () ->
                                         FlagsFactory.getFlags()
                                                 .getFledgeAuctionServerEnablePasUnlimitedEgress()),
+                        BinderFlagReader.readFlag(
+                                () -> FlagsFactory.getFlags().getEnableProdDebugInAuctionServer()),
                         new AdIdFetcher(
                                 context,
                                 AdIdWorker.getInstance(),
                                 AdServicesExecutors.getLightWeightExecutor(),
                                 AdServicesExecutors.getScheduler()),
-                        BinderFlagReader.readFlag(
-                                () ->
-                                        FlagsFactory.getFlags()
-                                                .getFledgeAuctionServerAdIdFetcherTimeoutMs()),
-                        AdServicesExecutors.getLightWeightExecutor()),
-                BinderFlagReader.readFlag(
-                        () ->
-                                DebugFlags.getInstance()
-                                        .getAdServicesJsIsolateConsoleMessagesInLogsEnabled()));
+                        new ConsentedDebugConfigurationGeneratorFactory(
+                                        BinderFlagReader.readFlag(
+                                                () ->
+                                                        DebugFlags.getInstance()
+                                                                .getFledgeAuctionServerConsentedDebuggingEnabled()),
+                                        AdSelectionDatabase.getInstance()
+                                                .consentedDebugConfigurationDao())
+                                .create(),
+                        AdServicesExecutors.getLightWeightExecutor()));
     }
 
     @Override
@@ -654,101 +661,32 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             int e2eTraceCookie) {
         int offBinderThreadTraceCookie =
                 Tracing.beginAsyncSection(Tracing.GET_AD_SELECTION_DATA_OFF_BINDER_THREAD);
-
-        ListenableFuture<AuctionServerDebugReporting> auctionServerDebugReportingFuture =
-                AuctionServerDebugReporting.createInstance(
+        GetAdSelectionDataRunner runner =
+                new GetAdSelectionDataRunner(
+                        mContext,
+                        e2eTraceCookie,
+                        mMultiCloudSupportStrategy,
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mEncodedPayloadDao,
+                        mAdSelectionServiceFilter,
+                        mAdFilteringFeatureFactory.getFrequencyCapAdFilterer(),
+                        mBackgroundExecutor,
+                        mLightweightExecutor,
+                        AdServicesExecutors.getBlockingExecutor(),
+                        mScheduledExecutor,
                         mFlags,
-                        mAdIdFetcher,
-                        inputParams.getCallerPackageName(),
+                        mDebugFlags,
                         callingUid,
-                        mLightweightExecutor);
-
-        FluentFuture.from(auctionServerDebugReportingFuture)
-                .addCallback(
-                        new FutureCallback<>() {
-                            @Override
-                            public void onSuccess(
-                                    AuctionServerDebugReporting auctionServerDebugReporting) {
-                                sLogger.v(
-                                        "Auction Server Debug reporting enabled: %b",
-                                        auctionServerDebugReporting.isEnabled());
-
-                                GetAdSelectionDataRunner runner =
-                                        new GetAdSelectionDataRunner(
-                                                mContext,
-                                                e2eTraceCookie,
-                                                mMultiCloudSupportStrategy,
-                                                mAdSelectionEntryDao,
-                                                mCustomAudienceDao,
-                                                mEncodedPayloadDao,
-                                                mAdSelectionServiceFilter,
-                                                mAdFilteringFeatureFactory
-                                                        .getFrequencyCapAdFilterer(),
-                                                mBackgroundExecutor,
-                                                mLightweightExecutor,
-                                                AdServicesExecutors.getBlockingExecutor(),
-                                                mScheduledExecutor,
-                                                mFlags,
-                                                mDebugFlags,
-                                                callingUid,
-                                                devContext,
-                                                auctionServerDebugReporting,
-                                                adsRelevanceExecutionLogger,
-                                                mAdServicesLogger,
-                                                getAuctionServerPayloadMetricsStrategy(mFlags),
-                                                mConsentedDebugConfigurationGeneratorFactory
-                                                        .create(),
-                                                mEgressConfigurationGenerator,
-                                                mAdFilteringFeatureFactory
-                                                        .getAppInstallAdFilterer());
-                                Tracing.endAsyncSection(
-                                        Tracing.GET_AD_SELECTION_DATA_OFF_BINDER_THREAD,
-                                        offBinderThreadTraceCookie);
-                                runner.run(inputParams, callback);
-                            }
-
-                            @Override
-                            public void onFailure(Throwable t) {
-                                sLogger.e(
-                                        t,
-                                        "Failed to create Auction Server Debug Reporting instance,"
-                                                + " debug reporting is disabled");
-                                GetAdSelectionDataRunner runner =
-                                        new GetAdSelectionDataRunner(
-                                                mContext,
-                                                e2eTraceCookie,
-                                                mMultiCloudSupportStrategy,
-                                                mAdSelectionEntryDao,
-                                                mCustomAudienceDao,
-                                                mEncodedPayloadDao,
-                                                mAdSelectionServiceFilter,
-                                                mAdFilteringFeatureFactory
-                                                        .getFrequencyCapAdFilterer(),
-                                                mBackgroundExecutor,
-                                                mLightweightExecutor,
-                                                AdServicesExecutors.getBlockingExecutor(),
-                                                mScheduledExecutor,
-                                                mFlags,
-                                                mDebugFlags,
-                                                callingUid,
-                                                devContext,
-                                                AuctionServerDebugReporting
-                                                        .createForDebugReportingDisabled(),
-                                                adsRelevanceExecutionLogger,
-                                                mAdServicesLogger,
-                                                getAuctionServerPayloadMetricsStrategy(mFlags),
-                                                mConsentedDebugConfigurationGeneratorFactory
-                                                        .create(),
-                                                mEgressConfigurationGenerator,
-                                                mAdFilteringFeatureFactory
-                                                        .getAppInstallAdFilterer());
-                                Tracing.endAsyncSection(
-                                        Tracing.GET_AD_SELECTION_DATA_OFF_BINDER_THREAD,
-                                        offBinderThreadTraceCookie);
-                                runner.run(inputParams, callback);
-                            }
-                        },
-                        mLightweightExecutor);
+                        devContext,
+                        adsRelevanceExecutionLogger,
+                        mAdServicesLogger,
+                        getAuctionServerPayloadMetricsStrategy(mFlags),
+                        mAdFilteringFeatureFactory.getAppInstallAdFilterer(),
+                        mAuctionServerDebugConfigurationGenerator);
+        Tracing.endAsyncSection(
+                Tracing.GET_AD_SELECTION_DATA_OFF_BINDER_THREAD, offBinderThreadTraceCookie);
+        runner.run(inputParams, callback);
     }
 
     private AuctionServerPayloadMetricsStrategy getAuctionServerPayloadMetricsStrategy(

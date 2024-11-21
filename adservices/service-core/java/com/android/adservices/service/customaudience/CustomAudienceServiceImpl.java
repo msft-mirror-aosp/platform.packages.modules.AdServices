@@ -145,6 +145,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     }
 
     /** Creates a new instance of {@link CustomAudienceServiceImpl}. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static CustomAudienceServiceImpl create(@NonNull Context context) {
         return new CustomAudienceServiceImpl(context);
     }

@@ -1322,6 +1322,26 @@ public interface Flags extends ModuleSharedFlags {
         return PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES;
     }
 
+    @FeatureFlag boolean FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE = false;
+
+    @ConfigFlag
+    long FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS = 4L * 60L * 60L; // 4 hours
+
+    /**
+     * Returns {@code true} if forced encoding directly after a call to updateSignals() is enabled.
+     */
+    default boolean getFledgeEnableForcedEncodingAfterSignalsUpdate() {
+        return FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE;
+    }
+
+    /**
+     * Returns the cooldown period in seconds after any signals encoding during which forced
+     * encoding directly after a call to updateSignals() will not occur.
+     */
+    default long getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds() {
+        return FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS;
+    }
+
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
     int FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT = 9_500;
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT = 1_000;
@@ -2057,15 +2077,6 @@ public interface Flags extends ModuleSharedFlags {
 
     default boolean getAdServicesEnabled() {
         return ADSERVICES_ENABLED;
-    }
-
-    @FeatureFlag boolean DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED = false;
-
-    /**
-     * @return {@code true} if the developer mode feature is enabled on this device.
-     */
-    default boolean getDeveloperModeFeatureEnabled() {
-        return DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED;
     }
 
     /**
@@ -3234,11 +3245,14 @@ public interface Flags extends ModuleSharedFlags {
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE = true;
+    @ConfigFlag boolean ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE = true;
+    @ConfigFlag boolean ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE = true;
+    @ConfigFlag boolean ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE = true;
     boolean ENFORCE_FOREGROUND_STATUS_TOPICS = true;
     boolean ENFORCE_FOREGROUND_STATUS_SIGNALS = true;
 
     /**
-     * Returns true if FLEDGE runAdSelection API should require that the calling API is running in
+     * Returns true if FLEDGE runAdSelection API should require that the caller is running in
      * foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
@@ -3246,7 +3260,7 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Returns true if FLEDGE reportImpression API should require that the calling API is running in
+     * Returns true if FLEDGE reportImpression API should require that the caller is running in
      * foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeReportImpression() {
@@ -3254,8 +3268,8 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Returns true if FLEDGE reportInteraction API should require that the calling API is running
-     * in foreground.
+     * Returns true if FLEDGE reportInteraction API should require that the caller is running in
+     * foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeReportInteraction() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION;
@@ -3263,7 +3277,7 @@ public interface Flags extends ModuleSharedFlags {
 
     /**
      * Returns true if FLEDGE override API methods (for Custom Audience and Ad Selection) should
-     * require that the calling API is running in foreground.
+     * require that the caller is running in foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeOverrides() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES;
@@ -3275,6 +3289,30 @@ public interface Flags extends ModuleSharedFlags {
      */
     default boolean getEnforceForegroundStatusForFledgeCustomAudience() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
+    }
+
+    /**
+     * Returns true if FetchAndJoin Custom Audience API should require that the calling API is
+     * running in foreground.
+     */
+    default boolean getEnforceForegroundStatusForFetchAndJoinCustomAudience() {
+        return ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE;
+    }
+
+    /**
+     * Returns true if Leave Custom Audience API should require that the calling API is running in
+     * foreground.
+     */
+    default boolean getEnforceForegroundStatusForLeaveCustomAudience() {
+        return ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE;
+    }
+
+    /**
+     * Returns true if Schedule Custom Audience API should require that the calling API is running
+     * in foreground.
+     */
+    default boolean getEnforceForegroundStatusForScheduleCustomAudience() {
+        return ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE;
     }
 
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS = true;
@@ -5891,6 +5929,13 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns if the winning seller id in AdSelectionOutcome is enabled. */
     default boolean getEnableWinningSellerIdInAdSelectionOutcome() {
         return DEFAULT_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME;
+    }
+
+    boolean DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER = false;
+
+    /** Returns if the prod debug feature is enabled for server auctions. */
+    default boolean getEnableProdDebugInAuctionServer() {
+        return DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

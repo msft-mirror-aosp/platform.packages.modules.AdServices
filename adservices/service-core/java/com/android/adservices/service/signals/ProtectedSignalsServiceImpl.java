@@ -220,6 +220,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
     }
 
     /** Creates a new instance of {@link ProtectedSignalsServiceImpl}. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static ProtectedSignalsServiceImpl create(@NonNull Context context) {
         return new ProtectedSignalsServiceImpl(context);
     }
@@ -383,7 +385,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                         buyer,
                                         input.getCallerPackageName(),
                                         devContext,
-                                        UpdateSignalsApiCalledStats.builder(),
+                                        jsonProcessingStatsBuilder,
                                         updateSignalsProcessReportedLogger)
                                 .get();
                         PeriodicEncodingJobService.scheduleIfNeeded(mContext, mFlags, false);

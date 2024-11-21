@@ -611,6 +611,12 @@ public final class FlagsConstants {
     public static final String KEY_PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES =
             "key_protected_signals_fetch_signal_updates_max_size_bytes";
 
+    public static final String KEY_FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE =
+            "Fledge__enable_forced_encoding_after_signals_update";
+
+    public static final String KEY_FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS =
+            "Fledge__forced_encoding_after_signals_update_cooldown_seconds";
+
     // FLEDGE Ad Selection keys
     public static final String KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT =
             "fledge_ad_selection_max_concurrent_bidding_count";
@@ -843,6 +849,13 @@ public final class FlagsConstants {
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
             "fledge_ad_selection_enforce_foreground_status_custom_audience";
 
+    public static final String KEY_ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE =
+            "Fledge__enforce_fetch_and_join_custom_audience_foreground_status";
+    public static final String KEY_ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE =
+            "Fledge__enforce_leave_custom_audience_foreground_status";
+    public static final String KEY_ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE =
+            "Fledge__enforce_schedule_custom_audience_foreground_status";
+
     // Protected Signals keys
     public static final String KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED =
             "protected_signals_cleanup_enabled";
@@ -1060,10 +1073,6 @@ public final class FlagsConstants {
 
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
     public static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
-
-    // If the developer session feature is enabled.
-    public static final String KEY_DEVELOPER_MODE_FEATURE_ENABLED =
-            "CommonInfra__enable_developer_mode";
 
     // Max response payload size allowed per source/trigger registration
     public static final String KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES =
@@ -1685,9 +1694,13 @@ public final class FlagsConstants {
 
     /** Key to enable report event for component seller as one of the destination. */
     public static final String KEY_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER =
-            "FLEDGE__enable_report_event_for_component_seller";
+            "Fledge__enable_report_event_for_component_seller";
 
     /** Key to enable winning seller id field in ad selection outcome */
     public static final String KEY_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME =
-            "FLEDGE__enable_winning_seller_id_in_ad_selection_outcome";
+            "Fledge__enable_winning_seller_id_in_ad_selection_outcome";
+
+    /** Key to enable prod debug feature in server auctions */
+    public static final String KEY_FLEDGE_ENABLE_PROD_DEBUG_IN_SERVER_AUCTION =
+            "Fledge__enable_prod_debug_in_auction_server";
 }
