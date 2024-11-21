@@ -18,9 +18,7 @@ package com.android.adservices.data.signals;
 
 import static android.database.sqlite.SQLiteDatabase.CONFLICT_FAIL;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.CommonFixture;
 import android.app.Instrumentation;
@@ -31,44 +29,46 @@ import androidx.room.testing.MigrationTestHelper;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Rule;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.List;
 
-public class ProtectedSignalsDatabaseMigrationTest {
+@RequiresSdkLevelAtLeastT
+public final class ProtectedSignalsDatabaseMigrationTest extends AdServicesUnitTestCase {
     private static final String TEST_DB = "migration-test";
     private static final Instrumentation INSTRUMENTATION =
             InstrumentationRegistry.getInstrumentation();
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
-
-    @Rule(order = 1)
+    @Rule(order = 11)
     public MigrationTestHelper helper =
             new MigrationTestHelper(INSTRUMENTATION, ProtectedSignalsDatabase.class);
 
     @Test
-    public void testMigration1To2() throws IOException {
+    public void testMigration1To2() throws Exception {
         try (SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 1)) {
             List<String> tables = listTables(db);
-            assertTrue(tables.contains(DBProtectedSignal.TABLE_NAME));
-            assertFalse(tables.contains(DBEncoderLogicMetadata.TABLE_NAME));
-            assertFalse(tables.contains(DBEncodedPayload.TABLE_NAME));
-            assertFalse(tables.contains(DBEncoderEndpoint.TABLE_NAME));
+            assertThat(tables).contains(DBProtectedSignal.TABLE_NAME);
+            assertThat(tables)
+                    .containsNoneOf(
+                            DBEncoderLogicMetadata.TABLE_NAME,
+                            DBEncodedPayload.TABLE_NAME,
+                            DBEncoderEndpoint.TABLE_NAME);
         }
         // Re-open the database with version 2.
         try (SupportSQLiteDatabase db = helper.runMigrationsAndValidate(TEST_DB, 2, true)) {
             List<String> tables = listTables(db);
-            assertTrue(tables.contains(DBProtectedSignal.TABLE_NAME));
-            assertTrue(tables.contains(DBEncoderLogicMetadata.TABLE_NAME));
-            assertTrue(tables.contains(DBEncodedPayload.TABLE_NAME));
-            assertTrue(tables.contains(DBEncoderEndpoint.TABLE_NAME));
+            assertThat(tables)
+                    .containsAtLeast(
+                            DBProtectedSignal.TABLE_NAME,
+                            DBEncoderLogicMetadata.TABLE_NAME,
+                            DBEncodedPayload.TABLE_NAME,
+                            DBEncoderEndpoint.TABLE_NAME);
         }
     }
 
@@ -83,10 +83,10 @@ public class ProtectedSignalsDatabaseMigrationTest {
     }
 
     @Test
-    public void testMigration2To3() throws IOException {
-        final String encoderLogicMetadataTable = "encoder_logics";
-        final int version = 2;
-        final int failedEncodingCount = 3;
+    public void testMigration2To3() throws Exception {
+        String encoderLogicMetadataTable = "encoder_logics";
+        int version = 2;
+        int failedEncodingCount = 3;
         try (SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 2)) {
             ContentValues contentValuesV2 = new ContentValues();
 
@@ -98,11 +98,11 @@ public class ProtectedSignalsDatabaseMigrationTest {
         // Re-open the database with version 3.
         try (SupportSQLiteDatabase db = helper.runMigrationsAndValidate(TEST_DB, 3, true)) {
             Cursor c = db.query("SELECT * FROM " + encoderLogicMetadataTable);
-            assertEquals(1, c.getCount());
+            assertThat(c.getCount()).isEqualTo(1);
             c.moveToFirst();
 
             int failedEncodingCountIndex = c.getColumnIndex("failed_encoding_count");
-            assertEquals(0, c.getInt(failedEncodingCountIndex));
+            assertThat(c.getInt(failedEncodingCountIndex)).isEqualTo(0);
 
             ContentValues contentValuesV3 = new ContentValues();
             contentValuesV3.put("buyer", CommonFixture.VALID_BUYER_2.toString());
@@ -117,32 +117,37 @@ public class ProtectedSignalsDatabaseMigrationTest {
                                     + " WHERE buyer = '"
                                     + CommonFixture.VALID_BUYER_2
                                     + "'");
-            assertEquals(1, c.getCount());
+            assertThat(c.getCount()).isEqualTo(1);
             c.moveToFirst();
-            assertEquals(3, c.getInt(c.getColumnIndex("failed_encoding_count")));
-            assertEquals(
-                    CommonFixture.VALID_BUYER_2.toString(), c.getString(c.getColumnIndex("buyer")));
+            assertThat(c.getInt(c.getColumnIndex("failed_encoding_count"))).isEqualTo(3);
+            assertThat(c.getString(c.getColumnIndex("buyer")))
+                    .isEqualTo(CommonFixture.VALID_BUYER_2.toString());
         }
     }
 
     @Test
-    public void testMigration3To4() throws IOException {
+    public void testMigration3To4() throws Exception {
         try (SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 3)) {
             List<String> tables = listTables(db);
-            assertTrue(tables.contains(DBProtectedSignal.TABLE_NAME));
-            assertTrue(tables.contains(DBEncoderLogicMetadata.TABLE_NAME));
-            assertTrue(tables.contains(DBEncodedPayload.TABLE_NAME));
-            assertTrue(tables.contains(DBEncoderEndpoint.TABLE_NAME));
-            assertFalse(tables.contains(DBSignalsUpdateMetadata.TABLE_NAME));
+            assertThat(tables)
+                    .containsAtLeast(
+                            DBProtectedSignal.TABLE_NAME,
+                            DBEncoderLogicMetadata.TABLE_NAME,
+                            DBEncodedPayload.TABLE_NAME,
+                            DBEncoderEndpoint.TABLE_NAME);
+            assertThat(tables).doesNotContain(DBSignalsUpdateMetadata.TABLE_NAME);
         }
+
         // Re-open the database with version 4.
         try (SupportSQLiteDatabase db = helper.runMigrationsAndValidate(TEST_DB, 4, true)) {
             List<String> tables = listTables(db);
-            assertTrue(tables.contains(DBProtectedSignal.TABLE_NAME));
-            assertTrue(tables.contains(DBEncoderLogicMetadata.TABLE_NAME));
-            assertTrue(tables.contains(DBEncodedPayload.TABLE_NAME));
-            assertTrue(tables.contains(DBEncoderEndpoint.TABLE_NAME));
-            assertTrue(tables.contains(DBSignalsUpdateMetadata.TABLE_NAME));
+            assertThat(tables)
+                    .containsAtLeast(
+                            DBProtectedSignal.TABLE_NAME,
+                            DBEncoderLogicMetadata.TABLE_NAME,
+                            DBEncodedPayload.TABLE_NAME,
+                            DBEncoderEndpoint.TABLE_NAME,
+                            DBSignalsUpdateMetadata.TABLE_NAME);
         }
     }
 }
