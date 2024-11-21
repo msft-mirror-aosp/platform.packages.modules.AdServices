@@ -100,11 +100,7 @@ public class AdSelectionOutcome {
         return mWinningSeller;
     }
 
-    /**
-     * Returns the ad component renderUris that are returned by this auction, if any.
-     *
-     * @hide
-     */
+    /** Returns the ad component renderUris that are returned by this auction. */
     @FlaggedApi(Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
     @NonNull
     public List<Uri> getComponentAdUris() {
@@ -177,8 +173,6 @@ public class AdSelectionOutcome {
 
         /**
          * Sets the list of ad component renderUris.
-         *
-         * @hide
          */
         @FlaggedApi(Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
         @NonNull
