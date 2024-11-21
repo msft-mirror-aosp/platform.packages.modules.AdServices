@@ -610,6 +610,14 @@ public final class FlagsConstants {
             "protected_signals_encoder_refresh_window_seconds";
     public static final String KEY_PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES =
             "key_protected_signals_fetch_signal_updates_max_size_bytes";
+    public static final String
+            KEY_PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP =
+                    "Fledge__protected_signals_failed_encoding_max_count";
+    public static final String KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES =
+            "Fledge__protected_signals_raw_signals_max_size_per_buyer_bytes";
+    public static final String
+            KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES =
+                    "Fledge__protected_signals_raw_signals_max_oversubscribed_size_per_buyer_bytes";
 
     public static final String KEY_FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE =
             "Fledge__enable_forced_encoding_after_signals_update";
