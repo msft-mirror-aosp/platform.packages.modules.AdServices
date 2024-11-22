@@ -93,6 +93,7 @@ public class SdkSandboxRestrictionsTestApp {
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(
                         Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG,
                         Manifest.permission.READ_DEVICE_CONFIG);
 
         mConfigListener = new ConfigListener();

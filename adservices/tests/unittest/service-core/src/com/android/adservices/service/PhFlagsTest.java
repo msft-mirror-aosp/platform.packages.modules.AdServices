@@ -279,6 +279,7 @@ import static com.android.adservices.service.Flags.FLEDGE_EVENT_LEVEL_DEBUG_REPO
 import static com.android.adservices.service.Flags.FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH;
 import static com.android.adservices.service.Flags.FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY;
+import static com.android.adservices.service.Flags.FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B;
 import static com.android.adservices.service.Flags.FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_REQUEST_CUSTOM_HEADER_SIZE_B;
@@ -291,16 +292,20 @@ import static com.android.adservices.service.Flags.FLEDGE_FREQUENCY_CAP_FILTERIN
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
+import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
 import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
 import static com.android.adservices.service.Flags.FLEDGE_HTTP_CACHE_MAX_ENTRIES;
+import static com.android.adservices.service.Flags.FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED;
+import static com.android.adservices.service.Flags.FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
 import static com.android.adservices.service.Flags.FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
+import static com.android.adservices.service.Flags.FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.FLEDGE_REGISTER_AD_BEACON_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_API_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B;
@@ -308,14 +313,21 @@ import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_MAX_
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B;
+import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES;
 import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
+import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.FLEDGE_SELECT_ADS_FROM_OUTCOMES_API_METRICS_ENABLED;
 import static com.android.adservices.service.Flags.FLEDGE_SELECT_ADS_KILL_SWITCH;
+import static com.android.adservices.service.Flags.FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.FOREGROUND_STATUS_LEVEL;
 import static com.android.adservices.service.Flags.GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.Flags.GET_ADSERVICES_COMMON_STATES_ALLOW_LIST;
@@ -534,6 +546,9 @@ import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_ENABLED;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES;
+import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP;
+import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES;
+import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS;
 import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
@@ -760,6 +775,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEV
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_MAX_ITEMS_PER_BATCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_REQUEST_CUSTOM_HEADER_SIZE_B;
@@ -772,11 +788,13 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FREQUENCY
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_DEFAULT_MAX_AGE_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE_JS_CACHING;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_MAX_ENTRIES;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE;
@@ -795,10 +813,12 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_REG
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_BATCH_SIZE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_API_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B;
@@ -806,14 +826,21 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IM
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_FROM_OUTCOMES_API_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.FlagsConstants.KEY_FOREGROUND_STATUS_LEVEL;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST;
@@ -1074,6 +1101,9 @@ import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNAL
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENCODED_PAYLOAD_MAX_SIZE_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENCODER_REFRESH_WINDOW_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES;
+import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP;
+import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES;
+import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_FLEX_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
@@ -2527,6 +2557,30 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testGetProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP,
+                PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP,
+                Flags::getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop);
+    }
+
+    @Test
+    public void testGetProtectedSignalsMaxSignalSizePerBuyerBytes() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES,
+                PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES,
+                Flags::getProtectedSignalsMaxSignalSizePerBuyerBytes);
+    }
+
+    @Test
+    public void testGetProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES,
+                PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES,
+                Flags::getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes);
+    }
+
+    @Test
     public void testGetFledgeEnableForcedEncodingAfterSignalsUpdate() {
         mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE,
@@ -3367,6 +3421,116 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testGetFledgeJoinCustomAudienceRequestPermitsPerSecond() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeJoinCustomAudienceRequestPermitsPerSecond);
+
+        assertThat(mTestFlags.getFledgeJoinCustomAudienceRequestPermitsPerSecond())
+                .isEqualTo(FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Test
+    public void testGetFledgeFetchAndJoinCustomAudienceRequestPermitsPerSecond() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeFetchAndJoinCustomAudienceRequestPermitsPerSecond);
+
+        assertThat(mTestFlags.getFledgeFetchAndJoinCustomAudienceRequestPermitsPerSecond())
+                .isEqualTo(FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Test
+    public void testGetFledgeScheduleCustomAudienceUpdateRequestPermitsPerSecond() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeScheduleCustomAudienceUpdateRequestPermitsPerSecond);
+
+        assertThat(mTestFlags.getFledgeScheduleCustomAudienceUpdateRequestPermitsPerSecond())
+                .isEqualTo(FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Test
+    public void testGetFledgeLeaveCustomAudienceRequestPermitsPerSecond() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeLeaveCustomAudienceRequestPermitsPerSecond);
+
+        assertThat(mTestFlags.getFledgeLeaveCustomAudienceRequestPermitsPerSecond())
+                .isEqualTo(FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Test
+    public void testGetFledgeUpdateSignalsRequestPermitsPerSecond() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeUpdateSignalsRequestPermitsPerSecond);
+
+        assertThat(mTestFlags.getFledgeUpdateSignalsRequestPermitsPerSecond())
+                .isEqualTo(FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Test
+    public void testGetFledgeSelectAdsRequestPermitsPerSecond() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeSelectAdsRequestPermitsPerSecond);
+
+        assertThat(mTestFlags.getFledgeSelectAdsRequestPermitsPerSecond())
+                .isEqualTo(FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Test
+    public void testGetFledgeSelectAdsWithOutcomesRequestPermitsPerSecond() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeSelectAdsWithOutcomesRequestPermitsPerSecond);
+
+        assertThat(mTestFlags.getFledgeSelectAdsWithOutcomesRequestPermitsPerSecond())
+                .isEqualTo(FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Test
+    public void testGetFledgeGetAdSelectionDataRequestPermitsPerSecond() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeGetAdSelectionDataRequestPermitsPerSecond);
+
+        assertThat(mTestFlags.getFledgeGetAdSelectionDataRequestPermitsPerSecond())
+                .isEqualTo(FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Test
+    public void testGetFledgePersistAdSelectionResultRequestPermitsPerSecond() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgePersistAdSelectionResultRequestPermitsPerSecond);
+
+        assertThat(mTestFlags.getFledgePersistAdSelectionResultRequestPermitsPerSecond())
+                .isEqualTo(FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Test
+    public void testGetFledgeReportImpressionRequestPermitsPerSecond() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeReportImpressionRequestPermitsPerSecond);
+
+        assertThat(mTestFlags.getFledgeReportImpressionRequestPermitsPerSecond())
+                .isEqualTo(FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Test
     public void testGetFledgeReportInteractionRequestPermitsPerSecond() {
         mFlagsTestHelper.testConfigFlag(
                 KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND,
@@ -3375,6 +3539,28 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
         assertThat(mTestFlags.getFledgeReportInteractionRequestPermitsPerSecond())
                 .isEqualTo(FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Test
+    public void testGgetFledgeSetAppInstallAdvertisersRequestPermitsPerSecond() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeSetAppInstallAdvertisersRequestPermitsPerSecond);
+
+        assertThat(mTestFlags.getFledgeSetAppInstallAdvertisersRequestPermitsPerSecond())
+                .isEqualTo(FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND);
+    }
+
+    @Test
+    public void testGetFledgeUpdateAdCounterHistogramRequestPermitsPerSecond() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND,
+                FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeUpdateAdCounterHistogramRequestPermitsPerSecond);
+
+        assertThat(mTestFlags.getFledgeUpdateAdCounterHistogramRequestPermitsPerSecond())
+                .isEqualTo(FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND);
     }
 
     @Test
