@@ -4337,4 +4337,11 @@ public class RawFlags implements Flags {
     public final boolean getEnableRbAtrace() {
         return mBackend.getFlag(KEY_ENABLE_RB_ATRACE, DEFAULT_ENABLE_RB_ATRACE);
     }
+
+    @Override
+    public boolean getEnableMsmtRegisterSourcePackageDenyList() {
+        return mBackend.getFlag(
+                KEY_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST,
+                DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST);
+    }
 }

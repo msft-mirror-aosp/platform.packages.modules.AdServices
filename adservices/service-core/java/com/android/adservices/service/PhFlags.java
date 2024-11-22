@@ -106,6 +106,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPO
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_PERSISTED;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_JOB_REQUIRED_NETWORK_TYPE;
+import static com.android.adservices.service.FlagsConstants.KEY_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_PRODUCT_METRICS_V1_ENABLED;
@@ -5142,5 +5143,12 @@ public final class PhFlags implements Flags {
     @Override
     public boolean getEnableRbAtrace() {
         return getDeviceConfigFlag(FlagsConstants.KEY_ENABLE_RB_ATRACE, DEFAULT_ENABLE_RB_ATRACE);
+    }
+
+    @Override
+    public boolean getEnableMsmtRegisterSourcePackageDenyList() {
+        return getDeviceConfigFlag(
+                KEY_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST,
+                DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST);
     }
 }

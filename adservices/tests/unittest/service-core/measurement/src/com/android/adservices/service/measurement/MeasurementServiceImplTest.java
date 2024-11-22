@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_DENY_LIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
@@ -44,6 +45,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
@@ -83,6 +85,7 @@ import com.android.adservices.common.WebUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.download.MddJob;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AdPackageDenyResolver;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PermissionHelper;
@@ -111,6 +114,8 @@ import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
+
+import com.google.common.util.concurrent.Futures;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -162,6 +167,7 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     @Mock private MeasurementImpl mMockMeasurementImpl;
     @Mock private Throttler mMockThrottler;
     @Mock private DevContextFilter mDevContextFilter;
+    @Mock private AdPackageDenyResolver mAdPackageDenyResolver;
 
     private MeasurementServiceImpl mMeasurementServiceImpl;
     private Map<Integer, Boolean> mKillSwitchSnapshot;
@@ -410,6 +416,34 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
                 Api.REGISTER_SOURCE,
                 new AccessDenier().deniedByKillSwitch(),
                 () -> registerSourceAndAssertFailure(STATUS_KILLSWITCH_ENABLED));
+    }
+
+    @Test
+    public void testRegisterSource_failureByPackageDenyResolver() throws Exception {
+        runWithMocks(
+                Api.REGISTER_SOURCE,
+                new AccessDenier().deniedByPackageDenyList(),
+                () -> registerSourceAndAssertFailure(STATUS_CALLER_NOT_ALLOWED_DENY_LIST));
+    }
+
+    @Test
+    public void testRegisterSources_failureByPackageDenyResolver() throws Exception {
+        runWithMocks(
+                Api.REGISTER_SOURCES,
+                new AccessDenier().deniedByPackageDenyList(),
+                () -> registerSourceAndAssertFailure(STATUS_CALLER_NOT_ALLOWED_DENY_LIST));
+    }
+
+    @Test
+    public void testRegisterSource_successByPackageDenyResolver_flagDisabled() throws Exception {
+        runWithMocks(
+                Api.REGISTER_SOURCE,
+                new AccessDenier().deniedByPackageDenyList(),
+                () -> {
+                    // Flip kill switch.
+                    when(mMockFlags.getEnableMsmtRegisterSourcePackageDenyList()).thenReturn(false);
+                    registerTriggerAndAssertSuccess();
+                });
     }
 
     @Test
@@ -2033,6 +2067,7 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
                 mMockAdServicesLogger,
                 mMockAppImportanceFilter,
                 mDevContextFilter,
+                mAdPackageDenyResolver,
                 AdServicesExecutors.getBackgroundExecutor());
     }
 
@@ -2205,6 +2240,15 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
         // PermissionHelper
         updateAttributionPermissionDenied(accessDenier.mByAttributionPermission);
 
+        // Package Deny List
+        if (accessDenier.mByPackageDenyList) {
+            when(mMockFlags.getEnableMsmtRegisterSourcePackageDenyList()).thenReturn(true);
+            when(mAdPackageDenyResolver.shouldDenyPackage(anyString(), anyString(), anySet()))
+                    .thenReturn(Futures.immediateFuture(true));
+        } else {
+            when(mMockFlags.getEnableMsmtRegisterSourcePackageDenyList()).thenReturn(false);
+        }
+
         // Results
         when(mMockMeasurementImpl.register(any(RegistrationRequest.class), anyBoolean(), anyLong()))
                 .thenReturn(STATUS_SUCCESS);
@@ -2252,6 +2296,15 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
 
         // PermissionHelper
         updateAttributionPermissionDenied(accessDenier.mByAttributionPermission);
+
+        // Package Deny List
+        if (accessDenier.mByPackageDenyList) {
+            when(mMockFlags.getEnableMsmtRegisterSourcePackageDenyList()).thenReturn(true);
+            when(mAdPackageDenyResolver.shouldDenyPackage(anyString(), anyString(), anySet()))
+                    .thenReturn(Futures.immediateFuture(true));
+        } else {
+            when(mMockFlags.getEnableMsmtRegisterSourcePackageDenyList()).thenReturn(false);
+        }
 
         // Results
         when(mMockMeasurementImpl.registerSources(
@@ -2544,6 +2597,7 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
         private boolean mByKillSwitch;
         private boolean mByThrottler;
         private boolean mByDevContext;
+        private boolean mByPackageDenyList;
 
         private AccessDenier deniedByDevContext() {
             mByDevContext = true;
@@ -2587,6 +2641,11 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
 
         private AccessDenier deniedByThrottler() {
             mByThrottler = true;
+            return this;
+        }
+
+        private AccessDenier deniedByPackageDenyList() {
+            mByPackageDenyList = true;
             return this;
         }
     }

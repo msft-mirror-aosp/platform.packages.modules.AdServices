@@ -25,6 +25,7 @@ import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
+import static com.android.adservices.service.Flags.DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST;
 import static com.android.adservices.service.Flags.DEFAULT_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS;
@@ -1325,6 +1326,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getComponentAdRenderIdMaxLengthBytes",
                 COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
                 Flags::getComponentAdRenderIdMaxLengthBytes);
+    }
+
+    @Test
+    public void testGetEnableMsmtRegisterSourcePackageDenyList() {
+        testFlag(
+                "getEnableMsmtRegisterSourcePackageDenyList",
+                DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST,
+                Flags::getEnableMsmtRegisterSourcePackageDenyList);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {

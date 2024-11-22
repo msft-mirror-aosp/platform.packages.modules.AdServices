@@ -52,6 +52,7 @@ import android.os.SystemClock;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.common.AdPackageDenyResolver;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
@@ -83,6 +84,7 @@ public final class MeasurementServiceImplRvcTest extends AdServicesExtendedMocki
     @Mock private MeasurementImpl mMockMeasurementImpl;
     @Mock private Throttler mMockThrottler;
     @Mock private DevContextFilter mDevContextFilter;
+    @Mock private AdPackageDenyResolver mAdPackageDenyResolver;
 
     private MeasurementServiceImpl mMeasurementServiceImpl;
 
@@ -252,6 +254,7 @@ public final class MeasurementServiceImplRvcTest extends AdServicesExtendedMocki
                 mMockAdServicesLogger,
                 mMockAppImportanceFilter,
                 mDevContextFilter,
+                mAdPackageDenyResolver,
                 AdServicesExecutors.getBackgroundExecutor());
     }
 
