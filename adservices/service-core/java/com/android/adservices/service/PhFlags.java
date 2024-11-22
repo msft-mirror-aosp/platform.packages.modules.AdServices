@@ -1255,6 +1255,29 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public int getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop() {
+        return getDeviceConfigFlag(
+                FlagsConstants
+                        .KEY_PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP,
+                PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP);
+    }
+
+    @Override
+    public int getProtectedSignalsMaxSignalSizePerBuyerBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES,
+                PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES);
+    }
+
+    @Override
+    public int getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants
+                        .KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES,
+                PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES);
+    }
+
+    @Override
     public int getAdSelectionMaxConcurrentBiddingCount() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT,
