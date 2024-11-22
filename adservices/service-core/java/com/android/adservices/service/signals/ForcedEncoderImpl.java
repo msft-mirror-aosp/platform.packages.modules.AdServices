@@ -17,29 +17,161 @@
 package com.android.adservices.service.signals;
 
 import android.adservices.common.AdTechIdentifier;
+import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.signals.DBEncodedPayload;
+import com.android.adservices.data.signals.EncodedPayloadDao;
+import com.android.adservices.data.signals.EncoderLogicHandler;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.ListeningExecutorService;
+
+import java.time.Instant;
+import java.util.Objects;
 
 public class ForcedEncoderImpl implements ForcedEncoder {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    private final long mFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds;
+    private final EncoderLogicHandler mEncoderLogicHandler;
+    private final EncodedPayloadDao mEncodedPayloadDao;
+    private final PeriodicEncodingJobWorker mEncodingJobWorker;
+    private final ProtectedSignalsDao mProtectedSignalsDao;
+    private final ListeningExecutorService mExecutor;
 
-    public ForcedEncoderImpl() {}
+    @VisibleForTesting
+    ForcedEncoderImpl(
+            long fledgeForcedEncodingAfterSignalsUpdateCooldownSeconds,
+            EncoderLogicHandler encoderLogicHandler,
+            EncodedPayloadDao encodedPayloadDao,
+            ProtectedSignalsDao protectedSignalsDao,
+            PeriodicEncodingJobWorker encodingJobWorker,
+            ListeningExecutorService executor) {
+        Objects.requireNonNull(
+                encoderLogicHandler, "Non-null instance of EncoderLogicHandler required.");
+        Objects.requireNonNull(
+                encodedPayloadDao, "Non-null instance of EncodedPayloadDao required.");
+        Objects.requireNonNull(
+                protectedSignalsDao, "Non-null instance of ProtectedSignalsDao required.");
+        Objects.requireNonNull(
+                encoderLogicHandler, "Non-null instance of PeriodicEncodingJobWorker required.");
+        Objects.requireNonNull(
+                encoderLogicHandler, "Non-null instance of ListeningExecutorService required.");
+
+        mFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds =
+                fledgeForcedEncodingAfterSignalsUpdateCooldownSeconds;
+        mEncoderLogicHandler = encoderLogicHandler;
+        mEncodedPayloadDao = encodedPayloadDao;
+        mProtectedSignalsDao = protectedSignalsDao;
+        mEncodingJobWorker = encodingJobWorker;
+        mExecutor = executor;
+    }
+
+    public ForcedEncoderImpl(
+            long fledgeForcedEncodingAfterSignalsUpdateCooldownSeconds, Context context) {
+        this(
+                fledgeForcedEncodingAfterSignalsUpdateCooldownSeconds,
+                new EncoderLogicHandler(context),
+                ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
+                ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
+                PeriodicEncodingJobWorker.getInstance(),
+                AdServicesExecutors.getBackgroundExecutor());
+    }
+
+    /**
+     * Checks if forced encoding can be attempted for the given buyer.
+     *
+     * <p>Forced encoding can be attempted if either of the following conditions is met:
+     *
+     * <ul>
+     *   <li>An encoded payload exists for the buyer and was created before the start of the
+     *       cooldown window.
+     *   <li>If an encoded payload does not exist, we check if the buyer has raw signals and an
+     *       encoder is registered.
+     * </ul>
+     *
+     * @param buyer the buyer for which forced encoding is being attempted.
+     * @return {@code true} if forced encoding can be attempted, {@code false} otherwise.
+     */
+    private boolean shouldAttemptForcedEncodingForBuyer(AdTechIdentifier buyer) {
+        // Fetch encoder registered with buyer.
+        String encoderLogicMetadata = mEncoderLogicHandler.getEncoder(buyer);
+
+        // Skip forced encoding if no encoder is registered.
+        if (encoderLogicMetadata == null) {
+            sLogger.v("Found no registered encoder for buyer %s", buyer.toString());
+            return false;
+        }
+        sLogger.v("Found registered encoder for buyer %s", buyer.toString());
+
+        // If an encoded payload exists, check if it was created before the start of the cooldown
+        // window.
+        DBEncodedPayload encodedPayload = mEncodedPayloadDao.getEncodedPayload(buyer);
+        if (encodedPayload != null) {
+            // Calculate the start of the cooldown window.
+            Instant cooldownWindowStart =
+                    Instant.now()
+                            .minusSeconds(mFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds);
+
+            // Check if encoded payload was created before the start of the cooldown window.
+            boolean hasEncodedPayloadBeforeCooldownStart =
+                    encodedPayload.getCreationTime().isBefore(cooldownWindowStart);
+            sLogger.v(
+                    "Buyer %s hasEncodedPayloadBeforeCooldownStart: %s",
+                    buyer, hasEncodedPayloadBeforeCooldownStart);
+
+            return hasEncodedPayloadBeforeCooldownStart;
+        }
+
+        // With the absence of prior encoded signals, check if buyer has any raw signals.
+        boolean hasRawSignals = mProtectedSignalsDao.hasSignalsFromBuyer(buyer);
+        sLogger.v("Buyer %s hasRawSignals: %s", buyer, hasRawSignals);
+
+        return hasRawSignals;
+    }
 
     // TODO(b/380936203): Split into individual methods when we have individual implementations for
     //   raw signals encoding and encoders update.
     /**
-     * Forces encoding and updaters encoders.
+     * Forces encoding and updates encoders.
      *
      * @return a {@link FluentFuture} that completes when the encoding and encoder updates are
      *     complete. The future's result is {@code null}.
      */
     public FluentFuture<Void> forceEncodingAndUpdateEncoderForBuyer(AdTechIdentifier buyer) {
-        sLogger.v("Forced encoding enabled: running forced encoder for %s.", buyer);
+        sLogger.v("Forced encoding enabled: running forced encoder for %s", buyer);
 
-        // TODO(b/379389496): Add implementation.
-        return FluentFuture.from(Futures.immediateVoidFuture());
+        FluentFuture<Void> forcedEncodingfuture = FluentFuture.from(Futures.immediateVoidFuture());
+        if (shouldAttemptForcedEncodingForBuyer(buyer)) {
+            sLogger.v("Can attempt forced encoding for buyer %s", buyer);
+
+            // TODO(b/381310604): Trigger the whole encoding and encoder update flow for only the
+            //  calling buyer.
+            forcedEncodingfuture =
+                    forcedEncodingfuture.transformAsync(
+                            ignored -> mEncodingJobWorker.encodeProtectedSignals(), mExecutor);
+
+            forcedEncodingfuture.addCallback(
+                    new FutureCallback<Void>() {
+                        @Override
+                        public void onSuccess(Void result) {
+                            sLogger.v("Forced encoding completed successfully.");
+                        }
+
+                        @Override
+                        public void onFailure(Throwable t) {
+                            sLogger.d(t, "Forced encoding failed.");
+                        }
+                    },
+                    mExecutor);
+        }
+
+        return forcedEncodingfuture;
     }
 }

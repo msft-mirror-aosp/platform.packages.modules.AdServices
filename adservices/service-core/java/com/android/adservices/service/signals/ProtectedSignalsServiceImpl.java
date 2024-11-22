@@ -143,8 +143,23 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                         new UpdateProcessingOrchestrator(
                                 ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
                                 new UpdateProcessorSelector(),
-                                new UpdateEncoderEventHandler(context),
-                                new SignalEvictionController()),
+                                new UpdateEncoderEventHandler(
+                                        context,
+                                        new ForcedEncoderFactory(
+                                                        FlagsFactory.getFlags()
+                                                                .getFledgeEnableForcedEncodingAfterSignalsUpdate(),
+                                                        FlagsFactory.getFlags()
+                                                                .getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds(),
+                                                        context)
+                                                .createInstance()),
+                                new SignalEvictionController(),
+                                new ForcedEncoderFactory(
+                                                FlagsFactory.getFlags()
+                                                        .getFledgeEnableForcedEncodingAfterSignalsUpdate(),
+                                                FlagsFactory.getFlags()
+                                                        .getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds(),
+                                                context)
+                                        .createInstance()),
                         new AdTechUriValidator(ADTECH_CALLER_NAME, "", CLASS_NAME, FIELD_NAME),
                         Clock.systemUTC()),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),

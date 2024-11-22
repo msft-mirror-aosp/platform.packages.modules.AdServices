@@ -16,15 +16,124 @@
 
 package com.android.adservices.service.signals;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+import static android.adservices.common.CommonFixture.FIXED_NOW;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import static com.android.adservices.service.Flags.FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
+
+import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
+
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
+import com.android.adservices.data.signals.DBEncodedPayload;
+import com.android.adservices.data.signals.EncodedPayloadDao;
+import com.android.adservices.data.signals.EncoderLogicHandler;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+
+import java.time.Duration;
 
 @SetErrorLogUtilDefaultParams(
         throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
-public class ForcedEncoderImplTest extends AdServicesMockitoTestCase {}
+public class ForcedEncoderImplTest extends AdServicesExtendedMockitoTestCase {
+    private static final Duration COOLDOWN_WINDOW_SECONDS =
+            Duration.ofSeconds(FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS);
+    private static final AdTechIdentifier BUYER = CommonFixture.VALID_BUYER_1;
+    private static final String ENCODER_LOGIC = "function buyer_EncodeJs() {\" correct result \"}";
+    private final ListeningExecutorService mDirectExecutor =
+            MoreExecutors.newDirectExecutorService();
+    @Mock EncoderLogicHandler mEncoderLogicHandlerMock;
+    @Mock EncodedPayloadDao mEncodedPayloadDaoMock;
+    @Mock ProtectedSignalsDao mProtectedSignalsDaoMock;
+    @Mock PeriodicEncodingJobWorker mEncodingJobWorkerMock;
+    private ForcedEncoder mSyncForcedEncoder;
+
+    @Before
+    public void setup() {
+        mSyncForcedEncoder =
+                new ForcedEncoderImpl(
+                        COOLDOWN_WINDOW_SECONDS.getSeconds(),
+                        mEncoderLogicHandlerMock,
+                        mEncodedPayloadDaoMock,
+                        mProtectedSignalsDaoMock,
+                        mEncodingJobWorkerMock,
+                        mDirectExecutor);
+    }
+
+    private DBEncodedPayload getDbEncodedPayloadBeforeNowBy(Duration duration) {
+        return DBEncodedPayload.create(
+                BUYER, 1, FIXED_NOW.minus(duration), new byte[] {0x22, 0x33});
+    }
+
+    @Test
+    public void test_canAttemptForcedEncodingForBuyer_absentRegisteredEncoder_false() {
+        when(mEncoderLogicHandlerMock.getEncoder(BUYER)).thenReturn(null);
+
+        mSyncForcedEncoder.forceEncodingAndUpdateEncoderForBuyer(BUYER);
+
+        verifyZeroInteractions(
+                mEncodedPayloadDaoMock, mProtectedSignalsDaoMock, mEncodingJobWorkerMock);
+    }
+
+    @Test
+    public void test_canAttemptForcedEncodingForBuyer_hasEncodedPayloadBeforeCooldownStart_true() {
+        when(mEncoderLogicHandlerMock.getEncoder(BUYER)).thenReturn(ENCODER_LOGIC);
+        when(mEncodedPayloadDaoMock.getEncodedPayload(BUYER))
+                .thenReturn(getDbEncodedPayloadBeforeNowBy(COOLDOWN_WINDOW_SECONDS));
+
+        mSyncForcedEncoder.forceEncodingAndUpdateEncoderForBuyer(BUYER);
+
+        verifyZeroInteractions(mProtectedSignalsDaoMock);
+        verify(mEncodingJobWorkerMock).encodeProtectedSignals();
+    }
+
+    @Test
+    public void test_canAttemptForcedEncodingForBuyer_hasEncodedPayloadAfterCooldownStart_false() {
+        when(mEncoderLogicHandlerMock.getEncoder(BUYER)).thenReturn(ENCODER_LOGIC);
+        when(mEncodedPayloadDaoMock.getEncodedPayload(BUYER))
+                .thenReturn(
+                        getDbEncodedPayloadBeforeNowBy(COOLDOWN_WINDOW_SECONDS.minusSeconds(10)));
+
+        // Don't need to wait for the thread completion since `mForcedEncoder`
+        // is using a `directExecutor`
+        mSyncForcedEncoder.forceEncodingAndUpdateEncoderForBuyer(BUYER);
+
+        verifyZeroInteractions(mProtectedSignalsDaoMock, mEncodingJobWorkerMock);
+    }
+
+    @Test
+    public void test_canAttemptForcedEncodingForBuyer_hasRawSignals_true() {
+        when(mEncoderLogicHandlerMock.getEncoder(BUYER)).thenReturn(ENCODER_LOGIC);
+        when(mEncodedPayloadDaoMock.getEncodedPayload(BUYER)).thenReturn(null);
+        when(mProtectedSignalsDaoMock.hasSignalsFromBuyer(BUYER)).thenReturn(true);
+
+        mSyncForcedEncoder.forceEncodingAndUpdateEncoderForBuyer(BUYER);
+
+        verify(mEncodingJobWorkerMock).encodeProtectedSignals();
+    }
+
+    @Test
+    public void test_canAttemptForcedEncodingForBuyer_absentRawSignals_true() {
+        when(mEncoderLogicHandlerMock.getEncoder(BUYER)).thenReturn(ENCODER_LOGIC);
+        when(mEncodedPayloadDaoMock.getEncodedPayload(BUYER)).thenReturn(null);
+        when(mProtectedSignalsDaoMock.hasSignalsFromBuyer(BUYER)).thenReturn(false);
+
+        mSyncForcedEncoder.forceEncodingAndUpdateEncoderForBuyer(BUYER);
+
+        verifyZeroInteractions(mEncodingJobWorkerMock);
+    }
+}

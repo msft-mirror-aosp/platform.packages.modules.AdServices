@@ -173,6 +173,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
     private Flags mFakeFlags;
     private EnrollmentDao mEnrollmentDao;
     private Clock mClock;
+    private ForcedEncoder mForcedEncoder;
 
     @Before
     public void setup() {
@@ -206,6 +207,13 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
         mAdServicesHttpsClient =
                 new AdServicesHttpsClient(mBackgroundExecutorService, 2000, 2000, 10000);
         mFakeFlags = FakeFlagsFactory.getFlagsForTest();
+        mForcedEncoder =
+                new ForcedEncoderFactory(
+                                mFakeFlags.getFledgeEnableForcedEncodingAfterSignalsUpdate(),
+                                mFakeFlags
+                                        .getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds(),
+                                mSpyContext)
+                        .createInstance();
         mEncoderLogicHandler =
                 new EncoderLogicHandler(
                         mEncoderPersistenceDao,
@@ -222,14 +230,16 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mEncoderLogicHandler,
                         mSpyContext,
                         AdServicesExecutors.getBackgroundExecutor(),
-                        /* isCompletionBroadcastEnabled= */ false);
+                        /* isCompletionBroadcastEnabled= */ false,
+                        mForcedEncoder);
         mSignalEvictionController = new SignalEvictionController(ImmutableList.of(), 0, 0);
         mUpdateProcessingOrchestrator =
                 new UpdateProcessingOrchestrator(
                         mSignalsDao,
                         mUpdateProcessorSelector,
                         mUpdateEncoderEventHandler,
-                        mSignalEvictionController);
+                        mSignalEvictionController,
+                        mForcedEncoder);
         mAdtechUriValidator = new AdTechUriValidator("", "", "", "");
         mFledgeAuthorizationFilter =
                 ExtendedMockito.spy(
