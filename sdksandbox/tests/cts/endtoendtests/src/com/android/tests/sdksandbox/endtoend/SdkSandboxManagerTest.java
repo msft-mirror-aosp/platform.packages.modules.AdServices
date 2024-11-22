@@ -150,7 +150,8 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(
                         Manifest.permission.READ_DEVICE_CONFIG,
-                        Manifest.permission.WRITE_DEVICE_CONFIG);
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG);
 
         mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
         mScenario = activityScenarioRule.getScenario();
