@@ -46,13 +46,13 @@ public class MainActivityActionDelegate extends BaseActionDelegate {
             AdServicesSettingsMainActivity mainSettingsActivity, MainViewModel mainViewModel) {
         super(mainSettingsActivity);
         mMainViewModel = mainViewModel;
-        initWithUx(mainSettingsActivity, mainSettingsActivity.getApplicationContext());
+        initWithUx();
         listenToMainViewModelUiEvents();
     }
 
     /** Refreshes static views with data from view model that may have changed. */
     public void refreshState() {
-        initWithUx(mActivity, mActivity.getApplicationContext());
+        initWithUx();
     }
 
     @Override

@@ -96,13 +96,13 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
         }
         boolean debugModeEnabled =
                 DebugFlags.getInstance().getConsentNotificationActivityDebugMode();
-        boolean isUxStateReady = isUxStatesReady(this);
+        boolean isUxStateReady = isUxStatesReady();
         LoggerFactory.getUILogger()
                 .d(
                         "getting debug mode %b, getting ux state ready %b",
                         debugModeEnabled, isUxStateReady);
         if (debugModeEnabled || isUxStateReady) {
-            initWithUx(context, /* beforePasUxActive */ true);
+            initWithUx(/* beforePasUxActive */ true);
         } else {
             initFragment();
         }
@@ -139,8 +139,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
      * Notification fragments should call this when view is created. Used to keep track of user's
      * current page and log correct page exit if user exits.
      */
-    @SuppressWarnings("AvoidStaticContext") // UX class
-    public static void handleAction(NotificationFragmentEnum fragmentAction, Context context) {
+    public static void handleAction(NotificationFragmentEnum fragmentAction) {
         switch (fragmentAction) {
             case LANDING_PAGE_DISPLAYED:
                 sCurrentFragment = fragmentAction;

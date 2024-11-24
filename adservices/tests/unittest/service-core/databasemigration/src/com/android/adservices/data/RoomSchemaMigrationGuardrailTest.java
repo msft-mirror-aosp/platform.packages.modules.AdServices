@@ -16,7 +16,6 @@
 
 package com.android.adservices.data;
 
-import android.annotation.NonNull;
 import android.app.Instrumentation;
 import android.content.Context;
 
@@ -26,6 +25,7 @@ import androidx.room.testing.MigrationTestHelper;
 import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -50,7 +50,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /** This UT is a guardrail to schema migration managed by Room. */
-public class RoomSchemaMigrationGuardrailTest {
+public final class RoomSchemaMigrationGuardrailTest extends AdServicesUnitTestCase {
     // Note that this is not the context of this test, but the different context whose assets folder
     // is adservices/service-core/schemas
     private static final Context TARGET_CONTEXT =
@@ -111,7 +111,7 @@ public class RoomSchemaMigrationGuardrailTest {
     }
 
     @Test
-    public void validateDatabaseMigrationAllowedChanges() throws IOException {
+    public void validateDatabaseMigrationAllowedChanges() {
         List<DatabaseWithVersion> databaseClassesWithNewestVersion =
                 validateAndGetDatabaseClassesWithNewestVersionNumber();
         for (DatabaseWithVersion databaseWithVersion : databaseClassesWithNewestVersion) {
@@ -158,7 +158,7 @@ public class RoomSchemaMigrationGuardrailTest {
         ImmutableList.Builder<DatabaseWithVersion> result = new ImmutableList.Builder<>();
         for (Class<? extends RoomDatabase> clazz : DATABASE_CLASSES) {
             try {
-                final int newestDatabaseVersion = getNewestDatabaseVersion(clazz);
+                int newestDatabaseVersion = getNewestDatabaseVersion(clazz);
                 result.add(new DatabaseWithVersion(clazz, newestDatabaseVersion));
             } catch (Exception e) {
                 mErrors.add(
@@ -175,7 +175,7 @@ public class RoomSchemaMigrationGuardrailTest {
         return database.getField("DATABASE_VERSION").getInt(null);
     }
 
-    private void validateNewTablesAndFieldsOnly(@NonNull DatabaseWithVersion databaseWithVersion) {
+    private void validateNewTablesAndFieldsOnly(DatabaseWithVersion databaseWithVersion) {
         // Custom audience table v1 to v2 is violating the policy. Skip it.
         if (BYPASS_DATABASE_VERSIONS_NEW_FIELD_ONLY.contains(databaseWithVersion)) {
             return;
@@ -255,9 +255,7 @@ public class RoomSchemaMigrationGuardrailTest {
         }
     }
 
-    @NonNull
-    private void validateJsonSchemaPopulatedCorrectly(
-            @NonNull DatabaseWithVersion databaseWithVersion) throws IOException {
+    private void validateJsonSchemaPopulatedCorrectly(DatabaseWithVersion databaseWithVersion) {
         Map<String, Map<String, SqliteColumnInfo>> databaseSchemaBuildFromDatabaseClass =
                 SqliteSchemaExtractor.getTableSchema(
                         getInMemoryDatabaseFromDatabaseClass(
@@ -341,10 +339,10 @@ public class RoomSchemaMigrationGuardrailTest {
     }
 
     private static class DatabaseWithVersion {
-        @NonNull private final Class<? extends RoomDatabase> mRoomDatabaseClass;
+        private final Class<? extends RoomDatabase> mRoomDatabaseClass;
         private final int mVersion;
 
-        DatabaseWithVersion(@NonNull Class<? extends RoomDatabase> roomDatabaseClass, int version) {
+        DatabaseWithVersion(Class<? extends RoomDatabase> roomDatabaseClass, int version) {
             mRoomDatabaseClass = roomDatabaseClass;
             mVersion = version;
         }

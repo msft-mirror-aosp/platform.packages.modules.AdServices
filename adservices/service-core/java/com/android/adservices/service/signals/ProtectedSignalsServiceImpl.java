@@ -385,7 +385,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                                         buyer,
                                         input.getCallerPackageName(),
                                         devContext,
-                                        UpdateSignalsApiCalledStats.builder(),
+                                        jsonProcessingStatsBuilder,
                                         updateSignalsProcessReportedLogger)
                                 .get();
                         PeriodicEncodingJobService.scheduleIfNeeded(mContext, mFlags, false);

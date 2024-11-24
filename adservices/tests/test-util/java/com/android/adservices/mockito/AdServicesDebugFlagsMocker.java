@@ -30,4 +30,10 @@ public interface AdServicesDebugFlagsMocker {
      * com.android.adservices.service.DebugFlags#getConsentNotificationDebugMode()}
      */
     void mockGetConsentNotificationDebugMode(boolean value);
+
+    /**
+     * Mocks a call to {@link
+     * com.android.adservices.service.DebugFlags#getDeveloperModeFeatureEnabled()}
+     */
+    void mockGetDeveloperSessionFeatureEnabled(boolean value);
 }

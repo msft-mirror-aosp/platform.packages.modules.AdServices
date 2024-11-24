@@ -121,7 +121,9 @@ public class MeasurementDefaultProfileSuite {
     public static void setup() throws Exception {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+                .adoptShellPermissionIdentity(
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG);
         Log.i(TAG, "Added DeviceWriteConfig Permission");
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()

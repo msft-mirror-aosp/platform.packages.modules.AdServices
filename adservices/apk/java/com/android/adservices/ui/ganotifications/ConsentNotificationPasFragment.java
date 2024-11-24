@@ -114,7 +114,7 @@ public class ConsentNotificationPasFragment extends Fragment {
                 consentManager.enable(requireContext(), AdServicesApiType.MEASUREMENTS);
             }
         }
-        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED, getContext());
+        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED);
     }
 
     @Override
@@ -123,7 +123,7 @@ public class ConsentNotificationPasFragment extends Fragment {
         if (mScrollToBottomController != null) {
             mScrollToBottomController.saveInstanceState(savedInstanceState);
         }
-        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISMISSED, getContext());
+        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISMISSED);
     }
 
     private void setupListeners(Bundle savedInstanceState) {
@@ -134,7 +134,7 @@ public class ConsentNotificationPasFragment extends Fragment {
         howItWorksExpander.setOnClickListener(
                 view -> {
                     ConsentNotificationActivity.handleAction(
-                            CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED, getContext());
+                            CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED);
 
                     setInfoViewState1(!mIsInfoViewExpanded1);
                 });
@@ -150,7 +150,7 @@ public class ConsentNotificationPasFragment extends Fragment {
             howItWorksExpander2.setOnClickListener(
                     view -> {
                         ConsentNotificationActivity.handleAction(
-                                LANDING_PAGE_ADDITIONAL_INFO_2_CLICKED, getContext());
+                                LANDING_PAGE_ADDITIONAL_INFO_2_CLICKED);
                         setInfoViewState2(!mIsInfoViewExpanded2);
                     });
             ((TextView) requireActivity().findViewById(R.id.learn_more_from_privacy_policy2))
@@ -169,7 +169,7 @@ public class ConsentNotificationPasFragment extends Fragment {
         leftControlButton.setOnClickListener(
                 view -> {
                     ConsentNotificationActivity.handleAction(
-                            CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED, getContext());
+                            CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED);
 
                     // go to settings activity
                     Intent intent =

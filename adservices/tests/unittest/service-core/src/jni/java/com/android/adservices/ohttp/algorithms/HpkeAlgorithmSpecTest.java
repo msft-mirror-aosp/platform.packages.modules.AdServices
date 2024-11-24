@@ -16,16 +16,20 @@
 
 package com.android.adservices.ohttp.algorithms;
 
+import static com.google.common.truth.Truth.assertThat;
+
+import static org.junit.Assert.assertThrows;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 
 import com.google.common.io.BaseEncoding;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.security.spec.InvalidKeySpecException;
 
-public class HpkeAlgorithmSpecTest {
+public final class HpkeAlgorithmSpecTest extends AdServicesUnitTestCase {
 
     @Test
     public void fromKeyConfig_createsHpkeAlgorithmSpec()
@@ -38,9 +42,9 @@ public class HpkeAlgorithmSpecTest {
 
         HpkeAlgorithmSpec hpkeAlgorithmSpec = HpkeAlgorithmSpec.fromKeyConfig(keyConfig);
 
-        Assert.assertEquals(hpkeAlgorithmSpec.kem().identifier(), 0X0020);
-        Assert.assertEquals(hpkeAlgorithmSpec.kdf().identifier(), 0X0001);
-        Assert.assertEquals(hpkeAlgorithmSpec.aead().identifier(), 0X0002);
+        assertThat(hpkeAlgorithmSpec.kem().identifier()).isEqualTo(0X0020);
+        assertThat(hpkeAlgorithmSpec.kdf().identifier()).isEqualTo(0X0001);
+        assertThat(hpkeAlgorithmSpec.aead().identifier()).isEqualTo(0X0002);
     }
 
     @Test
@@ -51,7 +55,7 @@ public class HpkeAlgorithmSpecTest {
         byte[] bytes = BaseEncoding.base16().lowerCase().decode(keyConfigHex);
         ObliviousHttpKeyConfig keyConfig = ObliviousHttpKeyConfig.fromSerializedKeyConfig(bytes);
 
-        Assert.assertThrows(
+        assertThrows(
                 UnsupportedHpkeAlgorithmException.class,
                 () -> HpkeAlgorithmSpec.fromKeyConfig(keyConfig));
     }
@@ -64,7 +68,7 @@ public class HpkeAlgorithmSpecTest {
         byte[] bytes = BaseEncoding.base16().lowerCase().decode(keyConfigHex);
         ObliviousHttpKeyConfig keyConfig = ObliviousHttpKeyConfig.fromSerializedKeyConfig(bytes);
 
-        Assert.assertThrows(
+        assertThrows(
                 UnsupportedHpkeAlgorithmException.class,
                 () -> HpkeAlgorithmSpec.fromKeyConfig(keyConfig));
     }

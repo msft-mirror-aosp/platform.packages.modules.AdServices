@@ -60,7 +60,7 @@ public final class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUni
     }
 
     @Test
-    public void testBuildValidRequest_withoutList_success() {
+    public void testBuildValidRequest_withoutRequiredPartialCustomAudienceList_success() {
         ScheduleCustomAudienceUpdateRequest request =
                 new ScheduleCustomAudienceUpdateRequest.Builder(VALID_UPDATE_URI_1, VALID_DELAY)
                         .build();

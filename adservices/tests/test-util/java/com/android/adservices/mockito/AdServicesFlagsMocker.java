@@ -57,7 +57,4 @@ public interface AdServicesFlagsMocker {
      * for the testing release stage.
      */
     void mockGetAdservicesReleaseStageForCobalt(String stage);
-
-    /** Mocks a call to {@link Flags#getDeveloperModeFeatureEnabled()}. */
-    void mockGetDeveloperModeFeatureEnabled(boolean value);
 }

@@ -43,6 +43,7 @@ import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -68,9 +69,19 @@ public final class CustomAudienceManagerTest extends AdServicesEndToEndTestCase 
 
     @Before
     public void setUp() throws TimeoutException {
+        String[] deviceConfigPermissions;
+        if (SdkLevel.isAtLeastU()) {
+            deviceConfigPermissions =
+                    new String[] {
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG
+                    };
+        } else {
+            deviceConfigPermissions = new String[] {Manifest.permission.WRITE_DEVICE_CONFIG};
+        }
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+                .adoptShellPermissionIdentity(deviceConfigPermissions);
 
         // Kill AdServices process
         AdservicesTestHelper.killAdservicesProcess(sContext);

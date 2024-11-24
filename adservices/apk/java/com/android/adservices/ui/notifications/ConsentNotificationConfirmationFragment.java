@@ -65,14 +65,14 @@ public class ConsentNotificationConfirmationFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         setupListeners();
 
-        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED, getContext());
+        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED);
     }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle savedInstanceState) {
         super.onSaveInstanceState(savedInstanceState);
 
-        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISMISSED, getContext());
+        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISMISSED);
     }
 
     private void setupListeners() {
@@ -82,10 +82,10 @@ public class ConsentNotificationConfirmationFragment extends Fragment {
                 view -> {
                     if (mOptedIn) {
                         ConsentNotificationActivity.handleAction(
-                                CONFIRMATION_PAGE_OPT_IN_SETTINGS_CLICKED, getContext());
+                                CONFIRMATION_PAGE_OPT_IN_SETTINGS_CLICKED);
                     } else {
                         ConsentNotificationActivity.handleAction(
-                                CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED, getContext());
+                                CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED);
                     }
 
                     Intent intent =
@@ -101,10 +101,10 @@ public class ConsentNotificationConfirmationFragment extends Fragment {
                 view -> {
                     if (mOptedIn) {
                         ConsentNotificationActivity.handleAction(
-                                CONFIRMATION_PAGE_OPT_IN_GOT_IT_BUTTON_CLICKED, getContext());
+                                CONFIRMATION_PAGE_OPT_IN_GOT_IT_BUTTON_CLICKED);
                     } else {
                         ConsentNotificationActivity.handleAction(
-                                CONFIRMATION_PAGE_OPT_OUT_GOT_IT_BUTTON_CLICKED, getContext());
+                                CONFIRMATION_PAGE_OPT_OUT_GOT_IT_BUTTON_CLICKED);
                     }
 
                     // acknowledge and dismiss

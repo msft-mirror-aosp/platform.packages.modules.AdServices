@@ -35,6 +35,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
@@ -224,6 +225,42 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
         // Shouldn't be logged if status is success
         assertEquals("", mStatsCaptor.getValue().getAdTechId());
         assertEquals(0, mStatsCaptor.getValue().getPackageUid());
+    }
+
+    @SuppressWarnings("FutureReturnValueIgnored")
+    @Test
+    public void testUpdateSignals_passesInCorrectStats() throws Exception {
+        when(mUpdateSignalsOrchestratorMock.orchestrateUpdate(
+                        eq(URI), eq(ADTECH), eq(PACKAGE), eq(mDevContext), any(), any()))
+                .thenAnswer(
+                        invocation -> {
+                            UpdateSignalsApiCalledStats.Builder passedBuilder =
+                                    invocation.getArgument(4);
+                            passedBuilder.setJsonSize(9876);
+                            SettableFuture<Object> returnedFuture = SettableFuture.create();
+                            returnedFuture.set(new Object());
+                            return FluentFuture.from(returnedFuture);
+                        });
+
+        mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
+
+        ArgumentCaptor<UpdateSignalsApiCalledStats.Builder> orchestratorStatsCaptor =
+                ArgumentCaptor.forClass(UpdateSignalsApiCalledStats.Builder.class);
+        verify(mUpdateSignalsOrchestratorMock)
+                .orchestrateUpdate(
+                        eq(URI),
+                        eq(ADTECH),
+                        eq(PACKAGE),
+                        eq(mDevContext),
+                        orchestratorStatsCaptor.capture(),
+                        /* updateSignalsProcessReportedLogger= */ any());
+        verify(mAdServicesLoggerMock).logUpdateSignalsApiCalledStats(mStatsCaptor.capture());
+        assertWithMessage("Logged JSON processing status")
+                .that(mStatsCaptor.getValue().getJsonProcessingStatus())
+                .isEqualTo(JSON_PROCESSING_STATUS_SUCCESS);
+        assertWithMessage("Logged JSON size")
+                .that(mStatsCaptor.getValue().getJsonSize())
+                .isEqualTo(orchestratorStatsCaptor.getValue().build().getJsonSize());
     }
 
     @SuppressWarnings("FutureReturnValueIgnored")

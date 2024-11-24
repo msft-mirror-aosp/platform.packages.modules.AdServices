@@ -31,7 +31,11 @@ import java.util.Objects;
  *
  * <p>This service-side version of {@link com.android.adservices.shared.storage.AtomicFileDatastore}
  * uses a hardcoded version key ({@link #VERSION_KEY}}.
+ *
+ * @deprecated Please use {@link androidx.datastore.guava.GuavaDataStore} wrapper class for any new
+ *     features for storage.
  */
+@Deprecated
 public final class AtomicFileDatastore
         extends com.android.adservices.shared.storage.AtomicFileDatastore {
 

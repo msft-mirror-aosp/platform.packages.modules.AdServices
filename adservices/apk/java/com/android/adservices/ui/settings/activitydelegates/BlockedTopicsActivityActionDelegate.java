@@ -48,7 +48,7 @@ public class BlockedTopicsActivityActionDelegate extends BaseActionDelegate {
             BlockedTopicsViewModel blockedTopicsViewModel) {
         super(blockedTopicsActivity);
         mBlockedTopicsViewModel = blockedTopicsViewModel;
-        initWithUx(blockedTopicsActivity, blockedTopicsActivity.getApplicationContext());
+        initWithUx();
         listenToBlockedTopicsViewModelUiEvents();
     }
 

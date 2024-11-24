@@ -62,7 +62,9 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
 
     @Before
     public void setFixtures() {
-        mProvider = new AdServicesInternalProvider(mMockFlags, mMockThrottler, mMockConsentManager);
+        mProvider =
+                new AdServicesInternalProvider(
+                        mMockFlags, mMockThrottler, mMockConsentManager, mMockDebugFlags);
     }
 
     @Test
@@ -242,14 +244,13 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
     }
 
     private void mockAdservicesApplicationContextFlagEnabled(boolean value) {
-        mocker.mockGetDeveloperModeFeatureEnabled(value);
+        mocker.mockGetDeveloperSessionFeatureEnabled(value);
     }
 
     // TODO(b/371064777): Ideally we should have a DumpHelper.mockDump() method that could be used
     // below...
 
     private void mockDebugFlagsDump(String dump) {
-        mocker.mockGetDebugFlags(mMockDebugFlags);
         doAnswer(
                         (inv) -> {
                             mLog.d("%s", MockitoHelper.toString(inv));

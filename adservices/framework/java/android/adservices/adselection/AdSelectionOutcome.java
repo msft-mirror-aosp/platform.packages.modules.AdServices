@@ -26,6 +26,7 @@ import android.os.OutcomeReceiver;
 import com.android.adservices.flags.Flags;
 import com.android.internal.util.Preconditions;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -55,18 +56,25 @@ public class AdSelectionOutcome {
     private final long mAdSelectionId;
     @NonNull private final Uri mRenderUri;
     @NonNull private final AdTechIdentifier mWinningSeller;
+    @NonNull private final List<Uri> mComponentAdUris;
 
     private AdSelectionOutcome() {
         mAdSelectionId = UNSET_AD_SELECTION_ID;
         mRenderUri = Uri.EMPTY;
         mWinningSeller = AdTechIdentifier.UNSET_AD_TECH_IDENTIFIER;
+        mComponentAdUris = List.of();
     }
 
     private AdSelectionOutcome(
-            long adSelectionId, @NonNull Uri renderUri, @NonNull AdTechIdentifier winningSeller) {
+            long adSelectionId,
+            @NonNull Uri renderUri,
+            @NonNull AdTechIdentifier winningSeller,
+            @NonNull List<Uri> componentAdUris) {
         mAdSelectionId = adSelectionId;
         mRenderUri = Objects.requireNonNull(renderUri, "Render uri cannot be null");
         mWinningSeller = Objects.requireNonNull(winningSeller, "Winning seller cannot be null");
+        mComponentAdUris =
+                Objects.requireNonNull(componentAdUris, "Component ad uris cannot be null");
     }
 
     /** Returns the renderUri that the AdSelection returns. */
@@ -92,6 +100,13 @@ public class AdSelectionOutcome {
         return mWinningSeller;
     }
 
+    /** Returns the ad component renderUris that are returned by this auction. */
+    @FlaggedApi(Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
+    @NonNull
+    public List<Uri> getComponentAdUris() {
+        return mComponentAdUris;
+    }
+
     /**
      * Returns whether the outcome contains results or empty. Empty outcomes' {@code render uris}
      * shouldn't be used.
@@ -106,14 +121,15 @@ public class AdSelectionOutcome {
             AdSelectionOutcome adSelectionOutcome = (AdSelectionOutcome) o;
             return mAdSelectionId == adSelectionOutcome.mAdSelectionId
                     && Objects.equals(mRenderUri, adSelectionOutcome.mRenderUri)
-                    && Objects.equals(mWinningSeller, adSelectionOutcome.mWinningSeller);
+                    && Objects.equals(mWinningSeller, adSelectionOutcome.mWinningSeller)
+                    && Objects.equals(mComponentAdUris, adSelectionOutcome.mComponentAdUris);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mAdSelectionId, mRenderUri, mWinningSeller);
+        return Objects.hash(mAdSelectionId, mRenderUri, mWinningSeller, mComponentAdUris);
     }
 
     /**
@@ -122,6 +138,7 @@ public class AdSelectionOutcome {
     public static final class Builder {
         private long mAdSelectionId = UNSET_AD_SELECTION_ID;
         @Nullable private Uri mRenderUri;
+        @NonNull private List<Uri> mComponentAdUris;
 
         @NonNull
         private AdTechIdentifier mWinningSeller = AdTechIdentifier.UNSET_AD_TECH_IDENTIFIER;
@@ -155,6 +172,17 @@ public class AdSelectionOutcome {
         }
 
         /**
+         * Sets the list of ad component renderUris.
+         */
+        @FlaggedApi(Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
+        @NonNull
+        public AdSelectionOutcome.Builder setComponentAdUris(@NonNull List<Uri> componentAdUris) {
+            mComponentAdUris =
+                    Objects.requireNonNull(componentAdUris, "Component ad Uris cannot be null!");
+            return this;
+        }
+
+        /**
          * Builds a {@link AdSelectionOutcome} instance.
          *
          * @throws IllegalArgumentException if the adSelectionIid is not set
@@ -164,11 +192,15 @@ public class AdSelectionOutcome {
         public AdSelectionOutcome build() {
             Objects.requireNonNull(mRenderUri);
             Objects.requireNonNull(mWinningSeller);
+            if (Objects.isNull(mComponentAdUris)) {
+                mComponentAdUris = List.of();
+            }
 
             Preconditions.checkArgument(
                     mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
 
-            return new AdSelectionOutcome(mAdSelectionId, mRenderUri, mWinningSeller);
+            return new AdSelectionOutcome(
+                    mAdSelectionId, mRenderUri, mWinningSeller, mComponentAdUris);
         }
     }
 }

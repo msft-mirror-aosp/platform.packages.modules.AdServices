@@ -28,6 +28,7 @@ import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.DatabaseClearer;
@@ -88,7 +89,7 @@ public final class AdServicesApiShellCommandFactory implements ShellCommandFacto
                                 AdServicesExecutors.getBackgroundExecutor()),
                         DevSessionDataStoreFactory.get(),
                         AdServicesExecutors.getLightWeightExecutor()),
-                FlagsFactory.getFlags().getDeveloperModeFeatureEnabled());
+                DebugFlags.getInstance().getDeveloperSessionFeatureEnabled());
     }
 
     @Nullable

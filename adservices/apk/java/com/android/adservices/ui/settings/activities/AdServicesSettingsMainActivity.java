@@ -70,7 +70,7 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
         }
         UiStatsLogger.logSettingsPageDisplayed();
         super.onCreate(savedInstanceState);
-        if (!isUxStatesReady(this)) {
+        if (!isUxStatesReady()) {
             initMainFragment();
         }
         Trace.endSection();
@@ -90,7 +90,7 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (isUxStatesReady(this) && mActivityActionDelegate != null) {
+        if (isUxStatesReady() && mActivityActionDelegate != null) {
             mActivityActionDelegate.refreshState();
         }
     }

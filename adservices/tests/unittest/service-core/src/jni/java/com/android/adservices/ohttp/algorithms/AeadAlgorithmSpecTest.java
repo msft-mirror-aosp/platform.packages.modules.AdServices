@@ -16,14 +16,18 @@
 
 package com.android.adservices.ohttp.algorithms;
 
-import org.junit.Assert;
+import static com.google.common.truth.Truth.assertThat;
+
+import static org.junit.Assert.assertThrows;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
+
 import org.junit.Test;
 
-public class AeadAlgorithmSpecTest {
+public final class AeadAlgorithmSpecTest extends AdServicesUnitTestCase {
     @Test
     public void get_unsupportedId_throwsError() {
-        Assert.assertThrows(
-                UnsupportedHpkeAlgorithmException.class, () -> AeadAlgorithmSpec.get(100));
+        assertThrows(UnsupportedHpkeAlgorithmException.class, () -> AeadAlgorithmSpec.get(100));
     }
 
     @Test
@@ -31,10 +35,10 @@ public class AeadAlgorithmSpecTest {
         AeadAlgorithmSpec aeadAlgorithmSpec =
                 AeadAlgorithmSpec.get(AeadAlgorithmSpec.AES_256_GCM_IDENTIFIER);
 
-        Assert.assertEquals(aeadAlgorithmSpec.keyLength(), 32);
-        Assert.assertEquals(aeadAlgorithmSpec.nonceLength(), 12);
-        Assert.assertEquals(aeadAlgorithmSpec.tagLength(), 16);
-        Assert.assertEquals(
-                aeadAlgorithmSpec.identifier(), AeadAlgorithmSpec.AES_256_GCM_IDENTIFIER);
+        assertThat(aeadAlgorithmSpec.keyLength()).isEqualTo(32);
+        assertThat(aeadAlgorithmSpec.nonceLength()).isEqualTo(12);
+        assertThat(aeadAlgorithmSpec.tagLength()).isEqualTo(16);
+        assertThat(aeadAlgorithmSpec.identifier())
+                .isEqualTo(AeadAlgorithmSpec.AES_256_GCM_IDENTIFIER);
     }
 }

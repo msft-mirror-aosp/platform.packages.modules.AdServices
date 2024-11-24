@@ -74,6 +74,144 @@ public class ConsentNotificationTrigger {
     private static final int GA_REQUEST_CODE = 2;
     private static final int U18_REQUEST_CODE = 3;
     private static final int GA_WITH_PAS_REQUEST_CODE = 4;
+    private static final int NON_PERSONALIZED_REQUEST_CODE = 5;
+    private static final int PERSONALIZED_FIRST_TIME_REQUEST_CODE = 6;
+    private static final int PERSONALIZED_RENOTIFY_REQUEST_CODE = 7;
+
+    /**
+     * Shows consent notification as the highest priority notification to the user. Differs from V1
+     * as no business logic is called, and an outside app must handle the corresponding intents for
+     * notification page content and consent changes.
+     *
+     * @param context Context which is used to display {@link NotificationCompat}.
+     * @param isRenotify is the notification re-notifying the user.
+     * @param isNewAdPersonalizationModuleEnabled is a personalization API being enabled.
+     * @param isOngoingNotification is the notification supposed to be persistent/ongoing.
+     */
+    @SuppressWarnings("AvoidStaticContext")
+    public static void showConsentNotificationV2(
+            @NonNull Context context,
+            boolean isRenotify,
+            boolean isNewAdPersonalizationModuleEnabled,
+            boolean isOngoingNotification) {
+        LogUtil.d("Started requesting notification.");
+        UiStatsLogger.logRequestedNotification();
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+        ConsentManager consentManager = ConsentManager.getInstance();
+        if (!notificationManager.areNotificationsEnabled()) {
+            LogUtil.d("Notification is disabled.");
+            recordNotificationDisplayed(context, true, consentManager);
+            UiStatsLogger.logNotificationDisabled();
+            return;
+        }
+
+        // Set OTA resources if it exists.
+        if (UxStatesManager.getInstance().getFlag(KEY_UI_OTA_STRINGS_FEATURE_ENABLED)
+                || UxStatesManager.getInstance().getFlag(KEY_UI_OTA_RESOURCES_FEATURE_ENABLED)) {
+            OTAResourcesManager.applyOTAResources(context.getApplicationContext(), true);
+        }
+
+        createNotificationChannel(context);
+        Notification notification =
+                getConsentNotificationV2(
+                        context,
+                        isRenotify,
+                        isNewAdPersonalizationModuleEnabled,
+                        isOngoingNotification);
+
+        notificationManager.notify(NOTIFICATION_ID, notification);
+        LogUtil.d("Sending broadcast about notification being displayed.");
+        context.sendBroadcast(new Intent(ACTION_ADSERVICES_NOTIFICATION_DISPLAYED));
+        // TODO(b/378683120):Notification still recorded as displayed to show entry point.
+        //  Change to a unified displayed bit or show entry point bit.
+        recordNotificationDisplayed(context, true, consentManager);
+        UiStatsLogger.logNotificationDisplayed();
+        LogUtil.d("Notification was displayed.");
+    }
+
+    private static Notification getConsentNotificationV2(
+            @NonNull Context context,
+            boolean isRenotify,
+            boolean isNewAdPersonalizationModuleEnabled,
+            boolean isOngoingNotification) {
+
+        Intent intent = getNotificationV2Intent(context);
+        int requestCode;
+        String contentTitle;
+        String contentText;
+        // TODO(b/380065660): Rename resources to exclude business logic
+        if (isNewAdPersonalizationModuleEnabled) {
+            if (isRenotify) {
+                requestCode = PERSONALIZED_RENOTIFY_REQUEST_CODE;
+                contentTitle = context.getString(R.string.notificationUI_pas_re_notification_title);
+                contentText =
+                        context.getString(R.string.notificationUI_pas_re_notification_content);
+            } else {
+                requestCode = PERSONALIZED_FIRST_TIME_REQUEST_CODE;
+                contentTitle = context.getString(R.string.notificationUI_pas_notification_title);
+                contentText = context.getString(R.string.notificationUI_pas_notification_content);
+            }
+        } else {
+            requestCode = NON_PERSONALIZED_REQUEST_CODE;
+            contentTitle = context.getString(R.string.notificationUI_u18_notification_title);
+            contentText = context.getString(R.string.notificationUI_u18_notification_content);
+        }
+
+        intent.putExtra(IS_RENOTIFY_KEY, isRenotify);
+
+        PendingIntent pendingIntent =
+                PendingIntent.getActivity(
+                        context, requestCode, intent, PendingIntent.FLAG_IMMUTABLE);
+
+        NotificationCompat.BigTextStyle textStyle =
+                new NotificationCompat.BigTextStyle().bigText(contentText);
+
+        NotificationCompat.Builder notificationBuilder =
+                new NotificationCompat.Builder(context, CHANNEL_ID)
+                        .setSmallIcon(R.drawable.ic_info_icon)
+                        .setContentTitle(contentTitle)
+                        .setContentText(contentText)
+                        .setStyle(textStyle)
+                        .setPriority(NOTIFICATION_PRIORITY)
+                        .setAutoCancel(true)
+                        .setContentIntent(pendingIntent);
+        Notification notification = notificationBuilder.build();
+        if (isOngoingNotification) {
+            notification.flags |= Notification.FLAG_ONGOING_EVENT | Notification.FLAG_NO_CLEAR;
+        }
+        return notification;
+    }
+
+    private static Intent getNotificationV2Intent(Context context) {
+        Intent intent = new Intent(ACTION_VIEW_ADSERVICES_CONSENT_PAGE);
+        PackageManager pm = context.getPackageManager();
+        List<ResolveInfo> activities = pm.queryIntentActivities(intent, 0);
+        for (ResolveInfo resolveInfo : activities) {
+            String packageName = resolveInfo.activityInfo.packageName;
+            if (PermissionHelper.hasPermission(context, packageName, MODIFY_ADSERVICES_STATE)
+                    || PermissionHelper.hasPermission(
+                            context, packageName, MODIFY_ADSERVICES_STATE_COMPAT)) {
+                LogUtil.d(
+                        "Matching Activity found for %s action in : %s",
+                        ACTION_VIEW_ADSERVICES_CONSENT_PAGE, packageName);
+                return intent.setPackage(packageName);
+            }
+            LogUtil.w(
+                    "Matching Activity found for %s action in : %s, but it has neither %s nor"
+                            + " %s permission",
+                    ACTION_VIEW_ADSERVICES_CONSENT_PAGE,
+                    packageName,
+                    MODIFY_ADSERVICES_STATE,
+                    MODIFY_ADSERVICES_STATE_COMPAT);
+        }
+        LogUtil.w(
+                "No activity available in system image to handle "
+                        + "%s action. Falling back to "
+                        + "ConsentNotificationActivity",
+                ACTION_VIEW_ADSERVICES_CONSENT_PAGE);
+        return new Intent(context, ConsentNotificationActivity.class);
+    }
 
     /**
      * Shows consent notification as the highest priority notification to the user.
@@ -108,17 +246,11 @@ public class ConsentNotificationTrigger {
                 getNotification(context, isEuDevice, gaUxFeatureEnabled, consentManager);
 
         notificationManager.notify(NOTIFICATION_ID, notification);
-        if (FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled()) {
-            LogUtil.d("Sending broadcast about notification being displayed.");
-            context.sendBroadcast(new Intent(ACTION_ADSERVICES_NOTIFICATION_DISPLAYED));
-        }
         recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
 
         // must setup consents after recording notification displayed data to ensure accurate UX in
         // logs
-        if (!FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled()) {
-            setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
-        }
+        setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
         UiStatsLogger.logNotificationDisplayed();
         LogUtil.d("Notification was displayed.");
     }
@@ -132,8 +264,8 @@ public class ConsentNotificationTrigger {
             consentManager.recordUserManualInteractionWithConsent(NO_MANUAL_INTERACTIONS_RECORDED);
         }
 
-        if (isUxStatesReady(context)) {
-            switch (UxUtil.getUx(context)) {
+        if (isUxStatesReady()) {
+            switch (UxUtil.getUx()) {
                 case GA_UX:
                     if (UxStatesManager.getInstance().getFlag(KEY_PAS_UX_ENABLED)) {
                         consentManager.recordPasNotificationDisplayed(true);
@@ -166,8 +298,8 @@ public class ConsentNotificationTrigger {
             boolean gaUxFeatureEnabled,
             ConsentManager consentManager) {
         Notification notification;
-        if (isUxStatesReady(context)) {
-            switch (UxUtil.getUx(context)) {
+        if (isUxStatesReady()) {
+            switch (UxUtil.getUx()) {
                 case GA_UX:
                     if (UxStatesManager.getInstance().getFlag(KEY_PAS_UX_ENABLED)) {
                         notification =
@@ -208,8 +340,8 @@ public class ConsentNotificationTrigger {
             boolean isEuDevice,
             boolean gaUxFeatureEnabled,
             ConsentManager consentManager) {
-        if (isUxStatesReady(context)) {
-            switch (UxUtil.getUx(context)) {
+        if (isUxStatesReady()) {
+            switch (UxUtil.getUx()) {
                 case GA_UX:
                     if (isPasRenotifyUser(consentManager)) {
                         // Is PAS renotify user, respect previous consents.
@@ -260,7 +392,7 @@ public class ConsentNotificationTrigger {
     @SuppressWarnings("AvoidStaticContext") // UX class
     private static Notification getGaV2ConsentNotification(
             @NonNull Context context, boolean isEuDevice) {
-        Intent intent = getNotificationIntent(context);
+        Intent intent = new Intent(context, ConsentNotificationActivity.class);
 
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(
@@ -306,7 +438,7 @@ public class ConsentNotificationTrigger {
     @SuppressWarnings("AvoidStaticContext") // UX class
     private static Notification getConsentNotification(
             @NonNull Context context, boolean isEuDevice) {
-        Intent intent = getNotificationIntent(context);
+        Intent intent = new Intent(context, ConsentNotificationActivity.class);
 
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(
@@ -346,7 +478,7 @@ public class ConsentNotificationTrigger {
      */
     @SuppressWarnings("AvoidStaticContext") // UX class
     private static Notification getU18ConsentNotification(@NonNull Context context) {
-        Intent intent = getNotificationIntent(context);
+        Intent intent = new Intent(context, ConsentNotificationActivity.class);
 
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(
@@ -371,7 +503,7 @@ public class ConsentNotificationTrigger {
     private static Notification getPasConsentNotification(
             @NonNull Context context, ConsentManager consentManager, boolean isEuDevice) {
         boolean isRenotify = isFledgeOrMsmtEnabled(consentManager);
-        Intent intent = getNotificationIntent(context);
+        Intent intent = new Intent(context, ConsentNotificationActivity.class);
         intent.putExtra(IS_RENOTIFY_KEY, isRenotify);
         if (!FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled()) {
             // isEuDevice argument here includes AdId disabled ROW users, which cannot be obtained
@@ -432,39 +564,6 @@ public class ConsentNotificationTrigger {
         NotificationManager notificationManager =
                 context.getSystemService(NotificationManager.class);
         notificationManager.createNotificationChannel(channel);
-    }
-
-    @SuppressWarnings("AvoidStaticContext") // UX class
-    private static Intent getNotificationIntent(Context context) {
-        if (FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled()) {
-            Intent intent = new Intent(ACTION_VIEW_ADSERVICES_CONSENT_PAGE);
-            PackageManager pm = context.getPackageManager();
-            List<ResolveInfo> activities = pm.queryIntentActivities(intent, 0);
-            for (ResolveInfo resolveInfo : activities) {
-                String packageName = resolveInfo.activityInfo.packageName;
-                if (PermissionHelper.hasPermission(context, packageName, MODIFY_ADSERVICES_STATE)
-                        || PermissionHelper.hasPermission(
-                                context, packageName, MODIFY_ADSERVICES_STATE_COMPAT)) {
-                    LogUtil.d(
-                            "Matching Activity found for %s action in : %s",
-                            ACTION_VIEW_ADSERVICES_CONSENT_PAGE, packageName);
-                    return intent.setPackage(packageName);
-                }
-                LogUtil.w(
-                        "Matching Activity found for %s action in : %s, but it has neither %s nor"
-                                + " %s permission",
-                        ACTION_VIEW_ADSERVICES_CONSENT_PAGE,
-                        packageName,
-                        MODIFY_ADSERVICES_STATE,
-                        MODIFY_ADSERVICES_STATE_COMPAT);
-            }
-            LogUtil.w(
-                    "No activity available in system image to handle "
-                            + "%s action. Falling back to "
-                            + "ConsentNotificationActivity",
-                    ACTION_VIEW_ADSERVICES_CONSENT_PAGE);
-        }
-        return new Intent(context, ConsentNotificationActivity.class);
     }
 
     @SuppressWarnings("AvoidStaticContext") // UX class

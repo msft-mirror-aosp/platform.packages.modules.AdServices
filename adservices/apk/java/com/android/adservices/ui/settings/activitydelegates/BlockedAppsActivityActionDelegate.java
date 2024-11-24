@@ -48,7 +48,7 @@ public class BlockedAppsActivityActionDelegate extends BaseActionDelegate {
             BlockedAppsActivity blockedAppsActivity, BlockedAppsViewModel blockedAppsViewModel) {
         super(blockedAppsActivity);
         mBlockedAppsViewModel = blockedAppsViewModel;
-        initWithUx(blockedAppsActivity, blockedAppsActivity.getApplicationContext());
+        initWithUx();
         listenToBlockedAppsViewModelUiEvents();
     }
 

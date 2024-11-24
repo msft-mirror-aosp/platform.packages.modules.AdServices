@@ -54,7 +54,7 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
     public AppsActivityActionDelegate(AppsActivity appsActivity, AppsViewModel appsViewModel) {
         super(appsActivity);
         mAppsViewModel = appsViewModel;
-        initWithUx(appsActivity, appsActivity.getApplicationContext());
+        initWithUx();
         listenToAppsViewModelUiEvents();
     }
 

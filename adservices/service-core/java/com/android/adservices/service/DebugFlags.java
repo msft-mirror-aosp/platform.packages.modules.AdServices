@@ -23,6 +23,7 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MAN
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_DEVELOPER_SESSION_FEATURE_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED;
@@ -70,6 +71,9 @@ public final class DebugFlags extends CommonDebugFlags {
 
     /** Default value for status of consented debugging CLI feature */
     @VisibleForTesting static final boolean DEFAULT_FLEDGE_CONSENTED_DEBUGGING_CLI_ENABLED = false;
+
+    /** Default value for status of developer mode feature. */
+    @VisibleForTesting static final boolean DEFAULT_DEVELOPER_SESSION_FEATURE_ENABLED = false;
 
     /** Default value for sending a broadcast when record topics is completed. */
     @VisibleForTesting
@@ -145,6 +149,12 @@ public final class DebugFlags extends CommonDebugFlags {
 
     public boolean getAdSelectionCommandsEnabled() {
         return getBoolean(KEY_AD_SELECTION_CLI_ENABLED, DEFAULT_AD_SELECTION_CLI_ENABLED);
+    }
+
+    /** Returns whether developer mode feature is enabled. */
+    public boolean getDeveloperSessionFeatureEnabled() {
+        return getBoolean(
+                KEY_DEVELOPER_SESSION_FEATURE_ENABLED, DEFAULT_DEVELOPER_SESSION_FEATURE_ENABLED);
     }
 
     /** Returns whether Consented Debugging is enabled for server auctions. */
@@ -267,5 +277,9 @@ public final class DebugFlags extends CommonDebugFlags {
                 pw,
                 KEY_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED,
                 getPeriodicEncodingJobCompleteBroadcastEnabled());
+        dump(
+                pw,
+                KEY_DEVELOPER_SESSION_FEATURE_ENABLED,
+                getDeveloperSessionFeatureEnabled());
     }
 }

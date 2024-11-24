@@ -54,7 +54,8 @@ public class SdkSandboxSettingsListenerUnitTest extends DeviceSupportedBaseTest 
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(
                         Manifest.permission.READ_DEVICE_CONFIG,
-                        Manifest.permission.WRITE_DEVICE_CONFIG);
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG);
 
         mSdkSandboxSettingsListener =
                 new SdkSandboxSettingsListener(

@@ -130,9 +130,19 @@ public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
                         .createDevContext(Process.myUid());
         mIsDebugMode = devContext.getDeviceDevOptionsEnabled();
 
+        String[] deviceConfigPermissions;
+        if (sdkLevel.isAtLeastU()) {
+            deviceConfigPermissions =
+                    new String[] {
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG
+                    };
+        } else {
+            deviceConfigPermissions = new String[] {Manifest.permission.WRITE_DEVICE_CONFIG};
+        }
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+                .adoptShellPermissionIdentity(deviceConfigPermissions);
 
         // Kill AdServices process
         AdservicesTestHelper.killAdservicesProcess(sContext);

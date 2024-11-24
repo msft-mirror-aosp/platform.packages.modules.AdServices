@@ -18,6 +18,8 @@ package com.android.adservices.service.common;
 
 import static com.android.adservices.service.common.UserProfileIdManager.MILLISECONDS_IN_DAY;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -26,7 +28,6 @@ import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.common.UserProfileIdDao;
 import com.android.adservices.shared.util.Clock;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -61,7 +62,7 @@ public final class UserProfileIdManagerTest extends AdServicesMockitoTestCase {
         UUID uuid = UUID.randomUUID();
         when(mUserProfileIdDao.getUserProfileId()).thenReturn(uuid);
         UUID result = mUserProfileIdManager.getOrCreateId();
-        Assert.assertEquals(uuid, result);
+        assertThat(result).isEqualTo(uuid);
         verify(mUserProfileIdDao).getUserProfileId();
         verifyNoMoreInteractions(mUserProfileIdDao);
     }

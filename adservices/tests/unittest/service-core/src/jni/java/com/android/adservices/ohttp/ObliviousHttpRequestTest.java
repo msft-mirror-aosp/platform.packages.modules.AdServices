@@ -18,13 +18,14 @@ package com.android.adservices.ohttp;
 
 import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.FlagsFactory;
 import com.android.modules.utils.testing.ExtendedMockitoRule;
 
 import com.google.common.io.BaseEncoding;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -33,7 +34,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.spec.InvalidKeySpecException;
 
 @ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
-public class ObliviousHttpRequestTest extends AdServicesExtendedMockitoTestCase {
+public final class ObliviousHttpRequestTest extends AdServicesExtendedMockitoTestCase {
 
     @Before
     public void setExpectations() {
@@ -71,8 +72,7 @@ public class ObliviousHttpRequestTest extends AdServicesExtendedMockitoTestCase 
         String expectedHeader = "01002000010001";
         String expectedCipherTextHexString =
                 BaseEncoding.base16().lowerCase().encode(cipherTextBytes);
-        Assert.assertEquals(
-                BaseEncoding.base16().lowerCase().encode(request.serialize()),
-                expectedHeader + encString + expectedCipherTextHexString);
+        assertThat(BaseEncoding.base16().lowerCase().encode(request.serialize()))
+                .isEqualTo(expectedHeader + encString + expectedCipherTextHexString);
     }
 }

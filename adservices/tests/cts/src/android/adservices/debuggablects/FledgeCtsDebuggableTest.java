@@ -543,9 +543,19 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode);
 
+        String[] deviceConfigPermissions;
+        if (sdkLevel.isAtLeastU()) {
+            deviceConfigPermissions =
+                    new String[] {
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG
+                    };
+        } else {
+            deviceConfigPermissions = new String[] {Manifest.permission.WRITE_DEVICE_CONFIG};
+        }
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+                .adoptShellPermissionIdentity(deviceConfigPermissions);
 
         // Clear the buyer list with an empty call to setAppInstallAdvertisers
         mAdSelectionClient.setAppInstallAdvertisers(

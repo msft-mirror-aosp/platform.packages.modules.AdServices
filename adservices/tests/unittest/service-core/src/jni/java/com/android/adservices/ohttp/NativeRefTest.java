@@ -16,11 +16,16 @@
 
 package com.android.adservices.ohttp;
 
-import org.junit.Assert;
+import static com.google.common.truth.Truth.assertThat;
+
+import static org.junit.Assert.assertThrows;
+
+import com.android.adservices.common.AdServicesUnitTestCase;
+
 import org.junit.Before;
 import org.junit.Test;
 
-public class NativeRefTest {
+public final class NativeRefTest extends AdServicesUnitTestCase {
 
     private static final long VALID_REFERENCE = 100000;
     private boolean mDoReleaseCalled;
@@ -56,14 +61,14 @@ public class NativeRefTest {
                     public void doRelease(long address) {}
                 };
 
-        Assert.assertThrows(NullPointerException.class, () -> new TestNativeRef(referenceManager));
+        assertThrows(NullPointerException.class, () -> new TestNativeRef(referenceManager));
     }
 
     @Test
     public void getAddress_returnsAddress() {
         NativeRef nativeRef = new TestNativeRef(mReferenceManager);
 
-        Assert.assertEquals(nativeRef.getAddress(), VALID_REFERENCE);
+        assertThat(nativeRef.getAddress()).isEqualTo(VALID_REFERENCE);
     }
 
     @Test
@@ -71,7 +76,7 @@ public class NativeRefTest {
         NativeRef nativeRef = new TestNativeRef(mReferenceManager);
         nativeRef.finalize();
 
-        Assert.assertTrue(mDoReleaseCalled);
+        assertThat(mDoReleaseCalled).isTrue();
     }
 
     private static class TestNativeRef extends NativeRef {

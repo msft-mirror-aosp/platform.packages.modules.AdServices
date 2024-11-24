@@ -70,10 +70,4 @@ public final class AdServicesMockitoFlagsMocker extends AbstractMocker
         mockGetEnableApiCallResponseLoggingEnabled(enabled);
         mockGetAdservicesReleaseStageForCobalt("DEBUG");
     }
-
-    @Override
-    public void mockGetDeveloperModeFeatureEnabled(boolean value) {
-        logV("mockGetDeveloperModeFeatureEnabled(%b)", value);
-        when(mFlags.getDeveloperModeFeatureEnabled()).thenReturn(value);
-    }
 }

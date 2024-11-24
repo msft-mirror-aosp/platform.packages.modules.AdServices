@@ -44,6 +44,7 @@ import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithE
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.service.signals.evict.FifoSignalEvictor;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEvent;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
@@ -539,7 +540,11 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                 .thenReturn(createProcessor(TEST_PROCESSOR, toReturn));
 
         SignalEvictionController signalEvictionController =
-                new SignalEvictionController() {
+                new SignalEvictionController(
+                        List.of(new FifoSignalEvictor()),
+                        mMockFlags.getProtectedSignalsMaxSignalSizePerBuyerBytes(),
+                        mMockFlags
+                                .getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes()) {
                     @Override
                     public void evict(
                             AdTechIdentifier adTech,

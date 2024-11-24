@@ -18,10 +18,7 @@ package com.android.adservices.ui;
 
 
 import android.annotation.RequiresApi;
-import android.content.Context;
 import android.os.Build;
-
-import androidx.fragment.app.FragmentActivity;
 
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
@@ -41,24 +38,21 @@ public interface UxSelector {
     /**
      * This method will be called in during initialization of class to determine which ux to choose.
      *
-     * @param fragmentActivity unused.
-     * @param context current context.
      * @return Ux that end user should see.
      */
-    default EndUserUx initWithUx(FragmentActivity fragmentActivity, Context context) {
-        return initWithUx(context, false);
+    default EndUserUx initWithUx() {
+        return initWithUx(false);
     }
 
     /**
      * This method will be called in during initialization of class to determine which ux to choose.
      *
-     * @param context current context.
      * @param beforePasUxActive if the current activity is before PAS UX is active, so it is part of
      *     the process of activating PAS UX and should be shown if flag is on.
      * @return Ux that end user should see.
      */
-    default EndUserUx initWithUx(Context context, boolean beforePasUxActive) {
-        EndUserUx endUserUx = getEndUserUx(context, beforePasUxActive);
+    default EndUserUx initWithUx(boolean beforePasUxActive) {
+        EndUserUx endUserUx = getEndUserUx(beforePasUxActive);
         switch (endUserUx) {
             case GA:
                 initGA();
@@ -78,22 +72,20 @@ public interface UxSelector {
     /**
      * Returns the UX that the end user should be seeing currently.
      *
-     * @param context current Context.
      * @return Ux that end user should see.
      */
-    default EndUserUx getEndUserUx(Context context) {
-        return getEndUserUx(context, false);
+    default EndUserUx getEndUserUx() {
+        return getEndUserUx(false);
     }
 
     /**
      * Returns the UX that the end user should be seeing currently.
      *
-     * @param context current Context.
      * @param beforePasUxActive if the current context is before PAS UX is active.
      * @return Ux that end user should see.
      */
-    default EndUserUx getEndUserUx(Context context, boolean beforePasUxActive) {
-        switch (UxUtil.getUx(context)) {
+    default EndUserUx getEndUserUx(boolean beforePasUxActive) {
+        switch (UxUtil.getUx()) {
             case U18_UX:
                 return EndUserUx.U18;
             case GA_UX:
