@@ -181,6 +181,7 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
                         Manifest.permission.INSTALL_PACKAGES,
                         Manifest.permission.READ_DEVICE_CONFIG,
                         Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG,
                         // for Context#registerReceiverForAllUsers
                         Manifest.permission.INTERACT_ACROSS_USERS_FULL);
 
@@ -1989,7 +1990,8 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
                         android.Manifest.permission.START_ACTIVITIES_FROM_SDK_SANDBOX,
                         // Required for test tearDown.
                         Manifest.permission.READ_DEVICE_CONFIG,
-                        Manifest.permission.WRITE_DEVICE_CONFIG);
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG);
         ActivityInterceptorCallback.ActivityInterceptResult result =
                 mInterceptorCallbackArgumentCaptor
                         .getValue()

@@ -31,12 +31,28 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
+import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT;
+import static com.android.adservices.service.Flags.FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS;
 import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
+import static com.android.adservices.service.Flags.FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MAX_BYTES;
+import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW;
@@ -65,6 +81,9 @@ import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SER
 import static com.android.adservices.service.Flags.MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS;
 import static com.android.adservices.service.Flags.MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
 import static com.android.adservices.service.Flags.PPAPI_AND_SYSTEM_SERVER;
+import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP;
+import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES;
+import static com.android.adservices.service.Flags.PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
 import static com.android.adservices.shared.common.flags.ModuleSharedFlags.DEFAULT_JOB_SCHEDULING_LOGGING_ENABLED;
 import static com.android.adservices.shared.testing.AndroidSdk.SC;
@@ -1063,6 +1082,134 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds);
     }
 
+    @Test
+    public void testGetFledgeJoinCustomAudienceRequestPermitsPerSecond() {
+        testFloatFlag(
+                "getFledgeJoinCustomAudienceRequestPermitsPerSecond()",
+                FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeJoinCustomAudienceRequestPermitsPerSecond);
+    }
+
+    @Test
+    public void testGetFledgeFetchAndJoinCustomAudienceRequestPermitsPerSecond() {
+        testFloatFlag(
+                "getFledgeFetchAndJoinCustomAudienceRequestPermitsPerSecond()",
+                FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeFetchAndJoinCustomAudienceRequestPermitsPerSecond);
+    }
+
+    @Test
+    public void testGetFledgeScheduleCustomAudienceUpdateRequestPermitsPerSecond() {
+        testFloatFlag(
+                "getFledgeScheduleCustomAudienceUpdateRequestPermitsPerSecond()",
+                FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeScheduleCustomAudienceUpdateRequestPermitsPerSecond);
+    }
+
+    @Test
+    public void testGetFledgeLeaveCustomAudienceRequestPermitsPerSecond() {
+        testFloatFlag(
+                "getFledgeLeaveCustomAudienceRequestPermitsPerSecond()",
+                FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeLeaveCustomAudienceRequestPermitsPerSecond);
+    }
+
+    @Test
+    public void testGetFledgeUpdateSignalsRequestPermitsPerSecond() {
+        testFloatFlag(
+                "getFledgeUpdateSignalsRequestPermitsPerSecond()",
+                FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeUpdateSignalsRequestPermitsPerSecond);
+    }
+
+    @Test
+    public void testGetFledgeSelectAdsRequestPermitsPerSecond() {
+        testFloatFlag(
+                "getFledgeSelectAdsRequestPermitsPerSecond()",
+                FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeSelectAdsRequestPermitsPerSecond);
+    }
+
+    @Test
+    public void testGetFledgeSelectAdsWithOutcomesRequestPermitsPerSecond() {
+        testFloatFlag(
+                "getFledgeSelectAdsWithOutcomesRequestPermitsPerSecond()",
+                FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeSelectAdsWithOutcomesRequestPermitsPerSecond);
+    }
+
+    @Test
+    public void testGetFledgeGetAdSelectionDataRequestPermitsPerSecond() {
+        testFloatFlag(
+                "getFledgeGetAdSelectionDataRequestPermitsPerSecond()",
+                FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeGetAdSelectionDataRequestPermitsPerSecond);
+    }
+
+    @Test
+    public void testGetFledgePersistAdSelectionResultRequestPermitsPerSecond() {
+        testFloatFlag(
+                "getFledgePersistAdSelectionResultRequestPermitsPerSecond()",
+                FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgePersistAdSelectionResultRequestPermitsPerSecond);
+    }
+
+    @Test
+    public void testGetFledgeReportImpressionRequestPermitsPerSecond() {
+        testFloatFlag(
+                "getFledgeReportImpressionRequestPermitsPerSecond()",
+                FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeReportImpressionRequestPermitsPerSecond);
+    }
+
+    @Test
+    public void testGetFledgeReportInteractionRequestPermitsPerSecond() {
+        testFloatFlag(
+                "getFledgeReportInteractionRequestPermitsPerSecond()",
+                FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeReportInteractionRequestPermitsPerSecond);
+    }
+
+    @Test
+    public void testGetFledgeSetAppInstallAdvertisersRequestPermitsPerSecond() {
+        testFloatFlag(
+                "getFledgeSetAppInstallAdvertisersRequestPermitsPerSecond()",
+                FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeSetAppInstallAdvertisersRequestPermitsPerSecond);
+    }
+
+    @Test
+    public void testGetFledgeUpdateAdCounterHistogramRequestPermitsPerSecond() {
+        testFloatFlag(
+                "getFledgeUpdateAdCounterHistogramRequestPermitsPerSecond()",
+                FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND,
+                Flags::getFledgeUpdateAdCounterHistogramRequestPermitsPerSecond);
+    }
+
+    @Test
+    public void testGetProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop() {
+        testFlag(
+                "getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop()",
+                PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP,
+                Flags::getProtectedSignalsMaxJsFailureExecutionOnCertainVersionBeforeStop);
+    }
+
+    @Test
+    public void testGetProtectedSignalsMaxSignalSizePerBuyerBytes() {
+        testFlag(
+                "getProtectedSignalsMaxSignalSizePerBuyerBytes()",
+                PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES,
+                Flags::getProtectedSignalsMaxSignalSizePerBuyerBytes);
+    }
+
+    @Test
+    public void testGetProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes() {
+        testFlag(
+                "getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes()",
+                PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES,
+                Flags::getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Internal helpers and tests - do not add new tests for flags following this point.          //
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1115,6 +1262,30 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getFledgeCustomAudiencePerBuyerMaxCount",
                 FLEDGE_CUSTOM_AUDIENCE_PER_BUYER_MAX_COUNT,
                 Flags::getFledgeCustomAudiencePerBuyerMaxCount);
+    }
+
+    @Test
+    public void testGetEnforceForegroundStatusForFetchAndJoinCustomAudience() {
+        testFlag(
+                "getEnforceForegroundStatusForFetchAndJoinCustomAudience",
+                ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE,
+                Flags::getEnforceForegroundStatusForFetchAndJoinCustomAudience);
+    }
+
+    @Test
+    public void testGetEnforceForegroundStatusForLeaveCustomAudience() {
+        testFlag(
+                "getEnforceForegroundStatusForLeaveCustomAudience",
+                ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE,
+                Flags::getEnforceForegroundStatusForLeaveCustomAudience);
+    }
+
+    @Test
+    public void testGetEnforceForegroundStatusForScheduleCustomAudience() {
+        testFlag(
+                "getEnforceForegroundStatusForScheduleCustomAudience",
+                ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE,
+                Flags::getEnforceForegroundStatusForScheduleCustomAudience);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {
