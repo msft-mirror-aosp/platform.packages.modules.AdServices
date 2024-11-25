@@ -113,6 +113,7 @@ import com.android.adservices.service.adselection.AuctionServerPayloadUnformatte
 import com.android.adservices.service.adselection.MockAdIdWorker;
 import com.android.adservices.service.adselection.MultiCloudSupportStrategy;
 import com.android.adservices.service.adselection.MultiCloudTestStrategyFactory;
+import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKeyManager;
 import com.android.adservices.service.adselection.encryption.KAnonObliviousHttpEncryptorImpl;
@@ -139,7 +140,6 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAuctionInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls.ReportingUrls;
-import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.kanon.KAnonGetChallengeStatusStats;
@@ -342,10 +342,7 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
 
     private Instant FIXED_INSTANT = Instant.now();
     private RetryStrategyFactory mRetryStrategyFactory;
-    private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
-    private ConsentedDebugConfigurationGeneratorFactory
-            mConsentedDebugConfigurationGeneratorFactory;
-    private EgressConfigurationGenerator mEgressConfigurationGenerator;
+    private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
 
     @Before
     public void setUp() throws IOException {
@@ -437,18 +434,22 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
         InputStream inputStream = mContext.getAssets().open(GOLDEN_TRANSCRIPT_PATH);
         mTranscript = Transcript.parseDelimitedFrom(inputStream);
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
-        mConsentedDebugConfigurationDao =
+        ConsentedDebugConfigurationDao consentedDebugConfigurationDao =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
                         .build()
                         .consentedDebugConfigurationDao();
-        mConsentedDebugConfigurationGeneratorFactory =
+        ConsentedDebugConfigurationGeneratorFactory consentedDebugConfigurationGeneratorFactory =
                 new ConsentedDebugConfigurationGeneratorFactory(
-                        false, mConsentedDebugConfigurationDao);
-        mEgressConfigurationGenerator =
-                EgressConfigurationGenerator.createInstance(
-                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
-                        mAdIdFetcher,
+                        false, consentedDebugConfigurationDao);
+        mAuctionServerDebugConfigurationGenerator =
+                new AuctionServerDebugConfigurationGenerator(
+                        Flags.ADID_KILL_SWITCH,
                         Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
+                        Flags.FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING,
+                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
+                        Flags.DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER,
+                        mAdIdFetcher,
+                        consentedDebugConfigurationGeneratorFactory.create(),
                         mLightweightExecutorService);
     }
 
@@ -2082,9 +2083,8 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
                 mKAnonSignJoinFactoryMock,
                 false,
                 mRetryStrategyFactory,
-                mConsentedDebugConfigurationGeneratorFactory,
-                mEgressConfigurationGenerator,
-                CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                mAuctionServerDebugConfigurationGenerator);
     }
 
     public PersistAdSelectionResultTestCallback invokePersistAdSelectionResult(

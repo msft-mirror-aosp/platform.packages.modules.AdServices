@@ -72,6 +72,7 @@ public class OTAResourcesManager {
      *
      * @param context {@link Context}
      */
+    @SuppressWarnings("AvoidStaticContext") // UX class
     public static void applyOTAResources(Context context, boolean shouldRefresh) {
         if (shouldRefresh || sOTAResourcesVersion == NO_OTA_RESOURCES_VERSION) {
             refreshOTAResources(context.getApplicationContext());
@@ -81,6 +82,7 @@ public class OTAResourcesManager {
         }
     }
 
+    @SuppressWarnings("AvoidStaticContext") // UX class
     static void refreshOTAResources(Context context) {
         LogUtil.d("createResourceLoaderFromMDDFiles called.");
         Map<String, ClientFile> downloadedOTAFiles = getDownloadedFiles();
@@ -131,6 +133,7 @@ public class OTAResourcesManager {
         }
     }
 
+    @SuppressWarnings("AvoidStaticContext") // UX class
     private static File getOtaFile(
             Context context, Map<String, ClientFile> otaFilesMap, String fileId) {
         // get OTA file
@@ -154,7 +157,6 @@ public class OTAResourcesManager {
     /**
      * This function populates metadata files to a map.
      *
-     * @param context {@link Context}
      * @return A {@link Map} containing downloaded fileId mapped to ClientFile or null if no
      *     downloaded files found.
      */

@@ -83,7 +83,7 @@ public abstract class AbstractFlagsPreparerClassRule<R extends AbstractFlagsPrep
         // to the rule conversion), so we're explicitly checking each annotation in order (but it
         // might still be useful to use such helper on FlagsSetter, when it's refactored)
         var setSdkSandboxStateEnabledAnnotation =
-                TestHelper.getAnnotation(testClass, SetSdkSandboxStateEnabled.class);
+                TestHelper.getAnnotationFromTypesOnly(testClass, SetSdkSandboxStateEnabled.class);
         if (setSdkSandboxStateEnabledAnnotation != null) {
             mLog.d("Found %s", setSdkSandboxStateEnabledAnnotation);
             actions.add(
@@ -95,7 +95,7 @@ public abstract class AbstractFlagsPreparerClassRule<R extends AbstractFlagsPrep
                                     : SdkSandbox.State.DISABLED));
         }
         var setSyncDisabledModeForTestAnnotation =
-                TestHelper.getAnnotation(testClass, SetSyncDisabledModeForTest.class);
+                TestHelper.getAnnotationFromTypesOnly(testClass, SetSyncDisabledModeForTest.class);
         if (setSyncDisabledModeForTestAnnotation != null) {
             mLog.d("Found %s", setSyncDisabledModeForTestAnnotation);
             actions.add(

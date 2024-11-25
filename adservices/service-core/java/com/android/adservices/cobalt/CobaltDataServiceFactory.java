@@ -36,6 +36,7 @@ import java.util.concurrent.ExecutorService;
 final class CobaltDataServiceFactory {
     private static final String DB_NAME = FileCompatUtils.getAdservicesFilename("cobalt_db");
 
+    @SuppressWarnings("AvoidStaticContext") // Factory method
     static DataService createDataService(
             Context context,
             ExecutorService executorService,

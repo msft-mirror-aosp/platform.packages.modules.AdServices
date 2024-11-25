@@ -27,6 +27,7 @@ import static android.adservices.common.AndroidRCommonUtil.invokeCallbackOnError
 import android.adservices.adid.AdId;
 import android.annotation.CallbackExecutor;
 import android.annotation.FlaggedApi;
+import android.annotation.IntDef;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.annotation.SdkConstant;
@@ -46,10 +47,10 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 import com.android.adservices.flags.Flags;
 
-import java.util.List;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Objects;
 import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
 
 /**
  * AdServicesCommonManager contains APIs common across the various AdServices. It provides two
@@ -72,6 +73,117 @@ public class AdServicesCommonManager {
 
     private final Context mContext;
     private final ServiceBinder<IAdServicesCommonService> mAdServicesCommonServiceBinder;
+
+    // TODO(b/378923974): refactor all usages to reference these constants directly instead of
+    //  derived ones in other classes.
+
+    /** Don't show any notification during the enrollment. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int NOTIFICATION_NONE = 0;
+
+    /** Shows ongoing notification during the enrollment, which user can not dismiss. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int NOTIFICATION_ONGOING = 1;
+
+    /** Shows regular notification during the enrollment, which user can dismiss. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int NOTIFICATION_REGULAR = 2;
+
+    /**
+     * Result codes that are common across various APIs.
+     *
+     * @hide
+     */
+    @IntDef(value = {NOTIFICATION_NONE, NOTIFICATION_ONGOING, NOTIFICATION_REGULAR})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface NotificationType {}
+
+    /** Default user choice state */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int USER_CHOICE_UNKNOWN = 0;
+
+    /** User opted in state */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int USER_CHOICE_OPTED_IN = 1;
+
+    /** User opted out state */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int USER_CHOICE_OPTED_OUT = 2;
+
+    /**
+     * Result codes that are common across various modules.
+     *
+     * @hide
+     */
+    @IntDef(
+            prefix = {""},
+            value = {USER_CHOICE_UNKNOWN, USER_CHOICE_OPTED_IN, USER_CHOICE_OPTED_OUT})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ModuleUserChoice {}
+
+    /** Default module state */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_STATE_UNKNOWN = 0;
+
+    /** Module is available on the device */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_STATE_ENABLED = 1;
+
+    /** Module is not available on the device */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_STATE_DISABLED = 2;
+
+    /**
+     * Result codes that are common across various modules.
+     *
+     * @hide
+     */
+    @IntDef(
+            prefix = {""},
+            value = {MODULE_STATE_UNKNOWN, MODULE_STATE_ENABLED, MODULE_STATE_DISABLED})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ModuleState {}
+
+    /** Measurement module. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_MEASUREMENT = 0;
+
+    /** Privacy Sandbox module. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_PROTECTED_AUDIENCE = 1;
+
+    /** Privacy Sandbox Attribution module. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_PROTECTED_APP_SIGNALS = 2;
+
+    /** Topics module. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_TOPICS = 3;
+
+    /** On-device Personalization(ODP) module. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_ON_DEVICE_PERSONALIZATION = 4;
+
+    /** ADID module. */
+    @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
+    public static final int MODULE_ADID = 5;
+
+    /**
+     * ModuleCode IntDef.
+     *
+     * @hide
+     */
+    @IntDef(
+            value = {
+                MODULE_MEASUREMENT,
+                MODULE_PROTECTED_AUDIENCE,
+                MODULE_PROTECTED_APP_SIGNALS,
+                MODULE_TOPICS,
+                MODULE_ON_DEVICE_PERSONALIZATION,
+                MODULE_ADID
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface Module {}
 
     /**
      * Create AdServicesCommonManager.
@@ -280,8 +392,12 @@ public class AdServicesCommonManager {
      * Broadcast action: notify that a consent notification has been displayed to the user, and the
      * user consent choices can be set by calling {@link #requestAdServicesModuleUserChoices()}.
      *
+     * <p>The action must be defined as an intent-filter in AndroidManifest.xml in order to receive
+     * Intents from the platform.
+     *
      * @hide
      */
+    @SystemApi
     @SdkConstant(SdkConstantType.BROADCAST_INTENT_ACTION)
     @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
@@ -340,15 +456,8 @@ public class AdServicesCommonManager {
 
         final IAdServicesCommonService service = getService();
         try {
-            List<AdServicesModuleState> adServicesModuleStateList =
-                    updateParams.getModuleStateMap().entrySet().stream()
-                            .map(
-                                    entry ->
-                                            new AdServicesModuleState(
-                                                    entry.getKey(), entry.getValue()))
-                            .collect(Collectors.toList());
             service.requestAdServicesModuleOverrides(
-                    adServicesModuleStateList,
+                    updateParams,
                     updateParams.getNotificationType(),
                     new IRequestAdServicesModuleOverridesCallback.Stub() {
                         @Override
@@ -399,16 +508,8 @@ public class AdServicesCommonManager {
 
         final IAdServicesCommonService service = getService();
         try {
-            // TODO(b/375672670): pass param directly to Impl
-            List<AdServicesModuleUserChoice> adServicesUserChoiceList =
-                    updateParams.getUserChoiceMap().entrySet().stream()
-                            .map(
-                                    entry ->
-                                            new AdServicesModuleUserChoice(
-                                                    entry.getKey(), entry.getValue()))
-                            .collect(Collectors.toList());
             service.requestAdServicesModuleUserChoices(
-                    adServicesUserChoiceList,
+                    updateParams,
                     new IRequestAdServicesModuleUserChoicesCallback.Stub() {
                         @Override
                         public void onSuccess() throws RemoteException {

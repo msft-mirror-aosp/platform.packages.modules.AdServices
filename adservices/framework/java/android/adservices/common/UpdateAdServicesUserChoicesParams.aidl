@@ -20,4 +20,4 @@ package android.adservices.common;
  * Contains data of user choices for each AdServices modules.
  */
 
-parcelable AdServicesModuleUserChoice;
+parcelable UpdateAdServicesUserChoicesParams;
