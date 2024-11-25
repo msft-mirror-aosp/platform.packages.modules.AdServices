@@ -2158,7 +2158,11 @@ public final class ConsentManager {
                 FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled();
         if (businessLogicMigrationEnabled) {
             String data = appSearchConsentManager.getModuleEnrollmentState();
+            if (data == null) {
+                data = "";
+            }
             datastore.putString(ConsentConstants.MODULE_ENROLLMENT_STATE, data);
+            adServicesManager.setModuleEnrollmentState(data);
         }
         return AppConsents.builder()
                 .setMsmtConsent(measurementConsented)
