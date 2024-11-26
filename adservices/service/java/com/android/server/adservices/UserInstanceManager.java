@@ -199,6 +199,10 @@ public class UserInstanceManager {
         }
     }
 
+    /**
+     * @deprecated
+     */
+    @Deprecated // TODO(b/378954994): remove
     @VisibleForTesting
     void tearDownForTesting() {
         synchronized (mLock) {

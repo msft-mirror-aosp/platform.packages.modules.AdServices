@@ -90,6 +90,11 @@ public class AtomicFileDatastore {
     private final String mVersionKey;
     private int mPreviousStoredVersion;
 
+    /**
+     * @deprecated use constructor that takes a {@code File} ({@link #AtomicFileDatastore(File, int,
+     *     String, AdServicesErrorLogger)}) instead.
+     */
+    @Deprecated // TODO(b/378954655): remove
     public AtomicFileDatastore(
             String parentPath,
             String filename,
@@ -694,8 +699,11 @@ public class AtomicFileDatastore {
         return mVersionKey;
     }
 
-    /** For tests only */
+    /**
+     * @deprecated tests should call {@link #clear()} or use the constructor that takes a file
+     */
     @VisibleForTesting
+    @Deprecated // TODO(b/378954655): remove
     public final void tearDownForTesting() {
         mWriteLock.lock();
         try {

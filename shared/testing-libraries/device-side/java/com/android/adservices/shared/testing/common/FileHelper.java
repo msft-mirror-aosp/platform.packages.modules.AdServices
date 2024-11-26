@@ -15,24 +15,28 @@
  */
 package com.android.adservices.shared.testing.common;
 
-import static com.android.adservices.shared.util.LogUtil.DEBUG;
-
 import android.os.Environment;
 
-import com.android.adservices.shared.util.LogUtil;
+import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.Logger;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 
+// TODO(b/381111873): add unit tests
 /** Provides helpers for file-related operations. */
 public final class FileHelper {
+
+    private static final Logger sLog = new Logger(AndroidLogger.getInstance(), FileHelper.class);
+
     private static final String SD_CARD_DIR = "/sdcard";
     private static final String ADSERVICES_TEST_DIR =
             Environment.DIRECTORY_DOCUMENTS + "/adservices-tests";
 
-    // TODO(b/313646338): add unit tests
     /** Writes a text file to {@link #getAdServicesTestsOutputDir()}. */
     public static void writeFile(String filename, String contents) {
         String userFriendlyFilename = filename;
@@ -40,22 +44,17 @@ public final class FileHelper {
             File dir = getAdServicesTestsOutputDir();
             Path filePath = Paths.get(dir.getAbsolutePath(), filename);
             userFriendlyFilename = filePath.toString();
-            LogUtil.i("Creating file %s", userFriendlyFilename);
+            sLog.i("Creating file %s", userFriendlyFilename);
             Files.createFile(filePath);
             byte[] bytes = contents.getBytes();
-            if (DEBUG) {
-                LogUtil.d("Writing %s bytes to %s", bytes.length, filePath);
-            }
+            sLog.v("Writing %s bytes to %s", bytes.length, filePath);
             Files.write(filePath, bytes);
-            if (DEBUG) {
-                LogUtil.d("Saul Goodman!");
-            }
+            sLog.d("Saul Goodman!");
         } catch (Exception e) {
-            LogUtil.e(e, "Failed to save %s", userFriendlyFilename);
+            sLog.e(e, "Failed to save %s", userFriendlyFilename);
         }
     }
 
-    // TODO(b/313646338): add unit tests
     /**
      * Writes a file to {@value #SD_CARD_DIR} under {@value #ADSERVICES_TEST_DIR}
      *
@@ -69,12 +68,58 @@ public final class FileHelper {
         if (dir.exists()) {
             return dir;
         }
-        LogUtil.d("Directory %s doesn't exist, creating it", path);
+        sLog.d("Directory %s doesn't exist, creating it", path);
         if (dir.mkdirs()) {
-            LogUtil.i("Created directory %s", path);
+            sLog.i("Created directory %s", path);
             return dir;
         }
         throw new IllegalStateException("Could not create directory " + path);
+    }
+
+    /**
+     * Deletes a file.
+     *
+     * <p>This is the same as {@code File.delete()}, but logging and throwing {@link IOException} if
+     * the file could not be removed (for example, if it's a non-empty directory).
+     */
+    public static File deleteFile(File file) throws IOException {
+        sLog.i("deleteFile(%s)", file);
+        Objects.requireNonNull(file, "file cannot be null");
+        String path = file.getAbsolutePath();
+        if (!file.exists()) {
+            sLog.i("deleteFile(%s): file doesn't exist", path);
+            return file;
+        }
+        if (file.delete()) {
+            sLog.i("%s deleted", path);
+            return file;
+        }
+        throw new IOException("File " + file + " was not deleted");
+    }
+
+    /** Recursively removes the contents of a directory. */
+    public static void deleteDirectory(File dir) throws IOException {
+        sLog.i("deleteDirectory(%s))", dir);
+        Objects.requireNonNull(dir, "dir cannot be null");
+
+        deleteContents(dir);
+    }
+
+    // Copied from android.os.FileUtil.deleteContents()
+    private static void deleteContents(File dir) throws IOException {
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.isDirectory()) {
+                    sLog.v("calling deleteContents() on %s", file);
+                    deleteContents(file);
+                }
+                sLog.v("calling File.delete() on %s)", file);
+                if (!file.delete()) {
+                    throw new IOException("Failed to delete " + file);
+                }
+            }
+        }
     }
 
     private FileHelper() {
