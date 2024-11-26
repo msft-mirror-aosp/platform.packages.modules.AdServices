@@ -112,8 +112,7 @@ public final class ConsentManager {
         // Create the DataStore and initialize it.
         AtomicFileDatastore datastore =
                 new AtomicFileDatastore(
-                        consentDataStoreDir,
-                        STORAGE_XML_IDENTIFIER,
+                        new File(consentDataStoreDir, STORAGE_XML_IDENTIFIER),
                         STORAGE_VERSION,
                         VERSION_KEY,
                         AdServicesErrorLoggerImpl.getInstance());

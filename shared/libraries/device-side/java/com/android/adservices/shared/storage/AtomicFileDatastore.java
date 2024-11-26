@@ -90,30 +90,12 @@ public class AtomicFileDatastore {
     private final String mVersionKey;
     private int mPreviousStoredVersion;
 
-    /**
-     * @deprecated use constructor that takes a {@code File} ({@link #AtomicFileDatastore(File, int,
-     *     String, AdServicesErrorLogger)}) instead.
-     */
-    @Deprecated // TODO(b/378954655): remove
-    public AtomicFileDatastore(
-            String parentPath,
-            String filename,
-            int datastoreVersion,
-            String versionKey,
-            AdServicesErrorLogger adServicesErrorLogger) {
-        this(newFile(parentPath, filename), datastoreVersion, versionKey, adServicesErrorLogger);
-    }
-
     public AtomicFileDatastore(
             File file,
             int datastoreVersion,
             String versionKey,
             AdServicesErrorLogger adServicesErrorLogger) {
-        this(
-                new AtomicFile(Objects.requireNonNull(file, "file cannot be null")),
-                datastoreVersion,
-                versionKey,
-                adServicesErrorLogger);
+        this(new AtomicFile(validFile(file)), datastoreVersion, versionKey, adServicesErrorLogger);
     }
 
     @VisibleForTesting // AtomicFileDatastoreTest must spy on AtomicFile
@@ -745,20 +727,14 @@ public class AtomicFileDatastore {
         }
     }
 
-    private static File newFile(String parentPath, String filename) {
-        checkValid("parentPath", parentPath);
-        checkValid("filename", filename);
-
-        File parent = new File(parentPath);
+    private static File validFile(File file) {
+        Objects.requireNonNull(file, "file cannot be null");
+        File parent = file.getParentFile();
         if (!parent.exists()) {
             throw new IllegalArgumentException(
                     "parentPath doesn't exist: " + parent.getAbsolutePath());
         }
-        if (!parent.isDirectory()) {
-            throw new IllegalArgumentException(
-                    "parentPath is not a directory: " + parent.getAbsolutePath());
-        }
-        return new File(parent, filename);
+        return file;
     }
 
     // TODO(b/335869310): change it to using ImmutableSet.

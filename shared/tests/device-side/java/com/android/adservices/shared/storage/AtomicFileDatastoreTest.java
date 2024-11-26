@@ -100,75 +100,7 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
 
     @Test
     public void testConstructor_emptyOrNullArgs() {
-        // String (dir + name) constructor
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        new AtomicFileDatastore(
-                                /* parentPath= */ null,
-                                FILENAME,
-                                DATASTORE_VERSION,
-                                TEST_VERSION_KEY,
-                                mMockAdServicesErrorLogger));
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        new AtomicFileDatastore(
-                                /* parentPath= */ "",
-                                FILENAME,
-                                DATASTORE_VERSION,
-                                TEST_VERSION_KEY,
-                                mMockAdServicesErrorLogger));
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        new AtomicFileDatastore(
-                                VALID_DIR,
-                                /* filename= */ null,
-                                DATASTORE_VERSION,
-                                TEST_VERSION_KEY,
-                                mMockAdServicesErrorLogger));
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        new AtomicFileDatastore(
-                                VALID_DIR,
-                                /* filename= */ "",
-                                DATASTORE_VERSION,
-                                TEST_VERSION_KEY,
-                                mMockAdServicesErrorLogger));
-
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        new AtomicFileDatastore(
-                                VALID_DIR,
-                                FILENAME,
-                                DATASTORE_VERSION,
-                                /* versionKey= */ null,
-                                mMockAdServicesErrorLogger));
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        new AtomicFileDatastore(
-                                VALID_DIR,
-                                FILENAME,
-                                DATASTORE_VERSION,
-                                /* versionKey= */ "",
-                                mMockAdServicesErrorLogger));
-
-        assertThrows(
-                NullPointerException.class,
-                () ->
-                        new AtomicFileDatastore(
-                                VALID_DIR,
-                                FILENAME,
-                                DATASTORE_VERSION,
-                                TEST_VERSION_KEY,
-                                /* adServicesErrorLogger= */ null));
-
-        // File constructor
+        File datastoreFile = new File(VALID_DIR, FILENAME);
         assertThrows(
                 NullPointerException.class,
                 () ->
@@ -177,6 +109,33 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                                 DATASTORE_VERSION,
                                 TEST_VERSION_KEY,
                                 mMockAdServicesErrorLogger));
+
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new AtomicFileDatastore(
+                                datastoreFile,
+                                DATASTORE_VERSION,
+                                /* versionKey= */ null,
+                                mMockAdServicesErrorLogger));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new AtomicFileDatastore(
+                                datastoreFile,
+                                DATASTORE_VERSION,
+                                /* versionKey= */ "",
+                                mMockAdServicesErrorLogger));
+
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new AtomicFileDatastore(
+                                datastoreFile,
+                                DATASTORE_VERSION,
+                                TEST_VERSION_KEY,
+                                /* adServicesErrorLogger= */ null));
     }
 
     @Test
@@ -185,35 +144,10 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                 IllegalArgumentException.class,
                 () ->
                         new AtomicFileDatastore(
-                                "I can't believe this is a valid dir",
-                                FILENAME,
+                                new File("I can't believe this is a valid dir", FILENAME),
                                 DATASTORE_VERSION,
                                 TEST_VERSION_KEY,
                                 mMockAdServicesErrorLogger));
-    }
-
-    @Test
-    public void testConstructor_parentPathDirectoryIsNotAFile() throws Exception {
-        File file = new File(VALID_DIR, "file.IAm");
-        String path = file.getAbsolutePath();
-        mLog.d("path: %s", path);
-        assertWithMessage("Could not create file %s", path).that(file.createNewFile()).isTrue();
-
-        try {
-            assertThrows(
-                    IllegalArgumentException.class,
-                    () ->
-                            new AtomicFileDatastore(
-                                    path,
-                                    FILENAME,
-                                    DATASTORE_VERSION,
-                                    TEST_VERSION_KEY,
-                                    mMockAdServicesErrorLogger));
-        } finally {
-            if (!file.delete()) {
-                mLog.e("Could not delete file %s at the end", path);
-            }
-        }
     }
 
     @Test
