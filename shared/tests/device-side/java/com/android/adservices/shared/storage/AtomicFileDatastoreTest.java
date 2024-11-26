@@ -61,6 +61,7 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
     private static final String FILENAME = "AtomicFileDatastoreTest.xml";
 
     private static final int DATASTORE_VERSION = 1;
+    private static final String NULL_KEY = null;
     private static final String TEST_KEY = "key";
     private static final String TEST_KEY_1 = "key1";
     private static final String TEST_KEY_2 = "key2";
@@ -78,15 +79,20 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
     private AtomicFileDatastore mDatastore;
 
     @Before
-    public void initializeDatastore() throws IOException {
-        mDatastore =
+    public void initializeDatastore() throws Exception {
+        mDatastore = newInitializedDataStore();
+    }
+
+    private AtomicFileDatastore newInitializedDataStore() throws IOException {
+        var datastore =
                 new AtomicFileDatastore(
                         VALID_DIR,
                         FILENAME,
                         DATASTORE_VERSION,
                         TEST_VERSION_KEY,
                         mMockAdServicesErrorLogger);
-        mDatastore.initialize();
+        datastore.initialize();
+        return datastore;
     }
 
     @After
@@ -96,9 +102,9 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
 
     @Test
     public void testConstructor_emptyOrNullArgs() {
-        // String dir + name constructor
+        // String (dir + name) constructor
         assertThrows(
-                IllegalArgumentException.class,
+                NullPointerException.class,
                 () ->
                         new AtomicFileDatastore(
                                 /* parentPath= */ null,
@@ -116,7 +122,7 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                                 TEST_VERSION_KEY,
                                 mMockAdServicesErrorLogger));
         assertThrows(
-                IllegalArgumentException.class,
+                NullPointerException.class,
                 () ->
                         new AtomicFileDatastore(
                                 VALID_DIR,
@@ -141,6 +147,26 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                                 VALID_DIR,
                                 FILENAME,
                                 DATASTORE_VERSION,
+                                /* versionKey= */ null,
+                                mMockAdServicesErrorLogger));
+
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        new AtomicFileDatastore(
+                                VALID_DIR,
+                                FILENAME,
+                                DATASTORE_VERSION,
+                                /* versionKey= */ "",
+                                mMockAdServicesErrorLogger));
+
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new AtomicFileDatastore(
+                                VALID_DIR,
+                                FILENAME,
+                                DATASTORE_VERSION,
                                 TEST_VERSION_KEY,
                                 /* adServicesErrorLogger= */ null));
 
@@ -149,7 +175,7 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                 NullPointerException.class,
                 () ->
                         new AtomicFileDatastore(
-                                /* file= */ (File) null,
+                                (File) null,
                                 DATASTORE_VERSION,
                                 TEST_VERSION_KEY,
                                 mMockAdServicesErrorLogger));
@@ -265,6 +291,45 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                 NullPointerException.class, () -> mDatastore.getBoolean(TEST_KEY, nullBoolean));
         assertThrows(NullPointerException.class, () -> mDatastore.getInt(TEST_KEY, nullInt));
         assertThrows(NullPointerException.class, () -> mDatastore.getString(TEST_KEY, nullString));
+    }
+
+    @Test
+    public void testNullKeyFails() {
+        assertThrows(NullPointerException.class, () -> mDatastore.putBoolean(NULL_KEY, true));
+        assertThrows(NullPointerException.class, () -> mDatastore.putInt(NULL_KEY, 42));
+        assertThrows(NullPointerException.class, () -> mDatastore.putString(NULL_KEY, "D'OH!"));
+
+        assertThrows(NullPointerException.class, () -> mDatastore.putBooleanIfNew(NULL_KEY, true));
+        assertThrows(NullPointerException.class, () -> mDatastore.putIntIfNew(NULL_KEY, 42));
+
+        assertThrows(
+                NullPointerException.class, () -> mDatastore.putStringIfNew(NULL_KEY, "D'OH!"));
+
+        assertThrows(NullPointerException.class, () -> mDatastore.getBoolean(NULL_KEY));
+        assertThrows(NullPointerException.class, () -> mDatastore.getBoolean(NULL_KEY, true));
+        assertThrows(NullPointerException.class, () -> mDatastore.getInt(NULL_KEY));
+        assertThrows(NullPointerException.class, () -> mDatastore.getInt(NULL_KEY, 42));
+        assertThrows(NullPointerException.class, () -> mDatastore.getString(NULL_KEY));
+        assertThrows(NullPointerException.class, () -> mDatastore.getString(NULL_KEY, "D'OH!"));
+    }
+
+    @Test
+    public void testEmptKeyFails() {
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.putBoolean("", true));
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.putInt("", 42));
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.putString("", "D'OH!"));
+
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.putBooleanIfNew("", true));
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.putIntIfNew("", 42));
+
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.putStringIfNew("", "D'OH!"));
+
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.getBoolean(""));
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.getBoolean("", true));
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.getInt(""));
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.getInt("", 42));
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.getString(""));
+        assertThrows(IllegalArgumentException.class, () -> mDatastore.getString("", "D'OH!"));
     }
 
     @Test
@@ -1007,6 +1072,45 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                 () ->
                         mDatastore.update(
                                 updateOperation -> updateOperation.putIntIfNew(TEST_KEY_2, 6)));
+    }
+
+    @Test
+    public void testClear() throws Exception {
+        mDatastore.update(txn -> txn.putBoolean(TEST_KEY, true));
+
+        mDatastore.clear();
+
+        expect.withMessage("number of entries after clear()").that(mDatastore.keySet()).isEmpty();
+
+        // Create a new datastore using the same file - it should be empty
+        var clonedDatastore = newInitializedDataStore();
+        expect.withMessage("number of entries on new datastore using same file")
+                .that(clonedDatastore.keySet())
+                .isEmpty();
+    }
+
+    @Test
+    public void testToString() throws Exception {
+        String before = mDatastore.toString();
+        expect.withMessage("empty toString()").that(before).startsWith("AtomicFileDatastore[");
+        expect.withMessage("empty toString()")
+                .that(before)
+                .contains("path=" + new File(VALID_DIR, FILENAME).getAbsolutePath());
+        expect.withMessage("empty toString()").that(before).contains("entries=0");
+        expect.withMessage("empty toString()")
+                .that(before)
+                .contains("version=" + DATASTORE_VERSION);
+        expect.withMessage("empty toString()").that(before).endsWith("]");
+        mDatastore.update(txn -> txn.putBoolean(TEST_KEY, false));
+
+        expect.withMessage("toString() after adding 1 entry")
+                .that(mDatastore.toString())
+                .contains("entries=1");
+
+        mDatastore.update(txn -> txn.putBoolean(TEST_KEY, true));
+        expect.withMessage("toString() after updating existing entry")
+                .that(mDatastore.toString())
+                .contains("entries=1");
     }
 
     private void assertCommonDumpContents(String dump, String prefix) {
