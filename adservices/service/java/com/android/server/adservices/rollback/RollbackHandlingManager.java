@@ -165,15 +165,4 @@ public final class RollbackHandlingManager {
                     .dump(writer, prefix4, AtomicFileDatastore.DUMP_ARGS_INCLUDE_CONTENTS_ONLY);
         }
     }
-
-    /**
-     * @deprecated
-     */
-    @Deprecated // TODO(b/378954994): remove
-    @VisibleForTesting
-    public void tearDownForTesting() {
-        synchronized (this) {
-            mAtomicFileDatastoreMap.clear();
-        }
-    }
 }

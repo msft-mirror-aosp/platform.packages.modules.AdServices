@@ -199,25 +199,6 @@ public class UserInstanceManager {
         }
     }
 
-    /**
-     * @deprecated
-     */
-    @Deprecated // TODO(b/378954994): remove
-    @VisibleForTesting
-    void tearDownForTesting() {
-        synchronized (mLock) {
-            for (int i = 0; i < mConsentManagerMapLocked.size(); i++) {
-                mConsentManagerMapLocked.valueAt(i).tearDownForTesting();
-            }
-            for (int i = 0; i < mAppConsentManagerMapLocked.size(); i++) {
-                mAppConsentManagerMapLocked.valueAt(i).tearDownForTesting();
-            }
-            for (int i = 0; i < mRollbackHandlingManagerMapLocked.size(); i++) {
-                mRollbackHandlingManagerMapLocked.valueAt(i).tearDownForTesting();
-            }
-        }
-    }
-
     private PerUserDumpHelper getPerUserDumpHelperForUser(
             SparseArray<PerUserDumpHelper> map, @UserIdInt int userId) {
         PerUserDumpHelper dumper = map.get(userId);

@@ -175,9 +175,6 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     public void tearDown() {
         mServices.forEach(AdServicesManagerService::tearDownForTesting);
 
-        // We need tear down this instance since it can have underlying persisted Data Store.
-        mUserInstanceManager.tearDownForTesting();
-
         // Clear BlockedTopics table in the database.
         TopicsDbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
     }
