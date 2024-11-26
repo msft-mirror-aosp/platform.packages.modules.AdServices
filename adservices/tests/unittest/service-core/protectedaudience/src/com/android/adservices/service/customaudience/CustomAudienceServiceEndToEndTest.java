@@ -122,6 +122,9 @@ import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.MeasurementDbHelper;
+import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
@@ -150,6 +153,7 @@ import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateBackgro
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedFailureStats;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedStats;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 import com.android.adservices.testutils.DevSessionHelper;
 import com.android.adservices.testutils.FetchCustomAudienceTestSyncCallback;
@@ -287,7 +291,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     @Mock private DevContextFilter mDevContextFilter;
     @Mock private FledgeApiThrottleFilter mFledgeApiThrottleFilterMock;
     @Mock private AppImportanceFilter mAppImportanceFilter;
-
+    private DatastoreManager mMeasurementDatastoreManager;
     private FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
     private Uri mFetchUri;
@@ -350,9 +354,19 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                 Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
                         .build()
                         .protectedSignalsDao();
+
+        mMeasurementDatastoreManager =
+                new SQLDatastoreManager(
+                        MeasurementDbHelper.getInstance(),
+                        Mockito.mock(AdServicesErrorLogger.class));
+
         mDevSessionHelper =
                 new DevSessionHelper(
-                        mCustomAudienceDao, mAppInstallDao, mFrequencyCapDao, protectedSignalsDao);
+                        mCustomAudienceDao,
+                        mAppInstallDao,
+                        mFrequencyCapDao,
+                        protectedSignalsDao,
+                        mMeasurementDatastoreManager);
 
         mCustomAudienceValidator =
                 new CustomAudienceValidator(
