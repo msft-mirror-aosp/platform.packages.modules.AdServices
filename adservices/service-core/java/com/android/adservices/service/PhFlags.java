@@ -3010,6 +3010,27 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableCustomAudienceComponentAds() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS,
+                ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS);
+    }
+
+    @Override
+    public int getMaxComponentAdsPerCustomAudience() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE,
+                MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
+    }
+
+    @Override
+    public int getComponentAdRenderIdMaxLengthBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
+                COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES);
+    }
+
+    @Override
     public boolean getFledgeRegisterAdBeaconEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED,
