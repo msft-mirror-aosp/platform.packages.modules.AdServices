@@ -116,7 +116,7 @@ public class AtomicFileDatastore {
                 adServicesErrorLogger);
     }
 
-    @VisibleForTesting
+    @VisibleForTesting // AtomicFileDatastoreTest must spy on AtomicFile
     AtomicFileDatastore(
             AtomicFile atomicFile,
             int datastoreVersion,
@@ -697,21 +697,6 @@ public class AtomicFileDatastore {
     /** Gets the version key. */
     public final String getVersionKey() {
         return mVersionKey;
-    }
-
-    /**
-     * @deprecated tests should call {@link #clear()} or use the constructor that takes a file
-     */
-    @VisibleForTesting
-    @Deprecated // TODO(b/378954655): remove
-    public final void tearDownForTesting() {
-        mWriteLock.lock();
-        try {
-            mAtomicFile.delete();
-            mLocalMap.clear();
-        } finally {
-            mWriteLock.unlock();
-        }
     }
 
     @Override

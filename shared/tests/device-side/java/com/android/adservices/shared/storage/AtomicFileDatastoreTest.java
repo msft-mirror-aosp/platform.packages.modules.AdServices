@@ -41,7 +41,6 @@ import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeast
 
 import com.google.common.truth.IterableSubject;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -97,11 +96,6 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                         mMockAdServicesErrorLogger);
         datastore.initialize();
         return datastore;
-    }
-
-    @After
-    public void cleanupDatastore() {
-        mDatastore.tearDownForTesting();
     }
 
     @Test
@@ -926,14 +920,14 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
 
     @Test
     public void testUpdate() throws Exception {
-        AtomicFile atomicFile = spy(new AtomicFile(new File(VALID_DIR, FILENAME)));
+        File file = deleteFile(VALID_DIR, FILENAME);
+        AtomicFile atomicFile = spy(new AtomicFile(file));
         AtomicFileDatastore datastore =
                 new AtomicFileDatastore(
                         atomicFile,
                         DATASTORE_VERSION,
                         TEST_VERSION_KEY,
                         mMockAdServicesErrorLogger);
-        try {
             datastore.update(
                     updateOperation -> {
                         updateOperation.putBoolean(TEST_KEY, false);
@@ -989,14 +983,12 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                     .containsExactlyEntriesIn(expectedMap);
 
             verify(atomicFile).startWrite();
-        } finally {
-            datastore.tearDownForTesting();
-        }
     }
 
     @Test
     public void testUpdate_noUpdateOnSameData() throws Exception {
-        AtomicFile atomicFile = spy(new AtomicFile(new File(VALID_DIR, FILENAME)));
+        File file = deleteFile(VALID_DIR, FILENAME);
+        AtomicFile atomicFile = spy(new AtomicFile(file));
         AtomicFileDatastore datastore =
                 new AtomicFileDatastore(
                         atomicFile,
@@ -1004,7 +996,6 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                         TEST_VERSION_KEY,
                         mMockAdServicesErrorLogger);
 
-        try {
             datastore.update(
                     updateOperation -> {
                         updateOperation.putBoolean(TEST_KEY, false);
@@ -1028,9 +1019,6 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                         updateOperation.putStringIfNew(TEST_KEY_5, "foo");
                     });
             verify(atomicFile).startWrite();
-        } finally {
-            datastore.tearDownForTesting();
-        }
     }
 
     @Test
@@ -1137,7 +1125,8 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
     }
 
     private void datastoreIoExceptionTestHelper(ThrowingRunnable runnable) throws Exception {
-        AtomicFile atomicFile = spy(new AtomicFile(new File(VALID_DIR, FILENAME)));
+        File file = deleteFile(VALID_DIR, FILENAME);
+        AtomicFile atomicFile = spy(new AtomicFile(file));
         AtomicFileDatastore datastore =
                 new AtomicFileDatastore(
                         atomicFile,
@@ -1145,67 +1134,61 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
                         TEST_VERSION_KEY,
                         mMockAdServicesErrorLogger);
 
-        try {
-            datastore.putBoolean(TEST_KEY, false);
-            datastore.putInt(TEST_KEY_1, 3);
-            datastore.putString(TEST_KEY_2, "bar");
-            datastore.putBoolean(TEST_KEY_3, true);
-            datastore.putBoolean(TEST_KEY_4, true);
+        datastore.putBoolean(TEST_KEY, false);
+        datastore.putInt(TEST_KEY_1, 3);
+        datastore.putString(TEST_KEY_2, "bar");
+        datastore.putBoolean(TEST_KEY_3, true);
+        datastore.putBoolean(TEST_KEY_4, true);
 
-            Map<String, Object> expectedMap =
-                    Map.of(
-                            TEST_KEY,
-                            false,
-                            TEST_KEY_1,
-                            3,
-                            TEST_KEY_2,
-                            "bar",
-                            TEST_KEY_3,
-                            true,
-                            TEST_KEY_4,
-                            true,
-                            TEST_VERSION_KEY,
-                            1);
+        Map<String, Object> expectedMap =
+                Map.of(
+                        TEST_KEY,
+                        false,
+                        TEST_KEY_1,
+                        3,
+                        TEST_KEY_2,
+                        "bar",
+                        TEST_KEY_3,
+                        true,
+                        TEST_KEY_4,
+                        true,
+                        TEST_VERSION_KEY,
+                        1);
 
-            assertWithMessage("datastore content check")
-                    .that(readFromAtomicFile(atomicFile))
-                    .containsExactlyEntriesIn(expectedMap);
+        assertWithMessage("datastore content check")
+                .that(readFromAtomicFile(atomicFile))
+                .containsExactlyEntriesIn(expectedMap);
 
-            // No file and local map update when exception occurs
-            when(atomicFile.startWrite()).thenThrow(new IOException("write failure"));
+        // No file and local map update when exception occurs
+        when(atomicFile.startWrite()).thenThrow(new IOException("write failure"));
 
-            assertThrows(IOException.class, () -> runnable.run(datastore));
+        assertThrows(IOException.class, () -> runnable.run(datastore));
 
-            assertWithMessage("getBoolean(%s)", TEST_KEY)
-                    .that(datastore.getBoolean(TEST_KEY))
-                    .isEqualTo(false);
-            assertWithMessage("getInt(%s)", TEST_KEY_1)
-                    .that(datastore.getInt(TEST_KEY_1))
-                    .isEqualTo(3);
-            assertWithMessage("getString(%s)", TEST_KEY_2)
-                    .that(datastore.getString(TEST_KEY_2))
-                    .isEqualTo("bar");
-            assertWithMessage("getBoolean(%s)", TEST_KEY_3)
-                    .that(datastore.getBoolean(TEST_KEY_3))
-                    .isEqualTo(true);
-            assertWithMessage("getBoolean(%s)", TEST_KEY_4)
-                    .that(datastore.getBoolean(TEST_KEY_4))
-                    .isEqualTo(true);
+        assertWithMessage("getBoolean(%s)", TEST_KEY)
+                .that(datastore.getBoolean(TEST_KEY))
+                .isEqualTo(false);
+        assertWithMessage("getInt(%s)", TEST_KEY_1).that(datastore.getInt(TEST_KEY_1)).isEqualTo(3);
+        assertWithMessage("getString(%s)", TEST_KEY_2)
+                .that(datastore.getString(TEST_KEY_2))
+                .isEqualTo("bar");
+        assertWithMessage("getBoolean(%s)", TEST_KEY_3)
+                .that(datastore.getBoolean(TEST_KEY_3))
+                .isEqualTo(true);
+        assertWithMessage("getBoolean(%s)", TEST_KEY_4)
+                .that(datastore.getBoolean(TEST_KEY_4))
+                .isEqualTo(true);
 
-            assertWithMessage("getBoolean(%s)", TEST_KEY_5)
-                    .that(datastore.getBoolean(TEST_KEY_5))
-                    .isNull();
-            assertWithMessage("getInt(%s)", TEST_KEY_6).that(datastore.getInt(TEST_KEY_6)).isNull();
-            assertWithMessage("getString(%s)", TEST_KEY_7)
-                    .that(datastore.getString(TEST_KEY_7))
-                    .isNull();
+        assertWithMessage("getBoolean(%s)", TEST_KEY_5)
+                .that(datastore.getBoolean(TEST_KEY_5))
+                .isNull();
+        assertWithMessage("getInt(%s)", TEST_KEY_6).that(datastore.getInt(TEST_KEY_6)).isNull();
+        assertWithMessage("getString(%s)", TEST_KEY_7)
+                .that(datastore.getString(TEST_KEY_7))
+                .isNull();
 
-            assertWithMessage("datastore content check after write failure")
-                    .that(readFromAtomicFile(atomicFile))
-                    .containsExactlyEntriesIn(expectedMap);
-        } finally {
-            datastore.tearDownForTesting();
-        }
+        assertWithMessage("datastore content check after write failure")
+                .that(readFromAtomicFile(atomicFile))
+                .containsExactlyEntriesIn(expectedMap);
     }
 
     @FunctionalInterface
