@@ -166,8 +166,6 @@ public abstract class AndroidMockerTestCase<T extends AndroidMocker> extends Dev
                 () -> getMocker().mockGetApplicationContext(mContext, mContext));
     }
 
-    // TODO(b/335935200): context.getApplicationContext() is not available on Ravenwood
-    @DisabledOnRavenwood(blockedBy = Context.class)
     @Test
     public final void testMockGetApplicationContext() {
         getMocker().mockGetApplicationContext(mMockContext, mContext);
@@ -177,8 +175,6 @@ public abstract class AndroidMockerTestCase<T extends AndroidMocker> extends Dev
         expect.withMessage("getApplicationContext()").that(actual).isSameInstanceAs(mContext);
     }
 
-    // TODO(b/335935200): context.getApplicationContext() is not available on Ravenwood
-    @DisabledOnRavenwood(blockedBy = Context.class)
     @Test
     public final void testMockGetApplicationContext_nullAppContext() {
         getMocker().mockGetApplicationContext(mMockContext, /* appContext= */ null);

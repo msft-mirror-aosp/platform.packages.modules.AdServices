@@ -16,6 +16,7 @@
 
 package android.adservices.cts;
 
+import static android.adservices.common.AdServicesModuleState.MODULE_STATE_DISABLED;
 import static android.adservices.common.AdServicesModuleState.MODULE_STATE_ENABLED;
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN;
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT;
@@ -158,10 +159,12 @@ public final class AdServicesCommonManagerTest extends CtsAdServicesDeviceTestCa
                 new AdServicesOutcomeReceiverForTests<>();
         UpdateAdServicesModuleStatesParams params =
                 new UpdateAdServicesModuleStatesParams.Builder()
+                        .setModuleState(MEASUREMENT, MODULE_STATE_DISABLED)
                         .setModuleState(MEASUREMENT, MODULE_STATE_ENABLED)
                         .setNotificationType(NotificationType.NOTIFICATION_ONGOING)
                         .build();
 
+        // last set value should be the returned value
         expect.that(params.getModuleStateMap().get(MEASUREMENT)).isEqualTo(MODULE_STATE_ENABLED);
         expect.that(params.getNotificationType()).isEqualTo(NotificationType.NOTIFICATION_ONGOING);
         expect.that(params.getModuleState(MEASUREMENT)).isEqualTo(MODULE_STATE_ENABLED);

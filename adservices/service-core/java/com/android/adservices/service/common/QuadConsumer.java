@@ -14,10 +14,24 @@
  * limitations under the License.
  */
 
-package android.adservices.common;
+package com.android.adservices.service.common;
 
 /**
- * Contains data of state for each AdServices modules.
+ * A 4-argument Consumer.
+ *
+ * @param <A> var1
+ * @param <B> var2
+ * @param <C> var3
+ * @param <D> var4
  */
-
-parcelable AdServicesModuleState;
+public interface QuadConsumer<A, B, C, D> {
+    /**
+     * Function that consumes 4 variables.
+     *
+     * @param var1 var1
+     * @param var2 var2
+     * @param var3 var3
+     * @param var4 var4
+     */
+    void accept(A var1, B var2, C var3, D var4);
+}

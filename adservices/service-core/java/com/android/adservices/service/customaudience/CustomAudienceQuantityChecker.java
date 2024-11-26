@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.annotation.NonNull;
 
@@ -36,15 +37,19 @@ public class CustomAudienceQuantityChecker {
 
     @VisibleForTesting
     static final String THE_MAX_NUMBER_OF_OWNER_ALLOWED_FOR_THE_DEVICE_HAD_REACHED =
-            "The max number of owner allowed for the device had reached.";
+            "The max number of owner allowed for the device has been reached.";
 
     @VisibleForTesting
     static final String THE_MAX_NUMBER_OF_CUSTOM_AUDIENCE_FOR_THE_DEVICE_HAD_REACHED =
-            "The max number of custom audience for the device had reached.";
+            "The max number of custom audience for the device has been reached.";
 
     @VisibleForTesting
     static final String THE_MAX_NUMBER_OF_CUSTOM_AUDIENCE_FOR_THE_OWNER_HAD_REACHED =
-            "The max number of custom audience for the owner had reached.";
+            "The max number of custom audience for the owner has been reached.";
+
+    @VisibleForTesting
+    static final String THE_MAX_NUMBER_OF_CUSTOM_AUDIENCE_FOR_THE_BUYER_HAD_REACHED =
+            "The max number of custom audience for the buyer has been reached.";
 
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final Flags mFlags;
@@ -65,25 +70,26 @@ public class CustomAudienceQuantityChecker {
      *   <li>The total number of custom audience does not exceed max allowed.
      *   <li>The total number of custom audience of an owner does not exceed max allowed.
      *   <li>The total number of custom audience owner does not exceed max allowed.
+     *   <li>The total number of custom audience per buyer does not exceed max allowed.
      * </ol>
      *
      * @param customAudience The custom audience really to be validated against.
      * @param callerPackageName the package name for the calling application, used as the owner
      *     application identifier
      */
-    // TODO(b/350584330): CustomAudience is not used in this method and can be removed from
-    // argument.
     public void check(@NonNull CustomAudience customAudience, @NonNull String callerPackageName) {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(callerPackageName);
 
+        AdTechIdentifier buyer = customAudience.getBuyer();
         long mCustomAudienceMaxOwnerCount = mFlags.getFledgeCustomAudienceMaxOwnerCount();
         long mCustomAudienceMaxCount = mFlags.getFledgeCustomAudienceMaxCount();
         long mCustomAudiencePerAppMaxCount = mFlags.getFledgeCustomAudiencePerAppMaxCount();
+        long mCustomAudiencePerBuyerMaxCount = mFlags.getFledgeCustomAudiencePerBuyerMaxCount();
 
         List<String> violations = new ArrayList<>();
         CustomAudienceStats customAudienceStats =
-                mCustomAudienceDao.getCustomAudienceStats(callerPackageName);
+                mCustomAudienceDao.getCustomAudienceStats(callerPackageName, buyer);
         if (customAudienceStats.getPerOwnerCustomAudienceCount() == 0
                 && customAudienceStats.getTotalOwnerCount() >= mCustomAudienceMaxOwnerCount) {
             violations.add(THE_MAX_NUMBER_OF_OWNER_ALLOWED_FOR_THE_DEVICE_HAD_REACHED);
@@ -93,6 +99,10 @@ public class CustomAudienceQuantityChecker {
         }
         if (customAudienceStats.getPerOwnerCustomAudienceCount() >= mCustomAudiencePerAppMaxCount) {
             violations.add(THE_MAX_NUMBER_OF_CUSTOM_AUDIENCE_FOR_THE_OWNER_HAD_REACHED);
+        }
+        if (customAudienceStats.getPerBuyerCustomAudienceCount()
+                >= mCustomAudiencePerBuyerMaxCount) {
+            violations.add(THE_MAX_NUMBER_OF_CUSTOM_AUDIENCE_FOR_THE_BUYER_HAD_REACHED);
         }
         if (!violations.isEmpty()) {
             throw new IllegalArgumentException(

@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement.reporting;
 
+import static com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator.POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION;
+import static com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator.PRE_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION;
 import static com.android.adservices.service.measurement.reporting.AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API;
 import static com.android.adservices.service.measurement.util.Applications.ANDROID_APP_SCHEME;
 
@@ -67,9 +69,6 @@ import java.util.stream.IntStream;
 
 @RunWith(MockitoJUnitRunner.class)
 public class AggregateDebugReportApiTest {
-    private static final String PRE_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "0.1";
-    private static final String POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "1.0";
-
     AggregateDebugReportApi mAggregateDebugReportApi;
     @Mock private Flags mFlags;
     @Mock private IMeasurementDao mMeasurementDao;

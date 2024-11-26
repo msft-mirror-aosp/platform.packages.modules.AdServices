@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package com.android.adservices.shared.proto;
+option java_multiple_files = true;
+option java_package = "com.android.adservices.shared.proto";
+
+// Describes a configuration for sampling events
+message LogSamplingConfig {
+  message PerEventSampling {
+    // Sampling rate for events. The value must be between 0 and 1 where 0 means no events are
+    // sampled and 1 means all events are sampled.
+    optional double sampling_rate = 1;
+  }
+
+  // Configuration of per-event sampling
+  optional PerEventSampling per_event_sampling = 1;
+}

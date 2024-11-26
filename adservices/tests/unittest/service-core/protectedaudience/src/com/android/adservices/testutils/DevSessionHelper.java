@@ -71,19 +71,13 @@ public class DevSessionHelper {
             AppInstallDao appInstallDao,
             FrequencyCapDao frequencyCapDao,
             ProtectedSignalsDao protectedSignalsDao) {
-        Flags flags =
-                new Flags() {
-                    @Override
-                    public boolean getDeveloperModeFeatureEnabled() {
-                        return true;
-                    }
-                };
         this.mDevSessionController =
                 new DevSessionControllerImpl(
                         new DatabaseClearer(
                                 customAudienceDao,
                                 appInstallDao,
-                                new AdFilteringFeatureFactory(appInstallDao, frequencyCapDao, flags)
+                                new AdFilteringFeatureFactory(
+                                                appInstallDao, frequencyCapDao, new Flags() {})
                                         .getFrequencyCapDataClearer(),
                                 protectedSignalsDao,
                                 AdServicesExecutors.getBackgroundExecutor()),
