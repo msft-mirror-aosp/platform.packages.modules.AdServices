@@ -24,7 +24,6 @@ import static com.android.adservices.flags.Flags.FLAG_ENABLE_ADSERVICES_API_ENAB
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
-import static com.android.adservices.flags.Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_DEFAULT_PARTIAL_CUSTOM_AUDIENCES_CONSTRUCTOR;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_DUMP_EFFECTIVE_TARGET_SDK_VERSION;
@@ -123,13 +122,6 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                     // be used to apply the restrictions. If any regression is observed, this
                     // feature can be rolled back
                     FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS,
-
-                    // This flag is used to guard the component ads feature from an API Level. There
-                    // will be two internal PH flags to guard the feature internally, one for the on
-                    // device auction and
-                    // one for the server auction
-                    // TODO:(b/377791969) move to NON_CANONICAL_FLAGS when PH flags are added
-                    FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS,
 
                     // This flag is used to guard a feature using an updated constructor, there are
                     // no accompanying service changes.
