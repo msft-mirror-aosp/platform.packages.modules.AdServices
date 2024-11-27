@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.common;
 
+import static com.android.adservices.shared.testing.common.FileHelper.deleteFile;
+
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
@@ -23,12 +25,11 @@ import static org.junit.Assert.assertThrows;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-import java.io.IOException;
+import java.io.File;
 
 public final class AtomicFileDatastoreTest extends AdServicesMockitoTestCase {
     private static final String FILENAME = "AtomicFileDatastoreTest.xml";
@@ -38,16 +39,12 @@ public final class AtomicFileDatastoreTest extends AdServicesMockitoTestCase {
     private AtomicFileDatastore mDatastore;
 
     @Before
-    public void initializeDatastore() throws IOException {
+    public void initializeDatastore() throws Exception {
+        File datastoreFile = deleteFile(mContext.getDataDir().getAbsolutePath(), FILENAME);
         mDatastore =
                 new AtomicFileDatastore(
-                        mContext, FILENAME, DATASTORE_VERSION, mMockAdServicesErrorLogger);
+                        datastoreFile, DATASTORE_VERSION, mMockAdServicesErrorLogger);
         mDatastore.initialize();
-    }
-
-    @After
-    public void cleanupDatastore() {
-        mDatastore.tearDownForTesting();
     }
 
     @Test

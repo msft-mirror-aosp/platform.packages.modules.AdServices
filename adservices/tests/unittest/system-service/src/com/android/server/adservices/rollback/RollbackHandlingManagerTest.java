@@ -37,7 +37,6 @@ import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -67,11 +66,6 @@ public final class RollbackHandlingManagerTest extends AdServicesExtendedMockito
                         DATASTORE_VERSION,
                         VERSION_KEY,
                         mMockAdServicesErrorLogger);
-    }
-
-    @After
-    public void tearDown() {
-        mDatastore.tearDownForTesting();
     }
 
     @Test

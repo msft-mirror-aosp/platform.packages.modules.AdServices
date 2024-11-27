@@ -523,20 +523,6 @@ public final class ConsentManager {
         return CONSENT_API_TYPE_PREFIX + consentApiType;
     }
 
-    /**
-     * @deprecated tests should use constructor that takes a datastore and remove its file
-     */
-    @Deprecated // TODO(b/378954994): remove
-    @VisibleForTesting
-    public void tearDownForTesting() {
-        mReadWriteLock.writeLock().lock();
-        try {
-            mDatastore.tearDownForTesting();
-        } finally {
-            mReadWriteLock.writeLock().unlock();
-        }
-    }
-
     @VisibleForTesting static final String IS_AD_ID_ENABLED = "IS_AD_ID_ENABLED";
 
     /** Returns whether the isAdIdEnabled bit is true. */

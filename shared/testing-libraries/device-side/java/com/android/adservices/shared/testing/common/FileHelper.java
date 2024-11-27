@@ -81,13 +81,15 @@ public final class FileHelper {
      *
      * <p>This is the same as {@code File.delete()}, but logging and throwing {@link IOException} if
      * the file could not be removed (for example, if it's a non-empty directory).
+     *
+     * @return reference to the file
      */
     public static File deleteFile(File file) throws IOException {
         sLog.i("deleteFile(%s)", file);
         Objects.requireNonNull(file, "file cannot be null");
         String path = file.getAbsolutePath();
         if (!file.exists()) {
-            sLog.i("deleteFile(%s): file doesn't exist", path);
+            sLog.d("deleteFile(%s): file doesn't exist", path);
             return file;
         }
         if (file.delete()) {
@@ -95,6 +97,22 @@ public final class FileHelper {
             return file;
         }
         throw new IOException("File " + file + " was not deleted");
+    }
+
+    /**
+     * Deletes a file.
+     *
+     * <p>This is the same as {@code File.delete()}, but logging and throwing {@link IOException} if
+     * the file could not be removed (for example, if it's a non-empty directory).
+     *
+     * @return reference to the file
+     */
+    public static File deleteFile(String baseDir, String filename) throws IOException {
+        sLog.i("createEmptyFile(%s, %s)", baseDir, filename);
+        Objects.requireNonNull(baseDir, "baseDir cannot be null");
+        Objects.requireNonNull(filename, "filename cannot be null");
+
+        return deleteFile(new File(baseDir, filename));
     }
 
     /** Recursively removes the contents of a directory. */

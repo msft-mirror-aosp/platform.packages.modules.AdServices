@@ -241,14 +241,4 @@ public class AppConsentManager {
         writer.printf("%sDatastore:\n", prefix2);
         mDatastore.dump(writer, prefix3, /* args= */ null);
     }
-
-    /**
-     * @deprecated tests should use constructor that takes a datastore and delete its file
-     */
-    @Deprecated // TODO(b/378954994): remove
-    public void tearDownForTesting() {
-        synchronized (this) {
-            mDatastore.tearDownForTesting();
-        }
-    }
 }
