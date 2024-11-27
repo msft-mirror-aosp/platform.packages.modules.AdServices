@@ -124,7 +124,6 @@ import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithE
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
-import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -173,6 +172,7 @@ import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnr
 import com.android.adservices.service.ui.util.EnrollmentData;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -189,6 +189,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.verification.VerificationMode;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -272,9 +273,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
         mDatastore =
                 new AtomicFileDatastore(
-                        mSpyContext,
-                        AppConsentDao.DATASTORE_NAME,
+                        new File(mSpyContext.getDataDir(), AppConsentDao.DATASTORE_NAME),
                         AppConsentDao.DATASTORE_VERSION,
+                        /* versionKey= */ "DaKey",
                         mMockAdServicesErrorLogger);
         // For each file, we should ensure there is only one instance of datastore that is able to
         // access it. (Refer to AtomicFileDatastore.class)

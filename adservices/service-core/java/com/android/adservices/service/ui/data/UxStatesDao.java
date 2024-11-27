@@ -21,13 +21,13 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.common.LegacyAtomicFileDatastoreFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.IOException;
