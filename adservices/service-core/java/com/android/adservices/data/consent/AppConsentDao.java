@@ -21,6 +21,7 @@ import android.content.pm.PackageManager;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.data.common.AtomicFileDatastore;
+import com.android.adservices.data.common.LegacyAtomicFileDatastoreFactory;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
@@ -63,8 +64,10 @@ public final class AppConsentDao {
             Suppliers.memoize(
                     () -> {
                         Context context = ApplicationContextSingleton.get();
+                        @SuppressWarnings("deprecation")
                         AtomicFileDatastore datastore =
-                                new AtomicFileDatastore(context, DATASTORE_NAME, DATASTORE_VERSION);
+                                LegacyAtomicFileDatastoreFactory.createAtomicFileDatastore(
+                                        context, DATASTORE_NAME, DATASTORE_VERSION);
                         PackageManager packageManager = context.getPackageManager();
                         return new AppConsentDao(datastore, packageManager);
                     });
