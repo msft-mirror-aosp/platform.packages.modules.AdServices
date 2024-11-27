@@ -34,7 +34,7 @@ import java.util.Objects;
 
 /** DAO for interacting with local storage on behalf of the UxStatesManager. */
 @RequiresApi(Build.VERSION_CODES.S)
-public class UxStatesDao {
+public final class UxStatesDao {
     @VisibleForTesting public static final int DATASTORE_VERSION = 1;
 
     @VisibleForTesting
@@ -53,9 +53,7 @@ public class UxStatesDao {
 
     @VisibleForTesting
     public UxStatesDao(AtomicFileDatastore datastore) {
-        Objects.requireNonNull(datastore);
-
-        mDatastore = datastore;
+        mDatastore = Objects.requireNonNull(datastore, "datastore cannot be null");
     }
 
     /** Returns an instance of the UxStatesDao. */
