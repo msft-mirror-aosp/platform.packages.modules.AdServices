@@ -22,6 +22,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.shared.storage.AtomicFileDatastore.DUMP_ARGS_INCLUDE_CONTENTS_ONLY;
 import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+import static com.android.adservices.shared.testing.common.FileHelper.deleteFile;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -80,14 +81,17 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
 
     @Before
     public void initializeDatastore() throws Exception {
-        mDatastore = newInitializedDataStore();
+        mDatastore = newInitializedDataStore(/* wipeFile= */ true);
     }
 
-    private AtomicFileDatastore newInitializedDataStore() throws IOException {
+    private AtomicFileDatastore newInitializedDataStore(boolean wipeFile) throws IOException {
+        File datastoreFile = new File(VALID_DIR, FILENAME);
+        if (wipeFile) {
+            deleteFile(datastoreFile);
+        }
         var datastore =
                 new AtomicFileDatastore(
-                        VALID_DIR,
-                        FILENAME,
+                        datastoreFile,
                         DATASTORE_VERSION,
                         TEST_VERSION_KEY,
                         mMockAdServicesErrorLogger);
@@ -1083,7 +1087,7 @@ public final class AtomicFileDatastoreTest extends SharedExtendedMockitoTestCase
         expect.withMessage("number of entries after clear()").that(mDatastore.keySet()).isEmpty();
 
         // Create a new datastore using the same file - it should be empty
-        var clonedDatastore = newInitializedDataStore();
+        var clonedDatastore = newInitializedDataStore(/* wipeFile= */ false);
         expect.withMessage("number of entries on new datastore using same file")
                 .that(clonedDatastore.keySet())
                 .isEmpty();

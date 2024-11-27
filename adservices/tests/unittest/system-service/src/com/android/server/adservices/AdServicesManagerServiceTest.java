@@ -18,6 +18,7 @@ package com.android.server.adservices;
 
 import static com.android.adservices.service.CommonDebugFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+import static com.android.adservices.shared.testing.common.FileHelper.deleteDirectory;
 import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -90,6 +91,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -146,12 +148,13 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     }
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         TopicsDao topicsDao = new TopicsDao(mDBHelper);
+        File baseDir = mContext.getFilesDir();
+        String basePath = baseDir.getAbsolutePath();
+        deleteDirectory(baseDir);
         mUserInstanceManager =
-                new UserInstanceManager(
-                        topicsDao,
-                        /* adServicesBaseDir= */ mContext.getFilesDir().getAbsolutePath()) {
+                new UserInstanceManager(topicsDao, basePath) {
                     @Override
                     public void dump(PrintWriter writer, String[] args) {
                         writer.println(USER_INSTANCE_MANAGER_DUMP);

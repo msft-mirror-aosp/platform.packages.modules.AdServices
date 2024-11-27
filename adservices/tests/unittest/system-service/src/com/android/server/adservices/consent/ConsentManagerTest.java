@@ -18,7 +18,9 @@ package com.android.server.adservices.consent;
 
 import static com.android.adservices.shared.testing.common.DumpHelper.assertDumpHasPrefix;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+import static com.android.adservices.shared.testing.common.FileHelper.deleteDirectory;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import static com.android.server.adservices.consent.ConsentManager.NOTIFICATION_DISPLAYED_ONCE;
 import static com.android.server.adservices.consent.ConsentManager.STORAGE_VERSION;
 import static com.android.server.adservices.consent.ConsentManager.STORAGE_XML_IDENTIFIER;
@@ -31,16 +33,12 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
 
 import android.app.adservices.consent.ConsentParcel;
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.adservices.shared.storage.AtomicFileDatastore;
-import com.android.modules.utils.testing.ExtendedMockitoRule;
 import com.android.server.adservices.Flags;
 import com.android.server.adservices.FlagsFactory;
 import com.android.server.adservices.feature.PrivacySandboxEnrollmentChannelCollection;
@@ -62,11 +60,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-/** Tests for {@link ConsentManager} */
-@ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
+@SpyStatic(FlagsFactory.class)
 public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase {
-    private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final String BASE_DIR = PPAPI_CONTEXT.getFilesDir().getAbsolutePath();
+    private static final File TEST_DIR = sContext.getFilesDir();
+    private static final String BASE_DIR = TEST_DIR.getAbsolutePath();
 
     @Rule(order = 11)
     public final AdServicesFlagsSetterRule flags =
@@ -87,18 +84,15 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Before
     public void setup() throws Exception {
+        deleteDirectory(TEST_DIR);
+
+        File datastoreFile = new File(TEST_DIR, STORAGE_XML_IDENTIFIER);
         mDatastore =
                 new AtomicFileDatastore(
-                        PPAPI_CONTEXT.getFilesDir().getAbsolutePath(),
-                        STORAGE_XML_IDENTIFIER,
-                        STORAGE_VERSION,
-                        VERSION_KEY,
-                        mMockAdServicesErrorLogger);
+                        datastoreFile, STORAGE_VERSION, VERSION_KEY, mMockAdServicesErrorLogger);
         when(FlagsFactory.getFlags()).thenReturn(mMockServerFlags);
         mockGetEnableAtomicFileDatastoreBatchUpdateApiInSystemServer(false);
-        mConsentManager = mConsentManager.createConsentManager(BASE_DIR, /* userIdentifier */ 0);
-        mCleanupActions.add(() -> mDatastore.tearDownForTesting());
-        mCleanupActions.add(() -> mConsentManager.tearDownForTesting());
+        mConsentManager = ConsentManager.createConsentManager(BASE_DIR, /* userIdentifier= */ 0);
     }
 
     @After
@@ -355,7 +349,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                                 new File(BASE_DIR + userIdentifierNotPresent)))
                 .isFalse();
         assertThat(Files.exists(packageDir)).isTrue();
-        consentManager.tearDownForTesting();
     }
 
     @Test
@@ -449,7 +442,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         // Assert that the DataStore is created and initialized with NOTIFICATION_DISPLAYED_ONCE
         // is false.
         assertThat(datastore.getBoolean(NOTIFICATION_DISPLAYED_ONCE)).isFalse();
-        datastore.tearDownForTesting();
     }
 
     private void testConsentNonNull() throws Exception {
@@ -528,8 +520,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         expect.withMessage("consentManager0 consent ALL_API")
                 .that(consentManager0.getConsent(ConsentParcel.ALL_API).isIsGiven())
                 .isFalse();
-        consentManager0.tearDownForTesting();
-        consentManager1.tearDownForTesting();
     }
 
     private void testSetCurrentPrivacySandboxFeatureSteps() throws Exception {

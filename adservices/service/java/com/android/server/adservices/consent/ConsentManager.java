@@ -15,6 +15,7 @@
  */
 package com.android.server.adservices.consent;
 
+import android.annotation.UserIdInt;
 import android.app.adservices.consent.ConsentParcel;
 
 import com.android.adservices.shared.storage.AtomicFileDatastore;
@@ -88,8 +89,8 @@ public final class ConsentManager {
         mDatastore = Objects.requireNonNull(datastore, "datastore cannot be null");
     }
 
-    /** Create a ConsentManager with base directory and for userIdentifier */
-    public static ConsentManager createConsentManager(String baseDir, int userIdentifier)
+    /** Creates a ConsentManager with base directory and for userId */
+    public static ConsentManager createConsentManager(String baseDir, @UserIdInt int userId)
             throws IOException {
         Objects.requireNonNull(baseDir, "Base dir must be provided.");
 
@@ -97,9 +98,9 @@ public final class ConsentManager {
         // /data/system/adservices/user_id/consent/data_schema_version/
         // Create the consent directory if needed.
         String consentDataStoreDir =
-                ConsentDatastoreLocationHelper.getConsentDataStoreDirAndCreateDir(
-                        baseDir, userIdentifier);
+                ConsentDatastoreLocationHelper.getConsentDataStoreDirAndCreateDir(baseDir, userId);
 
+        LogUtil.i("Creating datastore for user %d on dir %s", userId, consentDataStoreDir);
         AtomicFileDatastore datastore = createAndInitAtomicFileDatastore(consentDataStoreDir);
 
         return new ConsentManager(datastore);
@@ -522,7 +523,10 @@ public final class ConsentManager {
         return CONSENT_API_TYPE_PREFIX + consentApiType;
     }
 
-    /** tearDown method used for Testing only. */
+    /**
+     * @deprecated tests should use constructor that takes a datastore and remove its file
+     */
+    @Deprecated // TODO(b/378954994): remove
     @VisibleForTesting
     public void tearDownForTesting() {
         mReadWriteLock.writeLock().lock();

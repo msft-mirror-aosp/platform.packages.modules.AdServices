@@ -166,7 +166,10 @@ public final class RollbackHandlingManager {
         }
     }
 
-    /** tesrDown method used for testing only. */
+    /**
+     * @deprecated
+     */
+    @Deprecated // TODO(b/378954994): remove
     @VisibleForTesting
     public void tearDownForTesting() {
         synchronized (this) {
