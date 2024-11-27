@@ -34,12 +34,13 @@ import android.adservices.clients.signals.ProtectedSignalsClient;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.signals.UpdateSignalsRequest;
 import android.adservices.utils.CtsWebViewSupportUtil;
+import android.adservices.utils.DevContextUtils;
 import android.adservices.utils.MockWebServerRule;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 import android.net.Uri;
+import android.util.Log;
 
-import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.shared.testing.BroadcastReceiverSyncCallback;
@@ -70,31 +71,35 @@ import java.util.concurrent.Executors;
 @EnableDebugFlag(KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED)
 @RequiresSdkLevelAtLeastT(reason = "Protected App Signals is enabled for T+")
 public class TriggerEncodingShellCommandTest extends AdServicesDebuggableTestCase {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     public static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
     private static final String ACTION_REGISTER_ENCODER_LOGIC_COMPLETE =
             "android.adservices.debug.REGISTER_ENCODER_LOGIC_COMPLETE";
-    private ProtectedSignalsClient mProtectedSignalsClient;
+
+    @Rule(order = 11)
+    public final SupportedByConditionRule devOptionsEnabled =
+            DevContextUtils.createDevOptionsAvailableRule(mContext, LOGCAT_TAG_FLEDGE);
+
+    @Rule(order = 16)
+    public MockWebServerRule mMockWebServerRule =
+            MockWebServerRule.forHttps(
+                    mContext, "adservices_untrusted_test_server.p12", "adservices_test");
+
+    @Rule(order = 17)
+    public SupportedByConditionRule mWebViewSupportedRule =
+            CtsWebViewSupportUtil.createJSSandboxAvailableRule(mContext);
 
     private final AdServicesShellCommandHelper mShellCommandHelper =
             new AdServicesShellCommandHelper();
 
-    @Rule(order = 6)
-    public MockWebServerRule mMockWebServerRule =
-            MockWebServerRule.forHttps(
-                    sContext, "adservices_untrusted_test_server.p12", "adservices_test");
-
-    @Rule(order = 7)
-    public SupportedByConditionRule mWebViewSupportedRule =
-            CtsWebViewSupportUtil.createJSSandboxAvailableRule(sContext);
+    private ProtectedSignalsClient mProtectedSignalsClient;
 
     @Before
     public void setUp() throws Exception {
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
 
         mProtectedSignalsClient =
                 new ProtectedSignalsClient.Builder()
-                        .setContext(sContext)
+                        .setContext(mContext)
                         .setExecutor(Executors.newCachedThreadPool())
                         .build();
     }
@@ -118,7 +123,7 @@ public class TriggerEncodingShellCommandTest extends AdServicesDebuggableTestCas
     // TODO(b/331285831): fix this (see go/rb-FutureReturnValueIgnored)
     @SuppressWarnings("FutureReturnValueIgnored")
     private void joinSignals(ScenarioDispatcher scenarioDispatcher) throws InterruptedException {
-        sLogger.d("Joining signals before running test.");
+        Log.d(LOGCAT_TAG_FLEDGE, "Joining signals before running test.");
         mProtectedSignalsClient.updateSignals(
                 new UpdateSignalsRequest.Builder(
                                 Uri.parse(
@@ -126,8 +131,8 @@ public class TriggerEncodingShellCommandTest extends AdServicesDebuggableTestCas
                                                 + "/signals"))
                         .build());
         BroadcastReceiverSyncCallback broadcastReceiverSyncCallback =
-                new BroadcastReceiverSyncCallback(sContext, ACTION_REGISTER_ENCODER_LOGIC_COMPLETE);
+                new BroadcastReceiverSyncCallback(mContext, ACTION_REGISTER_ENCODER_LOGIC_COMPLETE);
         broadcastReceiverSyncCallback.assertResultReceived();
-        sLogger.d("Broadcast was properly received. Encoder logic registered.");
+        Log.d(LOGCAT_TAG_FLEDGE, "Broadcast was properly received. Encoder logic registered.");
     }
 }
