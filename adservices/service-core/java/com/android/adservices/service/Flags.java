@@ -1002,6 +1002,25 @@ public interface Flags extends ModuleSharedFlags {
     long FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_RETRY_AFTER_VALUE_MS =
             24 * 60 * 60 * 1000; // 24 hours in ms
 
+    @FeatureFlag boolean ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS = false;
+    @ConfigFlag int MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE = 40;
+    @ConfigFlag int COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES = 12;
+
+    /** Returns true if the component ads feature is enabled for custom audiences. */
+    default boolean getEnableCustomAudienceComponentAds() {
+        return ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
+    }
+
+    /** Returns the maximum number of component ads per custom audience. */
+    default int getMaxComponentAdsPerCustomAudience() {
+        return MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE;
+    }
+
+    /** Returns the maximum length of component ad render ids in bytes. */
+    default int getComponentAdRenderIdMaxLengthBytes() {
+        return COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES;
+    }
+
     /**
      * Returns the minimum number of milliseconds before the same fetch CA request can be retried.
      */

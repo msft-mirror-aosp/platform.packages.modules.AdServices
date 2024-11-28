@@ -185,7 +185,7 @@ public class FetchCustomAudienceImpl {
         // Ensuring process-stable flag values by assigning to local variables at instantiation.
         mFledgeFetchCustomAudienceEnabled = flags.getFledgeFetchCustomAudienceEnabled();
         mDisableFledgeEnrollmentCheck = flags.getDisableFledgeEnrollmentCheck();
-        mEnforceForegroundStatus = flags.getEnforceForegroundStatusForFledgeCustomAudience();
+        mEnforceForegroundStatus = flags.getEnforceForegroundStatusForFetchAndJoinCustomAudience();
         mMaxNameSizeB = flags.getFledgeCustomAudienceMaxNameSizeB();
         mMaxActivationDelayInMs = flags.getFledgeCustomAudienceMaxActivationDelayInMs();
         mMaxExpireInMs = flags.getFledgeCustomAudienceMaxExpireInMs();
