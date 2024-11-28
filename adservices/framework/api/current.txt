@@ -87,6 +87,7 @@ package android.adservices.adselection {
 
   public class AdSelectionOutcome {
     method @NonNull public long getAdSelectionId();
+    method @FlaggedApi("com.android.adservices.flags.fledge_enable_custom_audience_component_ads") @NonNull public java.util.List<android.net.Uri> getComponentAdUris();
     method @NonNull public android.net.Uri getRenderUri();
     method public boolean hasOutcome();
     field @NonNull public static final android.adservices.adselection.AdSelectionOutcome NO_OUTCOME;
@@ -96,6 +97,7 @@ package android.adservices.adselection {
     ctor public AdSelectionOutcome.Builder();
     method @NonNull public android.adservices.adselection.AdSelectionOutcome build();
     method @NonNull public android.adservices.adselection.AdSelectionOutcome.Builder setAdSelectionId(long);
+    method @FlaggedApi("com.android.adservices.flags.fledge_enable_custom_audience_component_ads") @NonNull public android.adservices.adselection.AdSelectionOutcome.Builder setComponentAdUris(@NonNull java.util.List<android.net.Uri>);
     method @NonNull public android.adservices.adselection.AdSelectionOutcome.Builder setRenderUri(@NonNull android.net.Uri);
   }
 
@@ -362,9 +364,9 @@ package android.adservices.common {
     field public static final android.adservices.common.AdSelectionSignals EMPTY;
   }
 
-  public interface AdServicesOutcomeReceiver<R, E extends java.lang.Throwable> {
-    method public default void onError(@NonNull E);
-    method public void onResult(R);
+  @Deprecated @FlaggedApi("com.android.adservices.flags.adservices_outcomereceiver_r_api_deprecated") public interface AdServicesOutcomeReceiver<R, E extends java.lang.Throwable> {
+    method @Deprecated public default void onError(@NonNull E);
+    method @Deprecated public void onResult(R);
   }
 
   public class AdServicesPermissions {
@@ -394,6 +396,15 @@ package android.adservices.common {
     ctor public AppInstallFilters.Builder();
     method @NonNull public android.adservices.common.AppInstallFilters build();
     method @NonNull public android.adservices.common.AppInstallFilters.Builder setPackageNames(@NonNull java.util.Set<java.lang.String>);
+  }
+
+  @FlaggedApi("com.android.adservices.flags.fledge_enable_custom_audience_component_ads") public final class ComponentAdData implements android.os.Parcelable {
+    ctor public ComponentAdData(@NonNull android.net.Uri, @NonNull String);
+    method public int describeContents();
+    method @NonNull public String getAdRenderId();
+    method @NonNull public android.net.Uri getRenderUri();
+    method public void writeToParcel(@NonNull android.os.Parcel, int);
+    field @NonNull public static final android.os.Parcelable.Creator<android.adservices.common.ComponentAdData> CREATOR;
   }
 
   public final class FrequencyCapFilters implements android.os.Parcelable {
@@ -466,6 +477,7 @@ package android.adservices.customaudience {
     method @FlaggedApi("com.android.adservices.flags.fledge_custom_audience_auction_server_request_flags_enabled") public int getAuctionServerRequestFlags();
     method @NonNull public android.net.Uri getBiddingLogicUri();
     method @NonNull public android.adservices.common.AdTechIdentifier getBuyer();
+    method @FlaggedApi("com.android.adservices.flags.fledge_enable_custom_audience_component_ads") @NonNull public java.util.List<android.adservices.common.ComponentAdData> getComponentAds();
     method @NonNull public android.net.Uri getDailyUpdateUri();
     method @Nullable public java.time.Instant getExpirationTime();
     method @NonNull public String getName();
@@ -485,6 +497,7 @@ package android.adservices.customaudience {
     method @FlaggedApi("com.android.adservices.flags.fledge_custom_audience_auction_server_request_flags_enabled") @NonNull public android.adservices.customaudience.CustomAudience.Builder setAuctionServerRequestFlags(int);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setBiddingLogicUri(@NonNull android.net.Uri);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setBuyer(@NonNull android.adservices.common.AdTechIdentifier);
+    method @FlaggedApi("com.android.adservices.flags.fledge_enable_custom_audience_component_ads") @NonNull public android.adservices.customaudience.CustomAudience.Builder setComponentAds(@NonNull java.util.List<android.adservices.common.ComponentAdData>);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setDailyUpdateUri(@NonNull android.net.Uri);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setExpirationTime(@Nullable java.time.Instant);
     method @NonNull public android.adservices.customaudience.CustomAudience.Builder setName(@NonNull String);
@@ -581,7 +594,8 @@ package android.adservices.customaudience {
   }
 
   @FlaggedApi("com.android.adservices.flags.fledge_schedule_custom_audience_update_enabled") public static final class ScheduleCustomAudienceUpdateRequest.Builder {
-    ctor public ScheduleCustomAudienceUpdateRequest.Builder(@NonNull android.net.Uri, @NonNull java.time.Duration, @NonNull java.util.List<android.adservices.customaudience.PartialCustomAudience>);
+    ctor @Deprecated public ScheduleCustomAudienceUpdateRequest.Builder(@NonNull android.net.Uri, @NonNull java.time.Duration, @NonNull java.util.List<android.adservices.customaudience.PartialCustomAudience>);
+    ctor @FlaggedApi("com.android.adservices.flags.fledge_enable_schedule_custom_audience_default_partial_custom_audiences_constructor") public ScheduleCustomAudienceUpdateRequest.Builder(@NonNull android.net.Uri, @NonNull java.time.Duration);
     method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest build();
     method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest.Builder setMinDelay(@NonNull java.time.Duration);
     method @NonNull public android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest.Builder setPartialCustomAudienceList(@NonNull java.util.List<android.adservices.customaudience.PartialCustomAudience>);

@@ -19,21 +19,14 @@ package com.android.tests.sandbox.adid;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
-import android.content.Context;
 import android.os.Bundle;
 
-import androidx.test.platform.app.InstrumentationRegistry;
-
-import com.android.adservices.common.AdservicesTestHelper;
-import com.android.compatibility.common.util.ShellUtils;
+import com.android.adservices.common.AdServicesCtsTestCase;
 
 import org.junit.After;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.time.Duration;
 import java.util.concurrent.Executor;
@@ -43,8 +36,8 @@ import java.util.concurrent.TimeoutException;
 /*
  * Test AdId API running within the Sandbox.
  */
-@RunWith(JUnit4.class)
-public class SandboxedAdIdManagerTest {
+public final class SandboxedAdIdManagerTest extends AdServicesCtsTestCase
+        implements CtsSandboxedAdIdTestFlags {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SDK_NAME = "com.android.tests.providers.adidsdk";
 
@@ -54,28 +47,29 @@ public class SandboxedAdIdManagerTest {
     @Rule(order = 0)
     public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
 
-    private static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getContext();
-
     @Before
     public void setup() throws TimeoutException, InterruptedException {
+        // The setup for this test:
+        // SandboxedAdIdManagerTest is the test app. It will load the adidsdk into the Sandbox.
+        // The adidsdk (running within the Sandbox) will query AdId API and verify that the correct
+        // adid are returned.
+        // After adidsdk verifies the result, it will communicate back to the
+        // SandboxedAdIdManagerTest via the loadSdk's callback.
+        // In this test, we use the loadSdk's callback as a 2-way communications between the Test
+        // app (this class) and the Sdk running within the Sandbox process.
+
         // Start a foreground activity
         SimpleActivity.startAndWaitForSimpleActivity(
-                sContext, Duration.ofMillis(FOREGROUND_ACTIVITY_BROADCAST_WAITING_TIMEOUT_MS));
-        overridingBeforeTest();
+                mContext, Duration.ofMillis(FOREGROUND_ACTIVITY_BROADCAST_WAITING_TIMEOUT_MS));
     }
 
     @After
     public void shutDown() {
-        overridingAfterTest();
-        SimpleActivity.stopSimpleActivity(sContext);
+        SimpleActivity.stopSimpleActivity(mContext);
     }
 
     @Test
-    public void loadSdkAndRunAdIdApi() throws Exception {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
+    public void loadSdkAndRunAdIdApi() {
         final SdkSandboxManager sdkSandboxManager =
                 sContext.getSystemService(SdkSandboxManager.class);
 
@@ -87,40 +81,5 @@ public class SandboxedAdIdManagerTest {
         // This verifies that the adidsdk in the Sandbox gets back the correct adid.
         // If the adidsdk did not get correct adid, it will trigger the callback.onLoadSdkError.
         callback.assertLoadSdkIsSuccessful("Load SDK from internet");
-    }
-
-    private void overridingBeforeTest() {
-        overridingAdservicesLoggingLevel("VERBOSE");
-        // The setup for this test:
-        // SandboxedAdIdManagerTest is the test app. It will load the adidsdk into the Sandbox.
-        // The adidsdk (running within the Sandbox) will query AdId API and verify that the correct
-        // adid are returned.
-        // After adidsdk verifies the result, it will communicate back to the
-        // SandboxedAdIdManagerTest via the loadSdk's callback.
-        // In this test, we use the loadSdk's callback as a 2-way communications between the Test
-        // app (this class) and the Sdk running within the Sandbox process.
-
-        overridingAdservicesAdIdKillSwitch(true);
-    }
-
-    // Reset back the original values.
-    private void overridingAfterTest() {
-        overridingAdservicesLoggingLevel("INFO");
-        overridingAdservicesAdIdKillSwitch(false);
-    }
-
-    private void overridingAdservicesLoggingLevel(String loggingLevel) {
-        ShellUtils.runShellCommand("setprop log.tag.adservices %s", loggingLevel);
-    }
-
-    // Override adid_kill_switch to ignore the effect of actual PH values.
-    // If shouldOverride = true, override adid_kill_switch to OFF to allow adservices
-    // If shouldOverride = false, override adid_kill_switch to meaningless value so that PhFlags
-    // will
-    // use the default value.
-    private void overridingAdservicesAdIdKillSwitch(boolean shouldOverride) {
-        String overrideString = shouldOverride ? "false" : "null";
-        ShellUtils.runShellCommand(
-                "device_config put adservices adid_kill_switch " + overrideString);
     }
 }

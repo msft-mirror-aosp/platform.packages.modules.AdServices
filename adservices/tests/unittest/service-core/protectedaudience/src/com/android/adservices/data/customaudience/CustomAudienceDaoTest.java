@@ -18,6 +18,9 @@ package com.android.adservices.data.customaudience;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -25,6 +28,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -33,10 +37,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.times;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
+import android.adservices.common.ComponentAdData;
+import android.adservices.common.ComponentAdDataFixture;
+import android.adservices.common.DBComponentAdDataFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.PartialCustomAudience;
 import android.content.pm.ApplicationInfo;
@@ -60,6 +68,7 @@ import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.adservices.service.exception.PersistScheduleCAUpdateException;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -68,6 +77,8 @@ import com.google.common.collect.ImmutableMap;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 
 import java.time.Clock;
@@ -645,6 +656,11 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                     .setUserBiddingSignals(USER_BIDDING_SIGNALS_1);
 
     private CustomAudienceDao mCustomAudienceDao;
+    @Captor ArgumentCaptor<Integer> mScheduleAttemptedStatsCaptor;
+
+    @Mock
+    ScheduledCustomAudienceUpdateScheduleAttemptedStats.Builder
+            mUpdateScheduleAttemptedStatsBuilderMock;
 
     @Before
     public void setup() {
@@ -1262,7 +1278,16 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    mCustomAudienceDao.getCustomAudienceStats(null);
+                    mCustomAudienceDao.getCustomAudienceStats(/* owner= */ null, BUYER_1);
+                });
+    }
+
+    @Test
+    public void testGetCustomAudienceStats_nullBuyer() {
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    mCustomAudienceDao.getCustomAudienceStats(OWNER_1, /* buyer= */ null);
                 });
     }
 
@@ -1271,21 +1296,57 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
         doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
 
         verifyCustomAudienceStats(
-                mCustomAudienceDao.getCustomAudienceStats(OWNER_1), OWNER_1, 0, 0, 0);
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_1, BUYER_1),
+                OWNER_1,
+                BUYER_1,
+                /*totalCount*/ 0,
+                /*perOwnerCount*/ 0,
+                /*ownerCount*/ 0,
+                /*perBuyerCount*/ 0);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, /* debuggable= */ false);
         verifyCustomAudienceStats(
-                mCustomAudienceDao.getCustomAudienceStats(OWNER_1), OWNER_1, 1, 1, 1);
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_1, BUYER_1),
+                OWNER_1,
+                BUYER_1,
+                /* totalCount= */ 1,
+                /* perOwnerCount= */ 1,
+                /* ownerCount= */ 1,
+                /* perBuyerCount= */ 1);
         verifyCustomAudienceStats(
-                mCustomAudienceDao.getCustomAudienceStats(OWNER_2), OWNER_2, 1, 0, 1);
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_2, BUYER_2),
+                OWNER_2,
+                BUYER_2,
+                /* totalCount= */ 1,
+                /* perOwnerCount= */ 0,
+                /* ownerCount= */ 1,
+                /* perBuyerCount= */ 0);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_1, false);
+                CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_1, /*debuggable*/ false);
         verifyCustomAudienceStats(
-                mCustomAudienceDao.getCustomAudienceStats(OWNER_1), OWNER_1, 2, 1, 2);
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_1, BUYER_1),
+                OWNER_1,
+                BUYER_1,
+                /* totalCount= */ 2,
+                /* perOwnerCount= */ 1,
+                /* ownerCount= */ 2,
+                /* perBuyerCount= */ 1);
         verifyCustomAudienceStats(
-                mCustomAudienceDao.getCustomAudienceStats(OWNER_2), OWNER_2, 2, 1, 2);
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_2, BUYER_2),
+                OWNER_2,
+                BUYER_2,
+                /* totalCount= */ 2,
+                /* perOwnerCount= */ 1,
+                /* ownerCount= */ 2,
+                /* perBuyerCount= */ 1);
         verifyCustomAudienceStats(
-                mCustomAudienceDao.getCustomAudienceStats(OWNER_3), OWNER_3, 2, 0, 2);
+                mCustomAudienceDao.getCustomAudienceStats(OWNER_3, BUYER_3),
+                OWNER_3,
+                BUYER_3,
+                /* totalCount= */ 2,
+                /* perOwnerCount= */ 0,
+                /* ownerCount= */ 2,
+                /* perBuyerCount= */ 0);
     }
 
     @Test(expected = NullPointerException.class)
@@ -3039,7 +3100,8 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 anUpdate,
                 List.of(partialCustomAudience1, partialCustomAudience2),
                 Collections.emptyList(),
-                /* shouldReplacePendingUpdates= */ false);
+                /* shouldReplacePendingUpdates= */ false,
+                mUpdateScheduleAttemptedStatsBuilderMock);
         updates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
@@ -3103,7 +3165,8 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 anUpdate,
                 List.of(partialCustomAudience1, partialCustomAudience2),
                 List.of(CA_TO_LEAVE_NAME_1, CA_TO_LEAVE_NAME_2),
-                /* shouldReplacePendingUpdates= */ false);
+                /* shouldReplacePendingUpdates= */ false,
+                mUpdateScheduleAttemptedStatsBuilderMock);
         updates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
@@ -3168,7 +3231,8 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 anUpdate,
                 List.of(partialCustomAudience1),
                 Collections.emptyList(),
-                /* shouldReplacePendingUpdates= */ false);
+                /* shouldReplacePendingUpdates= */ false,
+                mUpdateScheduleAttemptedStatsBuilderMock);
         updates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
@@ -3196,7 +3260,8 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 similarUpdate,
                 List.of(partialCustomAudience_2),
                 Collections.emptyList(),
-                /* shouldReplacePendingUpdates= */ true);
+                /* shouldReplacePendingUpdates= */ true,
+                mUpdateScheduleAttemptedStatsBuilderMock);
         List<DBScheduledCustomAudienceUpdate> newUpdates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
@@ -3242,7 +3307,9 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 anUpdate,
                 List.of(partialCustomAudience1),
                 List.of(CA_TO_LEAVE_NAME_1),
-                /* shouldReplacePendingUpdates= */ false);
+                /* shouldReplacePendingUpdates= */ false,
+                mUpdateScheduleAttemptedStatsBuilderMock);
+
         updates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
@@ -3281,11 +3348,21 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                                 similarUpdate,
                                 List.of(partialCustomAudience_2),
                                 List.of(CA_TO_LEAVE_NAME_2),
-                                /* shouldReplacePendingUpdates= */ false));
+                                /* shouldReplacePendingUpdates= */ false,
+                                mUpdateScheduleAttemptedStatsBuilderMock));
+
         List<DBScheduledCustomAudienceUpdate> updatesInDB =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
         assertEquals("Only 1 entry should have been inserted", 1, updatesInDB.size());
+        verify(mUpdateScheduleAttemptedStatsBuilderMock, times(2))
+                .setExistingUpdateStatus(mScheduleAttemptedStatsCaptor.capture());
+        assertWithMessage("Existing update status")
+                .that(mScheduleAttemptedStatsCaptor.getAllValues().get(0))
+                .isEqualTo(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE);
+        assertWithMessage("Existing update status")
+                .that(mScheduleAttemptedStatsCaptor.getAllValues().get(1))
+                .isEqualTo(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE);
 
         long newUpdateId = updatesInDB.get(0).getUpdateId();
         assertEquals(previousUpdateId, newUpdateId);
@@ -3304,6 +3381,7 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                                 .map(entry -> entry.getName())
                                 .collect(Collectors.toList()))
                 .containsExactly(CA_TO_LEAVE_NAME_1);
+
     }
 
     @Test
@@ -3334,7 +3412,8 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 oldUpdate,
                 List.of(oldPartialCustomAudience1, oldPartialCustomAudience2),
                 List.of(CA_TO_LEAVE_NAME_1, CA_TO_LEAVE_NAME_2),
-                /* shouldReplacePendingUpdates= */ false);
+                /* shouldReplacePendingUpdates= */ false,
+                mUpdateScheduleAttemptedStatsBuilderMock);
 
         DBScheduledCustomAudienceUpdate anUpdate =
                 DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
@@ -3381,7 +3460,18 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 anUpdate,
                 List.of(newPartialCustomAudience1, newPartialCustomAudience2),
                 List.of(CA_TO_LEAVE_NAME_3, CA_TO_LEAVE_NAME_4),
-                /* shouldReplacePendingUpdates= */ true);
+                /* shouldReplacePendingUpdates= */ true,
+                mUpdateScheduleAttemptedStatsBuilderMock);
+
+        verify(mUpdateScheduleAttemptedStatsBuilderMock, times(2))
+                .setExistingUpdateStatus(mScheduleAttemptedStatsCaptor.capture());
+        assertWithMessage("Existing update status")
+                .that(mScheduleAttemptedStatsCaptor.getAllValues().get(0))
+                .isEqualTo(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE);
+        assertWithMessage("Existing update status")
+                .that(mScheduleAttemptedStatsCaptor.getAllValues().get(1))
+                .isEqualTo(SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE);
+
         List<DBScheduledCustomAudienceUpdate> updates =
                 mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(
                         anUpdate.getScheduledTime().plus(10, ChronoUnit.MINUTES));
@@ -3498,6 +3588,186 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 mCustomAudienceDao.getNumberOfScheduleCAUpdatesByOwnerAndBuyer(OWNER_1, BUYER_1));
     }
 
+    @Test
+    public void testEmptyComponentAds() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
+
+        assertThat(mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_1, BUYER_1, NAME_1))
+                .isEmpty();
+    }
+
+    @Test
+    public void testInsertComponentAdDataRetrievesComponentAdDataCorrectly() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
+
+        ComponentAdData componentAdData =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER_1, 1);
+
+        DBComponentAdData dbComponentAdData1 =
+                DBComponentAdDataFixture.getDBComponentAdData(
+                        componentAdData, OWNER_1, BUYER_1, NAME_1);
+
+        mCustomAudienceDao.insertComponentAdData(dbComponentAdData1);
+
+        List<DBComponentAdData> dbComponentAdDataList1 =
+                mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_1, BUYER_1, NAME_1);
+
+        assertEquals(1, dbComponentAdDataList1.size());
+        assertEquals(dbComponentAdData1, dbComponentAdDataList1.get(0));
+    }
+
+    @Test
+    public void testInsertComponentAdDataFiltersOnCorrectCA() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2, false);
+
+        ComponentAdData componentAdDataForCa1 =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER_1, 1);
+        ComponentAdData componentAdDataForCa2 =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER_2, 1);
+
+        DBComponentAdData dbComponentAdDataForCa1 =
+                DBComponentAdDataFixture.getDBComponentAdData(
+                        componentAdDataForCa1, OWNER_1, BUYER_1, NAME_1);
+        DBComponentAdData dbComponentAdDataForCa2 =
+                DBComponentAdDataFixture.getDBComponentAdData(
+                        componentAdDataForCa2, OWNER_2, BUYER_2, NAME_2);
+
+        mCustomAudienceDao.insertComponentAdData(dbComponentAdDataForCa1);
+        mCustomAudienceDao.insertComponentAdData(dbComponentAdDataForCa2);
+
+        List<DBComponentAdData> dbComponentAdDataList1 =
+                mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_1, BUYER_1, NAME_1);
+
+        assertEquals(1, dbComponentAdDataList1.size());
+        assertEquals(dbComponentAdDataForCa1, dbComponentAdDataList1.get(0));
+
+        List<DBComponentAdData> dbComponentAdDataList2 =
+                mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_2, BUYER_2, NAME_2);
+
+        assertEquals(1, dbComponentAdDataList2.size());
+        assertEquals(dbComponentAdDataForCa2, dbComponentAdDataList2.get(0));
+    }
+
+    @Test
+    public void testComponentAdsAreReturnedInOrderOfInsertion() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2, false);
+
+        List<ComponentAdData> componentAdDataList =
+                ComponentAdDataFixture.getValidComponentAdsByBuyer(BUYER_1);
+
+        List<DBComponentAdData> expectedDBComponentAdDataList =
+                DBComponentAdDataFixture.getValidComponentAdsByBuyer(
+                        componentAdDataList, OWNER_1, BUYER_1, NAME_1);
+
+        // Split the list in two
+        List<ComponentAdData> componentAdDataList1 =
+                List.of(componentAdDataList.get(0), componentAdDataList.get(1));
+        List<ComponentAdData> componentAdDataList2 =
+                List.of(componentAdDataList.get(2), componentAdDataList.get(3));
+
+        // Insert the first half
+        mCustomAudienceDao.insertComponentAds(componentAdDataList1, OWNER_1, BUYER_1, NAME_1);
+
+        // Insert component ads for another CA in between
+        ComponentAdData componentAdData2 =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER_2, 1);
+        DBComponentAdData dbComponentAdData2 =
+                DBComponentAdDataFixture.getDBComponentAdData(
+                        componentAdData2, OWNER_2, BUYER_2, NAME_2);
+        mCustomAudienceDao.insertComponentAdData(dbComponentAdData2);
+
+        // Insert the second half
+        mCustomAudienceDao.insertComponentAds(componentAdDataList2, OWNER_1, BUYER_1, NAME_1);
+
+        List<DBComponentAdData> dbComponentAdDataList =
+                mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_1, BUYER_1, NAME_1);
+
+        // Assert order is preserved
+        assertThat(dbComponentAdDataList)
+                .containsExactlyElementsIn(expectedDBComponentAdDataList)
+                .inOrder();
+    }
+
+    @Test
+    public void testComponentAds_ForeignKeyCascades() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, false);
+
+        ComponentAdData componentAdDataForExpiredCA =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER_2, 1);
+
+        DBComponentAdData dbComponentAdDataForExpiredCA =
+                DBComponentAdDataFixture.getDBComponentAdData(
+                        componentAdDataForExpiredCA, OWNER_2, BUYER_2, NAME_3);
+
+        mCustomAudienceDao.insertComponentAdData(dbComponentAdDataForExpiredCA);
+
+        assertThat(mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_2, BUYER_2, NAME_3))
+                .isNotEmpty();
+
+        // Delete expired CA, should result in deletion of component ads for this CA
+        assertEquals(1, mCustomAudienceDao.deleteAllExpiredCustomAudienceData(CURRENT_TIME));
+
+        assertThat(mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_2, BUYER_2, NAME_3))
+                .isEmpty();
+    }
+
+    @Test
+    public void testComponentAds_ForeignKeyCascadesDoesNotDeleteNonExpiredComponentAds() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, false);
+
+        ComponentAdData componentAdDataForCa1 =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER_1, 1);
+        ComponentAdData componentAdDataForExpiredCA =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER_2, 1);
+
+        DBComponentAdData dbComponentAdDataForCa1 =
+                DBComponentAdDataFixture.getDBComponentAdData(
+                        componentAdDataForCa1, OWNER_1, BUYER_1, NAME_1);
+        DBComponentAdData dbComponentAdDataForExpiredCA =
+                DBComponentAdDataFixture.getDBComponentAdData(
+                        componentAdDataForExpiredCA, OWNER_2, BUYER_2, NAME_3);
+
+        mCustomAudienceDao.insertComponentAdData(dbComponentAdDataForCa1);
+        mCustomAudienceDao.insertComponentAdData(dbComponentAdDataForExpiredCA);
+
+        assertThat(mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_1, BUYER_1, NAME_1))
+                .isNotEmpty();
+        assertThat(mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_2, BUYER_2, NAME_3))
+                .isNotEmpty();
+
+        // Delete expired CA, should result in deletion of component ads for this CA
+        assertEquals(1, mCustomAudienceDao.deleteAllExpiredCustomAudienceData(CURRENT_TIME));
+
+        assertThat(mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_1, BUYER_1, NAME_1))
+                .isNotEmpty();
+        assertThat(mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_2, BUYER_2, NAME_3))
+                .isEmpty();
+    }
+
     private void assertUpdateEqualsExceptId(
             DBScheduledCustomAudienceUpdate expected, DBScheduledCustomAudienceUpdate actual) {
         assertEquals(expected.getBuyer(), actual.getBuyer());
@@ -3514,12 +3784,28 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
     private void verifyCustomAudienceStats(
             CustomAudienceStats customAudienceStats,
             String owner,
+            AdTechIdentifier buyer,
             int totalCount,
             int perOwnerCount,
-            int ownerCount) {
-        assertEquals(owner, customAudienceStats.getOwner());
-        assertEquals(totalCount, customAudienceStats.getTotalCustomAudienceCount());
-        assertEquals(perOwnerCount, customAudienceStats.getPerOwnerCustomAudienceCount());
-        assertEquals(ownerCount, customAudienceStats.getTotalOwnerCount());
+            int ownerCount,
+            int perBuyerCount) {
+        assertWithMessage("customAudienceStats.getOwner()")
+                .that(customAudienceStats.getOwner())
+                .isEqualTo(owner);
+        assertWithMessage("customAudienceStats.getBuyer()")
+                .that(customAudienceStats.getBuyer())
+                .isEqualTo(buyer);
+        assertWithMessage("customAudienceStats.getTotalCustomAudienceCount()")
+                .that(customAudienceStats.getTotalCustomAudienceCount())
+                .isEqualTo(totalCount);
+        assertWithMessage("customAudienceStats.getPerOwnerCustomAudienceCount()")
+                .that(customAudienceStats.getPerOwnerCustomAudienceCount())
+                .isEqualTo(perOwnerCount);
+        assertWithMessage("customAudienceStats.getTotalOwnerCount()")
+                .that(customAudienceStats.getTotalOwnerCount())
+                .isEqualTo(ownerCount);
+        assertWithMessage("customAudienceStats.getPerBuyerCustomAudienceCount()")
+                .that(customAudienceStats.getPerBuyerCustomAudienceCount())
+                .isEqualTo(perBuyerCount);
     }
 }

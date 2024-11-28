@@ -30,6 +30,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.DbTestUtil;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.KeyValueData;
@@ -102,6 +103,7 @@ public abstract class AbstractDbIntegrationTest {
         mInput = input;
         mOutput = output;
         mFlagsMap = flagsMap;
+        setCommonFlags();
     }
 
     /**
@@ -290,6 +292,21 @@ public abstract class AbstractDbIntegrationTest {
                             flagsMap,
                             name });
         }
+    }
+
+    /** Set flags that are common for all tests. */
+    private void setCommonFlags() {
+        // Make null agg report generation deterministic.
+        mFlagsMap.putIfAbsent(
+                FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME,
+                "0.0");
+        mFlagsMap.putIfAbsent(
+                FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME,
+                "0.0");
+        // Limit the number of aggregate keys because histograms are padded with many 0 valued
+        // buckets. This helps keep the test file shorter.
+        mFlagsMap.putIfAbsent(
+                FlagsConstants.KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION, "5");
     }
 
     private static Map<String, String> getFlagsMap(JSONObject testObj) throws JSONException {

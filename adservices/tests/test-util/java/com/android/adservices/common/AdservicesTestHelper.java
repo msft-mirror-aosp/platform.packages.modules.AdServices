@@ -25,6 +25,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
+import android.os.Process;
 import android.os.SystemProperties;
 import android.util.Log;
 
@@ -207,7 +208,17 @@ public final class AdservicesTestHelper {
 
     /** Install test app and verify the installation. */
     public static void installTestApp(String apkPath) {
-        String installMessage = ShellUtils.runShellCommand("pm install --user 0 -r %s", apkPath);
+        int currentUserId = Process.myUserHandle().getIdentifier();
+        String installMessage =
+                ShellUtils.runShellCommand("pm install --user %d -r %s", currentUserId, apkPath);
         assertThat(installMessage).contains("Success");
+    }
+
+    /** Uninstall test app and verify the uninstallation. */
+    public static void uninstallTestApp(String apkName) {
+        int currentUserId = Process.myUserHandle().getIdentifier();
+        String uninstallMessage =
+                ShellUtils.runShellCommand("pm uninstall --user %d %s", currentUserId, apkName);
+        assertThat(uninstallMessage).contains("Success");
     }
 }

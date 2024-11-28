@@ -21,6 +21,8 @@ import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERV
 import static android.adservices.customaudience.CustomAudience.PRIORITY_DEFAULT;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_PRIORITY_1;
 
+import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
+import static com.android.adservices.service.common.httpclient.AdServicesHttpsClient.DEFAULT_TIMEOUT_MS;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.ACTIVATION_TIME;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.BUYER_2;
@@ -37,22 +39,37 @@ import static com.android.adservices.service.customaudience.ScheduleCustomAudien
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.VALID_BIDDING_SIGNALS;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayload;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadInvalidJoinCA;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithInvalidExpirationTime;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithScheduleRequests;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutJoinCA;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutLeaveCA;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createRequestBody;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createRequestBodyWithOnlyPartialCustomAudiences;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.eqJsonArray;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.eqJsonObject;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.generateCustomAudienceWithName;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.generateScheduleRequestFromCustomAudienceNames;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.generateScheduleRequestFromCustomAudienceNamesWithInvalidPartialCA;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.generateScheduleRequestMissingUpdateUriKey;
 import static com.android.adservices.service.customaudience.ScheduledUpdatesHandler.JOIN_CUSTOM_AUDIENCE_KEY;
 import static com.android.adservices.service.customaudience.ScheduledUpdatesHandler.STALE_DELAYED_UPDATE_AGE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_HTTP_CALL;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_JOIN_CA;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_SCHEDULE_CA_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CLIENT_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CONTENT_SIZE_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_IO_EXCEPTION;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_REDIRECTION;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_SERVER_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_TOO_MANY_REQUESTS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyNoMoreInteractions;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.common.util.concurrent.Futures.immediateVoidFuture;
@@ -63,12 +80,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -83,6 +94,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -99,6 +111,7 @@ import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.cache.CacheDatabase;
 import com.android.adservices.service.common.cache.CacheEntryDao;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
@@ -108,10 +121,13 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientResp
 import com.android.adservices.service.common.httpclient.AdServicesHttpUtil;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.exception.HttpContentSizeException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateBackgroundJobStats;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedFailureStats;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedStats;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
@@ -130,8 +146,6 @@ import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
 import java.net.URL;
@@ -147,7 +161,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
-public final class ScheduledUpdatesHandlerTest {
+@MockStatic(BackgroundFetchJob.class)
+public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String OWNER = CustomAudienceFixture.VALID_OWNER;
     private static final String OWNER_2 = "com.android.test.2";
@@ -160,6 +175,9 @@ public final class ScheduledUpdatesHandlerTest {
     private static final Instant SCHEDULED_TIME = CREATION_TIME.plus(180, ChronoUnit.MINUTES);
     private static final long MAX_AGE_SECONDS = 120;
     private static final long MAX_ENTRIES = 20;
+    private static final int INVALID_MIN_DELAY = 10000;
+    private static final int VALID_MIN_DELAY = 100;
+    private static final String INVALID_CA_NAME = "";
     private static final DBScheduledCustomAudienceUpdate UPDATE =
             DBScheduledCustomAudienceUpdate.builder()
                     .setUpdateId(UPDATE_ID)
@@ -176,9 +194,9 @@ public final class ScheduledUpdatesHandlerTest {
 
     private final AdRenderIdValidator mAdRenderIdValidator =
             AdRenderIdValidator.createEnabledInstance(100);
-    @Rule public MockitoRule rule = MockitoJUnit.rule();
     @Captor ArgumentCaptor<AdServicesHttpClientRequest> mRequestCaptor;
     @Captor ArgumentCaptor<DBCustomAudience> mInsertCustomAudienceCaptor;
+
     @Captor
     ArgumentCaptor<ScheduledCustomAudienceUpdatePerformedFailureStats>
             mScheduleCAFailureStatsCaptor;
@@ -197,7 +215,7 @@ public final class ScheduledUpdatesHandlerTest {
     private boolean mAuctionServerRequestFlags;
     private boolean mSellerConfigurationEnabled;
     private long mFledgeAuctionServerAdRenderIdMaxLength;
-    private Flags mFlags;
+    private Flags mFakeFlags;
     @NonNull private CustomAudienceDao mCustomAudienceDao;
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
     @Mock private AppInstallDao mAppInstallDaoMock;
@@ -209,21 +227,35 @@ public final class ScheduledUpdatesHandlerTest {
     private ScheduledUpdatesHandler mHandler;
     @Mock private ScheduleCustomAudienceUpdateStrategy mStrategyMock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
+
+    @Mock
+    private ScheduledCustomAudienceUpdateScheduleAttemptedStats.Builder mScheduleAttemptedBuilder;
+
+    @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private HttpCache mCache;
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+    private AdditionalScheduleRequestsEnabledStrategyHelper mHelper;
+    private AdditionalScheduleRequestsEnabledStrategy mEnabledStrategy;
 
     @Before
     public void setup() throws Exception {
-        mFlags = new ScheduleCustomAudienceUpdateFlags();
+        mFakeFlags = new ScheduleCustomAudienceUpdateFlags();
         mAdFilteringFeatureFactory =
-                new AdFilteringFeatureFactory(mAppInstallDaoMock, mFrequencyCapDaoMock, mFlags);
+                new AdFilteringFeatureFactory(mAppInstallDaoMock, mFrequencyCapDaoMock, mFakeFlags);
+
+        mHelper =
+                new AdditionalScheduleRequestsEnabledStrategyHelper(
+                        ApplicationProvider.getApplicationContext(),
+                        mFledgeAuthorizationFilterMock,
+                        FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE,
+                        /* disableFledgeEnrollmentCheck */ true);
 
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDaoMock,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -235,14 +267,15 @@ public final class ScheduledUpdatesHandlerTest {
                         mStrategyMock,
                         mAdServicesLoggerMock);
 
-        mFledgeFrequencyCapFilteringEnabled = mFlags.getFledgeFrequencyCapFilteringEnabled();
-        mFledgeAppInstallFilteringEnabled = mFlags.getFledgeAppInstallFilteringEnabled();
-        mFledgeAuctionServerAdRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
+        mFledgeFrequencyCapFilteringEnabled = mFakeFlags.getFledgeFrequencyCapFilteringEnabled();
+        mFledgeAppInstallFilteringEnabled = mFakeFlags.getFledgeAppInstallFilteringEnabled();
+        mFledgeAuctionServerAdRenderIdEnabled =
+                mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled();
         mFledgeAuctionServerAdRenderIdMaxLength =
-                mFlags.getFledgeAuctionServerAdRenderIdMaxLength();
-        mAuctionServerRequestFlags = mFlags.getFledgeAuctionServerRequestFlagsEnabled();
+                mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength();
+        mAuctionServerRequestFlags = mFakeFlags.getFledgeAuctionServerRequestFlagsEnabled();
         mSellerConfigurationEnabled =
-                mFlags.getFledgeGetAdSelectionDataSellerConfigurationEnabled();
+                mFakeFlags.getFledgeGetAdSelectionDataSellerConfigurationEnabled();
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
@@ -258,6 +291,14 @@ public final class ScheduledUpdatesHandlerTest {
 
         mCache = new FledgeHttpCache(cacheEntryDao, MAX_AGE_SECONDS, MAX_ENTRIES);
         mAdServicesHttpsClient = new AdServicesHttpsClient(mExecutorService, mCache);
+
+        mEnabledStrategy =
+                new AdditionalScheduleRequestsEnabledStrategy(
+                        mCustomAudienceDao,
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mHelper,
+                        mAdServicesLoggerMock);
     }
 
     @Test
@@ -294,7 +335,8 @@ public final class ScheduledUpdatesHandlerTest {
         JSONArray partialCustomAudienceJsonArray =
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
-        String expectedRequestBody = partialCustomAudienceJsonArray.toString();
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
@@ -343,6 +385,7 @@ public final class ScheduledUpdatesHandlerTest {
                 joinedCustomAudiences.get(0).getUserBiddingSignals().toString());
 
         verifyDisabledStrategy(beforeTime, UPDATE, responseJson, partialCustomAudienceJsonArray);
+        verify(() -> BackgroundFetchJob.schedule(any()));
     }
 
     @Test
@@ -356,7 +399,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDaoMock,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -418,7 +461,8 @@ public final class ScheduledUpdatesHandlerTest {
                         eq(scheduledUpdateRequest.getUpdate().getOwner()),
                         eq(scheduledUpdateRequest.getUpdate().getAllowScheduleInResponse()),
                         eqJsonObject(responseJson),
-                        any(DevContext.class)))
+                        any(DevContext.class),
+                        any()))
                 .thenReturn(FluentFuture.from(immediateVoidFuture()));
 
         when(mStrategyMock.prepareFetchUpdateRequestBody(
@@ -474,6 +518,7 @@ public final class ScheduledUpdatesHandlerTest {
                         eq(UPDATE.getOwner()),
                         eq(UPDATE.getAllowScheduleInResponse()),
                         eqJsonObject(responseJson),
+                        any(),
                         any());
     }
 
@@ -784,7 +829,8 @@ public final class ScheduledUpdatesHandlerTest {
         JSONArray partialCustomAudienceJsonArray =
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
-        String expectedRequestBody = partialCustomAudienceJsonArray.toString();
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         JSONObject responseJson =
                 createJsonResponsePayload(
@@ -876,7 +922,8 @@ public final class ScheduledUpdatesHandlerTest {
         JSONArray partialCustomAudienceJsonArray =
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
-        String expectedRequestBody = partialCustomAudienceJsonArray.toString();
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         JSONObject responseJson =
                 createJsonResponsePayload(
@@ -974,7 +1021,8 @@ public final class ScheduledUpdatesHandlerTest {
         JSONArray partialCustomAudienceJsonArray =
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
-        String expectedRequestBody = partialCustomAudienceJsonArray.toString();
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         JSONObject responseJson =
                 createJsonResponsePayload(
@@ -1187,7 +1235,8 @@ public final class ScheduledUpdatesHandlerTest {
         JSONArray partialCustomAudienceJsonArray =
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
-        String expectedRequestBody = partialCustomAudienceJsonArray.toString();
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
@@ -1282,7 +1331,8 @@ public final class ScheduledUpdatesHandlerTest {
         JSONArray partialCustomAudienceJsonArray =
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
-        String expectedRequestBody = partialCustomAudienceJsonArray.toString();
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
@@ -1305,7 +1355,7 @@ public final class ScheduledUpdatesHandlerTest {
                 mRequestCaptor.getValue().getHttpMethodType());
         assertEquals(
                 "Sent payload mismatch",
-                expectedRequestBody.toString(),
+                expectedRequestBody,
                 new String(mRequestCaptor.getValue().getBodyInBytes()));
 
         verify(mCustomAudienceImplMock)
@@ -1384,7 +1434,8 @@ public final class ScheduledUpdatesHandlerTest {
         JSONArray partialCustomAudienceJsonArray =
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
-        String expectedRequestBody = partialCustomAudienceJsonArray.toString();
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
@@ -1408,7 +1459,7 @@ public final class ScheduledUpdatesHandlerTest {
                 mRequestCaptor.getValue().getHttpMethodType());
         assertEquals(
                 "Sent payload mismatch",
-                expectedRequestBody.toString(),
+                expectedRequestBody,
                 new String(mRequestCaptor.getValue().getBodyInBytes()));
 
         verify(mCustomAudienceImplMock)
@@ -1651,7 +1702,8 @@ public final class ScheduledUpdatesHandlerTest {
         JSONArray partialCustomAudienceJsonArray =
                 createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
 
-        String expectedRequestBody = partialCustomAudienceJsonArray.toString();
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
 
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
@@ -1674,7 +1726,7 @@ public final class ScheduledUpdatesHandlerTest {
                 mRequestCaptor.getValue().getHttpMethodType());
         assertEquals(
                 "Sent payload should have been empty",
-                expectedRequestBody.toString(),
+                expectedRequestBody,
                 new String(mRequestCaptor.getValue().getBodyInBytes()));
 
         verify(mCustomAudienceImplMock)
@@ -1821,7 +1873,8 @@ public final class ScheduledUpdatesHandlerTest {
 
         when(mStrategyMock.getScheduledCustomAudienceUpdateRequestList(invocationTime))
                 .thenReturn(Collections.emptyList());
-        when(mStrategyMock.scheduleRequests(any(), anyBoolean(), any(), any(DevContext.class)))
+        when(mStrategyMock.scheduleRequests(
+                        any(), anyBoolean(), any(), any(DevContext.class), any()))
                 .thenReturn(FluentFuture.from(immediateVoidFuture()));
         when(mStrategyMock.prepareFetchUpdateRequestBody(any(), any()))
                 .thenReturn(new JSONObject().toString());
@@ -1844,7 +1897,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -1892,6 +1945,810 @@ public final class ScheduledUpdatesHandlerTest {
         // error
         verify(mAdServicesLoggerMock, never())
                 .logScheduledCustomAudienceUpdatePerformedFailureStats(any());
+
+        // Background job should not be scheduled as no custom audiences are joined
+        verify(() -> BackgroundFetchJob.schedule(any()), never());
+    }
+
+    @Test
+    public void testPerformScheduledUpdatesV2_firstHop_invalidMinDelay_logsCorrectly()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClientMock,
+                        mFakeFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        mEnabledStrategy,
+                        mAdServicesLoggerMock);
+        DBScheduledCustomAudienceUpdate updateWithAllowScheduleInResponseTrue =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setUpdateId(UPDATE_ID)
+                        .setUpdateUri(UPDATE_URI)
+                        .setCreationTime(CREATION_TIME)
+                        .setScheduledTime(SCHEDULED_TIME)
+                        .setOwner(OWNER)
+                        .setBuyer(BUYER)
+                        .setAllowScheduleInResponse(true)
+                        .build();
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                updateWithAllowScheduleInResponseTrue);
+
+        JSONObject scheduleRequest =
+                generateScheduleRequestFromCustomAudienceNames(
+                        UPDATE.getBuyer(),
+                        INVALID_MIN_DELAY,
+                        partialCustomAudienceList.stream()
+                                .map(ca -> ca.getName())
+                                .collect(Collectors.toList()),
+                        List.of(LEAVE_CA_1, LEAVE_CA_2),
+                        false);
+
+        JSONArray scheduleRequests = new JSONArray(List.of(scheduleRequest));
+        String responsePayload =
+                createJsonResponsePayloadWithScheduleRequests(scheduleRequests).toString();
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responsePayload)
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        Void ignored =
+                mHandler.performScheduledUpdates(
+                                updateWithAllowScheduleInResponseTrue
+                                        .getScheduledTime()
+                                        .plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesHttpsClientMock).performRequestGetResponseInPlainString(any());
+
+        List<DBScheduledCustomAudienceUpdate> customAudienceScheduledUpdatesInDB =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(UPDATE.getOwner());
+
+        // Scheduled updates should be deleted from the database.
+        assertEquals(0, customAudienceScheduledUpdatesInDB.size());
+
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedFailureStats(
+                        mScheduleCAFailureStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedFailureStats actualStats =
+                mScheduleCAFailureStatsCaptor.getValue();
+
+        assertWithMessage("Failure action type")
+                .that(actualStats.getFailureAction())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_SCHEDULE_CA_UPDATE);
+        assertWithMessage("Failure type")
+                .that(actualStats.getFailureType())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR);
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedStats(
+                        mScheduleCAUpdatePerformedStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedStats performedStats =
+                mScheduleCAUpdatePerformedStatsCaptor.getValue();
+
+        assertWithMessage("Number of custom audience joined")
+                .that(performedStats.getNumberOfCustomAudienceJoined())
+                .isEqualTo(0);
+        assertWithMessage("Number of join custom audience in response")
+                .that(performedStats.getNumberOfJoinCustomAudienceInResponse())
+                .isEqualTo(0);
+        assertWithMessage("Number of leave custom audience in response")
+                .that(performedStats.getNumberOfLeaveCustomAudienceInResponse())
+                .isEqualTo(0);
+        assertWithMessage("Number of custom audiences left")
+                .that(performedStats.getNumberOfCustomAudienceLeft())
+                .isEqualTo(0);
+        assertWithMessage("Number of partial custom audience in request")
+                .that(performedStats.getNumberOfPartialCustomAudienceInRequest())
+                .isEqualTo(0);
+        assertWithMessage("Number of schedule custom audience updates in response")
+                .that(performedStats.getNumberOfScheduleUpdatesInResponse())
+                .isEqualTo(1);
+        assertWithMessage("Number of custom audience updates scheduled")
+                .that(performedStats.getNumberOfUpdatesScheduled())
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void testPerformScheduledUpdatesV2_firstHop_missingURI_logsCorrectly()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClientMock,
+                        mFakeFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        mEnabledStrategy,
+                        mAdServicesLoggerMock);
+        DBScheduledCustomAudienceUpdate updateWithAllowScheduleInResponseTrue =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setUpdateId(UPDATE_ID)
+                        .setUpdateUri(UPDATE_URI)
+                        .setCreationTime(CREATION_TIME)
+                        .setScheduledTime(SCHEDULED_TIME)
+                        .setOwner(OWNER)
+                        .setBuyer(BUYER)
+                        .setAllowScheduleInResponse(true)
+                        .build();
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                updateWithAllowScheduleInResponseTrue);
+
+        JSONObject scheduleRequest = generateScheduleRequestMissingUpdateUriKey();
+
+        JSONArray scheduleRequests = new JSONArray(List.of(scheduleRequest));
+        String responsePayload =
+                createJsonResponsePayloadWithScheduleRequests(scheduleRequests).toString();
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responsePayload)
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        Void ignored =
+                mHandler.performScheduledUpdates(
+                                updateWithAllowScheduleInResponseTrue
+                                        .getScheduledTime()
+                                        .plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesHttpsClientMock).performRequestGetResponseInPlainString(any());
+
+        List<DBScheduledCustomAudienceUpdate> customAudienceScheduledUpdatesInDB =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(UPDATE.getOwner());
+
+        // Scheduled updates should be deleted from the database.
+        assertEquals(0, customAudienceScheduledUpdatesInDB.size());
+
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedFailureStats(
+                        mScheduleCAFailureStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedFailureStats actualStats =
+                mScheduleCAFailureStatsCaptor.getValue();
+
+        assertWithMessage("Failure action type")
+                .that(actualStats.getFailureAction())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_SCHEDULE_CA_UPDATE);
+        assertWithMessage("Failure type")
+                .that(actualStats.getFailureType())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR);
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedStats(
+                        mScheduleCAUpdatePerformedStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedStats performedStats =
+                mScheduleCAUpdatePerformedStatsCaptor.getValue();
+
+        assertWithMessage("Number of custom audience joined")
+                .that(performedStats.getNumberOfCustomAudienceJoined())
+                .isEqualTo(0);
+        assertWithMessage("Number of join custom audience in response")
+                .that(performedStats.getNumberOfJoinCustomAudienceInResponse())
+                .isEqualTo(0);
+        assertWithMessage("Number of leave custom audience in response")
+                .that(performedStats.getNumberOfLeaveCustomAudienceInResponse())
+                .isEqualTo(0);
+        assertWithMessage("Number of custom audiences left")
+                .that(performedStats.getNumberOfCustomAudienceLeft())
+                .isEqualTo(0);
+        assertWithMessage("Number of partial custom audience in request")
+                .that(performedStats.getNumberOfPartialCustomAudienceInRequest())
+                .isEqualTo(0);
+        assertWithMessage("Number of schedule custom audience updates in response")
+                .that(performedStats.getNumberOfScheduleUpdatesInResponse())
+                .isEqualTo(1);
+        assertWithMessage("Number of custom audience updates scheduled")
+                .that(performedStats.getNumberOfUpdatesScheduled())
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void testPerformScheduledUpdatesV2_firstHop_invalidPartialCAInScheduledCA_logsCorrectly()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClientMock,
+                        mFakeFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        mEnabledStrategy,
+                        mAdServicesLoggerMock);
+        DBScheduledCustomAudienceUpdate updateWithAllowScheduleInResponseTrue =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setUpdateId(UPDATE_ID)
+                        .setUpdateUri(UPDATE_URI)
+                        .setCreationTime(CREATION_TIME)
+                        .setScheduledTime(SCHEDULED_TIME)
+                        .setOwner(OWNER)
+                        .setBuyer(BUYER)
+                        .setAllowScheduleInResponse(true)
+                        .build();
+        List<PartialCustomAudience> dbPartialCustomAudienceList =
+                partialCustomAudienceList.stream()
+                        .map(DBPartialCustomAudience::getPartialCustomAudience)
+                        .collect(Collectors.toList());
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                updateWithAllowScheduleInResponseTrue,
+                dbPartialCustomAudienceList,
+                Collections.emptyList(),
+                true,
+                mScheduleAttemptedBuilder);
+
+        JSONObject invalidScheduleRequest =
+                generateScheduleRequestFromCustomAudienceNamesWithInvalidPartialCA(
+                        UPDATE.getBuyer(),
+                        VALID_MIN_DELAY,
+                        partialCustomAudienceList.stream()
+                                .map(ca -> ca.getName())
+                                .collect(Collectors.toList()),
+                        List.of(LEAVE_CA_1, LEAVE_CA_2),
+                        true);
+        JSONObject validScheduleRequest =
+                generateScheduleRequestFromCustomAudienceNames(
+                        UPDATE.getBuyer(),
+                        VALID_MIN_DELAY,
+                        partialCustomAudienceList.stream()
+                                .map(ca -> ca.getName())
+                                .collect(Collectors.toList()),
+                        List.of(LEAVE_CA_1, LEAVE_CA_2),
+                        true);
+
+        JSONArray scheduleRequests =
+                new JSONArray(List.of(validScheduleRequest, invalidScheduleRequest));
+        String responsePayload =
+                createJsonResponsePayloadWithScheduleRequests(scheduleRequests).toString();
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responsePayload)
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        Void ignored =
+                mHandler.performScheduledUpdates(
+                                updateWithAllowScheduleInResponseTrue
+                                        .getScheduledTime()
+                                        .plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesHttpsClientMock).performRequestGetResponseInPlainString(any());
+
+        List<DBScheduledCustomAudienceUpdate> customAudienceScheduledUpdatesInDB =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(UPDATE.getOwner());
+
+        // Scheduled updates should be deleted from the database.
+        assertEquals(1, customAudienceScheduledUpdatesInDB.size());
+
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedFailureStats(
+                        mScheduleCAFailureStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedFailureStats actualStats =
+                mScheduleCAFailureStatsCaptor.getValue();
+
+        assertWithMessage("Failure action type")
+                .that(actualStats.getFailureAction())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_SCHEDULE_CA_UPDATE);
+        assertWithMessage("Failure type")
+                .that(actualStats.getFailureType())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR);
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedStats(
+                        mScheduleCAUpdatePerformedStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedStats performedStats =
+                mScheduleCAUpdatePerformedStatsCaptor.getValue();
+
+        assertWithMessage("Number of custom audience joined")
+                .that(performedStats.getNumberOfCustomAudienceJoined())
+                .isEqualTo(0);
+        assertWithMessage("Number of join custom audience in response")
+                .that(performedStats.getNumberOfJoinCustomAudienceInResponse())
+                .isEqualTo(0);
+        assertWithMessage("Number of leave custom audience in response")
+                .that(performedStats.getNumberOfLeaveCustomAudienceInResponse())
+                .isEqualTo(0);
+        assertWithMessage("Number of custom audiences left")
+                .that(performedStats.getNumberOfCustomAudienceLeft())
+                .isEqualTo(0);
+        assertWithMessage("Number of partial custom audience in request")
+                .that(performedStats.getNumberOfPartialCustomAudienceInRequest())
+                .isEqualTo(2);
+        assertWithMessage("Number of schedule custom audience updates in response")
+                .that(performedStats.getNumberOfScheduleUpdatesInResponse())
+                .isEqualTo(2);
+        assertWithMessage("Number of custom audience updates scheduled")
+                .that(performedStats.getNumberOfUpdatesScheduled())
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void testPerformScheduledUpdatesV2_firstHop_invalidLeaveCAInScheduledCA_logsCorrectly()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClientMock,
+                        mFakeFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        mEnabledStrategy,
+                        mAdServicesLoggerMock);
+        DBScheduledCustomAudienceUpdate updateWithAllowScheduleInResponseTrue =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setUpdateId(UPDATE_ID)
+                        .setUpdateUri(UPDATE_URI)
+                        .setCreationTime(CREATION_TIME)
+                        .setScheduledTime(SCHEDULED_TIME)
+                        .setOwner(OWNER)
+                        .setBuyer(BUYER)
+                        .setAllowScheduleInResponse(true)
+                        .build();
+        List<PartialCustomAudience> dbPartialCustomAudienceList =
+                partialCustomAudienceList.stream()
+                        .map(DBPartialCustomAudience::getPartialCustomAudience)
+                        .collect(Collectors.toList());
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                updateWithAllowScheduleInResponseTrue,
+                dbPartialCustomAudienceList,
+                Collections.emptyList(),
+                true,
+                mScheduleAttemptedBuilder);
+
+        JSONObject invalidScheduleRequest =
+                generateScheduleRequestFromCustomAudienceNames(
+                        UPDATE.getBuyer(),
+                        VALID_MIN_DELAY,
+                        partialCustomAudienceList.stream()
+                                .map(ca -> ca.getName())
+                                .collect(Collectors.toList()),
+                        List.of(INVALID_CA_NAME),
+                        true);
+        JSONObject validScheduleRequest =
+                generateScheduleRequestFromCustomAudienceNames(
+                        UPDATE.getBuyer(),
+                        VALID_MIN_DELAY,
+                        partialCustomAudienceList.stream()
+                                .map(ca -> ca.getName())
+                                .collect(Collectors.toList()),
+                        List.of(LEAVE_CA_1, LEAVE_CA_2),
+                        true);
+
+        JSONArray scheduleRequests =
+                new JSONArray(List.of(validScheduleRequest, invalidScheduleRequest));
+        String responsePayload =
+                createJsonResponsePayloadWithScheduleRequests(scheduleRequests).toString();
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responsePayload)
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        Void ignored =
+                mHandler.performScheduledUpdates(
+                                updateWithAllowScheduleInResponseTrue
+                                        .getScheduledTime()
+                                        .plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesHttpsClientMock).performRequestGetResponseInPlainString(any());
+
+        List<DBScheduledCustomAudienceUpdate> customAudienceScheduledUpdatesInDB =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(UPDATE.getOwner());
+
+        // Scheduled updates should be deleted from the database.
+        assertEquals(1, customAudienceScheduledUpdatesInDB.size());
+
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedFailureStats(
+                        mScheduleCAFailureStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedFailureStats actualStats =
+                mScheduleCAFailureStatsCaptor.getValue();
+
+        assertWithMessage("Failure action type")
+                .that(actualStats.getFailureAction())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_SCHEDULE_CA_UPDATE);
+        assertWithMessage("Failure type")
+                .that(actualStats.getFailureType())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR);
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedStats(
+                        mScheduleCAUpdatePerformedStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedStats performedStats =
+                mScheduleCAUpdatePerformedStatsCaptor.getValue();
+
+        assertWithMessage("Number of custom audience joined")
+                .that(performedStats.getNumberOfCustomAudienceJoined())
+                .isEqualTo(0);
+        assertWithMessage("Number of join custom audience in response")
+                .that(performedStats.getNumberOfJoinCustomAudienceInResponse())
+                .isEqualTo(0);
+        assertWithMessage("Number of leave custom audience in response")
+                .that(performedStats.getNumberOfLeaveCustomAudienceInResponse())
+                .isEqualTo(0);
+        assertWithMessage("Number of custom audiences left")
+                .that(performedStats.getNumberOfCustomAudienceLeft())
+                .isEqualTo(0);
+        assertWithMessage("Number of partial custom audience in request")
+                .that(performedStats.getNumberOfPartialCustomAudienceInRequest())
+                .isEqualTo(2);
+        assertWithMessage("Number of schedule custom audience updates in response")
+                .that(performedStats.getNumberOfScheduleUpdatesInResponse())
+                .isEqualTo(2);
+        assertWithMessage("Number of custom audience updates scheduled")
+                .that(performedStats.getNumberOfUpdatesScheduled())
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void testPerformScheduledUpdatesV2_firstHop_withScheduledCA_logsCorrectly()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClientMock,
+                        mFakeFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        mEnabledStrategy,
+                        mAdServicesLoggerMock);
+        DBScheduledCustomAudienceUpdate updateWithAllowScheduleInResponseTrue =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setUpdateId(UPDATE_ID)
+                        .setUpdateUri(UPDATE_URI)
+                        .setCreationTime(CREATION_TIME)
+                        .setScheduledTime(SCHEDULED_TIME)
+                        .setOwner(OWNER)
+                        .setBuyer(BUYER)
+                        .setAllowScheduleInResponse(true)
+                        .build();
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                updateWithAllowScheduleInResponseTrue);
+
+        JSONObject scheduleRequest =
+                generateScheduleRequestFromCustomAudienceNames(
+                        UPDATE.getBuyer(),
+                        40,
+                        partialCustomAudienceList.stream()
+                                .map(ca -> ca.getName())
+                                .collect(Collectors.toList()),
+                        List.of(LEAVE_CA_1, LEAVE_CA_2),
+                        true);
+
+        JSONArray scheduleRequests = new JSONArray(List.of(scheduleRequest));
+        String responsePayload =
+                createJsonResponsePayloadWithScheduleRequests(scheduleRequests).toString();
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responsePayload)
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        Void ignored =
+                mHandler.performScheduledUpdates(
+                                updateWithAllowScheduleInResponseTrue
+                                        .getScheduledTime()
+                                        .plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesHttpsClientMock).performRequestGetResponseInPlainString(any());
+
+        List<DBScheduledCustomAudienceUpdate> customAudienceScheduledUpdatesInDB =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(UPDATE.getOwner());
+
+        // A new scheduled custom audience update will be inserted in the database.
+        assertEquals(1, customAudienceScheduledUpdatesInDB.size());
+
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedStats(
+                        mScheduleCAUpdatePerformedStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedStats performedStats =
+                mScheduleCAUpdatePerformedStatsCaptor.getValue();
+
+        assertWithMessage("Number of custom audience joined")
+                .that(performedStats.getNumberOfCustomAudienceJoined())
+                .isEqualTo(0);
+        assertWithMessage("Number of join custom audience in response")
+                .that(performedStats.getNumberOfJoinCustomAudienceInResponse())
+                .isEqualTo(0);
+        assertWithMessage("Number of leave custom audience in response")
+                .that(performedStats.getNumberOfLeaveCustomAudienceInResponse())
+                .isEqualTo(0);
+        assertWithMessage("Number of custom audiences left")
+                .that(performedStats.getNumberOfCustomAudienceLeft())
+                .isEqualTo(0);
+        assertWithMessage("Number of partial custom audience in request")
+                .that(performedStats.getNumberOfPartialCustomAudienceInRequest())
+                .isEqualTo(0);
+        assertWithMessage("Number of schedule custom audience updates in response")
+                .that(performedStats.getNumberOfScheduleUpdatesInResponse())
+                .isEqualTo(1);
+        assertWithMessage("Number of custom audience updates scheduled")
+                .that(performedStats.getNumberOfUpdatesScheduled())
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void testPerformScheduledUpdatesV2_firstHop_withScheduledCAAndJoinCA_logsCorrectly()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
+
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClientMock,
+                        mFakeFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        mEnabledStrategy,
+                        mAdServicesLoggerMock);
+        DBScheduledCustomAudienceUpdate updateWithAllowScheduleInResponseTrue =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setUpdateId(UPDATE_ID)
+                        .setUpdateUri(UPDATE_URI)
+                        .setCreationTime(CREATION_TIME)
+                        .setScheduledTime(SCHEDULED_TIME)
+                        .setOwner(OWNER)
+                        .setBuyer(BUYER)
+                        .setAllowScheduleInResponse(true)
+                        .build();
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                updateWithAllowScheduleInResponseTrue);
+
+        String responsePayload =
+                createJsonResponsePayloadWithoutLeaveCA(
+                                UPDATE.getBuyer(),
+                                UPDATE.getOwner(),
+                                partialCustomAudienceList.stream()
+                                        .map(ca -> ca.getName())
+                                        .collect(Collectors.toList()),
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                false,
+                                false)
+                        .toString();
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responsePayload)
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        Void ignored =
+                mHandler.performScheduledUpdates(
+                                updateWithAllowScheduleInResponseTrue
+                                        .getScheduledTime()
+                                        .plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesHttpsClientMock).performRequestGetResponseInPlainString(any());
+
+        List<DBScheduledCustomAudienceUpdate> customAudienceScheduledUpdatesInDB =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(UPDATE.getOwner());
+
+        // A new scheduled custom audience update will be inserted in the database.
+        assertEquals(1, customAudienceScheduledUpdatesInDB.size());
+
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedStats(
+                        mScheduleCAUpdatePerformedStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedStats performedStats =
+                mScheduleCAUpdatePerformedStatsCaptor.getValue();
+
+        assertWithMessage("Number of custom audience joined")
+                .that(performedStats.getNumberOfCustomAudienceJoined())
+                .isEqualTo(2);
+        assertWithMessage("Number of join custom audience in response")
+                .that(performedStats.getNumberOfJoinCustomAudienceInResponse())
+                .isEqualTo(2);
+        assertWithMessage("Number of leave custom audience in response")
+                .that(performedStats.getNumberOfLeaveCustomAudienceInResponse())
+                .isEqualTo(0);
+        assertWithMessage("Number of custom audiences left")
+                .that(performedStats.getNumberOfCustomAudienceLeft())
+                .isEqualTo(0);
+        assertWithMessage("Number of partial custom audience in request")
+                .that(performedStats.getNumberOfPartialCustomAudienceInRequest())
+                .isEqualTo(0);
+        assertWithMessage("Number of schedule custom audience updates in response")
+                .that(performedStats.getNumberOfScheduleUpdatesInResponse())
+                .isEqualTo(1);
+        assertWithMessage("Number of custom audience updates scheduled")
+                .that(performedStats.getNumberOfUpdatesScheduled())
+                .isEqualTo(1);
+
+        verify(mAdServicesLoggerMock, never())
+                .logScheduledCustomAudienceUpdatePerformedFailureStats(any());
+
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdateBackgroundJobStats(
+                        mScheduleCABackgroundJobStatsCaptor.capture());
+        ScheduledCustomAudienceUpdateBackgroundJobStats backgroundJobStats =
+                mScheduleCABackgroundJobStatsCaptor.getValue();
+
+        assertWithMessage("Number of total updates")
+                .that(backgroundJobStats.getNumberOfUpdatesFound())
+                .isEqualTo(1);
+        assertWithMessage("Number of updates successful")
+                .that(backgroundJobStats.getNumberOfSuccessfulUpdates())
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void testPerformScheduledUpdatesV2_firstHop_bothValidAndInvalidSCA_logsCorrectly()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
+
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClientMock,
+                        mFakeFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        mEnabledStrategy,
+                        mAdServicesLoggerMock);
+        DBScheduledCustomAudienceUpdate updateWithAllowScheduleInResponseTrue =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setUpdateId(UPDATE_ID)
+                        .setUpdateUri(UPDATE_URI)
+                        .setCreationTime(CREATION_TIME)
+                        .setScheduledTime(SCHEDULED_TIME)
+                        .setOwner(OWNER)
+                        .setBuyer(BUYER)
+                        .setAllowScheduleInResponse(true)
+                        .build();
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                updateWithAllowScheduleInResponseTrue);
+
+        JSONObject scheduleRequest =
+                generateScheduleRequestFromCustomAudienceNames(
+                        UPDATE.getBuyer(),
+                        40,
+                        partialCustomAudienceList.stream()
+                                .map(ca -> ca.getName())
+                                .collect(Collectors.toList()),
+                        List.of(LEAVE_CA_1, LEAVE_CA_2),
+                        true);
+
+        JSONObject invalidScheduleRequest = generateScheduleRequestMissingUpdateUriKey();
+
+        JSONArray scheduleRequests =
+                new JSONArray(List.of(scheduleRequest, invalidScheduleRequest));
+        String responsePayload =
+                createJsonResponsePayloadWithScheduleRequests(scheduleRequests).toString();
+
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responsePayload)
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        Void ignored =
+                mHandler.performScheduledUpdates(
+                                updateWithAllowScheduleInResponseTrue
+                                        .getScheduledTime()
+                                        .plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesHttpsClientMock).performRequestGetResponseInPlainString(any());
+
+        List<DBScheduledCustomAudienceUpdate> customAudienceScheduledUpdatesInDB =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(UPDATE.getOwner());
+
+        // A new scheduled custom audience update will be inserted in the database.
+        assertEquals(1, customAudienceScheduledUpdatesInDB.size());
+
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedStats(
+                        mScheduleCAUpdatePerformedStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedStats performedStats =
+                mScheduleCAUpdatePerformedStatsCaptor.getValue();
+
+        assertWithMessage("Number of custom audience joined")
+                .that(performedStats.getNumberOfCustomAudienceJoined())
+                .isEqualTo(0);
+        assertWithMessage("Number of join custom audience in response")
+                .that(performedStats.getNumberOfJoinCustomAudienceInResponse())
+                .isEqualTo(0);
+        assertWithMessage("Number of leave custom audience in response")
+                .that(performedStats.getNumberOfLeaveCustomAudienceInResponse())
+                .isEqualTo(0);
+        assertWithMessage("Number of custom audiences left")
+                .that(performedStats.getNumberOfCustomAudienceLeft())
+                .isEqualTo(0);
+        assertWithMessage("Number of partial custom audience in request")
+                .that(performedStats.getNumberOfPartialCustomAudienceInRequest())
+                .isEqualTo(0);
+        assertWithMessage("Number of schedule custom audience updates in response")
+                .that(performedStats.getNumberOfScheduleUpdatesInResponse())
+                .isEqualTo(2);
+        assertWithMessage("Number of custom audience updates scheduled")
+                .that(performedStats.getNumberOfUpdatesScheduled())
+                .isEqualTo(1);
+
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedFailureStats(
+                        mScheduleCAFailureStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedFailureStats failureStats =
+                mScheduleCAFailureStatsCaptor.getValue();
+        assertWithMessage("Failure action type")
+                .that(failureStats.getFailureAction())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_SCHEDULE_CA_UPDATE);
     }
 
     @Test
@@ -1901,7 +2758,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -1957,7 +2814,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2076,7 +2933,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2143,7 +3000,11 @@ public final class ScheduledUpdatesHandlerTest {
                         .map(DBPartialCustomAudience::getPartialCustomAudience)
                         .collect(Collectors.toList());
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
-                updateWithCorrectUri, dbPartialCustomAudienceList, Collections.emptyList(), false);
+                updateWithCorrectUri,
+                dbPartialCustomAudienceList,
+                Collections.emptyList(),
+                false,
+                mScheduleAttemptedBuilder);
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(updateWithCorrectUri2);
 
         Void ignored =
@@ -2201,7 +3062,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2255,7 +3116,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2310,7 +3171,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2364,7 +3225,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2405,7 +3266,58 @@ public final class ScheduledUpdatesHandlerTest {
                 .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_HTTP_CALL);
         assertWithMessage("Failure type")
                 .that(loggedStats.getFailureType())
-                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR);
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_IO_EXCEPTION);
+    }
+
+    @Test
+    public void testPerformScheduledUpdates_ContentSizeException_logsCorrectly() throws Exception {
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClientMock,
+                        mFakeFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
+                        mAdServicesLoggerMock);
+        DBScheduledCustomAudienceUpdate updateWithCorrectUri =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setUpdateId(UPDATE_ID)
+                        .setUpdateUri(UPDATE_URI)
+                        .setCreationTime(CREATION_TIME)
+                        .setScheduledTime(SCHEDULED_TIME)
+                        .setOwner(OWNER)
+                        .setBuyer(BUYER)
+                        .build();
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(updateWithCorrectUri);
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFailedFuture(
+                        new HttpContentSizeException("Content size exceeds limit"));
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        Void ignored =
+                mHandler.performScheduledUpdates(UPDATE.getScheduledTime().plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesLoggerMock)
+                .logScheduledCustomAudienceUpdatePerformedFailureStats(
+                        mScheduleCAFailureStatsCaptor.capture());
+        ScheduledCustomAudienceUpdatePerformedFailureStats loggedStats =
+                mScheduleCAFailureStatsCaptor.getValue();
+
+        assertWithMessage("Failure action")
+                .that(loggedStats.getFailureAction())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_HTTP_CALL);
+        assertWithMessage("Failure type")
+                .that(loggedStats.getFailureType())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CONTENT_SIZE_ERROR);
     }
 
     @Test
@@ -2418,7 +3330,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2505,7 +3417,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClient,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2554,7 +3466,6 @@ public final class ScheduledUpdatesHandlerTest {
                 .logScheduledCustomAudienceUpdatePerformedStats(any());
     }
 
-
     @Test
     public void testPerformScheduledUpdates_withQualityCheckerException_logsCorrectly()
             throws JSONException, ExecutionException, InterruptedException, TimeoutException {
@@ -2571,7 +3482,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDaoMock,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2669,7 +3580,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2686,7 +3597,11 @@ public final class ScheduledUpdatesHandlerTest {
                         .map(DBPartialCustomAudience::getPartialCustomAudience)
                         .collect(Collectors.toList());
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
-                UPDATE, dbPartialCustomAudienceList, Collections.emptyList(), false);
+                UPDATE,
+                dbPartialCustomAudienceList,
+                Collections.emptyList(),
+                false,
+                mScheduleAttemptedBuilder);
 
         String responsePayload =
                 createJsonResponsePayloadInvalidJoinCA(
@@ -2798,7 +3713,11 @@ public final class ScheduledUpdatesHandlerTest {
                         .map(DBPartialCustomAudience::getPartialCustomAudience)
                         .collect(Collectors.toList());
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
-                UPDATE, dbPartialCustomAudienceList, Collections.emptyList(), false);
+                UPDATE,
+                dbPartialCustomAudienceList,
+                Collections.emptyList(),
+                false,
+                mScheduleAttemptedBuilder);
 
         String responsePayload =
                 createJsonResponsePayloadWithoutLeaveCA(
@@ -2864,6 +3783,161 @@ public final class ScheduledUpdatesHandlerTest {
                 .isEqualTo(partialCustomAudienceList.size());
     }
 
+    @Test
+    public void testPerformScheduledUpdates_exceptionDueToInvalidExpirationTime_logsCorrectly()
+            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1);
+
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        mAdServicesHttpsClientMock,
+                        mFakeFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
+                        mAdServicesLoggerMock);
+        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                UPDATE,
+                Collections.emptyList(),
+                Collections.emptyList(),
+                false,
+                mScheduleAttemptedBuilder);
+
+        String responsePayload =
+                createJsonResponsePayloadWithInvalidExpirationTime(
+                                UPDATE.getBuyer(),
+                                UPDATE.getOwner(),
+                                partialCustomAudienceList.stream()
+                                        .map(ca -> ca.getName())
+                                        .collect(Collectors.toList()))
+                        .toString();
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responsePayload)
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        Void ignored =
+                mHandler.performScheduledUpdates(UPDATE.getScheduledTime().plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesHttpsClientMock).performRequestGetResponseInPlainString(any());
+
+        List<DBScheduledCustomAudienceUpdate> customAudienceScheduledUpdatesInDB =
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledByOwner(UPDATE.getOwner());
+        // Scheduled updates should be deleted from the database.
+        assertEquals(0, customAudienceScheduledUpdatesInDB.size());
+
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedFailureStats(
+                        mScheduleCAFailureStatsCaptor.capture());
+        ScheduledCustomAudienceUpdatePerformedFailureStats loggedStats =
+                mScheduleCAFailureStatsCaptor.getValue();
+        assertWithMessage("Failure action")
+                .that(loggedStats.getFailureAction())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_JOIN_CA);
+        assertWithMessage("Failure type")
+                .that(loggedStats.getFailureType())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR);
+
+        verify(mAdServicesLoggerMock, times(1))
+                .logScheduledCustomAudienceUpdatePerformedStats(
+                        mScheduleCAUpdatePerformedStatsCaptor.capture());
+        ScheduledCustomAudienceUpdatePerformedStats performedStats =
+                mScheduleCAUpdatePerformedStatsCaptor.getValue();
+        assertWithMessage("Number of custom audience joined")
+                .that(performedStats.getNumberOfCustomAudienceJoined())
+                .isEqualTo(0);
+        assertWithMessage("Number of join custom audience in response")
+                .that(performedStats.getNumberOfJoinCustomAudienceInResponse())
+                .isEqualTo(1);
+        assertWithMessage("Number of leave custom audience in response")
+                .that(performedStats.getNumberOfLeaveCustomAudienceInResponse())
+                .isEqualTo(0);
+        assertWithMessage("Number of custom audiences left")
+                .that(performedStats.getNumberOfCustomAudienceLeft())
+                .isEqualTo(0);
+        assertWithMessage("Number of number of partial custom audience in request")
+                .that(performedStats.getNumberOfPartialCustomAudienceInRequest())
+                .isEqualTo(0);
+    }
+
+    @Test
+    public void testFetchUpdate_maxBytes_Failure() throws Exception {
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        new AdServicesHttpsClient(
+                                AdServicesExecutors.getBlockingExecutor(),
+                                DEFAULT_TIMEOUT_MS,
+                                DEFAULT_TIMEOUT_MS,
+                                /* maxBytes= */ 1),
+                        mFakeFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        mStrategyMock,
+                        mAdServicesLoggerMock);
+
+        MockResponse mockResponse =
+                new MockResponse().setBody("larger than 1 byte").setResponseCode(200);
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(ImmutableList.of(mockResponse));
+        URL updateUri = server.getUrl("/update");
+
+        DBScheduledCustomAudienceUpdate update =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setOwner(OWNER)
+                        .setBuyer(BUYER)
+                        .setUpdateUri(Uri.parse(updateUri.toString()))
+                        .setScheduledTime(Instant.now())
+                        .setCreationTime(Instant.now())
+                        .build();
+
+        DBScheduledCustomAudienceUpdateRequest request =
+                DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(update).build();
+
+        when(mStrategyMock.prepareFetchUpdateRequestBody(new JSONArray(), List.of()))
+                .thenReturn("");
+
+        when(mStrategyMock.getScheduledCustomAudienceUpdateRequestList(any()))
+                .thenReturn(List.of(request));
+
+        Void ignored =
+                mHandler.performScheduledUpdates(update.getScheduledTime().plusSeconds(1000))
+                        .get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesLoggerMock)
+                .logScheduledCustomAudienceUpdatePerformedFailureStats(
+                        mScheduleCAFailureStatsCaptor.capture());
+
+        ScheduledCustomAudienceUpdatePerformedFailureStats loggedStats =
+                mScheduleCAFailureStatsCaptor.getValue();
+
+        assertWithMessage("Failure action")
+                .that(loggedStats.getFailureAction())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_HTTP_CALL);
+        assertWithMessage("Failure type")
+                .that(loggedStats.getFailureType())
+                .isEqualTo(SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CONTENT_SIZE_ERROR);
+    }
+
     private JSONArray createJsonArrayFromPartialCustomAudienceList(
             List<DBPartialCustomAudience> partialCustomAudienceList) throws JSONException {
         List<CustomAudienceBlob> validBlobs = new ArrayList<>();
@@ -2915,7 +3989,7 @@ public final class ScheduledUpdatesHandlerTest {
 
     private void enableAuctionServerRequestFlags() {
         // Enable auction server request flags
-        mFlags =
+        mFakeFlags =
                 new ScheduleCustomAudienceUpdateFlags() {
                     @Override
                     public boolean getFledgeAuctionServerRequestFlagsEnabled() {
@@ -2926,7 +4000,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDaoMock,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2941,7 +4015,7 @@ public final class ScheduledUpdatesHandlerTest {
 
     private void enableSellerConfigurationFlag() {
         // Enable seller configuration flag
-        mFlags =
+        mFakeFlags =
                 new ScheduleCustomAudienceUpdateFlags() {
                     @Override
                     public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
@@ -2952,7 +4026,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDaoMock,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -2968,7 +4042,7 @@ public final class ScheduledUpdatesHandlerTest {
     private void disableSellerConfigurationFlag() {
         // Disable seller configuration flag
         // Safeguard to ensure that tests continue to work as intended when flag is turned on
-        mFlags =
+        mFakeFlags =
                 new ScheduleCustomAudienceUpdateFlags() {
                     @Override
                     public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
@@ -2979,7 +4053,7 @@ public final class ScheduledUpdatesHandlerTest {
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDaoMock,
                         mAdServicesHttpsClientMock,
-                        mFlags,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -3004,11 +4078,14 @@ public final class ScheduledUpdatesHandlerTest {
                         eq(request.getUpdate().getOwner()),
                         eq(request.getUpdate().getAllowScheduleInResponse()),
                         eqJsonObject(responseJson),
-                        any(DevContext.class)))
+                        any(DevContext.class),
+                        any()))
                 .thenReturn(FluentFuture.from(immediateVoidFuture()));
         when(mStrategyMock.prepareFetchUpdateRequestBody(
                         eqJsonArray(partialCustomAudienceJsonArray), eq(Collections.emptyList())))
-                .thenReturn(partialCustomAudienceJsonArray.toString());
+                .thenReturn(
+                        createRequestBodyWithOnlyPartialCustomAudiences(
+                                partialCustomAudienceJsonArray));
     }
 
     private void verifyDisabledStrategy(
@@ -3023,6 +4100,6 @@ public final class ScheduledUpdatesHandlerTest {
                         eqJsonArray(partialCustomAudienceJsonArray), eq(Collections.emptyList()));
         verify(mStrategyMock)
                 .scheduleRequests(
-                        eq(update.getOwner()), eq(false), eqJsonObject(responseJson), any());
+                        eq(update.getOwner()), eq(false), eqJsonObject(responseJson), any(), any());
     }
 }

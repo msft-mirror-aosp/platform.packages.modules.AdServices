@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.measurement.aggregation;
 
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.BUCKET;
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.ID;
+import static com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution.VALUE;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
@@ -28,6 +32,7 @@ import androidx.test.filters.SmallTest;
 import com.android.adservices.HpkeJni;
 import com.android.adservices.service.exception.CryptoException;
 import com.android.adservices.service.measurement.PrivacyParams;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.junit.Test;
 
@@ -55,6 +60,13 @@ public class AggregateCryptoConverterTest {
                     + "{\"bucket\": \"3\", \"value\":4}"
                     + "]}";
 
+    private static final String DEFAULT_PAYLOAD_WITH_FILTERING_ID =
+            "{\"operation\":\"histogram\", "
+                    + "\"data\": ["
+                    + "{\"bucket\": \"1\", \"value\":2, \"id\":\"15445556313182349289\"},"
+                    + "{\"bucket\": \"3\", \"value\":4, \"id\":\"18446744073709551615\"}"
+                    + "]}";
+
     private static final String PADDED_PAYLOAD1 =
             "{\"operation\":\"histogram\", "
                     + "\"data\": ["
@@ -79,19 +91,40 @@ public class AggregateCryptoConverterTest {
     public void testEncrypt_successfully() throws Exception {
         String result =
                 AggregateCryptoConverter.encrypt(
-                        AggregateCryptoFixture.getPublicKeyBase64(), DEFAULT_PAYLOAD, SHARED_INFO);
+                        AggregateCryptoFixture.getPublicKeyBase64(),
+                        DEFAULT_PAYLOAD,
+                        SHARED_INFO,
+                        /* filteringIdMaxBytes= */ null);
         assertNotNull(result);
         assertEncryptedPayload(result, SHARED_INFO);
     }
 
     @Test
-    public void testEncrypt_payloadPadding_sameSize() throws Exception {
+    public void testEncrypt_successfully_withFilteringId() throws Exception {
+        String result =
+                AggregateCryptoConverter.encrypt(
+                        AggregateCryptoFixture.getPublicKeyBase64(),
+                        DEFAULT_PAYLOAD_WITH_FILTERING_ID,
+                        SHARED_INFO,
+                        /* filteringIdMaxBytes= */ 8);
+        assertNotNull(result);
+        assertEncryptedPayload(result, SHARED_INFO);
+    }
+
+    @Test
+    public void testEncrypt_payloadPadding_sameSize() {
         String result1 =
                 AggregateCryptoConverter.encrypt(
-                        AggregateCryptoFixture.getPublicKeyBase64(), PADDED_PAYLOAD1, SHARED_INFO);
+                        AggregateCryptoFixture.getPublicKeyBase64(),
+                        PADDED_PAYLOAD1,
+                        SHARED_INFO,
+                        /* filteringIdMaxBytes= */ null);
         String result2 =
                 AggregateCryptoConverter.encrypt(
-                        AggregateCryptoFixture.getPublicKeyBase64(), PADDED_PAYLOAD2, SHARED_INFO);
+                        AggregateCryptoFixture.getPublicKeyBase64(),
+                        PADDED_PAYLOAD2,
+                        SHARED_INFO,
+                        /* filteringIdMaxBytes= */ null);
         assertEquals(result1.length(), result2.length());
     }
 
@@ -99,7 +132,10 @@ public class AggregateCryptoConverterTest {
     public void testEncrypt_sharedInfoEmpty_success() throws Exception {
         String result =
                 AggregateCryptoConverter.encrypt(
-                        AggregateCryptoFixture.getPublicKeyBase64(), DEFAULT_PAYLOAD, null);
+                        AggregateCryptoFixture.getPublicKeyBase64(),
+                        DEFAULT_PAYLOAD,
+                        null,
+                        /* filteringIdMaxBytes= */ null);
         assertNotNull(result);
         assertEncryptedPayload(result, "");
     }
@@ -108,7 +144,10 @@ public class AggregateCryptoConverterTest {
     public void testEncrypt_sharedInfoNull_success() throws Exception {
         String result =
                 AggregateCryptoConverter.encrypt(
-                        AggregateCryptoFixture.getPublicKeyBase64(), DEFAULT_PAYLOAD, null);
+                        AggregateCryptoFixture.getPublicKeyBase64(),
+                        DEFAULT_PAYLOAD,
+                        null,
+                        /* filteringIdMaxBytes= */ null);
         assertNotNull(result);
         assertEncryptedPayload(result, null);
     }
@@ -122,7 +161,8 @@ public class AggregateCryptoConverterTest {
                             + "\"data\": [{"
                             + "\"bucket\": \"1\", \"value\":2"
                             + "}]}",
-                    null);
+                    null,
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -138,7 +178,8 @@ public class AggregateCryptoConverterTest {
                             + "\"data\": [{"
                             + "\"bucket\": \"1\", \"value\":2"
                             + "}]}",
-                    null);
+                    null,
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -154,7 +195,8 @@ public class AggregateCryptoConverterTest {
                             + "\"info\": [{"
                             + "\"bucket\": \"1\", \"value\":2"
                             + "}]}",
-                    null);
+                    null,
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -170,7 +212,8 @@ public class AggregateCryptoConverterTest {
                             + "\"data\": [{"
                             + "\"bucket\": \"1\", \"v\":2"
                             + "}]}",
-                    null);
+                    null,
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -186,7 +229,8 @@ public class AggregateCryptoConverterTest {
                             + "\"data\": [{"
                             + "\"b\": 1, \"value\":2"
                             + "}]}",
-                    null);
+                    null,
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -195,7 +239,17 @@ public class AggregateCryptoConverterTest {
 
     @Test
     public void testEncode_successfully() throws Exception {
-        String result = AggregateCryptoConverter.encode(DEFAULT_PAYLOAD);
+        String result =
+                AggregateCryptoConverter.encode(DEFAULT_PAYLOAD, /* filteringIdMaxBytes= */ null);
+        assertNotNull(result);
+        assertEncodedPayload(result);
+    }
+
+    @Test
+    public void testEncodeWithFilteringIds_successfully() throws Exception {
+        String result =
+                AggregateCryptoConverter.encode(
+                        DEFAULT_PAYLOAD_WITH_FILTERING_ID, /* filteringIdMaxBytes= */ 8);
         assertNotNull(result);
         assertEncodedPayload(result);
     }
@@ -207,7 +261,8 @@ public class AggregateCryptoConverterTest {
                     "{{\"operation\":\"histogram\", "
                             + "\"data\": [{"
                             + "\"bucket\": \"1\", \"value\":2"
-                            + "}]}");
+                            + "}]}",
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -221,7 +276,8 @@ public class AggregateCryptoConverterTest {
                     "{{\"ops\":\"histogram\", "
                             + "\"data\": [{"
                             + "\"bucket\": \"1\", \"value\":2"
-                            + "}]}");
+                            + "}]}",
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -235,7 +291,8 @@ public class AggregateCryptoConverterTest {
                     "{{\"operation\":\"histogram\", "
                             + "\"info\": [{"
                             + "\"bucket\": \"1\", \"value\":2"
-                            + "}]}");
+                            + "}]}",
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -249,7 +306,8 @@ public class AggregateCryptoConverterTest {
                     "{{\"operation\":\"histogram\", "
                             + "\"data\": [{"
                             + "\"bucket\": \"1\", \"v\":2"
-                            + "}]}");
+                            + "}]}",
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -263,7 +321,8 @@ public class AggregateCryptoConverterTest {
                     "{{\"operation\":\"histogram\", "
                             + "\"data\": [{"
                             + "\"b\": 1, \"value\":2"
-                            + "}]}");
+                            + "}]}",
+                    /* filteringIdMaxBytes= */ null);
             fail();
         } catch (CryptoException e) {
             // succeed
@@ -286,7 +345,9 @@ public class AggregateCryptoConverterTest {
         contributions.add(firstContribution);
         contributions.add(secondContribution);
 
-        final byte[] encoded = AggregateCryptoConverter.encodeWithCbor(contributions);
+        final byte[] encoded =
+                AggregateCryptoConverter.encodeWithCbor(
+                        contributions, /* filteringIdMaxBytes= */ null);
         final List<DataItem> dataItems =
                 new CborDecoder(new ByteArrayInputStream(encoded)).decode();
 
@@ -299,15 +360,107 @@ public class AggregateCryptoConverterTest {
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "1")
-                                                && isFound((Map) i, "value", "2")));
-
+                                        isFound((Map) i, BUCKET, "1")
+                                                && isFound((Map) i, VALUE, "2")));
         assertTrue(
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "3")
-                                                && isFound((Map) i, "value", "4")));
+                                        isFound((Map) i, BUCKET, "3")
+                                                && isFound((Map) i, VALUE, "4")));
+    }
+
+    @Test
+    public void testEncodeWithCbor_filteringId_successfully() throws Exception {
+        final List<AggregateHistogramContribution> contributions = new ArrayList<>();
+        final AggregateHistogramContribution firstContribution =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger("1"))
+                        .setValue(2)
+                        .setId(UnsignedLong.ZERO)
+                        .build();
+        final AggregateHistogramContribution secondContribution =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger("2"))
+                        .setValue(3)
+                        .setId(new UnsignedLong("255"))
+                        .build();
+        final AggregateHistogramContribution thirdContribution =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger("3"))
+                        .setValue(4)
+                        .setId(new UnsignedLong("65535"))
+                        .build();
+        contributions.add(firstContribution);
+        contributions.add(secondContribution);
+        contributions.add(thirdContribution);
+
+        final byte[] encoded =
+                AggregateCryptoConverter.encodeWithCbor(
+                        contributions, /* filteringIdMaxBytes= */ 2);
+        final List<DataItem> dataItems =
+                new CborDecoder(new ByteArrayInputStream(encoded)).decode();
+
+        final Map payload = (Map) dataItems.get(0);
+        final Array payloadArray = (Array) payload.get(new UnicodeString("data"));
+
+        assertEquals(3, payloadArray.getDataItems().size());
+        assertEquals("histogram", payload.get(new UnicodeString("operation")).toString());
+        assertEquals(2, getBytesLength((Map) payloadArray.getDataItems().get(0), ID));
+        assertTrue(
+                payloadArray.getDataItems().stream()
+                        .anyMatch(
+                                i ->
+                                        isFound((Map) i, BUCKET, "1")
+                                                && isFound((Map) i, VALUE, "2")
+                                                && isFound((Map) i, ID, "0")));
+        assertTrue(
+                payloadArray.getDataItems().stream()
+                        .anyMatch(
+                                i ->
+                                        isFound((Map) i, BUCKET, "2")
+                                                && isFound((Map) i, VALUE, "3")
+                                                && isFound((Map) i, ID, "255")));
+        assertTrue(
+                payloadArray.getDataItems().stream()
+                        .anyMatch(
+                                i ->
+                                        isFound((Map) i, BUCKET, "3")
+                                                && isFound((Map) i, VALUE, "4")
+                                                && isFound((Map) i, ID, "65535")));
+    }
+
+    @Test
+    public void testEncodeWithCbor_largeFilteringId_successfully() throws Exception {
+        final List<AggregateHistogramContribution> contributions = new ArrayList<>();
+        final AggregateHistogramContribution contribution =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(new BigInteger("1"))
+                        .setValue(2)
+                        .setId(new UnsignedLong("18446744073709551615"))
+                        .build();
+        contributions.add(contribution);
+
+        final byte[] encoded =
+                AggregateCryptoConverter.encodeWithCbor(
+                        contributions, /* filteringIdMaxBytes= */ 8);
+
+        final List<DataItem> dataItems =
+                new CborDecoder(new ByteArrayInputStream(encoded)).decode();
+
+        final Map payload = (Map) dataItems.get(0);
+        final Array payloadArray = (Array) payload.get(new UnicodeString("data"));
+
+        assertEquals(1, payloadArray.getDataItems().size());
+        assertEquals("histogram", payload.get(new UnicodeString("operation")).toString());
+        assertTrue(
+                payloadArray.getDataItems().stream()
+                        .anyMatch(
+                                i ->
+                                        isFound((Map) i, BUCKET, "1")
+                                                && isFound((Map) i, VALUE, "2")
+                                                && isFound((Map) i, ID, "18446744073709551615")));
+        assertEquals(8, getBytesLength((Map) payloadArray.getDataItems().get(0), ID));
     }
 
     @Test
@@ -326,7 +479,9 @@ public class AggregateCryptoConverterTest {
         contributions.add(firstContribution);
         contributions.add(secondContribution);
 
-        final byte[] encoded = AggregateCryptoConverter.encodeWithCbor(contributions);
+        final byte[] encoded =
+                AggregateCryptoConverter.encodeWithCbor(
+                        contributions, /* filteringIdMaxBytes= */ null);
         final List<DataItem> dataItems =
                 new CborDecoder(new ByteArrayInputStream(encoded)).decode();
 
@@ -336,17 +491,17 @@ public class AggregateCryptoConverterTest {
         assertEquals(2, payloadArray.getDataItems().size());
         assertEquals(
                 PrivacyParams.AGGREGATE_HISTOGRAM_BUCKET_BYTE_SIZE,
-                getBytesLength((Map) payloadArray.getDataItems().get(0), "bucket"));
+                getBytesLength((Map) payloadArray.getDataItems().get(0), BUCKET));
         assertEquals(
-                getBytesLength((Map) payloadArray.getDataItems().get(0), "bucket"),
-                getBytesLength((Map) payloadArray.getDataItems().get(1), "bucket"));
+                getBytesLength((Map) payloadArray.getDataItems().get(0), BUCKET),
+                getBytesLength((Map) payloadArray.getDataItems().get(1), BUCKET));
 
         assertEquals(
                 PrivacyParams.AGGREGATE_HISTOGRAM_VALUE_BYTE_SIZE,
-                getBytesLength((Map) payloadArray.getDataItems().get(0), "value"));
+                getBytesLength((Map) payloadArray.getDataItems().get(0), VALUE));
         assertEquals(
-                getBytesLength((Map) payloadArray.getDataItems().get(0), "value"),
-                getBytesLength((Map) payloadArray.getDataItems().get(1), "value"));
+                getBytesLength((Map) payloadArray.getDataItems().get(0), VALUE),
+                getBytesLength((Map) payloadArray.getDataItems().get(1), VALUE));
     }
 
     @Test
@@ -361,7 +516,9 @@ public class AggregateCryptoConverterTest {
                         .build();
         contributions.add(contribution);
 
-        final byte[] encoded = AggregateCryptoConverter.encodeWithCbor(contributions);
+        final byte[] encoded =
+                AggregateCryptoConverter.encodeWithCbor(
+                        contributions, /* filteringIdMaxBytes= */ null);
         final List<DataItem> dataItems =
                 new CborDecoder(new ByteArrayInputStream(encoded)).decode();
 
@@ -374,9 +531,8 @@ public class AggregateCryptoConverterTest {
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", bucketUpperBound)
-                                                && isFound(
-                                                        (Map) i, "value", "" + valueUpperBound)));
+                                        isFound((Map) i, BUCKET, bucketUpperBound)
+                                                && isFound((Map) i, VALUE, "" + valueUpperBound)));
     }
 
     @Test
@@ -405,7 +561,9 @@ public class AggregateCryptoConverterTest {
         contributions.add(secondContribution);
         contributions.add(thirdContribution);
 
-        final byte[] encoded = AggregateCryptoConverter.encodeWithCbor(contributions);
+        final byte[] encoded =
+                AggregateCryptoConverter.encodeWithCbor(
+                        contributions, /* filteringIdMaxBytes= */ null);
         final List<DataItem> dataItems =
                 new CborDecoder(new ByteArrayInputStream(encoded)).decode();
 
@@ -417,20 +575,20 @@ public class AggregateCryptoConverterTest {
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "10")
-                                                && isFound((Map) i, "value", "1")));
+                                        isFound((Map) i, BUCKET, "10")
+                                                && isFound((Map) i, VALUE, "1")));
         assertTrue(
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "20")
-                                                && isFound((Map) i, "value", "2")));
+                                        isFound((Map) i, BUCKET, "20")
+                                                && isFound((Map) i, VALUE, "2")));
         assertTrue(
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "0")
-                                                && isFound((Map) i, "value", "0")));
+                                        isFound((Map) i, BUCKET, "0")
+                                                && isFound((Map) i, VALUE, "0")));
     }
 
     @Test
@@ -490,15 +648,15 @@ public class AggregateCryptoConverterTest {
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "1")
-                                                && isFound((Map) i, "value", "2")));
+                                        isFound((Map) i, BUCKET, "1")
+                                                && isFound((Map) i, VALUE, "2")));
 
         assertTrue(
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "3")
-                                                && isFound((Map) i, "value", "4")));
+                                        isFound((Map) i, BUCKET, "3")
+                                                && isFound((Map) i, VALUE, "4")));
     }
 
     private void assertEncodedPayload(String encodedPayloadBase64) throws Exception {
@@ -517,15 +675,15 @@ public class AggregateCryptoConverterTest {
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "1")
-                                                && isFound((Map) i, "value", "2")));
+                                        isFound((Map) i, BUCKET, "1")
+                                                && isFound((Map) i, VALUE, "2")));
 
         assertTrue(
                 payloadArray.getDataItems().stream()
                         .anyMatch(
                                 i ->
-                                        isFound((Map) i, "bucket", "3")
-                                                && isFound((Map) i, "value", "4")));
+                                        isFound((Map) i, BUCKET, "3")
+                                                && isFound((Map) i, VALUE, "4")));
     }
 
     private boolean isFound(Map map, String name, String value) {

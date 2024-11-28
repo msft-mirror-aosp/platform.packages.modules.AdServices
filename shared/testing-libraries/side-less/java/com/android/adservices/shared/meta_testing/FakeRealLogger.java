@@ -78,7 +78,9 @@ public final class FakeRealLogger implements RealLogger {
         LogEntry logEntry = new LogEntry(level, tag, message, throwable);
 
         // Also log "for real"
-        sRealLogger.v("Adding entry: %s", logEntry);
+        // TODO(b/380449177): ideally should be .v or .d , but it's .i because Ravenwood logs at
+        // that level by default
+        sRealLogger.i("Adding entry: %s", logEntry);
         mEntries.add(logEntry);
     }
 }

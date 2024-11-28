@@ -23,6 +23,7 @@ import android.util.Pair;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.android.adservices.service.measurement.AggregatableNamedBudgets.BudgetAndContribution;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -78,6 +79,16 @@ public interface IMeasurementDao {
      * @return a list of attribution scopes.
      */
     List<String> getSourceAttributionScopes(@NonNull String sourceId) throws DatastoreException;
+
+    /**
+     * Queries and returns the {@link Source}'s aggregatable named budgets.
+     *
+     * @param sourceId ID of the requested Source.
+     * @param matchedBudgetName name of the budget to retrieve.
+     * @return the budget and contribution of Source's matchedBudgetName named budget.
+     */
+    BudgetAndContribution getSourceAggregatableNamedBudgetAndContribution(
+            @NonNull String sourceId, @NonNull String matchedBudgetName) throws DatastoreException;
 
     /**
      * Queries and returns the {@link Source}'s attribution scopes for a given source registration
@@ -336,6 +347,20 @@ public interface IMeasurementDao {
      * @param source the {@link Source} object.
      */
     void updateSourceAggregateDebugContributions(@NonNull Source source) throws DatastoreException;
+
+    /**
+     * Updates the value of aggregatable named budgets for the corresponding {@link Source}.
+     *
+     * @param sourceId the id of the {@link Source} object.
+     * @param budgetName the name of the budget to update
+     * @param budgetAndContribution the object containing the information to update for the named
+     *     budget
+     */
+    void updateSourceAggregatableNamedBudgetAndContribution(
+            @NonNull String sourceId,
+            @NonNull String budgetName,
+            @NonNull BudgetAndContribution budgetAndContribution)
+            throws DatastoreException;
 
     /**
      * Returns list of all the reports associated with the {@link Source}.

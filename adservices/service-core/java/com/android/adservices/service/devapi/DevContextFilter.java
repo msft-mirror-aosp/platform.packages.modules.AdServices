@@ -98,6 +98,7 @@ public class DevContextFilter {
      * @return A valid {@link DevContextFilter} instance.
      */
     @VisibleForTesting
+    @SuppressWarnings("AvoidStaticContext")
     public static DevContextFilter create(
             @NonNull Context context, final boolean developerModeFeatureEnabled) {
         // A separate constructor is needed for tests as the data store factory makes a flags check,
@@ -112,6 +113,7 @@ public class DevContextFilter {
     }
 
     /** Creates an instance of {@link DevContextFilter}. */
+    @SuppressWarnings("AvoidStaticContext")
     public static DevContextFilter create(@NonNull Context context) {
         Objects.requireNonNull(context);
 

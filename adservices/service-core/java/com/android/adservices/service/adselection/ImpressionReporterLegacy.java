@@ -49,6 +49,7 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.data.adselection.datahandlers.ReportingComputationData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AdTechUriValidator;
@@ -113,6 +114,7 @@ public class ImpressionReporterLegacy {
     @NonNull private final CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
     @NonNull private final RegisterAdBeaconSupportHelper mRegisterAdBeaconSupportHelper;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final JsFetcher mJsFetcher;
@@ -135,6 +137,7 @@ public class ImpressionReporterLegacy {
             @NonNull DevContext devContext,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull final Flags flags,
+            @NonNull final DebugFlags debugFlags,
             @NonNull final AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull final FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
@@ -151,6 +154,7 @@ public class ImpressionReporterLegacy {
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(frequencyCapAdDataValidator);
         Objects.requireNonNull(devContext);
@@ -194,6 +198,7 @@ public class ImpressionReporterLegacy {
                 new CustomAudienceDevOverridesHelper(devContext, mCustomAudienceDao);
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mFrequencyCapAdDataValidator = frequencyCapAdDataValidator;
         mCallerUid = callerUid;
@@ -282,7 +287,7 @@ public class ImpressionReporterLegacy {
                                         mFlags
                                                 .getEnforceForegroundStatusForFledgeReportImpression(),
                                         true,
-                                        !mFlags.getConsentNotificationDebugMode(),
+                                        !mDebugFlags.getConsentNotificationDebugMode(),
                                         mCallerUid,
                                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,

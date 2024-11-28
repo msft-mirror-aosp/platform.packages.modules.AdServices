@@ -35,8 +35,10 @@ import com.android.adservices.service.measurement.aggregation.AggregateDebugRepo
 import com.android.adservices.service.measurement.aggregation.AggregateDebugReportRecord;
 import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
+import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.util.BaseUriExtractor;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONException;
 
@@ -57,9 +59,6 @@ import java.util.stream.IntStream;
  */
 public class AggregateDebugReportApi {
     public static final String AGGREGATE_DEBUG_REPORT_API = "attribution-reporting-debug";
-    // TODO(b/364768862): Bump this to 1.0 based on flexible contribution filtering flag
-    private static final String PRE_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "0.1";
-    private static final String POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "1.0";
     private final Flags mFlags;
 
     public AggregateDebugReportApi(Flags flags) {
@@ -108,7 +107,7 @@ public class AggregateDebugReportApi {
                             .collect(Collectors.toList());
 
             if (contributions.isEmpty()) {
-                // Both Source and trigger have opted-in but the debug data didn't match
+                // Source have opted-in but the debug data didn't match
                 LoggerFactory.getMeasurementLogger()
                         .d("Debug report type data not opted-in for ADR");
                 measurementDao.insertAggregateReport(generateNullAggregateReport(source));
@@ -204,16 +203,13 @@ public class AggregateDebugReportApi {
             Trigger trigger,
             List<DebugReportApi.Type> types,
             IMeasurementDao measurementDao) {
-        if (!mFlags.getMeasurementEnableAggregateDebugReporting()
-                || source.getAggregateDebugReportingString() == null) {
+        if (!mFlags.getMeasurementEnableAggregateDebugReporting()) {
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "Aggregate debug reporting on source disabled; "
                                     + "flag=%s; "
-                                    + "source_aggregatable_debug_reporting available=%s;"
                                     + "trigger_aggregatable debug_reporting available=%s",
                             mFlags.getMeasurementEnableAggregateDebugReporting(),
-                            source.getAggregateDebugReportingString() != null,
                             trigger.getAggregateDebugReportingString() != null);
             return;
         }
@@ -450,7 +446,7 @@ public class AggregateDebugReportApi {
                 getTriggerOrDefaultCoordinatorOrigin(trigger.getAggregateDebugReportingObject());
         return new AggregateReport.Builder()
                 .setId(UUID.randomUUID().toString())
-                .setAttributionDestination(trigger.getAttributionDestination())
+                .setAttributionDestination(trigger.getAttributionDestinationBaseUri())
                 .setPublisher(trigger.getAttributionDestination())
                 .setScheduledReportTime(trigger.getTriggerTime())
                 .setEnrollmentId(trigger.getEnrollmentId())
@@ -460,7 +456,7 @@ public class AggregateDebugReportApi {
                 // We don't want to deliver regular aggregate reports
                 .setStatus(AggregateReport.Status.MARKED_TO_DELETE)
                 .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
-                .setApiVersion(getApiVersion())
+                .setApiVersion(AggregatePayloadGenerator.getApiVersion(mFlags))
                 .setSourceId(null)
                 .setTriggerId(trigger.getId())
                 .setRegistrationOrigin(trigger.getRegistrationOrigin())
@@ -475,6 +471,7 @@ public class AggregateDebugReportApi {
         return new AggregateReport.Builder()
                 .setId(UUID.randomUUID().toString())
                 .setPublisher(source.getPublisher())
+                // Source already has base destination URIs
                 .setAttributionDestination(getSourceDestinationToReport(source))
                 .setScheduledReportTime(source.getEventTime())
                 .setEnrollmentId(source.getEnrollmentId())
@@ -483,7 +480,7 @@ public class AggregateDebugReportApi {
                 // We don't want to deliver regular aggregate reports for ADRs
                 .setStatus(AggregateReport.Status.MARKED_TO_DELETE)
                 .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
-                .setApiVersion(getApiVersion())
+                .setApiVersion(AggregatePayloadGenerator.getApiVersion(mFlags))
                 .setSourceId(sourceId)
                 .setTriggerId(null)
                 .setRegistrationOrigin(source.getRegistrationOrigin())
@@ -501,7 +498,7 @@ public class AggregateDebugReportApi {
         return new AggregateReport.Builder()
                 .setId(UUID.randomUUID().toString())
                 .setPublisher(source.getPublisher())
-                .setAttributionDestination(trigger.getAttributionDestination())
+                .setAttributionDestination(trigger.getAttributionDestinationBaseUri())
                 .setScheduledReportTime(trigger.getTriggerTime())
                 .setEnrollmentId(source.getEnrollmentId())
                 .setDebugCleartextPayload(
@@ -509,7 +506,7 @@ public class AggregateDebugReportApi {
                 // We don't want to deliver regular aggregate reports
                 .setStatus(AggregateReport.Status.MARKED_TO_DELETE)
                 .setDebugReportStatus(AggregateReport.DebugReportStatus.PENDING)
-                .setApiVersion(getApiVersion())
+                .setApiVersion(AggregatePayloadGenerator.getApiVersion(mFlags))
                 // As source/trigger registration might have failed
                 .setSourceId(source.getId())
                 .setTriggerId(trigger.getId())
@@ -568,12 +565,16 @@ public class AggregateDebugReportApi {
                 : Collections.min(source.getAppDestinations());
     }
 
-    private static AggregateHistogramContribution createContributions(
+    private AggregateHistogramContribution createContributions(
             AggregateDebugReportData errorDebugReportingData, BigInteger keyPiece) {
-        return new AggregateHistogramContribution.Builder()
-                .setKey(keyPiece.or(errorDebugReportingData.getKeyPiece()))
-                .setValue(errorDebugReportingData.getValue())
-                .build();
+        AggregateHistogramContribution.Builder aggregateHistogramContributionBuilder =
+                new AggregateHistogramContribution.Builder()
+                        .setKey(keyPiece.or(errorDebugReportingData.getKeyPiece()))
+                        .setValue(errorDebugReportingData.getValue());
+        if (mFlags.getMeasurementEnableFlexibleContributionFiltering()) {
+            aggregateHistogramContributionBuilder.setId(UnsignedLong.ZERO);
+        }
+        return aggregateHistogramContributionBuilder.build();
     }
 
     private static int sumContributions(List<AggregateHistogramContribution> contributions) {
@@ -601,7 +602,7 @@ public class AggregateDebugReportApi {
             throws JSONException {
         return generateBaseNullReportBuilder()
                 .setRegistrationOrigin(trigger.getRegistrationOrigin())
-                .setAttributionDestination(trigger.getAttributionDestination())
+                .setAttributionDestination(trigger.getAttributionDestinationBaseUri())
                 .setScheduledReportTime(trigger.getTriggerTime())
                 .setTriggerId(trigger.getId())
                 .setAggregationCoordinatorOrigin(
@@ -615,6 +616,7 @@ public class AggregateDebugReportApi {
         return generateBaseNullReportBuilder()
                 .setPublisher(source.getPublisher())
                 .setRegistrationOrigin(source.getRegistrationOrigin())
+                // Source already has base destination URIs
                 .setAttributionDestination(getSourceDestinationToReport(source))
                 .setScheduledReportTime(source.getEventTime())
                 // We don't want null report to be counted as this source driven ADR
@@ -627,7 +629,7 @@ public class AggregateDebugReportApi {
     private AggregateReport generateNullAggregateReport(Trigger trigger) throws JSONException {
         return generateBaseNullReportBuilder()
                 .setRegistrationOrigin(trigger.getRegistrationOrigin())
-                .setAttributionDestination(trigger.getAttributionDestination())
+                .setAttributionDestination(trigger.getAttributionDestinationBaseUri())
                 .setScheduledReportTime(trigger.getTriggerTime())
                 .setTriggerId(trigger.getId())
                 .setAggregationCoordinatorOrigin(
@@ -643,7 +645,7 @@ public class AggregateDebugReportApi {
                                 Collections.singletonList(createPaddingContribution())));
         return new AggregateReport.Builder()
                 .setId(UUID.randomUUID().toString())
-                .setApiVersion(getApiVersion())
+                .setApiVersion(AggregatePayloadGenerator.getApiVersion(mFlags))
                 // exclude by default
                 .setSourceRegistrationTime(null)
                 .setDebugCleartextPayload(debugPayload)
@@ -659,17 +661,22 @@ public class AggregateDebugReportApi {
     private List<AggregateHistogramContribution> getPaddedContributions(
             List<AggregateHistogramContribution> contributions) {
         List<AggregateHistogramContribution> paddedContributions = new ArrayList<>(contributions);
-        if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
-            IntStream.range(
-                            contributions.size(),
-                            mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
-                    .forEach(i -> paddedContributions.add(createPaddingContribution()));
-        }
+        IntStream.range(
+                        contributions.size(),
+                        mFlags.getMeasurementMaxAggregateKeysPerSourceRegistration())
+                .forEach(i -> paddedContributions.add(createPaddingContribution()));
         return paddedContributions;
     }
 
     private AggregateHistogramContribution createPaddingContribution() {
-        return new AggregateHistogramContribution.Builder().setPaddingContribution().build();
+        AggregateHistogramContribution.Builder aggregateHistogramContributionBuilder =
+                new AggregateHistogramContribution.Builder();
+        if (mFlags.getMeasurementEnableFlexibleContributionFiltering()) {
+            aggregateHistogramContributionBuilder.setPaddingContributionWithFilteringId();
+        } else {
+            aggregateHistogramContributionBuilder.setPaddingContribution();
+        }
+        return aggregateHistogramContributionBuilder.build();
     }
 
     private static Optional<Uri> extractBaseUri(Uri uri) {
@@ -677,12 +684,5 @@ public class AggregateDebugReportApi {
             return Optional.of(BaseUriExtractor.getBaseUri(uri));
         }
         return WebAddresses.topPrivateDomainAndScheme(uri);
-    }
-
-    private String getApiVersion() {
-        if (mFlags.getMeasurementEnableFlexibleContributionFiltering()) {
-            return POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION;
-        }
-        return PRE_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION;
     }
 }

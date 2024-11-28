@@ -145,6 +145,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     }
 
     /** Creates a new instance of {@link CustomAudienceServiceImpl}. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static CustomAudienceServiceImpl create(@NonNull Context context) {
         return new CustomAudienceServiceImpl(context);
     }
@@ -419,6 +421,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                     mConsentManager,
                                     callerUid,
                                     mFlags,
+                                    mDebugFlags,
                                     mAdServicesLogger,
                                     AdServicesExecutors.getBackgroundExecutor(),
                                     mCustomAudienceServiceFilter,
@@ -493,7 +496,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 mCustomAudienceServiceFilter.filterRequest(
                         buyer,
                         ownerPackageName,
-                        mFlags.getEnforceForegroundStatusForFledgeCustomAudience(),
+                        mFlags.getEnforceForegroundStatusForLeaveCustomAudience(),
                         false,
                         !mDebugFlags.getConsentNotificationDebugMode(),
                         callerUid,

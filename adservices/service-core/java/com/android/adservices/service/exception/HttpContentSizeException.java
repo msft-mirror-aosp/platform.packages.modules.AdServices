@@ -14,10 +14,17 @@
  * limitations under the License.
  */
 
-package android.adservices.common;
+package com.android.adservices.service.exception;
 
-/**
- * Contains data of user choices for each AdServices modules.
- */
+import java.io.IOException;
 
-parcelable AdServicesModuleUserChoice;
+/** Exception thrown during http request when the content size exceeds limit. */
+public class HttpContentSizeException extends IOException {
+    public HttpContentSizeException(Throwable e) {
+        super(e);
+    }
+
+    public HttpContentSizeException(String message) {
+        super(message);
+    }
+}

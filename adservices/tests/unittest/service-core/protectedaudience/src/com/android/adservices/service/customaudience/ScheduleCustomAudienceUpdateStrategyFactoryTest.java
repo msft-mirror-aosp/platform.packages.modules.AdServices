@@ -21,6 +21,9 @@ import static com.android.adservices.service.customaudience.ScheduleCustomAudien
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.service.common.FledgeAuthorizationFilter;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
 import org.junit.Test;
 import org.mockito.Mock;
@@ -28,16 +31,22 @@ import org.mockito.Mock;
 public class ScheduleCustomAudienceUpdateStrategyFactoryTest extends AdServicesMockitoTestCase {
 
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
+    @Mock private AdServicesLogger mAdServicesLoggerMock;
 
     @Test
     public void testCreateStrategy_AdditionalScheduleRequestsFalse_ReturnsDisabledStrategy() {
         ScheduleCustomAudienceUpdateStrategy strategy =
                 ScheduleCustomAudienceUpdateStrategyFactory.createStrategy(
+                        mContext,
                         mCustomAudienceDaoMock,
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
+                        FledgeAuthorizationFilter.create(
+                                mContext, AdServicesLoggerImpl.getInstance()),
                         MIN_DELAY,
-                        false);
+                        /* additionalScheduleRequestsEnabled= */ false,
+                        /* disableFledgeEnrollmentCheck= */ false,
+                        mAdServicesLoggerMock);
 
         expect.that(strategy).isInstanceOf(AdditionalScheduleRequestsDisabledStrategy.class);
     }
@@ -46,11 +55,16 @@ public class ScheduleCustomAudienceUpdateStrategyFactoryTest extends AdServicesM
     public void testCreateStrategy_AdditionalScheduleRequestsTrue_ReturnsEnabledStrategy() {
         ScheduleCustomAudienceUpdateStrategy strategy =
                 ScheduleCustomAudienceUpdateStrategyFactory.createStrategy(
+                        mContext,
                         mCustomAudienceDaoMock,
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
+                        FledgeAuthorizationFilter.create(
+                                mContext, AdServicesLoggerImpl.getInstance()),
                         MIN_DELAY,
-                        true);
+                        /* additionalScheduleRequestsEnabled= */ true,
+                        /* disableFledgeEnrollmentCheck= */ false,
+                        mAdServicesLoggerMock);
 
         expect.that(strategy).isInstanceOf(AdditionalScheduleRequestsEnabledStrategy.class);
     }

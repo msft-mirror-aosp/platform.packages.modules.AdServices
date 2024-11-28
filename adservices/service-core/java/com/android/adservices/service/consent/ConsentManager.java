@@ -39,9 +39,10 @@ import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesModuleState.ModuleStateCode;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesModuleUserChoice.ModuleUserChoiceCode;
+import android.adservices.common.Module;
 import android.adservices.common.Module.ModuleCode;
 import android.annotation.IntDef;
-import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.app.adservices.AdServicesManager;
 import android.app.adservices.consent.ConsentParcel;
@@ -49,6 +50,7 @@ import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.os.SystemClock;
 import android.os.Trace;
 
 import androidx.annotation.RequiresApi;
@@ -63,6 +65,7 @@ import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.data.topics.Topic;
@@ -71,6 +74,7 @@ import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.Flags.ConsentSourceOfTruth;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.common.BackgroundJobsManager;
@@ -98,6 +102,7 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
@@ -128,7 +133,12 @@ import java.util.stream.Stream;
 // TODO(b/259791134): Add a CTS/UI test to test the Consent Migration
 // TODO(b/279042385): move UI logs to UI.
 @RequiresApi(Build.VERSION_CODES.S)
-public class ConsentManager {
+public final class ConsentManager {
+
+    // Used on dump() / log only
+    private static int sDataMigrationDurationMs;
+    private static int sInstantiationDurationMs;
+
     private static volatile ConsentManager sConsentManager;
 
     @IntDef(value = {NO_MANUAL_INTERACTIONS_RECORDED, UNKNOWN, MANUAL_INTERACTIONS_RECORDED})
@@ -150,8 +160,9 @@ public class ConsentManager {
     private final AppInstallDao mAppInstallDao;
     private final ProtectedSignalsDao mProtectedSignalsDao;
     private final FrequencyCapDao mFrequencyCapDao;
+    private final EncodedPayloadDao mEncodedPayloadDao;
     private final AdServicesManager mAdServicesManager;
-    private final int mConsentSourceOfTruth;
+    private final @ConsentSourceOfTruth int mConsentSourceOfTruth;
     private final AppSearchConsentManager mAppSearchConsentManager;
     private final UserProfileIdManager mUserProfileIdManager;
     private final UxStatesDao mUxStatesDao;
@@ -160,22 +171,23 @@ public class ConsentManager {
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
 
     ConsentManager(
-            @NonNull Supplier<TopicsWorker> topicsWorkerSupplier,
-            @NonNull Supplier<AppConsentDao> appConsentDaoSupplier,
-            @NonNull Supplier<EnrollmentDao> enrollmentDaoSupplier,
-            @NonNull Supplier<MeasurementImpl> measurementSupplier,
-            @NonNull CustomAudienceDao customAudienceDao,
-            @NonNull AppInstallDao appInstallDao,
-            @NonNull ProtectedSignalsDao protectedSignalsDao,
-            @NonNull FrequencyCapDao frequencyCapDao,
-            @NonNull AdServicesManager adServicesManager,
-            @NonNull AtomicFileDatastore atomicFileDatastore,
-            @NonNull AppSearchConsentManager appSearchConsentManager,
-            @NonNull UserProfileIdManager userProfileIdManager,
-            @NonNull UxStatesDao uxStatesDao,
-            @NonNull Flags flags,
-            @NonNull DebugFlags debugFlags,
-            @Flags.ConsentSourceOfTruth int consentSourceOfTruth,
+            Supplier<TopicsWorker> topicsWorkerSupplier,
+            Supplier<AppConsentDao> appConsentDaoSupplier,
+            Supplier<EnrollmentDao> enrollmentDaoSupplier,
+            Supplier<MeasurementImpl> measurementSupplier,
+            CustomAudienceDao customAudienceDao,
+            AppInstallDao appInstallDao,
+            ProtectedSignalsDao protectedSignalsDao,
+            FrequencyCapDao frequencyCapDao,
+            EncodedPayloadDao encodedPayloadDao,
+            AdServicesManager adServicesManager,
+            AtomicFileDatastore atomicFileDatastore,
+            AppSearchConsentManager appSearchConsentManager,
+            UserProfileIdManager userProfileIdManager,
+            UxStatesDao uxStatesDao,
+            Flags flags,
+            DebugFlags debugFlags,
+            @ConsentSourceOfTruth int consentSourceOfTruth,
             boolean enableAppsearchConsentData) {
         mTopicsWorkerSupplier =
                 Objects.requireNonNull(topicsWorkerSupplier, "topicsWorker cannot be null");
@@ -190,6 +202,8 @@ public class ConsentManager {
                 Objects.requireNonNull(protectedSignalsDao, "protectedSignalsDao cannot be null");
         mFrequencyCapDao =
                 Objects.requireNonNull(frequencyCapDao, "frequencyCapDao cannot be null");
+        mEncodedPayloadDao =
+                Objects.requireNonNull(encodedPayloadDao, "encodedPayloadDao cannot be null");
         mDatastore =
                 Objects.requireNonNull(atomicFileDatastore, "atomicFileDatastore cannot be null");
         mUserProfileIdManager =
@@ -220,7 +234,6 @@ public class ConsentManager {
      * <p>If no instance has been initialized yet, a new one will be created. Otherwise, the
      * existing instance will be returned.
      */
-    @NonNull
     public static ConsentManager getInstance() {
         Context context = ApplicationContextSingleton.get();
 
@@ -228,6 +241,7 @@ public class ConsentManager {
         if (sConsentManager == null) {
             synchronized (LOCK) {
                 if (sConsentManager == null) {
+                    long startedTime = SystemClock.uptimeMillis();
                     // Execute one-time consent migration if needed.
                     LogUtil.d("start consent manager initialization");
                     int consentSourceOfTruth = FlagsFactory.getFlags().getConsentSourceOfTruth();
@@ -239,9 +253,8 @@ public class ConsentManager {
                             AppConsentDao.getSingletonSupplier();
 
                     // It is possible that the old value of the flag lingers after OTA until the
-                    // first
-                    // PH sync. In that case, we should not use the stale value, but use the default
-                    // instead. The next PH sync will restore the T+ value.
+                    // first PH sync. In that case, we should not use the stale value, but use the
+                    // default instead. The next PH sync will restore the T+ value.
                     if (SdkLevel.isAtLeastT() && consentSourceOfTruth == Flags.APPSEARCH_ONLY) {
                         consentSourceOfTruth = Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
                     }
@@ -270,6 +283,8 @@ public class ConsentManager {
                             adServicesManager,
                             statsdAdServicesLogger,
                             consentSourceOfTruth);
+                    long postDataMigrationTime = SystemClock.uptimeMillis();
+                    sDataMigrationDurationMs = (int) (postDataMigrationTime - startedTime);
                     sConsentManager =
                             new ConsentManager(
                                     TopicsWorker.getSingletonSupplier(),
@@ -280,6 +295,7 @@ public class ConsentManager {
                                     SharedStorageDatabase.getInstance().appInstallDao(),
                                     ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
                                     SharedStorageDatabase.getInstance().frequencyCapDao(),
+                                    ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
                                     adServicesManager,
                                     datastore,
                                     appSearchConsentManager,
@@ -290,7 +306,21 @@ public class ConsentManager {
                                     DebugFlags.getInstance(),
                                     consentSourceOfTruth,
                                     enableAppsearchConsentData);
-                    LogUtil.d("finish consent manager initialization");
+
+                    boolean businessLogicMigrationEnabled =
+                            FlagsFactory.getFlags()
+                                    .getAdServicesConsentBusinessLogicMigrationEnabled();
+                    if (businessLogicMigrationEnabled) {
+                        // Attempt to migrate old enrollment data to new format
+                        handleEnrollmentDataMigrationIfNeeded(sConsentManager);
+                    }
+
+                    sInstantiationDurationMs =
+                            (int) (SystemClock.uptimeMillis() - postDataMigrationTime);
+                    LogUtil.d(
+                            "finished consent manager initialization: data migration in %dms,"
+                                    + " instantiation in %dms",
+                            sDataMigrationDurationMs, sInstantiationDurationMs);
                 }
             }
         }
@@ -304,7 +334,7 @@ public class ConsentManager {
      * <p>To write consent to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To
      * write to system server consent if source of truth is system server or dual sources.
      */
-    public void enable(@NonNull Context context) {
+    public void enable(Context context) {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().enable(context);
             return;
@@ -342,7 +372,7 @@ public class ConsentManager {
      * <p>To write consent to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To
      * write to system server consent if source of truth is system server or dual sources.
      */
-    public void disable(@NonNull Context context) {
+    public void disable(Context context) {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().disable(context);
             return;
@@ -378,7 +408,7 @@ public class ConsentManager {
      * @param context Context of the application.
      * @param apiType Type of the API (Topics, Fledge, Measurement) which should be enabled.
      */
-    public void enable(@NonNull Context context, AdServicesApiType apiType) {
+    public void enable(Context context, AdServicesApiType apiType) {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().enable(context, apiType);
             return;
@@ -419,7 +449,7 @@ public class ConsentManager {
      * <p>To write consent to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To
      * write to system server consent if source of truth is system server or dual sources.
      */
-    public void disable(@NonNull Context context, AdServicesApiType apiType) {
+    public void disable(Context context, AdServicesApiType apiType) {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().disable(context, apiType);
             return;
@@ -527,7 +557,6 @@ public class ConsentManager {
      *
      * @return {@link ImmutableList} of {@link Topic}s.
      */
-    @NonNull
     public ImmutableList<Topic> getKnownTopicsWithConsent() {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().getKnownTopicsWithConsent();
@@ -541,7 +570,6 @@ public class ConsentManager {
      *
      * @return {@link ImmutableList} of blocked {@link Topic}s.
      */
-    @NonNull
     public ImmutableList<Topic> getTopicsWithRevokedConsent() {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().getTopicsWithRevokedConsent();
@@ -555,8 +583,7 @@ public class ConsentManager {
      *
      * @param topic {@link Topic} to block.
      */
-    @NonNull
-    public void revokeConsentForTopic(@NonNull Topic topic) {
+    public void revokeConsentForTopic(Topic topic) {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().revokeConsentForTopic(topic);
             return;
@@ -570,8 +597,7 @@ public class ConsentManager {
      *
      * @param topic {@link Topic} to restore consent for.
      */
-    @NonNull
-    public void restoreConsentForTopic(@NonNull Topic topic) {
+    public void restoreConsentForTopic(Topic topic) {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().restoreConsentForTopic(topic);
             return;
@@ -667,7 +693,7 @@ public class ConsentManager {
      * @param app {@link App} to block.
      * @throws IOException if the operation fails
      */
-    public void revokeConsentForApp(@NonNull App app) throws IOException {
+    public void revokeConsentForApp(App app) throws IOException {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().revokeConsentForApp(app);
             return;
@@ -710,7 +736,7 @@ public class ConsentManager {
      * @param app {@link App} to restore consent for.
      * @throws IOException if the operation fails
      */
-    public void restoreConsentForApp(@NonNull App app) throws IOException {
+    public void restoreConsentForApp(App app) throws IOException {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().restoreConsentForApp(app);
             return;
@@ -758,6 +784,7 @@ public class ConsentManager {
         }
         if (mFlags.getProtectedSignalsCleanupEnabled()) {
             asyncExecute(mProtectedSignalsDao::deleteAllSignals);
+            asyncExecute(mEncodedPayloadDao::deleteAllEncodedPayloads);
         }
     }
 
@@ -791,6 +818,7 @@ public class ConsentManager {
         }
         if (mFlags.getProtectedSignalsCleanupEnabled()) {
             asyncExecute(mProtectedSignalsDao::deleteAllSignals);
+            asyncExecute(mEncodedPayloadDao::deleteAllEncodedPayloads);
         }
     }
 
@@ -808,7 +836,7 @@ public class ConsentManager {
      * @throws IllegalArgumentException if the package name is invalid or not found as an installed
      *     application
      */
-    public boolean isFledgeConsentRevokedForApp(@NonNull String packageName)
+    public boolean isFledgeConsentRevokedForApp(String packageName)
             throws IllegalArgumentException {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().isFledgeConsentRevokedForApp(packageName);
@@ -870,7 +898,7 @@ public class ConsentManager {
      * @throws IllegalArgumentException if the package name is invalid or not found as an installed
      *     application
      */
-    public boolean isFledgeConsentRevokedForAppAfterSettingFledgeUse(@NonNull String packageName)
+    public boolean isFledgeConsentRevokedForAppAfterSettingFledgeUse(String packageName)
             throws IllegalArgumentException {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance()
@@ -962,7 +990,7 @@ public class ConsentManager {
      *
      * @param packageName the package name that had been uninstalled.
      */
-    public void clearConsentForUninstalledApp(@NonNull String packageName) {
+    public void clearConsentForUninstalledApp(String packageName) {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().clearConsentForUninstalledApp(packageName);
             return;
@@ -1447,6 +1475,8 @@ public class ConsentManager {
     }
 
     @VisibleForTesting
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     static AtomicFileDatastore createAndInitializeDataStore(
             Context context, AdServicesErrorLogger adServicesErrorLogger) {
         AtomicFileDatastore atomicFileDatastore =
@@ -1512,19 +1542,20 @@ public class ConsentManager {
     //             system server.
     // PPAPI_AND_SYSTEM_SERVER: migrate consent from PPAPI to system server.
     // SYSTEM_SERVER_ONLY: migrate consent from PPAPI to system server and clear PPAPI consent
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     @VisibleForTesting
     static void handleConsentMigrationIfNeeded(
-            @NonNull Context context,
-            @NonNull AtomicFileDatastore datastore,
+            Context context,
+            AtomicFileDatastore datastore,
             AdServicesManager adServicesManager,
-            @NonNull StatsdAdServicesLogger statsdAdServicesLogger,
-            @Flags.ConsentSourceOfTruth int consentSourceOfTruth) {
+            StatsdAdServicesLogger statsdAdServicesLogger,
+            @ConsentSourceOfTruth int consentSourceOfTruth) {
         Objects.requireNonNull(context, "context cannot be null");
         // On R/S, handleConsentMigrationIfNeeded should never be executed.
         // It is a T+ feature. On T+, this function should only execute if it's within the
-        // AdServices
-        // APK and not ExtServices. So check if it's within ExtServices, and bail out if that's the
-        // case on any platform.
+        // AdServices APK and not ExtServices. So check if it's within ExtServices, and bail out if
+        // that's the case on any platform.
         String packageName = context.getPackageName();
         if (packageName != null && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
             LogUtil.d("Aborting attempt to migrate consent in ExtServices");
@@ -1630,8 +1661,7 @@ public class ConsentManager {
     }
 
     @VisibleForTesting
-    static void setConsentToSystemServer(
-            @NonNull AdServicesManager adServicesManager, boolean isGiven) {
+    static void setConsentToSystemServer(AdServicesManager adServicesManager, boolean isGiven) {
         Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
 
         ConsentParcel consentParcel =
@@ -1643,7 +1673,7 @@ public class ConsentManager {
     }
 
     static void setPerApiConsentToSystemServer(
-            @NonNull AdServicesManager adServicesManager,
+            AdServicesManager adServicesManager,
             @ConsentParcel.ConsentApiType int consentApiType,
             boolean isGiven) {
         Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
@@ -1657,27 +1687,28 @@ public class ConsentManager {
 
     @VisibleForTesting
     static boolean getPerApiConsentFromSystemServer(
-            @NonNull AdServicesManager adServicesManager,
-            @ConsentParcel.ConsentApiType int consentApiType) {
+            AdServicesManager adServicesManager, @ConsentParcel.ConsentApiType int consentApiType) {
         Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
         return adServicesManager.getConsent(consentApiType).isIsGiven();
     }
 
     @VisibleForTesting
-    static boolean getConsentFromSystemServer(@NonNull AdServicesManager adServicesManager) {
+    static boolean getConsentFromSystemServer(AdServicesManager adServicesManager) {
         Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
         return getPerApiConsentFromSystemServer(adServicesManager, ConsentParcel.ALL_API);
     }
 
     // Perform a one-time migration to migrate existing PPAPI Consent
     @VisibleForTesting
-    // Suppress lint warning for context.getUser in R since this code is unused in R
-    @SuppressWarnings("NewApi")
+    @SuppressWarnings({
+        "NewApi", // Suppress lint warning for context.getUser in R since this code is unused in R
+        "AvoidStaticContext", // TODO(b/311183933): Remove passed in Context from static method.
+    })
     static void migratePpApiConsentToSystemService(
-            @NonNull Context context,
-            @NonNull AtomicFileDatastore datastore,
-            @NonNull AdServicesManager adServicesManager,
-            @NonNull StatsdAdServicesLogger statsdAdServicesLogger) {
+            Context context,
+            AtomicFileDatastore datastore,
+            AdServicesManager adServicesManager,
+            StatsdAdServicesLogger statsdAdServicesLogger) {
         Objects.requireNonNull(context, "context cannot be null");
         Objects.requireNonNull(datastore, "datastore cannot be null");
         Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
@@ -1776,8 +1807,9 @@ public class ConsentManager {
     // Clear PPAPI Consent if fully migrated to use system server consent. This is because system
     // consent cannot be migrated back to PPAPI. This data clearing should only happen once.
     @VisibleForTesting
-    static void clearPpApiConsent(
-            @NonNull Context context, @NonNull AtomicFileDatastore datastore) {
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
+    static void clearPpApiConsent(Context context, AtomicFileDatastore datastore) {
         // Exit if PPAPI consent has cleared.
         SharedPreferences sharedPreferences = getPrefs(context);
         if (sharedPreferences.getBoolean(
@@ -1809,8 +1841,9 @@ public class ConsentManager {
 
     // Set the shared preference to false for given key.
     @VisibleForTesting
-    static void resetSharedPreference(
-            @NonNull Context context, @NonNull String sharedPreferenceKey) {
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
+    static void resetSharedPreference(Context context, String sharedPreferenceKey) {
         Objects.requireNonNull(context, "context cannot be null");
         Objects.requireNonNull(sharedPreferenceKey, "sharedPreferenceKey cannot be null");
 
@@ -1826,6 +1859,96 @@ public class ConsentManager {
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_RESET_FAILURE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
         }
+    }
+
+    @VisibleForTesting
+    static void handleEnrollmentDataMigrationIfNeeded(ConsentManager manager) {
+        String value = manager.getModuleEnrollmentState();
+        if (value != null && !value.isEmpty()) {
+            return;
+        }
+        EnrollmentData data = new EnrollmentData();
+
+        // convert data (Ad ID is left out for now)
+        int[] modules =
+                new int[] {
+                    Module.MEASUREMENT,
+                    Module.PROTECTED_AUDIENCE,
+                    Module.PROTECTED_APP_SIGNALS,
+                    Module.TOPICS,
+                    Module.ON_DEVICE_PERSONALIZATION
+                };
+        for (int module : modules) {
+            data.putModuleState(module, manager.getConvertedModuleState(module));
+            data.putUserChoice(module, manager.getConvertedUserChoice(module));
+        }
+
+        // store data
+        String dataString = EnrollmentData.serialize(data);
+        manager.setModuleEnrollmentData(dataString);
+    }
+
+    @ModuleUserChoiceCode
+    private int getConvertedUserChoice(@ModuleCode int apiType) {
+        Boolean consent = null;
+
+        try {
+            switch (apiType) {
+                case Module.MEASUREMENT ->
+                        consent = getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+                case Module.ON_DEVICE_PERSONALIZATION, Module.PROTECTED_APP_SIGNALS -> {
+                    boolean isEuDevice =
+                            DeviceRegionProvider.isEuDevice(ApplicationContextSingleton.get());
+                    boolean isOnboardedEeaPasUser =
+                            isEuDevice && mFlags.getEeaPasUxEnabled() && wasPasNotificationOpened();
+                    boolean isOnboardedRowPasUser =
+                            !isEuDevice
+                                    && mFlags.getPasUxEnabled()
+                                    && wasPasNotificationDisplayed();
+                    if (isOnboardedEeaPasUser || isOnboardedRowPasUser) {
+                        consent = getConsent(AdServicesApiType.FLEDGE).isGiven();
+                    }
+                }
+                case Module.PROTECTED_AUDIENCE ->
+                        consent = getConsent(AdServicesApiType.FLEDGE).isGiven();
+                case Module.TOPICS -> consent = getConsent(AdServicesApiType.TOPICS).isGiven();
+                default -> consent = null;
+            }
+        } catch (NullPointerException e) {
+            LogUtil.v("No previous consent for apiType:" + apiType);
+        }
+
+        return consent == null
+                ? AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN
+                : consent
+                        ? AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN
+                        : AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT;
+    }
+
+    @ModuleStateCode
+    private int getConvertedModuleState(@ModuleCode int apiType) {
+        int state = AdServicesModuleState.MODULE_STATE_DISABLED;
+        switch (apiType) {
+            case Module.MEASUREMENT -> {
+                if (wasGaUxNotificationDisplayed()
+                        || wasU18NotificationDisplayed()
+                        || wasPasNotificationDisplayed()) {
+                    state = AdServicesModuleState.MODULE_STATE_ENABLED;
+                }
+            }
+            case Module.ON_DEVICE_PERSONALIZATION, Module.PROTECTED_APP_SIGNALS -> {
+                if (wasPasNotificationDisplayed()) {
+                    state = AdServicesModuleState.MODULE_STATE_ENABLED;
+                }
+            }
+            case Module.PROTECTED_AUDIENCE, Module.TOPICS -> {
+                if (wasGaUxNotificationDisplayed() || wasPasNotificationDisplayed()) {
+                    state = AdServicesModuleState.MODULE_STATE_ENABLED;
+                }
+            }
+            default -> state = AdServicesModuleState.MODULE_STATE_UNKNOWN;
+        }
+        return state;
     }
 
     // To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources.
@@ -1883,13 +2006,15 @@ public class ConsentManager {
      * written for consent, we need to make sure it is migrated correctly post-OTA in this method.
      */
     @VisibleForTesting
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     static void handleConsentMigrationFromAppSearchIfNeeded(
-            @NonNull Context context,
-            @NonNull AtomicFileDatastore datastore,
-            @NonNull AppConsentDao appConsentDao,
-            @NonNull AppSearchConsentManager appSearchConsentManager,
-            @NonNull AdServicesManager adServicesManager,
-            @NonNull StatsdAdServicesLogger statsdAdServicesLogger) {
+            Context context,
+            AtomicFileDatastore datastore,
+            AppConsentDao appConsentDao,
+            AppSearchConsentManager appSearchConsentManager,
+            AdServicesManager adServicesManager,
+            StatsdAdServicesLogger statsdAdServicesLogger) {
         Objects.requireNonNull(context, "context cannot be null");
         Objects.requireNonNull(appSearchConsentManager, "appSearchConsentManager cannot be null");
         LogUtil.d("Check migrating Consent from AppSearch to PPAPI and System Service");
@@ -1910,10 +2035,8 @@ public class ConsentManager {
         try {
             // This should be called only once after OTA (if flag is enabled). If we did not record
             // showing the notification on T+ yet and we have shown the notification on S- (as
-            // recorded
-            // in AppSearch), initialize T+ consent data so that we don't show notification twice
-            // (after
-            // OTA upgrade).
+            // recorded in AppSearch), initialize T+ consent data so that we don't show notification
+            // twice (after OTA upgrade).
             SharedPreferences sharedPreferences = getPrefs(context);
             // If we did not migrate notification data, we should not attempt to migrate anything.
             if (!appSearchConsentManager.migrateConsentDataIfNeeded(
@@ -2030,6 +2153,17 @@ public class ConsentManager {
                 adServicesManager,
                 AdServicesApiType.MEASUREMENTS.toConsentApiType(),
                 measurementConsented);
+
+        boolean businessLogicMigrationEnabled =
+                FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled();
+        if (businessLogicMigrationEnabled) {
+            String data = appSearchConsentManager.getModuleEnrollmentState();
+            if (data == null) {
+                data = "";
+            }
+            datastore.putString(ConsentConstants.MODULE_ENROLLMENT_STATE, data);
+            adServicesManager.setModuleEnrollmentState(data);
+        }
         return AppConsents.builder()
                 .setMsmtConsent(measurementConsented)
                 .setTopicsConsent(topicsConsented)
@@ -2037,9 +2171,7 @@ public class ConsentManager {
                 .build();
     }
 
-    @NonNull
-    private static ConsentParcel getConsentParcel(
-            @NonNull Integer apiType, @NonNull Boolean consented) {
+    private static ConsentParcel getConsentParcel(Integer apiType, Boolean consented) {
         return new ConsentParcel.Builder().setConsentApiType(apiType).setIsGiven(consented).build();
     }
 
@@ -2295,7 +2427,7 @@ public class ConsentManager {
     }
 
     /** Set module enrollment data to storage based on consent_source_of_truth. */
-    private String getModuleEnrollmentState() {
+    String getModuleEnrollmentState() {
         return executeGettersByConsentSourceOfTruth(
                 "",
                 () -> mDatastore.getString(ConsentConstants.MODULE_ENROLLMENT_STATE),
@@ -2305,7 +2437,7 @@ public class ConsentManager {
     }
 
     /** Set module enrollment data to storage based on consent_source_of_truth. */
-    private void setModuleEnrollmentData(String data) {
+    void setModuleEnrollmentData(String data) {
         executeSettersByConsentSourceOfTruth(
                 () -> mDatastore.putString(ConsentConstants.MODULE_ENROLLMENT_STATE, data),
                 () -> mAdServicesManager.setModuleEnrollmentState(data),
@@ -2480,6 +2612,39 @@ public class ConsentManager {
                 /* errorLogger= */ null);
     }
 
+    /** Dump its internal state */
+    public void dump(PrintWriter writer, @Nullable String[] args) {
+        writer.println("ConsentManager");
+        String prefix = "  ";
+
+        writer.printf(
+                "%sSource of truth: %s\n",
+                prefix, consentSourceOfTruthToString(mConsentSourceOfTruth));
+
+        writer.printf("%ssDataMigrationDuration: %dms\n", prefix, sDataMigrationDurationMs);
+        writer.printf("%ssInstantiationDuration: %dms\n", prefix, sInstantiationDurationMs);
+
+        writer.printf("%sDatastore:\n", prefix);
+        String prefix2 = "    ";
+        mDatastore.dump(writer, prefix2, /* args= */ null);
+    }
+
+    /** Returns a user-friendly representation of {@code source}. */
+    public static String consentSourceOfTruthToString(@ConsentSourceOfTruth int source) {
+        switch (source) {
+            case Flags.SYSTEM_SERVER_ONLY:
+                return "SYSTEM_SERVER_ONLY";
+            case Flags.PPAPI_ONLY:
+                return "PPAPI_ONLY";
+            case Flags.PPAPI_AND_SYSTEM_SERVER:
+                return "PPAPI_AND_SYSTEM_SERVER";
+            case Flags.APPSEARCH_ONLY:
+                return "APPSEARCH_ONLY";
+            default:
+                return "UNKNOWN-" + source;
+        }
+    }
+
     @FunctionalInterface
     interface ThrowableSetter {
         void apply() throws IOException, RuntimeException;
@@ -2562,7 +2727,7 @@ public class ConsentManager {
             ThrowableGetter<T> systemServiceGetter, /* MUST pass lambdas instead of method
             references for back compat. */
             ThrowableGetter<T> appSearchGetter, /* MUST pass lambdas instead of method references
-             for back compat. */
+            for back compat. */
             ErrorLogger errorLogger) {
         Trace.beginSection("ConsentManager#ReadOperation");
         mReadWriteLock.readLock().lock();
@@ -2597,7 +2762,7 @@ public class ConsentManager {
     }
 
     /* Returns the region od the device */
-    private static int getConsentRegion(@NonNull Context context) {
+    private static int getConsentRegion(Context context) {
         return DeviceRegionProvider.isEuDevice(context)
                 ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
                 : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
@@ -2616,6 +2781,8 @@ public class ConsentManager {
      * @param context Context of the application
      * @return consentMigrationStats returns ConsentMigrationStats for logging
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static ConsentMigrationStats getConsentManagerStatsForLogging(
             AppConsents appConsents,
             ConsentMigrationStats.MigrationStatus migrationStatus,

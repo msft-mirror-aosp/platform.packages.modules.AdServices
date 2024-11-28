@@ -19,16 +19,10 @@ package android.adservices.utils;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 
-import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
 
 import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
@@ -59,6 +53,7 @@ import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -88,16 +83,14 @@ import java.util.concurrent.TimeoutException;
 @SetIntegerFlag(name = KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS, value = 5_000)
 @SetPpapiAppAllowList
 public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
-    protected static final String TAG = FledgeScenarioTest.class.getSimpleName();
     protected static final int TIMEOUT = 120;
     protected static final int TIMEOUT_TES_SECONDS = 10;
     protected static final String SHOES_CA = "shoes";
     protected static final String SHIRTS_CA = "shirts";
     protected static final String HATS_CA = "hats";
+    protected static final long AD_ID_FETCHER_TIMEOUT = 1000;
     private static final int NUM_ADS_PER_AUDIENCE = 4;
     private static final String PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
-    private static final long AD_ID_FETCHER_TIMEOUT = 1000;
-    private static final long AD_ID_FETCHER_TIMEOUT_DEFAULT = 50;
 
     protected AdvertisingCustomAudienceClient mCustomAudienceClient;
     protected AdvertisingCustomAudienceClient mCustomAudienceClientUsingGetMethod;
@@ -110,20 +103,16 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
 
     @Rule(order = 1)
     public final SupportedByConditionRule devOptionsEnabled =
-            DevContextUtils.createDevOptionsAvailableRule(sContext, TAG);
+            DevContextUtils.createDevOptionsAvailableRule(mContext, LOGCAT_TAG_FLEDGE);
 
     @Rule(order = 2)
     public final SupportedByConditionRule webViewSupportsJSSandbox =
-            CtsWebViewSupportUtil.createJSSandboxAvailableRule(sContext);
+            CtsWebViewSupportUtil.createJSSandboxAvailableRule(mContext);
 
     @Rule(order = 3)
     public MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
-                    sContext, "adservices_untrusted_test_server.p12", "adservices_test");
-
-    protected void overrideBiddingLogicVersionToV3(boolean useVersion3) {
-        flags.setFlag(KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION, useVersion3 ? 3 : 2);
-    }
+                    mContext, "adservices_untrusted_test_server.p12", "adservices_test");
 
     protected static AdSelectionSignals makeAdSelectionSignals() {
         return AdSelectionSignals.fromString(
@@ -132,9 +121,19 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
 
     @Before
     public void setUp() throws Exception {
+        String[] deviceConfigPermissions;
+        if (SdkLevel.isAtLeastU()) {
+            deviceConfigPermissions =
+                    new String[] {
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG
+                    };
+        } else {
+            deviceConfigPermissions = new String[] {Manifest.permission.WRITE_DEVICE_CONFIG};
+        }
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+                .adoptShellPermissionIdentity(deviceConfigPermissions);
 
         AdservicesTestHelper.killAdservicesProcess(mContext);
         ExecutorService executor = Executors.newCachedThreadPool();
@@ -167,7 +166,7 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
             leaveCustomAudience(HATS_CA);
         } catch (Exception e) {
             // No-op catch here, these are only for cleaning up
-            Log.w(TAG, "Failed while cleaning up custom audiences", e);
+            Log.w(LOGCAT_TAG_FLEDGE, "Failed while cleaning up custom audiences", e);
         }
     }
 
@@ -181,7 +180,7 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
             throws ExecutionException, InterruptedException, TimeoutException {
         AdSelectionOutcome result =
                 adSelectionClient.selectAds(adSelectionConfig).get(TIMEOUT, TimeUnit.SECONDS);
-        Log.d(TAG, "Ran ad selection.");
+        Log.d(LOGCAT_TAG_FLEDGE, "Ran ad selection.");
         return result;
     }
 
@@ -203,7 +202,7 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
                                                 | FLAG_REPORTING_DESTINATION_BUYER)
                                 .build())
                 .get(TIMEOUT, TimeUnit.SECONDS);
-        Log.d(TAG, "Ran report ad click for ad selection id: " + adSelectionId);
+        Log.d(LOGCAT_TAG_FLEDGE, "Ran report ad click for ad selection id: " + adSelectionId);
     }
 
     protected void doReportImpression(long adSelectionId, AdSelectionConfig adSelectionConfig)
@@ -219,7 +218,7 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
         adSelectionClient
                 .reportImpression(new ReportImpressionRequest(adSelectionId, adSelectionConfig))
                 .get(TIMEOUT, TimeUnit.SECONDS);
-        Log.d(TAG, "Ran report impression for ad selection id: " + adSelectionId);
+        Log.d(LOGCAT_TAG_FLEDGE, "Ran report impression for ad selection id: " + adSelectionId);
     }
 
     protected void joinCustomAudience(String customAudienceName)
@@ -234,7 +233,7 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
                 makeJoinCustomAudienceRequest(customAudienceName);
         client.joinCustomAudience(joinCustomAudienceRequest.getCustomAudience())
                 .get(TIMEOUT_TES_SECONDS, TimeUnit.SECONDS);
-        Log.d(TAG, "Joined Custom Audience: " + customAudienceName);
+        Log.d(LOGCAT_TAG_FLEDGE, "Joined Custom Audience: " + customAudienceName);
     }
 
     protected void joinCustomAudience(CustomAudience customAudience)
@@ -242,7 +241,7 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
         mCustomAudienceClient
                 .joinCustomAudience(customAudience)
                 .get(TIMEOUT_TES_SECONDS, TimeUnit.SECONDS);
-        Log.d(TAG, "Joined Custom Audience: " + customAudience.getName());
+        Log.d(LOGCAT_TAG_FLEDGE, "Joined Custom Audience: " + customAudience.getName());
     }
 
     protected void leaveCustomAudience(String customAudienceName)
@@ -256,7 +255,7 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
         CustomAudience customAudience = makeCustomAudience(customAudienceName).build();
         client.leaveCustomAudience(customAudience.getBuyer(), customAudience.getName())
                 .get(TIMEOUT_TES_SECONDS, TimeUnit.SECONDS);
-        Log.d(TAG, "Left Custom Audience: " + customAudienceName);
+        Log.d(LOGCAT_TAG_FLEDGE, "Left Custom Audience: " + customAudienceName);
     }
 
     protected void doScheduleCustomAudienceUpdate(ScheduleCustomAudienceUpdateRequest request)
@@ -268,34 +267,17 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
             AdvertisingCustomAudienceClient client, ScheduleCustomAudienceUpdateRequest request)
             throws ExecutionException, InterruptedException, TimeoutException {
         client.scheduleCustomAudienceUpdate(request).get(TIMEOUT, TimeUnit.SECONDS);
-        Log.d(TAG, "Scheduled Custom Audience Update: " + request);
+        Log.d(LOGCAT_TAG_FLEDGE, "Scheduled Custom Audience Update: " + request);
     }
 
     protected String getServerBaseAddress() {
         return mServerBaseAddress;
     }
 
-    protected void overrideCpcBillingEnabled(boolean enabled) {
-        flags.setFlag(KEY_FLEDGE_CPC_BILLING_ENABLED, enabled);
-    }
-
-    protected void overrideShouldUseUnifiedTable(boolean shouldUse) {
-        flags.setFlag(KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES, shouldUse);
-    }
-
-    protected void setDebugReportingEnabledForTesting(boolean enabled) {
-        overrideBiddingLogicVersionToV3(enabled);
-        flags.setFlag(
-                KEY_AD_ID_FETCHER_TIMEOUT_MS,
-                enabled ? AD_ID_FETCHER_TIMEOUT : AD_ID_FETCHER_TIMEOUT_DEFAULT);
-        flags.setFlag(KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED, enabled);
-        flags.setFlag(KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY, enabled);
-    }
-
     protected AdSelectionConfig makeAdSelectionConfig(URL serverBaseAddressWithPrefix) {
         AdSelectionSignals signals = FledgeScenarioTest.makeAdSelectionSignals();
-        Log.d(TAG, "Ad tech buyer: " + mBuyer);
-        Log.d(TAG, "Ad tech seller: " + mSeller);
+        Log.d(LOGCAT_TAG_FLEDGE, "Ad tech buyer: " + mBuyer);
+        Log.d(LOGCAT_TAG_FLEDGE, "Ad tech seller: " + mSeller);
         return new AdSelectionConfig.Builder()
                 .setSeller(mSeller)
                 .setPerBuyerSignals(ImmutableMap.of(mBuyer, signals))
@@ -320,7 +302,7 @@ public abstract class FledgeScenarioTest extends AdServicesCtsTestCase {
         mSeller =
                 AdTechIdentifier.fromString(
                         scenarioDispatcher.getBaseAddressWithPrefix().getHost());
-        Log.d(TAG, "Started default MockWebServer.");
+        Log.d(LOGCAT_TAG_FLEDGE, "Started default MockWebServer.");
         return scenarioDispatcher;
     }
 

@@ -720,9 +720,9 @@ public class AsyncSourceFetcher {
                 return Optional.empty();
             }
             int intBudget = maybeIntBudget.get();
-            if (intBudget <= 0) {
+            if (intBudget < 0) {
                 LoggerFactory.getMeasurementLogger()
-                        .d("parseAggregatableNamedBudgets: budget is non positive. %s", intBudget);
+                        .d("parseAggregatableNamedBudgets: budget is negative. %s", intBudget);
                 return Optional.empty();
             }
             if (intBudget > mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()) {
@@ -1138,7 +1138,12 @@ public class AsyncSourceFetcher {
             headers = urlConnection.getHeaderFields();
             asyncFetchStatus.setResponseSize(FetcherUtil.calculateHeadersCharactersLength(headers));
             int responseCode = urlConnection.getResponseCode();
-            LoggerFactory.getMeasurementLogger().d("Response code = " + responseCode);
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Response code: %s, Method: %s, Host: %s",
+                            responseCode,
+                            urlConnection.getRequestMethod(),
+                            urlConnection.getURL().getHost());
             if (!FetcherUtil.isRedirect(responseCode) && !FetcherUtil.isSuccess(responseCode)) {
                 asyncFetchStatus.setResponseStatus(
                         AsyncFetchStatus.ResponseStatus.SERVER_UNAVAILABLE);

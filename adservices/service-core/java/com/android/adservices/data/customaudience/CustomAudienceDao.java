@@ -16,7 +16,12 @@
 
 package com.android.adservices.data.customaudience;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE;
+
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.ComponentAdData;
 import android.adservices.customaudience.PartialCustomAudience;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -39,6 +44,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.JsVersionHelper;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
 import com.android.adservices.service.exception.PersistScheduleCAUpdateException;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableMap;
@@ -214,6 +220,10 @@ public abstract class CustomAudienceDao {
     @Query("SELECT COUNT(*) FROM custom_audience WHERE owner=:owner")
     public abstract long getCustomAudienceCountForOwner(String owner);
 
+    /** Get count of custom audience of a given buyer. */
+    @Query("SELECT COUNT(*) FROM custom_audience WHERE buyer=:buyer")
+    public abstract long getCustomAudienceCountForBuyer(AdTechIdentifier buyer);
+
     /** Get the total number of distinct custom audience owner. */
     @Query("SELECT COUNT(DISTINCT owner) FROM custom_audience")
     public abstract long getCustomAudienceOwnerCount();
@@ -242,19 +252,24 @@ public abstract class CustomAudienceDao {
      */
     @Transaction
     @NonNull
-    public CustomAudienceStats getCustomAudienceStats(@NonNull String owner) {
-        Objects.requireNonNull(owner);
+    public CustomAudienceStats getCustomAudienceStats(
+            @NonNull String owner, @NonNull AdTechIdentifier buyer) {
+        Objects.requireNonNull(owner, "Owner must not be null");
+        Objects.requireNonNull(buyer, "Buyer must not be null");
 
         long customAudienceCount = getCustomAudienceCount();
         long customAudienceCountPerOwner = getCustomAudienceCountForOwner(owner);
         long ownerCount = getCustomAudienceOwnerCount();
+        long customAudienceCountPerBuyer = getCustomAudienceCountForBuyer(buyer);
 
         // TODO(b/255780705): Add buyer and per-buyer stats
         return CustomAudienceStats.builder()
                 .setOwner(owner)
+                .setBuyer(buyer)
                 .setTotalCustomAudienceCount(customAudienceCount)
                 .setPerOwnerCustomAudienceCount(customAudienceCountPerOwner)
                 .setTotalOwnerCount(ownerCount)
+                .setPerBuyerCustomAudienceCount(customAudienceCountPerBuyer)
                 .build();
     }
 
@@ -816,14 +831,18 @@ public abstract class CustomAudienceDao {
             @NonNull DBScheduledCustomAudienceUpdate update,
             @NonNull List<PartialCustomAudience> partialCustomAudienceList,
             @NonNull List<String> customAudienceToLeaveList,
-            boolean shouldReplacePendingUpdates) {
-        if (shouldReplacePendingUpdates) {
-            deleteScheduleCAUpdatesByOwnerAndBuyer(update.getOwner(), update.getBuyer());
-        } else {
-            int pendingUpdates =
-                    getNumberOfScheduleCAUpdatesByOwnerAndBuyer(
-                            update.getOwner(), update.getBuyer());
-            if (pendingUpdates != 0) {
+            boolean shouldReplacePendingUpdates,
+            ScheduledCustomAudienceUpdateScheduleAttemptedStats.Builder statsBuilder) {
+        int pendingUpdates =
+                getNumberOfScheduleCAUpdatesByOwnerAndBuyer(update.getOwner(), update.getBuyer());
+        if (pendingUpdates != 0) {
+            if (shouldReplacePendingUpdates) {
+                statsBuilder.setExistingUpdateStatus(
+                        SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE);
+                deleteScheduleCAUpdatesByOwnerAndBuyer(update.getOwner(), update.getBuyer());
+            } else {
+                statsBuilder.setExistingUpdateStatus(
+                        SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE);
                 throw new PersistScheduleCAUpdateException(
                         String.format(
                                 Locale.ENGLISH,
@@ -831,6 +850,9 @@ public abstract class CustomAudienceDao {
                                         + " update(s)",
                                 pendingUpdates));
             }
+        } else {
+            statsBuilder.setExistingUpdateStatus(
+                    SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE);
         }
 
         long updateId = insertScheduledCustomAudienceUpdate(update);
@@ -974,6 +996,40 @@ public abstract class CustomAudienceDao {
     @Delete
     public abstract void deleteScheduledCustomAudienceUpdate(
             @NonNull DBScheduledCustomAudienceUpdate update);
+
+    /** Persists a component ad */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract void insertComponentAdData(DBComponentAdData componentAdData);
+
+    /** Inserts a list of component ads in the table. */
+    @Transaction
+    public void insertComponentAds(
+            List<ComponentAdData> componentAdDataList,
+            String owner,
+            AdTechIdentifier buyer,
+            String name) {
+        for (ComponentAdData componentAdData : componentAdDataList) {
+            DBComponentAdData dbComponentAdData =
+                    DBComponentAdData.builder()
+                            .setRenderUri(componentAdData.getRenderUri())
+                            .setRenderId(componentAdData.getAdRenderId())
+                            .setOwner(owner)
+                            .setBuyer(buyer)
+                            .setName(name)
+                            .build();
+            insertComponentAdData(dbComponentAdData);
+        }
+    }
+
+    /**
+     * Gets a list of component ads associated with the primary keys of a custom audience. This list
+     * will be ordered by the ascending order in which the component ads were persisted.
+     */
+    @Query(
+            "SELECT * FROM component_ad_data WHERE owner = :owner AND buyer = :buyer AND name ="
+                    + " :name ORDER BY rowId")
+    abstract List<DBComponentAdData> getComponentAdsByCustomAudienceInfo(
+            String owner, AdTechIdentifier buyer, String name);
 
     @VisibleForTesting
     static class BiddingLogicJsWithVersion {

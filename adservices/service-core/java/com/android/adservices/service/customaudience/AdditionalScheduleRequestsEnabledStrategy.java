@@ -19,8 +19,17 @@ package com.android.adservices.service.customaudience;
 import static com.android.adservices.service.customaudience.AdditionalScheduleRequestsEnabledStrategyHelper.LEAVE_CUSTOM_AUDIENCE_KEY;
 import static com.android.adservices.service.customaudience.AdditionalScheduleRequestsEnabledStrategyHelper.PARTIAL_CUSTOM_AUDIENCES_KEY;
 import static com.android.adservices.service.customaudience.AdditionalScheduleRequestsEnabledStrategyHelper.SHOULD_REPLACE_PENDING_UPDATES_KEY;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_SCHEDULE_CA_UPDATE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_UNKNOWN;
 
 import static com.google.common.util.concurrent.Futures.immediateVoidFuture;
+
+import android.adservices.customaudience.PartialCustomAudience;
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -28,6 +37,10 @@ import com.android.adservices.data.customaudience.DBCustomAudienceToLeave;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdateRequest;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedFailureStats;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedStats;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
 
 import com.google.common.util.concurrent.ExecutionSequencer;
 import com.google.common.util.concurrent.FluentFuture;
@@ -42,28 +55,35 @@ import org.json.JSONObject;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
+@RequiresApi(Build.VERSION_CODES.S)
 public class AdditionalScheduleRequestsEnabledStrategy
         implements ScheduleCustomAudienceUpdateStrategy {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    private static final int UPDATE_PERFORMED_INTERNAL_FAILURE =
+            SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR;
 
     private final CustomAudienceDao mCustomAudienceDao;
     private final ListeningExecutorService mBackgroundExecutor;
     private final ListeningExecutorService mLightWeightExecutor;
     private final AdditionalScheduleRequestsEnabledStrategyHelper
             mAdditionalScheduleRequestsEnabledStrategyHelper;
+    private final AdServicesLogger mAdServicesLogger;
 
     AdditionalScheduleRequestsEnabledStrategy(
             CustomAudienceDao customAudienceDao,
             ListeningExecutorService backgroundExecutor,
             ListeningExecutorService lightWeightExecutor,
             AdditionalScheduleRequestsEnabledStrategyHelper
-                    additionalScheduleCustomAudienceUpdateHelper) {
+                    additionalScheduleCustomAudienceUpdateHelper,
+            AdServicesLogger adServicesLogger) {
         mCustomAudienceDao = customAudienceDao;
         mBackgroundExecutor = backgroundExecutor;
         mLightWeightExecutor = lightWeightExecutor;
         mAdditionalScheduleRequestsEnabledStrategyHelper =
                 additionalScheduleCustomAudienceUpdateHelper;
+        mAdServicesLogger = adServicesLogger;
     }
 
     @Override
@@ -71,44 +91,86 @@ public class AdditionalScheduleRequestsEnabledStrategy
             String owner,
             boolean allowScheduleInResponse,
             JSONObject updateResponseJson,
-            DevContext devContext) {
-        if (!allowScheduleInResponse) return FluentFuture.from(immediateVoidFuture());
-
+            DevContext devContext,
+            ScheduledCustomAudienceUpdatePerformedStats.Builder statsBuilder) {
+        if (!allowScheduleInResponse) {
+            statsBuilder.setWasInitialHop(false);
+            return FluentFuture.from(immediateVoidFuture());
+        }
         List<ListenableFuture<Void>> persistScheduleRequestList = new ArrayList<>();
         ExecutionSequencer sequencer = ExecutionSequencer.create();
-
-        for (JSONObject scheduleRequest :
+        List<JSONObject> scheduledRequests =
                 mAdditionalScheduleRequestsEnabledStrategyHelper
-                        .extractScheduleRequestsFromResponse(updateResponseJson)) {
+                        .extractScheduleRequestsFromResponse(updateResponseJson);
+        statsBuilder.setNumberOfScheduleUpdatesInResponse(scheduledRequests.size());
+        AtomicInteger numberOfUpdatesScheduled = new AtomicInteger(0);
+        for (JSONObject scheduleRequest : scheduledRequests) {
             try {
                 DBScheduledCustomAudienceUpdate scheduledUpdate =
                         mAdditionalScheduleRequestsEnabledStrategyHelper
                                 .validateAndConvertScheduleRequest(
                                         owner, scheduleRequest, Instant.now(), devContext);
-
+                List<PartialCustomAudience> partialCustomAudienceList =
+                        mAdditionalScheduleRequestsEnabledStrategyHelper
+                                .extractPartialCustomAudiencesFromRequest(scheduleRequest);
+                List<String> customAudienceLeave =
+                        mAdditionalScheduleRequestsEnabledStrategyHelper
+                                .extractCustomAudiencesToLeaveFromRequest(scheduleRequest);
+                boolean shouldReplacePendingUpdates =
+                        scheduleRequest.getBoolean(SHOULD_REPLACE_PENDING_UPDATES_KEY);
                 persistScheduleRequestList.add(
                         sequencer.submitAsync(
                                 () -> {
-                                    mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
-                                            scheduledUpdate,
-                                            mAdditionalScheduleRequestsEnabledStrategyHelper
-                                                    .extractPartialCustomAudiencesFromRequest(
-                                                            scheduleRequest),
-                                            mAdditionalScheduleRequestsEnabledStrategyHelper
-                                                    .extractCustomAudiencesToLeaveFromRequest(
-                                                            scheduleRequest),
-                                            scheduleRequest.getBoolean(
-                                                    SHOULD_REPLACE_PENDING_UPDATES_KEY));
-                                    return null;
+                                    try {
+                                        mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
+                                                scheduledUpdate,
+                                                partialCustomAudienceList,
+                                                customAudienceLeave,
+                                                shouldReplacePendingUpdates,
+                                                ScheduledCustomAudienceUpdateScheduleAttemptedStats
+                                                        .builder());
+                                        numberOfUpdatesScheduled.getAndIncrement();
+                                    } catch (Throwable e) {
+                                        sLogger.e(
+                                                e,
+                                                "Error while inserting Scheduled Custom Audience"
+                                                        + " Update");
+                                        logScheduleCAUpdateScheduleUpdatesPerformedFailureStats(
+                                                UPDATE_PERFORMED_INTERNAL_FAILURE);
+                                    }
+                                    return immediateVoidFuture();
                                 },
                                 mBackgroundExecutor));
-            } catch (JSONException | IllegalArgumentException e) {
+            } catch (Throwable e) {
+                int failureType = SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_UNKNOWN;
+                if (e instanceof JSONException) {
+                    failureType = SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR;
+                } else if (e instanceof IllegalArgumentException) {
+                    failureType = SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR;
+                }
+                logScheduleCAUpdateScheduleUpdatesPerformedFailureStats(failureType);
                 sLogger.e(e, "Invalid schedule request, skipping scheduling for this request");
             }
         }
 
         return FluentFuture.from(Futures.successfulAsList(persistScheduleRequestList))
-                .transform(ignored -> null, mLightWeightExecutor);
+                .transform(
+                        ignored -> {
+                            statsBuilder.setNumberOfUpdatesScheduled(
+                                    numberOfUpdatesScheduled.intValue());
+                            return null;
+                        },
+                        mLightWeightExecutor);
+    }
+
+    private void logScheduleCAUpdateScheduleUpdatesPerformedFailureStats(int failureType) {
+        ScheduledCustomAudienceUpdatePerformedFailureStats stats =
+                ScheduledCustomAudienceUpdatePerformedFailureStats.builder()
+                        .setFailureType(failureType)
+                        .setFailureAction(
+                                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_SCHEDULE_CA_UPDATE)
+                        .build();
+        mAdServicesLogger.logScheduledCustomAudienceUpdatePerformedFailureStats(stats);
     }
 
     @Override

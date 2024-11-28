@@ -543,6 +543,8 @@ class AppSearchConsentWorker {
      * This method returns the package name of the AdServices APK from AdServices apex (T+). On an
      * S- device, it removes the "ext." substring from the package name.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static String getAdServicesPackageName(Context context) {
         Intent serviceIntent = new Intent(AdServicesCommon.ACTION_MEASUREMENT_SERVICE);
         List<ResolveInfo> resolveInfos =

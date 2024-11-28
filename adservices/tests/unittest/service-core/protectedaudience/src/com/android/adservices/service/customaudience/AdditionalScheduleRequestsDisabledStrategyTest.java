@@ -20,6 +20,7 @@ import static com.android.adservices.service.customaudience.ScheduleCustomAudien
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.DB_CUSTOM_AUDIENCE_TO_LEAVE_2;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.OWNER;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.PACKAGE;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createRequestBodyWithOnlyPartialCustomAudiences;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.getPartialCustomAudienceJsonArray;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.getScheduleRequest_1;
 
@@ -34,6 +35,7 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudienceToLeave;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedStats;
 
 import org.json.JSONException;
 import org.junit.Before;
@@ -51,6 +53,7 @@ public class AdditionalScheduleRequestsDisabledStrategyTest
     @Captor private ArgumentCaptor<Instant> mBeforeTimeArgumentCaptor;
     @Mock private CustomAudienceDao mCustomAudienceDao;
     private AdditionalScheduleRequestsDisabledStrategy mStrategy;
+    @Mock private ScheduledCustomAudienceUpdatePerformedStats.Builder mStatsBuilderMock;
 
     @Before
     public void setup() {
@@ -65,11 +68,12 @@ public class AdditionalScheduleRequestsDisabledStrategyTest
                         OWNER,
                         true,
                         getScheduleRequest_1(),
-                        DevContext.builder(PACKAGE).setDeviceDevOptionsEnabled(false).build())
+                        DevContext.builder(PACKAGE).setDeviceDevOptionsEnabled(false).build(),
+                        mStatsBuilderMock)
                 .get();
 
         verify(mCustomAudienceDao, times(0))
-                .insertScheduledCustomAudienceUpdate(any(), any(), any(), anyBoolean());
+                .insertScheduledCustomAudienceUpdate(any(), any(), any(), anyBoolean(), any());
     }
 
     @Test
@@ -81,7 +85,10 @@ public class AdditionalScheduleRequestsDisabledStrategyTest
                 mStrategy.prepareFetchUpdateRequestBody(
                         getPartialCustomAudienceJsonArray(), dbCustomAudienceToLeaveList);
 
-        assertThat(result).isEqualTo(getPartialCustomAudienceJsonArray().toString());
+        assertThat(result)
+                .isEqualTo(
+                        createRequestBodyWithOnlyPartialCustomAudiences(
+                                getPartialCustomAudienceJsonArray()));
     }
 
     @Test

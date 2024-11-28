@@ -53,7 +53,7 @@ public class TopicsActivityActionDelegate extends BaseActionDelegate {
             TopicsActivity topicsActivity, TopicsViewModel topicsViewModel) {
         super(topicsActivity);
         mTopicsViewModel = topicsViewModel;
-        initWithUx(topicsActivity, topicsActivity.getApplicationContext());
+        initWithUx();
         listenToTopicsViewModelUiEvents();
     }
 

@@ -23,6 +23,7 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.XNetworkData;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.UnsignedLong;
+import com.android.internal.annotations.VisibleForTesting;
 
 import org.json.JSONException;
 
@@ -40,6 +41,11 @@ import java.util.stream.IntStream;
  */
 public class AggregatePayloadGenerator {
     private final Flags mFlags;
+    @VisibleForTesting
+    public static final String PRE_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "0.1";
+
+    @VisibleForTesting
+    public static final String POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "1.0";
 
     public AggregatePayloadGenerator(Flags flags) {
         mFlags = flags;
@@ -111,27 +117,39 @@ public class AggregatePayloadGenerator {
         }
 
         List<AggregateHistogramContribution> contributions = new ArrayList<>();
-        Optional<Map<String, Integer>> maybeMatchedValueMap =
-                getMatchedValueMap(attributionTrigger, sourceFilterMap, filter);
+        Optional<Map<String, AggregatableKeyValue>> maybeMatchedValueMap =
+                getMatchedAggregatableKeyValueMap(attributionTrigger, sourceFilterMap, filter);
         if (maybeMatchedValueMap.isPresent()) {
             for (String id : aggregateSourceMap.navigableKeySet()) {
                 if (maybeMatchedValueMap.get().containsKey(id)) {
-                    contributions.add(
-                            buildContribution(
-                                    aggregateSourceMap.get(id),
-                                    maybeMatchedValueMap.get().get(id)));
+                    if (mFlags.getMeasurementEnableFlexibleContributionFiltering()) {
+                        UnsignedLong filteringId = UnsignedLong.ZERO;
+                        if (maybeMatchedValueMap.get().get(id).getFilteringId() != null) {
+                            filteringId = maybeMatchedValueMap.get().get(id).getFilteringId();
+                        }
+                        contributions.add(
+                                buildContribution(
+                                        aggregateSourceMap.get(id),
+                                        maybeMatchedValueMap.get().get(id).getValue(),
+                                        filteringId));
+                    } else {
+                        contributions.add(
+                                buildContribution(
+                                        aggregateSourceMap.get(id),
+                                        maybeMatchedValueMap.get().get(id).getValue()));
+                    }
                 }
             }
         }
         if (contributions.size() > 0) {
-            if (mFlags.getMeasurementEnableAggregatableReportPayloadPadding()) {
-                AggregateHistogramContribution paddingContribution =
-                        new AggregateHistogramContribution.Builder()
-                                .setPaddingContribution()
-                                .build();
-
-                padContributions(contributions, paddingContribution);
+            AggregateHistogramContribution.Builder paddingContribution =
+                    new AggregateHistogramContribution.Builder();
+            if (mFlags.getMeasurementEnableFlexibleContributionFiltering()) {
+                paddingContribution.setPaddingContributionWithFilteringId();
+            } else {
+                paddingContribution.setPaddingContribution();
             }
+            padContributions(contributions, paddingContribution.build());
             return Optional.of(contributions);
         }
         return Optional.empty();
@@ -160,7 +178,7 @@ public class AggregatePayloadGenerator {
      * Returns first matched value map from getValueConfigs against Source filters or value map from
      * getValues.
      */
-    public Optional<Map<String, Integer>> getMatchedValueMap(
+    public Optional<Map<String, AggregatableKeyValue>> getMatchedAggregatableKeyValueMap(
             AggregatableAttributionTrigger aggregatableAttributionTrigger,
             FilterMap sourceFilterMap,
             Filter filter) {
@@ -185,7 +203,7 @@ public class AggregatePayloadGenerator {
                                         aggregatableValuesConfig.getNotFilterSet(),
                                         false);
                 if (matchedNotFilters) {
-                    return Optional.of(aggregatableValuesConfig.getConfigValuesMap());
+                    return Optional.of(aggregatableValuesConfig.getValues());
                 }
             }
         }
@@ -193,7 +211,25 @@ public class AggregatePayloadGenerator {
     }
 
     /** Add a new contribution with key, value to the existing list of contributions. */
-    private AggregateHistogramContribution buildContribution(BigInteger key, int value) {
+    private static AggregateHistogramContribution buildContribution(BigInteger key, int value) {
         return new AggregateHistogramContribution.Builder().setKey(key).setValue(value).build();
+    }
+
+    /** Add a new contribution with key, value,and id to the existing list of contributions. */
+    private static AggregateHistogramContribution buildContribution(
+            BigInteger key, int value, UnsignedLong filteringId) {
+        return new AggregateHistogramContribution.Builder()
+                .setKey(key)
+                .setValue(value)
+                .setId(filteringId)
+                .build();
+    }
+
+    /** Returns the API version for the report. */
+    public static String getApiVersion(Flags flags) {
+        if (flags.getMeasurementEnableFlexibleContributionFiltering()) {
+            return POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION;
+        }
+        return PRE_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION;
     }
 }

@@ -230,7 +230,8 @@
                 "x_network_key_mapping": {
                   "enrollment-id-ad-tech1.test": "0x1",
                   "enrollment-id-ad-tech2.test": "0x2"
-                }
+                },
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -337,7 +338,8 @@
                 "x_network_key_mapping": {
                   "enrollment-id-ad-tech1.test": "0x1",
                   "enrollment-id-ad-tech3.test": "0x3"
-                }
+                },
+                "aggregatable_source_registration_time": "INCLUDE"
               },
               "Location": null,
               "Attribution-Reporting-Redirect": null
@@ -368,7 +370,11 @@
             {
               "key": "0xb87",
               "value": 1664
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       },
@@ -389,7 +395,11 @@
             {
               "key": "0x55b",
               "value": 32768
-            }
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
           ]
         }
       }

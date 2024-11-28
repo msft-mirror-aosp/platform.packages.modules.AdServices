@@ -17,7 +17,7 @@
 package android.adservices.common;
 
 /**
- * Contains data of state for each AdServices modules.
+ * Contains data of user choices for each AdServices modules.
  */
 
-parcelable AdServicesModuleState;
+parcelable UpdateAdServicesUserChoicesParams;

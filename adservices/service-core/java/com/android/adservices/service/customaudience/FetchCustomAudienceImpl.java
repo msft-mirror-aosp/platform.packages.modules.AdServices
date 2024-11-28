@@ -146,6 +146,7 @@ public class FetchCustomAudienceImpl {
     @NonNull private CustomAudienceBlob mFusedCustomAudience;
     private final int mCallingAppUid;
     @NonNull private String mCallerAppPackageName;
+    private final Flags mFlags;
 
     public FetchCustomAudienceImpl(
             @NonNull Flags flags,
@@ -184,7 +185,7 @@ public class FetchCustomAudienceImpl {
         // Ensuring process-stable flag values by assigning to local variables at instantiation.
         mFledgeFetchCustomAudienceEnabled = flags.getFledgeFetchCustomAudienceEnabled();
         mDisableFledgeEnrollmentCheck = flags.getDisableFledgeEnrollmentCheck();
-        mEnforceForegroundStatus = flags.getEnforceForegroundStatusForFledgeCustomAudience();
+        mEnforceForegroundStatus = flags.getEnforceForegroundStatusForFetchAndJoinCustomAudience();
         mMaxNameSizeB = flags.getFledgeCustomAudienceMaxNameSizeB();
         mMaxActivationDelayInMs = flags.getFledgeCustomAudienceMaxActivationDelayInMs();
         mMaxExpireInMs = flags.getFledgeCustomAudienceMaxExpireInMs();
@@ -261,6 +262,7 @@ public class FetchCustomAudienceImpl {
                                 mFledgeCustomAudienceMaxNumAds));
 
         mEnforceNotification = !debugFlags.getConsentNotificationDebugMode();
+        mFlags = flags;
     }
 
     /** Adds a user to a fetched custom audience. */
@@ -520,6 +522,7 @@ public class FetchCustomAudienceImpl {
                                     customAudience,
                                     mFusedCustomAudience.getDailyUpdateUri(),
                                     isDebuggableCustomAudience);
+                            BackgroundFetchJob.schedule(mFlags);
                             return null;
                         }));
     }
