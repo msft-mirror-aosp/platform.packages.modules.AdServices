@@ -81,14 +81,11 @@ public final class AppConsentDao {
     /** Constructs the {@link AppConsentDao}. */
     @VisibleForTesting
     public AppConsentDao(AtomicFileDatastore datastore, PackageManager packageManager) {
-        Objects.requireNonNull(datastore);
-        Objects.requireNonNull(packageManager);
-
-        mDatastore = datastore;
-        mPackageManager = packageManager;
+        mDatastore = Objects.requireNonNull(datastore, "datastore cannot be null");
+        mPackageManager = Objects.requireNonNull(packageManager, "packageManager cannot be null");
     }
 
-    /** Get the singleton instance of the {@link AppConsentDao} */
+    /** Gets the singleton instance of the {@link AppConsentDao} */
     public static AppConsentDao getInstance() {
         if (sAppConsentDao == null) {
             synchronized (SINGLETON_LOCK) {

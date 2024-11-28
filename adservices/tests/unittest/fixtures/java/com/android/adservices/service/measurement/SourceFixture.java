@@ -265,8 +265,9 @@ public final class SourceFixture {
                         + "\"summary_buckets\": [1]}]";
         Source source = getMinimalValidSourceBuilder().build();
         double mockFlipProbability = Combinatorics.getFlipProbability(5, 3);
-        String jsonString = String.format("{\"flip_probability\": %f}", mockFlipProbability);
-        TriggerSpecs triggerSpecs = new TriggerSpecs(triggerSpecsString, "1", source, jsonString);
+        String privacyParametersString = "{\"flip_probability\": " + mockFlipProbability + "}";
+        TriggerSpecs triggerSpecs =
+                new TriggerSpecs(triggerSpecsString, "1", source, privacyParametersString);
         return triggerSpecs;
     }
 
