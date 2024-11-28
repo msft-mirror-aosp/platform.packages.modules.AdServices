@@ -2657,6 +2657,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mMockIAdServicesManager, never()).recordMeasurementDefaultConsent(anyBoolean());
         verify(mMockIAdServicesManager, never()).recordTopicsDefaultConsent(anyBoolean());
         verify(mMockIAdServicesManager, never()).recordUserManualInteractionWithConsent(anyInt());
+        verify(mMockIAdServicesManager, never()).setModuleEnrollmentState(anyString());
         verify(mockEditor, never()).putBoolean(any(), anyBoolean());
     }
 
@@ -2883,6 +2884,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mockAdServicesManager, never()).recordMeasurementDefaultConsent(anyBoolean());
         verify(mockAdServicesManager, never()).recordTopicsDefaultConsent(anyBoolean());
         verify(mockAdServicesManager, never()).recordUserManualInteractionWithConsent(anyInt());
+        verify(mMockIAdServicesManager, never()).setModuleEnrollmentState(anyString());
     }
 
     @Test
@@ -2890,6 +2892,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(any(), any(), any(), any()))
                 .thenReturn(true);
         when(mAppSearchConsentManagerMock.getConsent(any())).thenReturn(true);
+        when(mMockFlags.getAdServicesConsentBusinessLogicMigrationEnabled()).thenReturn(true);
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
         mConsentDatastore.putBoolean(CONSENT_KEY, true);
         mConsentDatastore.putBoolean(NOTIFICATION_DISPLAYED_ONCE, true);
 
@@ -2961,6 +2965,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         .build();
 
         verify(mStatsdAdServicesLoggerMock).logConsentMigrationStats(consentMigrationStats);
+        verify(mockAdServicesManager).setModuleEnrollmentState(anyString());
     }
 
     @Test

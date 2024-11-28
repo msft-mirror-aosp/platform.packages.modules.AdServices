@@ -225,7 +225,6 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         mAppInstallDaoMock, mFrequencyCapDaoMock, mFetchCustomAudienceFlags);
 
         mFetchCustomAudienceImpl = getImplWithFlags(mFetchCustomAudienceFlags);
-
         doReturn(BUYER)
                 .when(mCustomAudienceServiceFilterMock)
                 .filterRequestAndExtractIdentifier(
@@ -1184,6 +1183,54 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
         verify(mAdServicesLoggerMock)
                 .logFledgeApiCallStats(
                         eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
+    }
+
+    @Test
+    public void testImpl_runNormally_filterRequestWithForegroundStatusFlagEnforced()
+            throws Exception {
+        mFetchCustomAudienceImpl =
+                getImplWithFlags(
+                        new FetchCustomAudienceFlags() {
+                            @Override
+                            public boolean
+                                    getEnforceForegroundStatusForFetchAndJoinCustomAudience() {
+                                return true;
+                            }
+                        });
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                getFullSuccessfulJsonResponse(
+                                                                BUYER,
+                                                                /*auctionServerRequestFlagsEnabled*/
+                                                                false,
+                                                                /* sellerConfigurationEnabled */
+                                                                false)
+                                                        .toString())));
+
+        FetchCustomAudienceTestSyncCallback callback =
+                callFetchCustomAudience(mInputBuilder.build());
+        callback.assertResultReceived();
+        expect.withMessage("mockWebServer.getRequestCount()")
+                .that(mockWebServer.getRequestCount())
+                .isEqualTo(1);
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(API_NAME), eq(TEST_PACKAGE_NAME), eq(STATUS_SUCCESS), anyInt());
+        verify(mCustomAudienceServiceFilterMock)
+                .filterRequestAndExtractIdentifier(
+                        mFetchUri,
+                        VALID_OWNER,
+                        mFetchCustomAudienceFlags.getDisableFledgeEnrollmentCheck(),
+                        true,
+                        true,
+                        mEnforceNotificationShown,
+                        Process.myUid(),
+                        API_NAME,
+                        Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                        DevContext.createForDevOptionsDisabled());
     }
 
     @Test
