@@ -20,6 +20,7 @@ import static android.adservices.common.CommonFixture.FIXED_NOW;
 
 import static com.android.adservices.service.Flags.FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroInteractions;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
@@ -98,7 +99,8 @@ public class ForcedEncoderImplTest extends AdServicesExtendedMockitoTestCase {
         mSyncForcedEncoder.forceEncodingAndUpdateEncoderForBuyer(BUYER);
 
         verifyZeroInteractions(mProtectedSignalsDaoMock);
-        verify(mEncodingJobWorkerMock).encodeProtectedSignals();
+        verify(mEncodingJobWorkerMock)
+                .encodeProtectedSignals(PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL);
     }
 
     @Test
@@ -123,7 +125,8 @@ public class ForcedEncoderImplTest extends AdServicesExtendedMockitoTestCase {
 
         mSyncForcedEncoder.forceEncodingAndUpdateEncoderForBuyer(BUYER);
 
-        verify(mEncodingJobWorkerMock).encodeProtectedSignals();
+        verify(mEncodingJobWorkerMock)
+                .encodeProtectedSignals(PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL);
     }
 
     @Test

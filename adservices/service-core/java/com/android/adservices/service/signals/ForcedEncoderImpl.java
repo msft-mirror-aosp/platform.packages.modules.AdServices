@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL;
+
 import android.adservices.common.AdTechIdentifier;
 import android.content.Context;
 
@@ -155,7 +157,10 @@ public class ForcedEncoderImpl implements ForcedEncoder {
             //  calling buyer.
             forcedEncodingfuture =
                     forcedEncodingfuture.transformAsync(
-                            ignored -> mEncodingJobWorker.encodeProtectedSignals(), mExecutor);
+                            ignored ->
+                                    mEncodingJobWorker.encodeProtectedSignals(
+                                            PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL),
+                            mExecutor);
 
             forcedEncodingfuture.addCallback(
                     new FutureCallback<Void>() {
