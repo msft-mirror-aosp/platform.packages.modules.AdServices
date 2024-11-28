@@ -25,6 +25,7 @@ import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.adservices.LogUtil;
 import com.android.server.adservices.errorlogging.AdServicesErrorLoggerImpl;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Objects;
@@ -53,9 +54,7 @@ public final class RollbackHandlingManager {
     private final SparseArray<AtomicFileDatastore> mAtomicFileDatastoreMap = new SparseArray<>(1);
 
     private RollbackHandlingManager(String datastoreDir, int packageVersion) {
-        Objects.requireNonNull(datastoreDir, "datastoreDir cannot be null");
-
-        mDatastoreDir = datastoreDir;
+        mDatastoreDir = Objects.requireNonNull(datastoreDir, "datastoreDir cannot be null");
         mPackageVersion = packageVersion;
     }
 
@@ -82,8 +81,9 @@ public final class RollbackHandlingManager {
                 if (deletionApiType == AdServicesManager.MEASUREMENT_DELETION) {
                     datastore =
                             new AtomicFileDatastore(
-                                    mDatastoreDir,
-                                    MSMT_FILE_PREFIX + STORAGE_XML_IDENTIFIER,
+                                    new File(
+                                            mDatastoreDir,
+                                            MSMT_FILE_PREFIX + STORAGE_XML_IDENTIFIER),
                                     mPackageVersion,
                                     VERSION_KEY,
                                     AdServicesErrorLoggerImpl.getInstance());
@@ -163,14 +163,6 @@ public final class RollbackHandlingManager {
             mAtomicFileDatastoreMap
                     .valueAt(i)
                     .dump(writer, prefix4, AtomicFileDatastore.DUMP_ARGS_INCLUDE_CONTENTS_ONLY);
-        }
-    }
-
-    /** tesrDown method used for testing only. */
-    @VisibleForTesting
-    public void tearDownForTesting() {
-        synchronized (this) {
-            mAtomicFileDatastoreMap.clear();
         }
     }
 }

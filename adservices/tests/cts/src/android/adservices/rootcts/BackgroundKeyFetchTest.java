@@ -59,7 +59,7 @@ public final class BackgroundKeyFetchTest extends FledgeRootScenarioTest {
             // We don't care about the result or exception thrown by this API.
             doSelectAds(mAdSelectionClient, mAdSelectionConfig);
         } catch (Exception e) {
-            Log.w(TAG, "Failed while running selectAds", e);
+            Log.w(LOGCAT_TAG_FLEDGE, "Failed while running selectAds", e);
         }
     }
 

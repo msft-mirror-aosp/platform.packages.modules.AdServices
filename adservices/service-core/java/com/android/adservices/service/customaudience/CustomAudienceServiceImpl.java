@@ -496,7 +496,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 mCustomAudienceServiceFilter.filterRequest(
                         buyer,
                         ownerPackageName,
-                        mFlags.getEnforceForegroundStatusForFledgeCustomAudience(),
+                        mFlags.getEnforceForegroundStatusForLeaveCustomAudience(),
                         false,
                         !mDebugFlags.getConsentNotificationDebugMode(),
                         callerUid,

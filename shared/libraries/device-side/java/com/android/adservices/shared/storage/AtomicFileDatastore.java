@@ -91,27 +91,14 @@ public class AtomicFileDatastore {
     private int mPreviousStoredVersion;
 
     public AtomicFileDatastore(
-            String parentPath,
-            String filename,
-            int datastoreVersion,
-            String versionKey,
-            AdServicesErrorLogger adServicesErrorLogger) {
-        this(newFile(parentPath, filename), datastoreVersion, versionKey, adServicesErrorLogger);
-    }
-
-    public AtomicFileDatastore(
             File file,
             int datastoreVersion,
             String versionKey,
             AdServicesErrorLogger adServicesErrorLogger) {
-        this(
-                new AtomicFile(Objects.requireNonNull(file, "file cannot be null")),
-                datastoreVersion,
-                versionKey,
-                adServicesErrorLogger);
+        this(new AtomicFile(validFile(file)), datastoreVersion, versionKey, adServicesErrorLogger);
     }
 
-    @VisibleForTesting
+    @VisibleForTesting // AtomicFileDatastoreTest must spy on AtomicFile
     AtomicFileDatastore(
             AtomicFile atomicFile,
             int datastoreVersion,
@@ -694,18 +681,6 @@ public class AtomicFileDatastore {
         return mVersionKey;
     }
 
-    /** For tests only */
-    @VisibleForTesting
-    public final void tearDownForTesting() {
-        mWriteLock.lock();
-        try {
-            mAtomicFile.delete();
-            mLocalMap.clear();
-        } finally {
-            mWriteLock.unlock();
-        }
-    }
-
     @Override
     public final String toString() {
         StringBuilder string =
@@ -752,20 +727,14 @@ public class AtomicFileDatastore {
         }
     }
 
-    private static File newFile(String parentPath, String filename) {
-        checkValid("parentPath", parentPath);
-        checkValid("filename", filename);
-
-        File parent = new File(parentPath);
+    private static File validFile(File file) {
+        Objects.requireNonNull(file, "file cannot be null");
+        File parent = file.getParentFile();
         if (!parent.exists()) {
             throw new IllegalArgumentException(
                     "parentPath doesn't exist: " + parent.getAbsolutePath());
         }
-        if (!parent.isDirectory()) {
-            throw new IllegalArgumentException(
-                    "parentPath is not a directory: " + parent.getAbsolutePath());
-        }
-        return new File(parent, filename);
+        return file;
     }
 
     // TODO(b/335869310): change it to using ImmutableSet.
