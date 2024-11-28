@@ -73,16 +73,14 @@ import co.nstant.in.cbor.model.UnicodeString;
  *
  * <p>Tests in assets/msmt_interop_tests/ directory were copied from Chromium
  * src/content/test/data/attribution_reporting/interop GitHub commit
- * I73cec5ed92bac54689c169577273785174cd0af2.
+ * 2c05d700df45bcad83d3ed8fae8b9cb15fc24716.
  */
 @RunWith(Parameterized.class)
 public class E2EInteropMockTest extends E2EAbstractMockTest {
     static {
         sTestsToSkip =
                 ImmutableSet.of(
-                        "aggregatable_contributions_with_filtering_ids.json",
-                        "aggregatable_debug_reports.json",
-                        "aggregatable_dedup_key.json",
+                        "aggregatable_debug_reports_trigger.json",
                         "aggregatable_report_window.json",
                         "aggregatable_reports_fake_source.json",
                         "aggregation_coordinator_origin.json",
@@ -90,30 +88,20 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         "attribution_scopes_navigation_limit_no_scopes.json",
                         "attribution_scopes_navigation_limit_with_scopes.json",
                         "attribution_scopes_null_scopes_removes_data.json",
-                        "attribution_scopes_older_scopes_removed_2.json",
                         "attribution_scopes_parsing_failures.json",
-                        "basic_aggregatable.json",
-                        "clamp_aggregatable_report_window.json",
-                        "clamp_event_report_window.json",
-                        "clamp_expiry.json",
                         "custom_trigger_data.json",
                         "destination_limit.json",
                         "destination_rate_limit.json",
                         "destination_validation.json",
-                        "event_level_epsilon.json",
                         "event_level_report_time.json",
                         "event_level_trigger_filter_data.json",
                         "event_report_window.json",
-                        "event_report_windows.json",
-                        "event_report_windows_int_max.json",
                         "expired_source.json",
                         "fenced.json",
                         "filter_data_validation.json",
                         "header_presence.json",
-                        "lookback_window_int_max.json",
                         "lookback_window_precision.json",
                         "max_event_level_reports_per_source.json",
-                        "null_aggregatable_report.json",
                         "os_debug_reports.json",
                         "preferred_platform.json",
                         "prio_dup.json",
@@ -228,7 +216,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
         // quotes.
         return json.replaceAll("\\.test(?=[\"\\/\\\\])", ".com")
                 // Remove comments
-                .replaceAll("^\\s*\\/\\/.+\\n", "")
+                .replaceAll("// .*", "")
                 .replaceAll("\"destination\":", "\"web_destination\":")
                 // In a header response provided in string format, destination may be surronded by
                 // escaped quotes.

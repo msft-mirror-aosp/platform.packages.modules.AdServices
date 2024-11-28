@@ -108,7 +108,7 @@ public class ScheduleCustomAudienceUpdateImpl {
         mCustomAudienceServiceFilter = customAudienceServiceFilter;
         mCustomAudienceDao = customAudienceDao;
         mDisableFledgeEnrollmentCheck = flags.getDisableFledgeEnrollmentCheck();
-        mEnforceForegroundStatus = flags.getEnforceForegroundStatusForFledgeCustomAudience();
+        mEnforceForegroundStatus = flags.getEnforceForegroundStatusForScheduleCustomAudience();
         mScheduleCustomAudienceUpdateEnabled = flags.getFledgeScheduleCustomAudienceUpdateEnabled();
         mEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests =
                 flags.getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests();

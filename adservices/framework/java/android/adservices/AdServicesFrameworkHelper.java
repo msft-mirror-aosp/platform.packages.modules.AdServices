@@ -26,17 +26,17 @@ import java.io.StringWriter;
  */
 // TODO(b/378164580) move it to shared library
 public final class AdServicesFrameworkHelper {
-
     private AdServicesFrameworkHelper() {}
 
     /** Returns the stacktrace string of the exception. */
     public static String getExceptionStackTraceString(Throwable e) {
         StringWriter writer = new StringWriter();
         PrintWriter printWriter = new PrintWriter(writer);
+        String message = e.getMessage();
         e.printStackTrace(printWriter);
         printWriter.flush();
 
         String stackTrace = writer.toString();
-        return stackTrace;
+        return message + stackTrace;
     }
 }

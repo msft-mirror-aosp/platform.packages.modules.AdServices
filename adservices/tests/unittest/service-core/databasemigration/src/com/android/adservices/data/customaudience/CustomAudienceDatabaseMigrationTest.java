@@ -302,6 +302,31 @@ public final class CustomAudienceDatabaseMigrationTest extends AdServicesUnitTes
         db.close();
     }
 
+    @Test
+    public void testAutoMigration10To11() throws IOException {
+        // Create DB with v10.
+        String componentAdDataTable = "component_ad_data";
+        SupportSQLiteDatabase db = helper.createDatabase(TEST_DB, 10);
+
+        // The table should not exist in v10
+        Cursor cursor = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, componentAdDataTable));
+        assertThat(cursor.getCount()).isEqualTo(0);
+        cursor.close();
+
+        // Close DB before attempting migrations.
+        db.close();
+
+        // Attempt to re-open the database with v11 auto migration.
+        db = helper.runMigrationsAndValidate(TEST_DB, 11, true);
+
+        // The table should exist in v11
+        cursor = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, componentAdDataTable));
+        assertThat(cursor.getCount()).isEqualTo(1);
+        cursor.close();
+
+        db.close();
+    }
+
     private boolean checkIfColumnExists(Cursor cursor, String name) {
         boolean columnExists = false;
         if (cursor.moveToFirst()) {
