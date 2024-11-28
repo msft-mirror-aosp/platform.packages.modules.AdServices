@@ -126,6 +126,7 @@ import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_EPOCH_JOB_ENAB
 import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_SPE_ON_PILOT_JOBS_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_U18_UX_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT;
 import static com.android.adservices.service.Flags.DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.Flags.DISABLE_MEASUREMENT_ENROLLMENT_CHECK;
 import static com.android.adservices.service.Flags.DISABLE_TOPICS_ENROLLMENT_CHECK;
@@ -621,6 +622,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_COBALT__IGNORED_
 import static com.android.adservices.service.FlagsConstants.KEY_COMPAT_LOGGING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES;
 import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB;
+import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_RESET_TOKEN;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
@@ -6008,6 +6010,14 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB,
                 DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB,
                 Flags::getEnableEnrollmentConfigV3Db);
+    }
+
+    @Test
+    public void testGetUseConfigsManagerToQueryEnrollment() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT,
+                DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT,
+                Flags::getUseConfigsManagerToQueryEnrollment);
     }
 
     @Test

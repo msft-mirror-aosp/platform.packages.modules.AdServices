@@ -1208,6 +1208,8 @@ public final class FlagsConstants {
     public static final String KEY_ENROLLMENT_PROTO_FILE_ENABLED = "enrollment_proto_file_enabled";
     public static final String KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB =
             "ConfigDelivery__enable_enrollment_config_v3_db";
+    public static final String KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT =
+            "ConfigDelivery__use_configs_manager_to_query_enrollment";
 
     // New Feature Flags
     public static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED =
