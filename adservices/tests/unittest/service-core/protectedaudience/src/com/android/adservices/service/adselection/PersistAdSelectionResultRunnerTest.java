@@ -23,6 +23,7 @@ import static android.adservices.adselection.DataHandlersFixture.getWinningCusto
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
+import static android.adservices.common.AdTechIdentifier.UNSET_AD_TECH_IDENTIFIER;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithThrowable;
@@ -55,6 +56,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -168,6 +170,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     private static final String DIFFERENT_CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME_2;
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
     private static final AdTechIdentifier DIFFERENT_SELLER = AdSelectionConfigFixture.SELLER_1;
+    private static final AdTechIdentifier COMPONENT_SELLER =
+            AdSelectionConfigFixture.COMPONENT_SELLER;
     private static final Uri AD_RENDER_URI_1 = Uri.parse("test2.com/render_uri");
     private static final Uri AD_RENDER_URI_2 = Uri.parse("test3.com/render_uri");
     private static final AdTechIdentifier WINNER_BUYER =
@@ -298,6 +302,17 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                     .setScore((float) SCORE)
                     .setIsChaff(false)
                     .setWinReportingUrls(WIN_REPORTING_URLS);
+    private static final AuctionResult.Builder AUCTION_RESULT_WITH_WINNING_SELLER =
+            AuctionResult.newBuilder()
+                    .setAdRenderUrl(WINNER_AD_RENDER_URI.toString())
+                    .setCustomAudienceName(WINNER_CUSTOM_AUDIENCE_NAME)
+                    .setCustomAudienceOwner(WINNER_CUSTOM_AUDIENCE_OWNER)
+                    .setBuyer(WINNER_BUYER.toString())
+                    .setBid((float) BID)
+                    .setScore((float) SCORE)
+                    .setIsChaff(false)
+                    .setWinReportingUrls(WIN_REPORTING_URLS)
+                    .setWinningSeller(COMPONENT_SELLER.toString());
     private static final AuctionResult.Builder
             AUCTION_RESULT_WITH_DIFFERENT_SELLER_IN_REPORTING_URIS =
                     AuctionResult.newBuilder()
@@ -515,7 +530,9 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         .build();
         mAuctionResultValidator =
                 new AuctionResultValidator(
-                        mFledgeAuthorizationFilterMock, false /* disableFledgeEnrollmentCheck */);
+                        mFledgeAuthorizationFilterMock, /* disableFledgeEnrollmentCheck */
+                        false,
+                        /* enableWinningSellerInAdSelectionOutcome= */ false);
         mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
         mAdsRelevanceExecutionLoggerFactory =
                 new AdsRelevanceExecutionLoggerFactory(
@@ -662,6 +679,424 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
 
         verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_CA_WINNER);
+    }
+
+    @Test
+    public void testRunner_withWinningSellerInOutComeDisabled_returnsEmptyWinningSeller()
+            throws Exception {
+        class FlagsWithWinningSellerOutcomeInAdSelectionOutcomeDisabled
+                extends PersistAdSelectionResultRunnerTestFlags {
+            @Override
+            public boolean getEnableWinningSellerIdInAdSelectionOutcome() {
+                return false;
+            }
+        }
+        Flags flagsWithWinningSellerOutcomeInAdSelectionOutcomeDisabled =
+                new FlagsWithWinningSellerOutcomeInAdSelectionOutcomeDisabled();
+        mocker.mockGetFlags(flagsWithWinningSellerOutcomeInAdSelectionOutcomeDisabled);
+
+        mPersistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        flagsWithWinningSellerOutcomeInAdSelectionOutcomeDisabled,
+                        mMockDebugFlags,
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mKAnonSignJoinFactoryMock);
+
+        doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT_WITH_WINNING_SELLER))
+                .when(mObliviousHttpEncryptorMock)
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        doReturn(WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD)
+                .when(mCustomAudienceDaoMock)
+                .getCustomAudienceByPrimaryKey(
+                        WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA);
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
+
+        Assert.assertTrue(callback.mIsSuccess);
+        Assert.assertEquals(
+                WINNER_AD_RENDER_URI, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
+        Assert.assertEquals(
+                AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
+        Assert.assertEquals(
+                "Unset Winning seller ",
+                UNSET_AD_TECH_IDENTIFIER,
+                callback.mPersistAdSelectionResultResponse.getWinningSeller());
+    }
+
+    @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_RESULT_IS_CHAFF)
+    public void testRunner_persistChaffResult_returnsEmptyWinningSeller() throws Exception {
+        class FlagsWithWinningSellerOutcomeInAdSelectionOutcomeDisabled
+                extends PersistAdSelectionResultRunnerTestFlags {
+            @Override
+            public boolean getEnableWinningSellerIdInAdSelectionOutcome() {
+                return false;
+            }
+        }
+        Flags flagsWithWinningSellerOutcomeInAdSelectionOutcomeDisabled =
+                new FlagsWithWinningSellerOutcomeInAdSelectionOutcomeDisabled();
+        mocker.mockGetFlags(flagsWithWinningSellerOutcomeInAdSelectionOutcomeDisabled);
+
+        mPersistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        flagsWithWinningSellerOutcomeInAdSelectionOutcomeDisabled,
+                        mMockDebugFlags,
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mKAnonSignJoinFactoryMock);
+        doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT_CHAFF))
+                .when(mObliviousHttpEncryptorMock)
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA);
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
+
+        Assert.assertTrue(callback.mIsSuccess);
+        assertWithMessage("Empty ad render uri")
+                .that(callback.mPersistAdSelectionResultResponse.getAdRenderUri())
+                .isEqualTo(Uri.EMPTY);
+        assertWithMessage("Ad selection id")
+                .that(callback.mPersistAdSelectionResultResponse.getAdSelectionId())
+                .isEqualTo(AD_SELECTION_ID);
+        assertWithMessage("Empty winning seller id")
+                .that(callback.mPersistAdSelectionResultResponse.getWinningSeller())
+                .isEqualTo(UNSET_AD_TECH_IDENTIFIER);
+    }
+
+    @Test
+    public void testRunner_withWinningSellerInOutComeEnabled_returnsCorrectWinningSeller()
+            throws Exception {
+        class FlagsWithWinningSellerOutcomeInAdSelectionOutcome
+                extends PersistAdSelectionResultRunnerTestFlags {
+            @Override
+            public boolean getEnableWinningSellerIdInAdSelectionOutcome() {
+                return true;
+            }
+        }
+        Flags flagsWithWinningSellerInOutcomeEnabled =
+                new FlagsWithWinningSellerOutcomeInAdSelectionOutcome();
+        mocker.mockGetFlags(flagsWithWinningSellerInOutcomeEnabled);
+
+        mPersistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        flagsWithWinningSellerInOutcomeEnabled,
+                        mMockDebugFlags,
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mKAnonSignJoinFactoryMock);
+
+        doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT_WITH_WINNING_SELLER))
+                .when(mObliviousHttpEncryptorMock)
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        doReturn(WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD)
+                .when(mCustomAudienceDaoMock)
+                .getCustomAudienceByPrimaryKey(
+                        WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA);
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
+
+        Assert.assertTrue(callback.mIsSuccess);
+        Assert.assertEquals(
+                "Ad render uri",
+                WINNER_AD_RENDER_URI,
+                callback.mPersistAdSelectionResultResponse.getAdRenderUri());
+        Assert.assertEquals(
+                "Ad selection id",
+                AD_SELECTION_ID,
+                callback.mPersistAdSelectionResultResponse.getAdSelectionId());
+        Assert.assertEquals(
+                "Winning seller ",
+                COMPONENT_SELLER,
+                callback.mPersistAdSelectionResultResponse.getWinningSeller());
+    }
+
+    @Test
+    public void
+            testRunner_winningSellerEnabledAndNoWinningSellerInAuctionResult_returnsEmptyWinner()
+                    throws Exception {
+        class FlagsWithWinningSellerOutcomeInAdSelectionOutcome
+                extends PersistAdSelectionResultRunnerTestFlags {
+            @Override
+            public boolean getEnableWinningSellerIdInAdSelectionOutcome() {
+                return true;
+            }
+        }
+        Flags flagsWithWinningSellerInOutcomeEnabled =
+                new FlagsWithWinningSellerOutcomeInAdSelectionOutcome();
+        mocker.mockGetFlags(flagsWithWinningSellerInOutcomeEnabled);
+
+        mPersistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        flagsWithWinningSellerInOutcomeEnabled,
+                        mMockDebugFlags,
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mKAnonSignJoinFactoryMock);
+        mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
+
+        doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT))
+                .when(mObliviousHttpEncryptorMock)
+                .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        doReturn(WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD)
+                .when(mCustomAudienceDaoMock)
+                .getCustomAudienceByPrimaryKey(
+                        WINNER_CUSTOM_AUDIENCE_OWNER, WINNER_BUYER, WINNER_CUSTOM_AUDIENCE_NAME);
+
+        mAdSelectionEntryDaoSpy.persistAdSelectionInitialization(
+                AD_SELECTION_ID, INITIALIZATION_DATA);
+
+        PersistAdSelectionResultInput inputParams =
+                new PersistAdSelectionResultInput.Builder()
+                        .setSeller(SELLER)
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionResult(CIPHER_TEXT_BYTES)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        PersistAdSelectionResultTestCallback callback =
+                invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
+
+        Assert.assertTrue(callback.mIsSuccess);
+        Assert.assertEquals(
+                WINNER_AD_RENDER_URI, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
+        Assert.assertEquals(
+                AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
+        Assert.assertEquals(
+                "Unset Winning seller ",
+                UNSET_AD_TECH_IDENTIFIER,
+                callback.mPersistAdSelectionResultResponse.getWinningSeller());
+    }
+
+    @Test
+    public void testCreatePersistAdSelectionResultResponse_winningSellerEnabled_success() {
+        class FlagsWithWinningSellerOutcomeInAdSelectionOutcome
+                extends PersistAdSelectionResultRunnerTestFlags {
+            @Override
+            public boolean getEnableWinningSellerIdInAdSelectionOutcome() {
+                return true;
+            }
+        }
+        Flags flagsWithWinningSellerInOutcomeEnabled =
+                new FlagsWithWinningSellerOutcomeInAdSelectionOutcome();
+        mocker.mockGetFlags(flagsWithWinningSellerInOutcomeEnabled);
+
+        mPersistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        flagsWithWinningSellerInOutcomeEnabled,
+                        mMockDebugFlags,
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mKAnonSignJoinFactoryMock);
+
+        AuctionResult auctionResult = AUCTION_RESULT_WITH_WINNING_SELLER.build();
+        PersistAdSelectionResultResponse response =
+                mPersistAdSelectionResultRunner.createPersistAdSelectionResultResponse(
+                        auctionResult, AD_SELECTION_ID);
+
+        Assert.assertEquals("Ad render uri", WINNER_AD_RENDER_URI, response.getAdRenderUri());
+        Assert.assertEquals("Ad selection id", AD_SELECTION_ID, response.getAdSelectionId());
+        Assert.assertEquals("Winning seller ", COMPONENT_SELLER, response.getWinningSeller());
+    }
+
+    @Test
+    public void testCreatePersistAdSelectionResultResponse_winningSellerDisabled_success() {
+        class FlagsWithWinningSellerOutcomeInAdSelectionOutcome
+                extends PersistAdSelectionResultRunnerTestFlags {
+            @Override
+            public boolean getEnableWinningSellerIdInAdSelectionOutcome() {
+                return false;
+            }
+        }
+        Flags flagsWithWinningSellerInOutcomeEnabled =
+                new FlagsWithWinningSellerOutcomeInAdSelectionOutcome();
+        mocker.mockGetFlags(flagsWithWinningSellerInOutcomeEnabled);
+
+        mPersistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        flagsWithWinningSellerInOutcomeEnabled,
+                        mMockDebugFlags,
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mKAnonSignJoinFactoryMock);
+
+        AuctionResult auctionResult = AUCTION_RESULT_WITH_WINNING_SELLER.build();
+        PersistAdSelectionResultResponse response =
+                mPersistAdSelectionResultRunner.createPersistAdSelectionResultResponse(
+                        auctionResult, AD_SELECTION_ID);
+
+        Assert.assertEquals("Ad render uri", WINNER_AD_RENDER_URI, response.getAdRenderUri());
+        Assert.assertEquals("Ad selection id", AD_SELECTION_ID, response.getAdSelectionId());
+        Assert.assertEquals(
+                "Unset Winning seller ", UNSET_AD_TECH_IDENTIFIER, response.getWinningSeller());
+    }
+
+    @Test
+    public void testCreatePersistAdSelectionResultResponse_withAuctionResultChaff_success() {
+        class FlagsWithWinningSellerOutcomeInAdSelectionOutcome
+                extends PersistAdSelectionResultRunnerTestFlags {
+            @Override
+            public boolean getEnableWinningSellerIdInAdSelectionOutcome() {
+                return true;
+            }
+        }
+        Flags flagsWithWinningSellerInOutcomeEnabled =
+                new FlagsWithWinningSellerOutcomeInAdSelectionOutcome();
+        mocker.mockGetFlags(flagsWithWinningSellerInOutcomeEnabled);
+
+        mPersistAdSelectionResultRunner =
+                new PersistAdSelectionResultRunner(
+                        mObliviousHttpEncryptorMock,
+                        mAdSelectionEntryDaoSpy,
+                        mCustomAudienceDaoMock,
+                        mAdSelectionServiceFilterMock,
+                        mBackgroundExecutorService,
+                        mLightweightExecutorService,
+                        mScheduledExecutor,
+                        CALLER_UID,
+                        DevContext.createForDevOptionsDisabled(),
+                        mOverallTimeout,
+                        mForceContinueOnAbsentOwner,
+                        mReportingLimits,
+                        mAdCounterHistogramUpdaterSpy,
+                        mAuctionResultValidator,
+                        flagsWithWinningSellerInOutcomeEnabled,
+                        mMockDebugFlags,
+                        mAdServicesLoggerSpy,
+                        mAdsRelevanceExecutionLogger,
+                        mKAnonSignJoinFactoryMock);
+
+        AuctionResult auctionResult = AUCTION_RESULT_CHAFF.build();
+        PersistAdSelectionResultResponse response =
+                mPersistAdSelectionResultRunner.createPersistAdSelectionResultResponse(
+                        auctionResult, AD_SELECTION_ID);
+
+        assertWithMessage("Empty ad render uri")
+                .that(response.getAdRenderUri())
+                .isEqualTo(Uri.EMPTY);
+        assertWithMessage("Ad selection id")
+                .that(response.getAdSelectionId())
+                .isEqualTo(AD_SELECTION_ID);
+        assertWithMessage("Empty winning seller id")
+                .that(response.getWinningSeller())
+                .isEqualTo(UNSET_AD_TECH_IDENTIFIER);
     }
 
     @Test

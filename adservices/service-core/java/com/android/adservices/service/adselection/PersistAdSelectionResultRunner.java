@@ -298,11 +298,7 @@ public class PersistAdSelectionResultRunner {
                     new FutureCallback<>() {
                         @Override
                         public void onSuccess(AuctionResult result) {
-                            Uri adRenderUri =
-                                    (result.getIsChaff())
-                                            ? Uri.EMPTY
-                                            : Uri.parse(result.getAdRenderUrl());
-                            notifySuccessToCaller(adRenderUri, adSelectionId, callback);
+                            notifySuccessToCaller(result, adSelectionId, callback);
                         }
 
                         @Override
@@ -410,7 +406,7 @@ public class PersistAdSelectionResultRunner {
                             } else {
                                 makeKAnonSignJoin(auctionResult, adSelectionId);
                                 try {
-                                    validateAuctionResult(auctionResult);
+                                    mAuctionResultValidator.validate(auctionResult);
                                 } catch (IllegalArgumentException e) {
                                     logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
                                     String err = "Invalid object of Auction Result";
@@ -955,15 +951,32 @@ public class PersistAdSelectionResultRunner {
         }
     }
 
+    @VisibleForTesting
+    PersistAdSelectionResultResponse createPersistAdSelectionResultResponse(
+            AuctionResult result, long adSelectionId) {
+        Uri adRenderUri = (result.getIsChaff()) ? Uri.EMPTY : Uri.parse(result.getAdRenderUrl());
+        PersistAdSelectionResultResponse.Builder persistAdSelectionResponseBuilder =
+                new PersistAdSelectionResultResponse.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setAdRenderUri(adRenderUri);
+        if (mFlags.getEnableWinningSellerIdInAdSelectionOutcome()) {
+            AdTechIdentifier winningSeller =
+                    result.getIsChaff()
+                            ? AdTechIdentifier.UNSET_AD_TECH_IDENTIFIER
+                            : AdTechIdentifier.fromString(result.getWinningSeller());
+            sLogger.d("Adding winning seller in PersistAdSelectionResponse");
+            persistAdSelectionResponseBuilder.setWinningSeller(winningSeller);
+        }
+        return persistAdSelectionResponseBuilder.build();
+    }
+
     private void notifySuccessToCaller(
-            Uri renderUri, long adSelectionId, PersistAdSelectionResultCallback callback) {
+            AuctionResult result, long adSelectionId, PersistAdSelectionResultCallback callback) {
         int resultCode = STATUS_SUCCESS;
         try {
-            callback.onSuccess(
-                    new PersistAdSelectionResultResponse.Builder()
-                            .setAdSelectionId(adSelectionId)
-                            .setAdRenderUri(renderUri)
-                            .build());
+            PersistAdSelectionResultResponse response =
+                    createPersistAdSelectionResultResponse(result, adSelectionId);
+            callback.onSuccess(response);
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying PersistAdSelectionResultCallback");
             resultCode = STATUS_INTERNAL_ERROR;
@@ -988,6 +1001,7 @@ public class PersistAdSelectionResultRunner {
                     new PersistAdSelectionResultResponse.Builder()
                             .setAdSelectionId(adSelectionId)
                             .setAdRenderUri(Uri.EMPTY)
+                            .setWinningSeller(AdTechIdentifier.UNSET_AD_TECH_IDENTIFIER)
                             .build());
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE,
