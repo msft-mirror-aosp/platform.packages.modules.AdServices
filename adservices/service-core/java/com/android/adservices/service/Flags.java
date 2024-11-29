@@ -5990,6 +5990,13 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB;
     }
 
+    /** Flag to use configurations manager to query enrollment data. */
+    @FeatureFlag boolean DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT = false;
+
+    default boolean getUseConfigsManagerToQueryEnrollment() {
+        return DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT;
+    }
+
     @FeatureFlag boolean DEFAULT_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER = false;
 
     /**
