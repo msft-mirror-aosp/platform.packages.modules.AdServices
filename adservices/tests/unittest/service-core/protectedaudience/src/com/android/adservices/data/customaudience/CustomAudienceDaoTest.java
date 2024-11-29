@@ -3665,8 +3665,32 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
 
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
+
+        List<ComponentAdData> componentAdDataList =
+                ComponentAdDataFixture.getValidComponentAdsByBuyer(BUYER_1);
+
+        List<DBComponentAdData> expectedDBComponentAdDataList =
+                DBComponentAdDataFixture.getValidComponentAdsByBuyer(
+                        componentAdDataList, OWNER_1, BUYER_1, NAME_1);
+
+        mCustomAudienceDao.insertAndOverwriteComponentAds(
+                componentAdDataList, OWNER_1, BUYER_1, NAME_1);
+
+        List<DBComponentAdData> dbComponentAdDataList =
+                mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_1, BUYER_1, NAME_1);
+
+        // Assert order is preserved
+        assertThat(dbComponentAdDataList)
+                .containsExactlyElementsIn(expectedDBComponentAdDataList)
+                .inOrder();
+    }
+
+    @Test
+    public void testInsertAndOverwriteComponentAdsOverwritesExistingComponentAds() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2, false);
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
 
         List<ComponentAdData> componentAdDataList =
                 ComponentAdDataFixture.getValidComponentAdsByBuyer(BUYER_1);
@@ -3682,25 +3706,29 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 List.of(componentAdDataList.get(2), componentAdDataList.get(3));
 
         // Insert the first half
-        mCustomAudienceDao.insertComponentAds(componentAdDataList1, OWNER_1, BUYER_1, NAME_1);
+        mCustomAudienceDao.insertAndOverwriteComponentAds(
+                componentAdDataList1, OWNER_1, BUYER_1, NAME_1);
 
-        // Insert component ads for another CA in between
-        ComponentAdData componentAdData2 =
-                ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER_2, 1);
-        DBComponentAdData dbComponentAdData2 =
-                DBComponentAdDataFixture.getDBComponentAdData(
-                        componentAdData2, OWNER_2, BUYER_2, NAME_2);
-        mCustomAudienceDao.insertComponentAdData(dbComponentAdData2);
-
-        // Insert the second half
-        mCustomAudienceDao.insertComponentAds(componentAdDataList2, OWNER_1, BUYER_1, NAME_1);
-
-        List<DBComponentAdData> dbComponentAdDataList =
+        List<DBComponentAdData> dbComponentAdDataList1 =
                 mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_1, BUYER_1, NAME_1);
 
-        // Assert order is preserved
-        assertThat(dbComponentAdDataList)
-                .containsExactlyElementsIn(expectedDBComponentAdDataList)
+        // Assert first half is returned
+        assertThat(dbComponentAdDataList1)
+                .containsExactly(
+                        expectedDBComponentAdDataList.get(0), expectedDBComponentAdDataList.get(1))
+                .inOrder();
+
+        // Insert the second half
+        mCustomAudienceDao.insertAndOverwriteComponentAds(
+                componentAdDataList2, OWNER_1, BUYER_1, NAME_1);
+
+        List<DBComponentAdData> dbComponentAdDataList2 =
+                mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_1, BUYER_1, NAME_1);
+
+        // Assert first half is overrwitten and second half is returned
+        assertThat(dbComponentAdDataList2)
+                .containsExactly(
+                        expectedDBComponentAdDataList.get(2), expectedDBComponentAdDataList.get(3))
                 .inOrder();
     }
 
