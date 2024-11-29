@@ -417,6 +417,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetUseConfigsManagerToQueryEnrollment() {
+        testFeatureFlag(
+                "DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT",
+                Flags::getUseConfigsManagerToQueryEnrollment);
+    }
+
+    @Test
     public void testGetSharedDatabaseSchemaVersion4Enabled() {
         testFeatureFlag(
                 "SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED",
