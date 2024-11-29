@@ -163,6 +163,8 @@ public class PersistAdSelectionResultRunner {
             "buyer interaction reporting uri";
     private static final String SELLER_INTERACTION_REPORTING_URI_FIELD_NAME =
             "seller interaction reporting uri";
+    private static final String COMPONENT_SELLER_INTERACTION_REPORTING_URI_FIELD_NAME =
+            "component seller interaction reporting uri";
     private static final String SHA256 = "SHA-256";
 
     @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
@@ -648,7 +650,8 @@ public class PersistAdSelectionResultRunner {
         }
     }
 
-    private void persistAuctionResults(
+    @VisibleForTesting
+    void persistAuctionResults(
             AuctionResult auctionResult,
             DBAdData winningAd,
             long adSelectionId,
@@ -678,11 +681,25 @@ public class PersistAdSelectionResultRunner {
                         .setName(auctionResult.getCustomAudienceName())
                         .setAdCounterKeys(winningAd.getAdCounterKeys())
                         .build();
-        ReportingData reportingData =
+
+        ReportingData.Builder reportingDataBuilder =
                 ReportingData.builder()
                         .setBuyerWinReportingUri(buyerReportingUrl)
-                        .setSellerWinReportingUri(sellerReportingUrl)
-                        .build();
+                        .setSellerWinReportingUri(sellerReportingUrl);
+        if (mFlags.getEnableReportEventForComponentSeller()) {
+            Uri componentSellerReportingUrl =
+                    validateAdTechUriAndReturnEmptyIfInvalid(
+                            ValidatorUtil.AD_TECH_ROLE_COMPONENT_SELLER,
+                            auctionResult.getWinningSeller(),
+                            SELLER_WIN_REPORTING_URI_FIELD_NAME,
+                            Uri.parse(
+                                    winReportingUrls
+                                            .getComponentSellerReportingUrls()
+                                            .getReportingUrl()));
+            reportingDataBuilder.setComponentSellerWinReportingUri(componentSellerReportingUrl);
+        }
+        ReportingData reportingData = reportingDataBuilder.build();
+
         AdSelectionResultBidAndUri resultBidAndUri =
                 AdSelectionResultBidAndUri.builder()
                         .setAdSelectionId(adSelectionId)
@@ -728,7 +745,8 @@ public class PersistAdSelectionResultRunner {
      * com.android.adservices.service.Flags
      * #getFledgeReportImpressionMaxInteractionReportingUriSizeB()}
      */
-    private void persistAdInteractionKeysAndUrls(
+    @VisibleForTesting
+    void persistAdInteractionKeysAndUrls(
             AuctionResult auctionResult, long adSelectionId, AdTechIdentifier seller) {
         final WinReportingUrls winReportingUrls = auctionResult.getWinReportingUrls();
         final Map<String, String> attemptedBuyerInteractionReportingUrls =
@@ -748,6 +766,7 @@ public class PersistAdSelectionResultRunner {
                         seller.toString(),
                         SELLER_INTERACTION_REPORTING_URI_FIELD_NAME,
                         attemptedSellerInteractionReportingUrls);
+
         sLogger.v("Valid buyer interaction urls: %s", buyerInteractionReportingUrls);
         persistAdInteractionKeysAndUrls(
                 buyerInteractionReportingUrls,
@@ -758,6 +777,23 @@ public class PersistAdSelectionResultRunner {
                 sellerInteractionReportingUrls,
                 adSelectionId,
                 ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER);
+
+        if (mFlags.getEnableReportEventForComponentSeller()) {
+            Map<String, String> attemptedComponentSellerInteractionReportingUrls =
+                    winReportingUrls
+                            .getComponentSellerReportingUrls()
+                            .getInteractionReportingUrls();
+            Map<String, Uri> componentSellerInteractionReportingUrls =
+                    filterInvalidInteractionUri(
+                            ValidatorUtil.AD_TECH_ROLE_COMPONENT_SELLER,
+                            auctionResult.getWinningSeller(),
+                            COMPONENT_SELLER_INTERACTION_REPORTING_URI_FIELD_NAME,
+                            attemptedComponentSellerInteractionReportingUrls);
+            persistAdInteractionKeysAndUrls(
+                    componentSellerInteractionReportingUrls,
+                    adSelectionId,
+                    ReportEventRequest.FLAG_REPORTING_DESTINATION_COMPONENT_SELLER);
+        }
 
         if (mFlags.getFledgeBeaconReportingMetricsEnabled()) {
             int totalNumRegisteredAdInteractions =
