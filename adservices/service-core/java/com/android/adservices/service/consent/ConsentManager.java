@@ -61,6 +61,7 @@ import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.common.AtomicFileDatastore;
+import com.android.adservices.data.common.LegacyAtomicFileDatastoreFactory;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -1479,8 +1480,9 @@ public final class ConsentManager {
     @SuppressWarnings("AvoidStaticContext")
     static AtomicFileDatastore createAndInitializeDataStore(
             Context context, AdServicesErrorLogger adServicesErrorLogger) {
+        @SuppressWarnings("deprecation")
         AtomicFileDatastore atomicFileDatastore =
-                new AtomicFileDatastore(
+                LegacyAtomicFileDatastoreFactory.createAtomicFileDatastore(
                         context,
                         ConsentConstants.STORAGE_XML_IDENTIFIER,
                         ConsentConstants.STORAGE_VERSION,
