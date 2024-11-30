@@ -32,6 +32,7 @@ import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.DatabaseClearer;
 import com.android.adservices.service.devapi.DevSessionController;
 import com.android.adservices.service.devapi.DevSessionControllerImpl;
+import com.android.adservices.service.devapi.DevSessionInMemoryDataStore;
 import com.android.adservices.service.devapi.DevSessionControllerResult;
 import com.android.adservices.service.devapi.DevSessionDataStoreFactory;
 
@@ -81,7 +82,7 @@ public class DevSessionHelper {
                                         .getFrequencyCapDataClearer(),
                                 protectedSignalsDao,
                                 AdServicesExecutors.getBackgroundExecutor()),
-                        DevSessionDataStoreFactory.get(/* developerModeFeatureEnabled= */ true),
+                        new DevSessionInMemoryDataStore(),
                         AdServicesExecutors.getLightWeightExecutor());
     }
 
