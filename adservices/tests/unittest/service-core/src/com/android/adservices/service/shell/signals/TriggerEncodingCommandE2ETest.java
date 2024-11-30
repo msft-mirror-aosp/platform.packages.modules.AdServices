@@ -79,7 +79,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AppPackageNameRetriever;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.adservices.service.devapi.DevSessionDataStoreFactory;
+import com.android.adservices.service.devapi.DevSessionInMemoryDataStore;
 import com.android.adservices.service.signals.PeriodicEncodingJobRunner;
 import com.android.adservices.service.signals.ProtectedSignalsServiceImpl;
 import com.android.adservices.service.signals.SignalsProviderAndArgumentFactory;
@@ -378,7 +378,7 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                     sContext.getContentResolver(),
                     sContext.getPackageManager(),
                     AppPackageNameRetriever.create(sContext),
-                    DevSessionDataStoreFactory.get());
+                    new DevSessionInMemoryDataStore());
         }
 
         @Override
