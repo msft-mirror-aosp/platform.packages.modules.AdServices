@@ -8590,6 +8590,47 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    public void fetchTrigger_jsonException_ignoreValidAggregateDebugReportingFields()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableAggregateDebugReporting()).thenReturn(false);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_debug_reporting\":{\"budget\":1024,"
+                                            + "\"key_piece\":\"0x1\",\"debug_data\":["
+                                            + "{\"types\":\"trigger-event-deduplicated\"," // types
+                                                + "\"key_piece\":\"0x123\","
+                                                + "\"value\": 123},"
+                                                + "{\"types\":["
+                                                + "\"trigger-event-no-matching-configurations\"],"
+                                                + "\"key_piece\":\"0x789\","
+                                                + "\"value\":789}],"
+                                                + "\"aggregation_coordinator_origin\":"
+                                                + " \"https://cloud.coordination.test\"}}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getAggregateDebugReportingString()).isNull();
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
     public void fetchTrigger_adrHasInvalidDebugData_acceptsTrigger() throws Exception {
         when(mMockFlags.getMeasurementEnableAggregateDebugReporting()).thenReturn(true);
         when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
