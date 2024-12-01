@@ -38,6 +38,7 @@ import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
+import android.adservices.utils.DevContextUtils;
 import android.adservices.utils.MockWebServerRule;
 import android.net.Uri;
 
@@ -45,6 +46,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdServicesSupportHelper;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
@@ -52,6 +54,7 @@ import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -100,6 +103,10 @@ public final class MeasurementCtsDebuggableTest extends AdServicesDebuggableTest
             "/.well-known/attribution-reporting/report-aggregate-attribution";
     private static final String EVENT_ATTRIBUTION_REPORT_URI_PATH =
             "/.well-known/attribution-reporting/report-event-attribution";
+
+    @Rule(order = 11)
+    public final SupportedByConditionRule devOptionsEnabled =
+            DevContextUtils.createDevOptionsAvailableRule(mContext, LOGCAT_TAG_MEASUREMENT);
 
     private MeasurementManager mMeasurementManager;
 

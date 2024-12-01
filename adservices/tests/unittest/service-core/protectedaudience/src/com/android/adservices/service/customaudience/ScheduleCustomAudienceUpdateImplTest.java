@@ -152,7 +152,6 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mBackgroundExecutorService,
                         mCustomAudienceServiceFilterMock,
                         mCustomAudienceDaoMock);
-
         when(mMockFlags.getDisableFledgeEnrollmentCheck()).thenReturn(false);
         when(mMockFlags.getEnforceForegroundStatusForSignals()).thenReturn(true);
         mocker.mockGetConsentNotificationDebugMode(false);
@@ -821,6 +820,63 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
         verifyNoMoreInteractions(mCustomAudienceServiceFilterMock);
         verifyNoMoreInteractions(mCustomAudienceDaoMock);
         assertTrue(callback.isSuccess());
+    }
+
+    @Test
+    public void testScheduleCAUpdate_ForegroundEnforcement_FiltersRequest() throws Exception {
+        when(mMockFlags.getEnforceForegroundStatusForScheduleCustomAudience()).thenReturn(true);
+
+        when(mCustomAudienceServiceFilterMock.filterRequestAndExtractIdentifier(
+                        eq(UPDATE_URI),
+                        eq(PACKAGE),
+                        eq(false),
+                        eq(true),
+                        eq(true),
+                        eq(false),
+                        eq(mCallingAppUid),
+                        eq(API_NAME),
+                        eq(FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE),
+                        eq(mDevContext)))
+                .thenReturn(BUYER);
+
+        ScheduleCustomAudienceUpdateImpl scheduleCustomAudienceUpdateImpl =
+                new ScheduleCustomAudienceUpdateImpl(
+                        mContext,
+                        mConsentManagerMock,
+                        mCallingAppUid,
+                        mMockFlags,
+                        mMockDebugFlags,
+                        mAdServicesLoggerMock,
+                        mBackgroundExecutorService,
+                        mCustomAudienceServiceFilterMock,
+                        mCustomAudienceDaoMock);
+
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                UPDATE_URI,
+                                PACKAGE,
+                                Duration.ofMinutes(50),
+                                Collections.emptyList())
+                        .setShouldReplacePendingUpdates(false)
+                        .build();
+
+        ScheduleUpdateTestCallback callback =
+                callScheduleUpdate(input, scheduleCustomAudienceUpdateImpl);
+
+        verify(mCustomAudienceServiceFilterMock)
+                .filterRequestAndExtractIdentifier(
+                        eq(UPDATE_URI),
+                        eq(PACKAGE),
+                        eq(false),
+                        eq(true),
+                        eq(true),
+                        eq(true),
+                        eq(mCallingAppUid),
+                        eq(API_NAME),
+                        eq(FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE),
+                        eq(mDevContext));
+        verifyNoMoreInteractions(mCustomAudienceDaoMock);
+        expect.withMessage("callback.isSuccess()").that(callback.isSuccess()).isFalse();
     }
 
     private ScheduleUpdateTestCallback callScheduleUpdate(

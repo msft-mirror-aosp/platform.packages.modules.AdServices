@@ -106,7 +106,17 @@ public class EnrollmentData implements Serializable {
      * @param moduleState Module choice object to update in enrollment data.
      */
     public void putModuleState(AdServicesModuleState moduleState) {
-        mModuleStates.put(moduleState.getModule(), moduleState.getModuleState());
+        putModuleState(moduleState.getModule(), moduleState.getModuleState());
+    }
+
+    /**
+     * Stores the state for the given module.
+     *
+     * @param moduleCode Code for desired module.
+     * @param moduleState Module choice object to update in enrollment data.
+     */
+    public void putModuleState(@ModuleCode int moduleCode, @ModuleStateCode int moduleState) {
+        mModuleStates.put(moduleCode, moduleState);
     }
 
     /**

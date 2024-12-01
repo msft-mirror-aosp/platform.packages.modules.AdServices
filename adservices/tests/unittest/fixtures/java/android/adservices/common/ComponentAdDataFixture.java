@@ -26,11 +26,16 @@ import java.util.List;
 public final class ComponentAdDataFixture {
     private ComponentAdDataFixture() {}
 
-    private static Uri getValidRenderUriByBuyer(AdTechIdentifier buyer, int sequence) {
+    /**
+     * @return a valid render uri for a specified buyer and sequence number
+     */
+    public static Uri getValidRenderUriByBuyer(AdTechIdentifier buyer, int sequence) {
         return CommonFixture.getUri(buyer, "/testing/hello" + sequence);
     }
 
-    /** Returns a valid list of component ads for a specified buyer. */
+    /**
+     * @return a valid list of component ads for a specified buyer.
+     */
     public static List<ComponentAdData> getValidComponentAdsByBuyer(AdTechIdentifier buyer) {
         return ImmutableList.of(
                 getValidComponentAdDataByBuyer(buyer, 1),
@@ -39,7 +44,10 @@ public final class ComponentAdDataFixture {
                 getValidComponentAdDataByBuyer(buyer, 4));
     }
 
-    private static ComponentAdData getValidComponentAdDataByBuyer(
+    /**
+     * @return a component ad for a specified buyer.
+     */
+    public static ComponentAdData getValidComponentAdDataByBuyer(
             AdTechIdentifier buyer, int sequenceNumber) {
         return new ComponentAdData(
                 getValidRenderUriByBuyer(buyer, sequenceNumber), AdDataFixture.VALID_RENDER_ID);

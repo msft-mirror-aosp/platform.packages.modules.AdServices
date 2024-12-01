@@ -1,0 +1,400 @@
+{
+  "description": "One-sided aggregate debug reports",
+  "phflags_override": {
+    "Measurement__enable_aggregate_debug_reporting": "true",
+    "measurement_aggregation_coordinator_origin_list": "https://c1.test,https://c2.test"
+  },
+  "input": {
+    "sources": [
+      // Source A: ADR fields (not present)
+      {
+        "timestamp": "0",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "source.test"
+        },
+        "responses": [{
+          "url": "https://reporter.test/register-source",
+          "response": {
+            "Attribution-Reporting-Register-Source": {
+              "destination": "android-app://destination1.test"
+            }
+          }
+        }]
+      },
+      // Source B: ADR fields (present)
+      {
+        "timestamp": "1",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "source.test"
+        },
+        "responses": [{
+          "url": "https://reporter.test/register-source",
+          "response": {
+            "Attribution-Reporting-Register-Source": {
+              "source_event_id": "1",
+              "destination": "android-app://destination2.test",
+              "aggregatable_debug_reporting": {
+                "budget": 1024,
+                "key_piece": "0x1"
+              }
+            }
+          }
+        }]
+      }
+    ],
+    "triggers": [
+      // Trigger A: matching source (false) + ADR field (present) + matching debug type (true)
+      {
+        "timestamp": "2",
+        "registration_request": {
+          "registrant": "destination3.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_values": {
+                  "a": 1
+                },
+                "aggregatable_debug_reporting": {
+                  "key_piece": "0x2",
+                  "debug_data": [
+                    {
+                      "types": ["trigger-no-matching-source"],
+                      "key_piece": "0x4",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      // Trigger B: matching source (false) + ADR field (present) + matching debug type (false)
+      {
+        "timestamp": "3",
+        "registration_request": {
+          "registrant": "destination3.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_values": {
+                  "a": 1
+                },
+                "aggregatable_debug_reporting": {
+                  "key_piece": "0x2",
+                  "debug_data": [
+                    {
+                      "types": ["trigger-aggregate-no-contributions"],
+                      "key_piece": "0x4",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      // Trigger C: matching source (true, no ADR) + ADR field (present) + matching debug type (false)
+      {
+        "timestamp": "4",
+        "registration_request": {
+          "registrant": "destination1.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_values": {
+                  "a": 1
+                },
+                "aggregatable_debug_reporting": {
+                  "key_piece": "0x2",
+                  "debug_data": [
+                    {
+                      "types": ["trigger-no-matching-source"],
+                      "key_piece": "0x4",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      // Trigger D: matching source (true, no ADR) + ADR field (present) + matching debug type (true)
+      {
+        "timestamp": "5",
+        "registration_request": {
+          "registrant": "destination1.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_values": {
+                  "a": 1
+                },
+                "aggregatable_debug_reporting": {
+                  "key_piece": "0x2",
+                  "debug_data": [
+                    {
+                      "types": ["trigger-aggregate-no-contributions"],
+                      "key_piece": "0x4",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      // Trigger E: matching source (true, ADR) + ADR field (present) + matching debug type (false)
+      {
+        "timestamp": "6",
+        "registration_request": {
+          "registrant": "destination2.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_values": {
+                  "a": 1
+                },
+                "aggregatable_debug_reporting": {
+                  "key_piece": "0x2",
+                  "debug_data": [
+                    {
+                      "types": ["trigger-no-matching-source"],
+                      "key_piece": "0x4",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      // Trigger F: matching source (true, ADR) + ADR field (present) + matching debug type (true)
+      {
+        "timestamp": "7",
+        "registration_request": {
+          "registrant": "destination2.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_values": {
+                  "a": 1
+                },
+                "aggregatable_debug_reporting": {
+                  "key_piece": "0x2",
+                  "debug_data": [
+                    {
+                      "types": ["trigger-aggregate-no-contributions"],
+                      "key_piece": "0x4",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        ]
+      },
+      // Trigger G: matching source (true, no ADR) + ADR field (not present)
+      {
+        "timestamp": "8",
+        "registration_request": {
+          "registrant": "destination1.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_values": {
+                  "a": 1
+                }
+              }
+            }
+          }
+        ]
+      },
+      // Trigger H: matching source (true, ADR) + ADR field (not present)
+      {
+        "timestamp": "9",
+        "registration_request": {
+          "registrant": "destination2.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_values": {
+                  "a": 1
+                }
+              }
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "event_level_results": [],
+    "aggregatable_results": [],
+    "debug_aggregatable_results": [
+      // Report (Trigger A)
+      {
+        "report_time": "2",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/report-aggregate-debug",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting-debug",
+            "attribution_destination": "android-app://destination3.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "0",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {"key": "0x6", "value": 1},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ]
+        }
+      },
+      // Report (Trigger B)
+      {
+        "report_time": "3",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/report-aggregate-debug",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting-debug",
+            "attribution_destination": "android-app://destination3.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "0",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ]
+        }
+      },
+      // Report (Source A + Trigger C)
+      {
+        "report_time": "4",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/report-aggregate-debug",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting-debug",
+            "attribution_destination": "android-app://destination1.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "0",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ]
+        }
+      },
+      // Report (Source A + Trigger D)
+      {
+        "report_time": "5",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/report-aggregate-debug",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting-debug",
+            "attribution_destination": "android-app://destination1.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "0",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ]
+        }
+      },
+      // Report (Source B + Trigger E)
+      {
+        "report_time": "6",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/report-aggregate-debug",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting-debug",
+            "attribution_destination": "android-app://destination2.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "0",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ]
+        }
+      },
+      // Report (Source B + Trigger F)
+      {
+        "report_time": "7",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/report-aggregate-debug",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting-debug",
+            "attribution_destination": "android-app://destination2.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "0",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {"key": "0x7", "value": 1},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ]
+        }
+      }
+    ]
+  }
+}

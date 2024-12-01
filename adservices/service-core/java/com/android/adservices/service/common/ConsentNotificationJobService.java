@@ -65,6 +65,11 @@ public class ConsentNotificationJobService extends JobService {
 
     static final String ADID_ENABLE_STATUS = "adid_enable_status";
     static final String RE_CONSENT_STATUS = "re_consent_status";
+    static final String IS_V2_NOTIFICATION = "IS_V2_NOTIFICATION";
+    static final String IS_RENOTIFY = "IS_RENOTIFY";
+    static final String IS_NEW_AD_PERSONALIZATION_MODULE_ENABLED =
+            "IS_NEW_AD_PERSONALIZATION_MODULE_ENABLED";
+    static final String IS_ONGOING_NOTIFICATION = "IS_ONGOING_NOTIFICATION";
     private static final String ADSERVICES_STATUS_SHARED_PREFERENCE =
             "AdserviceStatusSharedPreference";
 
@@ -101,6 +106,65 @@ public class ConsentNotificationJobService extends JobService {
         bundle.putBoolean(ADID_ENABLE_STATUS, adidEnabled);
         bundle.putLong(FIRST_ENTRY_REQUEST_TIMESTAMP, firstEntryRequestTimestamp);
         bundle.putBoolean(RE_CONSENT_STATUS, reConsentStatus);
+
+        final JobInfo job =
+                new JobInfo.Builder(
+                                CONSENT_NOTIFICATION_JOB_ID,
+                                new ComponentName(context, ConsentNotificationJobService.class))
+                        .setMinimumLatency(initialDelay)
+                        .setOverrideDeadline(deadline)
+                        .setExtras(bundle)
+                        .setPersisted(true)
+                        .build();
+        jobScheduler.schedule(job);
+        LogUtil.d("Scheduling Consent notification job ...");
+    }
+
+    /** Schedule the V2 Notification Job. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
+    public static void scheduleNotificationV2(
+            Context context,
+            boolean isRenotify,
+            boolean isNewAdPersonalizationModuleEnabled,
+            boolean isOngoingNotification) {
+        final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
+        long initialDelay = calculateInitialDelay(Calendar.getInstance(TimeZone.getDefault()));
+        long deadline = calculateDeadline(Calendar.getInstance(TimeZone.getDefault()));
+        LogUtil.d(
+                "scheduleNotificationV2 called with initial delay:"
+                        + initialDelay
+                        + ", deadline:"
+                        + deadline
+                        + ", isRenotify:"
+                        + isRenotify
+                        + ", isNewAdPersonalizationModuleEnabled:"
+                        + isNewAdPersonalizationModuleEnabled
+                        + ", isOngoingNotification:"
+                        + isOngoingNotification);
+
+        SharedPreferences sharedPref = getPrefs(context);
+
+        long currentTimestamp = System.currentTimeMillis();
+        long firstEntryRequestTimestamp =
+                sharedPref.getLong(FIRST_ENTRY_REQUEST_TIMESTAMP, currentTimestamp);
+        if (firstEntryRequestTimestamp == currentTimestamp) {
+            // schedule the background download tasks for OTA resources at the first PPAPI request.
+            MddJob.scheduleAllMddJobs();
+            SharedPreferences.Editor editor = sharedPref.edit();
+            editor.putLong(FIRST_ENTRY_REQUEST_TIMESTAMP, currentTimestamp);
+            if (!editor.commit()) {
+                LogUtil.e("Failed to save " + FIRST_ENTRY_REQUEST_TIMESTAMP);
+            }
+        }
+        LogUtil.d(FIRST_ENTRY_REQUEST_TIMESTAMP + ": " + firstEntryRequestTimestamp);
+
+        PersistableBundle bundle = new PersistableBundle();
+        bundle.putBoolean(IS_V2_NOTIFICATION, true);
+        bundle.putBoolean(IS_RENOTIFY, isRenotify);
+        bundle.putBoolean(
+                IS_NEW_AD_PERSONALIZATION_MODULE_ENABLED, isNewAdPersonalizationModuleEnabled);
+        bundle.putBoolean(IS_ONGOING_NOTIFICATION, isOngoingNotification);
 
         final JobInfo job =
                 new JobInfo.Builder(
@@ -214,6 +278,11 @@ public class ConsentNotificationJobService extends JobService {
         LogUtil.d("ConsentNotificationJobService.onStartJob");
         AdServicesJobServiceLogger.getInstance().recordOnStartJob(CONSENT_NOTIFICATION_JOB_ID);
 
+        boolean isV2Notification = params.getExtras().getBoolean(IS_V2_NOTIFICATION, false);
+        if (isV2Notification) {
+            return startV2Job(params);
+        }
+
         if (mConsentManager == null) {
             setConsentManager(ConsentManager.getInstance());
         }
@@ -260,6 +329,53 @@ public class ConsentNotificationJobService extends JobService {
                                                     + " notification now.");
                                     AdServicesSyncUtil.getInstance()
                                             .execute(this, isEeaNotification);
+                                }
+                            } finally {
+                                boolean shouldRetry = false;
+                                AdServicesJobServiceLogger.getInstance()
+                                        .recordJobFinished(
+                                                CONSENT_NOTIFICATION_JOB_ID,
+                                                /* isSuccessful= */ true,
+                                                shouldRetry);
+
+                                jobFinished(params, shouldRetry);
+                            }
+                        });
+        return true;
+    }
+
+    private boolean startV2Job(JobParameters params) {
+        boolean isRenotify = params.getExtras().getBoolean(IS_RENOTIFY, false);
+        boolean isNewAdPersonalizationModuleEnabled =
+                params.getExtras().getBoolean(IS_NEW_AD_PERSONALIZATION_MODULE_ENABLED, true);
+        boolean isOngoingNotification =
+                params.getExtras().getBoolean(IS_ONGOING_NOTIFICATION, false);
+
+        AdServicesExecutors.getBackgroundExecutor()
+                .execute(
+                        () -> {
+                            try {
+                                if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()
+                                        || FlagsFactory.getFlags()
+                                                .getUiOtaResourcesFeatureEnabled()) {
+                                    handleOtaResourcesV2(
+                                            params.getExtras()
+                                                    .getLong(
+                                                            FIRST_ENTRY_REQUEST_TIMESTAMP,
+                                                            System.currentTimeMillis()),
+                                            isRenotify,
+                                            isNewAdPersonalizationModuleEnabled,
+                                            isOngoingNotification);
+                                } else {
+                                    LogUtil.d(
+                                            "OTA strings feature is not enabled, sending"
+                                                    + " notification now.");
+                                    AdServicesSyncUtil.getInstance()
+                                            .executeNotificationTriggerV2(
+                                                    this,
+                                                    isRenotify,
+                                                    isNewAdPersonalizationModuleEnabled,
+                                                    isOngoingNotification);
                                 }
                             } finally {
                                 boolean shouldRetry = false;
@@ -342,6 +458,60 @@ public class ConsentNotificationJobService extends JobService {
         }
         LogUtil.d("OTA resources are not yet downloaded.");
         return;
+    }
+
+    private void handleOtaResourcesV2(
+            long firstEntryRequestTimestamp,
+            boolean isRenotify,
+            boolean isNewAdPersonalizationModuleEnabled,
+            boolean isOngoingNotification) {
+        if (System.currentTimeMillis() - firstEntryRequestTimestamp
+                >= FlagsFactory.getFlags().getUiOtaStringsDownloadDeadline()) {
+            LogUtil.d("Passed OTA resources download deadline, sending" + " notification now.");
+            AdServicesSyncUtil.getInstance()
+                    .executeNotificationTriggerV2(
+                            this,
+                            isRenotify,
+                            isNewAdPersonalizationModuleEnabled,
+                            isOngoingNotification);
+        } else {
+            sendNotificationIfOtaResourcesDownloadCompletedV2(
+                    isRenotify, isNewAdPersonalizationModuleEnabled, isOngoingNotification);
+        }
+    }
+
+    private void sendNotificationIfOtaResourcesDownloadCompletedV2(
+            boolean isRenotify,
+            boolean isNewAdPersonalizationModuleEnabled,
+            boolean isOngoingNotification) {
+        try {
+            ClientFileGroup cfg =
+                    MobileDataDownloadFactory.getMdd(FlagsFactory.getFlags())
+                            .getFileGroup(
+                                    GetFileGroupRequest.newBuilder()
+                                            .setGroupName(
+                                                    FlagsFactory.getFlags()
+                                                            .getUiOtaStringsGroupName())
+                                            .build())
+                            .get();
+            if (cfg != null && cfg.getStatus() == ClientFileGroup.Status.DOWNLOADED) {
+                LogUtil.d("finished downloading OTA resources." + " Sending notification now.");
+                AdServicesSyncUtil.getInstance()
+                        .executeNotificationTriggerV2(
+                                this,
+                                isRenotify,
+                                isNewAdPersonalizationModuleEnabled,
+                                isOngoingNotification);
+                return;
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            LogUtil.e("Error while fetching clientFileGroup: " + e.getMessage());
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__LOAD_MDD_FILE_GROUP_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX);
+        }
+        LogUtil.d("OTA resources are not yet downloaded.");
     }
 
     @SuppressWarnings("AvoidSharedPreferences") // Legacy usage

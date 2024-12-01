@@ -11968,6 +11968,51 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
+    public void fetchSource_jsonException_adrIgnored() throws Exception {
+        when(mMockFlags.getMeasurementEnableAggregateDebugReporting()).thenReturn(true);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource())
+                .thenReturn(MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        String validHeader =
+                "{"
+                        + "\"destination\":\""
+                        + DEFAULT_DESTINATION
+                        + "\","
+                        + "\"aggregatable_debug_reporting\":{"
+                        + "\"budget\":1024,"
+                        + "\"key_piece\":\"0x1\","
+                        + "\"debug_data\":{" // debug_data should be JSONArray instead of JSONObject
+                        + "\"types\":["
+                        + "\"source-storage-limit\","
+                        + "\"source-unknown-error\"],"
+                        + "\"key_piece\":\"0x123\","
+                        + "\"value\": 123},"
+                        + "\"aggregation_coordinator_origin\":"
+                        + " \"https://cloud.coordination.test\"}}";
+        RegistrationRequest request = buildRequest(DEFAULT_REGISTRATION);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(DEFAULT_REGISTRATION));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(Map.of("Attribution-Reporting-Register-Source", List.of(validHeader)));
+
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+
+        // Execution
+        Optional<Source> fetch =
+                mFetcher.fetchSource(
+                        appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+
+        // Assertion
+        assertThat(AsyncFetchStatus.ResponseStatus.SUCCESS)
+                .isEqualTo(asyncFetchStatus.getResponseStatus());
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getAggregateDebugReportingString()).isNull();
+    }
+
+    @Test
     public void fetchSource_aggregateDebugReportingEnabled_validAggregateDebugReporting()
             throws Exception {
         when(mMockFlags.getMeasurementEnableAggregateDebugReporting()).thenReturn(true);
@@ -12176,7 +12221,10 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
 
         // Assertion
-        assertAdrObjectWithExpectedBudget(asyncFetchStatus, fetch, 0);
+        assertThat(AsyncFetchStatus.ResponseStatus.SUCCESS)
+                .isEqualTo(asyncFetchStatus.getResponseStatus());
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getAggregateDebugReportingString()).isNull();
     }
 
     @Test
@@ -12214,8 +12262,10 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
 
         // Assertion
-        int expectedBudget = 0;
-        assertAdrObjectWithExpectedBudget(asyncFetchStatus, fetch, expectedBudget);
+        assertThat(AsyncFetchStatus.ResponseStatus.SUCCESS)
+                .isEqualTo(asyncFetchStatus.getResponseStatus());
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getAggregateDebugReportingString()).isNull();
     }
 
     @Test
@@ -12253,22 +12303,10 @@ public final class AsyncSourceFetcherTest extends AdServicesExtendedMockitoTestC
                         appSourceRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
 
         // Assertion
-        int expectedBudget = 0;
-        assertAdrObjectWithExpectedBudget(asyncFetchStatus, fetch, expectedBudget);
-    }
-
-    private static void assertAdrObjectWithExpectedBudget(
-            AsyncFetchStatus asyncFetchStatus, Optional<Source> fetch, int expectedBudget)
-            throws JSONException {
         assertThat(AsyncFetchStatus.ResponseStatus.SUCCESS)
                 .isEqualTo(asyncFetchStatus.getResponseStatus());
         assertThat(fetch.isPresent()).isTrue();
-        AggregateDebugReporting aggregateDebugReporting =
-                fetch.get().getAggregateDebugReportingObject();
-        assertThat(aggregateDebugReporting.getBudget()).isEqualTo(expectedBudget);
-        assertThat(aggregateDebugReporting.getKeyPiece()).isEqualTo(new BigInteger("1", 16));
-        assertThat(aggregateDebugReporting.getAggregationCoordinatorOrigin())
-                .isEqualTo(Uri.parse("https://cloud.coordination.test"));
+        assertThat(fetch.get().getAggregateDebugReportingString()).isNull();
     }
 
     private RegistrationRequest buildRequest(String registrationUri) {

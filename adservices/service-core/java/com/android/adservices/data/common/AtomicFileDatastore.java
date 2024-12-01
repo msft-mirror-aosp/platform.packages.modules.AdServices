@@ -19,12 +19,10 @@ package com.android.adservices.data.common;
 import android.content.Context;
 
 import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
-import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.internal.util.Preconditions;
 
-import java.util.Objects;
+import java.io.File;
 
 /**
  * {@inheritDoc}
@@ -39,29 +37,26 @@ import java.util.Objects;
 public final class AtomicFileDatastore
         extends com.android.adservices.shared.storage.AtomicFileDatastore {
 
-    @VisibleForTesting
-    static final String VERSION_KEY = "com.android.adservices.data.common.VERSION";
+    private static final String VERSION_KEY = LegacyAtomicFileDatastoreFactory.VERSION_KEY;
 
-    public AtomicFileDatastore(Context adServicesContext, String filename, int datastoreVersion) {
-        this(
-                adServicesContext,
-                filename,
-                datastoreVersion,
-                AdServicesErrorLoggerImpl.getInstance());
+    public AtomicFileDatastore(Context context, String filename, int datastoreVersion) {
+        this(context, filename, datastoreVersion, AdServicesErrorLoggerImpl.getInstance());
     }
 
     public AtomicFileDatastore(
-            Context adServicesContext,
+            Context context,
             String filename,
             int datastoreVersion,
             AdServicesErrorLogger adServicesErrorLogger) {
-        super(
-                FileCompatUtils.newFileHelper(
-                        Objects.requireNonNull(adServicesContext).getFilesDir(),
-                        Preconditions.checkStringNotEmpty(
-                                filename, "Filename must not be empty or null")),
+        this(
+                LegacyAtomicFileDatastoreFactory.getDataStoreFile(context, filename),
                 datastoreVersion,
-                VERSION_KEY,
                 adServicesErrorLogger);
+    }
+
+    @VisibleForTesting
+    public AtomicFileDatastore(
+            File datastoreFile, int datastoreVersion, AdServicesErrorLogger adServicesErrorLogger) {
+        super(datastoreFile, datastoreVersion, VERSION_KEY, adServicesErrorLogger);
     }
 }

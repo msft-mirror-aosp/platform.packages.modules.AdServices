@@ -22,6 +22,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JS_S
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB;
+import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT;
 import static com.android.adservices.service.FlagsConstants.KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS;
@@ -3010,6 +3011,27 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnableCustomAudienceComponentAds() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS,
+                ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS);
+    }
+
+    @Override
+    public int getMaxComponentAdsPerCustomAudience() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE,
+                MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
+    }
+
+    @Override
+    public int getComponentAdRenderIdMaxLengthBytes() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
+                COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES);
+    }
+
+    @Override
     public boolean getFledgeRegisterAdBeaconEnabled() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED,
@@ -4853,6 +4875,13 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB,
                 DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB);
+    }
+
+    @Override
+    public boolean getUseConfigsManagerToQueryEnrollment() {
+        return getDeviceConfigFlag(
+                KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT,
+                DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT);
     }
 
     @Override

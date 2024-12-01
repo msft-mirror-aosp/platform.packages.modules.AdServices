@@ -17,7 +17,9 @@
 package com.android.server.adservices;
 
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+import static com.android.adservices.shared.testing.common.FileHelper.deleteDirectory;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import static com.android.server.adservices.data.topics.TopicsTables.DUMMY_MODEL_VERSION;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -31,7 +33,6 @@ import android.adservices.topics.Topic;
 import android.app.adservices.topics.TopicParcel;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.modules.utils.testing.ExtendedMockitoRule;
 import com.android.server.adservices.consent.AppConsentManager;
 import com.android.server.adservices.consent.ConsentManager;
 import com.android.server.adservices.data.topics.TopicsDao;
@@ -45,19 +46,21 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.List;
 import java.util.Set;
 
 /** Tests for {@link UserInstanceManager} */
-@ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
+@SpyStatic(FlagsFactory.class)
 public final class UserInstanceManagerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String TOPICS_DAO_DUMP = "D'OHump!";
     private static final int TEST_MODULE_VERSION = 339990000;
 
-    private final String mTestBasePath = mContext.getFilesDir().getAbsolutePath();
+    private final File mTestDir = mContext.getFilesDir();
+    private final String mTestBasePath = mTestDir.getAbsolutePath();
     private final TopicsDbHelper mDBHelper = TopicsDbTestUtil.getDbHelperForTest();
     private TopicsDao mTopicsDao;
 
@@ -69,6 +72,7 @@ public final class UserInstanceManagerTest extends AdServicesExtendedMockitoTest
 
     @Before
     public void setup() throws IOException {
+        deleteDirectory(mTestDir);
         // make 2 below final
         mTopicsDao = new TopicsDao(mDBHelper);
         mUserInstanceManager = new UserInstanceManager(mTopicsDao, mTestBasePath);
@@ -82,9 +86,6 @@ public final class UserInstanceManagerTest extends AdServicesExtendedMockitoTest
 
     @After
     public void tearDown() {
-        // We need tear down this instance since it can have underlying persisted Data Store.
-        mUserInstanceManager.tearDownForTesting();
-
         // Delete all data in the database
         TopicsDbTestUtil.deleteTable(TopicsTables.BlockedTopicsContract.TABLE);
     }
@@ -139,8 +140,6 @@ public final class UserInstanceManagerTest extends AdServicesExtendedMockitoTest
                         mUserInstanceManager.getOrCreateUserRollbackHandlingManagerInstance(
                                 1, TEST_MODULE_VERSION))
                 .isSameInstanceAs(rollbackHandlingManager1);
-        consentManager0.tearDownForTesting();
-        consentManager1.tearDownForTesting();
     }
 
     @Test

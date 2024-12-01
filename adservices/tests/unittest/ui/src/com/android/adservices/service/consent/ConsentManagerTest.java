@@ -93,6 +93,8 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.doAnswer;
 
 import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesModuleUserChoice;
@@ -2655,6 +2657,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mMockIAdServicesManager, never()).recordMeasurementDefaultConsent(anyBoolean());
         verify(mMockIAdServicesManager, never()).recordTopicsDefaultConsent(anyBoolean());
         verify(mMockIAdServicesManager, never()).recordUserManualInteractionWithConsent(anyInt());
+        verify(mMockIAdServicesManager, never()).setModuleEnrollmentState(anyString());
         verify(mockEditor, never()).putBoolean(any(), anyBoolean());
     }
 
@@ -2881,6 +2884,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mockAdServicesManager, never()).recordMeasurementDefaultConsent(anyBoolean());
         verify(mockAdServicesManager, never()).recordTopicsDefaultConsent(anyBoolean());
         verify(mockAdServicesManager, never()).recordUserManualInteractionWithConsent(anyInt());
+        verify(mMockIAdServicesManager, never()).setModuleEnrollmentState(anyString());
     }
 
     @Test
@@ -2888,6 +2892,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(any(), any(), any(), any()))
                 .thenReturn(true);
         when(mAppSearchConsentManagerMock.getConsent(any())).thenReturn(true);
+        when(mMockFlags.getAdServicesConsentBusinessLogicMigrationEnabled()).thenReturn(true);
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
         mConsentDatastore.putBoolean(CONSENT_KEY, true);
         mConsentDatastore.putBoolean(NOTIFICATION_DISPLAYED_ONCE, true);
 
@@ -2959,6 +2965,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         .build();
 
         verify(mStatsdAdServicesLoggerMock).logConsentMigrationStats(consentMigrationStats);
+        verify(mockAdServicesManager).setModuleEnrollmentState(anyString());
     }
 
     @Test
@@ -4886,6 +4893,94 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         expect.withMessage("consentSourceOfTruthToString(%s)", source)
                 .that(consentSourceOfTruthToString(source))
                 .isEqualTo(toString);
+    }
+
+    @Test
+    public void testMigrateEnrollmentData() throws Exception {
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        doNothing().when(mMockIAdServicesManager).setConsent(any());
+        doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed(true);
+
+        doReturn(null).when(spyConsentManager).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(spyConsentManager)
+                .getConsent(AdServicesApiType.TOPICS);
+        doReturn(AdServicesApiConsent.REVOKED)
+                .when(spyConsentManager)
+                .getConsent(AdServicesApiType.MEASUREMENTS);
+        doReturn(true).when(spyConsentManager).wasGaUxNotificationDisplayed();
+
+        final String[] dataStringArg = new String[1];
+        doAnswer(
+                        i -> {
+                            dataStringArg[0] = i.getArgument(0);
+                            return null;
+                        })
+                .when(spyConsentManager)
+                .setModuleEnrollmentData(anyString());
+
+        ConsentManager.handleEnrollmentDataMigrationIfNeeded(spyConsentManager);
+
+        EnrollmentData actualData = EnrollmentData.deserialize(dataStringArg[0]);
+        assertEquals(
+                "TOPICS User Choice",
+                AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN,
+                actualData.getUserChoice(Module.TOPICS));
+        assertEquals(
+                "MEASUREMENT User Choice",
+                AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT,
+                actualData.getUserChoice(Module.MEASUREMENT));
+        assertEquals(
+                "PA User Choice",
+                AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN,
+                actualData.getUserChoice(Module.PROTECTED_AUDIENCE));
+        assertEquals(
+                "PAS User Choice",
+                AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN,
+                actualData.getUserChoice(Module.PROTECTED_APP_SIGNALS));
+        assertEquals(
+                "ODP User Choice",
+                AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN,
+                actualData.getUserChoice(Module.ON_DEVICE_PERSONALIZATION));
+        assertEquals(
+                "ADID User Choice",
+                AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN,
+                actualData.getUserChoice(Module.ADID));
+        assertEquals(
+                "TOPICS Module State",
+                AdServicesModuleState.MODULE_STATE_ENABLED,
+                actualData.getModuleState(Module.TOPICS));
+        assertEquals(
+                "MEASUREMENT Module State",
+                AdServicesModuleState.MODULE_STATE_ENABLED,
+                actualData.getModuleState(Module.MEASUREMENT));
+        assertEquals(
+                "PA Module State",
+                AdServicesModuleState.MODULE_STATE_ENABLED,
+                actualData.getModuleState(Module.PROTECTED_AUDIENCE));
+        assertEquals(
+                "PAS Module State",
+                AdServicesModuleState.MODULE_STATE_DISABLED,
+                actualData.getModuleState(Module.PROTECTED_APP_SIGNALS));
+        assertEquals(
+                "ODP Module State",
+                AdServicesModuleState.MODULE_STATE_DISABLED,
+                actualData.getModuleState(Module.ON_DEVICE_PERSONALIZATION));
+        assertEquals(
+                "ADID Module State",
+                AdServicesModuleState.MODULE_STATE_UNKNOWN,
+                actualData.getModuleState(Module.ADID));
+        verify(spyConsentManager).setModuleEnrollmentData(anyString());
+        clearInvocations(spyConsentManager);
+
+        doAnswer(unused -> dataStringArg[0]).when(spyConsentManager).getModuleEnrollmentState();
+        // Verify this should only happen once
+        ConsentManager.handleEnrollmentDataMigrationIfNeeded(spyConsentManager);
+        verify(spyConsentManager, never()).setModuleEnrollmentData(anyString());
     }
 
     private void setupAndVerifyEnrollmentStates(

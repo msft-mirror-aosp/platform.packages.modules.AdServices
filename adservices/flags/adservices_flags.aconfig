@@ -12,6 +12,7 @@ flag {
     namespace: "adservices_aconfig"
     bug: "346669688"
     description: "Enables apis for adservices allow caller to enable individual module(PA/TOPIC/MSMT). This api only make the module available on the device, each module can still have own flag/logic to turn on off themself."
+    is_exported: true
 }
 
 flag {
@@ -19,6 +20,7 @@ flag {
     namespace: "adservices_aconfig"
     bug: "365586922"
     description: "AdServices is no longer supported on Android R. Deprecating the R-specific APIs"
+    is_exported: true
 }
 
 flag {
@@ -26,6 +28,7 @@ flag {
     namespace: "adservices_aconfig"
     bug: "377051742"
     description: "Enables component ads feature for custom audiences."
+    is_exported: true
 }
 
 flag {
@@ -47,6 +50,7 @@ flag {
     namespace: "adservices_aconfig"
     bug: "377383709"
     description: "Enables the new constructor that does not require partial custom audiences in the request."
+    is_exported: true
 }
 
 flag {
@@ -93,6 +97,7 @@ flag {
     bug: "303511619"
     # TODO(b/320156647): Add proper description below
     description: "Add AIDL and system APIs for AdServicesExtDataService"
+    is_exported: true
 }
 
 flag {
@@ -124,6 +129,7 @@ flag {
     namespace: "adservices"
     bug: "267712947"
     description: "Enabled negative filtering feature with signed contextual ads"
+    is_exported: true
 }
 
 flag {
@@ -131,6 +137,7 @@ flag {
     namespace: "adservices"
     bug: "323397060"
     description: "Enables the getAdSelectionDataId feature of the getAdSelectionData API"
+    is_exported: true
 }
 
 flag {
@@ -138,6 +145,7 @@ flag {
     namespace: "adservices"
     bug: "320786372"
     description: "Enables server auction request flags feature for custom audiences."
+    is_exported: true
 }
 
 flag {
@@ -145,6 +153,7 @@ flag {
     namespace: "adservices"
     bug: "323297322"
     description: "Enables Schedule Custom Audience Update API"
+    is_exported: true
 }
 
 flag {
@@ -152,6 +161,7 @@ flag {
     namespace: "adservices"
     bug: "323888604"
     description: "Enable multi cloud support for unified flow APIs "
+    is_exported: true
 }
 
 flag {
@@ -159,6 +169,7 @@ flag {
     namespace: "adservices"
     bug: "342332791"
     description: "Enable the seller configuration feature for the getAdSelectionData API"
+    is_exported: true
 }
 
 flag {
@@ -166,6 +177,7 @@ flag {
     namespace: "adservices"
     bug: "322635374"
     description: "Enables Get Adservices common states API."
+    is_exported: true
 }
 
 flag {
@@ -173,6 +185,7 @@ flag {
     namespace: "adservices"
     bug: "299946888"
     description: "Enables Protected Signals API"
+    is_exported: true
 }
 
 flag {
@@ -180,6 +193,7 @@ flag {
     namespace: "adservices"
     bug: "303727027"
     description: "Enables encrypted Topics feature for Topics API."
+    is_exported: true
 }
 
 ####################################################################################################

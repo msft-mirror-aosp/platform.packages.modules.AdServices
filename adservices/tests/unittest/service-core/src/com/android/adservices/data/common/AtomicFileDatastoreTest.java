@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.common;
 
+import static com.android.adservices.shared.testing.common.FileHelper.deleteFile;
+
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
@@ -23,13 +25,13 @@ import static org.junit.Assert.assertThrows;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-import java.io.IOException;
+import java.io.File;
 
+// TODO(b/372051957): rename to LegacyAtomicFileDatastoreFactoryTest
 public final class AtomicFileDatastoreTest extends AdServicesMockitoTestCase {
     private static final String FILENAME = "AtomicFileDatastoreTest.xml";
     private static final int DATASTORE_VERSION = 1;
@@ -38,23 +40,20 @@ public final class AtomicFileDatastoreTest extends AdServicesMockitoTestCase {
     private AtomicFileDatastore mDatastore;
 
     @Before
-    public void initializeDatastore() throws IOException {
+    public void initializeDatastore() throws Exception {
+        deleteFile(LegacyAtomicFileDatastoreFactory.getDataStoreFile(mContext, FILENAME));
+        File datastoreFile = deleteFile(mContext.getDataDir().getAbsolutePath(), FILENAME);
         mDatastore =
-                new AtomicFileDatastore(
+                LegacyAtomicFileDatastoreFactory.createAtomicFileDatastore(
                         mContext, FILENAME, DATASTORE_VERSION, mMockAdServicesErrorLogger);
         mDatastore.initialize();
-    }
-
-    @After
-    public void cleanupDatastore() {
-        mDatastore.tearDownForTesting();
     }
 
     @Test
     public void testGetVersionKey() {
         assertWithMessage("getVersionKey()")
                 .that(mDatastore.getVersionKey())
-                .isEqualTo(AtomicFileDatastore.VERSION_KEY);
+                .isEqualTo(LegacyAtomicFileDatastoreFactory.VERSION_KEY);
     }
 
     @Test
@@ -62,15 +61,15 @@ public final class AtomicFileDatastoreTest extends AdServicesMockitoTestCase {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        new AtomicFileDatastore(
-                                /* adServicesContext= */ null,
+                        LegacyAtomicFileDatastoreFactory.createAtomicFileDatastore(
+                                /* context= */ null,
                                 FILENAME,
                                 DATASTORE_VERSION,
                                 mMockAdServicesErrorLogger));
         assertThrows(
-                IllegalArgumentException.class,
+                NullPointerException.class,
                 () ->
-                        new AtomicFileDatastore(
+                        LegacyAtomicFileDatastoreFactory.createAtomicFileDatastore(
                                 mContext,
                                 /* filename= */ null,
                                 DATASTORE_VERSION,
@@ -78,7 +77,7 @@ public final class AtomicFileDatastoreTest extends AdServicesMockitoTestCase {
         assertThrows(
                 IllegalArgumentException.class,
                 () ->
-                        new AtomicFileDatastore(
+                        LegacyAtomicFileDatastoreFactory.createAtomicFileDatastore(
                                 mContext,
                                 /* filename= */ "",
                                 DATASTORE_VERSION,
@@ -86,7 +85,7 @@ public final class AtomicFileDatastoreTest extends AdServicesMockitoTestCase {
         assertThrows(
                 NullPointerException.class,
                 () ->
-                        new AtomicFileDatastore(
+                        LegacyAtomicFileDatastoreFactory.createAtomicFileDatastore(
                                 mContext,
                                 FILENAME,
                                 DATASTORE_VERSION,

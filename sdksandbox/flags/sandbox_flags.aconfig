@@ -6,6 +6,7 @@ flag {
     namespace: "sdk_sandbox"
     bug: "290326267"
     description: "This flag make the sandbox activity context based on its corresponding SDK package info instead of the sandbox App package info"
+    is_exported: true
 }
 
 flag {
@@ -13,6 +14,7 @@ flag {
     namespace: "sdk_sandbox"
     bug: "267760787"
     description: "Enables SDKs in the sandbox to know about specific changes in the client's importance"
+    is_exported: true
 }
 
 flag {
@@ -44,6 +46,7 @@ flag {
     namespace: "sdk_sandbox"
     bug: "315018061"
     description: "Enables the getSdkSandboxApplicationInfoForInstrumentation API for tests"
+    is_exported: true
 }
 
 flag {
@@ -51,6 +54,7 @@ flag {
     namespace: "sdk_sandbox"
     description: "Get the app uid for the input sdk sandbox uid"
     bug: "314270319"
+    is_exported: true
 }
 
 flag {

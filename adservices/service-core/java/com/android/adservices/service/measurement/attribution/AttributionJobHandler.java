@@ -594,8 +594,7 @@ class AttributionJobHandler {
                     new AggregatePayloadGenerator(mFlags)
                             .generateAttributionReport(source, trigger);
             if (!contributions.isPresent()) {
-                if (maybeAggregatableAttributionSource.isPresent()
-                        && maybeAggregatableAttributionTrigger.isPresent()) {
+                if (maybeAggregatableAttributionTrigger.isPresent()) {
                     mDebugReportApi.scheduleTriggerDebugReport(
                             source,
                             trigger,

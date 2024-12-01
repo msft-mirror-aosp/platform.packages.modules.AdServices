@@ -53,6 +53,7 @@ import static com.android.adservices.service.ui.constants.DebugMessages.SET_AD_S
 import static com.android.adservices.service.ui.constants.DebugMessages.UNAUTHORIZED_CALLER_MESSAGE;
 
 import android.adservices.adid.AdId;
+import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStates;
 import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesModuleState;
@@ -560,6 +561,8 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         boolean personalizedAdsApiDiff = false;
         boolean isRenotify = false;
         boolean isOptedInPersonalizedAdsApisUser = false;
+        boolean isVisibleNotificationType =
+                notificationType != AdServicesCommonManager.NOTIFICATION_NONE;
 
         for (AdServicesModuleState state : adServicesModuleStateList) {
             int curState = consentManager.getModuleState(state.getModule());
@@ -577,22 +580,16 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             }
         }
 
-        if (notificationType != NotificationType.NOTIFICATION_NONE) {
-            // enabling personalized ads APIs requires the full notification. Otherwise, show
-            // limited notification.
-            if (personalizedAdsApiDiff) {
-                // if opted-out of all personalization, then don't show notification
-                if (isOptedInPersonalizedAdsApisUser) {
-                    if (isRenotify) {
-                        // TODO(b/375464084): trigger re-notification
-                    } else {
-                        // TODO(b/375464084): trigger first time notification
-                    }
-                }
-            } else if (apiDiff) {
-                // show limited notification since no personalized APIs are enabled
-                // TODO(b/375464084): trigger non personalized ads api only notification
-            }
+        // Only need notification if APIs changed. Enabling personalized ads APIs requires the full
+        // notification. Otherwise, show limited notification. If user previously opted-out of all
+        // personalized APIs, then don't show notification.
+        if (apiDiff
+                && isVisibleNotificationType
+                && !(personalizedAdsApiDiff && isOptedInPersonalizedAdsApisUser)) {
+            boolean isOngoingNotification =
+                    notificationType == AdServicesCommonManager.NOTIFICATION_ONGOING;
+            ConsentNotificationJobService.scheduleNotificationV2(
+                    mContext, isRenotify, personalizedAdsApiDiff, isOngoingNotification);
         }
 
         consentManager.setModuleStates(adServicesModuleStateList);

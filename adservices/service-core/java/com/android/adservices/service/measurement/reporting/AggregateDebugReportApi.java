@@ -107,7 +107,7 @@ public class AggregateDebugReportApi {
                             .collect(Collectors.toList());
 
             if (contributions.isEmpty()) {
-                // Both Source and trigger have opted-in but the debug data didn't match
+                // Source have opted-in but the debug data didn't match
                 LoggerFactory.getMeasurementLogger()
                         .d("Debug report type data not opted-in for ADR");
                 measurementDao.insertAggregateReport(generateNullAggregateReport(source));
@@ -203,16 +203,13 @@ public class AggregateDebugReportApi {
             Trigger trigger,
             List<DebugReportApi.Type> types,
             IMeasurementDao measurementDao) {
-        if (!mFlags.getMeasurementEnableAggregateDebugReporting()
-                || source.getAggregateDebugReportingString() == null) {
+        if (!mFlags.getMeasurementEnableAggregateDebugReporting()) {
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "Aggregate debug reporting on source disabled; "
                                     + "flag=%s; "
-                                    + "source_aggregatable_debug_reporting available=%s;"
                                     + "trigger_aggregatable debug_reporting available=%s",
                             mFlags.getMeasurementEnableAggregateDebugReporting(),
-                            source.getAggregateDebugReportingString() != null,
                             trigger.getAggregateDebugReportingString() != null);
             return;
         }
@@ -449,7 +446,7 @@ public class AggregateDebugReportApi {
                 getTriggerOrDefaultCoordinatorOrigin(trigger.getAggregateDebugReportingObject());
         return new AggregateReport.Builder()
                 .setId(UUID.randomUUID().toString())
-                .setAttributionDestination(trigger.getAttributionDestination())
+                .setAttributionDestination(trigger.getAttributionDestinationBaseUri())
                 .setPublisher(trigger.getAttributionDestination())
                 .setScheduledReportTime(trigger.getTriggerTime())
                 .setEnrollmentId(trigger.getEnrollmentId())
@@ -474,6 +471,7 @@ public class AggregateDebugReportApi {
         return new AggregateReport.Builder()
                 .setId(UUID.randomUUID().toString())
                 .setPublisher(source.getPublisher())
+                // Source already has base destination URIs
                 .setAttributionDestination(getSourceDestinationToReport(source))
                 .setScheduledReportTime(source.getEventTime())
                 .setEnrollmentId(source.getEnrollmentId())
@@ -500,7 +498,7 @@ public class AggregateDebugReportApi {
         return new AggregateReport.Builder()
                 .setId(UUID.randomUUID().toString())
                 .setPublisher(source.getPublisher())
-                .setAttributionDestination(trigger.getAttributionDestination())
+                .setAttributionDestination(trigger.getAttributionDestinationBaseUri())
                 .setScheduledReportTime(trigger.getTriggerTime())
                 .setEnrollmentId(source.getEnrollmentId())
                 .setDebugCleartextPayload(
@@ -604,7 +602,7 @@ public class AggregateDebugReportApi {
             throws JSONException {
         return generateBaseNullReportBuilder()
                 .setRegistrationOrigin(trigger.getRegistrationOrigin())
-                .setAttributionDestination(trigger.getAttributionDestination())
+                .setAttributionDestination(trigger.getAttributionDestinationBaseUri())
                 .setScheduledReportTime(trigger.getTriggerTime())
                 .setTriggerId(trigger.getId())
                 .setAggregationCoordinatorOrigin(
@@ -618,6 +616,7 @@ public class AggregateDebugReportApi {
         return generateBaseNullReportBuilder()
                 .setPublisher(source.getPublisher())
                 .setRegistrationOrigin(source.getRegistrationOrigin())
+                // Source already has base destination URIs
                 .setAttributionDestination(getSourceDestinationToReport(source))
                 .setScheduledReportTime(source.getEventTime())
                 // We don't want null report to be counted as this source driven ADR
@@ -630,7 +629,7 @@ public class AggregateDebugReportApi {
     private AggregateReport generateNullAggregateReport(Trigger trigger) throws JSONException {
         return generateBaseNullReportBuilder()
                 .setRegistrationOrigin(trigger.getRegistrationOrigin())
-                .setAttributionDestination(trigger.getAttributionDestination())
+                .setAttributionDestination(trigger.getAttributionDestinationBaseUri())
                 .setScheduledReportTime(trigger.getTriggerTime())
                 .setTriggerId(trigger.getId())
                 .setAggregationCoordinatorOrigin(

@@ -31,6 +31,8 @@ import java.util.Map;
 public class AdSelectionConfigFixture {
     public static final AdTechIdentifier SELLER = AdTechIdentifier.fromString("test.com");
     public static final AdTechIdentifier SELLER_1 = AdTechIdentifier.fromString("test2.com");
+    public static final AdTechIdentifier COMPONENT_SELLER_1 =
+            AdTechIdentifier.fromString("componentSeller1.com");
 
     // Uri Constants
     public static final String DECISION_LOGIC_FRAGMENT = "/decisionFragment";

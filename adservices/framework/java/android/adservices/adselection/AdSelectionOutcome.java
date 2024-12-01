@@ -92,7 +92,6 @@ public class AdSelectionOutcome {
     /**
      * Returns the willing seller that won the auction.
      *
-     * @hide
      */
     @FlaggedApi(Flags.FLAG_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME)
     @NonNull

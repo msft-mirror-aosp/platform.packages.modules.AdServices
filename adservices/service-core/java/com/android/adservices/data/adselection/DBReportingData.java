@@ -60,6 +60,15 @@ public abstract class DBReportingData {
     @ColumnInfo(name = "seller_reporting_uri")
     public abstract Uri getSellerReportingUri();
 
+    /**
+     * The reporting uri associated with the component seller, this field will be null if there is
+     * no component seller.
+     */
+    @AutoValue.CopyAnnotations
+    @Nullable
+    @ColumnInfo(name = "component_seller_reporting_uri")
+    public abstract Uri getComponentSellerReportingUri();
+
     /** The reporting uri associated with auction winner/buyer. */
     @AutoValue.CopyAnnotations
     @Nullable
@@ -79,7 +88,10 @@ public abstract class DBReportingData {
      */
     @NonNull
     public static DBReportingData create(
-            long adSelectionId, @Nullable Uri sellerReportingUri, @Nullable Uri buyerReportingUri) {
+            long adSelectionId,
+            @Nullable Uri sellerReportingUri,
+            @Nullable Uri buyerReportingUri,
+            @Nullable Uri componentSellerReportingUri) {
         Objects.requireNonNull(sellerReportingUri);
         Objects.requireNonNull(buyerReportingUri);
 
@@ -87,6 +99,7 @@ public abstract class DBReportingData {
                 .setAdSelectionId(adSelectionId)
                 .setSellerReportingUri(sellerReportingUri)
                 .setBuyerReportingUri(buyerReportingUri)
+                .setComponentSellerReportingUri(componentSellerReportingUri)
                 .build();
     }
 
@@ -103,6 +116,10 @@ public abstract class DBReportingData {
         /** Sets buyer reporting uri. */
         public abstract DBReportingData.Builder setBuyerReportingUri(
                 @Nullable Uri buyerReportingUri);
+
+        /** Sets the component seller reporting uri. */
+        public abstract DBReportingData.Builder setComponentSellerReportingUri(
+                @Nullable Uri componentSellerReportingUri);
 
         /** Builds the {@link DBReportingData}. */
         public abstract DBReportingData build();

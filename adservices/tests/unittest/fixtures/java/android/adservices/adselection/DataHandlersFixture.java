@@ -67,6 +67,8 @@ public class DataHandlersFixture {
             CommonFixture.getUri(AdSelectionConfigFixture.BUYER, REPORTING_FRAGMENT);
     private static final Uri SELLER_REPORTING_URI_1 =
             CommonFixture.getUri(AdSelectionConfigFixture.SELLER, REPORTING_FRAGMENT);
+    private static final Uri COMPONENT_SELLER_REPORTING_URL_1 =
+            CommonFixture.getUri(AdSelectionConfigFixture.COMPONENT_SELLER_1, REPORTING_FRAGMENT);
     public static final Duration CUSTOM_AUDIENCE_EXPIRE_IN = Duration.ofDays(1);
     public static final Instant VALID_ACTIVATION_TIME =
             Instant.now().truncatedTo(ChronoUnit.MILLIS);
@@ -155,6 +157,12 @@ public class DataHandlersFixture {
                     .build();
     public static ReportingData REPORTING_DATA_WITH_URIS =
             getReportingData(BUYER_REPORTING_URI_1, SELLER_REPORTING_URI_1);
+
+    public static ReportingData REPORTING_DATA_WITH_COMPONENT_SELLER_URI =
+            getReportingData(
+                    BUYER_REPORTING_URI_1,
+                    SELLER_REPORTING_URI_1,
+                    COMPONENT_SELLER_REPORTING_URL_1);
 
     public static RegisteredAdInteraction REGISTERED_AD_INTERACTIONS_SELLER_1_CLICK =
             RegisteredAdInteraction.builder()
@@ -247,6 +255,15 @@ public class DataHandlersFixture {
         return ReportingData.builder()
                 .setBuyerWinReportingUri(buyerReportingUri)
                 .setSellerWinReportingUri(sellerReportingUri)
+                .build();
+    }
+
+    public static ReportingData getReportingData(
+            Uri buyerReportingUri, Uri sellerReportingUri, Uri componentSellerReportingUri) {
+        return ReportingData.builder()
+                .setBuyerWinReportingUri(buyerReportingUri)
+                .setSellerWinReportingUri(sellerReportingUri)
+                .setComponentSellerWinReportingUri(componentSellerReportingUri)
                 .build();
     }
 }
