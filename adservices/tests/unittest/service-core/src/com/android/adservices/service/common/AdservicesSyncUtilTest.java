@@ -33,11 +33,19 @@ import java.util.function.BiConsumer;
 public final class AdservicesSyncUtilTest extends AdServicesMockitoTestCase {
     private AdServicesSyncUtil mAdservicesSyncUtil;
     @Mock private BiConsumer<Context, Boolean> mConsumer;
+    @Mock private QuadConsumer<Context, Boolean, Boolean, Boolean> mConsumerV2;
 
     @Before
     public void setup() {
         mAdservicesSyncUtil = AdServicesSyncUtil.getInstance();
         doNothing().when(mConsumer).accept(any(Context.class), any(Boolean.class));
+        doNothing()
+                .when(mConsumerV2)
+                .accept(
+                        any(Context.class),
+                        any(Boolean.class),
+                        any(Boolean.class),
+                        any(Boolean.class));
     }
 
     @Test
@@ -45,5 +53,16 @@ public final class AdservicesSyncUtilTest extends AdServicesMockitoTestCase {
         mAdservicesSyncUtil.register(mConsumer);
         mAdservicesSyncUtil.execute(mMockContext, true);
         verify(mConsumer).accept(mMockContext, true);
+    }
+
+    @Test
+    public void testRegisterNotificationTriggerV2ConsumerAndExecute() {
+        mAdservicesSyncUtil.registerNotificationTriggerV2(mConsumerV2);
+        mAdservicesSyncUtil.executeNotificationTriggerV2(
+                mMockContext,
+                /* isRenotify= */ true,
+                /* isNewAdPersonalizationModuleEnabled= */ true,
+                /* isOngoingNotification= */ true);
+        verify(mConsumerV2).accept(mMockContext, true, true, true);
     }
 }

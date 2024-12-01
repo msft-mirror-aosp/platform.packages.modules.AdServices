@@ -33,6 +33,7 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.clients.signals.ProtectedSignalsClient;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.signals.UpdateSignalsRequest;
+import android.adservices.utils.DevContextUtils;
 import android.adservices.utils.MockWebServerRule;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
@@ -40,6 +41,7 @@ import android.net.Uri;
 
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
@@ -61,19 +63,22 @@ import java.util.concurrent.TimeUnit;
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @RequiresSdkLevelAtLeastT(reason = "Protected App Signals is enabled for T+")
 public final class GenerateInputForEncodingShellCommandTest extends AdServicesDebuggableTestCase {
-
     private static final String STATUS_FINISHED = "FINISHED";
     private static final int PAS_API_TIMEOUT_SEC = 10;
 
-    private ProtectedSignalsClient mProtectedSignalsClient;
+    @Rule(order = 11)
+    public final SupportedByConditionRule devOptionsEnabled =
+            DevContextUtils.createDevOptionsAvailableRule(mContext, LOGCAT_TAG_FLEDGE);
+
+    @Rule(order = 16)
+    public MockWebServerRule mMockWebServerRule =
+            MockWebServerRule.forHttps(
+                    mContext, "adservices_untrusted_test_server.p12", "adservices_test");
 
     private final AdServicesShellCommandHelper mShellCommandHelper =
             new AdServicesShellCommandHelper();
 
-    @Rule(order = 6)
-    public MockWebServerRule mMockWebServerRule =
-            MockWebServerRule.forHttps(
-                    mContext, "adservices_untrusted_test_server.p12", "adservices_test");
+    private ProtectedSignalsClient mProtectedSignalsClient;
 
     @Before
     public void setUp() throws Exception {

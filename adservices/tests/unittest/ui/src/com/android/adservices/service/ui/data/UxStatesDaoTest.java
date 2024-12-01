@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.ui.data;
 
+import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.when;
@@ -26,7 +28,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
-import com.android.modules.utils.testing.ExtendedMockitoRule;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -35,7 +36,7 @@ import org.mockito.Mock;
 import java.io.IOException;
 
 /** This test reads and writes to test files under the test app dir instead of using full mocks. */
-@ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
+@SpyStatic(FlagsFactory.class)
 public final class UxStatesDaoTest extends AdServicesExtendedMockitoTestCase {
     private UxStatesDao mUxStatesDao;
 

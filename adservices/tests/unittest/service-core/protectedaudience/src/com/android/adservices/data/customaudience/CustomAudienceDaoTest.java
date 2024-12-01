@@ -42,6 +42,9 @@ import static org.mockito.Mockito.times;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
+import android.adservices.common.ComponentAdData;
+import android.adservices.common.ComponentAdDataFixture;
+import android.adservices.common.DBComponentAdDataFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.PartialCustomAudience;
 import android.content.pm.ApplicationInfo;
@@ -3583,6 +3586,214 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
         assertEquals(
                 1,
                 mCustomAudienceDao.getNumberOfScheduleCAUpdatesByOwnerAndBuyer(OWNER_1, BUYER_1));
+    }
+
+    @Test
+    public void testEmptyComponentAds() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
+
+        assertThat(mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_1, BUYER_1, NAME_1))
+                .isEmpty();
+    }
+
+    @Test
+    public void testInsertComponentAdDataRetrievesComponentAdDataCorrectly() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
+
+        ComponentAdData componentAdData =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER_1, 1);
+
+        DBComponentAdData dbComponentAdData1 =
+                DBComponentAdDataFixture.getDBComponentAdData(
+                        componentAdData, OWNER_1, BUYER_1, NAME_1);
+
+        mCustomAudienceDao.insertComponentAdData(dbComponentAdData1);
+
+        List<DBComponentAdData> dbComponentAdDataList1 =
+                mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_1, BUYER_1, NAME_1);
+
+        assertEquals(1, dbComponentAdDataList1.size());
+        assertEquals(dbComponentAdData1, dbComponentAdDataList1.get(0));
+    }
+
+    @Test
+    public void testInsertComponentAdDataFiltersOnCorrectCA() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_2, DAILY_UPDATE_URI_2, false);
+
+        ComponentAdData componentAdDataForCa1 =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER_1, 1);
+        ComponentAdData componentAdDataForCa2 =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER_2, 1);
+
+        DBComponentAdData dbComponentAdDataForCa1 =
+                DBComponentAdDataFixture.getDBComponentAdData(
+                        componentAdDataForCa1, OWNER_1, BUYER_1, NAME_1);
+        DBComponentAdData dbComponentAdDataForCa2 =
+                DBComponentAdDataFixture.getDBComponentAdData(
+                        componentAdDataForCa2, OWNER_2, BUYER_2, NAME_2);
+
+        mCustomAudienceDao.insertComponentAdData(dbComponentAdDataForCa1);
+        mCustomAudienceDao.insertComponentAdData(dbComponentAdDataForCa2);
+
+        List<DBComponentAdData> dbComponentAdDataList1 =
+                mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_1, BUYER_1, NAME_1);
+
+        assertEquals(1, dbComponentAdDataList1.size());
+        assertEquals(dbComponentAdDataForCa1, dbComponentAdDataList1.get(0));
+
+        List<DBComponentAdData> dbComponentAdDataList2 =
+                mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_2, BUYER_2, NAME_2);
+
+        assertEquals(1, dbComponentAdDataList2.size());
+        assertEquals(dbComponentAdDataForCa2, dbComponentAdDataList2.get(0));
+    }
+
+    @Test
+    public void testComponentAdsAreReturnedInOrderOfInsertion() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
+
+        List<ComponentAdData> componentAdDataList =
+                ComponentAdDataFixture.getValidComponentAdsByBuyer(BUYER_1);
+
+        List<DBComponentAdData> expectedDBComponentAdDataList =
+                DBComponentAdDataFixture.getValidComponentAdsByBuyer(
+                        componentAdDataList, OWNER_1, BUYER_1, NAME_1);
+
+        mCustomAudienceDao.insertAndOverwriteComponentAds(
+                componentAdDataList, OWNER_1, BUYER_1, NAME_1);
+
+        List<DBComponentAdData> dbComponentAdDataList =
+                mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_1, BUYER_1, NAME_1);
+
+        // Assert order is preserved
+        assertThat(dbComponentAdDataList)
+                .containsExactlyElementsIn(expectedDBComponentAdDataList)
+                .inOrder();
+    }
+
+    @Test
+    public void testInsertAndOverwriteComponentAdsOverwritesExistingComponentAds() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
+
+        List<ComponentAdData> componentAdDataList =
+                ComponentAdDataFixture.getValidComponentAdsByBuyer(BUYER_1);
+
+        List<DBComponentAdData> expectedDBComponentAdDataList =
+                DBComponentAdDataFixture.getValidComponentAdsByBuyer(
+                        componentAdDataList, OWNER_1, BUYER_1, NAME_1);
+
+        // Split the list in two
+        List<ComponentAdData> componentAdDataList1 =
+                List.of(componentAdDataList.get(0), componentAdDataList.get(1));
+        List<ComponentAdData> componentAdDataList2 =
+                List.of(componentAdDataList.get(2), componentAdDataList.get(3));
+
+        // Insert the first half
+        mCustomAudienceDao.insertAndOverwriteComponentAds(
+                componentAdDataList1, OWNER_1, BUYER_1, NAME_1);
+
+        List<DBComponentAdData> dbComponentAdDataList1 =
+                mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_1, BUYER_1, NAME_1);
+
+        // Assert first half is returned
+        assertThat(dbComponentAdDataList1)
+                .containsExactly(
+                        expectedDBComponentAdDataList.get(0), expectedDBComponentAdDataList.get(1))
+                .inOrder();
+
+        // Insert the second half
+        mCustomAudienceDao.insertAndOverwriteComponentAds(
+                componentAdDataList2, OWNER_1, BUYER_1, NAME_1);
+
+        List<DBComponentAdData> dbComponentAdDataList2 =
+                mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_1, BUYER_1, NAME_1);
+
+        // Assert first half is overrwitten and second half is returned
+        assertThat(dbComponentAdDataList2)
+                .containsExactly(
+                        expectedDBComponentAdDataList.get(2), expectedDBComponentAdDataList.get(3))
+                .inOrder();
+    }
+
+    @Test
+    public void testComponentAds_ForeignKeyCascades() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, false);
+
+        ComponentAdData componentAdDataForExpiredCA =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER_2, 1);
+
+        DBComponentAdData dbComponentAdDataForExpiredCA =
+                DBComponentAdDataFixture.getDBComponentAdData(
+                        componentAdDataForExpiredCA, OWNER_2, BUYER_2, NAME_3);
+
+        mCustomAudienceDao.insertComponentAdData(dbComponentAdDataForExpiredCA);
+
+        assertThat(mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_2, BUYER_2, NAME_3))
+                .isNotEmpty();
+
+        // Delete expired CA, should result in deletion of component ads for this CA
+        assertEquals(1, mCustomAudienceDao.deleteAllExpiredCustomAudienceData(CURRENT_TIME));
+
+        assertThat(mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_2, BUYER_2, NAME_3))
+                .isEmpty();
+    }
+
+    @Test
+    public void testComponentAds_ForeignKeyCascadesDoesNotDeleteNonExpiredComponentAds() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_EXPIRED, DAILY_UPDATE_URI_2, false);
+
+        ComponentAdData componentAdDataForCa1 =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER_1, 1);
+        ComponentAdData componentAdDataForExpiredCA =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER_2, 1);
+
+        DBComponentAdData dbComponentAdDataForCa1 =
+                DBComponentAdDataFixture.getDBComponentAdData(
+                        componentAdDataForCa1, OWNER_1, BUYER_1, NAME_1);
+        DBComponentAdData dbComponentAdDataForExpiredCA =
+                DBComponentAdDataFixture.getDBComponentAdData(
+                        componentAdDataForExpiredCA, OWNER_2, BUYER_2, NAME_3);
+
+        mCustomAudienceDao.insertComponentAdData(dbComponentAdDataForCa1);
+        mCustomAudienceDao.insertComponentAdData(dbComponentAdDataForExpiredCA);
+
+        assertThat(mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_1, BUYER_1, NAME_1))
+                .isNotEmpty();
+        assertThat(mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_2, BUYER_2, NAME_3))
+                .isNotEmpty();
+
+        // Delete expired CA, should result in deletion of component ads for this CA
+        assertEquals(1, mCustomAudienceDao.deleteAllExpiredCustomAudienceData(CURRENT_TIME));
+
+        assertThat(mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_1, BUYER_1, NAME_1))
+                .isNotEmpty();
+        assertThat(mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(OWNER_2, BUYER_2, NAME_3))
+                .isEmpty();
     }
 
     private void assertUpdateEqualsExceptId(

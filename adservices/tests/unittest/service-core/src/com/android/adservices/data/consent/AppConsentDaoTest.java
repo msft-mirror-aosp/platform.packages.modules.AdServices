@@ -17,6 +17,7 @@
 package com.android.adservices.data.consent;
 
 import static com.android.adservices.data.consent.AppConsentDao.DATASTORE_KEY_SEPARATOR;
+import static com.android.adservices.shared.testing.common.FileHelper.deleteFile;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -42,11 +43,11 @@ import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,19 +64,16 @@ public final class AppConsentDaoTest extends AdServicesExtendedMockitoTestCase {
 
     @Before
     public void setup() throws IOException {
+        File datastoreFile =
+                new File(mContext.getDataDir(), AppConsentDaoFixture.TEST_DATASTORE_NAME);
+        deleteFile(datastoreFile);
         mDatastoreSpy =
                 spy(
                         new AtomicFileDatastore(
-                                mContext,
-                                AppConsentDaoFixture.TEST_DATASTORE_NAME,
-                                1,
+                                datastoreFile,
+                                /* datastoreVersion= */ 1,
                                 mMockAdServicesErrorLogger));
         mAppConsentDao = new AppConsentDao(mDatastoreSpy, mContext.getPackageManager());
-    }
-
-    @After
-    public void teardown() throws IOException {
-        mDatastoreSpy.tearDownForTesting();
     }
 
     @Test

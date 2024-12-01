@@ -557,7 +557,9 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         AuctionResultValidator auctionResultValidator =
                 new AuctionResultValidator(
                         mFledgeAuthorizationFilter,
-                        BinderFlagReader.readFlag(mFlags::getDisableFledgeEnrollmentCheck));
+                        BinderFlagReader.readFlag(mFlags::getDisableFledgeEnrollmentCheck),
+                        BinderFlagReader.readFlag(
+                                mFlags::getEnableWinningSellerIdInAdSelectionOutcome));
         mLightweightExecutor.execute(
                 () -> {
                     PersistAdSelectionResultRunner runner =

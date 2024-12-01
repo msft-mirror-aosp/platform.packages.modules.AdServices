@@ -1014,6 +1014,14 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                                 AdServicesModuleState.MODULE_STATE_DISABLED)
                         .setNotificationType(NotificationType.NOTIFICATION_ONGOING)
                         .build();
+        doNothing()
+                .when(
+                        () ->
+                                ConsentNotificationJobService.scheduleNotificationV2(
+                                        any(Context.class),
+                                        anyBoolean(),
+                                        anyBoolean(),
+                                        anyBoolean()));
         mCommonService.requestAdServicesModuleOverrides(
                 params, NotificationType.NOTIFICATION_ONGOING, callback);
 
