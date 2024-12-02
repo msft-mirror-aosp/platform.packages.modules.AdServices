@@ -416,7 +416,8 @@ public final class CustomAudience implements Parcelable {
                 && mAds.equals(that.mAds)
                 && mComponentAds.equals(that.mComponentAds)
                 && mAuctionServerRequestFlags == that.mAuctionServerRequestFlags
-                && Double.compare(mPriority, that.mPriority) == 0;
+                && Double.compare(mPriority, that.mPriority) == 0
+                && mComponentAds.equals(that.mComponentAds);
     }
 
     /** Returns the hash of the {@link CustomAudience} object's data. */
