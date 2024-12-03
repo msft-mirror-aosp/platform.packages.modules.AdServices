@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.signals;
 
-
 import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__FLEDGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
@@ -65,6 +64,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
@@ -149,7 +149,12 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                         Clock.systemUTC()),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
                 ConsentManager.getInstance(),
-                DevContextFilter.create(context),
+                DevContextFilter.create(
+                        context,
+                        BinderFlagReader.readFlag(
+                                () ->
+                                        DebugFlags.getInstance()
+                                                .getDeveloperSessionFeatureEnabled())),
                 AdServicesExecutors.getBackgroundExecutor(),
                 AdServicesLoggerImpl.getInstance(),
                 FlagsFactory.getFlags(),
@@ -238,8 +243,10 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         sLogger.v("Entering updateSignals");
 
         final int apiName = AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
-        String callerPackageName = updateSignalsInput == null ?
-                EMPTY_PACKAGE_NAME : updateSignalsInput.getCallerPackageName();
+        String callerPackageName =
+                updateSignalsInput == null
+                        ? EMPTY_PACKAGE_NAME
+                        : updateSignalsInput.getCallerPackageName();
 
         try {
             Objects.requireNonNull(updateSignalsInput);
@@ -258,7 +265,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
             mUpdateSignalsProcessReportedLogger.setAdservicesApiStatusCode(
                     AdServicesStatusUtils.STATUS_INVALID_ARGUMENT);
             // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
-            AdsRelevanceStatusUtils.logCelInsideBinderThread(exception,
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    exception,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_SERVICE_IMPL_NULL_ARGUMENT,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
             // Rethrow because we want to fail fast
@@ -375,9 +383,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                 // the service filter
                 // TODO (b/327187357): Move per-API/per-app consent into the filter
                 if (mConsentManager.isPasFledgeConsentGiven()) {
-                    if (!mConsentManager
-                            .isFledgeConsentRevokedForAppAfterSettingFledgeUse(
-                                    input.getCallerPackageName())) {
+                    if (!mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
+                            input.getCallerPackageName())) {
                         sLogger.v("Orchestrating signal update");
                         mUpdateSignalsOrchestrator
                                 .orchestrateUpdate(
@@ -469,7 +476,8 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
             updateSignalsProcessReportedLogger.setAdservicesApiStatusCode(
                     AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
             // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
-            AdsRelevanceStatusUtils.logCelInsideBinderThread(illegalStateException,
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    illegalStateException,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_GET_CALLING_UID_ILLEGAL_STATE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
             throw illegalStateException;
