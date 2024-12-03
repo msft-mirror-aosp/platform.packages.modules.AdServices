@@ -16,25 +16,23 @@
 
 package android.adservices.common;
 
-import static android.adservices.common.AdServicesModuleState.MODULE_STATE_UNKNOWN;
-import static android.adservices.common.AdServicesModuleState.ModuleStateCode;
-import static android.adservices.common.Module.ModuleCode;
-import static android.adservices.common.NotificationType.NotificationTypeCode;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_UNKNOWN;
+import static android.adservices.common.AdServicesCommonManager.Module;
+import static android.adservices.common.AdServicesCommonManager.ModuleState;
+import static android.adservices.common.AdServicesCommonManager.NotificationType;
+import static android.adservices.common.AdServicesCommonManager.validateModule;
+import static android.adservices.common.AdServicesCommonManager.validateModuleState;
 
 import android.annotation.FlaggedApi;
 import android.annotation.NonNull;
 import android.annotation.SystemApi;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.SparseIntArray;
 
 import com.android.adservices.flags.Flags;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  * The request sent from from system applications to control the module states with Adservices.
@@ -44,19 +42,21 @@ import java.util.Optional;
 @SystemApi
 @FlaggedApi(Flags.FLAG_ADSERVICES_ENABLE_PER_MODULE_OVERRIDES_API)
 public final class UpdateAdServicesModuleStatesParams implements Parcelable {
-    private final List<AdServicesModuleState> mAdServicesModuleStateList;
-    @NotificationTypeCode private final int mNotificationType;
+    private final SparseIntArray mAdServicesModuleStates;
+    @NotificationType private final int mNotificationType;
 
     private UpdateAdServicesModuleStatesParams(
-            List<AdServicesModuleState> adServicesModuleStateList,
-            @NotificationTypeCode int notificationType) {
-        mAdServicesModuleStateList = Objects.requireNonNull(adServicesModuleStateList);
+            SparseIntArray adServicesModuleStates, @NotificationType int notificationType) {
+        mAdServicesModuleStates = Objects.requireNonNull(adServicesModuleStates);
         mNotificationType = notificationType;
     }
 
     private UpdateAdServicesModuleStatesParams(Parcel in) {
-        mAdServicesModuleStateList = new ArrayList<>();
-        in.readTypedList(mAdServicesModuleStateList, AdServicesModuleState.CREATOR);
+        int moduleStatesSize = in.readInt();
+        mAdServicesModuleStates = new SparseIntArray(moduleStatesSize);
+        for (int i = 0; i < moduleStatesSize; i++) {
+            mAdServicesModuleStates.put(in.readInt(), in.readInt());
+        }
         mNotificationType = in.readInt();
     }
 
@@ -85,18 +85,19 @@ public final class UpdateAdServicesModuleStatesParams implements Parcelable {
     public void writeToParcel(@NonNull Parcel out, int flags) {
         Objects.requireNonNull(out);
 
-        out.writeTypedList(mAdServicesModuleStateList);
+        int size = mAdServicesModuleStates.size();
+        out.writeInt(size);
+        for (int i = 0; i < size; i++) {
+            out.writeInt(mAdServicesModuleStates.keyAt(i));
+            out.writeInt(mAdServicesModuleStates.valueAt(i));
+        }
         out.writeInt(mNotificationType);
     }
 
     /** Gets the last set AdServices module state value for a module. */
-    @ModuleStateCode
-    public int getModuleState(@ModuleCode int module) {
-        Optional<AdServicesModuleState> moduleState =
-                mAdServicesModuleStateList.stream()
-                        .filter(element -> element.getModule() == module)
-                        .reduce((first, second) -> second);
-        return moduleState.map(AdServicesModuleState::getModuleState).orElse(MODULE_STATE_UNKNOWN);
+    @ModuleState
+    public int getModuleState(@Module int module) {
+        return mAdServicesModuleStates.get(module, MODULE_STATE_UNKNOWN);
     }
 
     /**
@@ -105,17 +106,12 @@ public final class UpdateAdServicesModuleStatesParams implements Parcelable {
      *
      * @hide
      */
-    @NonNull
-    public Map<Integer, Integer> getModuleStateMap() {
-        Map<Integer, Integer> moduleStatemap = new HashMap<>(mAdServicesModuleStateList.size());
-        mAdServicesModuleStateList.forEach(
-                moduleState ->
-                        moduleStatemap.put(moduleState.getModule(), moduleState.getModuleState()));
-        return moduleStatemap;
+    public SparseIntArray getModuleStates() {
+        return mAdServicesModuleStates;
     }
 
     /** Returns the Notification type associated with this result. */
-    @NotificationTypeCode
+    @NotificationType
     public int getNotificationType() {
         return mNotificationType;
     }
@@ -123,8 +119,8 @@ public final class UpdateAdServicesModuleStatesParams implements Parcelable {
     @Override
     public String toString() {
         return "UpdateAdIdRequest{"
-                + "mAdServicesModuleStateList="
-                + mAdServicesModuleStateList
+                + "mAdServicesModuleStates="
+                + mAdServicesModuleStates
                 + ", mNotificationType="
                 + mNotificationType
                 + '}';
@@ -140,19 +136,19 @@ public final class UpdateAdServicesModuleStatesParams implements Parcelable {
             return false;
         }
 
-        return Objects.equals(mAdServicesModuleStateList, that.mAdServicesModuleStateList)
+        return (mAdServicesModuleStates == that.mAdServicesModuleStates)
                 && (mNotificationType == that.mNotificationType);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mAdServicesModuleStateList, mNotificationType);
+        return Objects.hash(mAdServicesModuleStates, mNotificationType);
     }
 
     /** Builder for {@link UpdateAdServicesModuleStatesParams} objects. */
     public static final class Builder {
-        private final List<AdServicesModuleState> mAdServicesModuleStateList = new ArrayList<>();
-        @NotificationTypeCode private int mNotificationType;
+        private final SparseIntArray mAdServicesModuleStateList = new SparseIntArray();
+        @NotificationType private int mNotificationType;
 
         public Builder() {}
 
@@ -161,14 +157,15 @@ public final class UpdateAdServicesModuleStatesParams implements Parcelable {
          * given module was set before.
          */
         @NonNull
-        public Builder setModuleState(@ModuleCode int module, @ModuleStateCode int moduleState) {
-            this.mAdServicesModuleStateList.add(new AdServicesModuleState(module, moduleState));
+        public Builder setModuleState(@Module int module, @ModuleState int moduleState) {
+            this.mAdServicesModuleStateList.put(
+                    validateModule(module), validateModuleState(moduleState));
             return this;
         }
 
         /** Sets the notification type. */
         @NonNull
-        public Builder setNotificationType(@NotificationTypeCode int notificationType) {
+        public Builder setNotificationType(@NotificationType int notificationType) {
             this.mNotificationType = notificationType;
             return this;
         }
