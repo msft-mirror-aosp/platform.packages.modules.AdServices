@@ -234,7 +234,8 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mSpyContext,
                         AdServicesExecutors.getBackgroundExecutor(),
                         /* isCompletionBroadcastEnabled= */ false,
-                        mForcedEncoder);
+                        mForcedEncoder,
+                        false);
         mSignalEvictionController = new SignalEvictionController(ImmutableList.of(), 0, 0);
         mUpdateProcessingOrchestrator =
                 new UpdateProcessingOrchestrator(

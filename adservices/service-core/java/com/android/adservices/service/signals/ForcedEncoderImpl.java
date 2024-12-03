@@ -31,7 +31,6 @@ import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FluentFuture;
-import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
@@ -146,10 +145,11 @@ public class ForcedEncoderImpl implements ForcedEncoder {
      * @return a {@link FluentFuture} that completes when the encoding and encoder updates are
      *     complete. The future's result is {@code null}.
      */
-    public FluentFuture<Void> forceEncodingAndUpdateEncoderForBuyer(AdTechIdentifier buyer) {
+    public FluentFuture<Boolean> forceEncodingAndUpdateEncoderForBuyer(AdTechIdentifier buyer) {
         sLogger.v("Forced encoding enabled: running forced encoder for %s", buyer);
 
-        FluentFuture<Void> forcedEncodingfuture = FluentFuture.from(Futures.immediateVoidFuture());
+        FluentFuture<Boolean> forcedEncodingfuture =
+                FluentFuture.from(Futures.immediateFuture(false)); // Default to false
         if (shouldAttemptForcedEncodingForBuyer(buyer)) {
             sLogger.v("Can attempt forced encoding for buyer %s", buyer);
 
@@ -158,23 +158,11 @@ public class ForcedEncoderImpl implements ForcedEncoder {
             forcedEncodingfuture =
                     forcedEncodingfuture.transformAsync(
                             ignored ->
-                                    mEncodingJobWorker.encodeProtectedSignals(
-                                            PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL),
+                                    mEncodingJobWorker
+                                            .encodeProtectedSignals(
+                                                    PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL)
+                                            .transform(unused -> true, mExecutor),
                             mExecutor);
-
-            forcedEncodingfuture.addCallback(
-                    new FutureCallback<Void>() {
-                        @Override
-                        public void onSuccess(Void result) {
-                            sLogger.v("Forced encoding completed successfully.");
-                        }
-
-                        @Override
-                        public void onFailure(Throwable t) {
-                            sLogger.d(t, "Forced encoding failed.");
-                        }
-                    },
-                    mExecutor);
         }
 
         return forcedEncodingfuture;
