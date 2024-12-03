@@ -668,7 +668,9 @@ public final class MeasurementImplTest extends AdServicesExtendedMockitoTestCase
                         () ->
                                 MeasurementRollbackCompatManager.getInstance(
                                         any(), eq(AdServicesManager.MEASUREMENT_DELETION)));
-
+        doReturn(Optional.of(List.of(DEFAULT_URI)))
+                .when(mDatastoreManager)
+                .runInTransactionWithResult(any());
         doReturn(true).when(mMeasurementDataDeleter).deleteAppUninstalledData(any(), anyLong());
 
         MeasurementImpl measurement = createMeasurementImpl();
