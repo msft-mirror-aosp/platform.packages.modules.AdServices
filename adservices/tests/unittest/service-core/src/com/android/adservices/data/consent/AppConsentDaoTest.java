@@ -38,9 +38,9 @@ import androidx.annotation.NonNull;
 import androidx.test.core.content.pm.ApplicationInfoBuilder;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
@@ -72,6 +72,7 @@ public final class AppConsentDaoTest extends AdServicesExtendedMockitoTestCase {
                         new AtomicFileDatastore(
                                 datastoreFile,
                                 /* datastoreVersion= */ 1,
+                                /* versionKey= */ "Songs in the Key of Version",
                                 mMockAdServicesErrorLogger));
         mAppConsentDao = new AppConsentDao(mDatastoreSpy, mContext.getPackageManager());
     }

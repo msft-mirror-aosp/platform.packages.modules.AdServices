@@ -34,8 +34,7 @@ import java.io.File;
  *     features for storage.
  */
 @Deprecated
-public final class AtomicFileDatastore
-        extends com.android.adservices.shared.storage.AtomicFileDatastore {
+final class AtomicFileDatastore extends com.android.adservices.shared.storage.AtomicFileDatastore {
 
     private static final String VERSION_KEY = LegacyAtomicFileDatastoreFactory.VERSION_KEY;
 
