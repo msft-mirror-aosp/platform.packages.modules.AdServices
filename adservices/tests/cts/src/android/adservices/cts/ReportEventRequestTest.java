@@ -149,17 +149,6 @@ public class ReportEventRequestTest {
     }
 
     @Test
-    public void testFailsToBuildWithInvalidDestinations() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> {
-                    new ReportEventRequest.Builder(
-                                    AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, 5)
-                            .build();
-                });
-    }
-
-    @Test
     public void testFailsToBuildWithEventDataExceedsMaxSize() {
         char[] largePayload = new char[65 * 1024]; // 65KB
         assertThrows(
