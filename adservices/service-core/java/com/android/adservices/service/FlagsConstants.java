@@ -1198,6 +1198,8 @@ public final class FlagsConstants {
             "ConfigDelivery__enable_enrollment_config_v3_db";
     public static final String KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT =
             "ConfigDelivery__use_configs_manager_to_query_enrollment";
+    public static final String KEY_CONFIG_DELIVERY__MDD_MANIFEST_URLS =
+            "ConfigDelivery__mdd_manifest_urls";
 
     // New Feature Flags
     public static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED =
