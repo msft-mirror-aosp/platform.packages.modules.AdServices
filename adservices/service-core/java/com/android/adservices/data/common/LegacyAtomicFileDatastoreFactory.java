@@ -20,6 +20,7 @@ import android.content.Context;
 import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 
@@ -53,7 +54,11 @@ public final class LegacyAtomicFileDatastoreFactory {
             String filename,
             int datastoreVersion,
             AdServicesErrorLogger adServicesErrorLogger) {
-        return new AtomicFileDatastore(context, filename, datastoreVersion, adServicesErrorLogger);
+        return new AtomicFileDatastore(
+                getDataStoreFile(context, filename),
+                datastoreVersion,
+                VERSION_KEY,
+                adServicesErrorLogger);
     }
 
     @VisibleForTesting

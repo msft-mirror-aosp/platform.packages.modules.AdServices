@@ -29,15 +29,16 @@ import android.adservices.common.CommonFixture;
 import android.content.Context;
 import android.net.Uri;
 
-import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.signals.DBEncoderEndpoint;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.signals.ForcedEncoder;
 import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.util.concurrent.FluentFuture;
 import com.google.common.util.concurrent.Futures;
+import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -56,8 +57,8 @@ public class UpdateEncoderEventHandlerTest {
     @Mock private EncoderEndpointsDao mEncoderEndpointsDaoMock;
 
     @Mock private EncoderLogicHandler mEncoderLogicHandlerMock;
-    @Mock private Context mMockContext;
-
+    @Mock private Context mContextMock;
+    @Mock private ForcedEncoder mForcedEncoderMock;
     @Captor private ArgumentCaptor<DBEncoderEndpoint> mEndpointCaptor;
 
     private UpdateEncoderEventHandler mHandler;
@@ -71,9 +72,10 @@ public class UpdateEncoderEventHandlerTest {
                 new UpdateEncoderEventHandler(
                         mEncoderEndpointsDaoMock,
                         mEncoderLogicHandlerMock,
-                        mMockContext,
-                        AdServicesExecutors.getBackgroundExecutor(),
-                        false);
+                        mContextMock,
+                        MoreExecutors.newDirectExecutorService(),
+                        false,
+                        mForcedEncoderMock);
     }
 
     @Test
@@ -84,7 +86,8 @@ public class UpdateEncoderEventHandlerTest {
                 () -> {
                     mHandler.handle(buyer, null, DEV_CONTEXT);
                 });
-        verifyZeroInteractions(mEncoderEndpointsDaoMock, mEncoderLogicHandlerMock);
+        verifyZeroInteractions(
+                mEncoderEndpointsDaoMock, mEncoderLogicHandlerMock, mForcedEncoderMock);
     }
 
     @Test
@@ -95,6 +98,8 @@ public class UpdateEncoderEventHandlerTest {
         when(mEncoderLogicHandlerMock.downloadAndUpdate(
                         buyer, DevContext.createForDevOptionsDisabled()))
                 .thenReturn(FluentFuture.from(Futures.immediateFuture(true)));
+        when(mForcedEncoderMock.forceEncodingAndUpdateEncoderForBuyer(buyer))
+                .thenReturn(FluentFuture.from(Futures.immediateVoidFuture()));
         mHandler.handle(
                 buyer,
                 UpdateEncoderEvent.builder()
@@ -105,6 +110,7 @@ public class UpdateEncoderEventHandlerTest {
         verify(mEncoderEndpointsDaoMock).registerEndpoint(mEndpointCaptor.capture());
         verify(mEncoderLogicHandlerMock)
                 .downloadAndUpdate(buyer, DevContext.createForDevOptionsDisabled());
+        verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(buyer);
         assertEquals(uri, mEndpointCaptor.getValue().getDownloadUri());
         assertEquals(buyer, mEndpointCaptor.getValue().getBuyer());
     }
@@ -120,6 +126,8 @@ public class UpdateEncoderEventHandlerTest {
                                 .setCreationTime(Instant.now())
                                 .setBuyer(buyer)
                                 .build());
+        when(mForcedEncoderMock.forceEncodingAndUpdateEncoderForBuyer(buyer))
+                .thenReturn(FluentFuture.from(Futures.immediateVoidFuture()));
         mHandler.handle(
                 buyer,
                 UpdateEncoderEvent.builder()
@@ -128,6 +136,7 @@ public class UpdateEncoderEventHandlerTest {
                         .build(),
                 DEV_CONTEXT);
         verify(mEncoderEndpointsDaoMock).registerEndpoint(mEndpointCaptor.capture());
+        verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(buyer);
         assertEquals(uri, mEndpointCaptor.getValue().getDownloadUri());
         assertEquals(buyer, mEndpointCaptor.getValue().getBuyer());
         verifyZeroInteractions(mEncoderLogicHandlerMock);
@@ -146,6 +155,7 @@ public class UpdateEncoderEventHandlerTest {
                                     .build(),
                             DEV_CONTEXT);
                 });
-        verifyZeroInteractions(mEncoderEndpointsDaoMock, mEncoderLogicHandlerMock);
+        verifyZeroInteractions(
+                mEncoderEndpointsDaoMock, mEncoderLogicHandlerMock, mForcedEncoderMock);
     }
 }
