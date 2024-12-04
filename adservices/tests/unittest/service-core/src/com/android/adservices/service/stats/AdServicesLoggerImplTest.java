@@ -945,6 +945,8 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setSignalEncodingSuccesses(5)
                         .setSignalEncodingFailures(3)
                         .setSignalEncodingSkips(2)
+                        .setEncodingSourceType(
+                                AdsRelevanceStatusUtils.PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL)
                         .build();
         mAdservicesLogger.logEncodingJobRunStats(stats);
         verify(mStatsdLoggerMock).logEncodingJobRunStats(eq(stats));
