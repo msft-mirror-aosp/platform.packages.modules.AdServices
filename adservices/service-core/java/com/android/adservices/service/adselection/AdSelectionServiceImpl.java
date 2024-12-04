@@ -306,7 +306,12 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.create(context, FlagsFactory.getFlags())),
-                DevContextFilter.create(context),
+                DevContextFilter.create(
+                        context,
+                        BinderFlagReader.readFlag(
+                                () ->
+                                        DebugFlags.getInstance()
+                                                .getDeveloperSessionFeatureEnabled())),
                 AdServicesExecutors.getLightWeightExecutor(),
                 AdServicesExecutors.getBackgroundExecutor(),
                 AdServicesExecutors.getScheduler(),
@@ -420,7 +425,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName,
                     inputParams.getCallerPackageName(),
                     STATUS_KILLSWITCH_ENABLED,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
             AdsRelevanceStatusUtils.logCelInsideBinderThread(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_AUCTION_SERVER_API_NOT_AVAILABLE,
@@ -438,9 +443,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName,
                     inputParams.getCallerPackageName(),
                     STATUS_INVALID_ARGUMENT,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
-            AdsRelevanceStatusUtils.logCelInsideBinderThread(e,
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
             // Rethrow because we want to fail fast
@@ -512,9 +518,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName,
                     inputParams.getCallerPackageName(),
                     STATUS_INVALID_ARGUMENT,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             // TODO(b/376542959): replace this temporary solution for CEL inside Binder thread.
-            AdsRelevanceStatusUtils.logCelInsideBinderThread(e,
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             // Rethrow because we want to fail fast
@@ -844,7 +851,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName,
                     inputParams.getCallerPackageName(),
                     STATUS_INVALID_ARGUMENT,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             // Rethrow because we want to fail fast
             throw e;
         }
@@ -893,7 +900,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -973,7 +980,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -1032,7 +1039,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -1066,7 +1073,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -1133,7 +1140,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -1145,7 +1152,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName,
                     devContext.getCallingAppPackageName(),
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1192,7 +1199,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiNameLoggingId,
                     callerAppPackageName,
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             logGetCallingUidCEL(apiNameLoggingId);
             throw illegalStateException;
         }
@@ -1220,7 +1227,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -1232,7 +1239,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName,
                     devContext.getCallingAppPackageName(),
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1273,7 +1280,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -1285,7 +1292,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName,
                     devContext.getCallingAppPackageName(),
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1330,7 +1337,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -1342,7 +1349,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName,
                     devContext.getCallingAppPackageName(),
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1384,7 +1391,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -1396,7 +1403,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName,
                     devContext.getCallingAppPackageName(),
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1436,7 +1443,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -1448,7 +1455,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName,
                     devContext.getCallingAppPackageName(),
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1489,7 +1496,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -1501,7 +1508,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName,
                     devContext.getCallingAppPackageName(),
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1517,7 +1524,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             status = STATUS_INTERNAL_ERROR;
         } finally {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, devContext.getCallingAppPackageName(), status, /*latencyMs=*/ 0);
+                    apiName, devContext.getCallingAppPackageName(), status, /* latencyMs= */ 0);
         }
     }
 
@@ -1532,7 +1539,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -1544,7 +1551,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName,
                     devContext.getCallingAppPackageName(),
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1560,7 +1567,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             status = STATUS_INTERNAL_ERROR;
         } finally {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, devContext.getCallingAppPackageName(), status, /*latencyMs=*/ 0);
+                    apiName, devContext.getCallingAppPackageName(), status, /* latencyMs= */ 0);
         }
     }
 
@@ -1572,7 +1579,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -1584,7 +1591,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                     apiName,
                     devContext.getCallingAppPackageName(),
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -1600,7 +1607,7 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             status = STATUS_INTERNAL_ERROR;
         } finally {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, devContext.getCallingAppPackageName(), status, /*latencyMs=*/ 0);
+                    apiName, devContext.getCallingAppPackageName(), status, /* latencyMs= */ 0);
         }
     }
 
