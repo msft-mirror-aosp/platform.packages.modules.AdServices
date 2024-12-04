@@ -94,6 +94,7 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
     @Mock private UpdateEncoderEventHandler mUpdateEncoderEventHandlerMock;
     @Mock private SignalEvictionController mSignalEvictionControllerMock;
     @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
+    @Mock private ForcedEncoder mForcedEncoderMock;
     private UpdateSignalsApiCalledStats.Builder mUpdateSignalsApiCalledStats;
     @Captor ArgumentCaptor<List<DBProtectedSignal>> mInsertCaptor;
     @Captor ArgumentCaptor<List<DBProtectedSignal>> mRemoveCaptor;
@@ -108,7 +109,8 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                         mProtectedSignalsDaoMock,
                         mUpdateProcessorSelectorMock,
                         mUpdateEncoderEventHandlerMock,
-                        mSignalEvictionControllerMock);
+                        mSignalEvictionControllerMock,
+                        mForcedEncoderMock);
         mUpdateSignalsApiCalledStats = UpdateSignalsApiCalledStats.builder();
     }
 
@@ -124,9 +126,6 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                 mUpdateSignalsApiCalledStats,
                 mUpdateSignalsProcessReportedLoggerMock);
         verify(mProtectedSignalsDaoMock).getSignalsByBuyer(eq(ADTECH));
-        verify(mProtectedSignalsDaoMock)
-                .insertAndDelete(ADTECH, NOW, Collections.emptyList(), Collections.emptyList());
-        verifyZeroInteractions(mUpdateProcessorSelectorMock);
         verify(mSignalEvictionControllerMock)
                 .evict(
                         eq(ADTECH),
@@ -134,6 +133,10 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                         mUpdateOutputArgumentCaptor.capture(),
                         any(UpdateSignalsProcessReportedLogger.class));
         assertUpdateOutputEquals(new UpdateOutput(), mUpdateOutputArgumentCaptor.getValue());
+        verifyZeroInteractions(mUpdateProcessorSelectorMock, mUpdateEncoderEventHandlerMock);
+        verify(mProtectedSignalsDaoMock)
+                .insertAndDelete(ADTECH, NOW, Collections.emptyList(), Collections.emptyList());
+        verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(ADTECH);
     }
 
     @Test
@@ -174,7 +177,7 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                                         mUpdateSignalsProcessReportedLoggerMock));
         assertEquals(exception, t.getCause());
         verify(mProtectedSignalsDaoMock).getSignalsByBuyer(ADTECH);
-        verifyZeroInteractions(mSignalEvictionControllerMock);
+        verifyZeroInteractions(mSignalEvictionControllerMock, mForcedEncoderMock);
         verifyNoMoreInteractions(mProtectedSignalsDaoMock);
         assertEquals(
                 JSON_PROCESSING_STATUS_SYNTACTIC_ERROR,
@@ -205,9 +208,6 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                 mUpdateSignalsApiCalledStats,
                 mUpdateSignalsProcessReportedLoggerMock);
 
-        List<DBProtectedSignal> expected = List.of(createSignal(KEY_1, VALUE));
-        verify(mProtectedSignalsDaoMock)
-                .insertAndDelete(ADTECH, NOW, expected, Collections.emptyList());
         verify(mUpdateProcessorSelectorMock).getUpdateProcessor(eq(TEST_PROCESSOR));
         verify(mSignalEvictionControllerMock)
                 .evict(
@@ -216,6 +216,10 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                         mUpdateOutputArgumentCaptor.capture(),
                         any(UpdateSignalsProcessReportedLogger.class));
         assertUpdateOutputEquals(toReturn, mUpdateOutputArgumentCaptor.getValue());
+        List<DBProtectedSignal> expected = List.of(createSignal(KEY_1, VALUE));
+        verify(mProtectedSignalsDaoMock)
+                .insertAndDelete(ADTECH, NOW, expected, Collections.emptyList());
+        verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(ADTECH);
     }
 
     @Test
@@ -242,9 +246,6 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                 mUpdateSignalsApiCalledStats,
                 mUpdateSignalsProcessReportedLoggerMock);
 
-        List<DBProtectedSignal> expected = Arrays.asList(createSignal(KEY_1, VALUE));
-        verify(mProtectedSignalsDaoMock)
-                .insertAndDelete(ADTECH, NOW, expected, Collections.emptyList());
         verify(mUpdateProcessorSelectorMock).getUpdateProcessor(eq(TEST_PROCESSOR));
         verify(mSignalEvictionControllerMock)
                 .evict(
@@ -253,6 +254,10 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                         mUpdateOutputArgumentCaptor.capture(),
                         any(UpdateSignalsProcessReportedLogger.class));
         assertUpdateOutputEquals(toReturn, mUpdateOutputArgumentCaptor.getValue());
+        List<DBProtectedSignal> expected = Arrays.asList(createSignal(KEY_1, VALUE));
+        verify(mProtectedSignalsDaoMock)
+                .insertAndDelete(ADTECH, NOW, expected, Collections.emptyList());
+        verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(ADTECH);
     }
 
     @Test
@@ -280,8 +285,6 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                 mUpdateSignalsProcessReportedLoggerMock);
 
         verify(mProtectedSignalsDaoMock).getSignalsByBuyer(eq(ADTECH));
-        verify(mProtectedSignalsDaoMock)
-                .insertAndDelete(ADTECH, NOW, Collections.emptyList(), Arrays.asList(toRemove));
         verify(mUpdateProcessorSelectorMock).getUpdateProcessor(eq(TEST_PROCESSOR));
         verify(mSignalEvictionControllerMock)
                 .evict(
@@ -290,6 +293,9 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                         mUpdateOutputArgumentCaptor.capture(),
                         any(UpdateSignalsProcessReportedLogger.class));
         assertUpdateOutputEquals(toReturn, mUpdateOutputArgumentCaptor.getValue());
+        verify(mProtectedSignalsDaoMock)
+                .insertAndDelete(ADTECH, NOW, Collections.emptyList(), Arrays.asList(toRemove));
+        verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(ADTECH);
     }
 
     @Test
@@ -325,13 +331,6 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                 mUpdateSignalsApiCalledStats,
                 mUpdateSignalsProcessReportedLoggerMock);
 
-        DBProtectedSignal expected1 = createSignal(KEY_1, VALUE);
-        DBProtectedSignal expected2 = createSignal(KEY_2, VALUE);
-        verify(mProtectedSignalsDaoMock)
-                .insertAndDelete(
-                        eq(ADTECH), eq(NOW), mInsertCaptor.capture(), eq(Collections.emptyList()));
-        assertThat(mInsertCaptor.getValue())
-                .containsExactlyElementsIn(Arrays.asList(expected1, expected2));
         verify(mUpdateProcessorSelectorMock).getUpdateProcessor(eq(TEST_PROCESSOR + 1));
         verify(mUpdateProcessorSelectorMock).getUpdateProcessor(eq(TEST_PROCESSOR + 2));
         UpdateOutput toEvictOutput = new UpdateOutput();
@@ -346,6 +345,14 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                         mUpdateOutputArgumentCaptor.capture(),
                         any(UpdateSignalsProcessReportedLogger.class));
         assertUpdateOutputEquals(toEvictOutput, mUpdateOutputArgumentCaptor.getValue());
+        DBProtectedSignal expected1 = createSignal(KEY_1, VALUE);
+        DBProtectedSignal expected2 = createSignal(KEY_2, VALUE);
+        verify(mProtectedSignalsDaoMock)
+                .insertAndDelete(
+                        eq(ADTECH), eq(NOW), mInsertCaptor.capture(), eq(Collections.emptyList()));
+        assertThat(mInsertCaptor.getValue())
+                .containsExactlyElementsIn(Arrays.asList(expected1, expected2));
+        verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(ADTECH);
     }
 
     @Test
@@ -383,7 +390,7 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                                 DEV_CONTEXT,
                                 mUpdateSignalsApiCalledStats,
                                 mUpdateSignalsProcessReportedLoggerMock));
-        verifyZeroInteractions(mSignalEvictionControllerMock);
+        verifyZeroInteractions(mSignalEvictionControllerMock, mForcedEncoderMock);
         assertEquals(
                 JSON_PROCESSING_STATUS_SEMANTIC_ERROR,
                 mUpdateSignalsApiCalledStats.build().getJsonProcessingStatus());
@@ -415,9 +422,6 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                 mUpdateSignalsProcessReportedLoggerMock);
 
         verify(mProtectedSignalsDaoMock).getSignalsByBuyer(eq(ADTECH));
-        verify(mProtectedSignalsDaoMock)
-                .insertAndDelete(
-                        ADTECH, NOW, Collections.emptyList(), Arrays.asList(toRemove1, toRemove2));
         verify(mUpdateProcessorSelectorMock).getUpdateProcessor(eq(TEST_PROCESSOR));
         verify(mSignalEvictionControllerMock)
                 .evict(
@@ -426,6 +430,10 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                         mUpdateOutputArgumentCaptor.capture(),
                         any(UpdateSignalsProcessReportedLogger.class));
         assertUpdateOutputEquals(toReturn, mUpdateOutputArgumentCaptor.getValue());
+        verify(mProtectedSignalsDaoMock)
+                .insertAndDelete(
+                        ADTECH, NOW, Collections.emptyList(), Arrays.asList(toRemove1, toRemove2));
+        verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(ADTECH);
     }
 
     @Test
@@ -445,6 +453,7 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                 mUpdateSignalsApiCalledStats,
                 mUpdateSignalsProcessReportedLoggerMock);
         verifyZeroInteractions(mUpdateEncoderEventHandlerMock);
+        verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(ADTECH);
     }
 
     @Test
@@ -472,6 +481,61 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
                 mUpdateSignalsProcessReportedLoggerMock);
         verify(mUpdateEncoderEventHandlerMock)
                 .handle(CommonFixture.VALID_BUYER_1, event, DEV_CONTEXT);
+        verifyZeroInteractions(mForcedEncoderMock);
+    }
+
+    @Test
+    public void testUpdatesProcessorSingleInsert_evictNewlyAddedSignal() throws Exception {
+        JSONObject json = new JSONObject();
+        json.put(TEST_PROCESSOR, new JSONObject());
+
+        when(mProtectedSignalsDaoMock.getSignalsByBuyer(any())).thenReturn(Collections.emptyList());
+
+        UpdateOutput toReturn = new UpdateOutput();
+        toReturn.getKeysTouched().add(ByteBuffer.wrap(KEY_1));
+        DBProtectedSignal.Builder addedSignal =
+                DBProtectedSignal.builder().setKey(KEY_1).setValue(VALUE);
+        toReturn.getToAdd().add(addedSignal);
+        when(mUpdateProcessorSelectorMock.getUpdateProcessor(TEST_PROCESSOR))
+                .thenReturn(createProcessor(TEST_PROCESSOR, toReturn));
+
+        SignalEvictionController signalEvictionController =
+                new SignalEvictionController(
+                        List.of(new FifoSignalEvictor()),
+                        mMockFlags.getProtectedSignalsMaxSignalSizePerBuyerBytes(),
+                        mMockFlags
+                                .getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes()) {
+                    @Override
+                    public void evict(
+                            AdTechIdentifier adTech,
+                            List<DBProtectedSignal> updatedSignals,
+                            UpdateOutput combinedUpdates,
+                            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
+                        combinedUpdates.getToRemove().add(updatedSignals.remove(0));
+                    }
+                };
+        mUpdateProcessingOrchestrator =
+                new UpdateProcessingOrchestrator(
+                        mProtectedSignalsDaoMock,
+                        mUpdateProcessorSelectorMock,
+                        mUpdateEncoderEventHandlerMock,
+                        signalEvictionController,
+                        mForcedEncoderMock);
+
+        mUpdateProcessingOrchestrator.processUpdates(
+                ADTECH,
+                PACKAGE,
+                NOW,
+                json,
+                DEV_CONTEXT,
+                mUpdateSignalsApiCalledStats,
+                mUpdateSignalsProcessReportedLoggerMock);
+
+        verify(mUpdateProcessorSelectorMock).getUpdateProcessor(eq(TEST_PROCESSOR));
+
+        List<DBProtectedSignal> expected = Arrays.asList(createSignal(KEY_1, VALUE));
+        verify(mProtectedSignalsDaoMock).insertAndDelete(ADTECH, NOW, expected, expected);
+        verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(ADTECH);
     }
 
     private DBProtectedSignal createSignal(byte[] key, byte[] value) {
@@ -522,56 +586,5 @@ public class UpdateProcessingOrchestratorTest extends AdServicesExtendedMockitoT
         assertEquals(expect.getUpdateEncoderEvent(), actual.getUpdateEncoderEvent());
         assertEquals(expect.getToRemove(), actual.getToRemove());
         assertEquals(expect.getKeysTouched(), actual.getKeysTouched());
-    }
-
-    @Test
-    public void testUpdatesProcessorSingleInsert_evictNewlyAddedSignal() throws Exception {
-        JSONObject json = new JSONObject();
-        json.put(TEST_PROCESSOR, new JSONObject());
-
-        when(mProtectedSignalsDaoMock.getSignalsByBuyer(any())).thenReturn(Collections.emptyList());
-
-        UpdateOutput toReturn = new UpdateOutput();
-        toReturn.getKeysTouched().add(ByteBuffer.wrap(KEY_1));
-        DBProtectedSignal.Builder addedSignal =
-                DBProtectedSignal.builder().setKey(KEY_1).setValue(VALUE);
-        toReturn.getToAdd().add(addedSignal);
-        when(mUpdateProcessorSelectorMock.getUpdateProcessor(TEST_PROCESSOR))
-                .thenReturn(createProcessor(TEST_PROCESSOR, toReturn));
-
-        SignalEvictionController signalEvictionController =
-                new SignalEvictionController(
-                        List.of(new FifoSignalEvictor()),
-                        mMockFlags.getProtectedSignalsMaxSignalSizePerBuyerBytes(),
-                        mMockFlags
-                                .getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes()) {
-                    @Override
-                    public void evict(
-                            AdTechIdentifier adTech,
-                            List<DBProtectedSignal> updatedSignals,
-                            UpdateOutput combinedUpdates,
-                            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
-                        combinedUpdates.getToRemove().add(updatedSignals.remove(0));
-                    }
-                };
-        mUpdateProcessingOrchestrator =
-                new UpdateProcessingOrchestrator(
-                        mProtectedSignalsDaoMock,
-                        mUpdateProcessorSelectorMock,
-                        mUpdateEncoderEventHandlerMock,
-                        signalEvictionController);
-
-        mUpdateProcessingOrchestrator.processUpdates(
-                ADTECH,
-                PACKAGE,
-                NOW,
-                json,
-                DEV_CONTEXT,
-                mUpdateSignalsApiCalledStats,
-                mUpdateSignalsProcessReportedLoggerMock);
-
-        List<DBProtectedSignal> expected = Arrays.asList(createSignal(KEY_1, VALUE));
-        verify(mProtectedSignalsDaoMock).insertAndDelete(ADTECH, NOW, expected, expected);
-        verify(mUpdateProcessorSelectorMock).getUpdateProcessor(eq(TEST_PROCESSOR));
     }
 }
