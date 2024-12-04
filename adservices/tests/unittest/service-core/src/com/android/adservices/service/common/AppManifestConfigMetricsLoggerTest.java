@@ -187,7 +187,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     public void testLogUsage_handlesRuntimeException() throws Exception {
         // Do not move this into setup as it will conflict with ErrorLogUtil mocking behavior
         // required by the AdServicesLoggingUsageRule.
-        ErrorLogUtilCallback mErrorLogUtilWithThrowableCallback = mockErrorLogUtilWithThrowable();
+        ErrorLogUtilCallback errorLogUtilWithThrowableCallback = mockErrorLogUtilWithThrowable();
 
         RuntimeException exception = new RuntimeException("D'OH!");
 
@@ -195,7 +195,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
         logUsageAndDontWait(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
 
-        mErrorLogUtilWithThrowableCallback.assertReceived(
+        errorLogUtilWithThrowableCallback.assertReceived(
                 expect,
                 exception,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION,
@@ -209,7 +209,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     public void testLogUsage_commitFailed() throws Exception {
         // Do not move this into setup as it will conflict with ErrorLogUtil mocking behavior
         // required by the AdServicesLoggingUsageRule.
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallback =
+        ErrorLogUtilCallback errorLogUtilWithoutThrowableCallback =
                 mockErrorLogUtilWithoutThrowable();
         mPrefs.onCommitReturns(/* result= */ false);
 
@@ -218,7 +218,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         Map<String, ?> allProps = mPrefs.getAll();
         assertWithMessage("allProps").that(allProps).isEmpty();
 
-        mErrorLogUtilWithoutThrowableCallback.assertReceived(
+        errorLogUtilWithoutThrowableCallback.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);

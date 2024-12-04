@@ -24,91 +24,177 @@ import android.util.Log;
 
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
+import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 
 import com.google.common.truth.Expect;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 // TODO(b/355696393): integrate with rule and/or add unit tests (and document on internal site)
+
 /**
  * {@code SyncCallback} used in conjunction with {@link #mockErrorLogUtilWithoutThrowable()} /
  * {@link #mockErrorLogUtilWithThrowable()}.
  */
 public final class ErrorLogUtilCallback
-        extends FailableResultSyncCallback<ErrorLogUtilInvocation, Exception> {
-
+        extends FailableResultSyncCallback<ErrorLogUtilCall, Exception> {
+    private static final int DEFAULT_NUM_CALLS = 1;
     private static final String TAG = ErrorLogUtilCallback.class.getSimpleName();
 
-    /** Asserts {@link ErrorLogUtil#e(Throwable, int, int)}) was called with the given values. */
+    /**
+     * Asserts {@link ErrorLogUtil#e(Throwable, int, int)}) was called once with the given values.
+     */
     public void assertReceived(Expect expect, Throwable throwable, int errorCode, int ppapiName)
             throws InterruptedException {
-        ErrorLogUtilInvocation result = assertResultReceived();
-        expect.withMessage("throwable on %s", result)
-                .that(result.throwable)
-                .isSameInstanceAs(throwable);
-        expect.withMessage("errorCode on %s", result)
-                .that(result.errorCode)
-                .isSameInstanceAs(errorCode);
-        expect.withMessage("ppapiName on %s", result)
-                .that(result.ppapiName)
-                .isSameInstanceAs(ppapiName);
+        assertReceived(expect, throwable, errorCode, ppapiName, DEFAULT_NUM_CALLS);
     }
 
-    /** Asserts {@link ErrorLogUtil#e(int, int)}) was called with the given values. */
+    /**
+     * Asserts {@link ErrorLogUtil#e(Throwable, int, int)}) was called a certain number of times
+     * with the given values.
+     */
+    public void assertReceived(
+            Expect expect, Throwable throwable, int errorCode, int ppapiName, int numExpectedCalls)
+            throws InterruptedException {
+        assertCalls(
+                expect,
+                ErrorLogUtilCall.createWithNullableThrowable(
+                        throwable, errorCode, ppapiName, numExpectedCalls),
+                numExpectedCalls);
+    }
+
+    /** Asserts {@link ErrorLogUtil#e(int, int)}) was called once with the given values. */
     public void assertReceived(Expect expect, int errorCode, int ppapiName)
             throws InterruptedException {
-        ErrorLogUtilInvocation result = assertResultReceived();
-        expect.withMessage("throwable on %s", result).that(result.throwable).isNull();
-        expect.withMessage("errorCode on %s", result)
-                .that(result.errorCode)
-                .isSameInstanceAs(errorCode);
-        expect.withMessage("ppapiName on %s", result)
-                .that(result.ppapiName)
-                .isSameInstanceAs(ppapiName);
+        assertReceived(expect, errorCode, ppapiName, DEFAULT_NUM_CALLS);
+    }
+
+    /**
+     * Asserts {@link ErrorLogUtil#e(int, int)}) was called a certain number of times with the given
+     * values.
+     */
+    public void assertReceived(Expect expect, int errorCode, int ppapiName, int numExpectedCalls)
+            throws InterruptedException {
+        assertReceived(expect, /* throwable= */ null, errorCode, ppapiName, numExpectedCalls);
+    }
+
+    private void assertCalls(
+            Expect expect, ErrorLogUtilCall expectedInvocation, int numExpectedCalls)
+            throws InterruptedException {
+        List<ErrorLogUtilCall> results = internalAssertResultsReceived();
+        List<ErrorLogUtilCall> actualInvocations =
+                results.stream().filter(expectedInvocation::equals).collect(Collectors.toList());
+        expect.withMessage(
+                        "total invocations of %s from actual %s",
+                        expectedInvocation.logInvocationToString(), format(results))
+                .that(actualInvocations.size())
+                .isEqualTo(numExpectedCalls);
+    }
+
+    private String format(List<ErrorLogUtilCall> rawCalls) {
+        StringBuilder stringBuilder = new StringBuilder("[");
+
+        // Just print the raw invocations without "times". If needed, could potentially enhance this
+        // by grouping all similar invocations together.
+        for (ErrorLogUtilCall call : rawCalls) {
+            stringBuilder.append(call.logInvocationToString()).append(",");
+        }
+
+        // Delete the last comma
+        if (stringBuilder.length() > 1) {
+            stringBuilder.deleteCharAt(stringBuilder.length() - 1);
+        }
+
+        return stringBuilder.append("]").toString();
     }
 
     /**
      * Mocks a call to {@link ErrorLogUtil#e(Throwable, int, int)} and returns a callback object
      * that blocks until that call is made.
      *
-     * <p>Useful in cases where {@link ErrorLogUtil} is expected to be called asynchronously.
+     * <p>Useful in cases where {@link ErrorLogUtil} is expected to be called once asynchronously.
      */
     public static ErrorLogUtilCallback mockErrorLogUtilWithThrowable() {
         ErrorLogUtilCallback callback = new ErrorLogUtilCallback();
+        mockInvocationWithThrowable(callback);
+        return callback;
+    }
+
+    /**
+     * Mocks a call to {@link ErrorLogUtil#e(Throwable, int, int)} and returns a callback object
+     * that blocks until expected number of calls are made.
+     *
+     * <p>Useful in cases where {@link ErrorLogUtil} is expected to be called multiple times
+     * asynchronously.
+     */
+    public static ErrorLogUtilCallback mockErrorLogUtilWithThrowable(int numExpectedCalls) {
+        ErrorLogUtilCallback callback = new ErrorLogUtilCallback(numExpectedCalls);
+        mockInvocationWithThrowable(callback);
+        return callback;
+    }
+
+    private static void mockInvocationWithThrowable(ErrorLogUtilCallback callback) {
         doAnswer(
                         inv -> {
                             Log.d(TAG, "mockErrorLogUtilError(): inv= " + inv);
                             callback.injectResult(
-                                    new ErrorLogUtilInvocation(
+                                    ErrorLogUtilCall.createWithNullableThrowable(
                                             inv.getArgument(0),
                                             inv.getArgument(1),
-                                            inv.getArgument(2)));
+                                            inv.getArgument(2),
+                                            DEFAULT_NUM_CALLS));
                             return null;
                         })
                 .when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
-        return callback;
     }
 
     /**
      * Mocks a call to {@link ErrorLogUtil#e(int, int)} and returns a callback object that blocks
      * until that call is made.
      *
-     * <p>Useful in cases where {@link ErrorLogUtil} is expected to be called asynchronously.
+     * <p>Useful in cases where {@link ErrorLogUtil} is expected to be called once asynchronously.
      */
     public static ErrorLogUtilCallback mockErrorLogUtilWithoutThrowable() {
         ErrorLogUtilCallback callback = new ErrorLogUtilCallback();
+        mockInvocationWithoutThrowable(callback);
+        return callback;
+    }
+
+    /**
+     * Mocks a call to {@link ErrorLogUtil#e(int, int)} and returns a callback object that blocks
+     * until expected number of calls are made.
+     *
+     * <p>Useful in cases where {@link ErrorLogUtil} is expected to be called multiple times
+     * asynchronously.
+     */
+    public static ErrorLogUtilCallback mockErrorLogUtilWithoutThrowable(int numExpectedCalls) {
+        ErrorLogUtilCallback callback = new ErrorLogUtilCallback(numExpectedCalls);
+        mockInvocationWithoutThrowable(callback);
+        return callback;
+    }
+
+    private static void mockInvocationWithoutThrowable(ErrorLogUtilCallback callback) {
         doAnswer(
                         inv -> {
                             Log.d(TAG, "mockErrorLogUtilError(): inv= " + inv);
                             callback.injectResult(
-                                    new ErrorLogUtilInvocation(
+                                    ErrorLogUtilCall.createWithNullableThrowable(
                                             /* throwable= */ null,
                                             inv.getArgument(0),
-                                            inv.getArgument(1)));
+                                            inv.getArgument(1),
+                                            DEFAULT_NUM_CALLS));
                             return null;
                         })
                 .when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
-        return callback;
     }
 
     private ErrorLogUtilCallback() {}
-    ;
+
+    private ErrorLogUtilCallback(int numExpectedCalls) {
+        super(
+                SyncCallbackFactory.newSettingsBuilder()
+                        .setExpectedNumberCalls(numExpectedCalls)
+                        .build());
+    }
 }
