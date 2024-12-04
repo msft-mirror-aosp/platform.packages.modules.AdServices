@@ -24,6 +24,7 @@ import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -31,8 +32,7 @@ import org.mockito.Mock;
 
 import java.io.File;
 
-// TODO(b/372051957): rename to LegacyAtomicFileDatastoreFactoryTest
-public final class AtomicFileDatastoreTest extends AdServicesMockitoTestCase {
+public final class LegacyAtomicFileDatastoreFactoryTest extends AdServicesMockitoTestCase {
     private static final String FILENAME = "AtomicFileDatastoreTest.xml";
     private static final int DATASTORE_VERSION = 1;
 

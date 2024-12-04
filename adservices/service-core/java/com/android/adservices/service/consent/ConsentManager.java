@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.consent;
 
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_DISABLED;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_ENABLED;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_UNKNOWN;
+import static android.adservices.common.AdServicesCommonManager.ModuleState;
+
 import static com.android.adservices.AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_SEARCH_DATA_MIGRATION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_DEFAULT_CONSENT;
@@ -35,8 +40,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.U18_UX;
 
-import android.adservices.common.AdServicesModuleState;
-import android.adservices.common.AdServicesModuleState.ModuleStateCode;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesModuleUserChoice.ModuleUserChoiceCode;
 import android.adservices.common.Module;
@@ -52,6 +55,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.SystemClock;
 import android.os.Trace;
+import android.util.SparseIntArray;
 
 import androidx.annotation.RequiresApi;
 
@@ -1927,28 +1931,28 @@ public final class ConsentManager {
                         : AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT;
     }
 
-    @ModuleStateCode
+    @ModuleState
     private int getConvertedModuleState(@ModuleCode int apiType) {
-        int state = AdServicesModuleState.MODULE_STATE_DISABLED;
+        int state = MODULE_STATE_DISABLED;
         switch (apiType) {
             case Module.MEASUREMENT -> {
                 if (wasGaUxNotificationDisplayed()
                         || wasU18NotificationDisplayed()
                         || wasPasNotificationDisplayed()) {
-                    state = AdServicesModuleState.MODULE_STATE_ENABLED;
+                    state = MODULE_STATE_ENABLED;
                 }
             }
             case Module.ON_DEVICE_PERSONALIZATION, Module.PROTECTED_APP_SIGNALS -> {
                 if (wasPasNotificationDisplayed()) {
-                    state = AdServicesModuleState.MODULE_STATE_ENABLED;
+                    state = MODULE_STATE_ENABLED;
                 }
             }
             case Module.PROTECTED_AUDIENCE, Module.TOPICS -> {
                 if (wasGaUxNotificationDisplayed() || wasPasNotificationDisplayed()) {
-                    state = AdServicesModuleState.MODULE_STATE_ENABLED;
+                    state = MODULE_STATE_ENABLED;
                 }
             }
-            default -> state = AdServicesModuleState.MODULE_STATE_UNKNOWN;
+            default -> state = MODULE_STATE_UNKNOWN;
         }
         return state;
     }
@@ -2383,7 +2387,7 @@ public final class ConsentManager {
      * @param module desired module
      * @return module state
      */
-    @ModuleStateCode
+    @ModuleState
     public int getModuleState(@ModuleCode int module) {
         EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
         return data.getModuleState(module);
@@ -2392,12 +2396,12 @@ public final class ConsentManager {
     /**
      * Sets module state for a module.
      *
-     * @param moduleState object to set
+     * @param modulesStates object to set
      */
-    public void setModuleStates(List<AdServicesModuleState> moduleStates) {
+    public void setModuleStates(SparseIntArray modulesStates) {
         EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
-        for (AdServicesModuleState moduleState : moduleStates) {
-            data.putModuleState(moduleState);
+        for (int i = 0; i < modulesStates.size(); i++) {
+            data.putModuleState(modulesStates.keyAt(i), modulesStates.valueAt(i));
         }
         setModuleEnrollmentData(EnrollmentData.serialize(data));
     }
