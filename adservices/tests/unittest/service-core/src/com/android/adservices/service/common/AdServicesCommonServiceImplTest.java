@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN;
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT;
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_ACTIVITY_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
@@ -36,6 +39,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -1103,12 +1107,8 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
 
         UpdateAdServicesUserChoicesParams params =
                 new UpdateAdServicesUserChoicesParams.Builder()
-                        .setUserChoice(
-                                Module.PROTECTED_AUDIENCE,
-                                AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN)
-                        .setUserChoice(
-                                Module.PROTECTED_APP_SIGNALS,
-                                AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT)
+                        .setUserChoice(Module.PROTECTED_AUDIENCE, USER_CHOICE_OPTED_IN)
+                        .setUserChoice(Module.PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_OUT)
                         .build();
         mCommonService.requestAdServicesModuleUserChoices(params, callback);
         callback.assertSuccess();
@@ -1125,13 +1125,13 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                     isPaAvailable = true;
                     expect.withMessage("state.getModule(): PROTECTED_AUDIENCE")
                             .that(userChoice.getUserChoice())
-                            .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
+                            .isEqualTo(USER_CHOICE_OPTED_IN);
                     break;
                 case Module.PROTECTED_APP_SIGNALS:
                     isPasAvailable = true;
                     expect.withMessage("state.getModule(): PROTECTED_APP_SIGNALS")
                             .that(userChoice.getUserChoice())
-                            .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT);
+                            .isEqualTo(USER_CHOICE_OPTED_OUT);
                     break;
                 default:
                     break;
@@ -1150,7 +1150,6 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                                 PermissionHelper.hasAccessAdServicesCommonStatePermission(
                                         any(), any()));
         ExtendedMockito.doReturn(mConsentManager).when(ConsentManager::getInstance);
-
         RequestAdServicesModuleUserChoicesCallback callback =
                 new RequestAdServicesModuleUserChoicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
 
@@ -1166,6 +1165,62 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         mCommonService.requestAdServicesModuleUserChoices(params, callback);
         callback.assertFailed(STATUS_KILLSWITCH_ENABLED);
         verify(mConsentManager, never()).setUserChoices(any());
+    }
+
+    @Test
+    public void testSetAdServicesUserChoices_noOverrideUnlessUnknown() throws Exception {
+        doReturn(true).when(mMockFlags).getAdServicesConsentBusinessLogicMigrationEnabled();
+        ExtendedMockito.doReturn(true)
+                .when(
+                        () ->
+                                PermissionHelper.hasAccessAdServicesCommonStatePermission(
+                                        any(), any()));
+        ExtendedMockito.doReturn(mConsentManager).when(ConsentManager::getInstance);
+        doReturn(USER_CHOICE_UNKNOWN)
+                .when(mConsentManager)
+                .getUserChoice(Module.PROTECTED_AUDIENCE);
+        doReturn(USER_CHOICE_OPTED_OUT)
+                .when(mConsentManager)
+                .getUserChoice(Module.PROTECTED_APP_SIGNALS);
+        doReturn(USER_CHOICE_OPTED_IN).when(mConsentManager).getUserChoice(Module.MEASUREMENT);
+
+        RequestAdServicesModuleUserChoicesCallback callback =
+                new RequestAdServicesModuleUserChoicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
+
+        UpdateAdServicesUserChoicesParams params =
+                new UpdateAdServicesUserChoicesParams.Builder()
+                        .setUserChoice(Module.PROTECTED_AUDIENCE, USER_CHOICE_OPTED_IN)
+                        .setUserChoice(Module.PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_IN)
+                        .setUserChoice(Module.MEASUREMENT, USER_CHOICE_UNKNOWN)
+                        .build();
+        mCommonService.requestAdServicesModuleUserChoices(params, callback);
+        callback.assertSuccess();
+        verify(mConsentManager, atLeastOnce())
+                .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
+        List<AdServicesModuleUserChoice> userChoiceList =
+                mAdservicesModuleUserChoiceArgumentCaptor.getValue();
+        assertThat(userChoiceList).hasSize(2);
+        boolean isPaOptedIn = false;
+        boolean isPasOptedIn = false;
+        boolean isMsmtReset = false;
+        for (AdServicesModuleUserChoice userChoice : userChoiceList) {
+            switch (userChoice.getModule()) {
+                case Module.PROTECTED_AUDIENCE:
+                    isPaOptedIn = userChoice.getUserChoice() == USER_CHOICE_OPTED_IN;
+                    break;
+                case Module.PROTECTED_APP_SIGNALS:
+                    fail("PROTECTED_APP_SIGNALS should not be set");
+                    break;
+                case Module.MEASUREMENT:
+                    isMsmtReset = userChoice.getUserChoice() == USER_CHOICE_UNKNOWN;
+                    break;
+                default:
+                    break;
+            }
+        }
+        expect.withMessage("isPaOptedIn").that(isPaOptedIn).isTrue();
+        expect.withMessage("isPasOptedIn").that(isPasOptedIn).isFalse();
+        expect.withMessage("isMsmtReset").that(isMsmtReset).isTrue();
     }
 
     @Test
