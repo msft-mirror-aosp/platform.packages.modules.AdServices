@@ -105,6 +105,9 @@ public final class Throttler {
 
         // Key to throttle Topics API based on the Sdk Name.
         TOPICS_API_SDK_NAME,
+
+        // Key to throttle select ads with outcomes api
+        FLEDGE_API_SELECT_ADS_WITH_OUTCOMES,
     }
 
     private static final double DEFAULT_RATE_LIMIT = 1d;
@@ -188,6 +191,32 @@ public final class Throttler {
         double registerWebTrigger = flags.getMeasurementRegisterWebTriggerRequestPermitsPerSecond();
         double topicsApiAppRequestPermitsPerSecond = flags.getTopicsApiAppRequestPermitsPerSecond();
         double topicsApiSdkRequestPermitsPerSecond = flags.getTopicsApiSdkRequestPermitsPerSecond();
+        double fledgeJoinCustomAudienceRequestPermitsPerSecond =
+                flags.getFledgeJoinCustomAudienceRequestPermitsPerSecond();
+        double fledgeFetchAndJoinCustomAudienceRequestPermitsPerSecond =
+                flags.getFledgeFetchAndJoinCustomAudienceRequestPermitsPerSecond();
+        double fledgeScheduleCustomAudienceUpdateRequestPermitsPerSecond =
+                flags.getFledgeScheduleCustomAudienceUpdateRequestPermitsPerSecond();
+        double fledgeLeaveCustomAudienceRequestPermitsPerSecond =
+                flags.getFledgeLeaveCustomAudienceRequestPermitsPerSecond();
+        double fledgeUpdateSignalsRequestPermitsPerSecond =
+                flags.getFledgeUpdateSignalsRequestPermitsPerSecond();
+        double fledgeSelectAdsRequestPermitsPerSecond =
+                flags.getFledgeSelectAdsRequestPermitsPerSecond();
+        double fledgeSelectAdsWithOutcomesRequestPermitsPerSecond =
+                flags.getFledgeSelectAdsWithOutcomesRequestPermitsPerSecond();
+        double fledgeGetAdSelectionDataRequestPermitsPerSecond =
+                flags.getFledgeGetAdSelectionDataRequestPermitsPerSecond();
+        double fledgeReportImpressionRequestPermitsPerSecond =
+                flags.getFledgeReportImpressionRequestPermitsPerSecond();
+        double fledgeReportInteractionRequestPermitsPerSecond =
+                flags.getFledgeReportInteractionRequestPermitsPerSecond();
+        double fledgePersistAdSelectionResultRequestPermitsPerSecond =
+                flags.getFledgePersistAdSelectionResultRequestPermitsPerSecond();
+        double fledgeSetAppInstallAdvertisersRequestPermitsPerSecond =
+                flags.getFledgeSetAppInstallAdvertisersRequestPermitsPerSecond();
+        double fledgeUpdateAdCounterHistogramRequestPermitsPerSecond =
+                flags.getFledgeUpdateAdCounterHistogramRequestPermitsPerSecond();
 
         mRateLimitPerApiMap.put(ApiKey.ADID_API_APP_PACKAGE_NAME, adIdPermitsPerSecond);
         mRateLimitPerApiMap.put(ApiKey.APPSETID_API_APP_PACKAGE_NAME, appSetIdPermitsPerSecond);
@@ -201,6 +230,44 @@ public final class Throttler {
         mRateLimitPerApiMap.put(
                 ApiKey.TOPICS_API_APP_PACKAGE_NAME, topicsApiAppRequestPermitsPerSecond);
         mRateLimitPerApiMap.put(ApiKey.TOPICS_API_SDK_NAME, topicsApiSdkRequestPermitsPerSecond);
+        mRateLimitPerApiMap.put(
+                ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE,
+                fledgeJoinCustomAudienceRequestPermitsPerSecond);
+        mRateLimitPerApiMap.put(
+                ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
+                fledgeFetchAndJoinCustomAudienceRequestPermitsPerSecond);
+        mRateLimitPerApiMap.put(
+                ApiKey.FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE,
+                fledgeScheduleCustomAudienceUpdateRequestPermitsPerSecond);
+        mRateLimitPerApiMap.put(
+                ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE,
+                fledgeLeaveCustomAudienceRequestPermitsPerSecond);
+        mRateLimitPerApiMap.put(
+                ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS,
+                fledgeUpdateSignalsRequestPermitsPerSecond);
+        mRateLimitPerApiMap.put(
+                ApiKey.FLEDGE_API_SELECT_ADS, fledgeSelectAdsRequestPermitsPerSecond);
+        mRateLimitPerApiMap.put(
+                ApiKey.FLEDGE_API_SELECT_ADS_WITH_OUTCOMES,
+                fledgeSelectAdsWithOutcomesRequestPermitsPerSecond);
+        mRateLimitPerApiMap.put(
+                ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA,
+                fledgeGetAdSelectionDataRequestPermitsPerSecond);
+        mRateLimitPerApiMap.put(
+                ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
+                fledgeReportImpressionRequestPermitsPerSecond);
+        mRateLimitPerApiMap.put(
+                ApiKey.FLEDGE_API_REPORT_INTERACTION,
+                fledgeReportInteractionRequestPermitsPerSecond);
+        mRateLimitPerApiMap.put(
+                ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT,
+                fledgePersistAdSelectionResultRequestPermitsPerSecond);
+        mRateLimitPerApiMap.put(
+                ApiKey.FLEDGE_API_SET_APP_INSTALL_ADVERTISERS,
+                fledgeSetAppInstallAdvertisersRequestPermitsPerSecond);
+        mRateLimitPerApiMap.put(
+                ApiKey.FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM,
+                fledgeUpdateAdCounterHistogramRequestPermitsPerSecond);
     }
 
     /**
