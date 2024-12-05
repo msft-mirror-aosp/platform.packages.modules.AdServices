@@ -64,6 +64,7 @@ java_defaults {
         "adservices-datastore_testing",
         "adservices-shared-error-logging",
         "adservices-shared-exceptions",
+        "adservices-shared-metriclogger",
         "adservices-shared-mockito-expectations",
         "adservices-shared-proto-lite",
         "adservices-shared-proto-utils",
