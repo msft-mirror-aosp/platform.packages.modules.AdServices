@@ -69,4 +69,13 @@ public abstract class AdServicesDebugFlagsMockerTestCase<T extends AdServicesDeb
 
         expect.withMessage("flags.getConsentNotificationDebugMode()").that(result).isTrue();
     }
+
+    @Test
+    public final void testMockGetDeveloperSessionFeatureEnabled() {
+        getMocker().mockGetDeveloperSessionFeatureEnabled(true);
+
+        boolean result = mMockDebugFlags.getDeveloperSessionFeatureEnabled();
+
+        expect.withMessage("flags.mockGetDeveloperSessionFeatureEnabled()").that(result).isTrue();
+    }
 }

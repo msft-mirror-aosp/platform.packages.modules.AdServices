@@ -21,6 +21,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_PERMISSION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
@@ -29,12 +30,17 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_VERY_SMALL;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.computeSize;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.getCelPpApiNameId;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.logCelInsideBinderThread;
 
 import static org.junit.Assert.assertEquals;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+
 import org.junit.Test;
 
-public class AdsRelevanceStatusUtilsTest {
+public class AdsRelevanceStatusUtilsTest extends AdServicesExtendedMockitoTestCase {
     @Test
     public void testComputeSize() {
         long[] buckets = {10, 20, 30, 40};
@@ -66,5 +72,27 @@ public class AdsRelevanceStatusUtilsTest {
         assertEquals(
                 getCelPpApiNameId(AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS),
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED);
+    }
+
+    @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_PERMISSION_FAILURE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA)
+    public void testLogCelInsideBinderThread() {
+        logCelInsideBinderThread(
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_PERMISSION_FAILURE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
+    }
+
+    @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_PERMISSION_FAILURE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA,
+            throwable = IllegalStateException.class)
+    public void testLogCelInsideBinderThreadWithThrowable() {
+        logCelInsideBinderThread(
+                new IllegalStateException("test exception"),
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_PERMISSION_FAILURE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
     }
 }

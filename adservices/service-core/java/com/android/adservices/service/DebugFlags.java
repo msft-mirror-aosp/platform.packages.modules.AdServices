@@ -23,12 +23,14 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MAN
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_DEVELOPER_SESSION_FEATURE_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FORCED_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED;
@@ -71,6 +73,9 @@ public final class DebugFlags extends CommonDebugFlags {
     /** Default value for status of consented debugging CLI feature */
     @VisibleForTesting static final boolean DEFAULT_FLEDGE_CONSENTED_DEBUGGING_CLI_ENABLED = false;
 
+    /** Default value for status of developer mode feature. */
+    @VisibleForTesting static final boolean DEFAULT_DEVELOPER_SESSION_FEATURE_ENABLED = false;
+
     /** Default value for sending a broadcast when record topics is completed. */
     @VisibleForTesting
     static final boolean DEFAULT_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED = false;
@@ -89,6 +94,10 @@ public final class DebugFlags extends CommonDebugFlags {
     /** Default value for sending a broadcast when periodic encoding is completed. */
     @VisibleForTesting
     static final boolean DEFAULT_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED = false;
+
+    /** Default value for sending a broadcast when forced encoding is completed. */
+    @VisibleForTesting
+    static final boolean DEFAULT_FORCED_ENCODING_COMPLETE_BROADCAST_ENABLED = false;
 
     static final boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
     static final boolean CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE = false;
@@ -147,6 +156,12 @@ public final class DebugFlags extends CommonDebugFlags {
         return getBoolean(KEY_AD_SELECTION_CLI_ENABLED, DEFAULT_AD_SELECTION_CLI_ENABLED);
     }
 
+    /** Returns whether developer mode feature is enabled. */
+    public boolean getDeveloperSessionFeatureEnabled() {
+        return getBoolean(
+                KEY_DEVELOPER_SESSION_FEATURE_ENABLED, DEFAULT_DEVELOPER_SESSION_FEATURE_ENABLED);
+    }
+
     /** Returns whether Consented Debugging is enabled for server auctions. */
     public boolean getFledgeAuctionServerConsentedDebuggingEnabled() {
         return getBoolean(
@@ -201,6 +216,13 @@ public final class DebugFlags extends CommonDebugFlags {
         return getBoolean(
                 KEY_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED,
                 DEFAULT_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED);
+    }
+
+    /** Returns whether sending a broadcast when forced encoding job is completed is enabled. */
+    public boolean getForcedEncodingJobCompleteBroadcastEnabled() {
+        return getBoolean(
+                KEY_FORCED_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED,
+                DEFAULT_FORCED_ENCODING_COMPLETE_BROADCAST_ENABLED);
     }
 
     /**
@@ -267,5 +289,13 @@ public final class DebugFlags extends CommonDebugFlags {
                 pw,
                 KEY_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED,
                 getPeriodicEncodingJobCompleteBroadcastEnabled());
+        dump(
+                pw,
+                KEY_DEVELOPER_SESSION_FEATURE_ENABLED,
+                getDeveloperSessionFeatureEnabled());
+        dump(
+                pw,
+                KEY_FORCED_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED,
+                getForcedEncodingJobCompleteBroadcastEnabled());
     }
 }

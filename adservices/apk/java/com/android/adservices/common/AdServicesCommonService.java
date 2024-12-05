@@ -26,10 +26,12 @@ import android.os.Trace;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.AdServicesCommonServiceImpl;
 import com.android.adservices.service.common.AdServicesSyncUtil;
+import com.android.adservices.service.common.QuadConsumer;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.ui.UxEngine;
 import com.android.adservices.service.ui.data.UxStatesManager;
@@ -56,6 +58,7 @@ public class AdServicesCommonService extends Service {
                     new AdServicesCommonServiceImpl(
                             this,
                             FlagsFactory.getFlags(),
+                            DebugFlags.getInstance(),
                             UxEngine.getInstance(),
                             UxStatesManager.getInstance(),
                             AdIdWorker.getInstance(),
@@ -64,19 +67,44 @@ public class AdServicesCommonService extends Service {
         }
         LogUtil.d("created adservices common service");
         try {
-            AdServicesSyncUtil.getInstance()
-                    .register(
-                            new BiConsumer<Context, Boolean>() {
-                                @Override
-                                public void accept(
-                                        Context context, Boolean shouldDisplayEuNotification) {
-                                    LogUtil.d(
-                                            "running trigger command with "
-                                                    + shouldDisplayEuNotification);
-                                    ConsentNotificationTrigger.showConsentNotification(
-                                            context, shouldDisplayEuNotification);
-                                }
-                            });
+            AdServicesSyncUtil syncUtil = AdServicesSyncUtil.getInstance();
+            syncUtil.register(
+                    new BiConsumer<Context, Boolean>() {
+                        @Override
+                        public void accept(Context context, Boolean shouldDisplayEuNotification) {
+                            LogUtil.d(
+                                    "running trigger command with " + shouldDisplayEuNotification);
+                            ConsentNotificationTrigger.showConsentNotification(
+                                    context, shouldDisplayEuNotification);
+                        }
+                    });
+            boolean businessLogicMigrationFlag =
+                    FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled();
+            if (businessLogicMigrationFlag) {
+                syncUtil.registerNotificationTriggerV2(
+                        new QuadConsumer<Context, Boolean, Boolean, Boolean>() {
+                            @Override
+                            public void accept(
+                                    Context context,
+                                    Boolean isRenotify,
+                                    Boolean isNewAdPersonalizationModuleEnabled,
+                                    Boolean isOngoingNotification) {
+                                LogUtil.d(
+                                        "running V2 trigger command with:"
+                                                + ", isRenotify: "
+                                                + isRenotify
+                                                + ", isNewAdPersonalizationModuleEnabled: "
+                                                + isNewAdPersonalizationModuleEnabled
+                                                + ", isOngoingNotification: "
+                                                + isOngoingNotification);
+                                ConsentNotificationTrigger.showConsentNotificationV2(
+                                        context,
+                                        isRenotify,
+                                        isNewAdPersonalizationModuleEnabled,
+                                        isOngoingNotification);
+                            }
+                        });
+            }
         } catch (Exception e) {
             LogUtil.e(
                     "getting exception when register consumer in AdServicesSyncUtil of "

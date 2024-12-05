@@ -21,6 +21,7 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHED
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE;
 
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.ComponentAdData;
 import android.adservices.customaudience.PartialCustomAudience;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -219,6 +220,10 @@ public abstract class CustomAudienceDao {
     @Query("SELECT COUNT(*) FROM custom_audience WHERE owner=:owner")
     public abstract long getCustomAudienceCountForOwner(String owner);
 
+    /** Get count of custom audience of a given buyer. */
+    @Query("SELECT COUNT(*) FROM custom_audience WHERE buyer=:buyer")
+    public abstract long getCustomAudienceCountForBuyer(AdTechIdentifier buyer);
+
     /** Get the total number of distinct custom audience owner. */
     @Query("SELECT COUNT(DISTINCT owner) FROM custom_audience")
     public abstract long getCustomAudienceOwnerCount();
@@ -247,19 +252,24 @@ public abstract class CustomAudienceDao {
      */
     @Transaction
     @NonNull
-    public CustomAudienceStats getCustomAudienceStats(@NonNull String owner) {
-        Objects.requireNonNull(owner);
+    public CustomAudienceStats getCustomAudienceStats(
+            @NonNull String owner, @NonNull AdTechIdentifier buyer) {
+        Objects.requireNonNull(owner, "Owner must not be null");
+        Objects.requireNonNull(buyer, "Buyer must not be null");
 
         long customAudienceCount = getCustomAudienceCount();
         long customAudienceCountPerOwner = getCustomAudienceCountForOwner(owner);
         long ownerCount = getCustomAudienceOwnerCount();
+        long customAudienceCountPerBuyer = getCustomAudienceCountForBuyer(buyer);
 
         // TODO(b/255780705): Add buyer and per-buyer stats
         return CustomAudienceStats.builder()
                 .setOwner(owner)
+                .setBuyer(buyer)
                 .setTotalCustomAudienceCount(customAudienceCount)
                 .setPerOwnerCustomAudienceCount(customAudienceCountPerOwner)
                 .setTotalOwnerCount(ownerCount)
+                .setPerBuyerCustomAudienceCount(customAudienceCountPerBuyer)
                 .build();
     }
 
@@ -986,6 +996,51 @@ public abstract class CustomAudienceDao {
     @Delete
     public abstract void deleteScheduledCustomAudienceUpdate(
             @NonNull DBScheduledCustomAudienceUpdate update);
+
+    /** Persists a component ad */
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract void insertComponentAdData(DBComponentAdData componentAdData);
+
+    /**
+     * Clears any existing component ads associated with the primary keys of this custom audience,
+     * then inserts a list of component ads.
+     */
+    @Transaction
+    public void insertAndOverwriteComponentAds(
+            List<ComponentAdData> componentAdDataList,
+            String owner,
+            AdTechIdentifier buyer,
+            String name) {
+        deleteComponentAdsByCustomAudienceInfo(owner, buyer, name);
+        for (ComponentAdData componentAdData : componentAdDataList) {
+            DBComponentAdData dbComponentAdData =
+                    DBComponentAdData.builder()
+                            .setRenderUri(componentAdData.getRenderUri())
+                            .setRenderId(componentAdData.getAdRenderId())
+                            .setOwner(owner)
+                            .setBuyer(buyer)
+                            .setName(name)
+                            .build();
+            insertComponentAdData(dbComponentAdData);
+        }
+    }
+
+    /**
+     * Gets a list of component ads associated with the primary keys of a custom audience. This list
+     * will be ordered by the ascending order in which the component ads were persisted.
+     */
+    @Query(
+            "SELECT * FROM component_ad_data WHERE owner = :owner AND buyer = :buyer AND name ="
+                    + " :name ORDER BY rowId")
+    abstract List<DBComponentAdData> getComponentAdsByCustomAudienceInfo(
+            String owner, AdTechIdentifier buyer, String name);
+
+    /** Deletes all component ads associated with the primary keys of a custom audience. */
+    @Query(
+            "DELETE FROM component_ad_data WHERE owner = :owner AND buyer = :buyer AND name ="
+                    + " :name")
+    abstract void deleteComponentAdsByCustomAudienceInfo(
+            String owner, AdTechIdentifier buyer, String name);
 
     @VisibleForTesting
     static class BiddingLogicJsWithVersion {

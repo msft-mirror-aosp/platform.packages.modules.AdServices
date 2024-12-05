@@ -100,7 +100,7 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         setupListeners(savedInstanceState);
 
-        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED, getContext());
+        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISPLAYED);
     }
 
     @Override
@@ -109,7 +109,7 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
         if (mScrollToBottomController != null) {
             mScrollToBottomController.saveInstanceState(savedInstanceState);
         }
-        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISMISSED, getContext());
+        ConsentNotificationActivity.handleAction(CONFIRMATION_PAGE_DISMISSED);
     }
 
     private void setupListeners(Bundle savedInstanceState) {
@@ -124,10 +124,10 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
                 view -> {
                     if (mTopicsOptIn) {
                         ConsentNotificationActivity.handleAction(
-                                CONFIRMATION_PAGE_OPT_IN_MORE_INFO_CLICKED, getContext());
+                                CONFIRMATION_PAGE_OPT_IN_MORE_INFO_CLICKED);
                     } else {
                         ConsentNotificationActivity.handleAction(
-                                CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED, getContext());
+                                CONFIRMATION_PAGE_OPT_OUT_MORE_INFO_CLICKED);
                     }
 
                     setInfoViewState(!mIsInfoViewExpanded);
@@ -139,10 +139,10 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
                 view -> {
                     if (mTopicsOptIn) {
                         ConsentNotificationActivity.handleAction(
-                                CONFIRMATION_PAGE_OPT_IN_SETTINGS_CLICKED, getContext());
+                                CONFIRMATION_PAGE_OPT_IN_SETTINGS_CLICKED);
                     } else {
                         ConsentNotificationActivity.handleAction(
-                                CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED, getContext());
+                                CONFIRMATION_PAGE_OPT_OUT_SETTINGS_CLICKED);
                     }
 
                     // go to settings activity
@@ -159,10 +159,10 @@ public class ConsentNotificationConfirmationGaFragment extends Fragment {
                 view -> {
                     if (mTopicsOptIn) {
                         ConsentNotificationActivity.handleAction(
-                                CONFIRMATION_PAGE_OPT_IN_GOT_IT_BUTTON_CLICKED, getContext());
+                                CONFIRMATION_PAGE_OPT_IN_GOT_IT_BUTTON_CLICKED);
                     } else {
                         ConsentNotificationActivity.handleAction(
-                                CONFIRMATION_PAGE_OPT_OUT_GOT_IT_BUTTON_CLICKED, getContext());
+                                CONFIRMATION_PAGE_OPT_OUT_GOT_IT_BUTTON_CLICKED);
                     }
 
                     // acknowledge and dismiss

@@ -210,7 +210,8 @@ public class UxStatesManager {
         return ConsentManager.getInstance().wasPasNotificationOpened();
     }
 
-    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings({"AvoidSharedPreferences", "AvoidStaticContext"}) // Legacy usage
     private static SharedPreferences getPrefs(Context context) {
         return context.getSharedPreferences(UX_SHARED_PREFS, Context.MODE_PRIVATE);
     }

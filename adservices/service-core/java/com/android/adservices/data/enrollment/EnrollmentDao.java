@@ -144,7 +144,7 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     @VisibleForTesting
     boolean isSeeded() {
-        SharedPreferences prefs = getPrefs(mContext);
+        SharedPreferences prefs = getPrefs();
         boolean isSeeded = prefs.getBoolean(IS_SEEDED, false);
         LogUtil.v("Persisted enrollment database seed status: %s", isSeeded);
         return isSeeded;
@@ -163,7 +163,7 @@ public class EnrollmentDao implements IEnrollmentDao {
             LogUtil.v("Enrollment database seed insertion status: %s", success);
 
             if (success) {
-                SharedPreferences prefs = getPrefs(mContext);
+                SharedPreferences prefs = getPrefs();
                 SharedPreferences.Editor edit = prefs.edit();
                 edit.putBoolean(IS_SEEDED, true);
                 if (!edit.commit()) {
@@ -184,7 +184,7 @@ public class EnrollmentDao implements IEnrollmentDao {
     void unSeed() {
         LogUtil.v("Clearing enrollment database seed status");
 
-        SharedPreferences prefs = getPrefs(mContext);
+        SharedPreferences prefs = getPrefs();
         SharedPreferences.Editor edit = prefs.edit();
         edit.putBoolean(IS_SEEDED, false);
         if (!edit.commit()) {
@@ -1731,8 +1731,8 @@ public class EnrollmentDao implements IEnrollmentDao {
         return mFlags.getEnrollmentApiBasedSchemaEnabled() && supportsEnrollmentAPISchemaColumns();
     }
 
-    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
-    private static SharedPreferences getPrefs(Context context) {
-        return context.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
+    @SuppressWarnings({"AvoidSharedPreferences"}) // Legacy usage
+    private SharedPreferences getPrefs() {
+        return mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
     }
 }

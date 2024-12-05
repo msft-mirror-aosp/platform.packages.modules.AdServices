@@ -18,8 +18,10 @@ package com.android.server.adservices;
 
 import static com.android.server.adservices.Flags.ADSERVICES_SYSTEM_SERVICE_ENABLED;
 import static com.android.server.adservices.Flags.CLIENT_ERROR_LOGGING__ENABLE_CEL_FOR_SYSTEM_SERVER;
+import static com.android.server.adservices.Flags.ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API_IN_SYSTEM_SERVER;
 import static com.android.server.adservices.PhFlags.KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED;
 import static com.android.server.adservices.PhFlags.KEY_CLIENT_ERROR_LOGGING__ENABLE_CEL_FOR_SYSTEM_SERVER;
+import static com.android.server.adservices.PhFlags.KEY_ENABLE_BATCH_UPDATE_API_IN_SYSTEM_SERVER;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -72,5 +74,24 @@ public final class PhFlagsTest {
                 /* makeDefault */ false);
 
         assertThat(mPhFlags.getEnableCelForSystemServer()).isEqualTo(phOverridingValue);
+    }
+
+    @Test
+    public void testEnableAtomicFileDatastoreBatchUpdateAPIInSystemServer() {
+        // Without any overriding, the value is the hard coded constant.
+        assertThat(mPhFlags.getEnableAtomicFileDatastoreBatchUpdateApiInSystemServer())
+                .isEqualTo(ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API_IN_SYSTEM_SERVER);
+
+        // Now overriding with the value from PH.
+        boolean phOverridingValue = !ENABLE_ATOMIC_FILE_DATASTORE_BATCH_UPDATE_API_IN_SYSTEM_SERVER;
+
+        DeviceConfig.setProperty(
+                DeviceConfig.NAMESPACE_ADSERVICES,
+                KEY_ENABLE_BATCH_UPDATE_API_IN_SYSTEM_SERVER,
+                Boolean.toString(phOverridingValue),
+                /* makeDefault */ false);
+
+        assertThat(mPhFlags.getEnableAtomicFileDatastoreBatchUpdateApiInSystemServer())
+                .isEqualTo(phOverridingValue);
     }
 }
