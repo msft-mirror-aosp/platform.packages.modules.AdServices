@@ -78,6 +78,7 @@ import static com.android.adservices.service.Flags.DEFAULT_ENABLE_PACKAGE_DENY_J
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_PACKAGE_DENY_MDD;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_PACKAGE_DENY_SERVICE;
+import static com.android.adservices.service.Flags.DEFAULT_ENABLE_RB_ATRACE;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_TABLET_REGION_FIX;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION;
@@ -649,6 +650,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_RB_ATRACE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_TABLET_REGION_FIX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_U18_APPSEARCH_MIGRATION;
 import static com.android.adservices.service.FlagsConstants.KEY_ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL;
@@ -6192,6 +6194,12 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
                 COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
                 Flags::getComponentAdRenderIdMaxLengthBytes);
+    }
+
+    @Test
+    public void testGetRbAtraceEnabled() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_ENABLE_RB_ATRACE, DEFAULT_ENABLE_RB_ATRACE, Flags::getEnableRbAtrace);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

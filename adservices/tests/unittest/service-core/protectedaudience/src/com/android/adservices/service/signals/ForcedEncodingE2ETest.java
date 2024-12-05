@@ -17,7 +17,6 @@
 package com.android.adservices.service.signals;
 
 import static android.adservices.common.CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI;
-import static android.adservices.common.CommonFixture.FIXED_NOW;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.service.signals.SignalsFixture.assertSignalsUnorderedListEqualsExceptIdAndTime;
@@ -112,6 +111,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -127,6 +127,8 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
     private static final long WAIT_TIME_SECONDS = 1L;
     private static final String SIGNALS_PATH = "/signals";
+    private static final Clock CLOCK = Clock.getInstance();
+    private static final Instant NOW = Instant.ofEpochMilli(CLOCK.currentTimeMillis());
     private static final List<DBProtectedSignal> DB_PROTECTED_SIGNALS =
             Arrays.asList(
                     getDBProtectedSignal(1, 101),
@@ -182,7 +184,6 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private EncoderLogicHandler mEncoderLogicHandler;
     private SignalsScriptEngine mScriptEngine;
-    private Clock mClock;
     private PeriodicEncodingJobWorker mPeriodicEncodingJobWorker;
     private ForcedEncoderImpl mForcedEncoder;
     private UpdateEncoderEventHandler mUpdateEncoderEventHandler;
@@ -195,7 +196,6 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
     private UpdateSignalsOrchestrator mUpdateSignalsOrchestrator;
 
     private ProtectedSignalsServiceImpl mService;
-
     @Before
     public void setup() {
         mFakeFlags = new ForcedEncodingE2ETestFlags();
@@ -244,8 +244,6 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                         ISOLATE_SETTINGS_WITH_MAX_HEAP_ENFORCEMENT_ENABLED
                                 ::getIsolateConsoleMessageInLogsEnabled);
 
-        mClock = Clock.getInstance();
-
         mPeriodicEncodingJobWorker =
                 new PeriodicEncodingJobWorker(
                         mEncoderLogicHandler,
@@ -257,7 +255,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                         mLightweightExecutor,
                         mFakeFlags,
                         mEnrollmentDao,
-                        mClock,
+                        CLOCK,
                         mAdServicesLoggerMock);
 
         mForcedEncoder =
@@ -267,7 +265,8 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                         mEncodedPayloadDao,
                         mSignalsDao,
                         mPeriodicEncodingJobWorker,
-                        mBackgroundExecutor);
+                        mBackgroundExecutor,
+                        CLOCK);
 
         mUpdateEncoderEventHandler =
                 new UpdateEncoderEventHandler(
@@ -419,7 +418,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                 .setBuyer(BUYER)
                 .setKey(intToBytes(key))
                 .setValue(intToBytes(value))
-                .setCreationTime(FIXED_NOW)
+                .setCreationTime(NOW)
                 .setPackageName(TEST_PACKAGE_NAME)
                 .build();
     }
@@ -455,7 +454,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
         DBEncoderEndpoint endpoint =
                 DBEncoderEndpoint.builder()
                         .setBuyer(BUYER)
-                        .setCreationTime(FIXED_NOW)
+                        .setCreationTime(NOW)
                         .setDownloadUri(encoderUri)
                         .build();
         mEncoderEndpointsDao.registerEndpoint(endpoint);
@@ -463,7 +462,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
         DBEncoderLogicMetadata encoderLogicEntry =
                 DBEncoderLogicMetadata.builder()
                         .setBuyer(BUYER)
-                        .setCreationTime(FIXED_NOW)
+                        .setCreationTime(NOW)
                         .setVersion(1)
                         .build();
         mEncoderLogicMetadataDao.persistEncoderLogicMetadata(encoderLogicEntry);
@@ -475,7 +474,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
         DBEncodedPayload dbEncodedPayload =
                 DBEncodedPayload.builder()
                         .setBuyer(BUYER)
-                        .setCreationTime(FIXED_NOW.minus(cooldownWindow))
+                        .setCreationTime(NOW.minus(cooldownWindow))
                         .setVersion(1)
                         .setEncodedPayload(new byte[] {(byte) (DB_PROTECTED_SIGNALS.size() - 1)})
                         .build();
@@ -536,7 +535,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
         DBEncoderEndpoint endpoint =
                 DBEncoderEndpoint.builder()
                         .setBuyer(BUYER)
-                        .setCreationTime(FIXED_NOW)
+                        .setCreationTime(NOW)
                         .setDownloadUri(encoderUri)
                         .build();
         mEncoderEndpointsDao.registerEndpoint(endpoint);
@@ -544,20 +543,17 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
         DBEncoderLogicMetadata encoderLogicEntry =
                 DBEncoderLogicMetadata.builder()
                         .setBuyer(BUYER)
-                        .setCreationTime(FIXED_NOW)
+                        .setCreationTime(NOW)
                         .setVersion(1)
                         .build();
         mEncoderLogicMetadataDao.persistEncoderLogicMetadata(encoderLogicEntry);
 
         // Persist an encoded payload created within the cooldown window.
-        Duration cooldownWindow =
-                Duration.ofSeconds(
-                        mFakeFlags.getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds() - 60);
         byte[] differentEncodedPayload = new byte[] {(byte) (DB_PROTECTED_SIGNALS.size() - 1)};
         DBEncodedPayload dbEncodedPayload =
                 DBEncodedPayload.builder()
                         .setBuyer(BUYER)
-                        .setCreationTime(FIXED_NOW.minus(cooldownWindow))
+                        .setCreationTime(NOW)
                         .setVersion(1)
                         .setEncodedPayload(differentEncodedPayload)
                         .build();
@@ -751,7 +747,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
         DBEncoderEndpoint endpoint =
                 DBEncoderEndpoint.builder()
                         .setBuyer(BUYER)
-                        .setCreationTime(FIXED_NOW)
+                        .setCreationTime(NOW)
                         .setDownloadUri(encoderUri)
                         .build();
         mEncoderEndpointsDao.registerEndpoint(endpoint);
@@ -759,7 +755,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
         DBEncoderLogicMetadata encoderLogicEntry =
                 DBEncoderLogicMetadata.builder()
                         .setBuyer(BUYER)
-                        .setCreationTime(FIXED_NOW)
+                        .setCreationTime(NOW)
                         .setVersion(1)
                         .build();
         mEncoderLogicMetadataDao.persistEncoderLogicMetadata(encoderLogicEntry);

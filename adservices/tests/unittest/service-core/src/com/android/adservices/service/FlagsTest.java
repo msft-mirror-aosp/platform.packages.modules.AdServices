@@ -680,6 +680,11 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 Flags::getFledgeEnableForcedEncodingAfterSignalsUpdate);
     }
 
+    @Test
+    public void testGetEnableRbAtrace() {
+        testFlag("DEFAULT_ENABLE_RB_ATRACE", /* defaultValue */ false, Flags::getEnableRbAtrace);
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // Tests for (legacy) kill-switch flags that will be refactored as feature flag - they should //
     // move to the block above once refactored.                                                   //
