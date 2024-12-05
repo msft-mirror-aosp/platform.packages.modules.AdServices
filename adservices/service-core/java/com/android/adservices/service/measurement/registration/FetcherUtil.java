@@ -442,41 +442,55 @@ public class FetcherUtil {
 
     static Optional<String> getValidAggregateDebugReportingWithBudget(
             JSONObject aggregateDebugReporting, Flags flags) throws JSONException {
-        int budget = 0;
-        if (!aggregateDebugReporting.isNull(AggregateDebugReportingHeaderContract.BUDGET)) {
-            Optional<BigDecimal> optionalBudget =
-                    extractIntegralValue(
+        try {
+            if (aggregateDebugReporting.isNull(AggregateDebugReportingHeaderContract.BUDGET)) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("Aggregate debug reporting budget is not present.");
+                return Optional.empty();
+            }
+            Optional<Integer> optionalBudget =
+                    extractIntegralInt(
                             aggregateDebugReporting, AggregateDebugReportingHeaderContract.BUDGET);
-            // If the budget is invalid number or not in range, fallback to 0
-            int maxSumAggValuesPerSource = flags.getMeasurementMaxSumOfAggregateValuesPerSource();
-            budget =
-                    optionalBudget
-                            .filter(val -> val.compareTo(BigDecimal.ZERO) >= 0)
-                            .filter(
-                                    val ->
-                                            val.compareTo(new BigDecimal(maxSumAggValuesPerSource))
-                                                    <= 0)
-                            .map(BigDecimal::intValue)
-                            .orElse(0);
+            if (optionalBudget.isEmpty()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("Aggregate debug reporting budget is invalid.");
+                return Optional.empty();
+            }
+            int budget = optionalBudget.get();
+            if (budget <= 0 || budget > flags.getMeasurementMaxSumOfAggregateValuesPerSource()) {
+                LoggerFactory.getMeasurementLogger()
+                        .d("Aggregate debug reporting budget value is out of bounds.");
+                return Optional.empty();
+            }
+            Optional<JSONObject> validAggregateDebugReporting =
+                    getValidAggregateDebugReportingWithoutBudget(
+                            aggregateDebugReporting, flags, budget);
+            if (validAggregateDebugReporting.isPresent()) {
+                validAggregateDebugReporting
+                        .get()
+                        .put(AggregateDebugReportingHeaderContract.BUDGET, budget);
+            }
+            return validAggregateDebugReporting.map(JSONObject::toString);
+        } catch (JSONException | NumberFormatException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("getValidAggregateDebugReportingWithBudget threw an exception.");
+            return Optional.empty();
         }
-        Optional<JSONObject> validAggregateDebugReporting =
-                getValidAggregateDebugReportingWithoutBudget(
-                        aggregateDebugReporting, flags, budget);
-        if (validAggregateDebugReporting.isPresent()) {
-            validAggregateDebugReporting
-                    .get()
-                    .put(AggregateDebugReportingHeaderContract.BUDGET, budget);
-        }
-        return validAggregateDebugReporting.map(JSONObject::toString);
     }
 
     static Optional<String> getValidAggregateDebugReportingWithoutBudget(
             JSONObject aggregateDebugReporting, Flags flags) throws JSONException {
-        return getValidAggregateDebugReportingWithoutBudget(
-                        aggregateDebugReporting,
-                        flags,
-                        flags.getMeasurementMaxSumOfAggregateValuesPerSource())
-                .map(JSONObject::toString);
+        try {
+            return getValidAggregateDebugReportingWithoutBudget(
+                            aggregateDebugReporting,
+                            flags,
+                            flags.getMeasurementMaxSumOfAggregateValuesPerSource())
+                    .map(JSONObject::toString);
+        } catch (JSONException | NumberFormatException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("getValidAggregateDebugReportingWithoutBudget threw an exception.");
+            return Optional.empty();
+        }
     }
 
     private static Optional<JSONObject> getValidAggregateDebugReportingWithoutBudget(
@@ -485,9 +499,6 @@ public class FetcherUtil {
         JSONObject validAggregateDebugReporting = new JSONObject();
         String keyPiece =
                 aggregateDebugReporting.optString(AggregateDebugReportingHeaderContract.KEY_PIECE);
-        if (keyPiece.isEmpty()) {
-            keyPiece = DEFAULT_HEX_STRING;
-        }
         if (!FetcherUtil.isValidAggregateKeyPiece(keyPiece, flags)) {
             LoggerFactory.getMeasurementLogger()
                     .d("Aggregate debug reporting key-piece is invalid.");
@@ -578,14 +589,12 @@ public class FetcherUtil {
                             AggregateDebugReportDataHeaderContract.TYPES,
                             Integer.MAX_VALUE,
                             Integer.MAX_VALUE);
-            if (maybeDebugDataTypes.isEmpty()) {
-                LoggerFactory.getMeasurementLogger()
-                        .d("Aggregate debug reporting data type must not be empty.");
+            if (maybeDebugDataTypes.isEmpty() || maybeDebugDataTypes.get().isEmpty()) {
+                LoggerFactory.getMeasurementLogger().d("Aggregate debug data type is invalid.");
                 return Optional.empty();
             }
-            List<String> debugDataTypesList = maybeDebugDataTypes.get();
             List<String> validDebugDataTypes = new ArrayList<>();
-            for (String debugDataType : debugDataTypesList) {
+            for (String debugDataType : maybeDebugDataTypes.get()) {
                 Optional<DebugReportApi.Type> maybeType =
                         DebugReportApi.Type.findByValue(debugDataType);
                 // Ignore the type if not recognized

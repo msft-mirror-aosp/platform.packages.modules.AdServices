@@ -18,7 +18,6 @@ package com.android.adservices.service;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
 
-import static com.android.adservices.service.DebugFlags.CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_GLOBAL;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_RAMPED_UP;
@@ -1003,6 +1002,25 @@ public interface Flags extends ModuleSharedFlags {
     long FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_RETRY_AFTER_VALUE_MS =
             24 * 60 * 60 * 1000; // 24 hours in ms
 
+    @FeatureFlag boolean ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS = false;
+    @ConfigFlag int MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE = 40;
+    @ConfigFlag int COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES = 12;
+
+    /** Returns true if the component ads feature is enabled for custom audiences. */
+    default boolean getEnableCustomAudienceComponentAds() {
+        return ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
+    }
+
+    /** Returns the maximum number of component ads per custom audience. */
+    default int getMaxComponentAdsPerCustomAudience() {
+        return MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE;
+    }
+
+    /** Returns the maximum length of component ad render ids in bytes. */
+    default int getComponentAdRenderIdMaxLengthBytes() {
+        return COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES;
+    }
+
     /**
      * Returns the minimum number of milliseconds before the same fetch CA request can be retried.
      */
@@ -1321,6 +1339,26 @@ public interface Flags extends ModuleSharedFlags {
      */
     default int getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes() {
         return PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES;
+    }
+
+    @FeatureFlag boolean FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE = false;
+
+    @ConfigFlag
+    long FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS = 4L * 60L * 60L; // 4 hours
+
+    /**
+     * Returns {@code true} if forced encoding directly after a call to updateSignals() is enabled.
+     */
+    default boolean getFledgeEnableForcedEncodingAfterSignalsUpdate() {
+        return FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE;
+    }
+
+    /**
+     * Returns the cooldown period in seconds after any signals encoding during which forced
+     * encoding directly after a call to updateSignals() will not occur.
+     */
+    default long getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds() {
+        return FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS;
     }
 
     int FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT = 10_000;
@@ -2060,15 +2098,6 @@ public interface Flags extends ModuleSharedFlags {
         return ADSERVICES_ENABLED;
     }
 
-    @FeatureFlag boolean DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED = false;
-
-    /**
-     * @return {@code true} if the developer mode feature is enabled on this device.
-     */
-    default boolean getDeveloperModeFeatureEnabled() {
-        return DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED;
-    }
-
     /**
      * The number of epoch to look back to do garbage collection for old epoch data. Assume current
      * Epoch is T, then any epoch data of (T-NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY-1) (inclusive)
@@ -2149,15 +2178,6 @@ public interface Flags extends ModuleSharedFlags {
 
     default long getConsentNotificationMinimalDelayBeforeIntervalEnds() {
         return CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS;
-    }
-
-    /**
-     * @deprecated - TODO(b/330796095): remove once all usages of this method are moved to {@link
-     *     DebugFlags}
-     */
-    @Deprecated
-    default boolean getConsentNotificationDebugMode() {
-        return CONSENT_NOTIFICATION_DEBUG_MODE;
     }
 
     /** Available sources of truth to get consent for PPAPI. */
@@ -3146,11 +3166,25 @@ public interface Flags extends ModuleSharedFlags {
      */
     float TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND = 1;
 
-    /**
-     * PP API Rate Limit for Fledge Report Interaction API. This is the max allowed QPS for one SDK
-     * to one the Report Interaction API. Negative Value means skipping the rate limiting checking.
+    /*
+     * PP API Rate Limits for Protected Audience/Protected Signals APIs. These are the max allowed
+     * QPS for an app to call a single API. A negative value means skipping the rate limiting
+     * check.
      */
+
+    @ConfigFlag float FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND = 1;
     float FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND = 1;
+    @ConfigFlag float FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND = 1;
 
     /** Returns the Sdk Request Permits Per Second. */
     default float getSdkRequestPermitsPerSecond() {
@@ -3202,9 +3236,83 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND;
     }
 
-    /** Returns the Fledge Report Interaction API Request Permits Per Second. */
+    /** Returns the Protected Audience joinCustomAudience() API max request permits per second. */
+    default float getFledgeJoinCustomAudienceRequestPermitsPerSecond() {
+        return FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /**
+     * Returns the Protected Audience fetchAndJoinCustomAudience() API max request permits per
+     * second.
+     */
+    default float getFledgeFetchAndJoinCustomAudienceRequestPermitsPerSecond() {
+        return FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /**
+     * Returns the Protected Audience scheduleCustomAudienceUpdate() API max request permits per
+     * second.
+     */
+    default float getFledgeScheduleCustomAudienceUpdateRequestPermitsPerSecond() {
+        return FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Protected Audience leaveCustomAudience() API max request permits per second. */
+    default float getFledgeLeaveCustomAudienceRequestPermitsPerSecond() {
+        return FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Protected Signals updateSignals() API max request permits per second. */
+    default float getFledgeUpdateSignalsRequestPermitsPerSecond() {
+        return FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Protected Audience selectAds() API max request permits per second. */
+    default float getFledgeSelectAdsRequestPermitsPerSecond() {
+        return FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /**
+     * Returns the Protected Audience selectAds() with outcomes API max request permits per second.
+     */
+    default float getFledgeSelectAdsWithOutcomesRequestPermitsPerSecond() {
+        return FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Protected Audience getAdSelectionData() API max request permits per second. */
+    default float getFledgeGetAdSelectionDataRequestPermitsPerSecond() {
+        return FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /**
+     * Returns the Protected Audience persistAdSelectionResult() API max request permits per second.
+     */
+    default float getFledgePersistAdSelectionResultRequestPermitsPerSecond() {
+        return FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Protected Audience reportImpression() API max request permits per second. */
+    default float getFledgeReportImpressionRequestPermitsPerSecond() {
+        return FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /** Returns the Protected Audience reportEvent() API max request permits per second. */
     default float getFledgeReportInteractionRequestPermitsPerSecond() {
         return FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /**
+     * Returns the Protected Audience setAppInstallAdvertisers() API max request permits per second.
+     */
+    default float getFledgeSetAppInstallAdvertisersRequestPermitsPerSecond() {
+        return FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND;
+    }
+
+    /**
+     * Returns the Protected Audience updateAdCounterHistogram() API max request permits per second.
+     */
+    default float getFledgeUpdateAdCounterHistogramRequestPermitsPerSecond() {
+        return FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND;
     }
 
     // Flags for ad tech enrollment enforcement
@@ -3244,11 +3352,14 @@ public interface Flags extends ModuleSharedFlags {
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES = true;
     boolean ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE = true;
+    @ConfigFlag boolean ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE = true;
+    @ConfigFlag boolean ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE = true;
+    @ConfigFlag boolean ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE = true;
     boolean ENFORCE_FOREGROUND_STATUS_TOPICS = true;
     boolean ENFORCE_FOREGROUND_STATUS_SIGNALS = true;
 
     /**
-     * Returns true if FLEDGE runAdSelection API should require that the calling API is running in
+     * Returns true if FLEDGE runAdSelection API should require that the caller is running in
      * foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
@@ -3256,7 +3367,7 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Returns true if FLEDGE reportImpression API should require that the calling API is running in
+     * Returns true if FLEDGE reportImpression API should require that the caller is running in
      * foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeReportImpression() {
@@ -3264,8 +3375,8 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Returns true if FLEDGE reportInteraction API should require that the calling API is running
-     * in foreground.
+     * Returns true if FLEDGE reportInteraction API should require that the caller is running in
+     * foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeReportInteraction() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION;
@@ -3273,18 +3384,42 @@ public interface Flags extends ModuleSharedFlags {
 
     /**
      * Returns true if FLEDGE override API methods (for Custom Audience and Ad Selection) should
-     * require that the calling API is running in foreground.
+     * require that the caller is running in foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeOverrides() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDES;
     }
 
     /**
-     * Returns true if FLEDGE Custom Audience API methods should require that the calling API is
-     * running in foreground.
+     * Returns true if FLEDGE Custom Audience API methods should require that the caller is running
+     * in foreground.
      */
     default boolean getEnforceForegroundStatusForFledgeCustomAudience() {
         return ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE;
+    }
+
+    /**
+     * Returns true if FetchAndJoin Custom Audience API should require that the caller is running in
+     * foreground.
+     */
+    default boolean getEnforceForegroundStatusForFetchAndJoinCustomAudience() {
+        return ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE;
+    }
+
+    /**
+     * Returns true if Leave Custom Audience API should require that the caller is running in
+     * foreground.
+     */
+    default boolean getEnforceForegroundStatusForLeaveCustomAudience() {
+        return ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE;
+    }
+
+    /**
+     * Returns true if Schedule Custom Audience API should require that the caller is running in
+     * foreground.
+     */
+    default boolean getEnforceForegroundStatusForScheduleCustomAudience() {
+        return ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE;
     }
 
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS = true;
@@ -5855,6 +5990,13 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB;
     }
 
+    /** Flag to use configurations manager to query enrollment data. */
+    @FeatureFlag boolean DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT = false;
+
+    default boolean getUseConfigsManagerToQueryEnrollment() {
+        return DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT;
+    }
+
     @FeatureFlag boolean DEFAULT_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER = false;
 
     /**
@@ -5901,6 +6043,13 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns if the winning seller id in AdSelectionOutcome is enabled. */
     default boolean getEnableWinningSellerIdInAdSelectionOutcome() {
         return DEFAULT_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME;
+    }
+
+    boolean DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER = false;
+
+    /** Returns if the prod debug feature is enabled for server auctions. */
+    default boolean getEnableProdDebugInAuctionServer() {
+        return DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

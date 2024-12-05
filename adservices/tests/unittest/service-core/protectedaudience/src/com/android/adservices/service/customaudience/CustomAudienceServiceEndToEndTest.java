@@ -386,7 +386,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                COMMON_FLAGS_WITH_FILTERS_ENABLED),
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         mFledgeAuthorizationFilterSpy,
                         mConsentManagerMock,
                         mDevContextFilter,
@@ -436,7 +438,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                COMMON_FLAGS_WITH_FILTERS_ENABLED),
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         mCustomAudienceQuantityChecker,
                         mStrategy,
                         mAdServicesLoggerMock);
@@ -468,7 +472,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 customAudienceQuantityChecker,
                                 customAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                COMMON_FLAGS_WITH_FILTERS_ENABLED),
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         new FledgeAuthorizationFilter(
                                 mContext.getPackageManager(),
                                 EnrollmentDao.getInstance(),
@@ -1357,7 +1363,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 customAudienceQuantityChecker,
                                 customAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                COMMON_FLAGS_WITH_FILTERS_ENABLED),
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         new FledgeAuthorizationFilter(
                                 mContext.getPackageManager(),
                                 EnrollmentDao.getInstance(),
@@ -1761,7 +1769,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                flagsWithAuctionServerRequestFlagsEnabled),
+                                flagsWithAuctionServerRequestFlagsEnabled,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         mCustomAudienceQuantityChecker,
                         mStrategy,
                         mAdServicesLoggerMock);
@@ -1928,7 +1938,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                flagsWithSellerConfigurationFlagEnabled),
+                                flagsWithSellerConfigurationFlagEnabled,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         mCustomAudienceQuantityChecker,
                         mStrategy,
                         mAdServicesLoggerMock);
@@ -2079,7 +2091,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                     caBlobs.stream()
                                             .map(b -> b.getName())
                                             .collect(Collectors.toList())
-                                            .containsAll(List.of(PARTIAL_CA_1)));
+                                            .contains(PARTIAL_CA_1));
                             return new MockResponse().setBody(responsePayload1);
                         } else if (request.getPath().equals(UPDATE_URI_PATH_2)) {
                             List<CustomAudienceBlob> caBlobs =
@@ -2088,7 +2100,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                     caBlobs.stream()
                                             .map(b -> b.getName())
                                             .collect(Collectors.toList())
-                                            .containsAll(List.of(PARTIAL_CA_2)));
+                                            .contains(PARTIAL_CA_2));
                             return new MockResponse().setBody(responsePayload2);
                         }
                         return new MockResponse();
@@ -2221,7 +2233,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                     caBlobs.stream()
                                             .map(b -> b.getName())
                                             .collect(Collectors.toList())
-                                            .containsAll(List.of(PARTIAL_CA_1)));
+                                            .contains(PARTIAL_CA_1));
                             return new MockResponse().setBody(responsePayload);
                         }
                         return new MockResponse();
@@ -2327,7 +2339,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                flagsWithCAQuantityCheckerFlags),
+                                flagsWithCAQuantityCheckerFlags,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         new CustomAudienceQuantityChecker(
                                 mCustomAudienceDao, flagsWithCAQuantityCheckerFlags),
                         mStrategy,
@@ -2356,7 +2370,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                     caBlobs.stream()
                                             .map(b -> b.getName())
                                             .collect(Collectors.toList())
-                                            .containsAll(List.of(PARTIAL_CA_1)));
+                                            .contains(PARTIAL_CA_1));
                             return new MockResponse().setBody(responsePayload);
                         }
                         return new MockResponse();
@@ -2461,7 +2475,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                flagsWithCAQuantityCheckerFlags),
+                                flagsWithCAQuantityCheckerFlags,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         new CustomAudienceQuantityChecker(
                                 mCustomAudienceDao, flagsWithCAQuantityCheckerFlags),
                         mStrategy,
@@ -2593,7 +2609,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                     caBlobs.stream()
                                             .map(b -> b.getName())
                                             .collect(Collectors.toList())
-                                            .containsAll(List.of(PARTIAL_CA_1)));
+                                            .contains(PARTIAL_CA_1));
                             return new MockResponse().setBody(responsePayload);
                         }
                         return new MockResponse();
@@ -2751,7 +2767,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 caBlobs.stream()
                                         .map(b -> b.getName())
                                         .collect(Collectors.toList())
-                                        .containsAll(List.of(PARTIAL_CA_1)));
+                                        .contains(PARTIAL_CA_1));
                         return new MockResponse().setBody(responsePayload);
                     }
                 };
@@ -2853,7 +2869,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 caBlobs.stream()
                                         .map(b -> b.getName())
                                         .collect(Collectors.toList())
-                                        .containsAll(List.of(PARTIAL_CA_1)));
+                                        .contains(PARTIAL_CA_1));
                         return new MockResponse().setBody(responsePayload);
                     }
                 };
@@ -4771,7 +4787,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                         mCustomAudienceQuantityCheckerMock,
                                         mCustomAudienceValidatorMock,
                                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                        flagsWithLowRateLimit),
+                                        flagsWithLowRateLimit,
+                                        ComponentAdsStrategy.createInstance(
+                                                /* componentAdsEnabled= */ false)),
                                 new FledgeAuthorizationFilter(
                                         mContext.getPackageManager(),
                                         EnrollmentDao.getInstance(),
@@ -4956,7 +4974,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                flags),
+                                flags,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         mFledgeAuthorizationFilterSpy,
                         mConsentManagerMock,
                         mDevContextFilter,
@@ -5136,7 +5156,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                COMMON_FLAGS_WITH_FILTERS_ENABLED),
+                                COMMON_FLAGS_WITH_FILTERS_ENABLED,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         mFledgeAuthorizationFilterSpy,
                         mConsentManagerMock,
                         mDevContextFilter,
@@ -5178,7 +5200,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceQuantityChecker,
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                                flags),
+                                flags,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)),
                         mCustomAudienceQuantityChecker,
                         mStrategy,
                         mAdServicesLoggerMock);

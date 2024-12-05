@@ -28,7 +28,8 @@ import com.android.modules.utils.build.SdkLevel;
 import java.io.File;
 
 /** Utility class for handling file names in a backward-compatible manner */
-@SuppressLint("NewAdServicesFile")
+// TODO(b/311183933): Remove passed in Context from static method.
+@SuppressLint({"NewAdServicesFile", "AvoidStaticContext"})
 public final class FileCompatUtils {
     private static final String ADSERVICES_PREFIX = "adservices";
 

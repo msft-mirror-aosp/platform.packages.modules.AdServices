@@ -17,7 +17,6 @@
 package com.android.adservices.ui.util;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
@@ -423,8 +422,7 @@ public final class SettingsTestUtil {
      */
     public static void fledgeViewTextPasEnabledTest(
             UiDevice device, AdServicesFlagsSetterRule flags) throws RemoteException {
-        flags.setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
-                .setFlag(KEY_PAS_UX_ENABLED, true)
+        flags.setFlag(KEY_PAS_UX_ENABLED, true)
                 .setFlag(KEY_IS_EEA_DEVICE_FEATURE_ENABLED, true)
                 .setFlag(KEY_IS_EEA_DEVICE, false)
                 .setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false)

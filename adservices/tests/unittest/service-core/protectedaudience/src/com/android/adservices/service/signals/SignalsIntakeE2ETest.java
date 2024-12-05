@@ -101,7 +101,6 @@ import com.google.mockwebserver.MockResponse;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -162,6 +161,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
     private ListeningExecutorService mBackgroundExecutorService;
     private Flags mFakeFlags;
     private EnrollmentDao mEnrollmentDao;
+    private ForcedEncoder mForcedEncoder;
 
     @Before
     public void setup() {
@@ -199,13 +199,22 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mFakeFlags);
+        mForcedEncoder =
+                new ForcedEncoderFactory(
+                                mFakeFlags.getFledgeEnableForcedEncodingAfterSignalsUpdate(),
+                                mFakeFlags
+                                        .getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds(),
+                                mSpyContext)
+                        .createInstance();
         mUpdateEncoderEventHandler =
                 new UpdateEncoderEventHandler(
                         mEncoderEndpointsDao,
                         mEncoderLogicHandler,
                         mSpyContext,
                         AdServicesExecutors.getBackgroundExecutor(),
-                        /* isCompletionBroadcastEnabled= */ false);
+                        /* isCompletionBroadcastEnabled= */ false,
+                        mForcedEncoder,
+                        false);
         int oversubscriptionBytesLimit =
                 mFakeFlags.getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes();
         mSignalEvictionController =
@@ -218,7 +227,8 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         mSignalsDao,
                         mUpdateProcessorSelector,
                         mUpdateEncoderEventHandler,
-                        mSignalEvictionController);
+                        mSignalEvictionController,
+                        mForcedEncoder);
         mAdtechUriValidator = new AdTechUriValidator("", "", "", "");
         mFledgeAuthorizationFilter =
                 ExtendedMockito.spy(
@@ -317,7 +327,6 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
         assertSignalsUnorderedListEqualsExceptIdAndTime(expected, actual);
     }
 
-    @Ignore("b/376480141")
     @Test
     public void testPut_beforeDevSession_signalIsCleared() throws Exception {
         setupService(true);
@@ -334,7 +343,6 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
         mDevSessionHelper.endDevSession();
     }
 
-    @Ignore("b/376480141")
     @Test
     public void testPut_duringDevSession_signalIsCleared() throws Exception {
         setupService(true);

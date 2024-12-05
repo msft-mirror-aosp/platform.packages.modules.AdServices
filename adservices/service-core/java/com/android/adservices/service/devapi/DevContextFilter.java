@@ -73,7 +73,6 @@ public class DevContextFilter {
      * @param appPackageNameRetriever An instance of a class to fetch app package names.
      * @param devSessionDataStore An instance of the class to fetch dev session status.
      */
-    @VisibleForTesting
     public DevContextFilter(
             @NonNull ContentResolver contentResolver,
             @NonNull PackageManager packageManager,
@@ -97,7 +96,7 @@ public class DevContextFilter {
      * @param developerModeFeatureEnabled If the developer mode feature is enabled.
      * @return A valid {@link DevContextFilter} instance.
      */
-    @VisibleForTesting
+    @SuppressWarnings("AvoidStaticContext")
     public static DevContextFilter create(
             @NonNull Context context, final boolean developerModeFeatureEnabled) {
         // A separate constructor is needed for tests as the data store factory makes a flags check,
@@ -109,17 +108,6 @@ public class DevContextFilter {
                 context.getPackageManager(),
                 AppPackageNameRetriever.create(context),
                 DevSessionDataStoreFactory.get(developerModeFeatureEnabled));
-    }
-
-    /** Creates an instance of {@link DevContextFilter}. */
-    public static DevContextFilter create(@NonNull Context context) {
-        Objects.requireNonNull(context);
-
-        return new DevContextFilter(
-                context.getContentResolver(),
-                context.getPackageManager(),
-                AppPackageNameRetriever.create(context),
-                DevSessionDataStoreFactory.get());
     }
 
     /**
@@ -274,9 +262,10 @@ public class DevContextFilter {
             DevSessionState devSessionState, boolean isCallerDebuggable) throws RuntimeException {
         Exception genericException = null;
         sLogger.v(
-                "Current DevSessionState: %s, isCallerDebuggable: %b",
+                "Current DevSessionState: %s, isCallerDebuggable: %b,",
                 devSessionState, isCallerDebuggable);
         if (devSessionState.equals(DevSessionState.IN_DEV) && !isCallerDebuggable) {
+            sLogger.v("Rejecting non-debuggable app in dev session");
             genericException =
                     AdServicesStatusUtils.asException(STATUS_DEV_SESSION_CALLER_IS_NON_DEBUGGABLE);
         }

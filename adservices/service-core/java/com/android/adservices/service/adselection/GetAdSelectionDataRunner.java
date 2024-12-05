@@ -79,7 +79,8 @@ import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
+import com.android.adservices.service.adselection.debug.AuctionServerDebugConfiguration;
+import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.CoordinatorOriginUriValidator;
@@ -90,7 +91,6 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ConsentedDebugConfiguration;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAuctionInput;
-import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -115,7 +115,6 @@ import java.security.SecureRandom;
 import java.time.Clock;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -150,7 +149,6 @@ public class GetAdSelectionDataRunner {
     @NonNull protected final AdSelectionIdGenerator mAdSelectionIdGenerator;
     @NonNull private final BuyerInputGenerator mBuyerInputGenerator;
     @NonNull private final AuctionServerDataCompressor mDataCompressor;
-    @NonNull private final AuctionServerDebugReporting mAuctionServerDebugReporting;
     @NonNull private final DevContext mDevContext;
     @NonNull private final Clock mClock;
     private final int mPayloadFormatterVersion;
@@ -160,12 +158,9 @@ public class GetAdSelectionDataRunner {
     @NonNull private final AdsRelevanceExecutionLogger mAdsRelevanceExecutionLogger;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategy;
-
-    @NonNull
-    private final ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
-
-    @NonNull private final EgressConfigurationGenerator mEgressConfigurationGenerator;
     private final BuyerInputGeneratorArgumentsPreparer mBuyerInputGeneratorArgumentsPreparer;
+    private final AuctionServerDebugConfigurationGenerator
+            mAuctionServerDebugConfigurationGenerator;
 
     public GetAdSelectionDataRunner(
             @NonNull final Context context,
@@ -184,14 +179,13 @@ public class GetAdSelectionDataRunner {
             @NonNull final DebugFlags debugFlags,
             final int callerUid,
             @NonNull final DevContext devContext,
-            @NonNull final AuctionServerDebugReporting auctionServerDebugReporting,
             @NonNull final AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy,
+            @NonNull final AppInstallAdFilterer appInstallAdFilterer,
             @NonNull
-                    final ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator,
-            @NonNull final EgressConfigurationGenerator egressConfigurationGenerator,
-            @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
+                    final AuctionServerDebugConfigurationGenerator
+                            auctionServerDebugConfigurationGenerator) {
         Objects.requireNonNull(multiCloudSupportStrategy);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
@@ -204,12 +198,10 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(flags);
         Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(devContext);
-        Objects.requireNonNull(auctionServerDebugReporting);
         Objects.requireNonNull(adsRelevanceExecutionLogger);
         Objects.requireNonNull(auctionServerPayloadMetricsStrategy);
-        Objects.requireNonNull(consentedDebugConfigurationGenerator);
-        Objects.requireNonNull(egressConfigurationGenerator);
         Objects.requireNonNull(appInstallAdFilterer);
+        Objects.requireNonNull(auctionServerDebugConfigurationGenerator);
 
         mE2ETraceCookie = e2eTraceCookie;
         mObliviousHttpEncryptor =
@@ -267,11 +259,9 @@ public class GetAdSelectionDataRunner {
                         compressedBuyerInputCreatorFactory);
         mPayloadFormatterVersion = mFlags.getFledgeAuctionServerPayloadFormatVersion();
         mPayloadBucketSizes = mFlags.getFledgeAuctionServerPayloadBucketSizes();
-        mAuctionServerDebugReporting = auctionServerDebugReporting;
         mAdsRelevanceExecutionLogger = adsRelevanceExecutionLogger;
         mAdServicesLogger = adServicesLogger;
-        mConsentedDebugConfigurationGenerator = consentedDebugConfigurationGenerator;
-        mEgressConfigurationGenerator = egressConfigurationGenerator;
+        mAuctionServerDebugConfigurationGenerator = auctionServerDebugConfigurationGenerator;
     }
 
     @VisibleForTesting
@@ -293,13 +283,13 @@ public class GetAdSelectionDataRunner {
             final int callerUid,
             @NonNull final DevContext devContext,
             @NonNull Clock clock,
-            @NonNull AuctionServerDebugReporting auctionServerDebugReporting,
             @NonNull AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy,
-            @NonNull ConsentedDebugConfigurationGenerator consentedDebugConfigurationGenerator,
-            @NonNull EgressConfigurationGenerator egressConfigurationGenerator,
-            @NonNull final AppInstallAdFilterer appInstallAdFilterer) {
+            @NonNull final AppInstallAdFilterer appInstallAdFilterer,
+            @NonNull
+                    final AuctionServerDebugConfigurationGenerator
+                            auctionServerDebugConfigurationGenerator) {
         Objects.requireNonNull(multiCloudSupportStrategy);
         Objects.requireNonNull(adSelectionEntryDao);
         Objects.requireNonNull(customAudienceDao);
@@ -313,12 +303,10 @@ public class GetAdSelectionDataRunner {
         Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(devContext);
         Objects.requireNonNull(clock);
-        Objects.requireNonNull(auctionServerDebugReporting);
         Objects.requireNonNull(adsRelevanceExecutionLogger);
         Objects.requireNonNull(auctionServerPayloadMetricsStrategy);
-        Objects.requireNonNull(consentedDebugConfigurationGenerator);
-        Objects.requireNonNull(egressConfigurationGenerator);
         Objects.requireNonNull(appInstallAdFilterer);
+        Objects.requireNonNull(auctionServerDebugConfigurationGenerator);
 
         mE2ETraceCookie = e2ETraceCookie;
         mObliviousHttpEncryptor =
@@ -376,11 +364,9 @@ public class GetAdSelectionDataRunner {
                         compressedBuyerInputCreatorFactory);
         mPayloadFormatterVersion = mFlags.getFledgeAuctionServerPayloadFormatVersion();
         mPayloadBucketSizes = mFlags.getFledgeAuctionServerPayloadBucketSizes();
-        mAuctionServerDebugReporting = auctionServerDebugReporting;
         mAdsRelevanceExecutionLogger = adsRelevanceExecutionLogger;
         mAdServicesLogger = adServicesLogger;
-        mConsentedDebugConfigurationGenerator = consentedDebugConfigurationGenerator;
-        mEgressConfigurationGenerator = egressConfigurationGenerator;
+        mAuctionServerDebugConfigurationGenerator = auctionServerDebugConfigurationGenerator;
     }
 
     /** Orchestrates GetAdSelectionData process. */
@@ -526,12 +512,8 @@ public class GetAdSelectionDataRunner {
         final AuctionServerPayloadInfo.Builder auctionServerPayloadInfoBuilder =
                 AuctionServerPayloadInfo.builder()
                         .setAdSelectionDataId(adSelectionId)
-                        .setPackageName(packageName)
-                        .setDebugReportingEnabled(mAuctionServerDebugReporting.isEnabled())
-                        .setConsentedDebugConfigurationOptional(
-                                mConsentedDebugConfigurationGenerator
-                                        .getConsentedDebugConfiguration());
-        return setUnlimitedEgressEnabled(auctionServerPayloadInfoBuilder, packageName, mCallerUid)
+                        .setPackageName(packageName);
+        return setDebugConfiguration(auctionServerPayloadInfoBuilder, packageName, mCallerUid)
                 .transformAsync(
                         auctionServerPayloadInfoBuilder2 ->
                                 setCompressedBuyerInputs(
@@ -597,15 +579,15 @@ public class GetAdSelectionDataRunner {
                         mLightweightExecutorService);
     }
 
-    private FluentFuture<AuctionServerPayloadInfo.Builder> setUnlimitedEgressEnabled(
+    private FluentFuture<AuctionServerPayloadInfo.Builder> setDebugConfiguration(
             AuctionServerPayloadInfo.Builder auctionServerPayloadInfoBuilder,
             String packageName,
             int callerUid) {
         return FluentFuture.from(
-                        mEgressConfigurationGenerator.isUnlimitedEgressEnabledForAuction(
-                                packageName, callerUid))
+                        mAuctionServerDebugConfigurationGenerator
+                                .getAuctionServerDebugConfiguration(packageName, callerUid))
                 .transform(
-                        auctionServerPayloadInfoBuilder::setUnlimitedEgressEnabled,
+                        auctionServerPayloadInfoBuilder::setAuctionServerDebugConfiguration,
                         mLightweightExecutorService);
     }
 
@@ -634,9 +616,7 @@ public class GetAdSelectionDataRunner {
                         auctionServerPayloadInfo.getCompressedBuyerInput(),
                         auctionServerPayloadInfo.getPackageName(),
                         auctionServerPayloadInfo.getAdSelectionDataId(),
-                        auctionServerPayloadInfo.getDebugReportingEnabled(),
-                        auctionServerPayloadInfo.getUnlimitedEgressEnabled(),
-                        auctionServerPayloadInfo.getConsentedDebugConfigurationOptional());
+                        auctionServerPayloadInfo.getAuctionServerDebugConfiguration());
         sLogger.v("ProtectedAuctionInput composed");
         AuctionServerPayloadFormattedData formattedData =
                 applyPayloadFormatter(protectedAudienceInput, sellerConfiguration);
@@ -648,12 +628,10 @@ public class GetAdSelectionDataRunner {
     private int getCurrentPayloadSize(AuctionServerPayloadInfo auctionServerPayloadInfo) {
         sLogger.v("Calling get current payload size");
         return composeProtectedAuctionInputBytes(
-                auctionServerPayloadInfo.getCompressedBuyerInput(),
-                auctionServerPayloadInfo.getPackageName(),
-                auctionServerPayloadInfo.getAdSelectionDataId(),
-                auctionServerPayloadInfo.getDebugReportingEnabled(),
-                auctionServerPayloadInfo.getUnlimitedEgressEnabled(),
-                auctionServerPayloadInfo.getConsentedDebugConfigurationOptional())
+                        auctionServerPayloadInfo.getCompressedBuyerInput(),
+                        auctionServerPayloadInfo.getPackageName(),
+                        auctionServerPayloadInfo.getAdSelectionDataId(),
+                        auctionServerPayloadInfo.getAuctionServerDebugConfiguration())
                 .toByteArray()
                 .length;
     }
@@ -684,9 +662,7 @@ public class GetAdSelectionDataRunner {
             Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedBuyerInputs,
             String packageName,
             long adSelectionId,
-            boolean isDebugReportingEnabled,
-            boolean isUnlimitedEgressEnabled,
-            Optional<ConsentedDebugConfiguration> consentedDebugConfigurationOptional) {
+            AuctionServerDebugConfiguration auctionServerDebugConfiguration) {
         sLogger.v("Composing ProtectedAuctionInput with buyer inputs and publisher");
         ProtectedAuctionInput.Builder protectedAuctionInputBuilder =
                 ProtectedAuctionInput.newBuilder()
@@ -699,16 +675,20 @@ public class GetAdSelectionDataRunner {
                                                                 ByteString.copyFrom(
                                                                         e.getValue().getData()))))
                         .setPublisherName(packageName)
-                        .setEnableDebugReporting(isDebugReportingEnabled)
+                        .setEnableDebugReporting(
+                                auctionServerDebugConfiguration.isDebugReportingEnabled())
                         // TODO(b/288287435): Set generation ID as a UUID generated per request
                         // which is not
                         //  accessible in plaintext.
                         .setGenerationId(String.valueOf(adSelectionId))
-                        .setEnableUnlimitedEgress(isUnlimitedEgressEnabled);
-        consentedDebugConfigurationOptional.ifPresent(
-                consentedDebugConfiguration ->
-                        protectedAuctionInputBuilder.setConsentedDebugConfig(
-                                consentedDebugConfiguration));
+                        .setEnableUnlimitedEgress(
+                                auctionServerDebugConfiguration.isUnlimitedEgressEnabled())
+                        .setProdDebug(auctionServerDebugConfiguration.isProdDebugEnabled());
+        ConsentedDebugConfiguration consentedDebugConfiguration =
+                auctionServerDebugConfiguration.getConsentedDebugConfiguration();
+        if (consentedDebugConfiguration != null) {
+            protectedAuctionInputBuilder.setConsentedDebugConfig(consentedDebugConfiguration);
+        }
         return protectedAuctionInputBuilder.build();
     }
 

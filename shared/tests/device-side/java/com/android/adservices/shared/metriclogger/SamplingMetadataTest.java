@@ -14,10 +14,21 @@
  * limitations under the License.
  */
 
-package android.adservices.common;
+package com.android.adservices.shared.metriclogger;
 
-/**
- * Contains data of user choices for each AdServices modules.
- */
+import com.android.adservices.shared.SharedUnitTestCase;
 
-parcelable AdServicesModuleUserChoice;
+import org.junit.Test;
+
+public final class SamplingMetadataTest extends SharedUnitTestCase {
+
+    @Test
+    public void testGetPerEventSamplingRate() {
+        double sampleRate = 0.5;
+        SamplingMetadata metadata = new SamplingMetadata(sampleRate);
+
+        expect.withMessage("sampleRate")
+                .that(metadata.getPerEventSamplingRate())
+                .isEqualTo(sampleRate);
+    }
+}

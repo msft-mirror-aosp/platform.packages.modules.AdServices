@@ -76,6 +76,8 @@ public final class AppSearchMeasurementRollbackWorker implements MeasurementRoll
     }
 
     /** Return an instance of {@link AppSearchMeasurementRollbackWorker} */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static AppSearchMeasurementRollbackWorker getInstance(
             @NonNull Context context, @NonNull String userId) {
         Objects.requireNonNull(context);

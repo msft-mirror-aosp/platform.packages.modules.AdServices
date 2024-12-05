@@ -53,7 +53,9 @@ public class SelectAdsFlagRule implements TestRule {
     private void setupFlags() {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+                .adoptShellPermissionIdentity(
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG);
         enableAdservicesApi();
         disableApiThrottling();
         disablePhenotypeFlagUpdates();
@@ -117,6 +119,5 @@ public class SelectAdsFlagRule implements TestRule {
         ShellUtils.runShellCommand(
                 "device_config put adservices adservice_system_service_enabled true");
         ShellUtils.runShellCommand("device_config put adservices enable_back_compat true");
-        ShellUtils.runShellCommand("device_config put adservices protected_signals_enabled true");
     }
 }

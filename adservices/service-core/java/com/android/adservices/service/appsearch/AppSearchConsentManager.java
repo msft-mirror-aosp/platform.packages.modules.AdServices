@@ -29,7 +29,6 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
@@ -42,6 +41,7 @@ import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -465,17 +465,44 @@ public class AppSearchConsentManager {
         boolean wasU18NotificationDisplayed =
                 isU18AppSearchMigrationEnabled && wasU18NotificationDisplayed();
 
-        if (wasNotificationDisplayed) {
-            datastore.putBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
-            adServicesManager.recordNotificationDisplayed(true);
-        }
-        if (wasGaUxNotificationDisplayed) {
-            datastore.putBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
-            adServicesManager.recordGaUxNotificationDisplayed(true);
-        }
-        if (wasU18NotificationDisplayed) {
-            datastore.putBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, true);
-            adServicesManager.setU18NotificationDisplayed(true);
+        if (FlagsFactory.getFlags().getEnableAtomicFileDatastoreBatchUpdateApi()) {
+            datastore.update(
+                    updateOperation -> {
+                        if (wasNotificationDisplayed) {
+                            updateOperation.putBoolean(
+                                    ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
+                        }
+                        if (wasGaUxNotificationDisplayed) {
+                            updateOperation.putBoolean(
+                                    ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
+                        }
+                        if (wasU18NotificationDisplayed) {
+                            updateOperation.putBoolean(
+                                    ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, true);
+                        }
+                    });
+            if (wasNotificationDisplayed) {
+                adServicesManager.recordNotificationDisplayed(true);
+            }
+            if (wasGaUxNotificationDisplayed) {
+                adServicesManager.recordGaUxNotificationDisplayed(true);
+            }
+            if (wasU18NotificationDisplayed) {
+                adServicesManager.setU18NotificationDisplayed(true);
+            }
+        } else {
+            if (wasNotificationDisplayed) {
+                datastore.putBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
+                adServicesManager.recordNotificationDisplayed(true);
+            }
+            if (wasGaUxNotificationDisplayed) {
+                datastore.putBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
+                adServicesManager.recordGaUxNotificationDisplayed(true);
+            }
+            if (wasU18NotificationDisplayed) {
+                datastore.putBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, true);
+                adServicesManager.setU18NotificationDisplayed(true);
+            }
         }
         if (!wasGaUxNotificationDisplayed
                 && !wasNotificationDisplayed
@@ -511,11 +538,25 @@ public class AppSearchConsentManager {
 
         // Migrate the current Privacy Sandbox feature type to PP API and system server.
         PrivacySandboxFeatureType currentFeatureType = getCurrentPrivacySandboxFeature();
-        for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
-            if (featureType.name().equals(currentFeatureType.name())) {
-                datastore.putBoolean(featureType.name(), true);
-            } else {
-                datastore.putBoolean(featureType.name(), false);
+        if (FlagsFactory.getFlags().getEnableAtomicFileDatastoreBatchUpdateApi()) {
+            datastore.update(
+                    updateOperation -> {
+                        for (PrivacySandboxFeatureType featureType :
+                                PrivacySandboxFeatureType.values()) {
+                            if (featureType.name().equals(currentFeatureType.name())) {
+                                updateOperation.putBoolean(featureType.name(), true);
+                            } else {
+                                updateOperation.putBoolean(featureType.name(), false);
+                            }
+                        }
+                    });
+        } else {
+            for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
+                if (featureType.name().equals(currentFeatureType.name())) {
+                    datastore.putBoolean(featureType.name(), true);
+                } else {
+                    datastore.putBoolean(featureType.name(), false);
+                }
             }
         }
         adServicesManager.setCurrentPrivacySandboxFeature(currentFeatureType.name());

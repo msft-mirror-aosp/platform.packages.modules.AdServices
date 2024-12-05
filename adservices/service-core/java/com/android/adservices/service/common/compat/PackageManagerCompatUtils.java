@@ -173,7 +173,8 @@ public final class PackageManagerCompatUtils {
      * @param context the context
      * @return true if AdServices activities are enabled, otherwise false
      */
-    @NonNull
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static boolean isAdServicesActivityEnabled(@NonNull Context context) {
         Objects.requireNonNull(context);
         String packageName = context.getPackageName();
