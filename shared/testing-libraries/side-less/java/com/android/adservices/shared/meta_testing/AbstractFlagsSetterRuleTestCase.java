@@ -34,17 +34,17 @@ import java.util.function.Consumer;
 public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSetterRule<R>>
         extends SharedSidelessTestCase {
 
-    private final FakeFlagsSetter mFakeFlagsSetter = new FakeFlagsSetter();
-    private final FakeDeviceGateway mFakeDeviceGateway = new FakeDeviceGateway();
+    protected final FakeFlagsSetter mFakeFlagsSetter = new FakeFlagsSetter();
+    protected final FakeDeviceGateway mFakeDeviceGateway = new FakeDeviceGateway();
 
-    private final SimpleStatement mTest = new SimpleStatement();
-    private final Description mTestDescription =
+    protected final SimpleStatement mTest = new SimpleStatement();
+    protected final Description mTestDescription =
             Description.createTestDescription(AClassHasNoNothingAtAll.class, "butItHasATest");
 
     /** Gets a new concrete implementation of the rule. */
     protected abstract R newRule(DeviceGateway deviceGateway, Consumer<NameValuePair> flagsSetter);
 
-    private R newRule() {
+    protected final R newRule() {
         var rule = newRule(mFakeDeviceGateway, mFakeFlagsSetter);
         assertWithMessage("rule returned by subclass").that(rule).isNotNull();
         return rule;
@@ -215,7 +215,7 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
     // - Check what happens when test fail
     // - etc...
 
-    private void runTest(R rule) throws Throwable {
+    protected final void runTest(R rule) throws Throwable {
         rule.apply(mTest, mTestDescription).evaluate();
 
         mTest.assertEvaluated();
