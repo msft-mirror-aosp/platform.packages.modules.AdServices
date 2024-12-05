@@ -63,9 +63,7 @@ public final class CustomAudienceCtsDebuggableTest extends ForegroundDebuggableC
                         .build();
         DevContextFilter devContextFilter =
                 DevContextFilter.create(mContext, /* developerModeFeatureEnabled= */ false);
-        DevContext devContext =
-                DevContextFilter.create(mContext, /* developerModeFeatureEnabled= */ false)
-                        .createDevContext(Process.myUid());
+        DevContext devContext = devContextFilter.createDevContext(Process.myUid());
         boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());
         boolean isDeveloperMode = devContextFilter.isDeviceDevOptionsEnabledOrDebuggable();
         mHasAccessToDevOverrides = devContext.getDeviceDevOptionsEnabled();

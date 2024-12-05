@@ -268,7 +268,8 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                                                 /* context= */ mContext,
                                                 AdServicesExecutors.getBackgroundExecutor(),
                                                 /* isCompletionBroadcastEnabled= */ true,
-                                                mForcedEncoder),
+                                                mForcedEncoder,
+                                                false),
                                         new SignalEvictionController(),
                                         mForcedEncoder),
                                 new AdTechUriValidator(

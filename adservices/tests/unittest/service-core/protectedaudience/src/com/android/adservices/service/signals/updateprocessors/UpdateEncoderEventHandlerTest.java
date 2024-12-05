@@ -20,6 +20,8 @@ import static com.android.adservices.service.signals.SignalsFixture.DEV_CONTEXT;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
@@ -75,7 +77,8 @@ public class UpdateEncoderEventHandlerTest {
                         mContextMock,
                         MoreExecutors.newDirectExecutorService(),
                         false,
-                        mForcedEncoderMock);
+                        mForcedEncoderMock,
+                        false);
     }
 
     @Test
@@ -99,7 +102,7 @@ public class UpdateEncoderEventHandlerTest {
                         buyer, DevContext.createForDevOptionsDisabled()))
                 .thenReturn(FluentFuture.from(Futures.immediateFuture(true)));
         when(mForcedEncoderMock.forceEncodingAndUpdateEncoderForBuyer(buyer))
-                .thenReturn(FluentFuture.from(Futures.immediateVoidFuture()));
+                .thenReturn(FluentFuture.from(Futures.immediateFuture(true)));
         mHandler.handle(
                 buyer,
                 UpdateEncoderEvent.builder()
@@ -111,6 +114,8 @@ public class UpdateEncoderEventHandlerTest {
         verify(mEncoderLogicHandlerMock)
                 .downloadAndUpdate(buyer, DevContext.createForDevOptionsDisabled());
         verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(buyer);
+        // Verify no broadcasts were sent since broadcast flags are disabled
+        verify(mContextMock, never()).sendBroadcast(any());
         assertEquals(uri, mEndpointCaptor.getValue().getDownloadUri());
         assertEquals(buyer, mEndpointCaptor.getValue().getBuyer());
     }
@@ -127,7 +132,7 @@ public class UpdateEncoderEventHandlerTest {
                                 .setBuyer(buyer)
                                 .build());
         when(mForcedEncoderMock.forceEncodingAndUpdateEncoderForBuyer(buyer))
-                .thenReturn(FluentFuture.from(Futures.immediateVoidFuture()));
+                .thenReturn(FluentFuture.from(Futures.immediateFuture(true)));
         mHandler.handle(
                 buyer,
                 UpdateEncoderEvent.builder()
@@ -137,6 +142,8 @@ public class UpdateEncoderEventHandlerTest {
                 DEV_CONTEXT);
         verify(mEncoderEndpointsDaoMock).registerEndpoint(mEndpointCaptor.capture());
         verify(mForcedEncoderMock).forceEncodingAndUpdateEncoderForBuyer(buyer);
+        // Verify no broadcasts were sent since broadcast flags are disabled
+        verify(mContextMock, never()).sendBroadcast(any());
         assertEquals(uri, mEndpointCaptor.getValue().getDownloadUri());
         assertEquals(buyer, mEndpointCaptor.getValue().getBuyer());
         verifyZeroInteractions(mEncoderLogicHandlerMock);

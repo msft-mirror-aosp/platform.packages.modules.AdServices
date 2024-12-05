@@ -64,6 +64,7 @@ import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
@@ -146,7 +147,9 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                 debugFlags,
                 AdServicesLoggerImpl.getInstance(),
                 appImportanceFilter,
-                DevContextFilter.create(context),
+                DevContextFilter.create(
+                        context,
+                        /* developerModeFeatureEnabled= */ false),
                 AdServicesExecutors.getBackgroundExecutor());
     }
 
