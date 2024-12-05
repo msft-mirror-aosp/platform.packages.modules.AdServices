@@ -18,7 +18,6 @@ package com.android.adservices.service.measurement.attribution;
 
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN;
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
-import static com.android.adservices.service.measurement.aggregation.AggregateReport.isDelayed;
 import static com.android.adservices.service.measurement.attribution.AttributionStatus.AttributionResult;
 import static com.android.adservices.service.measurement.attribution.AttributionStatus.FailureType;
 import static com.android.adservices.service.measurement.util.Time.roundDownToDay;
@@ -595,8 +594,7 @@ class AttributionJobHandler {
                     new AggregatePayloadGenerator(mFlags)
                             .generateAttributionReport(source, trigger);
             if (!contributions.isPresent()) {
-                if (maybeAggregatableAttributionSource.isPresent()
-                        && maybeAggregatableAttributionTrigger.isPresent()) {
+                if (maybeAggregatableAttributionTrigger.isPresent()) {
                     mDebugReportApi.scheduleTriggerDebugReport(
                             source,
                             trigger,
@@ -612,13 +610,16 @@ class AttributionJobHandler {
                     maybeGetNamedBudget(
                             maybeAggregatableAttributionSource,
                             maybeAggregatableAttributionTrigger);
-            if (!validateAndUpdateAggregateContributions(
-                    contributions.get(),
-                    source,
-                    trigger,
-                    measurementDao,
-                    adrTypesToGenerate,
-                    maybeNamedBudget.orElse(null))) {
+            Pair<Boolean, Optional<BudgetAndContribution>> validateAggregateContributions =
+                    validateAndUpdateAggregateContributions(
+                            contributions.get(),
+                            source,
+                            trigger,
+                            measurementDao,
+                            adrTypesToGenerate,
+                            maybeNamedBudget.orElse(null));
+
+            if (!validateAggregateContributions.first) {
                 return TriggeringStatus.DROPPED;
             }
 
@@ -691,8 +692,9 @@ class AttributionJobHandler {
 
             finalizeAggregateReportCreation(
                     source,
+                    maybeNamedBudget.orElse(null),
+                    validateAggregateContributions.second,
                     aggregateDeduplicationKeyOptional,
-                    maybeNamedBudget,
                     aggregateReport,
                     measurementDao);
             incrementAggregateReportCountBy(attributionStatus, 1);
@@ -762,7 +764,7 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao, Trigger trigger, AttributionStatus attributionStatus)
             throws DatastoreException, JSONException {
         float nullRate = mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime();
-        if (!isDelayed(trigger,mFlags)) {
+        if (!AggregateReport.isDelayed(trigger, mFlags)) {
             nullRate = 1.0F;
         }
         if (getRandom() < nullRate) {
@@ -1532,8 +1534,9 @@ class AttributionJobHandler {
 
     private static void finalizeAggregateReportCreation(
             Source source,
+            @Nullable String matchedNamedBudget,
+            Optional<BudgetAndContribution> maybeBudgetAndContribution,
             Optional<AggregateDeduplicationKey> aggregateDeduplicationKeyOptional,
-            Optional<String> maybeNamedBudget,
             AggregateReport aggregateReport,
             IMeasurementDao measurementDao)
             throws DatastoreException {
@@ -1547,8 +1550,9 @@ class AttributionJobHandler {
             // source
             measurementDao.updateSourceAggregateContributions(source);
             measurementDao.updateSourceAggregateReportDedupKeys(source);
-            if (maybeNamedBudget.isPresent()) {
-                measurementDao.updateSourceAggregatableNamedBudgets(source, maybeNamedBudget.get());
+            if (maybeBudgetAndContribution.isPresent()) {
+                measurementDao.updateSourceAggregatableNamedBudgetAndContribution(
+                        source.getId(), matchedNamedBudget, maybeBudgetAndContribution.get());
             }
         }
         measurementDao.insertAggregateReport(aggregateReport);
@@ -1755,7 +1759,7 @@ class AttributionJobHandler {
         return mFilter.deserializeFilterSet(filters);
     }
 
-    private boolean validateAndUpdateNamedBudgetContributions(
+    private Pair<Boolean, Optional<BudgetAndContribution>> validateAndGetNamedBudgetContributions(
             Source source,
             Trigger trigger,
             IMeasurementDao measurementDao,
@@ -1764,7 +1768,7 @@ class AttributionJobHandler {
             int desiredContributions)
             throws DatastoreException {
         if (matchedNamedBudget == null) {
-            return true;
+            return new Pair<>(true, Optional.empty());
         }
         BudgetAndContribution budgetAndContribution =
                 measurementDao.getSourceAggregatableNamedBudgetAndContribution(
@@ -1777,7 +1781,7 @@ class AttributionJobHandler {
                                     + " budget not found in database. Source ID: %s ;"
                                     + " Trigger ID: %s ; Budget: %s ",
                             source.getId(), trigger.getId(), matchedNamedBudget);
-            return true;
+            return new Pair<>(true, Optional.empty());
         }
 
         int totalContributions =
@@ -1802,14 +1806,14 @@ class AttributionJobHandler {
                                     + " contribution exceeded bound. Source ID: %s ;"
                                     + " Trigger ID: %s ; Budget: %s ",
                             source.getId(), trigger.getId(), matchedNamedBudget);
-            return false;
+            return new Pair<>(false, Optional.empty());
         }
-        source.getAggregatableNamedBudgets()
-                .setContribution(matchedNamedBudget, totalContributions);
-        return true;
+
+        budgetAndContribution.setAggregateContribution(totalContributions);
+        return new Pair<>(true, Optional.of(budgetAndContribution));
     }
 
-    private boolean validateAndUpdateAggregateContributions(
+    private Pair<Boolean, Optional<BudgetAndContribution>> validateAndUpdateAggregateContributions(
             List<AggregateHistogramContribution> contributions,
             Source source,
             Trigger trigger,
@@ -1847,7 +1851,7 @@ class AttributionJobHandler {
                                         + " contributions exceeded bound. Source ID: %s ; Trigger"
                                         + " ID: %s ",
                                     source.getId(), trigger.getId());
-                    return false;
+                    return new Pair<>(false, Optional.empty());
                 }
             } catch (ArithmeticException e) {
                 LoggerFactory.getMeasurementLogger()
@@ -1855,20 +1859,22 @@ class AttributionJobHandler {
                                 e,
                                 "AttributionJobHandler::validateAndUpdateAggregateContributions"
                                         + " Error adding aggregate contribution values.");
-                return false;
+                return new Pair<>(false, Optional.empty());
             }
         }
-        if (!validateAndUpdateNamedBudgetContributions(
-                source,
-                trigger,
-                measurementDao,
-                adrTypesToGenerate,
-                matchedNamedBudget,
-                aggregateContributions - source.getAggregateContributions())) {
-            return false;
+        Pair<Boolean, Optional<BudgetAndContribution>> namedBudgetResult =
+                validateAndGetNamedBudgetContributions(
+                        source,
+                        trigger,
+                        measurementDao,
+                        adrTypesToGenerate,
+                        matchedNamedBudget,
+                        aggregateContributions - source.getAggregateContributions());
+        if (namedBudgetResult.first) {
+            source.setAggregateContributions(aggregateContributions);
         }
-        source.setAggregateContributions(aggregateContributions);
-        return true;
+
+        return namedBudgetResult;
     }
 
     private boolean isReportingOriginWithinPrivacyBounds(

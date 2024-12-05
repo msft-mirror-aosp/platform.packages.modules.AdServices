@@ -95,6 +95,7 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
     @Mock private CustomAudienceQuantityChecker mCustomAudienceQuantityCheckerMock;
     @Mock private Validator<CustomAudience> mCustomAudienceValidatorMock;
     @Mock private Clock mClockMock;
+    @Mock private ComponentAdsStrategy mComponentAdsStrategyMock;
     private static final Flags FLAGS =
             new FakeFlagsFactory.TestFlags() {
                 @Override
@@ -118,7 +119,8 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
                         mCustomAudienceQuantityCheckerMock,
                         mCustomAudienceValidatorMock,
                         mClockMock,
-                        FLAGS);
+                        FLAGS,
+                        mComponentAdsStrategyMock);
     }
 
     @Test
@@ -135,6 +137,11 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER_1),
                         false);
+        verify(mComponentAdsStrategyMock)
+                .persistComponentAds(
+                        VALID_CUSTOM_AUDIENCE,
+                        CustomAudienceFixture.VALID_OWNER,
+                        mCustomAudienceDaoMock);
         verify(mClockMock).instant();
         verify(mCustomAudienceQuantityCheckerMock)
                 .check(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
@@ -157,6 +164,11 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER_1),
                         true);
+        verify(mComponentAdsStrategyMock)
+                .persistComponentAds(
+                        VALID_CUSTOM_AUDIENCE,
+                        CustomAudienceFixture.VALID_OWNER,
+                        mCustomAudienceDaoMock);
         verify(mClockMock).instant();
         verify(mCustomAudienceQuantityCheckerMock)
                 .check(VALID_CUSTOM_AUDIENCE, CustomAudienceFixture.VALID_OWNER);
@@ -180,8 +192,8 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
                         mCustomAudienceQuantityCheckerMock,
                         mCustomAudienceValidatorMock,
                         mClockMock,
-                        flagsWithAuctionServerRequestFlagsEnabled);
-
+                        flagsWithAuctionServerRequestFlagsEnabled,
+                        mComponentAdsStrategyMock);
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
 
         customAudienceImpl.joinCustomAudience(
@@ -195,6 +207,11 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER_1),
                         false);
+        verify(mComponentAdsStrategyMock)
+                .persistComponentAds(
+                        VALID_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS,
+                        CustomAudienceFixture.VALID_OWNER,
+                        mCustomAudienceDaoMock);
         verify(mClockMock).instant();
         verify(mCustomAudienceQuantityCheckerMock)
                 .check(
@@ -220,8 +237,8 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
                         mCustomAudienceQuantityCheckerMock,
                         mCustomAudienceValidatorMock,
                         mClockMock,
-                        flagsWithAuctionServerRequestFlagsDisabled);
-
+                        flagsWithAuctionServerRequestFlagsDisabled,
+                        mComponentAdsStrategyMock);
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
 
         customAudienceImpl.joinCustomAudience(
@@ -235,6 +252,11 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER_1),
                         false);
+        verify(mComponentAdsStrategyMock)
+                .persistComponentAds(
+                        VALID_CUSTOM_AUDIENCE_SERVER_AUCTION_FLAGS,
+                        CustomAudienceFixture.VALID_OWNER,
+                        mCustomAudienceDaoMock);
         verify(mClockMock).instant();
         verify(mCustomAudienceQuantityCheckerMock)
                 .check(
@@ -260,8 +282,8 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
                         mCustomAudienceQuantityCheckerMock,
                         mCustomAudienceValidatorMock,
                         mClockMock,
-                        flagsWithSellerConfigurationFlagEnabled);
-
+                        flagsWithSellerConfigurationFlagEnabled,
+                        mComponentAdsStrategyMock);
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
 
         customAudienceImpl.joinCustomAudience(
@@ -275,6 +297,11 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER_1),
                         false);
+        verify(mComponentAdsStrategyMock)
+                .persistComponentAds(
+                        VALID_CUSTOM_AUDIENCE_WITH_PRIORITY,
+                        CustomAudienceFixture.VALID_OWNER,
+                        mCustomAudienceDaoMock);
         verify(mClockMock).instant();
         verify(mCustomAudienceQuantityCheckerMock)
                 .check(VALID_CUSTOM_AUDIENCE_WITH_PRIORITY, CustomAudienceFixture.VALID_OWNER);
@@ -298,7 +325,8 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
                         mCustomAudienceQuantityCheckerMock,
                         mCustomAudienceValidatorMock,
                         mClockMock,
-                        flagsWithSellerConfigurationFlagDisabled);
+                        flagsWithSellerConfigurationFlagDisabled,
+                        mComponentAdsStrategyMock);
 
         when(mClockMock.instant()).thenReturn(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI);
 
@@ -313,6 +341,11 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
                         CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
                                 CommonFixture.VALID_BUYER_1),
                         false);
+        verify(mComponentAdsStrategyMock)
+                .persistComponentAds(
+                        VALID_CUSTOM_AUDIENCE_WITH_PRIORITY,
+                        CustomAudienceFixture.VALID_OWNER,
+                        mCustomAudienceDaoMock);
         verify(mClockMock).instant();
         verify(mCustomAudienceQuantityCheckerMock)
                 .check(VALID_CUSTOM_AUDIENCE_WITH_PRIORITY, CustomAudienceFixture.VALID_OWNER);
@@ -334,7 +367,8 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
                                 .setTotalOwnerCount(1)
                                 .build())
                 .when(mCustomAudienceDaoMock)
-                .getCustomAudienceStats(eq(CustomAudienceFixture.VALID_OWNER));
+                .getCustomAudienceStats(
+                        eq(CustomAudienceFixture.VALID_OWNER), eq(CommonFixture.VALID_BUYER_1));
 
         CustomAudience customAudienceWithValidSubdomains =
                 CustomAudienceFixture.getValidBuilderWithSubdomainsForBuyer(
@@ -351,7 +385,8 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
                                 new FrequencyCapAdDataValidatorImpl(),
                                 AdRenderIdValidator.AD_RENDER_ID_VALIDATOR_NO_OP),
                         mClockMock,
-                        FLAGS);
+                        FLAGS,
+                        mComponentAdsStrategyMock);
 
         implWithRealValidators.joinCustomAudience(
                 customAudienceWithValidSubdomains,
@@ -374,8 +409,14 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
                         eq(expectedDbCustomAudience),
                         eq(customAudienceWithValidSubdomains.getDailyUpdateUri()),
                         /* debuggable= */ eq(false));
+        verify(mComponentAdsStrategyMock)
+                .persistComponentAds(
+                        customAudienceWithValidSubdomains,
+                        CustomAudienceFixture.VALID_OWNER,
+                        mCustomAudienceDaoMock);
         verify(mCustomAudienceDaoMock)
-                .getCustomAudienceStats(eq(CustomAudienceFixture.VALID_OWNER));
+                .getCustomAudienceStats(
+                        eq(CustomAudienceFixture.VALID_OWNER), eq(CommonFixture.VALID_BUYER_1));
 
         // Clock called in both CA size validator and on persistence into DB
         verify(mClockMock, times(2)).instant();

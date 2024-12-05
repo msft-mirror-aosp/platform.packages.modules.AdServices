@@ -370,7 +370,8 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                                 /* isPARequest= */ false,
                                 /* num entities deleted */ 5,
                                 /* isEventLevelEpsilonEnabled= */ false,
-                                /* isTriggerAggregatableValueFiltersConfigured= */ false)
+                                /* isTriggerAggregatableValueFiltersConfigured= */ false,
+                                /* isTriggerFilteringIdConfigured= */ false)
                         .setAdTechDomain(null)
                         .build();
         mAdservicesLogger.logMeasurementRegistrationsResponseSize(stats, TEST_ENROLLMENT_ID);
@@ -396,6 +397,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         expect.that(loggedStats.getNumDeletedEntities()).isEqualTo(5);
         expect.that(loggedStats.isEventLevelEpsilonEnabled()).isFalse();
         expect.that(loggedStats.isTriggerAggregatableValueFiltersConfigured()).isFalse();
+        expect.that(loggedStats.isTriggerFilteringIdConfigured()).isFalse();
         callback.assertCalled();
     }
 
@@ -943,6 +945,8 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setSignalEncodingSuccesses(5)
                         .setSignalEncodingFailures(3)
                         .setSignalEncodingSkips(2)
+                        .setEncodingSourceType(
+                                AdsRelevanceStatusUtils.PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL)
                         .build();
         mAdservicesLogger.logEncodingJobRunStats(stats);
         verify(mStatsdLoggerMock).logEncodingJobRunStats(eq(stats));

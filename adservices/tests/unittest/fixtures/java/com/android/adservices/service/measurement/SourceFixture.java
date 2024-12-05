@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
@@ -264,8 +265,9 @@ public final class SourceFixture {
                         + "\"summary_buckets\": [1]}]";
         Source source = getMinimalValidSourceBuilder().build();
         double mockFlipProbability = Combinatorics.getFlipProbability(5, 3);
-        String jsonString = String.format("{\"flip_probability\": %f}", mockFlipProbability);
-        TriggerSpecs triggerSpecs = new TriggerSpecs(triggerSpecsString, "1", source, jsonString);
+        String privacyParametersString = "{\"flip_probability\": " + mockFlipProbability + "}";
+        TriggerSpecs triggerSpecs =
+                new TriggerSpecs(triggerSpecsString, "1", source, privacyParametersString);
         return triggerSpecs;
     }
 
@@ -340,6 +342,8 @@ public final class SourceFixture {
                             getValidTriggerSpecsCountBasedWithFewerState().getMaxReports())
                     .build();
         } catch (JSONException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Unable to build Source with non default epsilon.");
             return null;
         }
     }

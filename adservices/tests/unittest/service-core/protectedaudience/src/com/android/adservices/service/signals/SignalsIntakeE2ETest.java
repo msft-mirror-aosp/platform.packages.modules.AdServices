@@ -50,7 +50,6 @@ import android.os.IBinder;
 import android.os.RemoteException;
 
 import androidx.room.Room;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesMockitoTestCase;
@@ -162,6 +161,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
     private ListeningExecutorService mBackgroundExecutorService;
     private Flags mFakeFlags;
     private EnrollmentDao mEnrollmentDao;
+    private ForcedEncoder mForcedEncoder;
 
     @Before
     public void setup() {
@@ -199,13 +199,22 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mFakeFlags);
+        mForcedEncoder =
+                new ForcedEncoderFactory(
+                                mFakeFlags.getFledgeEnableForcedEncodingAfterSignalsUpdate(),
+                                mFakeFlags
+                                        .getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds(),
+                                mSpyContext)
+                        .createInstance();
         mUpdateEncoderEventHandler =
                 new UpdateEncoderEventHandler(
                         mEncoderEndpointsDao,
                         mEncoderLogicHandler,
                         mSpyContext,
                         AdServicesExecutors.getBackgroundExecutor(),
-                        /* isCompletionBroadcastEnabled= */ false);
+                        /* isCompletionBroadcastEnabled= */ false,
+                        mForcedEncoder,
+                        false);
         int oversubscriptionBytesLimit =
                 mFakeFlags.getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes();
         mSignalEvictionController =
@@ -218,7 +227,8 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         mSignalsDao,
                         mUpdateProcessorSelector,
                         mUpdateEncoderEventHandler,
-                        mSignalEvictionController);
+                        mSignalEvictionController,
+                        mForcedEncoder);
         mAdtechUriValidator = new AdTechUriValidator("", "", "", "");
         mFledgeAuthorizationFilter =
                 ExtendedMockito.spy(
@@ -333,7 +343,6 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
         mDevSessionHelper.endDevSession();
     }
 
-    @FlakyTest // b/376069423
     @Test
     public void testPut_duringDevSession_signalIsCleared() throws Exception {
         setupService(true);

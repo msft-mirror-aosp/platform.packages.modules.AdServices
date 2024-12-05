@@ -17,6 +17,7 @@ package com.android.adservices.service.measurement.registration;
 
 import static com.android.adservices.service.Flags.MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES;
 import static com.android.adservices.service.Flags.MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_REPORTING_REGISTER_SOURCE_EXPIRATION_IN_SECONDS;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_SUM_OF_AGGREGATE_VALUES_PER_SOURCE;
@@ -301,6 +302,10 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 .thenReturn(Flags.MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT);
         when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets())
                 .thenReturn(Flags.MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS);
+        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
+                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
+        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
+                .thenReturn(MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
     }
 
     @Test
@@ -321,6 +326,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 false,
                                 false,
                                 0,
+                                false,
                                 false,
                                 false)
                         .setAdTechDomain(null)
@@ -380,6 +386,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 false,
                                 false,
                                 0,
+                                false,
                                 false,
                                 false)
                         .setAdTechDomain(null)
@@ -2867,10 +2874,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                                 + 2
                                                 + "}")));
         when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
-        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
-        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -2880,6 +2883,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         // Assertion
         assertTrue(fetch.isPresent());
         assertEquals(AsyncFetchStatus.EntityStatus.SUCCESS, asyncFetchStatus.getEntityStatus());
+        assertThat(asyncFetchStatus.isTriggerFilteringIdConfigured()).isTrue();
         Trigger result = fetch.get();
         assertThat(result.getAggregateValuesString())
                 .isEqualTo(new JSONObject(validAggregatableValues).toString());
@@ -2905,8 +2909,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                                 + invalidAggregatableValues
                                                 + "}")));
         when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
-        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -2915,6 +2917,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertThat(fetch.isPresent()).isFalse();
+        assertThat(asyncFetchStatus.isTriggerFilteringIdConfigured()).isFalse();
     }
 
     @Test
@@ -2933,8 +2936,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                                 + invalidAggregatableValues
                                                 + "}")));
         when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
-        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -2943,6 +2944,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertThat(fetch.isPresent()).isFalse();
+        assertThat(asyncFetchStatus.isTriggerFilteringIdConfigured()).isFalse();
     }
 
     @Test
@@ -2962,8 +2964,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                                 + 0
                                                 + "}")));
         when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
-        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -2972,6 +2972,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertThat(fetch.isPresent()).isFalse();
+        assertThat(asyncFetchStatus.isTriggerFilteringIdConfigured()).isFalse();
     }
 
     @Test
@@ -2991,8 +2992,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                                 + 9
                                                 + "}")));
         when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
-        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -3001,6 +3000,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertThat(fetch.isPresent()).isFalse();
+        assertThat(asyncFetchStatus.isTriggerFilteringIdConfigured()).isFalse();
     }
 
     @Test
@@ -3014,14 +3014,8 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                 .thenReturn(
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
-                                List.of(
-                                        "{"
-                                                + "\"aggregatable_filtering_id_max_bytes\":"
-                                                + "2"
-                                                + "}")));
+                                List.of("{\"aggregatable_filtering_id_max_bytes\":" + "\"2\"}")));
         when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
-        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -3030,6 +3024,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertThat(fetch.isPresent()).isFalse();
+        assertThat(asyncFetchStatus.isTriggerFilteringIdConfigured()).isFalse();
     }
 
     @Test
@@ -3053,10 +3048,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                                 + validAggregatableValues
                                                 + "}")));
         when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
-        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
-        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -3095,10 +3086,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                                 + 2
                                                 + "}")));
         when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
-        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
-        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -3109,6 +3096,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
         assertThat(fetch.isPresent()).isTrue();
         assertThat(asyncFetchStatus.getEntityStatus())
                 .isEqualTo(AsyncFetchStatus.EntityStatus.SUCCESS);
+        assertThat(asyncFetchStatus.isTriggerFilteringIdConfigured()).isTrue();
         Trigger result = fetch.get();
         assertThat(result.getAggregateValuesString())
                 .isEqualTo(new JSONObject(validAggregatableValues).toString());
@@ -3135,10 +3123,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                                 + invalidAggregatableValues
                                                 + "}")));
         when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
-        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
-        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -3147,6 +3131,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertThat(fetch.isPresent()).isFalse();
+        assertThat(asyncFetchStatus.isTriggerFilteringIdConfigured()).isFalse();
     }
 
     @Test
@@ -3169,10 +3154,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                                 + invalidAggregatableValues
                                                 + "}")));
         when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
-        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
-        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -3207,10 +3188,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                                 + 2
                                                 + "}")));
         when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
-        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
-        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -3246,10 +3223,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                                 + "}")));
         when(mMockFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
         when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
-        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
-        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -3284,10 +3257,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                                 + "}")));
         when(mMockFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
         when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
-        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
-        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -3320,10 +3289,6 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                                 + "}")));
         when(mMockFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
         when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
-        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
-        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -3335,14 +3300,18 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
-    public void testTriggerRequest_flexibleFilteringFilteringIdExceedsFilteringIdMaxBytes_fails()
+    public void testTriggerRequest_flexibleFilteringFilteringIdEqualsFilteringIdMaxBytes_succeeds()
             throws Exception {
         RegistrationRequest request = buildRequest(TRIGGER_URI);
         doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
-        String invalidAggregatableValuesArr =
-                "[{\"values\":{\"campaignCounts\":{\"value\":32768, \"filtering_id\":\"65537\"},"
-                        + " \"geoValue\":1664}, \"filters\":{\"category\":[\"filter_1\"]},"
-                        + " \"not_filters\":{\"category\":[\"filter_2\"]}}]";
+        BigInteger validFilteringId =
+                BigInteger.valueOf(256)
+                        .pow(MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES)
+                        .subtract(BigInteger.ONE);
+        String validAggregatableValues =
+                "{\"campaignCounts\":{\"value\":32768,\"filtering_id\":\""
+                        + validFilteringId
+                        + "\"}}";
         when(mUrlConnection.getResponseCode()).thenReturn(200);
         when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
         when(mUrlConnection.getHeaderFields())
@@ -3350,19 +3319,52 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         Map.of(
                                 "Attribution-Reporting-Register-Trigger",
                                 List.of(
-                                        "{"
-                                                + "\"aggregatable_values\":"
-                                                + invalidAggregatableValuesArr
-                                                + ","
-                                                + "\"aggregatable_filtering_id_max_bytes\":"
-                                                + 2
+                                        "{\"aggregatable_values\":"
+                                                + validAggregatableValues
+                                                + ",\"aggregatable_filtering_id_max_bytes\":"
+                                                + MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES
                                                 + "}")));
         when(mMockFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
         when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
-        when(mMockFlags.getMeasurementDefaultFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES);
-        when(mMockFlags.getMeasurementMaxFilteringIdMaxBytes())
-                .thenReturn(Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isTrue();
+        Trigger trigger = fetch.get();
+        assertThat(trigger.getAggregatableFilteringIdMaxBytes())
+                .isEqualTo(MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        assertThat(trigger.getAggregateValuesString()).isEqualTo(validAggregatableValues);
+    }
+
+    @Test
+    public void testTriggerRequest_flexibleFilteringFilteringIdExceedsFilteringIdMaxBytes_fails()
+            throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        BigInteger invalidFilteringId =
+                BigInteger.valueOf(256).pow(MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES);
+        String invalidAggregatableValues =
+                "{\"campaignCounts\":{\"value\":32768,\"filtering_id\":\""
+                        + invalidFilteringId
+                        + "\"}}";
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_values\":"
+                                                + invalidAggregatableValues
+                                                + ",\"aggregatable_filtering_id_max_bytes\":"
+                                                + MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
         AsyncRedirects asyncRedirects = new AsyncRedirects();
         AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
         // Execution
@@ -3371,6 +3373,72 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                         appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
         // Assertion
         assertThat(fetch.isPresent()).isFalse();
+    }
+
+    @Test
+    public void
+            testTriggerRequest_DefaultFilteringIdMaxBytes_SourceRegisterationTimeInclude_succeeds()
+                    throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_source_registration_time\": \""
+                                                + Trigger.SourceRegistrationTimeConfig.INCLUDE
+                                                        .name()
+                                                + "\""
+                                                + ","
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 1
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isTrue();
+    }
+
+    @Test
+    public void
+            testTriggerRequest_NonDefaultFilteringIdMaxBytes_SourceRegisterationTimeInclude_fails()
+                    throws Exception {
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_source_registration_time\": \""
+                                                + Trigger.SourceRegistrationTimeConfig.INCLUDE
+                                                        .name()
+                                                + "\""
+                                                + ","
+                                                + "\"aggregatable_filtering_id_max_bytes\":"
+                                                + 2
+                                                + "}")));
+        when(mMockFlags.getMeasurementEnableFlexibleContributionFiltering()).thenReturn(true);
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(
+                        appTriggerRegistrationRequest(request), asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(fetch.isPresent()).isFalse();
+        assertEquals(
+                AsyncFetchStatus.EntityStatus.VALIDATION_ERROR, asyncFetchStatus.getEntityStatus());
     }
 
     @Test
@@ -6490,6 +6558,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                 false,
                                 0,
                                 false,
+                                false,
                                 false)
                         .setAdTechDomain(WebUtil.validUrl("https://foo.test"))
                         .build();
@@ -8497,6 +8566,47 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
                                                 + "{\"types\":["
                                                 + "\"trigger-event-deduplicated\","
                                                 + "\"trigger-event-low-priority\"],"
+                                                + "\"key_piece\":\"0x123\","
+                                                + "\"value\": 123},"
+                                                + "{\"types\":["
+                                                + "\"trigger-event-no-matching-configurations\"],"
+                                                + "\"key_piece\":\"0x789\","
+                                                + "\"value\":789}],"
+                                                + "\"aggregation_coordinator_origin\":"
+                                                + " \"https://cloud.coordination.test\"}}")));
+        AsyncRedirects asyncRedirects = new AsyncRedirects();
+        AsyncFetchStatus asyncFetchStatus = new AsyncFetchStatus();
+        AsyncRegistration asyncRegistration = appTriggerRegistrationRequest(request);
+
+        // Execution
+        Optional<Trigger> fetch =
+                mFetcher.fetchTrigger(asyncRegistration, asyncFetchStatus, asyncRedirects);
+        // Assertion
+        assertThat(asyncFetchStatus.getResponseStatus())
+                .isEqualTo(AsyncFetchStatus.ResponseStatus.SUCCESS);
+        assertThat(fetch.isPresent()).isTrue();
+        assertThat(fetch.get().getAggregateDebugReportingString()).isNull();
+        verify(mUrlConnection).setRequestMethod("POST");
+    }
+
+    @Test
+    public void fetchTrigger_jsonException_ignoreValidAggregateDebugReportingFields()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableAggregateDebugReporting()).thenReturn(false);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        RegistrationRequest request = buildRequest(TRIGGER_URI);
+        doReturn(mUrlConnection).when(mFetcher).openUrl(new URL(TRIGGER_URI));
+        when(mUrlConnection.getResponseCode()).thenReturn(200);
+        when(mUrlConnection.getURL()).thenReturn(new URL(TRIGGER_URI));
+        when(mUrlConnection.getHeaderFields())
+                .thenReturn(
+                        Map.of(
+                                "Attribution-Reporting-Register-Trigger",
+                                List.of(
+                                        "{\"aggregatable_debug_reporting\":{\"budget\":1024,"
+                                            + "\"key_piece\":\"0x1\",\"debug_data\":["
+                                            + "{\"types\":\"trigger-event-deduplicated\"," // types
                                                 + "\"key_piece\":\"0x123\","
                                                 + "\"value\": 123},"
                                                 + "{\"types\":["
