@@ -601,9 +601,12 @@ public class SourceNoiseHandlerTest {
     public void testGetRandomizedTriggerRateWithFullFlexSource() {
         // Number of states: 5
         // Epsilon: 3
-        // Flip probability: (5) / ((e^3) + 5 - 1) = 0.207593
+        // Flip probability: (5) / ((e^3) + 5 - 1) = 0.20759346224855763
         Source source = SourceFixture.getValidFullFlexSourceWithNonDefaultEpsilon();
-        assertEquals(0.207593, mSourceNoiseHandler.getRandomizedSourceResponsePickRate(source), 0);
+        assertEquals(
+                0.20759346224855763,
+                mSourceNoiseHandler.getRandomizedSourceResponsePickRate(source),
+                0);
     }
 
     @Test

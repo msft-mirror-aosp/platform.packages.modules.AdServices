@@ -94,6 +94,7 @@ import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -162,6 +163,8 @@ public class PersistAdSelectionResultRunner {
             "buyer interaction reporting uri";
     private static final String SELLER_INTERACTION_REPORTING_URI_FIELD_NAME =
             "seller interaction reporting uri";
+    private static final String COMPONENT_SELLER_INTERACTION_REPORTING_URI_FIELD_NAME =
+            "component seller interaction reporting uri";
     private static final String SHA256 = "SHA-256";
 
     @NonNull private final ObliviousHttpEncryptor mObliviousHttpEncryptor;
@@ -177,6 +180,7 @@ public class PersistAdSelectionResultRunner {
     // TODO(b/291680065): Remove when owner field is returned from B&A
     private final boolean mForceSearchOnAbsentOwner;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
     @NonNull private final AdServicesLogger mAdServicesLogger;
 
     private ReportingRegistrationLimits mReportingLimits;
@@ -206,6 +210,7 @@ public class PersistAdSelectionResultRunner {
             @NonNull final AdCounterHistogramUpdater adCounterHistogramUpdater,
             @NonNull final AuctionResultValidator auctionResultValidator,
             @NonNull final Flags flags,
+            @NonNull final DebugFlags debugFlags,
             @NonNull final AdServicesLogger adServicesLogger,
             @NonNull final AdsRelevanceExecutionLogger adsRelevanceExecutionLogger,
             @NonNull final KAnonSignJoinFactory kAnonSignJoinFactory) {
@@ -221,6 +226,7 @@ public class PersistAdSelectionResultRunner {
         Objects.requireNonNull(adCounterHistogramUpdater);
         Objects.requireNonNull(auctionResultValidator);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(adsRelevanceExecutionLogger);
         Objects.requireNonNull(kAnonSignJoinFactory);
@@ -240,6 +246,7 @@ public class PersistAdSelectionResultRunner {
         mAdCounterHistogramUpdater = adCounterHistogramUpdater;
         mAuctionResultValidator = auctionResultValidator;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mAdServicesLogger = adServicesLogger;
         mAdsRelevanceExecutionLogger = adsRelevanceExecutionLogger;
         mKAnonSignJoinFactory = kAnonSignJoinFactory;
@@ -269,7 +276,7 @@ public class PersistAdSelectionResultRunner {
                                             inputParams.getCallerPackageName(),
                                             false,
                                             true,
-                                            !mFlags.getConsentNotificationDebugMode(),
+                                            !mDebugFlags.getConsentNotificationDebugMode(),
                                             mCallerUid,
                                             apiName,
                                             Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT,
@@ -293,11 +300,7 @@ public class PersistAdSelectionResultRunner {
                     new FutureCallback<>() {
                         @Override
                         public void onSuccess(AuctionResult result) {
-                            Uri adRenderUri =
-                                    (result.getIsChaff())
-                                            ? Uri.EMPTY
-                                            : Uri.parse(result.getAdRenderUrl());
-                            notifySuccessToCaller(adRenderUri, adSelectionId, callback);
+                            notifySuccessToCaller(result, adSelectionId, callback);
                         }
 
                         @Override
@@ -405,7 +408,7 @@ public class PersistAdSelectionResultRunner {
                             } else {
                                 makeKAnonSignJoin(auctionResult, adSelectionId);
                                 try {
-                                    validateAuctionResult(auctionResult);
+                                    mAuctionResultValidator.validate(auctionResult);
                                 } catch (IllegalArgumentException e) {
                                     logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
                                     String err = "Invalid object of Auction Result";
@@ -647,7 +650,8 @@ public class PersistAdSelectionResultRunner {
         }
     }
 
-    private void persistAuctionResults(
+    @VisibleForTesting
+    void persistAuctionResults(
             AuctionResult auctionResult,
             DBAdData winningAd,
             long adSelectionId,
@@ -677,11 +681,25 @@ public class PersistAdSelectionResultRunner {
                         .setName(auctionResult.getCustomAudienceName())
                         .setAdCounterKeys(winningAd.getAdCounterKeys())
                         .build();
-        ReportingData reportingData =
+
+        ReportingData.Builder reportingDataBuilder =
                 ReportingData.builder()
                         .setBuyerWinReportingUri(buyerReportingUrl)
-                        .setSellerWinReportingUri(sellerReportingUrl)
-                        .build();
+                        .setSellerWinReportingUri(sellerReportingUrl);
+        if (mFlags.getEnableReportEventForComponentSeller()) {
+            Uri componentSellerReportingUrl =
+                    validateAdTechUriAndReturnEmptyIfInvalid(
+                            ValidatorUtil.AD_TECH_ROLE_COMPONENT_SELLER,
+                            auctionResult.getWinningSeller(),
+                            SELLER_WIN_REPORTING_URI_FIELD_NAME,
+                            Uri.parse(
+                                    winReportingUrls
+                                            .getComponentSellerReportingUrls()
+                                            .getReportingUrl()));
+            reportingDataBuilder.setComponentSellerWinReportingUri(componentSellerReportingUrl);
+        }
+        ReportingData reportingData = reportingDataBuilder.build();
+
         AdSelectionResultBidAndUri resultBidAndUri =
                 AdSelectionResultBidAndUri.builder()
                         .setAdSelectionId(adSelectionId)
@@ -727,7 +745,8 @@ public class PersistAdSelectionResultRunner {
      * com.android.adservices.service.Flags
      * #getFledgeReportImpressionMaxInteractionReportingUriSizeB()}
      */
-    private void persistAdInteractionKeysAndUrls(
+    @VisibleForTesting
+    void persistAdInteractionKeysAndUrls(
             AuctionResult auctionResult, long adSelectionId, AdTechIdentifier seller) {
         final WinReportingUrls winReportingUrls = auctionResult.getWinReportingUrls();
         final Map<String, String> attemptedBuyerInteractionReportingUrls =
@@ -747,6 +766,7 @@ public class PersistAdSelectionResultRunner {
                         seller.toString(),
                         SELLER_INTERACTION_REPORTING_URI_FIELD_NAME,
                         attemptedSellerInteractionReportingUrls);
+
         sLogger.v("Valid buyer interaction urls: %s", buyerInteractionReportingUrls);
         persistAdInteractionKeysAndUrls(
                 buyerInteractionReportingUrls,
@@ -757,6 +777,23 @@ public class PersistAdSelectionResultRunner {
                 sellerInteractionReportingUrls,
                 adSelectionId,
                 ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER);
+
+        if (mFlags.getEnableReportEventForComponentSeller()) {
+            Map<String, String> attemptedComponentSellerInteractionReportingUrls =
+                    winReportingUrls
+                            .getComponentSellerReportingUrls()
+                            .getInteractionReportingUrls();
+            Map<String, Uri> componentSellerInteractionReportingUrls =
+                    filterInvalidInteractionUri(
+                            ValidatorUtil.AD_TECH_ROLE_COMPONENT_SELLER,
+                            auctionResult.getWinningSeller(),
+                            COMPONENT_SELLER_INTERACTION_REPORTING_URI_FIELD_NAME,
+                            attemptedComponentSellerInteractionReportingUrls);
+            persistAdInteractionKeysAndUrls(
+                    componentSellerInteractionReportingUrls,
+                    adSelectionId,
+                    ReportEventRequest.FLAG_REPORTING_DESTINATION_COMPONENT_SELLER);
+        }
 
         if (mFlags.getFledgeBeaconReportingMetricsEnabled()) {
             int totalNumRegisteredAdInteractions =
@@ -950,15 +987,32 @@ public class PersistAdSelectionResultRunner {
         }
     }
 
+    @VisibleForTesting
+    PersistAdSelectionResultResponse createPersistAdSelectionResultResponse(
+            AuctionResult result, long adSelectionId) {
+        Uri adRenderUri = (result.getIsChaff()) ? Uri.EMPTY : Uri.parse(result.getAdRenderUrl());
+        PersistAdSelectionResultResponse.Builder persistAdSelectionResponseBuilder =
+                new PersistAdSelectionResultResponse.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setAdRenderUri(adRenderUri);
+        if (mFlags.getEnableWinningSellerIdInAdSelectionOutcome()) {
+            AdTechIdentifier winningSeller =
+                    result.getIsChaff()
+                            ? AdTechIdentifier.UNSET_AD_TECH_IDENTIFIER
+                            : AdTechIdentifier.fromString(result.getWinningSeller());
+            sLogger.d("Adding winning seller in PersistAdSelectionResponse");
+            persistAdSelectionResponseBuilder.setWinningSeller(winningSeller);
+        }
+        return persistAdSelectionResponseBuilder.build();
+    }
+
     private void notifySuccessToCaller(
-            Uri renderUri, long adSelectionId, PersistAdSelectionResultCallback callback) {
+            AuctionResult result, long adSelectionId, PersistAdSelectionResultCallback callback) {
         int resultCode = STATUS_SUCCESS;
         try {
-            callback.onSuccess(
-                    new PersistAdSelectionResultResponse.Builder()
-                            .setAdSelectionId(adSelectionId)
-                            .setAdRenderUri(renderUri)
-                            .build());
+            PersistAdSelectionResultResponse response =
+                    createPersistAdSelectionResultResponse(result, adSelectionId);
+            callback.onSuccess(response);
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying PersistAdSelectionResultCallback");
             resultCode = STATUS_INTERNAL_ERROR;
@@ -983,6 +1037,7 @@ public class PersistAdSelectionResultRunner {
                     new PersistAdSelectionResultResponse.Builder()
                             .setAdSelectionId(adSelectionId)
                             .setAdRenderUri(Uri.EMPTY)
+                            .setWinningSeller(AdTechIdentifier.UNSET_AD_TECH_IDENTIFIER)
                             .build());
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE,

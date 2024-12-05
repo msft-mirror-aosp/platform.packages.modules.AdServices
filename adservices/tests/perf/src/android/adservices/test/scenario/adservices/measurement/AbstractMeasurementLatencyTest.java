@@ -84,7 +84,9 @@ public class AbstractMeasurementLatencyTest {
     public static void setup() throws Exception {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+                .adoptShellPermissionIdentity(
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG);
     }
 
     protected void runRegisterSource(String testClassName, String testName) throws Exception {

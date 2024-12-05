@@ -24,8 +24,10 @@ android_app {
         "java/**/*.java",
     ],
     static_libs: [
+        "AdServicesLib",
         "androidx.appcompat_appcompat",
         "androidx-constraintlayout_constraintlayout",
+        "androidx.work_work-testing",
     ],
     optional_uses_libs: ["android.ext.adservices"],
     // TODO(b/269145496): Remove dex_preopt: false.

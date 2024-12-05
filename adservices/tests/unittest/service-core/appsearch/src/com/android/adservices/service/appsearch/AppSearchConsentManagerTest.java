@@ -27,6 +27,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -38,7 +39,6 @@ import android.content.pm.ApplicationInfo;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
@@ -51,6 +51,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.topics.BlockedTopicsManager;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -472,66 +473,46 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
     }
 
     @Test
-    public void testMigrateConsentData() throws IOException {
+    public void testMigrateConsentData() throws Exception {
         List appsWithConsent = List.of(PACKAGE_NAME1, PACKAGE_NAME2);
         List appsRevoked = List.of(PACKAGE_NAME3);
         List<Topic> blockedTopics = List.of(TOPIC1, TOPIC2, TOPIC3);
-        when(mAppSearchConsentWorker.wasNotificationDisplayed()).thenReturn(false);
-        when(mAppSearchConsentWorker.wasGaUxNotificationDisplayed()).thenReturn(true);
-        when(mAppSearchConsentWorker.getAppsWithConsent(
-                        eq(AppSearchAppConsentDao.APPS_WITH_CONSENT)))
-                .thenReturn(appsWithConsent);
-        when(mAppSearchConsentWorker.getAppsWithConsent(
-                        eq(AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT)))
-                .thenReturn(appsRevoked);
-        when(mAppSearchConsentWorker.getPrivacySandboxFeature())
-                .thenReturn(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT);
-        when(mAppSearchConsentWorker.getBlockedTopics()).thenReturn(blockedTopics);
-        initConsentDataForMigration();
-        when(mMockFlags.getEnableU18AppsearchMigration()).thenReturn(false);
+        prepareTestMigrateConsentData(appsWithConsent, appsRevoked, blockedTopics);
 
         boolean result =
                 mAppSearchConsentManager.migrateConsentDataIfNeeded(
                         mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
         assertThat(result).isTrue();
 
+        verifyTestMigrateConsentData(blockedTopics);
+
+        verify(mDatastore).putBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
         verify(mDatastore)
-                .putBoolean(eq(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE), eq(true));
-        verify(mAdServicesManager).recordGaUxNotificationDisplayed(true);
-        verify(mAppConsentDao).setConsentForApp(eq(PACKAGE_NAME1), eq(false));
-        verify(mAppConsentDao).setConsentForApp(eq(PACKAGE_NAME2), eq(false));
-        verify(mAppConsentDao).setConsentForApp(eq(PACKAGE_NAME3), eq(true));
-        verify(mAdServicesManager).setConsentForApp(eq(PACKAGE_NAME1), anyInt(), eq(false));
-        verify(mAdServicesManager).setConsentForApp(eq(PACKAGE_NAME2), anyInt(), eq(false));
-        verify(mAdServicesManager).setConsentForApp(eq(PACKAGE_NAME3), anyInt(), eq(true));
-        verify(mDatastore)
-                .putBoolean(
-                        eq(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.name()),
-                        eq(true));
+                .putBoolean(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.name(), true);
         verify(mDatastore, atLeast(4)).putBoolean(any(), eq(false));
-        verify(mEditor)
-                .putBoolean(eq(BlockedTopicsManager.SHARED_PREFS_KEY_HAS_MIGRATED), eq(true));
-        verify(mEditor).commit();
-        // Verify blocked topics migration.
-        ArgumentCaptor<List<TopicParcel>> argument = ArgumentCaptor.forClass(List.class);
-        verify(mAdServicesManager).recordBlockedTopic(argument.capture());
-        assertThat(argument.getValue().size()).isEqualTo(blockedTopics.size());
-        for (TopicParcel topicParcel : argument.getValue()) {
-            assertThat(List.of(TOPIC1.getTopic(), TOPIC2.getTopic(), TOPIC3.getTopic()))
-                    .contains(topicParcel.getTopicId());
-            List taxonomies =
-                    List.of(
-                            TOPIC1.getTaxonomyVersion(),
-                            TOPIC2.getTaxonomyVersion(),
-                            TOPIC3.getTaxonomyVersion());
-            assertThat(taxonomies).contains(topicParcel.getTaxonomyVersion());
-            List models =
-                    List.of(
-                            TOPIC1.getModelVersion(),
-                            TOPIC2.getModelVersion(),
-                            TOPIC3.getModelVersion());
-            assertThat(models).contains(topicParcel.getModelVersion());
-        }
+    }
+
+    @Test
+    public void testMigrateConsentData_atomic() throws Exception {
+        List appsWithConsent = List.of(PACKAGE_NAME1, PACKAGE_NAME2);
+        List appsRevoked = List.of(PACKAGE_NAME3);
+        List<Topic> blockedTopics = List.of(TOPIC1, TOPIC2, TOPIC3);
+        prepareTestMigrateConsentData(appsWithConsent, appsRevoked, blockedTopics);
+
+        when(mMockFlags.getEnableAtomicFileDatastoreBatchUpdateApi()).thenReturn(true);
+
+        boolean result =
+                mAppSearchConsentManager.migrateConsentDataIfNeeded(
+                        mSharedPrefs, mDatastore, mAdServicesManager, mAppConsentDao);
+        assertThat(result).isTrue();
+
+        verifyTestMigrateConsentData(blockedTopics);
+
+        verify(mDatastore, never())
+                .putBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
+        verify(mDatastore, never())
+                .putBoolean(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT.name(), true);
+        verify(mDatastore, atLeast(2)).update(any());
     }
 
     @Test
@@ -552,6 +533,7 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
     private void initConsentDataForMigration() {
         ExtendedMockito.doReturn(true).when(() -> SdkLevel.isAtLeastT());
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
+        when(mMockFlags.getEnableAtomicFileDatastoreBatchUpdateApi()).thenReturn(false);
         when(mSharedPrefs.getBoolean(any(), eq(true))).thenReturn(true);
         when(mAdServicesManager.wasNotificationDisplayed()).thenReturn(false);
         when(mAdServicesManager.wasGaUxNotificationDisplayed()).thenReturn(false);
@@ -709,4 +691,63 @@ public final class AppSearchConsentManagerTest extends AdServicesExtendedMockito
             }
         }
     }
+
+    private void prepareTestMigrateConsentData(
+            List appsWithConsent, List appsRevoked, List<Topic> blockedTopics) throws Exception {
+        when(mAppSearchConsentWorker.wasNotificationDisplayed()).thenReturn(false);
+        when(mAppSearchConsentWorker.wasGaUxNotificationDisplayed()).thenReturn(true);
+        when(mAppSearchConsentWorker.getAppsWithConsent(
+                        eq(AppSearchAppConsentDao.APPS_WITH_CONSENT)))
+                .thenReturn(appsWithConsent);
+        when(mAppSearchConsentWorker.getAppsWithConsent(
+                        eq(AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT)))
+                .thenReturn(appsRevoked);
+        when(mAppSearchConsentWorker.getPrivacySandboxFeature())
+                .thenReturn(PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT);
+        when(mAppSearchConsentWorker.getBlockedTopics()).thenReturn(blockedTopics);
+        initConsentDataForMigration();
+        when(mMockFlags.getEnableU18AppsearchMigration()).thenReturn(false);
+    }
+
+    private void verifyTestMigrateConsentData(List<Topic> blockedTopics) throws Exception {
+        verify(mAdServicesManager).recordGaUxNotificationDisplayed(true);
+        verify(mAppConsentDao).setConsentForApp(eq(PACKAGE_NAME1), eq(false));
+        verify(mAppConsentDao).setConsentForApp(eq(PACKAGE_NAME2), eq(false));
+        verify(mAppConsentDao).setConsentForApp(eq(PACKAGE_NAME3), eq(true));
+        verify(mAdServicesManager).setConsentForApp(eq(PACKAGE_NAME1), anyInt(), eq(false));
+        verify(mAdServicesManager).setConsentForApp(eq(PACKAGE_NAME2), anyInt(), eq(false));
+        verify(mAdServicesManager).setConsentForApp(eq(PACKAGE_NAME3), anyInt(), eq(true));
+        verify(mEditor)
+                .putBoolean(eq(BlockedTopicsManager.SHARED_PREFS_KEY_HAS_MIGRATED), eq(true));
+        verify(mEditor).commit();
+        // Verify blocked topics migration.
+        ArgumentCaptor<List<TopicParcel>> argument = ArgumentCaptor.forClass(List.class);
+        verify(mAdServicesManager).recordBlockedTopic(argument.capture());
+        assertThat(argument.getValue().size()).isEqualTo(blockedTopics.size());
+        List<Integer> topcisIds = List.of(TOPIC1.getTopic(), TOPIC2.getTopic(), TOPIC3.getTopic());
+        List<Long> taxonomyVersions =
+                List.of(
+                        TOPIC1.getTaxonomyVersion(),
+                        TOPIC2.getTaxonomyVersion(),
+                        TOPIC3.getTaxonomyVersion());
+        List<Long> modelVersions =
+                List.of(
+                        TOPIC1.getModelVersion(),
+                        TOPIC2.getModelVersion(),
+                        TOPIC3.getModelVersion());
+        for (int i = 0; i < argument.getValue().size(); i++) {
+            TopicParcel topicParcel = argument.getValue().get(i);
+            expect.withMessage("Topic at index %s of arguments", i)
+                    .that(topicParcel.getTopicId())
+                    .isIn(topcisIds);
+            expect.withMessage("Topic at index %s of arguments", i)
+                    .that(topicParcel.getTaxonomyVersion())
+                    .isIn(taxonomyVersions);
+            expect.withMessage("Topic at index %s of arguments", i)
+                    .that(topicParcel.getModelVersion())
+                    .isIn(modelVersions);
+        }
+    }
 }
+
+

@@ -37,6 +37,7 @@ import android.os.RemoteException;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.consent.ConsentManager;
@@ -71,6 +72,7 @@ public class UpdateAdCounterHistogramWorker {
     @NonNull private final Clock mClock;
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
     @NonNull private final AdSelectionServiceFilter mAdSelectionServiceFilter;
     @NonNull private final ConsentManager mConsentManager;
     private final int mCallerUid;
@@ -82,6 +84,7 @@ public class UpdateAdCounterHistogramWorker {
             @NonNull Clock clock,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull Flags flags,
+            @NonNull DebugFlags debugFlags,
             @NonNull AdSelectionServiceFilter adSelectionServiceFilter,
             @NonNull ConsentManager consentManager,
             int callerUid,
@@ -91,6 +94,7 @@ public class UpdateAdCounterHistogramWorker {
         Objects.requireNonNull(clock);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(adSelectionServiceFilter);
         Objects.requireNonNull(consentManager);
         Objects.requireNonNull(devContext);
@@ -100,6 +104,7 @@ public class UpdateAdCounterHistogramWorker {
         mClock = clock;
         mAdServicesLogger = adServicesLogger;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mAdSelectionServiceFilter = adSelectionServiceFilter;
         mConsentManager = consentManager;
         mCallerUid = callerUid;
@@ -176,7 +181,7 @@ public class UpdateAdCounterHistogramWorker {
                 inputParams.getCallerPackageName(),
                 true,
                 false,
-                !mFlags.getConsentNotificationDebugMode(),
+                !mDebugFlags.getConsentNotificationDebugMode(),
                 mCallerUid,
                 LOGGING_API_NAME,
                 FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM,

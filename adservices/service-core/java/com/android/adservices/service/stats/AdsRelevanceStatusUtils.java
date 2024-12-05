@@ -25,6 +25,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
 
 import android.annotation.IntDef;
+import android.os.Binder;
+
+import com.android.adservices.errorlogging.ErrorLogUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -253,6 +256,15 @@ public class AdsRelevanceStatusUtils {
     public static final int SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE =
             3;
 
+    /** The PAS encoding source type is unset. */
+    public static final int PAS_ENCODING_SOURCE_TYPE_UNSET = 0;
+
+    /** The PAS raw signals are encoded in {@code PeriodicEncodingJobService}. */
+    public static final int PAS_ENCODING_SOURCE_TYPE_ENCODING_JOB_SERVICE = 1;
+
+    /** The PAS raw signals are encoded in {@code PeriodicSignalsServiceImpl}. */
+    public static final int PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL = 2;
+
     /** The kind of winner did the beacon come from. */
     @IntDef(
             prefix = {"BEACON_SOURCE_"},
@@ -397,6 +409,16 @@ public class AdsRelevanceStatusUtils {
     @Retention(RetentionPolicy.SOURCE)
     public @interface ScheduleCustomAudienceUpdatePerformedFailureType {}
 
+    @IntDef(
+            prefix = {"PAS_ENCODING_SOURCE_TYPE_"},
+            value = {
+                PAS_ENCODING_SOURCE_TYPE_UNSET,
+                PAS_ENCODING_SOURCE_TYPE_ENCODING_JOB_SERVICE,
+                PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface PasEncodingSourceType {}
+
     /** Returns the size bucket for a raw value. */
     @Size
     public static int computeSize(long rawSize, long[] buckets) {
@@ -486,5 +508,31 @@ public class AdsRelevanceStatusUtils {
                 break;
         }
         return celPpApiNameId;
+    }
+
+    /**
+     * Clean the caller's identity and log CEL.
+     * TODO(b/376542959): this is a temporary solution for CEL logs inside the Binder thread.
+     */
+    public static void logCelInsideBinderThread(int errorCode, int ppapiName) {
+        long token = Binder.clearCallingIdentity();
+        try {
+            ErrorLogUtil.e(errorCode, ppapiName);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
+    }
+
+    /**
+     * Clean the caller's identity and log CEL.
+     * TODO(b/376542959): this is a temporary solution for CEL logs inside the Binder thread.
+     */
+    public static void logCelInsideBinderThread(Throwable tr, int errorCode, int ppapiName) {
+        long token = Binder.clearCallingIdentity();
+        try {
+            ErrorLogUtil.e(tr, errorCode, ppapiName);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
     }
 }

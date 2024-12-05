@@ -20,6 +20,7 @@ import android.adservices.lint.common.DeviceConfigUsageDetector
 import android.adservices.lint.common.KillSwitchFlagUsageDetector
 import android.adservices.lint.common.PreconditionsCheckStateDetector
 import android.adservices.lint.common.SharedPreferencesUsageDetector
+import android.adservices.lint.common.StaticContextDetector
 import android.adservices.lint.common.SystemPropertiesUsageDetector
 import com.android.tools.lint.client.api.IssueRegistry
 import com.android.tools.lint.client.api.Vendor
@@ -41,6 +42,7 @@ class AdServicesProdLintCheckerIssueRegistry : IssueRegistry() {
             RoomDatabaseMigrationDetector.ISSUE_WARNING,
             SharedPreferencesUsageDetector.ISSUE,
             SystemPropertiesUsageDetector.ISSUE,
+            StaticContextDetector.ISSUE,
         )
 
     override val api: Int

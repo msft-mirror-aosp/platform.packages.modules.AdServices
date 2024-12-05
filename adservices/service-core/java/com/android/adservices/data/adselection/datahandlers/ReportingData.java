@@ -39,6 +39,13 @@ public abstract class ReportingData {
     @Nullable
     public abstract Uri getSellerWinReportingUri();
 
+    /**
+     * Win reporting uri associated with the component seller. This field will be null if there is
+     * no component seller.
+     */
+    @Nullable
+    public abstract Uri getComponentSellerWinReportingUri();
+
     /** The data required for computing the reporting Uris. */
     @AutoValue.CopyAnnotations
     @Nullable
@@ -57,13 +64,16 @@ public abstract class ReportingData {
      * create objects.
      */
     public static ReportingData createWithUris(
-            @NonNull Uri buyerWinReportingUri, @NonNull Uri sellerWinReportingUri) {
+            @NonNull Uri buyerWinReportingUri,
+            @NonNull Uri sellerWinReportingUri,
+            @NonNull Uri componentSellerWinReportingUri) {
         Objects.requireNonNull(buyerWinReportingUri);
         Objects.requireNonNull(sellerWinReportingUri);
 
         return builder()
                 .setBuyerWinReportingUri(buyerWinReportingUri)
                 .setSellerWinReportingUri(sellerWinReportingUri)
+                .setComponentSellerWinReportingUri(componentSellerWinReportingUri)
                 .build();
     }
 
@@ -77,6 +87,10 @@ public abstract class ReportingData {
         /** Sets the win reporting uri associated with the seller adtech. */
         public abstract Builder setSellerWinReportingUri(@Nullable Uri sellerWinReportingUri);
 
+        /** Sets the win reporting uri associated with the component seller adtech. */
+        public abstract Builder setComponentSellerWinReportingUri(
+                @Nullable Uri componentSellerWinReportingUri);
+
         /** Sets the data required for computing the reporting Uris. */
         public abstract Builder setReportingComputationData(
                 @Nullable ReportingComputationData reportingComputationData);
@@ -89,7 +103,8 @@ public abstract class ReportingData {
 
             boolean reportingUriSet =
                     reportingData.getBuyerWinReportingUri() != null
-                            || reportingData.getSellerWinReportingUri() != null;
+                            || reportingData.getSellerWinReportingUri() != null
+                            || reportingData.getComponentSellerWinReportingUri() != null;
             boolean reportingComputationDataSet =
                     reportingData.getReportingComputationData() != null;
             Preconditions.checkArgument(

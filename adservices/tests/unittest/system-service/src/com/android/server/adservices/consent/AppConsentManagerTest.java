@@ -32,10 +32,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
-import android.content.Context;
 import android.content.pm.PackageManager;
-
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
@@ -46,14 +43,14 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 public final class AppConsentManagerTest extends AdServicesMockitoTestCase {
-    private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
-    private static final String BASE_DIR = PPAPI_CONTEXT.getFilesDir().getAbsolutePath();
+    private static final String BASE_DIR = sContext.getFilesDir().getAbsolutePath();
 
     private AppConsentManager mAppConsentManager;
 
@@ -66,9 +63,8 @@ public final class AppConsentManagerTest extends AdServicesMockitoTestCase {
         mDatastoreSpy =
                 spy(
                         new AtomicFileDatastore(
-                                BASE_DIR,
-                                AppConsentManagerFixture.TEST_DATASTORE_NAME,
-                                1,
+                                new File(BASE_DIR, AppConsentManagerFixture.TEST_DATASTORE_NAME),
+                                /* datastoreVersion= */ 1,
                                 STORAGE_XML_IDENTIFIER,
                                 mMockAdServicesErrorLogger));
         mAppConsentManager = new AppConsentManager(mDatastoreSpy);
@@ -455,7 +451,10 @@ public final class AppConsentManagerTest extends AdServicesMockitoTestCase {
         assertDumpHasPrefix(dump, prefix);
 
         String datastoreDump =
-                dump(pw -> mDatastoreSpy.dump(pw, prefix + DUMP_PREFIX + DUMP_PREFIX));
+                dump(
+                        pw ->
+                                mDatastoreSpy.dump(
+                                        pw, prefix + DUMP_PREFIX + DUMP_PREFIX, /* args= */ null));
         assertWithMessage("content of dump() (datastore)").that(dump).contains(datastoreDump);
     }
 }
