@@ -28,6 +28,7 @@ import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.shared.util.Clock;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FluentFuture;
@@ -45,6 +46,7 @@ public class ForcedEncoderImpl implements ForcedEncoder {
     private final PeriodicEncodingJobWorker mEncodingJobWorker;
     private final ProtectedSignalsDao mProtectedSignalsDao;
     private final ListeningExecutorService mExecutor;
+    private final Clock mClock;
 
     @VisibleForTesting
     ForcedEncoderImpl(
@@ -53,7 +55,8 @@ public class ForcedEncoderImpl implements ForcedEncoder {
             EncodedPayloadDao encodedPayloadDao,
             ProtectedSignalsDao protectedSignalsDao,
             PeriodicEncodingJobWorker encodingJobWorker,
-            ListeningExecutorService executor) {
+            ListeningExecutorService executor,
+            Clock clock) {
         Objects.requireNonNull(
                 encoderLogicHandler, "Non-null instance of EncoderLogicHandler required.");
         Objects.requireNonNull(
@@ -72,6 +75,7 @@ public class ForcedEncoderImpl implements ForcedEncoder {
         mProtectedSignalsDao = protectedSignalsDao;
         mEncodingJobWorker = encodingJobWorker;
         mExecutor = executor;
+        mClock = clock;
     }
 
     public ForcedEncoderImpl(
@@ -82,7 +86,8 @@ public class ForcedEncoderImpl implements ForcedEncoder {
                 ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
                 ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
                 PeriodicEncodingJobWorker.getInstance(),
-                AdServicesExecutors.getBackgroundExecutor());
+                AdServicesExecutors.getBackgroundExecutor(),
+                Clock.getInstance());
     }
 
     /**
@@ -117,7 +122,7 @@ public class ForcedEncoderImpl implements ForcedEncoder {
         if (encodedPayload != null) {
             // Calculate the start of the cooldown window.
             Instant cooldownWindowStart =
-                    Instant.now()
+                    Instant.ofEpochMilli(mClock.currentTimeMillis())
                             .minusSeconds(mFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds);
 
             // Check if encoded payload was created before the start of the cooldown window.
