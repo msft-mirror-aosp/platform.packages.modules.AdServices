@@ -416,34 +416,57 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         return setOrCacheFlag(name, Double.toString(value));
     }
 
-    /** Sets the flag with the given value. */
-    public final T setFlag(String name, String value) {
-        return setOrCacheFlag(name, value);
+    /**
+     * Sets the flag with the given values and the {@link #ARRAY_SPLITTER_COMMA} separator.
+     *
+     * <p>This method could also be used to set a simple (i.e., no array) String flag, as the
+     * separator is not added after the last element.
+     */
+    public final T setFlag(String name, String... values) {
+        return setArrayFlagWithExplicitSeparator(name, ARRAY_SPLITTER_COMMA, values);
     }
+
+    // TODO(b/303901926): static import from shared code instead
+    private static final String ARRAY_SPLITTER_COMMA = ",";
 
     /**
      * Sets the string array flag with the given value , using the {@code separator} to flatten it.
      *
      * <p><b>Note:</b> in most cases, it's clearer to use the {@link SetLogcatTag} annotation
      * instead.
+     *
+     * @deprecated use {@link #setArrayFlagWithExplicitSeparator(String, String, String...)} or
+     *     {@link #setFlag(String, String...)} instead.
      */
+    @Deprecated
     public final T setFlag(String name, String[] value, String separator) {
+        return setArrayFlagWithExplicitSeparator(name, separator, value);
+    }
+
+    /**
+     * Sets a string array flag with the given elements, separated by {@code separator}.
+     *
+     * <p>Use the method when you need to pass a explicitly {@code separator} - otherwise, just use
+     * {@link #setFlag(String, String...)}, it's simpler.
+     */
+    public final T setArrayFlagWithExplicitSeparator(
+            String name, String separator, String... values) {
         Objects.requireNonNull(separator, "separator cannot be null");
-        Objects.requireNonNull(value, "value cannot be null");
-        if (value.length == 0) {
+        Objects.requireNonNull(values, "values cannot be null");
+        if (values.length == 0) {
             throw new IllegalArgumentException("no values (name=" + name + ")");
         }
-        if (value.length == 1) {
-            return setFlag(name, value[0]);
+        if (values.length == 1) {
+            return setOrCacheFlag(name, values[0]);
         }
 
         // TODO(b/303901926): use some existing helper / utility to flatten it - or a stream like
         // list.stream().map(Object::toString).collect(Collectors.joining(delimiter) - once it's
         // unit tested
-        StringBuilder flattenedValue = new StringBuilder().append(value[0]);
-        for (int i = 1; i < value.length; i++) {
-            String nextValue = value[i];
-            if (i < value.length) {
+        StringBuilder flattenedValue = new StringBuilder().append(values[0]);
+        for (int i = 1; i < values.length; i++) {
+            String nextValue = values[i];
+            if (i < values.length) {
                 flattenedValue.append(separator);
             }
             flattenedValue.append(nextValue);
