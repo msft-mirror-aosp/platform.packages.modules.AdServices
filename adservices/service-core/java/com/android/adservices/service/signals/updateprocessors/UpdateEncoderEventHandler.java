@@ -243,11 +243,16 @@ public class UpdateEncoderEventHandler {
             sLogger.d("Sending completion broadcast for forced encoding is disabled");
             return;
         }
-        sLogger.d("Sending FORCED_ENCODING_COMPLETED broadcast for test to catch");
         Intent intent;
         if (result) {
+            sLogger.d(
+                    "Sending FORCED_ENCODING_COMPLETED_ENCODING_ATTEMPTED broadcast for test to"
+                            + " catch");
             intent = new Intent(FORCED_ENCODING_COMPLETED_ENCODING_ATTEMPTED);
         } else {
+            sLogger.d(
+                    "Sending FORCED_ENCODING_COMPLETED_ENCODING_NOT_ATTEMPTED broadcast for test to"
+                            + " catch");
             intent = new Intent(FORCED_ENCODING_COMPLETED_ENCODING_NOT_ATTEMPTED);
         }
         mContext.sendBroadcast(intent);
