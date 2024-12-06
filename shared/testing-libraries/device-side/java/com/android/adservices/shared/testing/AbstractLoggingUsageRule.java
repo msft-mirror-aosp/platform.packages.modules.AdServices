@@ -52,8 +52,8 @@ public abstract class AbstractLoggingUsageRule extends AbstractRule {
         // is active for the test.
         SkipLoggingUsageRule annotation =
                 TestHelper.getAnnotationFromAnywhere(description, SkipLoggingUsageRule.class);
-        boolean hasSkipAnnotation = annotation != null;
-        if (!hasSkipAnnotation) {
+        boolean shouldUseVerifiers = annotation == null;
+        if (shouldUseVerifiers) {
             logVerifiers.forEach(LogVerifier::setup);
         }
 
@@ -68,7 +68,7 @@ public abstract class AbstractLoggingUsageRule extends AbstractRule {
         }
 
         // Skip verification of log usage if appropriate annotation is detected.
-        if (hasSkipAnnotation) {
+        if (!shouldUseVerifiers) {
             mLog.v("Skipping log usage rule verification, reason: %s", annotation.reason());
             return;
         }

@@ -2421,7 +2421,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INTERACTION_URI_EXCEEDS_MAXIMUM_LIMIT,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT,
-                /* times= */ 2);
+                /* numExpectedCalls= */ 2);
 
         Assert.assertTrue(callback.mIsSuccess);
         Assert.assertEquals(
