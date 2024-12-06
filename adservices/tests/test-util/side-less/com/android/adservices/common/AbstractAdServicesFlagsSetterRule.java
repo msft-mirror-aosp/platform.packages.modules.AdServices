@@ -166,20 +166,6 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     // Helper methods to set more commonly used flags such as kill switches.
     // Less common flags can be set directly using setFlags methods.
 
-    // TODO(b/303901926): refactor this method to simply call setFlag(String, String) (after unit
-    // tested), then remove it / replace usage.
-    /**
-     * Sets a flag that takes an array of strings with just the given value, using the default
-     * separator.
-     *
-     * @deprecated just use {@link #setFlag(String, String)} - after all, it only has one element
-     *     and hence the separator is not used.s
-     */
-    @Deprecated
-    public final T setSimpleArrayFlag(String name, String value) {
-        return setFlag(name, value);
-    }
-
     /**
      * Overrides the flag that sets the global AdServices kill switch.
      *

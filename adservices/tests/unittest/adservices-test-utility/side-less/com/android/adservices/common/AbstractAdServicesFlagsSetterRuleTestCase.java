@@ -122,23 +122,4 @@ public abstract class AbstractAdServicesFlagsSetterRuleTestCase<
                         new NameValuePair(key, "One Is The Loniest Number"),
                         new NameValuePair(key, "4,8,15,16,23,42", ","));
     }
-
-    @Test
-    public final void testSetSimpleArrayFlag() throws Throwable {
-        R rule = newRule();
-        List<NameValuePair> cachedCalls = new ArrayList<>();
-        mTest.onEvaluate(() -> cachedCalls.addAll(mFakeFlagsSetter.getAndResetCalls()));
-
-        rule.setSimpleArrayFlag("empty", "");
-        rule.setSimpleArrayFlag("null", null);
-        rule.setSimpleArrayFlag("SimpleArrayFlag", "Y U NO SIMPLER?");
-        runTest(rule);
-
-        expect.withMessage("cached calls")
-                .that(cachedCalls)
-                .containsExactly(
-                        new NameValuePair("empty", ""),
-                        new NameValuePair("null", /* value= */ null),
-                        new NameValuePair("SimpleArrayFlag", "Y U NO SIMPLER?"));
-    }
 }
