@@ -1746,4 +1746,7 @@ public final class FlagsConstants {
     /** Key to enable prod debug feature in server auctions */
     public static final String KEY_FLEDGE_ENABLE_PROD_DEBUG_IN_SERVER_AUCTION =
             "Fledge__enable_prod_debug_in_auction_server";
+
+    /** Key to enable the AdServices latency metrics {@code RbATrace}. */
+    public static final String KEY_ENABLE_RB_ATRACE = "enable_rb_atrace";
 }

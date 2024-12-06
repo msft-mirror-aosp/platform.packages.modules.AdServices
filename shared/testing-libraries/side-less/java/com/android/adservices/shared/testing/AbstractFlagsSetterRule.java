@@ -62,6 +62,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Consumer;
 
 // TODO(b/294423183): add unit tests for the most relevant / less repetitive stuff (don't need to
 // test all setters / getters, for example)
@@ -115,10 +116,14 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     private final List<NameValuePair> mOnTestFailureFlags = new ArrayList<>();
     private final List<NameValuePair> mOnTestFailureSystemProperties = new ArrayList<>();
 
-    private DeviceConfig.SyncDisabledModeForTest mPreviousSyncDisabledModeForTest = null;
+    private DeviceConfig.SyncDisabledModeForTest mPreviousSyncDisabledModeForTest;
 
     private boolean mIsRunning;
     private boolean mFlagsClearedByTest;
+
+    private final Consumer<NameValuePair> mFlagsSetter;
+
+    private final boolean mSkipStuffWhenObjectsAreNullOnUnitTests;
 
     protected AbstractFlagsSetterRule(
             RealLogger logger,
@@ -166,10 +171,32 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         // apply() is called)
         setSyncDisabledMode(DeviceConfig.SyncDisabledModeForTest.PERSISTENT);
 
+        mFlagsSetter = flag -> defaultFlagsSetterImplementation(flag);
+        mSkipStuffWhenObjectsAreNullOnUnitTests = false;
+
         mLog.v(
                 "Constructor: mDeviceConfigNamespace=%s,"
                         + " mDebugFlagPrefix=%s,mDeviceConfig=%s, mSystemProperties=%s",
                 mDeviceConfigNamespace, mDebugFlagPrefix, mDeviceConfig, mSystemProperties);
+    }
+
+    // TODO(b/340882758): this constructor is only used by AbstractFlagsSetterRuleTestCase, which
+    // for now is only testing that the flags are set (it's not testing other stuff like checking
+    // they're reset, system properties, etc...), hence it sets some non-null fields as null. This
+    // is temporary, as this class should be refactored to use the new DeviceConfig class and be
+    // split into multiple rules (for example, to set DebugFlags and Logcat tags) - as more features
+    // are tested and/or refactored, these references should be properly set (and eventually the
+    // constructors merged);
+    protected AbstractFlagsSetterRule(RealLogger logger, Consumer<NameValuePair> flagsSetter) {
+        super(logger);
+        mFlagsSetter = flagsSetter;
+
+        mSkipStuffWhenObjectsAreNullOnUnitTests = true;
+        mSystemPropertiesMatcher = null;
+        mDeviceConfigNamespace = null;
+        mDeviceConfig = null;
+        mDebugFlagPrefix = null;
+        mSystemProperties = null;
     }
 
     @Override
@@ -177,17 +204,21 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         String testName = TestHelper.getTestName(description);
         mIsRunning = true;
 
-        // TODO(b/294423183): ideally should be "setupErrors", but it's not used yet (other
-        // than logging), so it doesn't matter
-        runSafely(cleanUpErrors, () -> mPreTestFlags.addAll(mDeviceConfig.getAll()));
+        if (!mSkipStuffWhenObjectsAreNullOnUnitTests) {
+            // TODO(b/294423183): ideally should be "setupErrors", but it's not used yet (other
+            // than logging), so it doesn't matter
+            runSafely(cleanUpErrors, () -> mPreTestFlags.addAll(mDeviceConfig.getAll()));
+        }
         // Log flags set on the device prior to test execution. Useful for verifying if flag state
         // is correct for flag-ramp / AOAO testing.
         log(mPreTestFlags, "pre-test flags");
+        if (!mSkipStuffWhenObjectsAreNullOnUnitTests) {
         runSafely(
                 cleanUpErrors,
                 () ->
                         mPreTestSystemProperties.addAll(
                                 mSystemProperties.getAll(mSystemPropertiesMatcher)));
+        }
 
         runInitialCommands(testName);
         setAnnotatedFlags(description);
@@ -390,7 +421,6 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         return setOrCacheFlag(name, value);
     }
 
-    // TODO(b/303901926): add unit test
     /**
      * Sets the string array flag with the given value , using the {@code separator} to flatten it.
      *
@@ -398,7 +428,9 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
      * instead.
      */
     public final T setFlag(String name, String[] value, String separator) {
-        if (value == null || value.length == 0) {
+        Objects.requireNonNull(separator, "separator cannot be null");
+        Objects.requireNonNull(value, "value cannot be null");
+        if (value.length == 0) {
             throw new IllegalArgumentException("no values (name=" + name + ")");
         }
         if (value.length == 1) {
@@ -416,7 +448,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
             }
             flattenedValue.append(nextValue);
         }
-        return setFlag(new NameValuePair(name, flattenedValue.toString(), separator));
+        return setOrCacheFlag(name, flattenedValue.toString(), separator);
     }
 
     /**
@@ -556,6 +588,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
     // TODO(b/294423183): need to add unit test for setters that call this
     protected final T setOrCacheFlag(String name, String value, @Nullable String separator) {
+        Objects.requireNonNull(name, "name cannot be null");
         NameValuePair flag = new NameValuePair(name, value, separator);
         if (!mIsRunning) {
             if (isFlagManagedByRunner(name)) {
@@ -573,6 +606,12 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     }
 
     private T setFlag(NameValuePair flag) {
+        mFlagsSetter.accept(flag);
+        return getThis();
+    }
+
+    // Only used by the default mFlagsSetter - other methods should call setFlag()
+    private void defaultFlagsSetterImplementation(NameValuePair flag) {
         mLog.d("Setting flag: %s", flag);
         if (flag.separator == null) {
             mDeviceConfig.set(flag.name, flag.value);
@@ -580,10 +619,13 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
             mDeviceConfig.setWithSeparator(flag.name, flag.value, flag.separator);
         }
         mChangedFlags.add(flag.name);
-        return getThis();
     }
 
     private void resetFlags(String testName) {
+        if (mSkipStuffWhenObjectsAreNullOnUnitTests) {
+            mLog.w("resetFlags(%s): skipping (should only happen on rule test itself)", testName);
+            return;
+        }
         mLog.d("Resetting flags after %s", testName);
         mDeviceConfig.reset();
     }
@@ -624,6 +666,12 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     }
 
     private void resetSystemProperties(String testName) {
+        if (mSkipStuffWhenObjectsAreNullOnUnitTests) {
+            mLog.w(
+                    "resetSystemProperties(%s): skipping (should only happen on rule test itself)",
+                    testName);
+            return;
+        }
         mLog.d("Resetting SystemProperties after %s", testName);
         mSystemProperties.reset();
     }
