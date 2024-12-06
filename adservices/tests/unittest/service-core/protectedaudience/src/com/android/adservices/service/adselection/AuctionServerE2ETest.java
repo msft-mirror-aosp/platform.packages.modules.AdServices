@@ -1919,7 +1919,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
 
     @Test
     @Ignore(
-            "b/382374544 - Remove after fixing; test was silently failing when originally "
+            "TODO(b/382374544) - Remove after fixing; test was silently failing when originally "
                     + "introduced due to b/381931308")
     public void testGetAdSelectionData_withEncrypt_validRequestInDevMode_dataIsCleared()
             throws Exception {
@@ -1943,7 +1943,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
 
     @Test
     @Ignore(
-            "b/382374544 - Remove after fixing; test was silently failing when originally "
+            "TODO(b/382374544) - Remove after fixing; test was silently failing when originally "
                     + "introduced due to b/381931308")
     public void testGetAdSelectionData_withEncrypt_validRequestBeforeDevMode_dataIsCleared()
             throws Exception {
