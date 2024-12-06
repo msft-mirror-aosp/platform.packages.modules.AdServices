@@ -46,9 +46,9 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.shared.testing.HandlerIdleSyncCallback;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -65,7 +65,6 @@ import org.mockito.Spy;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
 @MockStatic(ConsentManager.class)
 @SpyStatic(PeriodicEncodingJobService.class)
@@ -81,6 +80,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     private static final long MINIMUM_SCHEDULING_DELAY_MS = 60L * 60L * 1000L;
     private static final long PERIOD = 42 * 60 * 1000;
     private static final JobScheduler JOB_SCHEDULER = sContext.getSystemService(JobScheduler.class);
+    private static final int PAS_ENCODING_SOURCE_TYPE =
+            AdsRelevanceStatusUtils.PAS_ENCODING_SOURCE_TYPE_ENCODING_JOB_SERVICE;
 
     @Spy
     private final PeriodicEncodingJobService mSpyEncodingJobService =
@@ -114,7 +115,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
         mockGetProtectedSignalsPeriodicEncodingEnabled(false);
 
         AdServicesJobServiceLogger logger =
-                mockAdServicesJobServiceLogger(mMockContext, mMockFlags);
+                mocker.mockNoOpAdServicesJobServiceLogger(mMockContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobFlagDisabled();
@@ -148,7 +149,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     public void testOnStartJobConsentRevokedGaUxEnabled_withLogging() throws Exception {
         mockDisableRelevantKillSwitches();
 
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
@@ -185,7 +187,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
                 .when(() -> PeriodicEncodingJobWorker.getInstance());
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mMockPeriodicEncodingJobWorker)
-                .encodeProtectedSignals();
+                .encodeProtectedSignals(PAS_ENCODING_SOURCE_TYPE);
         JobServiceCallback callback =
                 new JobServiceCallback().expectJobFinished(mSpyEncodingJobService);
 
@@ -202,7 +204,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     public void testOnStartJobUpdateSuccess_withLogging() throws Exception {
         mockDisableRelevantKillSwitches();
 
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -215,7 +218,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     public void testOnStartJobUpdateTimeoutHandled_withLogging() throws Exception {
         mockDisableRelevantKillSwitches();
 
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -235,7 +239,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
                         FluentFuture.from(
                                 immediateFailedFuture(new InterruptedException("testing timeout"))))
                 .when(mMockPeriodicEncodingJobWorker)
-                .encodeProtectedSignals();
+                .encodeProtectedSignals(PAS_ENCODING_SOURCE_TYPE);
 
         assertOnStartSucceeded();
         callback.assertJobFinished();
@@ -259,7 +263,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
                                 immediateFailedFuture(
                                         new ExecutionException("testing timeout", null))))
                 .when(mMockPeriodicEncodingJobWorker)
-                .encodeProtectedSignals();
+                .encodeProtectedSignals(PAS_ENCODING_SOURCE_TYPE);
 
         assertOnStartSucceeded();
         callback.assertJobFinished();
@@ -272,7 +276,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
 
     @Test
     public void testOnStopJob_withLogging() throws Exception {
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         doReturn(mMockPeriodicEncodingJobWorker).when(PeriodicEncodingJobWorker::getInstance);
@@ -413,7 +418,8 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
 
     @Test
     public void testOnStartJobShouldDisableJobTrue() {
-        AdServicesJobServiceLogger logger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        AdServicesJobServiceLogger logger =
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
 
         doReturn(true)
                 .when(
@@ -450,7 +456,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
                 .when(() -> PeriodicEncodingJobWorker.getInstance());
         doReturn(FluentFuture.from(immediateFailedFuture(new TimeoutException("testing timeout"))))
                 .when(mMockPeriodicEncodingJobWorker)
-                .encodeProtectedSignals();
+                .encodeProtectedSignals(PAS_ENCODING_SOURCE_TYPE);
 
         assertOnStartSucceeded();
         callback.assertJobFinished();
@@ -468,7 +474,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
                 .when(() -> PeriodicEncodingJobWorker.getInstance());
         doReturn(FluentFuture.from(immediateFuture(null)))
                 .when(mMockPeriodicEncodingJobWorker)
-                .encodeProtectedSignals();
+                .encodeProtectedSignals(PAS_ENCODING_SOURCE_TYPE);
 
         assertOnStartSucceeded();
         callback.assertJobFinished();
@@ -605,11 +611,12 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     }
 
     private void verifyEncodeProtectedSignalsNeverCalled() {
-        verify(mMockPeriodicEncodingJobWorker, never()).encodeProtectedSignals();
+        verify(mMockPeriodicEncodingJobWorker, never())
+                .encodeProtectedSignals(PAS_ENCODING_SOURCE_TYPE);
     }
 
     private void verifyEncodeProtectedSignalsCalled() {
-        verify(mMockPeriodicEncodingJobWorker).encodeProtectedSignals();
+        verify(mMockPeriodicEncodingJobWorker).encodeProtectedSignals(PAS_ENCODING_SOURCE_TYPE);
     }
 
     private void verifyJobFinished() {

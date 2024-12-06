@@ -19,7 +19,6 @@ package com.android.adservices.service.customaudience;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.annotation.NonNull;
-import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
@@ -46,7 +45,7 @@ import java.util.Objects;
  *
  * <p>This class is thread safe.
  */
-public class CustomAudienceImpl {
+public final class CustomAudienceImpl {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final Object SINGLETON_LOCK = new Object();
 
@@ -60,6 +59,7 @@ public class CustomAudienceImpl {
     @NonNull private final Flags mFlags;
     private final boolean mAuctionServerRequestFlagsEnabled;
     private final boolean mSellerConfigurationFlagEnabled;
+    private final ComponentAdsStrategy mComponentAdsStrategy;
 
     @VisibleForTesting
     public CustomAudienceImpl(
@@ -67,7 +67,8 @@ public class CustomAudienceImpl {
             @NonNull CustomAudienceQuantityChecker customAudienceQuantityChecker,
             @NonNull Validator<CustomAudience> customAudienceValidator,
             @NonNull Clock clock,
-            @NonNull Flags flags) {
+            @NonNull Flags flags,
+            ComponentAdsStrategy componentAdsStrategy) {
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(customAudienceQuantityChecker);
         Objects.requireNonNull(customAudienceValidator);
@@ -84,6 +85,7 @@ public class CustomAudienceImpl {
         mSellerConfigurationFlagEnabled =
                 BinderFlagReader.readFlag(
                         flags::getFledgeGetAdSelectionDataSellerConfigurationEnabled);
+        mComponentAdsStrategy = componentAdsStrategy;
     }
 
     /**
@@ -92,20 +94,21 @@ public class CustomAudienceImpl {
      * <p>If no instance has been initialized yet, a new one will be created. Otherwise, the
      * existing instance will be returned.
      */
-    public static CustomAudienceImpl getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context, "Context must be provided.");
+    public static CustomAudienceImpl getInstance() {
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 Flags flags = FlagsFactory.getFlags();
                 CustomAudienceDao customAudienceDao =
-                        CustomAudienceDatabase.getInstance(context).customAudienceDao();
+                        CustomAudienceDatabase.getInstance().customAudienceDao();
                 sSingleton =
                         new CustomAudienceImpl(
                                 customAudienceDao,
                                 new CustomAudienceQuantityChecker(customAudienceDao, flags),
-                                CustomAudienceValidator.getInstance(context, flags),
+                                CustomAudienceValidator.getInstance(),
                                 Clock.systemUTC(),
-                                flags);
+                                flags,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false));
             }
             return sSingleton;
         }
@@ -143,7 +146,7 @@ public class CustomAudienceImpl {
                         appInstallFilteringEnabled,
                         adRenderIdEnabled);
 
-        boolean isDebuggableCustomAudience = devContext.getDevOptionsEnabled();
+        boolean isDebuggableCustomAudience = devContext.getDeviceDevOptionsEnabled();
         sLogger.v("Is debuggable custom audience: %b", isDebuggableCustomAudience);
 
         Duration customAudienceDefaultExpireIn =
@@ -165,6 +168,8 @@ public class CustomAudienceImpl {
         sLogger.v("Inserting CA in the DB: %s", dbCustomAudience);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dbCustomAudience, customAudience.getDailyUpdateUri(), isDebuggableCustomAudience);
+        mComponentAdsStrategy.persistComponentAds(
+                customAudience, callerPackageName, mCustomAudienceDao);
     }
 
     /** Delete a custom audience with given key. No-op if not exist. */

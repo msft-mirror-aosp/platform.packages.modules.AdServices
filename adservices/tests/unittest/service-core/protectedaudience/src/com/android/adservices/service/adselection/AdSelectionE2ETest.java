@@ -37,6 +37,7 @@ import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_BA
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_BUYERS_OR_CONTEXTUAL_ADS_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE;
@@ -61,7 +62,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.isA;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.never;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.spy;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.times;
@@ -108,6 +108,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
+import com.android.adservices.common.RecreateJSSandboxIsolateRule;
 import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -130,10 +131,12 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdCacheManager;
+import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -152,7 +155,6 @@ import com.android.adservices.service.encryptionkey.EncryptionKey;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
-import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -160,7 +162,7 @@ import com.android.adservices.service.stats.RunAdBiddingProcessReportedStats;
 import com.android.adservices.service.stats.RunAdScoringProcessReportedStats;
 import com.android.adservices.service.stats.RunAdSelectionProcessReportedStats;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -199,8 +201,9 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
  */
 // Test applications don't have the required permissions to read config P/H flags, and
 // injecting mocked flags everywhere is annoying and non-trivial for static methods
-@RequiresSdkLevelAtLeastS()
 @SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
+@SetFlagDisabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
 public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -647,6 +650,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     @Rule(order = 12)
     public final MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
+    @Rule(order = 13)
+    public final RecreateJSSandboxIsolateRule recreateJSSandboxIsolateRule =
+            new RecreateJSSandboxIsolateRule();
+
     // Mocking DevContextFilter to test behavior with and without override api authorization
     @Mock private DevContextFilter mDevContextFilter;
     @Mock private CallerMetadata mMockCallerMetadata;
@@ -686,18 +693,16 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     private MultiCloudSupportStrategy mMultiCloudSupportStrategy;
     private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
 
-    private MockAdIdWorker mMockAdIdWorker;
     private AdIdFetcher mAdIdFetcher;
     private RetryStrategyFactory mRetryStrategyFactory;
-    private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
-    private ConsentedDebugConfigurationGeneratorFactory
-            mConsentedDebugConfigurationGeneratorFactory;
 
-    private EgressConfigurationGenerator mEgressConfigurationGenerator;
+    private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
 
     @Before
     public void setUp() throws Exception {
         doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
+        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetConsentNotificationDebugMode(false);
 
         mAdSelectionEntryDaoSpy =
                 Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDatabase.class)
@@ -739,25 +744,28 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDebugReportingDatabase.class)
                         .build()
                         .getAdSelectionDebugReportDao();
-        mMockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(mSpyContext));
+        MockAdIdWorker mockAdIdWorker = new MockAdIdWorker(new AdIdCacheManager(mSpyContext));
         mAdIdFetcher =
                 new AdIdFetcher(
-                        mContext, mMockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
+                        mContext, mockAdIdWorker, mLightweightExecutorService, mScheduledExecutor);
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
-        mConsentedDebugConfigurationDao =
+        ConsentedDebugConfigurationDao consentedDebugConfigurationDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDatabase.class)
                         .build()
                         .consentedDebugConfigurationDao();
-        mConsentedDebugConfigurationGeneratorFactory =
+        ConsentedDebugConfigurationGeneratorFactory consentedDebugConfigurationGeneratorFactory =
                 new ConsentedDebugConfigurationGeneratorFactory(
-                        false, mConsentedDebugConfigurationDao);
-        mEgressConfigurationGenerator =
-                EgressConfigurationGenerator.createInstance(
-                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
-                        mAdIdFetcher,
+                        false, consentedDebugConfigurationDao);
+        mAuctionServerDebugConfigurationGenerator =
+                new AuctionServerDebugConfigurationGenerator(
+                        Flags.ADID_KILL_SWITCH,
                         Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
+                        Flags.FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING,
+                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
+                        Flags.DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER,
+                        mAdIdFetcher,
+                        consentedDebugConfigurationGeneratorFactory.create(),
                         mLightweightExecutorService);
-
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
         when(mMockCallerMetadata.getBinderElapsedTimestamp())
@@ -780,6 +788,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -791,9 +800,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         Uri uriPathForScoringWithReportResults =
@@ -927,7 +935,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS,
                         Throttler.ApiKey.FLEDGE_API_SELECT_ADS,
                         DevContext.createForDevOptionsDisabled());
-        mMockAdIdWorker.setResult(AdId.ZERO_OUT, true);
+        mockAdIdWorker.setResult(AdId.ZERO_OUT, true);
     }
 
     @Test
@@ -1037,6 +1045,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithCPCEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -1048,9 +1057,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -1169,6 +1177,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithDataVersionHeaderEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -1180,9 +1189,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -1320,6 +1328,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithDataVersionHeaderEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -1331,9 +1340,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -1467,6 +1475,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithDataVersionHeaderEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -1478,9 +1487,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -1595,6 +1603,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithCPCDisabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -1606,9 +1615,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -1819,6 +1827,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         prebuiltDisabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -1830,9 +1839,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -1923,6 +1931,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -1934,9 +1943,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -2118,6 +2126,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithCPCEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -2129,9 +2138,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -2248,6 +2256,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithDataVersionHeaderEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -2259,9 +2268,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -2399,6 +2407,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithDataVersionHeaderEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -2410,9 +2419,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -2546,6 +2554,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithDataVersionHeaderEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -2557,9 +2566,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -2674,6 +2682,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithCPCDisabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -2685,9 +2694,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
         doAnswer(
@@ -3207,7 +3215,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME)
+                                .setDeviceDevOptionsEnabled(true)
+                                .build());
 
         // Creating new instance of service with new DevContextFilter
         mAdSelectionService =
@@ -3227,6 +3237,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -3238,9 +3249,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -3371,6 +3381,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithContextualAdsDisabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -3382,9 +3393,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(adSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4143,6 +4153,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -4154,9 +4165,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionTestCallback resultsCallbackNoCache =
                 invokeSelectAds(adSelectionServiceNoCache, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4266,6 +4276,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -4277,9 +4288,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionTestCallback resultsCallbackNoCache =
                 invokeSelectAds(adSelectionServiceNoCache, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -4391,6 +4401,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -4402,9 +4413,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // We call selectAds again to verify that scoring logic was also cached
         AdSelectionTestCallback resultsCallbackWithCaching =
@@ -4519,6 +4529,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -4530,9 +4541,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // We call selectAds again to verify that scoring logic was also cached
         AdSelectionTestCallback resultsCallbackWithCaching =
@@ -4624,7 +4634,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME)
+                                .setDeviceDevOptionsEnabled(true)
+                                .build());
 
         // Creating new instance of service with new DevContextFilter
         mAdSelectionService =
@@ -4644,6 +4656,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -4655,9 +4668,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
@@ -4765,7 +4777,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
         when(mDevContextFilter.createDevContext())
                 .thenReturn(
-                        DevContext.builder(MY_APP_PACKAGE_NAME).setDevOptionsEnabled(true).build());
+                        DevContext.builder(MY_APP_PACKAGE_NAME)
+                                .setDeviceDevOptionsEnabled(true)
+                                .build());
 
         // Creating new instance of service with new DevContextFilter
         mAdSelectionService =
@@ -4785,6 +4799,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -4796,9 +4811,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // Populating the Custom Audience DB
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
@@ -5978,6 +5992,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithSmallerLimits,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -5989,9 +6004,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         String jsWaitMoreThanAllowedForBiddingPerCa =
                 insertJsWait(2 * mFakeFlags.getAdSelectionBiddingTimeoutPerCaMs());
@@ -6231,6 +6245,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithLenientBuyerBiddingLimits,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -6242,9 +6257,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6307,6 +6321,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithTightBuyerBiddingLimits,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -6318,9 +6333,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6500,6 +6514,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithLenientBuyerBiddingLimits,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -6511,9 +6526,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionTestCallback resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6576,6 +6590,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithTightBuyerBiddingLimits,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -6587,9 +6602,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         resultsCallback =
                 invokeSelectAds(mAdSelectionService, adSelectionConfig, CALLER_PACKAGE_NAME);
@@ -6695,6 +6709,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithSmallerLimits,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -6706,9 +6721,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         String jsWaitMoreThanAllowedForScoring =
                 insertJsWait(2 * mFakeFlags.getAdSelectionScoringTimeoutMs());
@@ -7399,6 +7413,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithEnrollmentCheckEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -7410,9 +7425,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -7514,7 +7528,10 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
             }
         }
 
-        Throttler.destroyExistingThrottler();
+        // NOTE: used to call Throttler.destroyExistingThrottler(), but constructor below doesn't
+        // actually set a Throttler - the "real" constructor uses the Throttler when instantiating
+        // the FledgeApiThrottleFilter (which in turn is passed to the constructor of
+        // AdSelectionServiceFilter)
         Flags throttlingFlags = new FlagsWithThrottling();
         AdSelectionServiceImpl adSelectionServiceWithThrottling =
                 new AdSelectionServiceImpl(
@@ -7533,6 +7550,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         throttlingFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -7544,9 +7562,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(1);
@@ -7629,19 +7646,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         AdSelectionRunner.AD_SELECTION_ERROR_PATTERN,
                         AdSelectionRunner.ERROR_AD_SELECTION_FAILURE,
                         RATE_LIMIT_REACHED_ERROR_MESSAGE));
-        resetThrottlerToNoRateLimits();
-    }
-
-    /**
-     * Given Throttler is singleton, & shared across tests, this method should be invoked after
-     * tests that impose restrictive rate limits.
-     */
-    private void resetThrottlerToNoRateLimits() {
-        Throttler.destroyExistingThrottler();
-        final float noRateLimit = -1;
-        Flags mockNoRateLimitFlags = mock(Flags.class);
-        doReturn(noRateLimit).when(mockNoRateLimitFlags).getSdkRequestPermitsPerSecond();
-        Throttler.getInstance(mockNoRateLimitFlags);
     }
 
     @Test
@@ -7674,6 +7678,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flagsWithEnrollmentCheckEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
                         mAdSelectionServiceFilter,
@@ -7685,9 +7690,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);

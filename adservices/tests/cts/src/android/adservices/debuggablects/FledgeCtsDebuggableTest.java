@@ -23,7 +23,9 @@ import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.Flags.PRECOMPUTED_CLASSIFIER;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
@@ -111,7 +113,6 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
@@ -152,7 +153,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@RequiresSdkLevelAtLeastS
 @SetFlagDisabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
 @SetFlagEnabled(KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED) // Enabled retry for java script engine
 @SetFlagEnabled(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED) // Enabled due to reset during teardown()
@@ -172,6 +172,7 @@ import java.util.concurrent.atomic.AtomicInteger;
         name = KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS,
         value = EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS)
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
+@SetIntegerFlag(name = KEY_CLASSIFIER_TYPE, value = PRECOMPUTED_CLASSIFIER)
 @SetPpapiAppAllowList
 public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
     private static final long LONGER_BIDDING_SCORING_TIMEOUT_MS = 8_000L;
@@ -532,18 +533,29 @@ public final class FledgeCtsDebuggableTest extends ForegroundDebuggableCtsTest {
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
         mCustomAudienceTestFixture = new CustomAudienceTestFixture(customAudienceClient);
-        DevContextFilter devContextFilter = DevContextFilter.create(sContext);
-        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
+        DevContextFilter devContextFilter =
+                DevContextFilter.create(mContext, /* developerModeFeatureEnabled= */ false);
+        DevContext devContext = devContextFilter.createDevContext(Process.myUid());
         boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());
-        boolean isDeveloperMode = devContextFilter.isDeveloperMode();
-        mHasAccessToDevOverrides = devContext.getDevOptionsEnabled();
+        boolean isDeveloperMode = devContextFilter.isDeviceDevOptionsEnabledOrDebuggable();
+        mHasAccessToDevOverrides = devContext.getDeviceDevOptionsEnabled();
         mAccessStatus =
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode);
 
+        String[] deviceConfigPermissions;
+        if (sdkLevel.isAtLeastU()) {
+            deviceConfigPermissions =
+                    new String[] {
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG
+                    };
+        } else {
+            deviceConfigPermissions = new String[] {Manifest.permission.WRITE_DEVICE_CONFIG};
+        }
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+                .adoptShellPermissionIdentity(deviceConfigPermissions);
 
         // Clear the buyer list with an empty call to setAppInstallAdvertisers
         mAdSelectionClient.setAppInstallAdvertisers(

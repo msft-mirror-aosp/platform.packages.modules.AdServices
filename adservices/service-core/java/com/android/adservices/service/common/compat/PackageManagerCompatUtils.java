@@ -24,8 +24,6 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.os.Build;
-import android.util.Pair;
 
 import androidx.annotation.NonNull;
 
@@ -62,35 +60,17 @@ public final class PackageManagerCompatUtils {
 
     // This list is the same as the list declared in the AdExtServicesManifest, where the
     // services with intent filters need to be enabled/disabled based on flag settings and SDK
-    // version. The list is a collection of pairs where the first value is the name of the service,
-    // and the second value is the min SDK version for which the service is supported.
-    public static final ImmutableList<Pair<String, Integer>>
-            SERVICE_CLASSES_AND_MIN_SDK_SUPPORT_PAIRS =
-                    ImmutableList.of(
-                            new Pair<>(
-                                    /* service= */ "com.android.adservices.adid.AdIdService",
-                                    /* minSdkSupport= */ Build.VERSION_CODES.R),
-                            new Pair<>(
-                                    /* service= */ "com.android.adservices.measurement.MeasurementService",
-                                    /* minSdkSupport= */ Build.VERSION_CODES.R),
-                            new Pair<>(
-                                    /* service= */ "com.android.adservices.common.AdServicesCommonService",
-                                    /* minSdkSupport= */ Build.VERSION_CODES.R),
-                            new Pair<>(
-                                    /* service= */ "com.android.adservices.adselection.AdSelectionService",
-                                    /* minSdkSupport= */ Build.VERSION_CODES.S),
-                            new Pair<>(
-                                    /* service= */ "com.android.adservices.customaudience.CustomAudienceService",
-                                    /* minSdkSupport= */ Build.VERSION_CODES.S),
-                            new Pair<>(
-                                    /* service= */ "android.adservices.signals.ProtectedSignalsService",
-                                    /* minSdkSupport= */ Build.VERSION_CODES.S),
-                            new Pair<>(
-                                    /* service= */ "com.android.adservices.topics.TopicsService",
-                                    /* minSdkSupport= */ Build.VERSION_CODES.S),
-                            new Pair<>(
-                                    /* service= */ "com.android.adservices.appsetid.AppSetIdService",
-                                    /* minSdkSupport= */ Build.VERSION_CODES.S));
+    // version.
+    public static final ImmutableList<String> SERVICE_CLASSES =
+            ImmutableList.of(
+                    "com.android.adservices.adid.AdIdService",
+                    "com.android.adservices.measurement.MeasurementService",
+                    "com.android.adservices.common.AdServicesCommonService",
+                    "com.android.adservices.adselection.AdSelectionService",
+                    "com.android.adservices.customaudience.CustomAudienceService",
+                    "android.adservices.signals.ProtectedSignalsService",
+                    "com.android.adservices.topics.TopicsService",
+                    "com.android.adservices.appsetid.AppSetIdService");
 
     // LINT.ThenChange()
 
@@ -193,7 +173,8 @@ public final class PackageManagerCompatUtils {
      * @param context the context
      * @return true if AdServices activities are enabled, otherwise false
      */
-    @NonNull
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static boolean isAdServicesActivityEnabled(@NonNull Context context) {
         Objects.requireNonNull(context);
         String packageName = context.getPackageName();

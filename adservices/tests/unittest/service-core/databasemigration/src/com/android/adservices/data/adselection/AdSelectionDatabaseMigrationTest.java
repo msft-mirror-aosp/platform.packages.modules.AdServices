@@ -16,7 +16,7 @@
 
 package com.android.adservices.data.adselection;
 
-import static org.junit.Assert.assertEquals;
+import static com.google.common.truth.Truth.assertThat;
 
 import android.app.Instrumentation;
 import android.database.Cursor;
@@ -26,7 +26,6 @@ import androidx.sqlite.db.SupportSQLiteDatabase;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -34,7 +33,6 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.List;
 
-@RequiresSdkLevelAtLeastS
 public final class AdSelectionDatabaseMigrationTest extends AdServicesUnitTestCase {
     private static final String QUERY_TABLES_FROM_SQL_MASTER =
             "SELECT * FROM sqlite_master WHERE type='table' AND name='%s';";
@@ -166,29 +164,23 @@ public final class AdSelectionDatabaseMigrationTest extends AdServicesUnitTestCa
     }
 
     private void validateTablesExistsInDatabase(SupportSQLiteDatabase db, List<String> tableNames) {
-        tableNames.forEach(
-                tableName -> {
-                    validateTableExistsInDatabase(db, tableName);
-                });
+        tableNames.forEach(tableName -> validateTableExistsInDatabase(db, tableName));
     }
 
     private void validateTableExistsInDatabase(SupportSQLiteDatabase db, String tableName) {
         Cursor cursor = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, tableName));
-        assertEquals(1, cursor.getCount());
+        assertThat(cursor.getCount()).isEqualTo(1);
         cursor.moveToFirst();
-        assertEquals(tableName, cursor.getString(cursor.getColumnIndex(COLUMN_NAME_NAME)));
+        assertThat(cursor.getString(cursor.getColumnIndex(COLUMN_NAME_NAME))).isEqualTo(tableName);
     }
 
     private void validateTablesDoNotExistInDatabase(
             SupportSQLiteDatabase db, List<String> tableNames) {
-        tableNames.forEach(
-                tableName -> {
-                    validateTableDoesNotExistsInDatabase(db, tableName);
-                });
+        tableNames.forEach(tableName -> validateTableDoesNotExistsInDatabase(db, tableName));
     }
 
     private void validateTableDoesNotExistsInDatabase(SupportSQLiteDatabase db, String tableName) {
         Cursor cursor = db.query(String.format(QUERY_TABLES_FROM_SQL_MASTER, tableName));
-        assertEquals(0, cursor.getCount());
+        assertThat(cursor.getCount()).isEqualTo(0);
     }
 }

@@ -55,12 +55,14 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
@@ -96,6 +98,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     @NonNull private final AdServicesLogger mAdServicesLogger;
     @NonNull private final AppImportanceFilter mAppImportanceFilter;
     @NonNull private final Flags mFlags;
+    @NonNull private final DebugFlags mDebugFlags;
     @NonNull private final CallingAppUidSupplier mCallingAppUidSupplier;
 
     @NonNull private final CustomAudienceServiceFilter mCustomAudienceServiceFilter;
@@ -108,16 +111,22 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     private CustomAudienceServiceImpl(@NonNull Context context) {
         this(
                 context,
-                CustomAudienceImpl.getInstance(context),
+                CustomAudienceImpl.getInstance(),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
                 ConsentManager.getInstance(),
-                DevContextFilter.create(context),
+                DevContextFilter.create(
+                        context,
+                        BinderFlagReader.readFlag(
+                                () ->
+                                        DebugFlags.getInstance()
+                                                .getDeveloperSessionFeatureEnabled())),
                 AdServicesExecutors.getBackgroundExecutor(),
                 AdServicesLoggerImpl.getInstance(),
                 AppImportanceFilter.create(
                         context,
                         () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation()),
                 FlagsFactory.getFlags(),
+                DebugFlags.getInstance(),
                 CallingAppUidSupplierBinderImpl.create(),
                 new CustomAudienceServiceFilter(
                         context,
@@ -134,15 +143,16 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         new FledgeAllowListsFilter(
                                 FlagsFactory.getFlags(), AdServicesLoggerImpl.getInstance()),
                         new FledgeApiThrottleFilter(
-                                Throttler.getInstance(FlagsFactory.getFlags()),
-                                AdServicesLoggerImpl.getInstance())),
+                                Throttler.getInstance(), AdServicesLoggerImpl.getInstance())),
                 new AdFilteringFeatureFactory(
-                        SharedStorageDatabase.getInstance(context).appInstallDao(),
-                        SharedStorageDatabase.getInstance(context).frequencyCapDao(),
+                        SharedStorageDatabase.getInstance().appInstallDao(),
+                        SharedStorageDatabase.getInstance().frequencyCapDao(),
                         FlagsFactory.getFlags()));
     }
 
     /** Creates a new instance of {@link CustomAudienceServiceImpl}. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static CustomAudienceServiceImpl create(@NonNull Context context) {
         return new CustomAudienceServiceImpl(context);
     }
@@ -158,6 +168,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull Flags flags,
+            @NonNull DebugFlags debugFlags,
             @NonNull CallingAppUidSupplier callingAppUidSupplier,
             @NonNull CustomAudienceServiceFilter customAudienceServiceFilter,
             @NonNull AdFilteringFeatureFactory adFilteringFeatureFactory) {
@@ -179,6 +190,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         mAdServicesLogger = adServicesLogger;
         mAppImportanceFilter = appImportanceFilter;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mCallingAppUidSupplier = callingAppUidSupplier;
         mCustomAudienceServiceFilter = customAudienceServiceFilter;
         mAdFilteringFeatureFactory = adFilteringFeatureFactory;
@@ -204,7 +216,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, ownerPackageName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, ownerPackageName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -251,7 +263,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                         ownerPackageName,
                         mFlags.getEnforceForegroundStatusForFledgeCustomAudience(),
                         false,
-                        !mFlags.getConsentNotificationDebugMode(),
+                        !mDebugFlags.getConsentNotificationDebugMode(),
                         callerUid,
                         apiName,
                         FLEDGE_API_JOIN_CUSTOM_AUDIENCE,
@@ -284,7 +296,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         } finally {
             if (shouldLog) {
                 mAdServicesLogger.logFledgeApiCallStats(
-                        apiName, ownerPackageName, resultCode, /*latencyMs=*/ 0);
+                        apiName, ownerPackageName, resultCode, /* latencyMs= */ 0);
             }
         }
     }
@@ -307,7 +319,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
 
             // Rethrow because we want to fail fast
             throw exception;
@@ -327,6 +339,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     FetchCustomAudienceImpl impl =
                             new FetchCustomAudienceImpl(
                                     mFlags,
+                                    mDebugFlags,
                                     // TODO(b/235841960): Align on internal Clock usage.
                                     Clock.systemUTC(),
                                     mAdServicesLogger,
@@ -390,7 +403,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     apiName,
                     input.getCallerPackageName(),
                     STATUS_INVALID_ARGUMENT,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
 
             // Rethrow because we want to fail fast
             throw exception;
@@ -414,6 +427,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                     mConsentManager,
                                     callerUid,
                                     mFlags,
+                                    mDebugFlags,
                                     mAdServicesLogger,
                                     AdServicesExecutors.getBackgroundExecutor(),
                                     mCustomAudienceServiceFilter,
@@ -443,7 +457,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, ownerPackageName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, ownerPackageName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
 
             // Rethrow because we want to fail fast
             throw exception;
@@ -488,9 +502,9 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 mCustomAudienceServiceFilter.filterRequest(
                         buyer,
                         ownerPackageName,
-                        mFlags.getEnforceForegroundStatusForFledgeCustomAudience(),
+                        mFlags.getEnforceForegroundStatusForLeaveCustomAudience(),
                         false,
-                        !mFlags.getConsentNotificationDebugMode(),
+                        !mDebugFlags.getConsentNotificationDebugMode(),
                         callerUid,
                         apiName,
                         FLEDGE_API_LEAVE_CUSTOM_AUDIENCE,
@@ -529,7 +543,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         } finally {
             if (shouldLog) {
                 mAdServicesLogger.logFledgeApiCallStats(
-                        apiName, ownerPackageName, resultCode, /*latencyMs=*/ 0);
+                        apiName, ownerPackageName, resultCode, /* latencyMs= */ 0);
             }
         }
     }
@@ -561,19 +575,19 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow to fail fast
             throw exception;
         }
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -628,19 +642,19 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow to fail fast
             throw exception;
         }
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -667,7 +681,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         overrider.removeOverride(owner, buyer, name, callback);
     }
 
-
     /**
      * Resets all custom audience overrides for a given caller.
      *
@@ -681,7 +694,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow to fail fast
             throw exception;
         }
@@ -690,12 +703,12 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
 
         DevContext devContext = mDevContextFilter.createDevContext();
 
-        if (!devContext.getDevOptionsEnabled()) {
+        if (!devContext.getDeviceDevOptionsEnabled()) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName,
                     devContext.getCallingAppPackageName(),
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -735,7 +748,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     apiNameLoggingId,
                     callerAppPackageName,
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             throw illegalStateException;
         }
     }

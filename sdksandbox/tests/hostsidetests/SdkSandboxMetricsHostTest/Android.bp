@@ -29,7 +29,7 @@ java_test_host {
         "SdkSandboxHostTestUtils",
     ],
     test_suites: ["general-tests"],
-    data: [
+    device_common_data: [
         ":CrashTestSdkProvider",
         ":SdkSandboxMetricsTestApp",
         ":SdkSandboxMetricsSecondaryTestApp",
@@ -104,5 +104,5 @@ android_test_helper_app {
     ],
     certificate: ":sdksandbox-test",
     min_sdk_version: "33",
-    target_sdk_version: "33",
+    target_sdk_version: "34",
 }

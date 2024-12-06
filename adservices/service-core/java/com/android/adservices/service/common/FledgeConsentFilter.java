@@ -16,16 +16,24 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_ALL_APIS_CONSENT_DISABLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_CONSENT_REVOKED_FOR_APP;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_MISSING_ANY_NOTIFICATION_DISPLAYED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_USER_CONSENT_FOR_API_IS_NOT_GIVEN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 
 /** Filter for checking user consent in the PA/PAS (formerly FLEDGE) APIs. */
 @RequiresApi(Build.VERSION_CODES.S)
@@ -61,6 +69,12 @@ public class FledgeConsentFilter {
                     callerPackageName,
                     AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED,
                     0);
+            int celApiNameId = AdsRelevanceStatusUtils.getCelPpApiNameId(apiName);
+            if (celApiNameId != AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED) {
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_USER_CONSENT_FOR_API_IS_NOT_GIVEN,
+                        celApiNameId);
+            }
             throw new ConsentManager.RevokedConsentException();
         }
     }
@@ -88,6 +102,12 @@ public class FledgeConsentFilter {
                     callerPackageName,
                     AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED,
                     0);
+            int celApiNameId = AdsRelevanceStatusUtils.getCelPpApiNameId(apiName);
+            if (celApiNameId != AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED) {
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_CONSENT_REVOKED_FOR_APP,
+                        celApiNameId);
+            }
             throw new ConsentManager.RevokedConsentException();
         }
     }
@@ -105,6 +125,7 @@ public class FledgeConsentFilter {
             int apiName) {
         sLogger.v("Checking whether user has seen a notification and opted into any PP API");
         boolean wasAnyNotificationDisplayed;
+        int celApiNameId = AdsRelevanceStatusUtils.getCelPpApiNameId(apiName);
 
         if (!enforceNotificationShown) {
             // Hardcode if we don't need to enforce notification
@@ -124,6 +145,11 @@ public class FledgeConsentFilter {
                     callerPackageName,
                     AdServicesStatusUtils.STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET,
                     0);
+            if (celApiNameId != AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED) {
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_MISSING_ANY_NOTIFICATION_DISPLAYED,
+                        celApiNameId);
+            }
             throw new ConsentManager.RevokedConsentException();
         } else if (enforceConsentGiven && mConsentManager.areAllApisDisabled()) {
             sLogger.v("All PP APIs are disabled!");
@@ -132,6 +158,11 @@ public class FledgeConsentFilter {
                     callerPackageName,
                     AdServicesStatusUtils.STATUS_CONSENT_REVOKED_ALL_APIS,
                     0);
+            if (celApiNameId != AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED) {
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_ALL_APIS_CONSENT_DISABLED,
+                        celApiNameId);
+            }
             throw new ConsentManager.RevokedConsentException();
         }
     }

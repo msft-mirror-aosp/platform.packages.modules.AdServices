@@ -112,7 +112,7 @@ public class KAnonSignJoinBackgroundJobService extends JobService {
     public boolean onStopJob(JobParameters params) {
         AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB.getJobId(), false);
-        KAnonSignJoinBackgroundJobWorker.getInstance(this).stopWork();
+        KAnonSignJoinBackgroundJobWorker.getInstance().stopWork();
         return false;
     }
 
@@ -140,6 +140,8 @@ public class KAnonSignJoinBackgroundJobService extends JobService {
      * Attempts to schedule the KAnon Sign join background job as a periodic job if it is not
      * already scheduled.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void scheduleIfNeeded(@NonNull Context context, boolean forceSchedule) {
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         Flags flags = FlagsFactory.getFlags();
@@ -150,6 +152,8 @@ public class KAnonSignJoinBackgroundJobService extends JobService {
     }
 
     /** Schedules the kanon sign join background job as a periodic job. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void schedule(Context context, Flags flags) {
         if (!flags.getFledgeKAnonBackgroundProcessEnabled()) {
             return;
@@ -171,6 +175,6 @@ public class KAnonSignJoinBackgroundJobService extends JobService {
     }
 
     private FluentFuture<Void> doSignJoinBackgroundJob() {
-        return KAnonSignJoinBackgroundJobWorker.getInstance(this).runSignJoinBackgroundProcess();
+        return KAnonSignJoinBackgroundJobWorker.getInstance().runSignJoinBackgroundProcess();
     }
 }

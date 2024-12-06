@@ -45,6 +45,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
@@ -53,11 +54,11 @@ import android.os.PersistableBundle;
 
 import com.android.adservices.common.AdServicesJobTestCase;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AdPackageDenyResolver;
 import com.android.adservices.shared.spe.framework.ExecutionResult;
 import com.android.adservices.shared.spe.framework.ExecutionRuntimeParameters;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.shared.testing.FutureSyncCallback;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -70,8 +71,9 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.util.concurrent.Future;
+
 /** Unit test for {@link com.android.adservices.download.MddJob} */
-@RequiresSdkLevelAtLeastS
 @SpyStatic(AdServicesJobScheduler.class)
 @SpyStatic(AdServicesJobServiceFactory.class)
 @SpyStatic(EncryptionDataDownloadManager.class)
@@ -81,6 +83,7 @@ import org.mockito.Mock;
 @SpyStatic(MddJob.class)
 @SpyStatic(MddJobService.class)
 @SpyStatic(MobileDataDownloadFactory.class)
+@SpyStatic(AdPackageDenyResolver.class)
 public final class MddJobTest extends AdServicesJobTestCase {
     private static final com.google.android.libraries.mobiledatadownload.Flags sMddFlags =
             new com.google.android.libraries.mobiledatadownload.Flags() {};
@@ -96,6 +99,8 @@ public final class MddJobTest extends AdServicesJobTestCase {
     @Mock private JobScheduler mMockJobScheduler;
     @Mock private MddFlags mMockMddFlags;
 
+    @Mock private AdPackageDenyResolver mMockAdPackageDenyResolver;
+
     @Before
     public void setup() {
         mocker.mockGetFlags(mMockFlags);
@@ -109,7 +114,7 @@ public final class MddJobTest extends AdServicesJobTestCase {
                 .when(EnrollmentDataDownloadManager::getInstance);
         doReturn(mMockEncryptionDataDownloadManager)
                 .when(EncryptionDataDownloadManager::getInstance);
-
+        doReturn(mMockAdPackageDenyResolver).when(AdPackageDenyResolver::getInstance);
         // Assign a MDD task tag for general cases.
         PersistableBundle bundle = new PersistableBundle();
         bundle.putString(KEY_MDD_TASK_TAG, WIFI_CHARGING_PERIODIC_TASK);
@@ -142,6 +147,7 @@ public final class MddJobTest extends AdServicesJobTestCase {
         FutureSyncCallback<Void> mddHandleTaskCallBack = mockMddHandleTask();
         FutureSyncCallback<Void> enrollmentCallBack = mockEnrollmentReadFromMdd();
         FutureSyncCallback<Void> encryptionCallBack = mockEncryptionReadFromMdd();
+        FutureSyncCallback<Void> packageDenyCallBack = mockPackageDenyReadFromMdd();
 
         ListenableFuture<ExecutionResult> unusedFuture =
                 mMddJob.getExecutionFuture(mContext, mMockParams);
@@ -151,6 +157,26 @@ public final class MddJobTest extends AdServicesJobTestCase {
         mddHandleTaskCallBack.assertResultReceived();
         enrollmentCallBack.assertResultReceived();
         encryptionCallBack.assertResultReceived();
+        packageDenyCallBack.assertResultReceived();
+    }
+
+    @Test
+    public void testGetExecutionFuture_adDenyFlagIsFalse() throws Exception {
+        FutureSyncCallback<Void> mddHandleTaskCallBack = mockMddHandleTask();
+        FutureSyncCallback<Void> enrollmentCallBack = mockEnrollmentReadFromMdd();
+        FutureSyncCallback<Void> encryptionCallBack = mockEncryptionReadFromMdd();
+        when(mMockFlags.getEnablePackageDenyJobOnMddDownload()).thenReturn(false);
+
+        ListenableFuture<ExecutionResult> unusedFuture =
+                mMddJob.getExecutionFuture(mContext, mMockParams);
+        // Call it to suppress the linter.
+        assertThat(unusedFuture.get()).isEqualTo(SUCCESS);
+
+        mddHandleTaskCallBack.assertResultReceived();
+        enrollmentCallBack.assertResultReceived();
+        encryptionCallBack.assertResultReceived();
+        Future<AdPackageDenyResolver.PackageDenyMddProcessStatus> notCalled =
+                verify(mMockAdPackageDenyResolver, never()).loadDenyDataFromMdd();
     }
 
     @Test
@@ -280,6 +306,21 @@ public final class MddJobTest extends AdServicesJobTestCase {
                         })
                 .when(mMockEncryptionDataDownloadManager)
                 .readAndInsertEncryptionDataFromMdd();
+
+        return futureCallback;
+    }
+
+    private FutureSyncCallback<Void> mockPackageDenyReadFromMdd() {
+        when(mMockFlags.getEnablePackageDenyJobOnMddDownload()).thenReturn(true);
+        FutureSyncCallback<Void> futureCallback = new FutureSyncCallback<>();
+        doAnswer(
+                        invocation -> {
+                            futureCallback.onSuccess(null);
+                            return Futures.immediateFuture(
+                                    AdPackageDenyResolver.PackageDenyMddProcessStatus.SUCCESS);
+                        })
+                .when(mMockAdPackageDenyResolver)
+                .loadDenyDataFromMdd();
 
         return futureCallback;
     }

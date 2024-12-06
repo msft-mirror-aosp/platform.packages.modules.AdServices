@@ -27,7 +27,9 @@ import androidx.core.view.WindowCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.api.R;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.UiStatsLogger;
 import com.android.adservices.ui.OTAResourcesManager;
@@ -36,7 +38,6 @@ import com.android.adservices.ui.UxSelector;
 /**
  * Android application activity for controlling settings related to PP (Privacy Preserving) APIs.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ConsentNotificationActivity extends FragmentActivity implements UxSelector {
     public enum NotificationFragmentEnum {
@@ -93,10 +94,15 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
                 || FlagsFactory.getFlags().getUiOtaResourcesFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(context, true);
         }
-
-        if (FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()
-                || isUxStatesReady(this)) {
-            initWithUx(context, /* beforePasUxActive */ true);
+        boolean debugModeEnabled =
+                DebugFlags.getInstance().getConsentNotificationActivityDebugMode();
+        boolean isUxStateReady = isUxStatesReady();
+        LoggerFactory.getUILogger()
+                .d(
+                        "getting debug mode %b, getting ux state ready %b",
+                        debugModeEnabled, isUxStateReady);
+        if (debugModeEnabled || isUxStateReady) {
+            initWithUx(/* beforePasUxActive */ true);
         } else {
             initFragment();
         }
@@ -104,16 +110,19 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
 
     @Override
     public void initGA() {
+        LoggerFactory.getUILogger().d("consent activity init GA");
         setContentView(R.layout.consent_notification_ga_v2_activity);
     }
 
     @Override
     public void initU18() {
+        LoggerFactory.getUILogger().d("consent activity init u18");
         setContentView(R.layout.consent_notification_u18_activity);
     }
 
     @Override
     public void initGaUxWithPas() {
+        LoggerFactory.getUILogger().d("consent activity init GA PAS");
         setContentView(R.layout.consent_notification_pas_activity);
     }
 
@@ -130,7 +139,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
      * Notification fragments should call this when view is created. Used to keep track of user's
      * current page and log correct page exit if user exits.
      */
-    public static void handleAction(NotificationFragmentEnum fragmentAction, Context context) {
+    public static void handleAction(NotificationFragmentEnum fragmentAction) {
         switch (fragmentAction) {
             case LANDING_PAGE_DISPLAYED:
                 sCurrentFragment = fragmentAction;

@@ -37,12 +37,14 @@ import com.android.adservices.service.DebugFlagsConstants;
 import com.android.adservices.service.FlagsConstants;
 
 import com.google.common.base.Stopwatch;
+import com.google.common.truth.Truth;
 
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.rules.RuleChain;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -53,6 +55,7 @@ public class AbstractMeasurementLatencyTest {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SERVER_BASE_URI = "https://rb-measurement.com";
     private static final String SOURCE_PATH = "/source";
+    private static final long API_TIMEOUT_SECONDS = 5;
 
     protected static final MeasurementManager MEASUREMENT_MANAGER =
             (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
@@ -81,13 +84,16 @@ public class AbstractMeasurementLatencyTest {
     public static void setup() throws Exception {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+                .adoptShellPermissionIdentity(
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG);
     }
 
     protected void runRegisterSource(String testClassName, String testName) throws Exception {
         final String path = SERVER_BASE_URI + SOURCE_PATH;
 
         Stopwatch timer = Stopwatch.createStarted();
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         MEASUREMENT_MANAGER.registerSource(
                 Uri.parse(path),
                 /* inputEvent */ null,
@@ -96,20 +102,25 @@ public class AbstractMeasurementLatencyTest {
                     @Override
                     public void onResult(@NonNull Object ignoredResult) {
                         timer.stop();
+                        countDownLatch.countDown();
                     }
 
                     @Override
                     public void onError(@NonNull Exception error) {
                         timer.stop();
                         Assert.fail();
+                        countDownLatch.countDown();
                     }
                 });
 
+        Truth.assertThat(countDownLatch.await(API_TIMEOUT_SECONDS, TimeUnit.SECONDS)).isTrue();
         Log.i(TAG, generateLogLabel(testClassName, testName, timer.elapsed(TimeUnit.MILLISECONDS)));
     }
 
-    protected void runGetMeasurementApiStatus(String testClassName, String testName) {
+    protected void runGetMeasurementApiStatus(String testClassName, String testName)
+            throws InterruptedException {
         Stopwatch timer = Stopwatch.createStarted();
+        CountDownLatch countDownLatch = new CountDownLatch(1);
 
         MEASUREMENT_MANAGER.getMeasurementApiStatus(
                 CALLBACK_EXECUTOR,
@@ -117,15 +128,18 @@ public class AbstractMeasurementLatencyTest {
                     @Override
                     public void onResult(@NonNull Integer ignoredResult) {
                         timer.stop();
+                        countDownLatch.countDown();
                     }
 
                     @Override
                     public void onError(@NonNull Exception error) {
                         timer.stop();
                         Assert.fail();
+                        countDownLatch.countDown();
                     }
                 });
 
+        Truth.assertThat(countDownLatch.await(API_TIMEOUT_SECONDS, TimeUnit.SECONDS)).isTrue();
         Log.i(TAG, generateLogLabel(testClassName, testName, timer.elapsed(TimeUnit.MILLISECONDS)));
     }
 

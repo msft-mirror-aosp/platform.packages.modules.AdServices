@@ -27,11 +27,8 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.CommonFixture;
 
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
-
 import com.google.common.collect.ImmutableList;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -43,9 +40,6 @@ public class CustomAudienceNameValidatorTest {
 
     public final CustomAudienceNameValidator mValidator =
             new CustomAudienceNameValidator(CUSTOM_AUDIENCE_MAX_NAME_SIZE_B);
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testAddValidation_nullName_throws() {

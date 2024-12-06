@@ -56,6 +56,8 @@ import java.util.concurrent.Future;
  * <p>Bug(b/342687912): This will eventually replace {@link EventReportingJobService} and {@link
  * AggregateReportingJobService}.
  */
+// TODO(b/311183933): Remove passed in Context from static method.
+@SuppressWarnings("AvoidStaticContext")
 public final class ReportingJobService extends JobService {
     private static final ListeningExecutorService sBlockingExecutor =
             AdServicesExecutors.getBlockingExecutor();
@@ -189,7 +191,7 @@ public final class ReportingJobService extends JobService {
     }
 
     private static void saveNextExecution(Context context, Long latestReportTimeInBatch) {
-        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager();
         datastoreManager.runInTransaction(getSaveNextExecutionConsumer(latestReportTimeInBatch));
     }
 
@@ -212,7 +214,7 @@ public final class ReportingJobService extends JobService {
     }
 
     private static Long getNextScheduledExecution(Context context) {
-        DatastoreManager dataStoreManager = DatastoreManagerFactory.getDatastoreManager(context);
+        DatastoreManager dataStoreManager = DatastoreManagerFactory.getDatastoreManager();
 
         KeyValueData kvData =
                 dataStoreManager
@@ -227,7 +229,7 @@ public final class ReportingJobService extends JobService {
     }
 
     private static Optional<Long> getLastReportTimeInBatch(Context context, Flags flags) {
-        DatastoreManager dataStoreManager = DatastoreManagerFactory.getDatastoreManager(context);
+        DatastoreManager dataStoreManager = DatastoreManagerFactory.getDatastoreManager();
 
         return dataStoreManager.runInTransactionWithResult(
                 measurementDao ->
@@ -236,8 +238,7 @@ public final class ReportingJobService extends JobService {
     }
 
     private void saveExecutionStartTime() {
-        DatastoreManager datastoreManager =
-                DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager();
         datastoreManager.runInTransaction(getSaveExecutionTimeConsumer());
     }
 
@@ -253,7 +254,7 @@ public final class ReportingJobService extends JobService {
     }
 
     private static long getLastExecution(Context context) {
-        DatastoreManager dataStoreManager = DatastoreManagerFactory.getDatastoreManager(context);
+        DatastoreManager dataStoreManager = DatastoreManagerFactory.getDatastoreManager();
 
         KeyValueData lastExecution =
                 dataStoreManager
@@ -318,8 +319,7 @@ public final class ReportingJobService extends JobService {
                                     FlagsFactory.getFlags()
                                             .getMeasurementMaxAggregateReportUploadRetryWindowMs();
                             DatastoreManager datastoreManager =
-                                    DatastoreManagerFactory.getDatastoreManager(
-                                            getApplicationContext());
+                                    DatastoreManagerFactory.getDatastoreManager();
                             new AggregateReportingJobHandler(
                                             datastoreManager,
                                             new AggregateEncryptionKeyManager(
@@ -347,8 +347,7 @@ public final class ReportingJobService extends JobService {
                                     FlagsFactory.getFlags()
                                             .getMeasurementMaxEventReportUploadRetryWindowMs();
                             new EventReportingJobHandler(
-                                            DatastoreManagerFactory.getDatastoreManager(
-                                                    getApplicationContext()),
+                                            DatastoreManagerFactory.getDatastoreManager(),
                                             FlagsFactory.getFlags(),
                                             AdServicesLoggerImpl.getInstance(),
                                             ReportingStatus.ReportType.EVENT,

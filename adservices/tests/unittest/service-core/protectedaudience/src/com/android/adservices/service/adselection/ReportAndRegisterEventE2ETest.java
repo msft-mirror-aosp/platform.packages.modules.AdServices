@@ -90,6 +90,7 @@ import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -117,12 +118,11 @@ import com.android.adservices.service.measurement.registration.AsyncRegistration
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner;
 import com.android.adservices.service.measurement.registration.AsyncSourceFetcher;
 import com.android.adservices.service.measurement.registration.AsyncTriggerFetcher;
+import com.android.adservices.service.measurement.reporting.AggregateDebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
-import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -146,7 +146,6 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
-@RequiresSdkLevelAtLeastS()
 @MockStatic(ConsentManager.class)
 @MockStatic(PermissionHelper.class)
 @SpyStatic(MeasurementImpl.class)
@@ -249,6 +248,7 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
 
     AdSelectionServiceImpl mAdSelectionService;
     private AsyncRegistrationQueueRunner mAsyncRegistrationQueueRunnerSpy;
+    @Mock private AggregateDebugReportApi mAdrApiMock;
     @Mock private DebugReportApi mDebugReportApiMock;
 
     @Spy
@@ -272,10 +272,7 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
 
     @Mock private SourceNoiseHandler mSourceNoiseHandlerMock;
     private RetryStrategyFactory mRetryStrategyFactory;
-    private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
-    private ConsentedDebugConfigurationGeneratorFactory
-            mConsentedDebugConfigurationGeneratorFactory;
-    private EgressConfigurationGenerator mEgressConfigurationGenerator;
+    private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
 
     @Before
     public void setup() throws Exception {
@@ -322,7 +319,7 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
                                 mClickVerifierMock,
                                 mMeasurementDataDeleterMock,
                                 mContentResolverMock));
-        doReturn(mMeasurementImplSpy).when(() -> MeasurementImpl.getInstance(mContext));
+        doReturn(mMeasurementImplSpy).when(() -> MeasurementImpl.getInstance());
         doReturn(true)
                 .when(mClickVerifierMock)
                 .isInputEventVerifiable(any(), anyLong(), anyString());
@@ -331,26 +328,29 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
 
         when(mDevContextFilterMock.createDevContext()).thenReturn(mDevContext);
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
-        mConsentedDebugConfigurationDao =
+        ConsentedDebugConfigurationDao consentedDebugConfigurationDao =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionDatabase.class)
                         .build()
                         .consentedDebugConfigurationDao();
-        mConsentedDebugConfigurationGeneratorFactory =
+        ConsentedDebugConfigurationGeneratorFactory consentedDebugConfigurationGeneratorFactory =
                 new ConsentedDebugConfigurationGeneratorFactory(
-                        false, mConsentedDebugConfigurationDao);
-        mEgressConfigurationGenerator =
-                EgressConfigurationGenerator.createInstance(
-                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
-                        mAdIdFetcher,
+                        false, consentedDebugConfigurationDao);
+        mAuctionServerDebugConfigurationGenerator =
+                new AuctionServerDebugConfigurationGenerator(
+                        Flags.ADID_KILL_SWITCH,
                         Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
+                        Flags.FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING,
+                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
+                        Flags.DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER,
+                        mAdIdFetcher,
+                        consentedDebugConfigurationGeneratorFactory.create(),
                         mLightweightExecutorService);
 
         mAdSelectionService = getAdSelectionServiceImpl(mFakeFlags);
 
         initializeReportingArtifacts();
 
-        doReturn(mDatastoreManagerSpy)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+        doReturn(mDatastoreManagerSpy).when(DatastoreManagerFactory::getDatastoreManager);
 
         mAsyncRegistrationQueueRunnerSpy =
                 spy(
@@ -361,6 +361,7 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
                                 mAsyncTriggerFetcherSpy,
                                 mDatastoreManagerSpy,
                                 mDebugReportApiMock,
+                                mAdrApiMock,
                                 mSourceNoiseHandlerMock,
                                 mFakeFlags,
                                 mAdServicesLoggerMock));
@@ -1036,6 +1037,7 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
                 mContext,
                 mAdServicesLoggerMock,
                 flags,
+                mMockDebugFlags,
                 CallingAppUidSupplierProcessImpl.create(),
                 mFledgeAuthorizationFilterMock,
                 mAdSelectionServiceFilterMock,
@@ -1047,9 +1049,8 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
                 mUnusedKAnonSignJoinFactory,
                 false,
                 mRetryStrategyFactory,
-                mConsentedDebugConfigurationGeneratorFactory,
-                mEgressConfigurationGenerator,
-                CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                mAuctionServerDebugConfigurationGenerator);
     }
 
     private void initializeReportingArtifacts() throws JSONException {

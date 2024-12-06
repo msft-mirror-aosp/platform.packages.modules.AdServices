@@ -16,21 +16,19 @@
 
 package com.android.adservices.ohttp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import org.junit.Assert;
+import com.android.adservices.common.AdServicesMockitoTestCase;
+
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
-public class KemNativeRefTest {
-    @Rule public final MockitoRule mockito = MockitoJUnit.rule();
-
+public final class KemNativeRefTest extends AdServicesMockitoTestCase {
     @Mock private IOhttpJniWrapper mOhttpJniWrapper;
     private static final long TEST_ADDRESS = 10000;
 
@@ -50,7 +48,7 @@ public class KemNativeRefTest {
     public void getAddress_returnsCorrectAddress() throws Throwable {
         KemNativeRef ref = KemNativeRef.getHpkeKemDhkemX25519HkdfSha256Reference(mOhttpJniWrapper);
 
-        Assert.assertEquals(ref.getAddress(), TEST_ADDRESS);
+        assertThat(ref.getAddress()).isEqualTo(TEST_ADDRESS);
     }
 
     @Test

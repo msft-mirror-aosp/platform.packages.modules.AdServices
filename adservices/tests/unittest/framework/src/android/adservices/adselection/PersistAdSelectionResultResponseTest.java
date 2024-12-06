@@ -18,16 +18,15 @@ package android.adservices.adselection;
 
 import static org.junit.Assert.assertThrows;
 
+import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 import android.os.Parcel;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class PersistAdSelectionResultResponseTest extends AdServicesUnitTestCase {
     private static final Uri VALID_RENDER_URI =
             new Uri.Builder().path("valid.example.com/testing/hello").build();
@@ -35,6 +34,10 @@ public final class PersistAdSelectionResultResponseTest extends AdServicesUnitTe
             new Uri.Builder().path("another-valid.example.com/testing/hello").build();
     private static final long TEST_AD_SELECTION_ID = 12345;
     private static final long ANOTHER_TEST_AD_SELECTION_ID = 6789;
+    private static final AdTechIdentifier WINNING_SELLER_FIRST =
+            AdTechIdentifier.fromString("www.winningseller.com");
+    private static final AdTechIdentifier WINNING_SELLER_SECOND =
+            AdTechIdentifier.fromString("www.secondwillingseller.com");
 
     @Test
     public void testBuildPersistAdSelectionResultResponse() {
@@ -44,9 +47,32 @@ public final class PersistAdSelectionResultResponseTest extends AdServicesUnitTe
                         .setAdRenderUri(VALID_RENDER_URI)
                         .build();
 
-        expect.that(persistAdSelectionResultResponse.getAdSelectionId())
+        expect.withMessage("Ad selection id")
+                .that(persistAdSelectionResultResponse.getAdSelectionId())
                 .isEqualTo(TEST_AD_SELECTION_ID);
-        expect.that(persistAdSelectionResultResponse.getAdRenderUri()).isEqualTo(VALID_RENDER_URI);
+        expect.withMessage("Ad render uri")
+                .that(persistAdSelectionResultResponse.getAdRenderUri())
+                .isEqualTo(VALID_RENDER_URI);
+    }
+
+    @Test
+    public void testBuildPersistAdSelectionResultResponse_withWinningSeller_buildsCorrectly() {
+        PersistAdSelectionResultResponse persistAdSelectionResultResponse =
+                new PersistAdSelectionResultResponse.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setAdRenderUri(VALID_RENDER_URI)
+                        .setWinningSeller(WINNING_SELLER_FIRST)
+                        .build();
+
+        expect.withMessage("Ad selection id")
+                .that(persistAdSelectionResultResponse.getAdSelectionId())
+                .isEqualTo(TEST_AD_SELECTION_ID);
+        expect.withMessage("Ad render uri")
+                .that(persistAdSelectionResultResponse.getAdRenderUri())
+                .isEqualTo(VALID_RENDER_URI);
+        expect.withMessage("Winning seller")
+                .that(persistAdSelectionResultResponse.getWinningSeller())
+                .isEqualTo(WINNING_SELLER_FIRST);
     }
 
     @Test
@@ -63,8 +89,38 @@ public final class PersistAdSelectionResultResponseTest extends AdServicesUnitTe
         PersistAdSelectionResultResponse fromParcel =
                 PersistAdSelectionResultResponse.CREATOR.createFromParcel(p);
 
-        expect.that(fromParcel.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
-        expect.that(fromParcel.getAdRenderUri()).isEqualTo(VALID_RENDER_URI);
+        expect.withMessage("Ad selection id")
+                .that(fromParcel.getAdSelectionId())
+                .isEqualTo(TEST_AD_SELECTION_ID);
+        expect.withMessage("Ad render uri")
+                .that(fromParcel.getAdRenderUri())
+                .isEqualTo(VALID_RENDER_URI);
+    }
+
+    @Test
+    public void testParcelPersistAdSelectionResultResponse_withWinningSeller_buildsCorrectly() {
+        PersistAdSelectionResultResponse persistAdSelectionResultResponse =
+                new PersistAdSelectionResultResponse.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setAdRenderUri(VALID_RENDER_URI)
+                        .setWinningSeller(WINNING_SELLER_FIRST)
+                        .build();
+
+        Parcel p = Parcel.obtain();
+        persistAdSelectionResultResponse.writeToParcel(p, 0);
+        p.setDataPosition(0);
+        PersistAdSelectionResultResponse fromParcel =
+                PersistAdSelectionResultResponse.CREATOR.createFromParcel(p);
+
+        expect.withMessage("Ad selection id")
+                .that(fromParcel.getAdSelectionId())
+                .isEqualTo(TEST_AD_SELECTION_ID);
+        expect.withMessage("Ad render uri")
+                .that(fromParcel.getAdRenderUri())
+                .isEqualTo(VALID_RENDER_URI);
+        expect.withMessage("Winning seller")
+                .that(fromParcel.getWinningSeller())
+                .isEqualTo(WINNING_SELLER_FIRST);
     }
 
     @Test
@@ -90,6 +146,26 @@ public final class PersistAdSelectionResultResponseTest extends AdServicesUnitTe
                 new PersistAdSelectionResultResponse.Builder()
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
                         .setAdRenderUri(VALID_RENDER_URI)
+                        .build();
+
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(obj1, obj2);
+    }
+
+    @Test
+    public void testPersistAdSelectionResultResponse_withWinningSellerWithSameValues_areEqual() {
+        PersistAdSelectionResultResponse obj1 =
+                new PersistAdSelectionResultResponse.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setAdRenderUri(VALID_RENDER_URI)
+                        .setWinningSeller(WINNING_SELLER_FIRST)
+                        .build();
+
+        PersistAdSelectionResultResponse obj2 =
+                new PersistAdSelectionResultResponse.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setAdRenderUri(VALID_RENDER_URI)
+                        .setWinningSeller(WINNING_SELLER_FIRST)
                         .build();
 
         EqualsTester et = new EqualsTester(expect);

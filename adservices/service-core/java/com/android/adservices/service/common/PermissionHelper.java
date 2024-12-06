@@ -32,6 +32,7 @@ import com.android.adservices.service.common.compat.ProcessCompatUtils;
  *
  * @hide
  */
+@SuppressWarnings("AvoidStaticContext") // Helper class
 public final class PermissionHelper {
     private PermissionHelper() {}
 

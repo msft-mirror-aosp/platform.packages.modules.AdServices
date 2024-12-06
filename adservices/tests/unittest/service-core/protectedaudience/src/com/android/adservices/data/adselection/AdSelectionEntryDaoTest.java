@@ -26,6 +26,7 @@ import static android.adservices.adselection.DataHandlersFixture.getDBAdSelectio
 import static com.android.adservices.data.adselection.DBRegisteredAdInteractionFixture.toRegisteredAdInteraction;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -54,13 +55,11 @@ import com.android.adservices.data.adselection.datahandlers.RegisteredAdInteract
 import com.android.adservices.data.adselection.datahandlers.ReportingComputationData;
 import com.android.adservices.data.adselection.datahandlers.ReportingData;
 import com.android.adservices.data.adselection.datahandlers.WinningCustomAudience;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Clock;
@@ -379,9 +378,6 @@ public class AdSelectionEntryDaoTest {
                     .build();
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -1984,6 +1980,62 @@ public class AdSelectionEntryDaoTest {
         DBReportingData actualData =
                 mAdSelectionEntryDao.getDBReportingDataForId(AD_SELECTION_ID_1);
         assertEquals(DataHandlersFixture.getDBReportingDataWithId(AD_SELECTION_ID_1), actualData);
+    }
+
+    @Test
+    public void test_persistReportingData_withoutComponentSellerUri_success() {
+        // Insert DBAdSelectionInitialization to satisfy SQL FOREIGN KEY constraint.
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
+
+        assertNull(mAdSelectionEntryDao.getDBReportingDataForId(AD_SELECTION_ID_1));
+
+        ReportingData persistedReportingData = DataHandlersFixture.REPORTING_DATA_WITH_URIS;
+        mAdSelectionEntryDao.persistReportingData(
+                AD_SELECTION_ID_1, DataHandlersFixture.REPORTING_DATA_WITH_URIS);
+
+        DBReportingData actualData =
+                mAdSelectionEntryDao.getDBReportingDataForId(AD_SELECTION_ID_1);
+        assertWithMessage("Ad selection id")
+                .that(actualData.getAdSelectionId())
+                .isEqualTo(AD_SELECTION_ID_1);
+        assertWithMessage("Buyer reporting uri")
+                .that(actualData.getBuyerReportingUri())
+                .isEqualTo(persistedReportingData.getBuyerWinReportingUri());
+        assertWithMessage("Component seller reporting uri")
+                .that(actualData.getComponentSellerReportingUri())
+                .isNull();
+        assertWithMessage("Seller reporting uri")
+                .that(actualData.getSellerReportingUri())
+                .isEqualTo(persistedReportingData.getSellerWinReportingUri());
+    }
+
+    @Test
+    public void test_persistReportingData_withComponentSellerUri_success() {
+        // Insert DBAdSelectionInitialization to satisfy SQL FOREIGN KEY constraint.
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_1);
+
+        assertNull(mAdSelectionEntryDao.getDBReportingDataForId(AD_SELECTION_ID_1));
+
+        ReportingData persistedReportingData =
+                DataHandlersFixture.REPORTING_DATA_WITH_COMPONENT_SELLER_URI;
+        mAdSelectionEntryDao.persistReportingData(AD_SELECTION_ID_1, persistedReportingData);
+
+        DBReportingData actualData =
+                mAdSelectionEntryDao.getDBReportingDataForId(AD_SELECTION_ID_1);
+        assertWithMessage("Ad selection id")
+                .that(actualData.getAdSelectionId())
+                .isEqualTo(AD_SELECTION_ID_1);
+        assertWithMessage("Buyer reporting uri")
+                .that(actualData.getBuyerReportingUri())
+                .isEqualTo(persistedReportingData.getBuyerWinReportingUri());
+        assertWithMessage("Component seller reporting uri")
+                .that(actualData.getComponentSellerReportingUri())
+                .isEqualTo(persistedReportingData.getComponentSellerWinReportingUri());
+        assertWithMessage("Seller reporting uri")
+                .that(actualData.getSellerReportingUri())
+                .isEqualTo(persistedReportingData.getSellerWinReportingUri());
     }
 
     @Test

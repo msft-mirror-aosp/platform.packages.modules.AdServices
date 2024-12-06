@@ -28,7 +28,8 @@ import com.android.modules.utils.build.SdkLevel;
 import java.io.File;
 
 /** Utility class for handling file names in a backward-compatible manner */
-@SuppressLint("NewAdServicesFile")
+// TODO(b/311183933): Remove passed in Context from static method.
+@SuppressLint({"NewAdServicesFile", "AvoidStaticContext"})
 public final class FileCompatUtils {
     private static final String ADSERVICES_PREFIX = "adservices";
 
@@ -88,6 +89,7 @@ public final class FileCompatUtils {
      * returns a Sharedpreferences for the given context, name, and mode, while ensuring the
      * filename is prepended with "adservices" on S-.
      */
+    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
     public static SharedPreferences getSharedPreferencesHelper(
             Context context, String name, int mode) {
         return context.getSharedPreferences(getAdservicesFilename(name), mode);

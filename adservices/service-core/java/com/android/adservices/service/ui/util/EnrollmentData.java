@@ -16,19 +16,19 @@
 
 package com.android.adservices.service.ui.util;
 
-import static android.adservices.common.AdServicesModuleState.MODULE_STATE_UNKNOWN;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_UNKNOWN;
+import static android.adservices.common.AdServicesCommonManager.Module;
+import static android.adservices.common.AdServicesCommonManager.ModuleState;
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN;
 
-import android.adservices.common.AdServicesModuleState;
-import android.adservices.common.AdServicesModuleState.ModuleStateCode;
+import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesModuleUserChoice.ModuleUserChoiceCode;
 import android.adservices.common.Module.ModuleCode;
 
 import com.android.adservices.LogUtil;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
+import com.google.common.base.Strings;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -56,31 +56,12 @@ public class EnrollmentData implements Serializable {
      * @return Serialized string.
      */
     public static String serialize(EnrollmentData data) {
-        return new Gson().toJson(data);
-    }
-
-    /**
-     * Serializes module enrollment state data to string.
-     *
-     * @return Serialized string.
-     */
-    public String serialize() {
-        return serialize(this);
-    }
-
-    /**
-     * Serializes module enrollment state data to base64 string.
-     *
-     * @param data Data to serialize.
-     * @return Serialized string.
-     */
-    public static String serializeBase64(EnrollmentData data) {
         try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 ObjectOutputStream oos = new ObjectOutputStream(bos)) {
             oos.writeObject(data);
             return Base64.getEncoder().encodeToString(bos.toByteArray());
         } catch (IOException e) {
-            LogUtil.e("Enrollment Data serializeBase64 error:" + e);
+            LogUtil.e("Enrollment Data serializing error:" + e);
             return "";
         }
     }
@@ -92,45 +73,27 @@ public class EnrollmentData implements Serializable {
      * @return Object with enrollment data.
      */
     public static EnrollmentData deserialize(String string) {
-        try {
-            EnrollmentData data = new Gson().fromJson(string, EnrollmentData.class);
-            if (data != null) {
-                return data;
-            }
-        } catch (JsonSyntaxException e) {
+        if (Strings.isNullOrEmpty(string)) {
+            return new EnrollmentData();
+        }
+        byte[] decodedBytes = Base64.getDecoder().decode(string);
+        try (ByteArrayInputStream bis = new ByteArrayInputStream(decodedBytes);
+                ObjectInputStream ois = new ObjectInputStream(bis)) {
+            return (EnrollmentData) ois.readObject();
+        } catch (IOException | ClassNotFoundException e) {
             LogUtil.e("Enrollment Data deserializing error:" + e);
         }
         return new EnrollmentData();
     }
 
     /**
-     * Deserializes module enrolment state data from string, using base64.
-     *
-     * @param base64Encoded to deserialize.
-     * @return Object with enrollment data.
-     */
-    public static EnrollmentData deserializeFromBase64(String base64Encoded) {
-        if (base64Encoded == null || base64Encoded.isEmpty()) {
-            return new EnrollmentData();
-        }
-        byte[] decodedBytes = Base64.getDecoder().decode(base64Encoded);
-        try (ByteArrayInputStream bis = new ByteArrayInputStream(decodedBytes);
-                ObjectInputStream ois = new ObjectInputStream(bis)) {
-            return (EnrollmentData) ois.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            LogUtil.e("Enrollment Data deserializing from base64 error:" + e);
-        }
-        return new EnrollmentData();
-    }
-
-    /**
-     * Get the user choice for the given module. If null, then returns {@link
-     * AdServicesModuleState#MODULE_STATE_UNKNOWN}.
+     * Gets the user choice for the given module. If null, then returns {@link
+     * AdServicesCommonManager#MODULE_STATE_UNKNOWN}.
      *
      * @param key Key of desired module.
      * @return User choice for given module.
      */
-    @ModuleStateCode
+    @ModuleState
     public int getModuleState(@ModuleCode int key) {
         if (!mModuleStates.containsKey(key)) {
             return MODULE_STATE_UNKNOWN;
@@ -141,14 +104,15 @@ public class EnrollmentData implements Serializable {
     /**
      * Stores the state for the given module.
      *
-     * @param moduleState Module choice object to update in enrollment data.
+     * @param module Code for desired module.
+     * @param state Module choice object to update in enrollment data.
      */
-    public void putModuleState(AdServicesModuleState moduleState) {
-        mModuleStates.put(moduleState.getModule(), moduleState.getModuleState());
+    public void putModuleState(@Module int module, @ModuleState int state) {
+        mModuleStates.put(module, state);
     }
 
     /**
-     * Get the user choice for the given module. If null, then returns {@link
+     * Gets the user choice for the given module. If null, then returns {@link
      * AdServicesModuleUserChoice#USER_CHOICE_UNKNOWN}.
      *
      * @param key Key of desired module.

@@ -41,7 +41,6 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientResp
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -51,7 +50,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentMatcher;
@@ -90,9 +88,6 @@ public class TrustedBiddingDataFetcherTest {
     @Mock private CustomAudienceDevOverridesHelper mCustomAudienceDevOverridesHelper;
 
     private TrustedBiddingDataFetcher mTrustedBiddingDataFetcher;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Before
     public void setup() {
@@ -156,7 +151,7 @@ public class TrustedBiddingDataFetcherTest {
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
                         any());
 
-        verify(mDevContext).getDevOptionsEnabled();
+        verify(mDevContext).getDeviceDevOptionsEnabled();
         verifyNoMoreInteractions(
                 mAdServicesHttpsClient, mDevContext, mCustomAudienceDevOverridesHelper);
     }
@@ -222,7 +217,7 @@ public class TrustedBiddingDataFetcherTest {
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
                         any());
 
-        verify(mDevContext).getDevOptionsEnabled();
+        verify(mDevContext).getDeviceDevOptionsEnabled();
         verifyNoMoreInteractions(
                 mAdServicesHttpsClient, mDevContext, mCustomAudienceDevOverridesHelper);
     }
@@ -269,7 +264,7 @@ public class TrustedBiddingDataFetcherTest {
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
                         any());
 
-        verify(mDevContext).getDevOptionsEnabled();
+        verify(mDevContext).getDeviceDevOptionsEnabled();
         verifyNoMoreInteractions(
                 mAdServicesHttpsClient, mDevContext, mCustomAudienceDevOverridesHelper);
     }
@@ -319,7 +314,7 @@ public class TrustedBiddingDataFetcherTest {
                 .fetchPayload(
                         argThat(new TestTrustedBiddingDataUriKeysMatcher(PATH_2, KEYS_2)),
                         any());
-        verify(mDevContext).getDevOptionsEnabled();
+        verify(mDevContext).getDeviceDevOptionsEnabled();
         verifyNoMoreInteractions(
                 mAdServicesHttpsClient, mDevContext, mCustomAudienceDevOverridesHelper);
     }
@@ -327,7 +322,7 @@ public class TrustedBiddingDataFetcherTest {
     @Test
     public void testDevOptionEnabled_someCAhasDevOverride()
             throws ExecutionException, InterruptedException {
-        when(mDevContext.getDevOptionsEnabled()).thenReturn(true);
+        when(mDevContext.getDeviceDevOptionsEnabled()).thenReturn(true);
         when(mCustomAudienceDevOverridesHelper.getTrustedBiddingSignalsOverride(
                         CustomAudienceFixture.VALID_OWNER, CommonFixture.VALID_BUYER_1, NAME_1))
                 .thenReturn(AdSelectionSignals.EMPTY);
@@ -363,7 +358,7 @@ public class TrustedBiddingDataFetcherTest {
                 result.get(PATH_2).getBody().toString());
         assertNull(result.get(PATH_1));
 
-        verify(mDevContext).getDevOptionsEnabled();
+        verify(mDevContext).getDeviceDevOptionsEnabled();
         verify(mCustomAudienceDevOverridesHelper)
                 .getTrustedBiddingSignalsOverride(
                         CustomAudienceFixture.VALID_OWNER, CommonFixture.VALID_BUYER_1, NAME_1);

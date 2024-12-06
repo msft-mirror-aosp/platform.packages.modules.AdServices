@@ -17,6 +17,7 @@
 package com.android.adservices.service.common;
 
 import static com.android.adservices.service.common.ConsentNotificationJobService.ADID_ENABLE_STATUS;
+import static com.android.adservices.service.common.ConsentNotificationJobService.IS_V2_NOTIFICATION;
 import static com.android.adservices.service.common.ConsentNotificationJobService.MILLISECONDS_IN_THE_DAY;
 import static com.android.adservices.service.common.ConsentNotificationJobService.RE_CONSENT_STATUS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
@@ -31,6 +32,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -45,6 +47,7 @@ import android.content.pm.PackageManager;
 import android.os.PersistableBundle;
 
 import com.android.adservices.common.AdServicesJobServiceTestCase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
@@ -69,6 +72,7 @@ import java.util.concurrent.CountDownLatch;
 
 /** Unit test for {@link com.android.adservices.service.common.ConsentNotificationJobService}. */
 @SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 @SpyStatic(ConsentManager.class)
 @SpyStatic(AdServicesSyncUtil.class)
 @SpyStatic(ConsentNotificationJobService.class)
@@ -100,11 +104,13 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
     public void setup() {
         doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
         mocker.mockGetFlags(mMockFlags);
+        mocker.mockGetDebugFlags(mMockDebugFlags);
+        when(mPersistableBundle.getBoolean(eq(IS_V2_NOTIFICATION), anyBoolean())).thenReturn(false);
         when(mMockFlags.getConsentNotificationIntervalEndMs()).thenReturn(mIntervalEndMs);
         when(mMockFlags.getConsentNotificationIntervalBeginMs()).thenReturn(mIntervalBeginMs);
         when(mMockFlags.getConsentNotificationMinimalDelayBeforeIntervalEnds())
                 .thenReturn(mMinimalDelayBeforeIntervalEnds);
-        mSpyLogger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        mSpyLogger = mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
         ExtendedMockito.doReturn(mUxStatesManager).when(UxStatesManager::getInstance);
         ExtendedMockito.doReturn(mConsentManager).when(ConsentManager::getInstance);
 
@@ -125,9 +131,9 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
     /** Test GA UX disabled and reconsent, onStart method will not execute the job */
     @Test
     public void testOnStartJobAsyncUtilExecute_Reconsent_GaUxDisabled() throws Exception {
+        clearInvocations(mAdservicesSyncUtil);
         mockServiceCompatUtilDisableJob(false);
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(false);
+        mocker.mockGetConsentNotificationDebugMode(false);
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(false);
         ConsentManager consentManager = mock(ConsentManager.class);
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
@@ -136,8 +142,8 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
         mConsentNotificationJobService.setConsentManager(consentManager);
 
         Mockito.doReturn(true).when(mUxStatesManager).isEeaDevice();
-        when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
-        when(mPersistableBundle.getBoolean(anyString(), anyBoolean())).thenReturn(true);
+        when(mPersistableBundle.getBoolean(eq(RE_CONSENT_STATUS), anyBoolean())).thenReturn(true);
+        mockAdIdEnabled();
         doReturn(mAdservicesSyncUtil).when(AdServicesSyncUtil::getInstance);
         doAnswer(
                         unusedInvocation -> {
@@ -148,7 +154,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
                 .jobFinished(mMockJobParameters, false);
 
         doNothing().when(mAdservicesSyncUtil).execute(any(Context.class), any(Boolean.class));
-        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(false);
+        mocker.mockGetConsentNotificationDebugMode(false);
 
         mConsentNotificationJobService.onStartJob(mMockJobParameters);
         jobFinishedCountDown.await();
@@ -161,8 +167,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
     @Test
     public void testOnStartJobAsyncUtilExecute_ReconsentFalse() throws Exception {
         mockServiceCompatUtilDisableJob(false);
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(false);
+        mocker.mockGetConsentNotificationDebugMode(false);
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         ConsentManager consentManager = mock(ConsentManager.class);
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
@@ -184,7 +189,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
                 .jobFinished(mMockJobParameters, false);
 
         doNothing().when(mAdservicesSyncUtil).execute(any(Context.class), any(Boolean.class));
-        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(false);
+        mocker.mockGetConsentNotificationDebugMode(false);
 
         mConsentNotificationJobService.onStartJob(mMockJobParameters);
         jobFinishedCountDown.await();
@@ -274,8 +279,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
 
     @Test
     public void testDelaysWhenDebugModeOn() {
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(true);
+        mocker.mockGetConsentNotificationDebugMode(true);
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(0);
         long initialDelay = ConsentNotificationJobService.calculateInitialDelay(calendar);
@@ -375,10 +379,46 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
         verify(mAdservicesSyncUtil, times(1)).execute(any(Context.class), any(Boolean.class));
     }
 
+    /** Test V2 Job */
+    @Test
+    public void testOnStartJobV2() throws Exception {
+        mockServiceCompatUtilDisableJob(false);
+        CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
+        when(mPersistableBundle.getBoolean(eq(IS_V2_NOTIFICATION), anyBoolean())).thenReturn(true);
+        doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
+        when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
+        doReturn(mAdservicesSyncUtil).when(AdServicesSyncUtil::getInstance);
+        doAnswer(
+                        unusedInvocation -> {
+                            jobFinishedCountDown.countDown();
+                            return null;
+                        })
+                .when(mConsentNotificationJobService)
+                .jobFinished(mMockJobParameters, false);
+
+        doNothing()
+                .when(mAdservicesSyncUtil)
+                .executeNotificationTriggerV2(
+                        any(Context.class),
+                        any(Boolean.class),
+                        any(Boolean.class),
+                        any(Boolean.class));
+
+        mConsentNotificationJobService.onStartJob(mMockJobParameters);
+        jobFinishedCountDown.await();
+
+        verify(mAdservicesSyncUtil)
+                .executeNotificationTriggerV2(
+                        any(Context.class),
+                        any(Boolean.class),
+                        any(Boolean.class),
+                        any(Boolean.class));
+        verify(mConsentNotificationJobService).jobFinished(mMockJobParameters, false);
+    }
+
     private void testOnStartJobAsyncUtilExecute() throws Exception {
         mockServiceCompatUtilDisableJob(false);
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(false);
+        mocker.mockGetConsentNotificationDebugMode(false);
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         ConsentManager consentManager = mock(ConsentManager.class);
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
@@ -391,8 +431,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
         mConsentNotificationJobService.setConsentManager(consentManager);
         doReturn(consentManager).when(ConsentManager::getInstance);
         Mockito.doReturn(true).when(mUxStatesManager).isEeaDevice();
-        when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
-        when(mPersistableBundle.getBoolean(anyString(), anyBoolean())).thenReturn(true);
+        mockAdIdEnabled();
         doReturn(mAdservicesSyncUtil).when(AdServicesSyncUtil::getInstance);
         doAnswer(
                         unusedInvocation -> {
@@ -402,7 +441,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
                 .when(mConsentNotificationJobService)
                 .jobFinished(mMockJobParameters, false);
         doNothing().when(mAdservicesSyncUtil).execute(any(Context.class), any(Boolean.class));
-        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(false);
+        mocker.mockGetConsentNotificationDebugMode(false);
 
         mConsentNotificationJobService.onStartJob(mMockJobParameters);
         jobFinishedCountDown.await();
@@ -417,18 +456,15 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
     }
 
     private void mockOtaStringsFeature(boolean enabled) {
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
         when(mMockFlags.getUiOtaStringsFeatureEnabled()).thenReturn(enabled);
     }
 
     private void mockOtaResourcesFeature(boolean enabled) {
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
         when(mMockFlags.getUiOtaResourcesFeatureEnabled()).thenReturn(enabled);
     }
 
     private void mockConsentDebugMode(boolean enabled) {
-        doReturn(mMockFlags).when(FlagsFactory::getFlags);
-        when(mMockFlags.getConsentNotificationDebugMode()).thenReturn(enabled);
+        mocker.mockGetConsentNotificationDebugMode(enabled);
     }
 
     private void mockJobFinished() throws Exception {
@@ -449,7 +485,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
     }
 
     private void mockAdIdEnabled() {
-        when(mPersistableBundle.getBoolean(anyString(), anyBoolean())).thenReturn(true);
+        when(mPersistableBundle.getBoolean(eq(ADID_ENABLE_STATUS), anyBoolean())).thenReturn(true);
         when(mMockJobParameters.getExtras()).thenReturn(mPersistableBundle);
     }
 

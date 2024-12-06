@@ -16,23 +16,24 @@
 
 package android.adservices.debuggablects;
 
-import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
+import static com.android.adservices.service.CommonDebugFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SELECTION_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_DEVELOPER_SESSION_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.utils.CustomAudienceTestFixture;
+import android.adservices.utils.DevContextUtils;
 import android.util.Base64;
+import android.util.Log;
 
 import com.android.adservices.common.AdServicesShellCommandHelper;
-import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
@@ -44,52 +45,53 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 
 @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @EnableDebugFlag(KEY_AD_SELECTION_CLI_ENABLED)
 @SetFlagEnabled(KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED)
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_ENABLED)
+@EnableDebugFlag(KEY_DEVELOPER_SESSION_FEATURE_ENABLED)
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @RequiresSdkLevelAtLeastS(reason = "Ad Selection is enabled for S+")
-public class GetAdSelectionDataShellCommandCtsTest extends ForegroundDebuggableCtsTest {
+public class GetAdSelectionDataShellCommandCtsTest extends FledgeDebuggableScenarioTest {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
-
     private static final String SHELL_COMMAND_PREFIX = "ad-selection get-ad-selection-data";
-    public static final String OUTPUT_PROTO_FIELD = "output_proto";
+    private static final String OUTPUT_PROTO_FIELD = "output_proto";
 
-    private CustomAudienceTestFixture mCustomAudienceTestFixture;
+    @Rule(order = 11)
+    public final SupportedByConditionRule devOptionsEnabled =
+            DevContextUtils.createDevOptionsAvailableRule(mContext, LOGCAT_TAG_FLEDGE);
+
     private final AdServicesShellCommandHelper mAdServicesShellCommandHelper =
             new AdServicesShellCommandHelper();
 
+    private CustomAudienceTestFixture mCustomAudienceTestFixture;
+
     @Before
     public void setUp() throws Exception {
-        if (sdkLevel.isAtLeastT()) {
-            assertForegroundActivityStarted();
-        }
+        super.setUp();
 
-        AdservicesTestHelper.killAdservicesProcess(sContext);
-
-        mCustomAudienceTestFixture = new CustomAudienceTestFixture(sContext);
+        startDevSession();
+        mCustomAudienceTestFixture = new CustomAudienceTestFixture(mCustomAudienceClient);
         flags.setPpapiAppAllowList(FlagsConstants.ALLOWLIST_ALL);
     }
 
     @After
     public void tearDown() throws Exception {
         mCustomAudienceTestFixture.leaveJoinedCustomAudiences();
+        endDevSession();
     }
 
     @Test
-    public void testRun_withCustomAudiencesAndSignals_happyPath()
-            throws ExecutionException, InterruptedException, TimeoutException, JSONException {
+    public void testRunBuyer_withCustomAudiencesAndSignals_happyPath() throws Exception {
         mCustomAudienceTestFixture.joinCustomAudience(
                 mCustomAudienceTestFixture.createCustomAudienceWithAdRenderId(
-                        "shoes",
+                        SHOES_CA,
                         BUYER,
                         List.of(1D),
                         CustomAudienceFixture.VALID_ACTIVATION_TIME,
@@ -99,13 +101,31 @@ public class GetAdSelectionDataShellCommandCtsTest extends ForegroundDebuggableC
                 mAdServicesShellCommandHelper.runCommand(
                         "%s --buyer %s", SHELL_COMMAND_PREFIX, BUYER);
 
-        assertThat(rawOutput).isNotEmpty(); // Errors may go to stderr and not appear here.
-        assertThat(
-                        isValidProtobuf(
-                                Base64.decode(
-                                        new JSONObject(rawOutput).getString(OUTPUT_PROTO_FIELD),
-                                        Base64.DEFAULT)))
-                .isTrue();
+        expect.withMessage("output command valid").that(isValidCommandOutput(rawOutput)).isTrue();
+    }
+
+    @Test
+    public void testRunSeller_withCustomAudiencesAndSignals_happyPath() throws Exception {
+        // Custom audience must have an ad render ID to be present in the output.
+        mCustomAudienceTestFixture.joinCustomAudience(
+                mCustomAudienceTestFixture.createCustomAudienceWithAdRenderId(
+                        SHOES_CA,
+                        BUYER,
+                        List.of(1D),
+                        CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                        CustomAudienceFixture.VALID_EXPIRATION_TIME));
+
+        String rawOutput = mAdServicesShellCommandHelper.runCommand("%s", SHELL_COMMAND_PREFIX);
+
+        expect.withMessage("output command valid").that(isValidCommandOutput(rawOutput)).isTrue();
+    }
+
+    private static boolean isValidCommandOutput(String rawOutput) throws JSONException {
+        return !rawOutput.isEmpty()
+                && isValidProtobuf(
+                        Base64.decode(
+                                new JSONObject(rawOutput).getString(OUTPUT_PROTO_FIELD),
+                                Base64.DEFAULT));
     }
 
     private static boolean isValidProtobuf(byte[] data) {
@@ -117,5 +137,20 @@ public class GetAdSelectionDataShellCommandCtsTest extends ForegroundDebuggableC
         } catch (InvalidProtocolBufferException e) {
             return false;
         }
+    }
+
+    private void startDevSession() {
+        setDevSessionState(true);
+    }
+
+    private void endDevSession() {
+        setDevSessionState(false);
+    }
+
+    private void setDevSessionState(boolean state) {
+        Log.v(LOGCAT_TAG_FLEDGE, String.format("Starting setDevSession(%b)", state));
+        mAdServicesShellCommandHelper.runCommand(
+                "adservices-api dev-session %s --erase-db", state ? "start" : "end");
+        Log.v(LOGCAT_TAG_FLEDGE, String.format("Completed setDevSession(%b)", state));
     }
 }

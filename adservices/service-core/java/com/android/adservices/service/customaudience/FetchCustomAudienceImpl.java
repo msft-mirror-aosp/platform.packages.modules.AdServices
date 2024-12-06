@@ -48,6 +48,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceQuarantine;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdTechIdentifierValidator;
@@ -145,9 +146,11 @@ public class FetchCustomAudienceImpl {
     @NonNull private CustomAudienceBlob mFusedCustomAudience;
     private final int mCallingAppUid;
     @NonNull private String mCallerAppPackageName;
+    private final Flags mFlags;
 
     public FetchCustomAudienceImpl(
             @NonNull Flags flags,
+            @NonNull DebugFlags debugFlags,
             @NonNull Clock clock,
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull ExecutorService executor,
@@ -158,7 +161,9 @@ public class FetchCustomAudienceImpl {
             @NonNull FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull AdRenderIdValidator adRenderIdValidator,
             @NonNull AdDataConversionStrategy adDataConversionStrategy) {
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(flags);
+        Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(clock);
         Objects.requireNonNull(adServicesLogger);
         Objects.requireNonNull(executor);
@@ -180,7 +185,7 @@ public class FetchCustomAudienceImpl {
         // Ensuring process-stable flag values by assigning to local variables at instantiation.
         mFledgeFetchCustomAudienceEnabled = flags.getFledgeFetchCustomAudienceEnabled();
         mDisableFledgeEnrollmentCheck = flags.getDisableFledgeEnrollmentCheck();
-        mEnforceForegroundStatus = flags.getEnforceForegroundStatusForFledgeCustomAudience();
+        mEnforceForegroundStatus = flags.getEnforceForegroundStatusForFetchAndJoinCustomAudience();
         mMaxNameSizeB = flags.getFledgeCustomAudienceMaxNameSizeB();
         mMaxActivationDelayInMs = flags.getFledgeCustomAudienceMaxActivationDelayInMs();
         mMaxExpireInMs = flags.getFledgeCustomAudienceMaxExpireInMs();
@@ -256,7 +261,8 @@ public class FetchCustomAudienceImpl {
                                 mFledgeCustomAudienceMaxAdsSizeB,
                                 mFledgeCustomAudienceMaxNumAds));
 
-        mEnforceNotification = !flags.getConsentNotificationDebugMode();
+        mEnforceNotification = !debugFlags.getConsentNotificationDebugMode();
+        mFlags = flags;
     }
 
     /** Adds a user to a fetched custom audience. */
@@ -341,6 +347,9 @@ public class FetchCustomAudienceImpl {
                                                         API_NAME,
                                                         FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
                                                         devContext);
+                                sLogger.d(
+                                        "Buyer extracted by Custom Audience Service Filter is: %s",
+                                        mBuyer);
                             } catch (Throwable t) {
                                 throw new FilterException(t);
                             }
@@ -460,7 +469,8 @@ public class FetchCustomAudienceImpl {
         return FluentFuture.from(
                 mExecutorService.submit(
                         () -> {
-                            boolean isDebuggableCustomAudience = devContext.getDevOptionsEnabled();
+                            boolean isDebuggableCustomAudience =
+                                    devContext.getDeviceDevOptionsEnabled();
                             sLogger.v(
                                     "Is debuggable custom audience: %b",
                                     isDebuggableCustomAudience);
@@ -512,6 +522,7 @@ public class FetchCustomAudienceImpl {
                                     customAudience,
                                     mFusedCustomAudience.getDailyUpdateUri(),
                                     isDebuggableCustomAudience);
+                            BackgroundFetchJob.schedule(mFlags);
                             return null;
                         }));
     }

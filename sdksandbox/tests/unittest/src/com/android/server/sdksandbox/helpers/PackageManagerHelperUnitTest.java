@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -30,8 +29,10 @@ import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class PackageManagerHelperUnitTest {
+public class PackageManagerHelperUnitTest extends DeviceSupportedBaseTest {
     private static final String TEST_PACKAGE = "com.android.server.sdksandbox.tests";
     private static final ArrayList<String> SDK_NAMES =
             new ArrayList<>(
@@ -56,14 +57,21 @@ public class PackageManagerHelperUnitTest {
     private PackageManagerHelper mPackageManagerHelper;
     private int mClientAppUid;
 
-    @Rule(order = 0)
-    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
-
     @Before
     public void setUp() {
         Context context = InstrumentationRegistry.getInstrumentation().getContext();
         mClientAppUid = Process.myUid();
         mPackageManagerHelper = new PackageManagerHelper(context, mClientAppUid);
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .adoptShellPermissionIdentity(Manifest.permission.INTERACT_ACROSS_USERS_FULL);
+    }
+
+    @After
+    public void tearDown() {
+        InstrumentationRegistry.getInstrumentation()
+                .getUiAutomation()
+                .dropShellPermissionIdentity();
     }
 
     @Test
@@ -101,26 +109,14 @@ public class PackageManagerHelperUnitTest {
 
     @Test
     public void testGetApplicationInfoForSharedLibrary() throws Exception {
-
-        try {
-            InstrumentationRegistry.getInstrumentation()
-                    .getUiAutomation()
-                    .adoptShellPermissionIdentity(Manifest.permission.INTERACT_ACROSS_USERS_FULL);
-
-            SharedLibraryInfo sharedLibraryInfo =
-                    mPackageManagerHelper.getSdkSharedLibraryInfoForSdk(
-                            TEST_PACKAGE, SDK_NAMES.get(0));
-            ApplicationInfo applicationInfo =
-                    mPackageManagerHelper.getApplicationInfoForSharedLibrary(
-                            sharedLibraryInfo,
-                            /* flags= */ PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES
-                                    | PackageManager.MATCH_ANY_USER);
-            assertThat(applicationInfo.packageName).isEqualTo(SDK_PACKAGE_NAMES.get(0));
-        } finally {
-            InstrumentationRegistry.getInstrumentation()
-                    .getUiAutomation()
-                    .dropShellPermissionIdentity();
-        }
+        SharedLibraryInfo sharedLibraryInfo =
+                mPackageManagerHelper.getSdkSharedLibraryInfoForSdk(TEST_PACKAGE, SDK_NAMES.get(0));
+        ApplicationInfo applicationInfo =
+                mPackageManagerHelper.getApplicationInfoForSharedLibrary(
+                        sharedLibraryInfo,
+                        /* flags= */ PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES
+                                | PackageManager.MATCH_ANY_USER);
+        assertThat(applicationInfo.packageName).isEqualTo(SDK_PACKAGE_NAMES.get(0));
     }
 
     @Test

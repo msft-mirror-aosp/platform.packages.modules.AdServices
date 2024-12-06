@@ -17,6 +17,8 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AUCTION_RESULT_VALIDATOR_AD_TECH_NOT_ALLOWED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
 
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
@@ -25,6 +27,7 @@ import android.net.Uri;
 import android.os.Build;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.Validator;
@@ -54,16 +57,28 @@ public class AuctionResultValidator implements Validator<AuctionResult> {
     @VisibleForTesting
     static final String BUYER_EMPTY = "Buyer in the auction result is an empty string.";
 
+    @VisibleForTesting
+    static final String WINNING_SELLER_EMPTY =
+            "Winning seller in the auction result in an empty string.";
+
+    @VisibleForTesting
+    static final String WINNING_SELLER_ENROLLMENT =
+            "Winning seller (%s) in the auction result is not enrolled.";
+
     private FledgeAuthorizationFilter mFledgeAuthorizationFilter;
     private boolean mDisableFledgeEnrollmentCheck;
+    private boolean mEnableWinningSellerInAdSelectionOutcome;
 
     public AuctionResultValidator(
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
-            boolean disableFledgeEnrollmentCheck) {
+            boolean disableFledgeEnrollmentCheck,
+            boolean enableWinningSellerInAdSelectionOutcome) {
         Objects.requireNonNull(fledgeAuthorizationFilter);
         mFledgeAuthorizationFilter = fledgeAuthorizationFilter;
         mDisableFledgeEnrollmentCheck = disableFledgeEnrollmentCheck;
+        mEnableWinningSellerInAdSelectionOutcome = enableWinningSellerInAdSelectionOutcome;
     }
+
 
     /**
      * Validates {@link AuctionResult}.
@@ -87,14 +102,17 @@ public class AuctionResultValidator implements Validator<AuctionResult> {
             violations.add(BUYER_EMPTY);
         }
 
+        if (mEnableWinningSellerInAdSelectionOutcome
+                && auctionResult.getWinningSeller().isEmpty()) {
+            violations.add(WINNING_SELLER_EMPTY);
+        }
+
         if (!mDisableFledgeEnrollmentCheck) {
-            try {
-                mFledgeAuthorizationFilter.assertAdTechEnrolled(
-                        AdTechIdentifier.fromString(auctionResult.getBuyer()),
-                        AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
-            } catch (FledgeAuthorizationFilter.AdTechNotAllowedException e) {
-                violations.add(
-                        String.format(Locale.ENGLISH, BUYER_ENROLLMENT, auctionResult.getBuyer()));
+            assertAdTechEnrolledAndAddViolations(
+                    violations, auctionResult.getBuyer(), BUYER_ENROLLMENT);
+            if (mEnableWinningSellerInAdSelectionOutcome) {
+                assertAdTechEnrolledAndAddViolations(
+                        violations, auctionResult.getWinningSeller(), WINNING_SELLER_ENROLLMENT);
             }
         }
 
@@ -111,6 +129,23 @@ public class AuctionResultValidator implements Validator<AuctionResult> {
         }
         if (auctionResult.getScore() < 0) {
             violations.add(String.format(Locale.ENGLISH, NEGATIVE_SCORE, auctionResult.getScore()));
+        }
+    }
+
+    private void assertAdTechEnrolledAndAddViolations(
+            ImmutableCollection.Builder<String> violations,
+            String adTech,
+            String violationStringMsg) {
+        try {
+            mFledgeAuthorizationFilter.assertAdTechEnrolled(
+                    AdTechIdentifier.fromString(adTech),
+                    AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN);
+        } catch (FledgeAuthorizationFilter.AdTechNotAllowedException e) {
+            violations.add(String.format(Locale.ENGLISH, violationStringMsg, adTech));
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AUCTION_RESULT_VALIDATOR_AD_TECH_NOT_ALLOWED,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
     }
 }

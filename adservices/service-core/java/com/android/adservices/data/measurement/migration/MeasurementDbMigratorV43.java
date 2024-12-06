@@ -21,6 +21,7 @@ import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.data.measurement.MeasurementTables.AggregatableDebugReportBudgetTrackerContract;
 import com.android.adservices.data.measurement.MeasurementTables.AggregateReport;
 import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
@@ -43,6 +44,39 @@ import com.android.adservices.data.measurement.MeasurementTables.TriggerContract
  * MeasurementTables.AggregatableDebugReportBudgetTrackerContract#CONTRIBUTIONS} columns.
  */
 public class MeasurementDbMigratorV43 extends AbstractMeasurementDbMigrator {
+    public static final String CREATE_TABLE_AGGREGATABLE_DEBUG_REPORT_BUDGET_TRACKER_V43 =
+            "CREATE TABLE IF NOT EXISTS "
+                    + AggregatableDebugReportBudgetTrackerContract.TABLE
+                    + " ("
+                    + AggregatableDebugReportBudgetTrackerContract.REPORT_GENERATION_TIME
+                    + " INTEGER, "
+                    + AggregatableDebugReportBudgetTrackerContract.TOP_LEVEL_REGISTRANT
+                    + " TEXT, "
+                    + AggregatableDebugReportBudgetTrackerContract.REGISTRANT_APP
+                    + " TEXT, "
+                    + AggregatableDebugReportBudgetTrackerContract.REGISTRATION_ORIGIN
+                    + " TEXT, "
+                    + AggregatableDebugReportBudgetTrackerContract.SOURCE_ID
+                    + " TEXT, "
+                    + AggregatableDebugReportBudgetTrackerContract.TRIGGER_ID
+                    + " TEXT, "
+                    + AggregatableDebugReportBudgetTrackerContract.CONTRIBUTIONS
+                    + " INTEGER, "
+                    + "FOREIGN KEY ("
+                    + AggregatableDebugReportBudgetTrackerContract.SOURCE_ID
+                    + ") REFERENCES "
+                    + SourceContract.TABLE
+                    + "("
+                    + SourceContract.ID
+                    + ") ON DELETE CASCADE "
+                    + "FOREIGN KEY ("
+                    + AggregatableDebugReportBudgetTrackerContract.TRIGGER_ID
+                    + ") REFERENCES "
+                    + TriggerContract.TABLE
+                    + "("
+                    + TriggerContract.ID
+                    + ") ON DELETE CASCADE"
+                    + ")";
 
     private static final String AGGREGATE_REPORT_ATTRIBUTION_API = "attribution-reporting";
 
@@ -55,7 +89,7 @@ public class MeasurementDbMigratorV43 extends AbstractMeasurementDbMigrator {
         updateApiForAllAggregateReportRecords(db);
 
         // create new aggregatable debug report budget tracker table
-        db.execSQL(MeasurementTables.CREATE_TABLE_AGGREGATABLE_DEBUG_REPORT_BUDGET_TRACKER_LATEST);
+        db.execSQL(CREATE_TABLE_AGGREGATABLE_DEBUG_REPORT_BUDGET_TRACKER_V43);
     }
 
     public MeasurementDbMigratorV43() {

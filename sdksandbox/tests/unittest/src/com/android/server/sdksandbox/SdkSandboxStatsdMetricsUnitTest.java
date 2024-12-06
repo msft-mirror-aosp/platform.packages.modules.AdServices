@@ -155,6 +155,7 @@ public class SdkSandboxStatsdMetricsUnitTest extends DeviceSupportedBaseTest {
                 .adoptShellPermissionIdentity(
                         Manifest.permission.READ_DEVICE_CONFIG,
                         Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG,
                         // for Context#registerReceiverForAllUsers
                         Manifest.permission.INTERACT_ACROSS_USERS_FULL);
 
@@ -203,7 +204,8 @@ public class SdkSandboxStatsdMetricsUnitTest extends DeviceSupportedBaseTest {
                                                 .getPath()),
                                 sProvider,
                                 Mockito.spy(SdkSandboxPulledAtoms.class),
-                                mSdkSandboxStatsdLogger));
+                                mSdkSandboxStatsdLogger,
+                                new SdkSandboxRestrictionManager((mSpyContext))));
 
         mService = new SdkSandboxManagerService(mSpyContext, mInjector);
         mSdkSandboxManagerLocal = mService.getLocalManager();

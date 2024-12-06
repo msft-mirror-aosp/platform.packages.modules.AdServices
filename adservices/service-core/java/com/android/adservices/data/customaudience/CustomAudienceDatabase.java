@@ -18,7 +18,6 @@ package com.android.adservices.data.customaudience;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
 import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.RenameColumn;
@@ -33,9 +32,10 @@ import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.util.Objects;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 /** Room based database for custom audience. */
 @Database(
@@ -45,7 +45,9 @@ import java.util.Objects;
             DBCustomAudienceOverride.class,
             DBCustomAudienceQuarantine.class,
             DBPartialCustomAudience.class,
-            DBScheduledCustomAudienceUpdate.class
+            DBScheduledCustomAudienceUpdate.class,
+            DBCustomAudienceToLeave.class,
+            DBComponentAdData.class
         },
         version = CustomAudienceDatabase.DATABASE_VERSION,
         autoMigrations = {
@@ -56,12 +58,14 @@ import java.util.Objects;
             @AutoMigration(from = 5, to = 6),
             @AutoMigration(from = 7, to = 8),
             @AutoMigration(from = 8, to = 9),
+            @AutoMigration(from = 9, to = 10),
+            @AutoMigration(from = 10, to = 11),
         })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class CustomAudienceDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 9;
+    public static final int DATABASE_VERSION = 11;
     // TODO(b/230653780): Should we separate the DB.
     public static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("customaudience.db");
@@ -96,13 +100,13 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
                 }
             };
 
+    @GuardedBy("SINGLETON_LOCK")
     private static volatile CustomAudienceDatabase sSingleton;
 
     // TODO: How we want handle synchronized situation (b/228101878).
 
     /** Returns an instance of the CustomAudienceDatabase given a context. */
-    public static CustomAudienceDatabase getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context, "Context must be provided.");
+    public static CustomAudienceDatabase getInstance() {
         // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition
         CustomAudienceDatabase singleReadResult = sSingleton;
         if (singleReadResult != null) {
@@ -110,6 +114,7 @@ public abstract class CustomAudienceDatabase extends RoomDatabase {
         }
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
+                Context context = ApplicationContextSingleton.get();
                 DBCustomAudience.Converters converters =
                         new DBCustomAudience.Converters(
                                 BinderFlagReader.readFlag(

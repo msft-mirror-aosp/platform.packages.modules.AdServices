@@ -93,19 +93,20 @@ public class FledgeMaintenanceTasksWorker {
     private FledgeMaintenanceTasksWorker(@NonNull Context context) {
         Objects.requireNonNull(context);
         mFlags = FlagsFactory.getFlags();
-        mAdSelectionEntryDao = AdSelectionDatabase.getInstance(context).adSelectionEntryDao();
-        mFrequencyCapDao = SharedStorageDatabase.getInstance(context).frequencyCapDao();
+        mAdSelectionEntryDao = AdSelectionDatabase.getInstance().adSelectionEntryDao();
+        mFrequencyCapDao = SharedStorageDatabase.getInstance().frequencyCapDao();
         mEnrollmentDao = EnrollmentDao.getInstance();
-        mEncryptionContextDao =
-                AdSelectionServerDatabase.getInstance(context).encryptionContextDao();
+        mEncryptionContextDao = AdSelectionServerDatabase.getInstance().encryptionContextDao();
         mClock = Clock.systemUTC();
         mAdSelectionDebugReportDao =
                 AdSelectionDebugReportingDatabase.getInstance().getAdSelectionDebugReportDao();
         mAdServicesLogger = StatsdAdServicesLogger.getInstance();
-        mKAnonMessageDao = KAnonDatabase.getInstance(context).kAnonMessageDao();
+        mKAnonMessageDao = KAnonDatabase.getInstance().kAnonMessageDao();
     }
 
     /** Creates a new instance of {@link FledgeMaintenanceTasksWorker}. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static FledgeMaintenanceTasksWorker create(@NonNull Context context) {
         Objects.requireNonNull(context);
         return new FledgeMaintenanceTasksWorker(context);

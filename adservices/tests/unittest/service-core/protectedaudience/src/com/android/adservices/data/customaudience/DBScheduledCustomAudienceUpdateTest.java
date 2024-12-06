@@ -37,6 +37,7 @@ public class DBScheduledCustomAudienceUpdateTest extends AdServicesUnitTestCase 
     private static final Instant CREATION_TIME = CommonFixture.FIXED_NOW;
     private static final Instant SCHEDULED_TIME = CommonFixture.FIXED_NEXT_ONE_DAY;
     private static final boolean IS_DEBUGGABLE = false;
+    private static final boolean ALLOW_SCHEDULE_IN_RESPONSE = true;
 
     @Test
     public void testBuildDBScheduledCustomAudienceUpdate_BuilderSuccess() {
@@ -72,6 +73,9 @@ public class DBScheduledCustomAudienceUpdateTest extends AdServicesUnitTestCase 
         expect.withMessage("Scheduled Update Is Debuggable")
                 .that(dbScheduledCustomAudienceUpdate.getIsDebuggable())
                 .isEqualTo(IS_DEBUGGABLE);
+        expect.withMessage("Scheduled Update Allow Schedule in Response")
+                .that(dbScheduledCustomAudienceUpdate.getAllowScheduleInResponse())
+                .isEqualTo(false);
     }
 
     @Test
@@ -84,7 +88,8 @@ public class DBScheduledCustomAudienceUpdateTest extends AdServicesUnitTestCase 
                         UPDATE_URI,
                         SCHEDULED_TIME,
                         CREATION_TIME,
-                        IS_DEBUGGABLE);
+                        IS_DEBUGGABLE,
+                        ALLOW_SCHEDULE_IN_RESPONSE);
         expect.withMessage("Scheduled Update Id")
                 .that(dbScheduledCustomAudienceUpdate.getUpdateId())
                 .isEqualTo(UPDATE_ID);
@@ -103,6 +108,9 @@ public class DBScheduledCustomAudienceUpdateTest extends AdServicesUnitTestCase 
         expect.withMessage("Scheduled Update Creation Time")
                 .that(dbScheduledCustomAudienceUpdate.getCreationTime())
                 .isEqualTo(CREATION_TIME);
+        expect.withMessage("Scheduled Update Allow Schedule in Response")
+                .that(dbScheduledCustomAudienceUpdate.getAllowScheduleInResponse())
+                .isEqualTo(ALLOW_SCHEDULE_IN_RESPONSE);
     }
 
     @Test
@@ -173,5 +181,40 @@ public class DBScheduledCustomAudienceUpdateTest extends AdServicesUnitTestCase 
                                 .setUpdateUri(UPDATE_URI)
                                 .setScheduledTime(SCHEDULED_TIME)
                                 .build());
+    }
+
+    @Test
+    public void testBuildDBScheduledCustomAudienceUpdate_AllowScheduleInResponse_True_Success() {
+        DBScheduledCustomAudienceUpdate dbScheduledCustomAudienceUpdate =
+                DBScheduledCustomAudienceUpdate.builder()
+                        .setUpdateId(UPDATE_ID)
+                        .setOwner(OWNER)
+                        .setBuyer(BUYER)
+                        .setUpdateUri(UPDATE_URI)
+                        .setScheduledTime(SCHEDULED_TIME)
+                        .setCreationTime(CREATION_TIME)
+                        .setAllowScheduleInResponse(ALLOW_SCHEDULE_IN_RESPONSE)
+                        .build();
+        expect.withMessage("Scheduled Update Id")
+                .that(dbScheduledCustomAudienceUpdate.getUpdateId())
+                .isEqualTo(UPDATE_ID);
+        expect.withMessage("Scheduled Update Owner")
+                .that(dbScheduledCustomAudienceUpdate.getOwner())
+                .isEqualTo(OWNER);
+        expect.withMessage("Scheduled Update Buyer")
+                .that(dbScheduledCustomAudienceUpdate.getBuyer())
+                .isEqualTo(BUYER);
+        expect.withMessage("Scheduled Update Update Uri")
+                .that(dbScheduledCustomAudienceUpdate.getUpdateUri())
+                .isEqualTo(UPDATE_URI);
+        expect.withMessage("Scheduled Update Scheduled Time")
+                .that(dbScheduledCustomAudienceUpdate.getScheduledTime())
+                .isEqualTo(SCHEDULED_TIME);
+        expect.withMessage("Scheduled Update Creation Time")
+                .that(dbScheduledCustomAudienceUpdate.getCreationTime())
+                .isEqualTo(CREATION_TIME);
+        expect.withMessage("Scheduled Update Allow Schedule in Response")
+                .that(dbScheduledCustomAudienceUpdate.getAllowScheduleInResponse())
+                .isEqualTo(ALLOW_SCHEDULE_IN_RESPONSE);
     }
 }

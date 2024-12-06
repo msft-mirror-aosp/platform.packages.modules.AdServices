@@ -41,7 +41,7 @@ import static com.android.adservices.service.adselection.ImpressionReporterLegac
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
 import static com.android.adservices.service.adselection.ReportEventDisabledImpl.API_DISABLED_MESSAGE;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
-import static com.android.adservices.service.devapi.DevContext.UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED;
+import static com.android.adservices.service.devapi.DevContext.UNKNOWN_APP_BECAUSE_DEVICE_DEV_OPTIONS_IS_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_AD_SELECTION_CONFIG_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_AD_SELECTION_CONFIG_REMOTE_INFO_OVERRIDE;
@@ -118,7 +118,6 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AppInstallDao;
-import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionFromOutcomesOverride;
@@ -135,10 +134,11 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AppInstallAdvertisersSetterTest.SetAppInstallAdvertisersTestCallback;
-import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
+import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -161,10 +161,10 @@ import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
-import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.FetchProcessLogger;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -203,11 +203,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
+@SpyStatic(DebugFlags.class)
+@SpyStatic(FlagsFactory.class)
 @SpyStatic(JSScriptEngine.class)
 @MockStatic(ConsentManager.class)
-@MockStatic(FlagsFactory.class)
 @MockStatic(MeasurementImpl.class)
 @MockStatic(AppImportanceFilter.class)
+@SkipLoggingUsageRule(reason = "b/355696393")
 public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -286,7 +288,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     private final AdTechIdentifier mContextualSignals =
             AdTechIdentifier.fromString("{\"contextual_signals\":1}");
     private final int mBytesPerPeriod = 1;
-
     private final DevContext mDevContext = DevContext.createForDevOptionsDisabled();
 
     @Spy
@@ -295,15 +296,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                     AdServicesExecutors.getBlockingExecutor(),
                     CacheProviderFactory.createNoOpCache());
 
-    @Mock private AdServicesLogger mAdServicesLoggerMock;
-    @Mock private DevContextFilter mDevContextFilterMock;
-    @Mock private AppImportanceFilter mAppImportanceFilterMock;
-
     private Flags mFakeFlags;
-
-    @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
-
-    @Mock private ConsentManager mConsentManagerMock;
     private CustomAudienceDao mCustomAudienceDao;
     private EncodedPayloadDao mEncodedPayloadDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
@@ -316,20 +309,23 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     private CustomAudienceSignals mCustomAudienceSignals;
     private AdTechIdentifier mSeller;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
+    private MultiCloudSupportStrategy mMultiCloudSupportStrategy;
+    private RetryStrategyFactory mRetryStrategyFactory;
 
+    @Mock private AdServicesLogger mAdServicesLoggerMock;
+    @Mock private DevContextFilter mDevContextFilterMock;
+    @Mock private AppImportanceFilter mAppImportanceFilterMock;
+    @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
+    @Mock private ConsentManager mConsentManagerMock;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
-    private MultiCloudSupportStrategy mMultiCloudSupportStrategy;
     @Mock private MeasurementImpl mMeasurementServiceMock;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @Mock private AdIdFetcher mAdIdFetcher;
     @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
 
-    private RetryStrategyFactory mRetryStrategyFactory;
-    private ConsentedDebugConfigurationGeneratorFactory
-            mConsentedDebugConfigurationGeneratorFactory;
-    @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
-    @Mock private EgressConfigurationGenerator mEgressConfigurationGenerator;
+    @Mock
+    private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
 
     @Rule(order = 11)
     public final SupportedByConditionRule webViewSupportsJSSandbox =
@@ -342,6 +338,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void setUp() {
         mFakeFlags = new AdSelectionServicesTestsFlags(false);
         mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetConsentNotificationDebugMode(false);
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
@@ -424,9 +422,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
         mMultiCloudSupportStrategy =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
-        mConsentedDebugConfigurationGeneratorFactory =
-                new ConsentedDebugConfigurationGeneratorFactory(
-                        false, mConsentedDebugConfigurationDao);
     }
 
     @Test
@@ -510,6 +505,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -521,9 +517,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -553,14 +548,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionSuccessWithUXNotificationNotEnforced() throws Exception {
-        boolean enrollmentCheckDisabled = false;
-        Flags flagsWithoutUxNotificationEnforcement =
-                new AdSelectionServicesTestsFlags(enrollmentCheckDisabled) {
-                    @Override
-                    public boolean getConsentNotificationDebugMode() {
-                        return true;
-                    }
-                };
+        mocker.mockGetConsentNotificationDebugMode(true);
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -632,7 +620,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        flagsWithoutUxNotificationEnforcement,
+                        mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -644,9 +633,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -769,6 +757,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -780,9 +769,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -893,6 +881,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -904,9 +893,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1010,6 +998,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1021,9 +1010,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1134,6 +1122,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1145,9 +1134,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1249,6 +1237,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1260,9 +1249,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1380,6 +1368,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1391,9 +1380,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1512,6 +1500,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1523,9 +1512,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1632,6 +1620,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1643,9 +1632,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1770,6 +1758,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingDisabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1781,9 +1770,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1908,6 +1896,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingEnabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1919,9 +1908,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2047,6 +2035,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingEnabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2058,9 +2047,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2180,6 +2168,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingDisabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2191,9 +2180,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2304,6 +2292,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingDisabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2315,9 +2304,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2422,6 +2410,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingEnabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2433,9 +2422,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2539,6 +2527,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingDisabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2550,9 +2539,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2660,6 +2648,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         auctionServerReportingEnabledFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2671,9 +2660,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2770,6 +2758,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2781,9 +2770,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2895,6 +2883,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2906,9 +2895,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3017,6 +3005,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3028,9 +3017,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3145,6 +3133,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3156,9 +3145,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3322,6 +3310,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3333,9 +3322,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3468,6 +3456,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3479,9 +3468,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3632,6 +3620,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3643,9 +3632,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3801,6 +3789,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3812,9 +3801,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3961,6 +3949,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3972,9 +3961,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4110,6 +4098,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -4121,9 +4110,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4263,6 +4251,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         flagsWithSmallerMaxEventUris,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -4274,9 +4263,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4432,6 +4420,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         flagsWithSmallerMaxInteractionKeySize,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -4443,9 +4432,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4609,6 +4597,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         flagsWithSmallerMaxInteractionReportingUriSize,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -4620,9 +4609,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4755,6 +4743,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -4766,9 +4755,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4863,6 +4851,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -4874,9 +4863,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4970,6 +4958,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -4981,9 +4970,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -5081,6 +5069,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5092,9 +5081,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -5189,6 +5177,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5200,9 +5189,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -5292,6 +5280,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5303,9 +5292,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -5394,6 +5382,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5405,9 +5394,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -5497,6 +5485,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5508,9 +5497,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -5615,6 +5603,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5626,9 +5615,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -5759,6 +5747,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5770,9 +5759,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -5855,6 +5843,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5866,9 +5855,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5917,6 +5905,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5928,9 +5917,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5977,6 +5965,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5988,9 +5977,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -6012,7 +6000,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
         verifyLogFledgeApiCallStatsAnyLatency(
                 SHORT_API_NAME_OVERRIDE,
-                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                UNKNOWN_APP_BECAUSE_DEVICE_DEV_OPTIONS_IS_DISABLED,
                 STATUS_INTERNAL_ERROR);
     }
 
@@ -6040,6 +6028,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6051,9 +6040,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -6112,6 +6100,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6123,9 +6112,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -6182,6 +6170,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6193,9 +6182,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -6225,7 +6213,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
         verifyLogFledgeApiCallStatsAnyLatency(
                 SHORT_API_NAME_REMOVE_OVERRIDE,
-                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                UNKNOWN_APP_BECAUSE_DEVICE_DEV_OPTIONS_IS_DISABLED,
                 STATUS_INTERNAL_ERROR);
     }
 
@@ -6254,6 +6242,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6265,9 +6254,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -6326,6 +6314,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6337,9 +6326,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -6440,6 +6428,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6451,9 +6440,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -6556,6 +6544,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6567,9 +6556,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -6670,6 +6658,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6681,9 +6670,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -6756,14 +6744,14 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
         verifyLogFledgeApiCallStatsAnyLatency(
                 SHORT_API_NAME_RESET_ALL_OVERRIDES,
-                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                UNKNOWN_APP_BECAUSE_DEVICE_DEV_OPTIONS_IS_DISABLED,
                 STATUS_INTERNAL_ERROR);
     }
 
     @Test
     public void testCloseJSScriptEngineConnectionAtShutDown() {
         JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
-        doReturn(jsScriptEngineMock).when(() -> JSScriptEngine.getInstance(any()));
+        doReturn(jsScriptEngineMock).when(JSScriptEngine::getInstance);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -6782,6 +6770,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6793,9 +6782,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock).shutdown();
@@ -6804,8 +6792,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testJSScriptEngineConnectionExceptionAtShutDown() {
         JSScriptEngine jsScriptEngineMock = mock(JSScriptEngine.class);
-        doThrow(JSSandboxIsNotAvailableException.class)
-                .when(() -> JSScriptEngine.getInstance(any()));
+        doThrow(JSSandboxIsNotAvailableException.class).when(JSScriptEngine::getInstance);
 
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
@@ -6824,6 +6811,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6835,9 +6823,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock, never()).shutdown();
@@ -6879,6 +6866,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6890,9 +6878,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -6946,6 +6933,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -6957,9 +6945,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -7014,6 +7001,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7025,9 +7013,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -7073,6 +7060,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7084,9 +7072,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -7134,6 +7121,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7145,9 +7133,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -7189,6 +7176,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7200,9 +7188,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -7248,6 +7235,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         FlagsWithOverriddenFledgeChecks.createFlagsWithFledgeChecksDisabled(),
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7259,9 +7247,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -7351,6 +7338,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7362,9 +7350,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7471,6 +7458,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7482,9 +7470,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7592,6 +7579,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7603,9 +7591,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7718,6 +7705,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7729,9 +7717,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7825,6 +7812,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7836,9 +7824,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
@@ -7914,7 +7901,10 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
         mockCreateDevContextForDevOptionsDisabled();
 
-        Throttler.destroyExistingThrottler();
+        // NOTE: used to call Throttler.destroyExistingThrottler(), but AdSelectionServiceImpl
+        // constructor doesn't actually set a Throttler - the "real" constructor uses the Throttler
+        // when instantiating the FledgeApiThrottleFilter (which in turn is passed to the
+        // constructor of AdSelectionServiceFilter)
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
@@ -7932,6 +7922,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -7943,9 +7934,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7992,7 +7982,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
         assertEquals(
                 callbackSubsequentCall.mFledgeErrorResponse.getErrorMessage(),
                 RATE_LIMIT_REACHED_ERROR_MESSAGE);
-        resetThrottlerToNoRateLimits();
     }
 
     @Test
@@ -8069,6 +8058,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8080,9 +8070,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8184,6 +8173,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8195,9 +8185,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8301,6 +8290,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8312,9 +8302,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8440,6 +8429,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8451,9 +8441,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8575,6 +8564,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         flagsWithEnrollment,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8586,9 +8576,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8692,6 +8681,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8703,9 +8693,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8757,6 +8746,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8768,9 +8758,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8821,6 +8810,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8832,9 +8822,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8883,6 +8872,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8894,9 +8884,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8918,7 +8907,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
         verifyLogFledgeApiCallStatsAnyLatency(
                 AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                UNKNOWN_APP_BECAUSE_DEVICE_DEV_OPTIONS_IS_DISABLED,
                 STATUS_INTERNAL_ERROR);
     }
 
@@ -8947,6 +8936,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -8958,9 +8948,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9023,6 +9012,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -9034,9 +9024,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9097,6 +9086,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -9108,9 +9098,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9140,7 +9129,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
         verifyLogFledgeApiCallStatsAnyLatency(
                 AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                UNKNOWN_APP_BECAUSE_DEVICE_DEV_OPTIONS_IS_DISABLED,
                 STATUS_INTERNAL_ERROR);
     }
 
@@ -9170,6 +9159,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -9181,9 +9171,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9243,6 +9232,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -9254,9 +9244,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9365,6 +9354,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -9376,9 +9366,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9485,6 +9474,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -9496,9 +9486,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9575,7 +9564,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
         verifyLogFledgeApiCallStatsAnyLatency(
                 AD_SERVICES_API_CALLED__API_NAME__API_NAME_UNKNOWN,
-                UNKNOWN_APP_BECAUSE_DEV_OPTIONS_IS_DISABLED,
+                UNKNOWN_APP_BECAUSE_DEVICE_DEV_OPTIONS_IS_DISABLED,
                 STATUS_INTERNAL_ERROR);
     }
 
@@ -9605,6 +9594,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -9616,9 +9606,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9743,6 +9732,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -9754,9 +9744,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionOverrideTestCallback overridesCallback =
                 callAddOverrideForSelectAds(
@@ -9905,7 +9894,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Ignore("b/271652362")
     @Test
     public void testReportEvent_callbackErrorReported() throws Exception {
-        doReturn(mMeasurementServiceMock).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mMeasurementServiceMock).when(MeasurementImpl::getInstance);
 
         Uri biddingLogicUri = (mMockWebServerRule.uriForPath(mFetchJavaScriptPathBuyer));
 
@@ -9962,7 +9951,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportEvent_disabled_failsFast() throws Exception {
-        doReturn(mMeasurementServiceMock).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mMeasurementServiceMock).when(MeasurementImpl::getInstance);
 
         // Generate service instance with feature disabled.
         mFakeFlags =
@@ -10022,7 +10011,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         .setReportingDestinations(FLAG_REPORTING_DESTINATION_BUYER)
                         .build();
 
-        doReturn(mMeasurementServiceMock).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mMeasurementServiceMock).when(MeasurementImpl::getInstance);
 
         // Count down callback + log interaction.
         ReportInteractionTestCallback callback =
@@ -10351,6 +10340,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         unifiedFlowReportingDisabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -10362,9 +10352,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -10415,6 +10404,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         unifiedFlowReportingEnabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -10426,9 +10416,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -10451,15 +10440,11 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
             testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOnWithUXNotificationEnforcementDisabled()
                     throws Exception {
         boolean enrollmentCheck = false;
+        mocker.mockGetConsentNotificationDebugMode(true);
         Flags flagsWithUXConsentEnforcementDisabled =
                 new AdSelectionServicesTestsFlags(enrollmentCheck) {
                     @Override
                     public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getConsentNotificationDebugMode() {
                         return true;
                     }
                 };
@@ -10485,6 +10470,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mContext,
                         mAdServicesLoggerMock,
                         flagsWithUXConsentEnforcementDisabled,
+                        mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -10496,9 +10482,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -10545,6 +10530,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                 mContext,
                 mAdServicesLoggerMock,
                 mFakeFlags,
+                mMockDebugFlags,
                 CallingAppUidSupplierProcessImpl.create(),
                 mFledgeAuthorizationFilterMock,
                 mAdSelectionServiceFilterMock,
@@ -10556,9 +10542,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                 mUnusedKAnonSignJoinFactory,
                 false,
                 mRetryStrategyFactory,
-                mConsentedDebugConfigurationGeneratorFactory,
-                mEgressConfigurationGenerator,
-                CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                mAuctionServerDebugConfigurationGenerator);
     }
 
     private void persistAdSelectionEntryDaoResults(Map<Long, Double> adSelectionIdToBidMap) {
@@ -10588,18 +10573,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                             .build();
             mAdSelectionEntryDao.persistAdSelection(dbAdSelectionEntry);
         }
-    }
-
-    /**
-     * Given Throttler is singleton, & shared across tests, this method should be invoked after
-     * tests that impose restrictive rate limits.
-     */
-    private void resetThrottlerToNoRateLimits() {
-        Throttler.destroyExistingThrottler();
-        final float noRateLimit = -1;
-        Flags mockNoRateLimitFlags = mock(Flags.class);
-        doReturn(noRateLimit).when(mockNoRateLimitFlags).getSdkRequestPermitsPerSecond();
-        Throttler.getInstance(mockNoRateLimitFlags);
     }
 
     private AdSelectionOverrideTestCallback callAddOverrideForSelectAds(
@@ -11023,19 +10996,17 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                 mAdServicesLoggerMock, never(), apiName, appPackageName, resultCode);
     }
 
-    // TODO(b/314969513): move mockCreateDevContext() methods below to AdServicesMocker
-
     private void mockCreateDevContext(DevContextFilter mockFilter, String callingAppPackageName) {
         mockCreateDevContext(
                 mockFilter,
-                DevContext.builder(callingAppPackageName).setDevOptionsEnabled(true).build());
+                DevContext.builder(callingAppPackageName).setDeviceDevOptionsEnabled(true).build());
     }
 
     private void mockCreateDevContext(DevContextFilter mockFilter, DevContext devContext) {
         when(mockFilter.createDevContext()).thenReturn(devContext);
     }
 
-    // TODO(b/314969513, 323000746): move verifyLogFledgeApiCallStatsAnyLatency() methods below to
+    // TODO(b/370117835, 323000746): move verifyLogFledgeApiCallStatsAnyLatency() methods below to
     // AdServicesMocker or new logging rule / infra
 
     private void verifyLogFledgeApiCallStatsAnyLatency(

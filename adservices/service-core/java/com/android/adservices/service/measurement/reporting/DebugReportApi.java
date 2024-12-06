@@ -35,8 +35,6 @@ import com.android.adservices.service.measurement.noising.SourceNoiseHandler;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.internal.annotations.VisibleForTesting;
 
-import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -54,7 +52,7 @@ public class DebugReportApi {
 
     /** Define different verbose debug report types. */
     public enum Type {
-        DEFAULT("default"),
+        UNSPECIFIED("unspecified"),
         SOURCE_DESTINATION_LIMIT("source-destination-limit"),
         SOURCE_DESTINATION_RATE_LIMIT("source-destination-rate-limit"),
         SOURCE_DESTINATION_PER_DAY_RATE_LIMIT("source-destination-per-day-rate-limit"),
@@ -65,11 +63,12 @@ public class DebugReportApi {
         SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR("source-flexible-event-report-value-error"),
         SOURCE_MAX_EVENT_STATES_LIMIT("source-max-event-states-limit"),
         SOURCE_SCOPES_CHANNEL_CAPACITY_LIMIT("source-scopes-channel-capacity-limit"),
+        SOURCE_CHANNEL_CAPACITY_LIMIT("source-channel-capacity-limit"),
         SOURCE_ATTRIBUTION_SCOPE_INFO_GAIN_LIMIT("source-attribution-scope-info-gain-limit"),
         SOURCE_DESTINATION_GLOBAL_RATE_LIMIT("source-destination-global-rate-limit"),
         SOURCE_DESTINATION_LIMIT_REPLACED("source-destination-limit-replaced"),
+        SOURCE_REPORTING_ORIGIN_LIMIT("source-reporting-origin-limit"),
         SOURCE_REPORTING_ORIGIN_PER_SITE_LIMIT("source-reporting-origin-per-site-limit"),
-        // TODO(b/363156698): Not implemented yet
         SOURCE_TRIGGER_STATE_CARDINALITY_LIMIT("source-trigger-state-cardinality-limit"),
 
         TRIGGER_AGGREGATE_DEDUPLICATED("trigger-aggregate-deduplicated"),
@@ -97,7 +96,8 @@ public class DebugReportApi {
         TRIGGER_AGGREGATE_EXCESSIVE_REPORTS("trigger-aggregate-excessive-reports"),
         TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED("trigger-event-report-window-not-started"),
         TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA("trigger-event-no-matching-trigger-data"),
-        HEADER_PARSING_ERROR("header-parsing-error");
+        HEADER_PARSING_ERROR("header-parsing-error"),
+        TRIGGER_AGGREGATE_INSUFFICIENT_NAMED_BUDGET("trigger-aggregate-insufficient-named-budget");
 
         private final String mValue;
 
@@ -125,6 +125,7 @@ public class DebugReportApi {
     public interface Body {
         String ATTRIBUTION_DESTINATION = "attribution_destination";
         String LIMIT = "limit";
+        String NAME = "name";
         String RANDOMIZED_TRIGGER_RATE = "randomized_trigger_rate";
         String SCHEDULED_REPORT_TIME = "scheduled_report_time";
         String SOURCE_DEBUG_KEY = "source_debug_key";
@@ -150,15 +151,13 @@ public class DebugReportApi {
     private final Flags mFlags;
     private final EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
     private final SourceNoiseHandler mSourceNoiseHandler;
-    private final AggregateDebugReportApi mAggregateDebugReportApi;
 
     public DebugReportApi(Context context, Flags flags) {
         this(
                 context,
                 flags,
                 new EventReportWindowCalcDelegate(flags),
-                new SourceNoiseHandler(flags),
-                new AggregateDebugReportApi(flags, new AndroidTimeSource()));
+                new SourceNoiseHandler(flags));
     }
 
     @VisibleForTesting
@@ -166,13 +165,11 @@ public class DebugReportApi {
             Context context,
             Flags flags,
             EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
-            SourceNoiseHandler sourceNoiseHandler,
-            AggregateDebugReportApi aggregateDebugReportApi) {
+            SourceNoiseHandler sourceNoiseHandler) {
         mContext = context;
         mFlags = flags;
         mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
         mSourceNoiseHandler = sourceNoiseHandler;
-        mAggregateDebugReportApi = aggregateDebugReportApi;
     }
 
     /** Schedules the Source Destination limit Debug Report */
@@ -197,7 +194,7 @@ public class DebugReportApi {
     }
 
     /** Schedules Source Attribution Scope Debug Report */
-    public void scheduleAttributionScopeDebugReport(
+    public DebugReportApi.Type scheduleAttributionScopeDebugReport(
             Source source, Source.AttributionScopeValidationResult result, IMeasurementDao dao) {
         DebugReportApi.Type type = null;
         Map<String, String> additionalBodyParams = new HashMap<>();
@@ -217,10 +214,10 @@ public class DebugReportApi {
             }
         }
         if (type == null) {
-            return;
+            return null;
         }
-        scheduleSourceReport(
-                source, type, additionalBodyParams, dao, /* differentReportTypeForAdr= */ null);
+        scheduleSourceReport(source, type, additionalBodyParams, dao);
+        return type;
     }
 
     /** Determines if scheduling the Trigger Report is allowed */
@@ -251,8 +248,6 @@ public class DebugReportApi {
     public void scheduleTriggerNoMatchingSourceDebugReport(
             Trigger trigger, IMeasurementDao dao, DebugReportApi.Type type)
             throws DatastoreException {
-        mAggregateDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(trigger, dao);
-
         if (!isTriggerReportAllowed(trigger, type, /* source= */ null)) {
             return;
         }
@@ -275,8 +270,6 @@ public class DebugReportApi {
             IMeasurementDao dao,
             DebugReportApi.Type type)
             throws DatastoreException {
-        mAggregateDebugReportApi.scheduleTriggerAttributionErrorWithSourceDebugReport(
-                source, trigger, type, dao);
         if (!isTriggerReportAllowed(trigger, type, source)) {
             return;
         }
@@ -285,6 +278,44 @@ public class DebugReportApi {
         scheduleReport(
                 type,
                 generateTriggerDebugReportBody(source, trigger, limit, debugKeyPair, false),
+                source.getEnrollmentId(),
+                trigger.getRegistrationOrigin(),
+                source.getRegistrant(),
+                dao);
+    }
+
+    /**
+     * Schedules Trigger Debug Reports with/without limit and bucket, pass in Type for different
+     * types.
+     */
+    public void scheduleTriggerDebugReport(
+            Source source,
+            Trigger trigger,
+            String limit,
+            String budgetName,
+            IMeasurementDao dao,
+            DebugReportApi.Type type)
+            throws DatastoreException {
+        Objects.requireNonNull(source, "source cannot be null");
+        Objects.requireNonNull(trigger, "trigger cannot be null");
+        Objects.requireNonNull(limit, "limit cannot be null");
+        Objects.requireNonNull(budgetName, "budgetName cannot be null");
+        Objects.requireNonNull(dao, "dao cannot be null");
+        Objects.requireNonNull(type, "type cannot be null");
+        if (!isTriggerReportAllowed(trigger, type, source)) {
+            return;
+        }
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                new DebugKeyAccessor(dao).getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        scheduleReport(
+                type,
+                generateTriggerDebugReportBody(
+                        source,
+                        trigger,
+                        limit,
+                        budgetName,
+                        debugKeyPair,
+                        /* is TriggerNoMatchingSource= */ false),
                 source.getEnrollmentId(),
                 trigger.getRegistrationOrigin(),
                 source.getRegistrant(),
@@ -302,8 +333,6 @@ public class DebugReportApi {
             IMeasurementDao dao,
             DebugReportApi.Type type)
             throws DatastoreException {
-        mAggregateDebugReportApi.scheduleTriggerAttributionErrorWithSourceDebugReport(
-                source, trigger, type, dao);
         if (!isTriggerReportAllowed(trigger, type, source)) {
             return;
         }
@@ -322,7 +351,6 @@ public class DebugReportApi {
     /** Schedules the Source Destination limit type Debug Report */
     private void scheduleSourceDestinationLimitDebugReport(
             Source source, String limit, Type type, IMeasurementDao dao) {
-        mAggregateDebugReportApi.scheduleSourceRegistrationErrorDebugReport(source, type, dao);
         if (isSourceDebugFlagDisabled(Type.SOURCE_DESTINATION_LIMIT)) {
             return;
         }
@@ -385,16 +413,12 @@ public class DebugReportApi {
      * @param type The type of the debug report
      * @param additionalBodyParams Additional parameters to add to the body of the debug report
      * @param dao Measurement DAO
-     * @param differentReportTypeForAdr The type for SOURCE_SUCCESS adr report
      */
     public void scheduleSourceReport(
             Source source,
-            DebugReportApi.Type type,
+            Type type,
             @Nullable Map<String, String> additionalBodyParams,
-            IMeasurementDao dao,
-            @Nullable DebugReportApi.Type differentReportTypeForAdr) {
-        mAggregateDebugReportApi.scheduleSourceRegistrationErrorDebugReport(
-                source, differentReportTypeForAdr != null ? differentReportTypeForAdr : type, dao);
+            IMeasurementDao dao) {
         Objects.requireNonNull(source, "source cannot be null");
         Objects.requireNonNull(type, "type cannot be null");
         Objects.requireNonNull(dao, "dao cannot be null");
@@ -628,6 +652,33 @@ public class DebugReportApi {
                 return body;
             }
             body.put(Body.LIMIT, limit);
+            body.put(Body.SOURCE_DEBUG_KEY, debugKeyPair.first);
+            body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
+            body.put(Body.SOURCE_SITE, generateSourceSite(source));
+        } catch (JSONException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Json error while generating trigger debug report body.");
+        }
+        return body;
+    }
+
+    /** Generates trigger debug report body */
+    private JSONObject generateTriggerDebugReportBody(
+            Source source,
+            Trigger trigger,
+            String limit,
+            String budgetName,
+            Pair<UnsignedLong, UnsignedLong> debugKeyPair,
+            boolean isTriggerNoMatchingSource) {
+        JSONObject body = new JSONObject();
+        try {
+            body.put(Body.ATTRIBUTION_DESTINATION, trigger.getAttributionDestinationBaseUri());
+            body.put(Body.TRIGGER_DEBUG_KEY, debugKeyPair.second);
+            if (isTriggerNoMatchingSource) {
+                return body;
+            }
+            body.put(Body.LIMIT, limit);
+            body.put(Body.NAME, budgetName);
             body.put(Body.SOURCE_DEBUG_KEY, debugKeyPair.first);
             body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
             body.put(Body.SOURCE_SITE, generateSourceSite(source));

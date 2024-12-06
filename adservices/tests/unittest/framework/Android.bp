@@ -18,72 +18,84 @@ package {
 
 android_test {
     name: "AdServicesFrameworkUnitTests",
+    defaults: ["AdServicesFrameworkUnitTests-defaults"],
     srcs: [
         "src/**/*.java",
     ],
-    static_libs: [
-        "androidx.test.runner",
-        "androidx.test.core",
-        "mockito-target-extended-minus-junit4",
-        "truth",
-        "adservices-test-fixtures",
-        "adservices-test-utility",
-    ],
-    libs: [
-        "android.test.base.stubs.system",
-        "android.test.mock.stubs.system",
-        "android.test.runner.stubs.system",
-        "framework-adservices.impl",
-        "framework-sdksandbox.impl",
-        "framework-annotations-lib",
-    ],
-    sdk_version: "module_current",
     min_sdk_version: "Tiramisu",
     target_sdk_version: "Tiramisu",
     test_suites: [
         "general-tests",
         "mts-adservices",
     ],
-    instrumentation_for: "AdServicesApk",
+}
+
+android_test {
+    name: "AdExtServicesFrameworkUnitTests",
+    defaults: ["AdServicesFrameworkUnitTests-defaults"],
+    srcs: [
+        "src/**/*.java",
+    ],
+    libs: [
+        "android.ext.adservices",
+    ],
+    min_sdk_version: "31",
+    target_sdk_version: "31",
+    test_config: "AndroidTest.ExtServices.xml",
+    instrumentation_for: "ExtServices-sminus",
+    test_suites: [
+        "general-tests",
+        "mts-extservices",
+    ],
+    lint: {
+        baseline_filename: "lint-baseline-adextservices.xml",
+    },
+}
+
+android_test {
+    name: "AdExtServicesFrameworkRvcUnitTests",
+    defaults: ["AdServicesFrameworkUnitTests-defaults"],
+    srcs: [
+        "src/android/adservices/common/AndroidRCommonUtilRvcTest.java",
+    ],
+    libs: [
+        "android.ext.adservices",
+    ],
+    min_sdk_version: "30",
+    max_sdk_version: "30",
+    target_sdk_version: "30",
+    test_config: "AndroidTest.ExtServicesRvc.xml",
+    manifest: "AndroidManifestExtServicesRvc.xml",
+    instrumentation_for: "ExtServices-sminus",
+    test_suites: [
+        "general-tests",
+        "mts-extservices",
+    ],
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
         test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
 
-android_test {
-    name: "AdExtServicesFrameworkUnitTests",
-    srcs: [
-        "src/**/*.java",
-    ],
+java_defaults {
+    name: "AdServicesFrameworkUnitTests-defaults",
+    defaults: ["adservices-extended-mockito-defaults"],
     static_libs: [
+        "androidx.test.runner",
+        "androidx.test.core",
+        "truth",
         "adservices-test-fixtures",
         "adservices-test-utility",
-        "androidx.test.core",
-        "androidx.test.runner",
-        "mockito-target-extended-minus-junit4",
-        "truth",
     ],
     libs: [
-        "android.ext.adservices",
-        "android.test.base.stubs.system",
-        "android.test.mock.stubs.system",
-        "android.test.runner.stubs.system",
-        "framework-annotations-lib",
+        "framework-adservices.impl",
         "framework-sdksandbox.impl",
+        "framework-annotations-lib",
     ],
     sdk_version: "module_current",
-    min_sdk_version: "30",
-    target_sdk_version: "30",
-    test_suites: [
-        "general-tests",
-        "mts-extservices",
-    ],
-    test_config: "AndroidTest.ExtServices.xml",
-    instrumentation_for: "ExtServices-sminus",
+    instrumentation_for: "AdServicesApk",
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
-        baseline_filename: "lint-baseline-adextservices.xml",
         test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }

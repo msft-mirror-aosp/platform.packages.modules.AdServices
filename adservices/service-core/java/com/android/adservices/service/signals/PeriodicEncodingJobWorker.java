@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FAILED_PER_BUYER_ENCODING;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+
 import android.adservices.common.AdTechIdentifier;
 import android.content.Context;
 
@@ -28,6 +31,7 @@ import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -38,6 +42,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelperImpl;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelperNoOpImpl;
@@ -90,6 +95,8 @@ public final class PeriodicEncodingJobWorker {
     private final Flags mFlags;
     private final PeriodicEncodingJobRunner mPeriodicEncodingJobRunner;
 
+    private final EncodingJobRunStatsLogger mEncodingJobRunStatsLogger;
+
     @VisibleForTesting
     public PeriodicEncodingJobWorker(
             EncoderLogicHandler encoderLogicHandler,
@@ -126,6 +133,14 @@ public final class PeriodicEncodingJobWorker {
                         mEncodedPayloadDao,
                         mBackgroundExecutor,
                         mLightWeightExecutor);
+
+        mEncodingJobRunStatsLogger =
+                mFlags.getPasExtendedMetricsEnabled()
+                        ? new EncodingJobRunStatsLoggerImpl(
+                                mAdServicesLogger,
+                                EncodingJobRunStats.builder(),
+                                mFlags.getFledgeEnableForcedEncodingAfterSignalsUpdate())
+                        : new EncodingJobRunStatsLoggerNoLoggingImpl();
     }
 
     /**
@@ -170,9 +185,16 @@ public final class PeriodicEncodingJobWorker {
         }
     }
 
-    /** Initiates the encoding of raw signals */
-    public FluentFuture<Void> encodeProtectedSignals() {
+    /**
+     * Initiates the encoding of raw signals with PAS encoding source type.
+     *
+     * @param encodingSourceType The PAS encoding source type.
+     */
+    public FluentFuture<Void> encodeProtectedSignals(
+            @AdsRelevanceStatusUtils.PasEncodingSourceType int encodingSourceType) {
         sLogger.v("Starting %s", JOB_DESCRIPTION);
+        // TODO(b/30495695): Verify the metric is logged async.
+        mEncodingJobRunStatsLogger.resetStatsWithEncodingSourceType(encodingSourceType);
         return mSingletonRunner.runSingleInstance();
     }
 
@@ -189,12 +211,6 @@ public final class PeriodicEncodingJobWorker {
         int traceCookie = Tracing.beginAsyncSection(Tracing.RUN_WORKER);
 
         boolean pasExtendedMetricsEnabled = mFlags.getPasExtendedMetricsEnabled();
-        EncodingJobRunStatsLogger encodingJobRunStatsLogger =
-                pasExtendedMetricsEnabled
-                        ? new EncodingJobRunStatsLoggerImpl(
-                        mAdServicesLogger, EncodingJobRunStats.builder())
-                        : new EncodingJobRunStatsLoggerNoLoggingImpl();
-
         FluentFuture<List<DBEncoderLogicMetadata>> buyersWithRegisteredEncoders =
                 FluentFuture.from(
                         mBackgroundExecutor.submit(mEncoderLogicHandler::getAllRegisteredEncoders));
@@ -205,7 +221,7 @@ public final class PeriodicEncodingJobWorker {
                                 doEncodingForRegisteredBuyers(
                                         logicMetadata,
                                         pasExtendedMetricsEnabled,
-                                        encodingJobRunStatsLogger),
+                                        mEncodingJobRunStatsLogger),
                         mBackgroundExecutor);
 
         // TODO(b/294900119) We should do the update of encoding logic in a separate job
@@ -215,27 +231,28 @@ public final class PeriodicEncodingJobWorker {
                         .minus(
                                 mFlags.getProtectedSignalsEncoderRefreshWindowSeconds(),
                                 ChronoUnit.SECONDS);
-        return encodeSignalsFuture.transformAsync(
-                unused -> {
-                    FluentFuture<List<AdTechIdentifier>> buyersWithEncodersReadyForRefresh =
-                            FluentFuture.from(
-                                    mBackgroundExecutor.submit(
-                                            () ->
-                                                    mEncoderLogicMetadataDao
-                                                            .getBuyersWithEncodersBeforeTime(
-                                                                    timeForRefresh)));
-                    encodingJobRunStatsLogger.logEncodingJobRunStats();
+        return encodeSignalsFuture
+                .transformAsync(
+                        unused -> {
+                            FluentFuture<List<AdTechIdentifier>> buyersWithEncodersReadyForRefresh =
+                                    FluentFuture.from(
+                                            mBackgroundExecutor.submit(
+                                                    () ->
+                                                            mEncoderLogicMetadataDao
+                                                                    .getBuyersWithEncodersBeforeTime(
+                                                                            timeForRefresh)));
+                            mEncodingJobRunStatsLogger.logEncodingJobRunStats();
 
-                    return buyersWithEncodersReadyForRefresh.transformAsync(
-                            this::doUpdateEncodersForBuyers, mBackgroundExecutor);
-                },
-                mLightWeightExecutor)
-        .transform(
-                ignored -> {
-                    Tracing.endAsyncSection(Tracing.RUN_WORKER, traceCookie);
-                    return null;
-                },
-                mBackgroundExecutor);
+                            return buyersWithEncodersReadyForRefresh.transformAsync(
+                                    this::doUpdateEncodersForBuyers, mBackgroundExecutor);
+                        },
+                        mLightWeightExecutor)
+                .transform(
+                        ignored -> {
+                            Tracing.endAsyncSection(Tracing.RUN_WORKER, traceCookie);
+                            return null;
+                        },
+                        mBackgroundExecutor);
     }
 
     private FluentFuture<Void> doEncodingForRegisteredBuyers(
@@ -283,6 +300,10 @@ public final class PeriodicEncodingJobWorker {
                         (e) -> {
                             handleFailedPerBuyerEncoding(metadata);
                             encodingJobRunStatsLogger.addOneSignalEncodingFailures();
+                            ErrorLogUtil.e(
+                                    e,
+                                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FAILED_PER_BUYER_ENCODING,
+                                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
                             return null;
                         },
                         mLightWeightExecutor);
@@ -290,6 +311,7 @@ public final class PeriodicEncodingJobWorker {
 
     // TODO(b/294900119) We should do the update of encoding logic in a separate job, & remove this
     FluentFuture<Void> doUpdateEncodersForBuyers(List<AdTechIdentifier> buyers) {
+        sLogger.d("Updating encoders for buyers");
         int traceCookie = Tracing.beginAsyncSection(Tracing.UPDATE_ENCODERS_FOR_BUYERS);
 
         List<ListenableFuture<Boolean>> encoderUpdates =

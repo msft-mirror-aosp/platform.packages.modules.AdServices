@@ -45,7 +45,7 @@ public class BlockedAppsActivity extends AdServicesBaseActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (!isUxStatesReady(this)) {
+        if (!isUxStatesReady()) {
             initFragment();
         }
     }

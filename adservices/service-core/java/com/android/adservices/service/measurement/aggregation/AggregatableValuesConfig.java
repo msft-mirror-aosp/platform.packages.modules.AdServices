@@ -21,6 +21,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.measurement.FilterMap;
 import com.android.adservices.service.measurement.util.Filter;
 import com.android.adservices.service.measurement.util.Filter.FilterContract;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,9 +35,9 @@ import java.util.Objects;
 
 /** POJO for AggregatableValuesConfig */
 public class AggregatableValuesConfig {
-    Map<String, AggregatableKeyValue> mValues;
-    @Nullable List<FilterMap> mFilterSet;
-    @Nullable List<FilterMap> mNotFilterSet;
+    private final Map<String, AggregatableKeyValue> mValues;
+    @Nullable private final List<FilterMap> mFilterSet;
+    @Nullable private final List<FilterMap> mNotFilterSet;
 
     private AggregatableValuesConfig(AggregatableValuesConfig.Builder builder) {
         mValues = builder.mValues;
@@ -100,15 +101,16 @@ public class AggregatableValuesConfig {
             mValues = values;
         }
 
-        public Builder(JSONObject aggregateKeyValuesJson) throws JSONException {
-            mValues = buildValues(aggregateKeyValuesJson);
-        }
-
         public Builder(JSONObject aggregateKeyValuesJson, Flags flags) throws JSONException {
-            mValues =
-                    buildValues(
-                            aggregateKeyValuesJson.getJSONObject(
-                                    AggregatableValuesConfigContract.VALUES));
+            if (!aggregateKeyValuesJson.isNull(AggregatableValuesConfigContract.VALUES)) {
+                mValues =
+                        buildValues(
+                                aggregateKeyValuesJson.getJSONObject(
+                                        AggregatableValuesConfigContract.VALUES),
+                                flags);
+            } else {
+                mValues = buildValues(aggregateKeyValuesJson, flags);
+            }
             Filter filter = new Filter(flags);
             if (!aggregateKeyValuesJson.isNull(FilterContract.FILTERS)) {
                 JSONArray filterSet =
@@ -126,16 +128,40 @@ public class AggregatableValuesConfig {
          * Create {@link AggregatableValuesConfigContract#getValues} from a JSONObject that has
          * Integer typed values.
          */
-        private Map<String, AggregatableKeyValue> buildValues(JSONObject aggregateKeyValuesJson)
-                throws JSONException {
+        private Map<String, AggregatableKeyValue> buildValues(
+                JSONObject aggregateKeyValuesJson, Flags flags) throws JSONException {
             Iterator<String> valuesKeySet = aggregateKeyValuesJson.keys();
             Map<String, AggregatableKeyValue> mValues = new HashMap<>();
             while (valuesKeySet.hasNext()) {
                 String key = valuesKeySet.next();
-                AggregatableKeyValue aggregatableKeyValue =
-                        new AggregatableKeyValue.Builder(aggregateKeyValuesJson.getInt(key))
-                                .build();
-                mValues.put(key, aggregatableKeyValue);
+                AggregatableKeyValue.Builder aggregatableKeyValueBuilder;
+                if (flags.getMeasurementEnableFlexibleContributionFiltering()) {
+                    int value;
+                    UnsignedLong filteringId = UnsignedLong.ZERO;
+                    if (aggregateKeyValuesJson.get(key) instanceof JSONObject) {
+                        JSONObject obj = aggregateKeyValuesJson.getJSONObject(key);
+                        value = obj.getInt(AggregatableKeyValue.AggregatableKeyValueContract.VALUE);
+                        if (!obj.isNull(
+                                AggregatableKeyValue.AggregatableKeyValueContract.FILTERING_ID)) {
+                            filteringId =
+                                    new UnsignedLong(
+                                            obj.getString(
+                                                    AggregatableKeyValue
+                                                            .AggregatableKeyValueContract
+                                                            .FILTERING_ID));
+                        }
+                    } else {
+                        value = aggregateKeyValuesJson.getInt(key);
+                    }
+                    aggregatableKeyValueBuilder =
+                            new AggregatableKeyValue.Builder(value).setFilteringId(filteringId);
+                } else {
+                    // This will throw JSONException if a JSONObject was previously persisted, and
+                    // flag MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING gets set to false.
+                    aggregatableKeyValueBuilder =
+                            new AggregatableKeyValue.Builder(aggregateKeyValuesJson.getInt(key));
+                }
+                mValues.put(key, aggregatableKeyValueBuilder.build());
             }
             return mValues;
         }
@@ -153,7 +179,7 @@ public class AggregatableValuesConfig {
         }
 
         /** Build the {@link AggregatableValuesConfig}. */
-        public AggregatableValuesConfig build() {
+        public AggregatableValuesConfig build() throws JSONException {
             Objects.requireNonNull(mValues);
             return new AggregatableValuesConfig(this);
         }

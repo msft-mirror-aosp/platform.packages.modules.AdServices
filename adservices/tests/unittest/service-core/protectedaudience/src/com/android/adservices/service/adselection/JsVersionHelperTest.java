@@ -24,11 +24,9 @@ import android.net.Uri;
 
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.devapi.DevContext;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
 import com.google.common.collect.ImmutableMap;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
@@ -38,9 +36,6 @@ public class JsVersionHelperTest {
 
     private static final Uri URI = Uri.parse("https://example.com");
     private static final Long VERSION = 3L;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testGetRequestWithVersionAttribute() {

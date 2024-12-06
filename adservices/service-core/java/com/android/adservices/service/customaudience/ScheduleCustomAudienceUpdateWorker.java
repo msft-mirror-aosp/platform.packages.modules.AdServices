@@ -18,25 +18,30 @@ package com.android.adservices.service.customaudience;
 
 import android.annotation.NonNull;
 import android.content.Context;
+import android.os.Build;
 
+import androidx.annotation.RequiresApi;
 import androidx.annotation.VisibleForTesting;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.common.SingletonRunner;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 
 import com.google.common.util.concurrent.FluentFuture;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 import java.time.Instant;
-import java.util.Objects;
 import java.util.function.Supplier;
 
-public class ScheduleCustomAudienceUpdateWorker {
+@RequiresApi(Build.VERSION_CODES.S)
+public final class ScheduleCustomAudienceUpdateWorker {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     public static final String JOB_DESCRIPTION = "Schedule Custom Audience Update Job";
 
     private static final Object SINGLETON_LOCK = new Object();
 
+    @GuardedBy("SINGLETON_LOCK")
     private static volatile ScheduleCustomAudienceUpdateWorker sCustomAudienceUpdateWorker;
 
     private final ScheduledUpdatesHandler mUpdatesHandler;
@@ -45,11 +50,11 @@ public class ScheduleCustomAudienceUpdateWorker {
             new SingletonRunner<>(JOB_DESCRIPTION, this::doRun);
 
     @VisibleForTesting
-    ScheduleCustomAudienceUpdateWorker(@NonNull ScheduledUpdatesHandler handler) {
+    ScheduleCustomAudienceUpdateWorker(ScheduledUpdatesHandler handler) {
         mUpdatesHandler = handler;
     }
 
-    private ScheduleCustomAudienceUpdateWorker(@NonNull Context context) {
+    private ScheduleCustomAudienceUpdateWorker(Context context) {
         mUpdatesHandler = new ScheduledUpdatesHandler(context);
     }
 
@@ -57,10 +62,7 @@ public class ScheduleCustomAudienceUpdateWorker {
      * Returns an instance of {@link ScheduleCustomAudienceUpdateWorker} responsible for
      * orchestrating updates on their schedule
      */
-    @NonNull
-    public static ScheduleCustomAudienceUpdateWorker getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context);
-
+    public static ScheduleCustomAudienceUpdateWorker getInstance() {
         ScheduleCustomAudienceUpdateWorker singleReadResult = sCustomAudienceUpdateWorker;
         if (singleReadResult != null) {
             return singleReadResult;
@@ -68,6 +70,7 @@ public class ScheduleCustomAudienceUpdateWorker {
 
         synchronized (SINGLETON_LOCK) {
             if (sCustomAudienceUpdateWorker == null) {
+                Context context = ApplicationContextSingleton.get();
                 sCustomAudienceUpdateWorker = new ScheduleCustomAudienceUpdateWorker(context);
             }
         }

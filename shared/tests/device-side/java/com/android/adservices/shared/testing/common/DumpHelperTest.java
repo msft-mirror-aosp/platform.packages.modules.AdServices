@@ -149,7 +149,7 @@ public final class DumpHelperTest extends SharedExtendedMockitoTestCase {
         verify(mockPw).println("El Dumpo!");
     }
 
-    private final class MyStaticDumper {
+    private static final class MyStaticDumper {
 
         static void dump(PrintWriter printWriter) {
             throw new UnsupportedOperationException("Should have been static mocked");

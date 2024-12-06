@@ -18,7 +18,6 @@ package com.android.adservices.data.adselection;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
 import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.RoomDatabase;
@@ -26,8 +25,9 @@ import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 
-import java.util.Objects;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 /** Room based database for cross-app data that is read from during ad selection */
 @Database(
@@ -47,11 +47,11 @@ public abstract class SharedStorageDatabase extends RoomDatabase {
             FileCompatUtils.getAdservicesFilename("sharedstorage.db");
     static final Long FOREIGN_KEY_AUTOGENERATE_SUBSTITUTE = null;
 
-    private static volatile SharedStorageDatabase sSingleton = null;
+    @GuardedBy("SINGLETON_LOCK")
+    private static volatile SharedStorageDatabase sSingleton;
 
     /** Returns or creates the instance of SharedStorageDatabase given a context. */
-    public static SharedStorageDatabase getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context, "Context must be provided.");
+    public static SharedStorageDatabase getInstance() {
         // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition
         SharedStorageDatabase singleReadResult = sSingleton;
         if (singleReadResult != null) {
@@ -59,6 +59,7 @@ public abstract class SharedStorageDatabase extends RoomDatabase {
         }
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
+                Context context = ApplicationContextSingleton.get();
                 sSingleton =
                         FileCompatUtils.roomDatabaseBuilderHelper(
                                         context, SharedStorageDatabase.class, DATABASE_NAME)

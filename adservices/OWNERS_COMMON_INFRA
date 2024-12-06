@@ -5,5 +5,7 @@ hanlixy@google.com
 haoliuu@google.com
 karandadlani@google.com
 pdevpura@google.com
-ramarcus@google.com
 sawkar@google.com
+
+# Infra team leads
+include platform/packages/modules/AdServices:/OWNERS

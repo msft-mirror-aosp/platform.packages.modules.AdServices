@@ -18,6 +18,8 @@ package android.adservices.cts;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
@@ -25,6 +27,8 @@ import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
+import android.adservices.common.ComponentAdData;
+import android.adservices.common.ComponentAdDataFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.TrustedBiddingData;
@@ -33,7 +37,6 @@ import android.net.Uri;
 import android.os.Parcel;
 
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableList;
 
@@ -49,7 +52,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /** Unit tests for {@link android.adservices.customaudience.CustomAudience} */
-@RequiresSdkLevelAtLeastS
 public final class CustomAudienceTest extends CtsAdServicesDeviceTestCase {
     // TODO(b/342332791): add to these tests with CA priority
 
@@ -83,6 +85,42 @@ public final class CustomAudienceTest extends CtsAdServicesDeviceTestCase {
                                 CommonFixture.VALID_BUYER_1));
         expect.that(validCustomAudience.getAds())
                 .isEqualTo(AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1));
+    }
+
+    @Test
+    public void testBuildValidCustomAudienceSuccessWithComponentAds() {
+        List<ComponentAdData> componentAdDataList =
+                ComponentAdDataFixture.getValidComponentAdsByBuyer(CommonFixture.VALID_BUYER_1);
+
+        CustomAudience validCustomAudience =
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        .setComponentAds(componentAdDataList)
+                        .build();
+        assertWithMessage("Valid custom audience").that(validCustomAudience).isNotNull();
+
+        expect.that(validCustomAudience.getBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        expect.that(validCustomAudience.getName()).isEqualTo(CustomAudienceFixture.VALID_NAME);
+        expect.that(validCustomAudience.getActivationTime())
+                .isEqualTo(CustomAudienceFixture.VALID_ACTIVATION_TIME);
+        expect.that(validCustomAudience.getExpirationTime())
+                .isEqualTo(CustomAudienceFixture.VALID_EXPIRATION_TIME);
+        expect.that(validCustomAudience.getDailyUpdateUri())
+                .isEqualTo(
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(
+                                CommonFixture.VALID_BUYER_1));
+        expect.that(validCustomAudience.getUserBiddingSignals())
+                .isEqualTo(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
+        expect.that(validCustomAudience.getTrustedBiddingData())
+                .isEqualTo(
+                        TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer(
+                                CommonFixture.VALID_BUYER_1));
+        expect.that(validCustomAudience.getBiddingLogicUri())
+                .isEqualTo(
+                        CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
+                                CommonFixture.VALID_BUYER_1));
+        expect.that(validCustomAudience.getAds())
+                .isEqualTo(AdDataFixture.getValidAdsByBuyer(CommonFixture.VALID_BUYER_1));
+        expect.that(validCustomAudience.getComponentAds()).isEqualTo(componentAdDataList);
     }
 
     @Test
@@ -225,6 +263,27 @@ public final class CustomAudienceTest extends CtsAdServicesDeviceTestCase {
         CustomAudience fromParcel = CustomAudience.CREATOR.createFromParcel(p);
 
         expect.that(fromParcel).isEqualTo(validCustomAudience);
+    }
+
+    @Test
+    public void testParcelValidCustomAudienceSuccessWithComponentAds() {
+        CustomAudience validCustomAudience =
+                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
+                        .setComponentAds(
+                                ComponentAdDataFixture.getValidComponentAdsByBuyer(
+                                        CommonFixture.VALID_BUYER_1))
+                        .build();
+
+        Parcel p = Parcel.obtain();
+        try {
+            validCustomAudience.writeToParcel(p, 0);
+            p.setDataPosition(0);
+            CustomAudience fromParcel = CustomAudience.CREATOR.createFromParcel(p);
+
+            expect.that(fromParcel).isEqualTo(validCustomAudience);
+        } finally {
+            p.recycle();
+        }
     }
 
     /** @hide */

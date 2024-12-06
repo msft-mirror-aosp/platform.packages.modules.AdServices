@@ -16,7 +16,18 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+
 import android.annotation.IntDef;
+import android.os.Binder;
+
+import com.android.adservices.errorlogging.ErrorLogUtil;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -149,6 +160,111 @@ public class AdsRelevanceStatusUtils {
     /** Buckets for per buyer signal size in the update signals process. */
     public static final long[] PER_BUYER_SIGNAL_SIZE_BUCKETS = {10, 100, 500, 5000};
 
+    /** The topics reschedule epoch job status is unset. */
+    public static final int TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET = 0;
+    /** The topics reschedule epoch job status is success. */
+    public static final int TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_RESCHEDULE_SUCCESS = 1;
+    /** The topics reschedule epoch job status is skipped because of empty job scheduler. */
+    public static final int
+            TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_JOB_SCHEDULER = 2;
+    /** The topics reschedule epoch job status is skipped because of empty pending job. */
+    public static final int
+            TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_PENDING_JOB = 3;
+
+    /** The topics epoch job battery constraint is unknown setting. */
+    public static final int TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING = 0;
+    /** The topics epoch job battery constraint is requires charging. */
+    public static final int TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_CHARGING = 1;
+    /** The topics epoch job battery constraint is battery not low. */
+    public static final int TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW = 2;
+
+    /** Schedule ca update failure during http call. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_HTTP_CALL = 0;
+
+    /** Schedule ca update failure during join custom audience. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_JOIN_CA = 1;
+
+    /** Schedule ca update failure during leaving custom audience. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_LEAVE_CA = 2;
+
+    /** Schedule ca update failure during scheduling ca update for second hop. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_SCHEDULE_CA_UPDATE = 3;
+
+    /** Unknown failure during schedule custom audience update by the background job. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_UNKNOWN = 0;
+
+    /** Http error during schedule custom audience update by the background job. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_UNKNOWN_ERROR = 1;
+
+    /**
+     * Http server error during schedule custom audience update by the background job. Error code
+     * indicating that the user has sent too many requests in a given amount of time and the service
+     * received an HTTP 429 status code
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_TOO_MANY_REQUESTS = 2;
+
+    /**
+     * Http server error during schedule custom audience update by the background job. Error code
+     * indicating that the service received an HTTP 3xx status code
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_REDIRECTION = 3;
+
+    /**
+     * Http server error during schedule custom audience update by the background job. Error code
+     * indicating that the service received an HTTP 4xx status code
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CLIENT_ERROR = 4;
+
+    /**
+     * Http server error during schedule custom audience update by the background job. Error code
+     * indicating that the service received an HTTP 5xx.
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_SERVER_ERROR = 5;
+
+    /** Json error during schedule custom audience update by the background job. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR = 6;
+
+    /** Internal error during schedule custom audience update by the background job. */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR = 7;
+
+    /**
+     * Used for logging IO Exception thrown by the AdServicesHttpsClient. This exception is thrown
+     * by IOException.
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_IO_EXCEPTION = 8;
+
+    /**
+     * Used for logging HttpContentSizeException thrown by the AdServicesHttpsClient. This exception
+     * is thrown when the http response is exceeds the maximum permitted value.
+     */
+    public static final int SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CONTENT_SIZE_ERROR = 9;
+
+    /** Unknown status for existing update in the database. */
+    public static final int SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_UNKNOWN = 0;
+
+    /** Schedule custom audience request overwriting an already existing update in the database. */
+    public static final int
+            SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE = 1;
+
+    /** No existing update in the database present in the database. */
+    public static final int SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE = 2;
+
+    /**
+     * Schedule custom audience request rejected because of an already existing update in the
+     * database.
+     */
+    public static final int SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE =
+            3;
+
+    /** The PAS encoding source type is unset. */
+    public static final int PAS_ENCODING_SOURCE_TYPE_UNSET = 0;
+
+    /** The PAS raw signals are encoded in {@code PeriodicEncodingJobService}. */
+    public static final int PAS_ENCODING_SOURCE_TYPE_ENCODING_JOB_SERVICE = 1;
+
+    /** The PAS raw signals are encoded in {@code PeriodicSignalsServiceImpl}. */
+    public static final int PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL = 2;
+
     /** The kind of winner did the beacon come from. */
     @IntDef(
             prefix = {"BEACON_SOURCE_"},
@@ -254,6 +370,55 @@ public class AdsRelevanceStatusUtils {
     @Retention(RetentionPolicy.SOURCE)
     public @interface ServerAuctionCoordinatorSource {}
 
+    @IntDef(
+            prefix = {"SCHEDULE_CUSTOM_AUDIENCE_UPDATE_EXISTING_UPDATE_STATUS_"},
+            value = {
+                SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_UNKNOWN,
+                SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE,
+                SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE,
+                SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ScheduleCustomAudienceUpdateExistingUpdateStatus {}
+
+    @IntDef(
+            prefix = {"SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION"},
+            value = {
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_HTTP_CALL,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_JOIN_CA,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_LEAVE_CA,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_SCHEDULE_CA_UPDATE
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ScheduleCustomAudienceUpdatePerformedFailureAction {}
+
+    @IntDef(
+            prefix = {"SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE"},
+            value = {
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_UNKNOWN,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_UNKNOWN_ERROR,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_TOO_MANY_REQUESTS,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_REDIRECTION,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CLIENT_ERROR,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_SERVER_ERROR,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_INTERNAL_ERROR,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_IO_EXCEPTION,
+                SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_HTTP_CONTENT_SIZE_ERROR
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ScheduleCustomAudienceUpdatePerformedFailureType {}
+
+    @IntDef(
+            prefix = {"PAS_ENCODING_SOURCE_TYPE_"},
+            value = {
+                PAS_ENCODING_SOURCE_TYPE_UNSET,
+                PAS_ENCODING_SOURCE_TYPE_ENCODING_JOB_SERVICE,
+                PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface PasEncodingSourceType {}
+
     /** Returns the size bucket for a raw value. */
     @Size
     public static int computeSize(long rawSize, long[] buckets) {
@@ -301,4 +466,73 @@ public class AdsRelevanceStatusUtils {
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ServerAuctionEncryptionKeySource {}
+
+    /** The status when forcing reschedule Topics API EpochJob. */
+    @IntDef(
+            prefix = {"TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_"},
+            value = {
+                TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET,
+                TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_RESCHEDULE_SUCCESS,
+                TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_JOB_SCHEDULER,
+                TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_PENDING_JOB
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface TopicsRescheduleEpochJobStatus {}
+
+    /** The Epoch job setting of the Topics API EpochJob. */
+    @IntDef(
+            prefix = {"TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_"},
+            value = {
+                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING,
+                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_CHARGING,
+                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface TopicsEpochJobBatteryConstraint {}
+
+    /**
+     * Returns the Cel PP API name ID from AdServices API name ID.
+     */
+    public static int getCelPpApiNameId(int apiNameLoggingId) {
+        int celPpApiNameId = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+        switch (apiNameLoggingId) {
+            case AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA:
+                celPpApiNameId = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
+                break;
+            case AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT:
+                celPpApiNameId =
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
+                break;
+            case AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS:
+                celPpApiNameId = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+                break;
+        }
+        return celPpApiNameId;
+    }
+
+    /**
+     * Clean the caller's identity and log CEL.
+     * TODO(b/376542959): this is a temporary solution for CEL logs inside the Binder thread.
+     */
+    public static void logCelInsideBinderThread(int errorCode, int ppapiName) {
+        long token = Binder.clearCallingIdentity();
+        try {
+            ErrorLogUtil.e(errorCode, ppapiName);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
+    }
+
+    /**
+     * Clean the caller's identity and log CEL.
+     * TODO(b/376542959): this is a temporary solution for CEL logs inside the Binder thread.
+     */
+    public static void logCelInsideBinderThread(Throwable tr, int errorCode, int ppapiName) {
+        long token = Binder.clearCallingIdentity();
+        try {
+            ErrorLogUtil.e(tr, errorCode, ppapiName);
+        } finally {
+            Binder.restoreCallingIdentity(token);
+        }
+    }
 }
