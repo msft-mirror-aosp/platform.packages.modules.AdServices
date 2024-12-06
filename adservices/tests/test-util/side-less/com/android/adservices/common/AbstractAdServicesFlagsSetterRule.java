@@ -177,7 +177,7 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      */
     @Deprecated
     public final T setSimpleArrayFlag(String name, String value) {
-        return setFlag(name, new String[] {value}, ARRAY_SPLITTER_COMMA);
+        return setFlag(name, value);
     }
 
     /**
