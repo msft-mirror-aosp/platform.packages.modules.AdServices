@@ -36,6 +36,7 @@ import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.util.Clock;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
@@ -72,7 +73,8 @@ public class ForcedEncoderImplTest extends AdServicesExtendedMockitoTestCase {
                         mEncodedPayloadDaoMock,
                         mProtectedSignalsDaoMock,
                         mEncodingJobWorkerMock,
-                        mDirectExecutor);
+                        mDirectExecutor,
+                        Clock.getInstance());
     }
 
     private DBEncodedPayload getDbEncodedPayloadBeforeNowBy(Duration duration) {
