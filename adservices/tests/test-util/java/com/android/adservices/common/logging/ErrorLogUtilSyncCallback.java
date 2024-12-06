@@ -37,10 +37,10 @@ import java.util.stream.Collectors;
  * {@code SyncCallback} used in conjunction with {@link #mockErrorLogUtilWithoutThrowable()} /
  * {@link #mockErrorLogUtilWithThrowable()}.
  */
-public final class ErrorLogUtilCallback
+public final class ErrorLogUtilSyncCallback
         extends FailableResultSyncCallback<ErrorLogUtilCall, Exception> {
     private static final int DEFAULT_NUM_CALLS = 1;
-    private static final String TAG = ErrorLogUtilCallback.class.getSimpleName();
+    private static final String TAG = ErrorLogUtilSyncCallback.class.getSimpleName();
 
     /**
      * Asserts {@link ErrorLogUtil#e(Throwable, int, int)}) was called once with the given values.
@@ -115,8 +115,8 @@ public final class ErrorLogUtilCallback
      *
      * <p>Useful in cases where {@link ErrorLogUtil} is expected to be called once asynchronously.
      */
-    public static ErrorLogUtilCallback mockErrorLogUtilWithThrowable() {
-        ErrorLogUtilCallback callback = new ErrorLogUtilCallback();
+    public static ErrorLogUtilSyncCallback mockErrorLogUtilWithThrowable() {
+        ErrorLogUtilSyncCallback callback = new ErrorLogUtilSyncCallback();
         mockInvocationWithThrowable(callback);
         return callback;
     }
@@ -128,13 +128,13 @@ public final class ErrorLogUtilCallback
      * <p>Useful in cases where {@link ErrorLogUtil} is expected to be called multiple times
      * asynchronously.
      */
-    public static ErrorLogUtilCallback mockErrorLogUtilWithThrowable(int numExpectedCalls) {
-        ErrorLogUtilCallback callback = new ErrorLogUtilCallback(numExpectedCalls);
+    public static ErrorLogUtilSyncCallback mockErrorLogUtilWithThrowable(int numExpectedCalls) {
+        ErrorLogUtilSyncCallback callback = new ErrorLogUtilSyncCallback(numExpectedCalls);
         mockInvocationWithThrowable(callback);
         return callback;
     }
 
-    private static void mockInvocationWithThrowable(ErrorLogUtilCallback callback) {
+    private static void mockInvocationWithThrowable(ErrorLogUtilSyncCallback callback) {
         doAnswer(
                         inv -> {
                             Log.d(TAG, "mockErrorLogUtilError(): inv= " + inv);
@@ -155,8 +155,8 @@ public final class ErrorLogUtilCallback
      *
      * <p>Useful in cases where {@link ErrorLogUtil} is expected to be called once asynchronously.
      */
-    public static ErrorLogUtilCallback mockErrorLogUtilWithoutThrowable() {
-        ErrorLogUtilCallback callback = new ErrorLogUtilCallback();
+    public static ErrorLogUtilSyncCallback mockErrorLogUtilWithoutThrowable() {
+        ErrorLogUtilSyncCallback callback = new ErrorLogUtilSyncCallback();
         mockInvocationWithoutThrowable(callback);
         return callback;
     }
@@ -168,13 +168,13 @@ public final class ErrorLogUtilCallback
      * <p>Useful in cases where {@link ErrorLogUtil} is expected to be called multiple times
      * asynchronously.
      */
-    public static ErrorLogUtilCallback mockErrorLogUtilWithoutThrowable(int numExpectedCalls) {
-        ErrorLogUtilCallback callback = new ErrorLogUtilCallback(numExpectedCalls);
+    public static ErrorLogUtilSyncCallback mockErrorLogUtilWithoutThrowable(int numExpectedCalls) {
+        ErrorLogUtilSyncCallback callback = new ErrorLogUtilSyncCallback(numExpectedCalls);
         mockInvocationWithoutThrowable(callback);
         return callback;
     }
 
-    private static void mockInvocationWithoutThrowable(ErrorLogUtilCallback callback) {
+    private static void mockInvocationWithoutThrowable(ErrorLogUtilSyncCallback callback) {
         doAnswer(
                         inv -> {
                             Log.d(TAG, "mockErrorLogUtilError(): inv= " + inv);
@@ -189,9 +189,9 @@ public final class ErrorLogUtilCallback
                 .when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
     }
 
-    private ErrorLogUtilCallback() {}
+    private ErrorLogUtilSyncCallback() {}
 
-    private ErrorLogUtilCallback(int numExpectedCalls) {
+    private ErrorLogUtilSyncCallback(int numExpectedCalls) {
         super(
                 SyncCallbackFactory.newSettingsBuilder()
                         .setExpectedNumberCalls(numExpectedCalls)
