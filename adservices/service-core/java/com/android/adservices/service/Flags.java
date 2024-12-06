@@ -1002,6 +1002,25 @@ public interface Flags extends ModuleSharedFlags {
     long FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_RETRY_AFTER_VALUE_MS =
             24 * 60 * 60 * 1000; // 24 hours in ms
 
+    @FeatureFlag boolean ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS = false;
+    @ConfigFlag int MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE = 40;
+    @ConfigFlag int COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES = 12;
+
+    /** Returns true if the component ads feature is enabled for custom audiences. */
+    default boolean getEnableCustomAudienceComponentAds() {
+        return ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
+    }
+
+    /** Returns the maximum number of component ads per custom audience. */
+    default int getMaxComponentAdsPerCustomAudience() {
+        return MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE;
+    }
+
+    /** Returns the maximum length of component ad render ids in bytes. */
+    default int getComponentAdRenderIdMaxLengthBytes() {
+        return COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES;
+    }
+
     /**
      * Returns the minimum number of milliseconds before the same fetch CA request can be retried.
      */
@@ -5971,6 +5990,13 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB;
     }
 
+    /** Flag to use configurations manager to query enrollment data. */
+    @FeatureFlag boolean DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT = false;
+
+    default boolean getUseConfigsManagerToQueryEnrollment() {
+        return DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT;
+    }
+
     @FeatureFlag boolean DEFAULT_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER = false;
 
     /**
@@ -6024,6 +6050,17 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns if the prod debug feature is enabled for server auctions. */
     default boolean getEnableProdDebugInAuctionServer() {
         return DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER;
+    }
+
+    /**
+     * Feature flag to enable the Android Trace to collect AdServices latency metrics in Crystalball
+     * tests {@code RbATrace}.
+     */
+    @FeatureFlag boolean DEFAULT_ENABLE_RB_ATRACE = false;
+
+    /** Returns whether the AdServices latency metrics {@code RbATrace} is enabled. */
+    default boolean getEnableRbAtrace() {
+        return DEFAULT_ENABLE_RB_ATRACE;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

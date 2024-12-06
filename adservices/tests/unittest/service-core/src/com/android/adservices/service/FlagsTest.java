@@ -19,6 +19,7 @@ package com.android.adservices.service;
 import static com.android.adservices.service.Flags.AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.Flags.APPSEARCH_ONLY;
 import static com.android.adservices.service.Flags.COBALT__IGNORED_REPORT_ID_LIST;
+import static com.android.adservices.service.Flags.COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES;
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_TTL_MS;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
@@ -31,6 +32,7 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_EXECUTION_
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
+import static com.android.adservices.service.Flags.ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE;
@@ -54,6 +56,7 @@ import static com.android.adservices.service.Flags.FLEDGE_SET_APP_INSTALL_ADVERT
 import static com.android.adservices.service.Flags.FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
+import static com.android.adservices.service.Flags.MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.MDD_LOGGER_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW;
@@ -414,6 +417,13 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetUseConfigsManagerToQueryEnrollment() {
+        testFeatureFlag(
+                "DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT",
+                Flags::getUseConfigsManagerToQueryEnrollment);
+    }
+
+    @Test
     public void testGetSharedDatabaseSchemaVersion4Enabled() {
         testFeatureFlag(
                 "SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED",
@@ -668,6 +678,11 @@ public final class FlagsTest extends AdServicesUnitTestCase {
         testFeatureFlag(
                 "FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE",
                 Flags::getFledgeEnableForcedEncodingAfterSignalsUpdate);
+    }
+
+    @Test
+    public void testGetEnableRbAtrace() {
+        testFlag("DEFAULT_ENABLE_RB_ATRACE", /* defaultValue */ false, Flags::getEnableRbAtrace);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1286,6 +1301,30 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getEnforceForegroundStatusForScheduleCustomAudience",
                 ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE,
                 Flags::getEnforceForegroundStatusForScheduleCustomAudience);
+    }
+
+    @Test
+    public void testGetEnableCustomAudienceComponentAds() {
+        testFlag(
+                "getEnableCustomAudienceComponentAds",
+                ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS,
+                Flags::getEnableCustomAudienceComponentAds);
+    }
+
+    @Test
+    public void testGetMaxComponentAdsPerCustomAudience() {
+        testFlag(
+                "getMaxComponentAdsPerCustomAudience",
+                MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE,
+                Flags::getMaxComponentAdsPerCustomAudience);
+    }
+
+    @Test
+    public void testGetComponentAdRenderIdMaxLengthBytes() {
+        testFlag(
+                "getComponentAdRenderIdMaxLengthBytes",
+                COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
+                Flags::getComponentAdRenderIdMaxLengthBytes);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {

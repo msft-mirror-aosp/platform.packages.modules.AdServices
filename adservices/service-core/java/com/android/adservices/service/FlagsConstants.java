@@ -864,6 +864,13 @@ public final class FlagsConstants {
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE =
             "Fledge__enforce_schedule_custom_audience_foreground_status";
 
+    public static final String KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS =
+            "Fledge__enable_custom_audience_component_ads";
+    public static final String KEY_MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE =
+            "Fledge__max_component_ads_per_custom_audience";
+    public static final String KEY_COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES =
+            "Fledge__component_ad_render_id_max_length_bytes";
+
     // Protected Signals keys
     public static final String KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED =
             "protected_signals_cleanup_enabled";
@@ -1201,6 +1208,8 @@ public final class FlagsConstants {
     public static final String KEY_ENROLLMENT_PROTO_FILE_ENABLED = "enrollment_proto_file_enabled";
     public static final String KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB =
             "ConfigDelivery__enable_enrollment_config_v3_db";
+    public static final String KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT =
+            "ConfigDelivery__use_configs_manager_to_query_enrollment";
 
     // New Feature Flags
     public static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED =
@@ -1737,4 +1746,7 @@ public final class FlagsConstants {
     /** Key to enable prod debug feature in server auctions */
     public static final String KEY_FLEDGE_ENABLE_PROD_DEBUG_IN_SERVER_AUCTION =
             "Fledge__enable_prod_debug_in_auction_server";
+
+    /** Key to enable the AdServices latency metrics {@code RbATrace}. */
+    public static final String KEY_ENABLE_RB_ATRACE = "enable_rb_atrace";
 }

@@ -16,11 +16,12 @@
 
 package com.android.adservices.service.ui.util;
 
-import static android.adservices.common.AdServicesModuleState.MODULE_STATE_UNKNOWN;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_UNKNOWN;
+import static android.adservices.common.AdServicesCommonManager.Module;
+import static android.adservices.common.AdServicesCommonManager.ModuleState;
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN;
 
-import android.adservices.common.AdServicesModuleState;
-import android.adservices.common.AdServicesModuleState.ModuleStateCode;
+import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesModuleUserChoice.ModuleUserChoiceCode;
 import android.adservices.common.Module.ModuleCode;
@@ -86,13 +87,13 @@ public class EnrollmentData implements Serializable {
     }
 
     /**
-     * Get the user choice for the given module. If null, then returns {@link
-     * AdServicesModuleState#MODULE_STATE_UNKNOWN}.
+     * Gets the user choice for the given module. If null, then returns {@link
+     * AdServicesCommonManager#MODULE_STATE_UNKNOWN}.
      *
      * @param key Key of desired module.
      * @return User choice for given module.
      */
-    @ModuleStateCode
+    @ModuleState
     public int getModuleState(@ModuleCode int key) {
         if (!mModuleStates.containsKey(key)) {
             return MODULE_STATE_UNKNOWN;
@@ -103,14 +104,15 @@ public class EnrollmentData implements Serializable {
     /**
      * Stores the state for the given module.
      *
-     * @param moduleState Module choice object to update in enrollment data.
+     * @param module Code for desired module.
+     * @param state Module choice object to update in enrollment data.
      */
-    public void putModuleState(AdServicesModuleState moduleState) {
-        mModuleStates.put(moduleState.getModule(), moduleState.getModuleState());
+    public void putModuleState(@Module int module, @ModuleState int state) {
+        mModuleStates.put(module, state);
     }
 
     /**
-     * Get the user choice for the given module. If null, then returns {@link
+     * Gets the user choice for the given module. If null, then returns {@link
      * AdServicesModuleUserChoice#USER_CHOICE_UNKNOWN}.
      *
      * @param key Key of desired module.

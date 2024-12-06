@@ -17,7 +17,11 @@
 package android.adservices.debuggablects;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_AD_ID_FETCHER_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_HTTP_CACHE_ENABLE;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
@@ -47,6 +51,8 @@ import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -133,6 +139,7 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
      * </ul>
      */
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION, value = 3)
     public void testAdSelection_withBiddingLogicV3_happyPath() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
@@ -143,12 +150,10 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
 
         try {
             joinCustomAudience(SHOES_CA);
-            overrideBiddingLogicVersionToV3(true);
             AdSelectionOutcome result = doSelectAds(adSelectionConfig);
             assertThat(result.hasOutcome()).isTrue();
             assertThat(result.getRenderUri()).isNotNull();
         } finally {
-            overrideBiddingLogicVersionToV3(false);
             leaveCustomAudience(SHOES_CA);
         }
 
@@ -230,7 +235,7 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
                         .build();
 
         joinCustomAudience(customAudience);
-        Log.d(TAG, "Joined custom audience");
+        Log.d(LOGCAT_TAG_FLEDGE, "Joined custom audience");
         // Make a call to verify ad selection succeeds before timing out.
         mAdSelectionClient.selectAds(config).get(TIMEOUT, TimeUnit.SECONDS);
         Thread.sleep(7000);
@@ -281,6 +286,10 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
 
     /** Test that buyer and seller receive win and loss debug reports (Remarketing CUJ 164). */
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION, value = 3)
+    @SetLongFlag(name = KEY_AD_ID_FETCHER_TIMEOUT_MS, value = AD_ID_FETCHER_TIMEOUT)
+    @SetFlagEnabled(KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY)
     public void testAdSelection_withDebugReporting_happyPath() throws Exception {
         assumeTrue(isAdIdSupported());
         ScenarioDispatcher dispatcher =
@@ -293,13 +302,11 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
         try {
             joinCustomAudience(SHOES_CA);
             joinCustomAudience(SHIRTS_CA);
-            setDebugReportingEnabledForTesting(true);
             AdSelectionOutcome result = doSelectAds(adSelectionConfig);
             assertThat(result.hasOutcome()).isTrue();
         } finally {
-            setDebugReportingEnabledForTesting(false);
             leaveCustomAudience(SHOES_CA);
-            joinCustomAudience(SHIRTS_CA);
+            leaveCustomAudience(SHIRTS_CA);
         }
 
         assertThat(dispatcher.getCalledPaths())
@@ -308,6 +315,10 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
 
     /** Test that buyer and seller receive win and loss debug reports for bids = 0.0. */
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION, value = 3)
+    @SetLongFlag(name = KEY_AD_ID_FETCHER_TIMEOUT_MS, value = AD_ID_FETCHER_TIMEOUT)
+    @SetFlagEnabled(KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY)
     public void testAdSelection_withDebugReportingIsSentForZeroBid() throws Exception {
         assumeTrue(isAdIdSupported());
         ScenarioDispatcher dispatcher =
@@ -320,13 +331,11 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
         try {
             joinCustomAudience(SHOES_CA);
             joinCustomAudience(SHIRTS_CA);
-            setDebugReportingEnabledForTesting(true);
             AdSelectionOutcome result = doSelectAds(adSelectionConfig);
             assertThat(result.hasOutcome()).isTrue();
         } finally {
-            setDebugReportingEnabledForTesting(false);
             leaveCustomAudience(SHOES_CA);
-            joinCustomAudience(SHIRTS_CA);
+            leaveCustomAudience(SHIRTS_CA);
         }
 
         assertThat(dispatcher.getCalledPaths())
@@ -338,6 +347,7 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
      * disabled (Remarketing CUJ 165).
      */
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION, value = 3)
     public void testAdSelection_withDebugReportingDisabled_doesNotSend() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
@@ -348,11 +358,9 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
 
         try {
             joinCustomAudience(SHOES_CA);
-            overrideBiddingLogicVersionToV3(true);
             AdSelectionOutcome result = doSelectAds(adSelectionConfig);
             assertThat(result.hasOutcome()).isTrue();
         } finally {
-            overrideBiddingLogicVersionToV3(false);
             leaveCustomAudience(SHOES_CA);
         }
 
@@ -365,6 +373,10 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
      * CUJ 170).
      */
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION, value = 3)
+    @SetLongFlag(name = KEY_AD_ID_FETCHER_TIMEOUT_MS, value = AD_ID_FETCHER_TIMEOUT)
+    @SetFlagEnabled(KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY)
     public void testAdSelection_withDebugReportingAndRejectReason_happyPath() throws Exception {
         assumeTrue(isAdIdSupported());
         ScenarioDispatcher dispatcher =
@@ -377,11 +389,9 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
         try {
             joinCustomAudience(SHOES_CA);
             joinCustomAudience(SHIRTS_CA);
-            setDebugReportingEnabledForTesting(true);
             AdSelectionOutcome result = doSelectAds(adSelectionConfig);
             assertThat(result.hasOutcome()).isTrue();
         } finally {
-            setDebugReportingEnabledForTesting(false);
             leaveCustomAudience(SHOES_CA);
             leaveCustomAudience(SHIRTS_CA);
         }
@@ -456,7 +466,9 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
             adIdManager = AdIdManager.get(sContext);
             adIdManager.getAdId(MoreExecutors.directExecutor(), callback);
         } catch (IllegalStateException e) {
-            Log.d(TAG, "isAdIdAvailable(): IllegalStateException detected in AdId manager.");
+            Log.d(
+                    LOGCAT_TAG_FLEDGE,
+                    "isAdIdAvailable(): IllegalStateException detected in AdId manager.");
             return false;
         }
 
@@ -469,11 +481,13 @@ public final class AdSelectionTest extends FledgeDebuggableScenarioTest {
                             && !result.getAdId().equals(AdId.ZERO_OUT);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            Log.d(TAG, "isAdIdSupported(): failed to get AdId due to InterruptedException.");
+            Log.d(
+                    LOGCAT_TAG_FLEDGE,
+                    "isAdIdSupported(): failed to get AdId due to InterruptedException.");
             isAdIdAvailable = false;
         }
 
-        Log.d(TAG, String.format("isAdIdSupported(): %b", isAdIdAvailable));
+        Log.d(LOGCAT_TAG_FLEDGE, String.format("isAdIdSupported(): %b", isAdIdAvailable));
         return isAdIdAvailable;
     }
 }

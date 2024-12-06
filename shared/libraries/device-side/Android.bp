@@ -325,3 +325,43 @@ java_library {
         extra_check_modules: ["AdServicesProdLintChecker"],
     },
 }
+
+java_library {
+    name: "adservices-shared-metriclogger",
+    min_sdk_version: "30",
+    sdk_version: "module_current",
+    srcs: [
+        "java/com/android/adservices/shared/metriclogger/**/*.java",
+    ],
+    plugins: [
+        "auto_value_plugin",
+        "auto_annotation_plugin",
+    ],
+    libs: [
+        "framework-annotations-lib",
+        "auto_value_annotations",
+        "guava",
+    ],
+    static_libs: [
+        "adservices-shared-error-logging",
+        "adservices-shared-util",
+        "modules-utils-build",
+        "modules-utils-preconditions",
+        "adservices-shared-proto-lite",
+        "androidx.annotation_annotation",
+    ],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//packages/modules/ExtServices:__subpackages__",
+        "//packages/modules/OnDevicePersonalization:__subpackages__",
+    ],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization",
+    ],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+        baseline_filename: "lint-baseline-adservices-shared-storage.xml", // TODO(b/356688417): Clean up baseline file.
+    },
+}

@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.consent;
 
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_DISABLED;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_ENABLED;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_UNKNOWN;
+import static android.adservices.common.AdServicesCommonManager.ModuleState;
+
 import static com.android.adservices.AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_SEARCH_DATA_MIGRATION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_DEFAULT_CONSENT;
@@ -35,10 +40,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.U18_UX;
 
-import android.adservices.common.AdServicesModuleState;
-import android.adservices.common.AdServicesModuleState.ModuleStateCode;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesModuleUserChoice.ModuleUserChoiceCode;
+import android.adservices.common.Module;
 import android.adservices.common.Module.ModuleCode;
 import android.annotation.IntDef;
 import android.annotation.Nullable;
@@ -51,6 +55,7 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.SystemClock;
 import android.os.Trace;
+import android.util.SparseIntArray;
 
 import androidx.annotation.RequiresApi;
 
@@ -59,7 +64,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
-import com.android.adservices.data.common.AtomicFileDatastore;
+import com.android.adservices.data.common.LegacyAtomicFileDatastoreFactory;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -93,6 +98,7 @@ import com.android.adservices.service.ui.util.EnrollmentData;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 import com.android.modules.utils.build.SdkLevel;
@@ -305,6 +311,15 @@ public final class ConsentManager {
                                     DebugFlags.getInstance(),
                                     consentSourceOfTruth,
                                     enableAppsearchConsentData);
+
+                    boolean businessLogicMigrationEnabled =
+                            FlagsFactory.getFlags()
+                                    .getAdServicesConsentBusinessLogicMigrationEnabled();
+                    if (businessLogicMigrationEnabled) {
+                        // Attempt to migrate old enrollment data to new format
+                        handleEnrollmentDataMigrationIfNeeded(sConsentManager);
+                    }
+
                     sInstantiationDurationMs =
                             (int) (SystemClock.uptimeMillis() - postDataMigrationTime);
                     LogUtil.d(
@@ -1469,8 +1484,9 @@ public final class ConsentManager {
     @SuppressWarnings("AvoidStaticContext")
     static AtomicFileDatastore createAndInitializeDataStore(
             Context context, AdServicesErrorLogger adServicesErrorLogger) {
+        @SuppressWarnings("deprecation")
         AtomicFileDatastore atomicFileDatastore =
-                new AtomicFileDatastore(
+                LegacyAtomicFileDatastoreFactory.createAtomicFileDatastore(
                         context,
                         ConsentConstants.STORAGE_XML_IDENTIFIER,
                         ConsentConstants.STORAGE_VERSION,
@@ -1851,6 +1867,96 @@ public final class ConsentManager {
         }
     }
 
+    @VisibleForTesting
+    static void handleEnrollmentDataMigrationIfNeeded(ConsentManager manager) {
+        String value = manager.getModuleEnrollmentState();
+        if (value != null && !value.isEmpty()) {
+            return;
+        }
+        EnrollmentData data = new EnrollmentData();
+
+        // convert data (Ad ID is left out for now)
+        int[] modules =
+                new int[] {
+                    Module.MEASUREMENT,
+                    Module.PROTECTED_AUDIENCE,
+                    Module.PROTECTED_APP_SIGNALS,
+                    Module.TOPICS,
+                    Module.ON_DEVICE_PERSONALIZATION
+                };
+        for (int module : modules) {
+            data.putModuleState(module, manager.getConvertedModuleState(module));
+            data.putUserChoice(module, manager.getConvertedUserChoice(module));
+        }
+
+        // store data
+        String dataString = EnrollmentData.serialize(data);
+        manager.setModuleEnrollmentData(dataString);
+    }
+
+    @ModuleUserChoiceCode
+    private int getConvertedUserChoice(@ModuleCode int apiType) {
+        Boolean consent = null;
+
+        try {
+            switch (apiType) {
+                case Module.MEASUREMENT ->
+                        consent = getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+                case Module.ON_DEVICE_PERSONALIZATION, Module.PROTECTED_APP_SIGNALS -> {
+                    boolean isEuDevice =
+                            DeviceRegionProvider.isEuDevice(ApplicationContextSingleton.get());
+                    boolean isOnboardedEeaPasUser =
+                            isEuDevice && mFlags.getEeaPasUxEnabled() && wasPasNotificationOpened();
+                    boolean isOnboardedRowPasUser =
+                            !isEuDevice
+                                    && mFlags.getPasUxEnabled()
+                                    && wasPasNotificationDisplayed();
+                    if (isOnboardedEeaPasUser || isOnboardedRowPasUser) {
+                        consent = getConsent(AdServicesApiType.FLEDGE).isGiven();
+                    }
+                }
+                case Module.PROTECTED_AUDIENCE ->
+                        consent = getConsent(AdServicesApiType.FLEDGE).isGiven();
+                case Module.TOPICS -> consent = getConsent(AdServicesApiType.TOPICS).isGiven();
+                default -> consent = null;
+            }
+        } catch (NullPointerException e) {
+            LogUtil.v("No previous consent for apiType:" + apiType);
+        }
+
+        return consent == null
+                ? AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN
+                : consent
+                        ? AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN
+                        : AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT;
+    }
+
+    @ModuleState
+    private int getConvertedModuleState(@ModuleCode int apiType) {
+        int state = MODULE_STATE_DISABLED;
+        switch (apiType) {
+            case Module.MEASUREMENT -> {
+                if (wasGaUxNotificationDisplayed()
+                        || wasU18NotificationDisplayed()
+                        || wasPasNotificationDisplayed()) {
+                    state = MODULE_STATE_ENABLED;
+                }
+            }
+            case Module.ON_DEVICE_PERSONALIZATION, Module.PROTECTED_APP_SIGNALS -> {
+                if (wasPasNotificationDisplayed()) {
+                    state = MODULE_STATE_ENABLED;
+                }
+            }
+            case Module.PROTECTED_AUDIENCE, Module.TOPICS -> {
+                if (wasGaUxNotificationDisplayed() || wasPasNotificationDisplayed()) {
+                    state = MODULE_STATE_ENABLED;
+                }
+            }
+            default -> state = MODULE_STATE_UNKNOWN;
+        }
+        return state;
+    }
+
     // To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources.
     // To write to system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
     @VisibleForTesting
@@ -2053,6 +2159,17 @@ public final class ConsentManager {
                 adServicesManager,
                 AdServicesApiType.MEASUREMENTS.toConsentApiType(),
                 measurementConsented);
+
+        boolean businessLogicMigrationEnabled =
+                FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled();
+        if (businessLogicMigrationEnabled) {
+            String data = appSearchConsentManager.getModuleEnrollmentState();
+            if (data == null) {
+                data = "";
+            }
+            datastore.putString(ConsentConstants.MODULE_ENROLLMENT_STATE, data);
+            adServicesManager.setModuleEnrollmentState(data);
+        }
         return AppConsents.builder()
                 .setMsmtConsent(measurementConsented)
                 .setTopicsConsent(topicsConsented)
@@ -2270,7 +2387,7 @@ public final class ConsentManager {
      * @param module desired module
      * @return module state
      */
-    @ModuleStateCode
+    @ModuleState
     public int getModuleState(@ModuleCode int module) {
         EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
         return data.getModuleState(module);
@@ -2279,12 +2396,12 @@ public final class ConsentManager {
     /**
      * Sets module state for a module.
      *
-     * @param moduleState object to set
+     * @param modulesStates object to set
      */
-    public void setModuleStates(List<AdServicesModuleState> moduleStates) {
+    public void setModuleStates(SparseIntArray modulesStates) {
         EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
-        for (AdServicesModuleState moduleState : moduleStates) {
-            data.putModuleState(moduleState);
+        for (int i = 0; i < modulesStates.size(); i++) {
+            data.putModuleState(modulesStates.keyAt(i), modulesStates.valueAt(i));
         }
         setModuleEnrollmentData(EnrollmentData.serialize(data));
     }
@@ -2316,7 +2433,7 @@ public final class ConsentManager {
     }
 
     /** Set module enrollment data to storage based on consent_source_of_truth. */
-    private String getModuleEnrollmentState() {
+    String getModuleEnrollmentState() {
         return executeGettersByConsentSourceOfTruth(
                 "",
                 () -> mDatastore.getString(ConsentConstants.MODULE_ENROLLMENT_STATE),
@@ -2326,7 +2443,7 @@ public final class ConsentManager {
     }
 
     /** Set module enrollment data to storage based on consent_source_of_truth. */
-    private void setModuleEnrollmentData(String data) {
+    void setModuleEnrollmentData(String data) {
         executeSettersByConsentSourceOfTruth(
                 () -> mDatastore.putString(ConsentConstants.MODULE_ENROLLMENT_STATE, data),
                 () -> mAdServicesManager.setModuleEnrollmentState(data),

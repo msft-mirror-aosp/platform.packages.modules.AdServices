@@ -31,10 +31,11 @@ import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.signals.ForcedEncoder;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FluentFuture;
-import com.google.common.util.concurrent.FutureCallback;
+import com.google.common.util.concurrent.Futures;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -50,12 +51,22 @@ public class UpdateEncoderEventHandler {
     private List<Observer> mUpdatesObserver;
     private final Executor mBackgroundExecutor;
     private final Context mContext;
+    @NonNull private final ForcedEncoder mForcedEncoder;
 
     @VisibleForTesting
     public static final String ACTION_REGISTER_ENCODER_LOGIC_COMPLETE =
             "android.adservices.debug.REGISTER_ENCODER_LOGIC_COMPLETE";
 
-    private final boolean mIsCompletionBroadcastEnabled; // for testing.
+    @VisibleForTesting
+    public static final String FORCED_ENCODING_COMPLETED_ENCODING_ATTEMPTED =
+            "FORCED_ENCODING_COMPLETED_ENCODING_ATTEMPTED";
+
+    @VisibleForTesting
+    public static final String FORCED_ENCODING_COMPLETED_ENCODING_NOT_ATTEMPTED =
+            "FORCED_ENCODING_COMPLETED_ENCODING_NOT_ATTEMPTED";
+
+    private final boolean mIsEncoderLogicRegisteredCompletionBroadcastEnabled; // for testing.
+    private final boolean mIsEncoderForcedEncodingCompletionBroadcastEnabled; // for testing.
 
     @VisibleForTesting
     public UpdateEncoderEventHandler(
@@ -63,27 +74,38 @@ public class UpdateEncoderEventHandler {
             EncoderLogicHandler encoderLogicHandler,
             Context context,
             Executor backgroundExecutor,
-            boolean isCompletionBroadcastEnabled) {
+            boolean isEncoderLogicRegisteredCompletionBroadcastEnabled,
+            ForcedEncoder forcedEncoder,
+            boolean isForcedEncodingCompletionBroadcastEnabled) {
         Objects.requireNonNull(encoderEndpointsDao, "encoderEndpointsDao cannot be null");
         Objects.requireNonNull(encoderLogicHandler, "encoderLogicHandler cannot be null");
         Objects.requireNonNull(context, "context cannot be null");
         Objects.requireNonNull(backgroundExecutor, "backgroundExecutor cannot be null");
+        Objects.requireNonNull(forcedEncoder, "forcedEncoder cannot be null");
+
         mEncoderEndpointsDao = encoderEndpointsDao;
         mEncoderLogicHandler = encoderLogicHandler;
         mUpdatesObserver = new ArrayList<>();
         mBackgroundExecutor = backgroundExecutor;
         mContext = context;
-        mIsCompletionBroadcastEnabled = isCompletionBroadcastEnabled;
+        mIsEncoderLogicRegisteredCompletionBroadcastEnabled =
+                isEncoderLogicRegisteredCompletionBroadcastEnabled;
+        mForcedEncoder = forcedEncoder;
+        mIsEncoderForcedEncodingCompletionBroadcastEnabled =
+                isForcedEncodingCompletionBroadcastEnabled;
     }
 
-    public UpdateEncoderEventHandler(@NonNull Context context) {
+    public UpdateEncoderEventHandler(
+            @NonNull Context context, @NonNull ForcedEncoder forcedEncoder) {
         this(
                 ProtectedSignalsDatabase.getInstance().getEncoderEndpointsDao(),
                 new EncoderLogicHandler(context),
                 context,
                 AdServicesExecutors.getBackgroundExecutor(),
                 DebugFlags.getInstance()
-                        .getProtectedAppSignalsEncoderLogicRegisteredBroadcastEnabled());
+                        .getProtectedAppSignalsEncoderLogicRegisteredBroadcastEnabled(),
+                forcedEncoder,
+                DebugFlags.getInstance().getForcedEncodingJobCompleteBroadcastEnabled());
     }
 
     /**
@@ -105,6 +127,7 @@ public class UpdateEncoderEventHandler {
         Objects.requireNonNull(devContext);
         sLogger.v("Entering UpdateEncoderEventHandler#handle");
 
+        FluentFuture<Void> updateChain;
         switch (event.getUpdateType()) {
             case REGISTER:
                 Uri uri = event.getEncoderEndpointUri();
@@ -127,33 +150,53 @@ public class UpdateEncoderEventHandler {
                         endpoint.getDownloadUri(), endpoint.getBuyer());
 
                 if (previousRegisteredEncoder == null) {
-                    sLogger.v("Ran download and update as previous encoder was null");
-                    // We immediately download and update if no previous encoder existed
-                    FluentFuture<Boolean> downloadAndUpdate =
-                            mEncoderLogicHandler.downloadAndUpdate(buyer, devContext);
-                    downloadAndUpdate.addCallback(
-                            new FutureCallback<>() {
-                                @Override
-                                public void onSuccess(Boolean result) {
-                                    // Send the broadcast.
-                                    sendCompletionBroadcastForTesting();
-                                }
+                    // Immediately download and update if no previous encoder existed.
+                    sLogger.v("Running download and update since previous encoder was null.");
 
-                                @Override
-                                public void onFailure(Throwable t) {}
-                            },
-                            mBackgroundExecutor);
-                    notifyObservers(buyer, event.getUpdateType().toString(), downloadAndUpdate);
+                    // TODO(b/381305103): Refactor after updating observer semantics.
+                    FluentFuture<Boolean> downloadAndUpdateBaseFuture =
+                            mEncoderLogicHandler
+                                    .downloadAndUpdate(buyer, devContext)
+                                    .transform(
+                                            result -> {
+                                                sendEncoderLogicRegisteredCompletionBroadcastForTesting();
+                                                return result;
+                                            },
+                                            mBackgroundExecutor);
+                    notifyObservers(
+                            buyer, event.getUpdateType().toString(), downloadAndUpdateBaseFuture);
+
+                    // Continue the chain, if download and updated was successful.
+                    updateChain =
+                            downloadAndUpdateBaseFuture.transform(
+                                    ignored -> null, mBackgroundExecutor);
                 } else {
+                    // Encoder already exists so return immediately.
                     sLogger.v("Did not update encoder as previous encoder exists");
-                    // Signals already exist so send this immediately.
-                    sendCompletionBroadcastForTesting();
+                    updateChain = FluentFuture.from(Futures.immediateVoidFuture());
+                    sendEncoderLogicRegisteredCompletionBroadcastForTesting();
                 }
                 break;
             default:
                 throw new IllegalArgumentException(
                         "Unexpected value for update event type: " + event.getUpdateType());
         }
+
+        updateChain
+                .transformAsync(
+                        ignored -> mForcedEncoder.forceEncodingAndUpdateEncoderForBuyer(buyer),
+                        mBackgroundExecutor)
+                .transformAsync(
+                        result -> {
+                            sendForcedEncodingCompletionBroadcastForTesting(result);
+                            return Futures.immediateFuture(result);
+                        },
+                        mBackgroundExecutor)
+                .addListener(
+                        () -> {
+                            sLogger.v("Update chain of futures has completed.");
+                        },
+                        mBackgroundExecutor);
     }
 
     /**
@@ -185,13 +228,33 @@ public class UpdateEncoderEventHandler {
         void update(AdTechIdentifier buyer, String eventType, FluentFuture<?> event);
     }
 
-    private void sendCompletionBroadcastForTesting() {
-        if (!mIsCompletionBroadcastEnabled) {
-            sLogger.d("Not sending REGISTER_ENCODER_LOGIC_COMPLETE broadcast");
+    private void sendEncoderLogicRegisteredCompletionBroadcastForTesting() {
+        if (!mIsEncoderLogicRegisteredCompletionBroadcastEnabled) {
+            sLogger.d("Sending completion broadcast is disabled");
             return;
         }
         sLogger.d("Sending REGISTER_ENCODER_LOGIC_COMPLETE broadcast for test to catch");
         Intent intent = new Intent(ACTION_REGISTER_ENCODER_LOGIC_COMPLETE);
+        mContext.sendBroadcast(intent);
+    }
+
+    private void sendForcedEncodingCompletionBroadcastForTesting(Boolean result) {
+        if (!mIsEncoderForcedEncodingCompletionBroadcastEnabled) {
+            sLogger.d("Sending completion broadcast for forced encoding is disabled");
+            return;
+        }
+        Intent intent;
+        if (result) {
+            sLogger.d(
+                    "Sending FORCED_ENCODING_COMPLETED_ENCODING_ATTEMPTED broadcast for test to"
+                            + " catch");
+            intent = new Intent(FORCED_ENCODING_COMPLETED_ENCODING_ATTEMPTED);
+        } else {
+            sLogger.d(
+                    "Sending FORCED_ENCODING_COMPLETED_ENCODING_NOT_ATTEMPTED broadcast for test to"
+                            + " catch");
+            intent = new Intent(FORCED_ENCODING_COMPLETED_ENCODING_NOT_ATTEMPTED);
+        }
         mContext.sendBroadcast(intent);
     }
 }
