@@ -51,6 +51,8 @@ import java.util.concurrent.Future;
  * reports that the {@link DebugReportingJobService } failed/missed. The actual job execution logic
  * is part of {@link DebugReportingJobHandler }.
  */
+// TODO(b/311183933): Remove passed in Context from static method.
+@SuppressWarnings("AvoidStaticContext")
 public class VerboseDebugReportingFallbackJobService extends JobService {
 
     private static final int MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID =

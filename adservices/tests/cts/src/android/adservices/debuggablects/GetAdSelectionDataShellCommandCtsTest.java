@@ -19,7 +19,7 @@ package android.adservices.debuggablects;
 import static com.android.adservices.service.CommonDebugFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SELECTION_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
-import static com.android.adservices.service.FlagsConstants.KEY_DEVELOPER_MODE_FEATURE_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_DEVELOPER_SESSION_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
@@ -27,11 +27,13 @@ import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNAL
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.utils.CustomAudienceTestFixture;
+import android.adservices.utils.DevContextUtils;
 import android.util.Base64;
+import android.util.Log;
 
-import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
@@ -43,6 +45,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
@@ -52,20 +55,22 @@ import java.util.List;
 @EnableDebugFlag(KEY_AD_SELECTION_CLI_ENABLED)
 @SetFlagEnabled(KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED)
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_ENABLED)
-@SetFlagEnabled(KEY_DEVELOPER_MODE_FEATURE_ENABLED)
+@EnableDebugFlag(KEY_DEVELOPER_SESSION_FEATURE_ENABLED)
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @RequiresSdkLevelAtLeastS(reason = "Ad Selection is enabled for S+")
 public class GetAdSelectionDataShellCommandCtsTest extends FledgeDebuggableScenarioTest {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
-    private static final AdTechIdentifier SELLER = BUYER;
-
     private static final String SHELL_COMMAND_PREFIX = "ad-selection get-ad-selection-data";
-    public static final String OUTPUT_PROTO_FIELD = "output_proto";
+    private static final String OUTPUT_PROTO_FIELD = "output_proto";
 
-    private CustomAudienceTestFixture mCustomAudienceTestFixture;
+    @Rule(order = 11)
+    public final SupportedByConditionRule devOptionsEnabled =
+            DevContextUtils.createDevOptionsAvailableRule(mContext, LOGCAT_TAG_FLEDGE);
+
     private final AdServicesShellCommandHelper mAdServicesShellCommandHelper =
             new AdServicesShellCommandHelper();
+
+    private CustomAudienceTestFixture mCustomAudienceTestFixture;
 
     @Before
     public void setUp() throws Exception {
@@ -143,9 +148,9 @@ public class GetAdSelectionDataShellCommandCtsTest extends FledgeDebuggableScena
     }
 
     private void setDevSessionState(boolean state) {
-        sLogger.v("Starting setDevSession(%b)", state);
+        Log.v(LOGCAT_TAG_FLEDGE, String.format("Starting setDevSession(%b)", state));
         mAdServicesShellCommandHelper.runCommand(
                 "adservices-api dev-session %s --erase-db", state ? "start" : "end");
-        sLogger.v("Completed setDevSession(%b)", state);
+        Log.v(LOGCAT_TAG_FLEDGE, String.format("Completed setDevSession(%b)", state));
     }
 }

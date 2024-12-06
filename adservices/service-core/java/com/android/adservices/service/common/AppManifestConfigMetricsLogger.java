@@ -72,7 +72,9 @@ public final class AppManifestConfigMetricsLogger {
         AdServicesExecutors.getBackgroundExecutor().execute(() -> handleLogUsage(call));
     }
 
-    private static void handleLogUsage(AppManifestConfigCall call) {
+    // Exposing so tests call it directly to avoid race conditions
+    @VisibleForTesting
+    static void handleLogUsage(AppManifestConfigCall call) {
         Context context = ApplicationContextSingleton.get();
         try {
             @Result int newValue = call.result;
@@ -119,6 +121,8 @@ public final class AppManifestConfigMetricsLogger {
     }
 
     /** Dumps the internal state. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void dump(Context context, PrintWriter pw) {
         String prefix = "  ";
         pw.println("AppManifestConfigMetricsLogger");
@@ -164,7 +168,7 @@ public final class AppManifestConfigMetricsLogger {
 
     @SuppressWarnings({
         "NewAdServicesFile", // PREFS_NAME already called FileCompatUtils
-        "AvoidSharedPreferences" // Legacy Usage
+        "AvoidSharedPreferences", // Legacy Usage
     })
     private static SharedPreferences getPrefs(Context context) {
         return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);

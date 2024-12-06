@@ -28,17 +28,20 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.common.CommonFixture;
+import android.adservices.utils.DevContextUtils;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 import android.util.Base64;
 
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.shell.CommandResult;
 
 import org.json.JSONObject;
+import org.junit.Rule;
 import org.junit.Test;
 
 @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
@@ -47,11 +50,14 @@ import org.junit.Test;
 @EnableDebugFlag(KEY_AD_SELECTION_CLI_ENABLED)
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 public class ViewAuctionResultCommandTest extends FledgeDebuggableScenarioTest {
+    private static final String STATUS_FINISHED = "FINISHED";
+
+    @Rule(order = 11)
+    public final SupportedByConditionRule devOptionsEnabled =
+            DevContextUtils.createDevOptionsAvailableRule(mContext, LOGCAT_TAG_FLEDGE);
 
     private final AdServicesShellCommandHelper mShellCommandHelper =
             new AdServicesShellCommandHelper();
-
-    private static final String STATUS_FINISHED = "FINISHED";
 
     @Test
     public void testRun_withJoinCustomAudienceAndAuction_happyPath() throws Exception {

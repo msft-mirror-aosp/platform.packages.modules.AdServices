@@ -24,13 +24,13 @@ import static com.android.adservices.flags.Flags.FLAG_ENABLE_ADSERVICES_API_ENAB
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_CUSTOM_AUDIENCE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_DEFAULT_PARTIAL_CUSTOM_AUDIENCES_CONSTRUCTOR;
 import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SERVER_AUCTION_MULTI_CLOUD_ENABLED;
 import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_DUMP_EFFECTIVE_TARGET_SDK_VERSION;
 import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_INVALIDATE_EFFECTIVE_TARGET_SDK_VERSION_CACHE;
 import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS;
 import static com.android.adservices.shared.meta_testing.FlagsTestLittleHelper.getAllFlagNameConstants;
 
-import android.util.Log;
 import android.util.Pair;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
@@ -40,8 +40,11 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 // NOTE: when making changes on com.android.adservices.flags.Flags, you need to install the new
@@ -54,6 +57,9 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
             "If this is expected, you might need to change ACONFIG_ONLY_ALLOW_LIST, "
                     + "MISSING_FLAGS_ALLOWLIST, or"
                     + " NON_CANONICAL_FLAGS (on this file).";
+
+    private static final Pattern DEVICE_CONFIG_VALUE_WITH_DOMAIN_PREFIX =
+            Pattern.compile("^(?<domain>.*)__(?<value>.*)$");
 
     /**
      * List used by {@link #testAllAconfigFlagsAreMapped()}, it contains the name of flags that are
@@ -115,7 +121,11 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                     // using the effective target SDK version when deciding which allowlist should
                     // be used to apply the restrictions. If any regression is observed, this
                     // feature can be rolled back
-                    FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS);
+                    FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS,
+
+                    // This flag is used to guard a feature using an updated constructor, there are
+                    // no accompanying service changes.
+                    FLAG_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_DEFAULT_PARTIAL_CUSTOM_AUDIENCES_CONSTRUCTOR);
 
     /**
      * Map used by {@link #testAllAconfigFlagsAreMapped()} - key is the {@code aconfig} flag name,
@@ -162,7 +172,9 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
     public void testAllAconfigFlagsAreMapped() throws Exception {
         Map<String, String> reverseServiceFlags =
                 getAllFlagNameConstants(FlagsConstants.class).stream()
-                        .collect(Collectors.toMap(p -> p.second, p -> p.first));
+                        .collect(
+                                Collectors.toMap(
+                                        p -> deviceConfigFlagValueToAconfig(p), p -> p.first));
         List<String> missingFlags = new ArrayList<>();
         for (Pair<String, String> constant :
                 getAllFlagNameConstants(com.android.adservices.flags.Flags.class)) {
@@ -173,19 +185,15 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
             if (serviceConstant == null) {
                 if (ACONFIG_ONLY_ALLOWLIST.contains(aconfigFlag)
                         || MISSING_FLAGS_ALLOWLIST.contains(aconfigFlag)) {
-                    Log.i(
-                            mTag,
-                            "Missing mapping for allowlisted flag ("
-                                    + constantName
-                                    + "="
-                                    + aconfigFlag
-                                    + ")");
+                    mLog.i(
+                            "Missing mapping for allowlisted flag (%s=%s)",
+                            constantName, aconfigFlag);
                 } else {
-                    Log.e(mTag, "Missing mapping for " + constantName + "=" + aconfigFlag);
+                    mLog.e("Missing mapping for %s=%s", constantName, aconfigFlag);
                     missingFlags.add(expectedDeviceConfigFlag);
                 }
             } else {
-                Log.d(mTag, "Found mapping: " + constantName + "->" + serviceConstant);
+                mLog.d("Found mapping: %s->%s", constantName, serviceConstant);
             }
         }
         expect.withMessage(
@@ -193,6 +201,26 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
                         HOW_TO_FIX_IT_MESSAGE)
                 .that(missingFlags)
                 .isEmpty();
+    }
+
+    /*
+     * More recent constants follow the DOMAIN__VALUE convention, but aconfig doesn't allow __ nor
+     * upper-case letters, so we need to convert them here
+     */
+    private String deviceConfigFlagValueToAconfig(Pair<String, String> deviceConfigConstant) {
+        String constantName = deviceConfigConstant.first;
+        String constantValue = deviceConfigConstant.second;
+        Matcher matcher = DEVICE_CONFIG_VALUE_WITH_DOMAIN_PREFIX.matcher(constantValue);
+        if (matcher.matches()) {
+            String domain = matcher.group("domain");
+            String result = domain.toLowerCase(Locale.ENGLISH) + "_" + matcher.group("value");
+            mLog.v(
+                    "deviceConfigFlagValueToAconfig(%s): value has domain prefix (%s); returning"
+                            + " %s",
+                    deviceConfigConstant, domain, result);
+            return result;
+        }
+        return constantValue;
     }
 
     private static String aconfigToDeviceConfig(String flag) {
@@ -207,7 +235,7 @@ public final class FlagsConstantsTest extends AdServicesUnitTestCase {
     private String getExpectedDeviceConfigFlag(String aconfigFlag) {
         String nonCanonical = NON_CANONICAL_FLAGS.get(aconfigFlag);
         if (nonCanonical != null) {
-            Log.i(mTag, "Returning non-canonical flag for " + aconfigFlag + ": " + nonCanonical);
+            mLog.i("Returning non-canonical flag for %s: %s", aconfigFlag, nonCanonical);
             return nonCanonical;
         }
         return aconfigToDeviceConfig(aconfigFlag);

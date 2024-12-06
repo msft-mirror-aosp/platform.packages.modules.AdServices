@@ -30,6 +30,7 @@ import android.adservices.clients.signals.ProtectedSignalsClient;
 import android.adservices.common.CommonFixture;
 import android.adservices.signals.UpdateSignalsRequest;
 import android.adservices.utils.CtsWebViewSupportUtil;
+import android.adservices.utils.DevContextUtils;
 import android.adservices.utils.MockWebServerRule;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
@@ -60,18 +61,22 @@ public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest 
     private static final String FIRST_POSTFIX = "/signalsFirst";
     private static final String SECOND_POSTFIX = "/signalsSecond";
 
-    private String mServerBaseAddress;
-
-    private ProtectedSignalsClient mProtectedSignalsClient;
-
     @Rule(order = 11)
+    public final SupportedByConditionRule devOptionsEnabled =
+            DevContextUtils.createDevOptionsAvailableRule(mContext, LOGCAT_TAG_FLEDGE);
+
+    @Rule(order = 12)
     public final SupportedByConditionRule webViewSupportsJSSandbox =
             CtsWebViewSupportUtil.createJSSandboxAvailableRule(mContext);
 
-    @Rule(order = 12)
+    @Rule(order = 13)
     public MockWebServerRule mMockWebServerRule =
             MockWebServerRule.forHttps(
                     mContext, "adservices_untrusted_test_server.p12", "adservices_test");
+
+    private String mServerBaseAddress;
+
+    private ProtectedSignalsClient mProtectedSignalsClient;
 
     @Before
     public void setUp() throws Exception {

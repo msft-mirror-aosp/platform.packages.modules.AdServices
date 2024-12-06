@@ -17,7 +17,6 @@
 package com.android.adservices.ui;
 
 
-import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
@@ -63,15 +62,15 @@ public class UxUtil {
     }
 
     /** Returns if UXStates should be used. */
-    public static boolean isUxStatesReady(Context context) {
-        PrivacySandboxUxCollection ux = getUx(context);
+    public static boolean isUxStatesReady() {
+        PrivacySandboxUxCollection ux = getUx();
         return FlagsFactory.getFlags().getEnableAdServicesSystemApi()
                 && ux != null
                 && ux != PrivacySandboxUxCollection.UNSUPPORTED_UX;
     }
 
     /** Returns the current UX. */
-    public static PrivacySandboxUxCollection getUx(Context context) {
+    public static PrivacySandboxUxCollection getUx() {
         if (DebugFlags.getInstance().getConsentNotificationActivityDebugMode()) {
             return Stream.of(PrivacySandboxUxCollection.values())
                     .filter(ux -> ux.toString().equals(FlagsFactory.getFlags().getDebugUx()))

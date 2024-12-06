@@ -15,8 +15,9 @@
  */
 package com.android.adservices.ohttp;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.FlagsFactory;
@@ -24,7 +25,6 @@ import com.android.modules.utils.testing.ExtendedMockitoRule;
 
 import com.google.common.io.BaseEncoding;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -32,7 +32,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 
 @ExtendedMockitoRule.SpyStatic(FlagsFactory.class)
-public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
+public final class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String SERVER_PUBLIC_KEY =
             "6d21cfe09fbea5122f9ebc2eb2a69fcc4f06408cd54aac934f012e76fcdcef62";
@@ -51,22 +51,22 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
 
     @Test
     public void hpkeKemDhkemX25519HkdfSha256_success_nonZeroReference() {
-        Assert.assertNotEquals(mOhttpJniWrapper.hpkeKemDhkemX25519HkdfSha256(), 0);
+        assertThat(mOhttpJniWrapper.hpkeKemDhkemX25519HkdfSha256()).isNotEqualTo(0);
     }
 
     @Test
     public void hpkeKdfHkdfSha256_success_nonZeroReference() {
-        Assert.assertNotEquals(mOhttpJniWrapper.hpkeKdfHkdfSha256(), 0);
+        assertThat(mOhttpJniWrapper.hpkeKdfHkdfSha256()).isNotEqualTo(0);
     }
 
     @Test
     public void hpkeAeadAes256Gcm_success_nonZeroReference() {
-        Assert.assertNotEquals(mOhttpJniWrapper.hpkeAeadAes256Gcm(), 0);
+        assertThat(mOhttpJniWrapper.hpkeAeadAes256Gcm()).isNotEqualTo(0);
     }
 
     @Test
     public void hpkeCtxNew_success_nonZeroReference() {
-        Assert.assertNotEquals(mOhttpJniWrapper.hpkeCtxNew(), 0);
+        assertThat(mOhttpJniWrapper.hpkeCtxNew()).isNotEqualTo(0);
     }
 
     @Test
@@ -89,9 +89,8 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
                 mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
                         evpCtxSender, kem, kdf, aead, keyBytes, recipientKeyInfoBytes, seedBytes);
 
-        Assert.assertEquals(
-                "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67",
-                BaseEncoding.base16().lowerCase().encode(enc.getBytes()));
+        assertThat(BaseEncoding.base16().lowerCase().encode(enc.getBytes()))
+                .isEqualTo("1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67");
     }
 
     @Test
@@ -111,9 +110,8 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
                 mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
                         evpCtxSender, kem, kdf, aead, keyBytes, recipientKeyInfoBytes, seedBytes);
 
-        Assert.assertEquals(
-                "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67",
-                BaseEncoding.base16().lowerCase().encode(enc.getBytes()));
+        assertThat(BaseEncoding.base16().lowerCase().encode(enc.getBytes()))
+                .isEqualTo("1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67");
     }
 
     @Test
@@ -143,14 +141,13 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
                         plainTextBytes,
                         null);
 
-        Assert.assertEquals(
-                "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67",
-                BaseEncoding.base16()
-                        .lowerCase()
-                        .encode(response.encapsulatedSharedSecret().getBytes()));
-        Assert.assertEquals(
-                "2ef2da3b97acee493624b9959f0fc6df008a6f0701c923c5a60ed0ed2c34",
-                BaseEncoding.base16().lowerCase().encode(response.cipherText()));
+        assertThat(
+                        BaseEncoding.base16()
+                                .lowerCase()
+                                .encode(response.encapsulatedSharedSecret().getBytes()))
+                .isEqualTo("1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67");
+        assertThat(BaseEncoding.base16().lowerCase().encode(response.cipherText()))
+                .isEqualTo("2ef2da3b97acee493624b9959f0fc6df008a6f0701c923c5a60ed0ed2c34");
     }
 
     @Test
@@ -181,14 +178,13 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
                         plainTextBytes,
                         null);
 
-        Assert.assertEquals(
-                "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67",
-                BaseEncoding.base16()
-                        .lowerCase()
-                        .encode(response.encapsulatedSharedSecret().getBytes()));
-        Assert.assertEquals(
-                "70fbc40afc43d174f4b43cad7157d7b82b42f00aba7333d5f6c998918cca",
-                BaseEncoding.base16().lowerCase().encode(response.cipherText()));
+        assertThat(
+                        BaseEncoding.base16()
+                                .lowerCase()
+                                .encode(response.encapsulatedSharedSecret().getBytes()))
+                .isEqualTo("1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67");
+        assertThat(BaseEncoding.base16().lowerCase().encode(response.cipherText()))
+                .isEqualTo("70fbc40afc43d174f4b43cad7157d7b82b42f00aba7333d5f6c998918cca");
     }
 
     @Test
@@ -216,12 +212,12 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
                         null,
                         null);
 
-        Assert.assertEquals(
-                "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67",
-                BaseEncoding.base16()
-                        .lowerCase()
-                        .encode(response.encapsulatedSharedSecret().getBytes()));
-        Assert.assertNull(response.cipherText());
+        assertThat(
+                        BaseEncoding.base16()
+                                .lowerCase()
+                                .encode(response.encapsulatedSharedSecret().getBytes()))
+                .isEqualTo("1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67");
+        assertThat(response.cipherText()).isNull();
     }
 
     @Test
@@ -250,12 +246,12 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
                         null,
                         null);
 
-        Assert.assertEquals(
-                "1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67",
-                BaseEncoding.base16()
-                        .lowerCase()
-                        .encode(response.encapsulatedSharedSecret().getBytes()));
-        Assert.assertNull(response.cipherText());
+        assertThat(
+                        BaseEncoding.base16()
+                                .lowerCase()
+                                .encode(response.encapsulatedSharedSecret().getBytes()))
+                .isEqualTo("1cf579aba45a10ba1d1ef06d91fca2aa9ed0a1150515653155405d0b18cb9a67");
+        assertThat(response.cipherText()).isNull();
     }
 
     @Test
@@ -374,7 +370,7 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
                 mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
                         evpCtxSender, kem, kdf, aead, keyBytes, recipientKeyInfoBytes, seedBytes);
 
-        Assert.assertNull(enc.getBytes());
+        assertThat(enc.getBytes()).isNull();
     }
 
     @Test
@@ -395,7 +391,7 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
                 mOhttpJniWrapper.hpkeCtxSetupSenderWithSeed(
                         evpCtxSender, kem, kdf, aead, keyBytes, recipientKeyInfoBytes, seedBytes);
 
-        Assert.assertNull(enc.getBytes());
+        assertThat(enc.getBytes()).isNull();
     }
 
     @Test
@@ -409,9 +405,8 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
         HpkeExportResponse hpkeExportedSecret =
                 mOhttpJniWrapper.hpkeExport(evpCtxSender, labelBytes, 32);
 
-        Assert.assertEquals(
-                "3b8795c1fdb196febef3c9ab31bd9d7d55c63c828feeb686c2233e90c1d440d4",
-                BaseEncoding.base16().lowerCase().encode(hpkeExportedSecret.getBytes()));
+        assertThat(BaseEncoding.base16().lowerCase().encode(hpkeExportedSecret.getBytes()))
+                .isEqualTo("3b8795c1fdb196febef3c9ab31bd9d7d55c63c828feeb686c2233e90c1d440d4");
     }
 
     @Test
@@ -426,13 +421,12 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
         HpkeExportResponse hpkeExportedSecret =
                 mOhttpJniWrapper.hpkeExport(evpCtxSender, labelBytes, 32);
 
-        Assert.assertEquals(
-                "3657435a70941e1de741b8f2203adb282bcf81f8337960d51d43784fc14ebed4",
-                BaseEncoding.base16().lowerCase().encode(hpkeExportedSecret.getBytes()));
+        assertThat(BaseEncoding.base16().lowerCase().encode(hpkeExportedSecret.getBytes()))
+                .isEqualTo("3657435a70941e1de741b8f2203adb282bcf81f8337960d51d43784fc14ebed4");
     }
 
     @Test
-    public void hkdfExtract_returnsCorrectResponse() throws Exception {
+    public void hkdfExtract_returnsCorrectResponse() {
         byte[] hpkeExportedSecret =
                 BaseEncoding.base16()
                         .lowerCase()
@@ -449,13 +443,12 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
                         hpkeExportedSecret,
                         salt);
 
-        Assert.assertEquals(
-                "095b6f1ef722296230a76445694d7d1f7017f541732915bc1034af039e18abf0",
-                BaseEncoding.base16().lowerCase().encode(extract.getBytes()));
+        assertThat(BaseEncoding.base16().lowerCase().encode(extract.getBytes()))
+                .isEqualTo("095b6f1ef722296230a76445694d7d1f7017f541732915bc1034af039e18abf0");
     }
 
     @Test
-    public void hkdfExpand_returnsCorrectResponse() throws Exception {
+    public void hkdfExpand_returnsCorrectResponse() {
         byte[] keyInfo = "key".getBytes(StandardCharsets.US_ASCII);
         byte[] prk =
                 BaseEncoding.base16()
@@ -469,13 +462,12 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
                         keyInfo,
                         32);
 
-        Assert.assertEquals(
-                "373975f067d2ba1afb5ef6183715ab36f9a61e6d9a405a1b080a3afdc127258a",
-                BaseEncoding.base16().lowerCase().encode(expandedKey.getBytes()));
+        assertThat(BaseEncoding.base16().lowerCase().encode(expandedKey.getBytes()))
+                .isEqualTo("373975f067d2ba1afb5ef6183715ab36f9a61e6d9a405a1b080a3afdc127258a");
     }
 
     @Test
-    public void aeadSeal_returnsCorrectResponse() throws Exception {
+    public void aeadSeal_returnsCorrectResponse() {
         byte[] aeadKey =
                 BaseEncoding.base16()
                         .lowerCase()
@@ -491,13 +483,12 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
                         aeadNonce,
                         plainText);
 
-        Assert.assertEquals(
-                "f623a32dba30cdf1a011543bdd7e95ace60be30b029574dc3be9abee478df9",
-                BaseEncoding.base16().lowerCase().encode(cipherText));
+        assertThat(BaseEncoding.base16().lowerCase().encode(cipherText))
+                .isEqualTo("f623a32dba30cdf1a011543bdd7e95ace60be30b029574dc3be9abee478df9");
     }
 
     @Test
-    public void aeadOpen_returnsCorrectResponse() throws Exception {
+    public void aeadOpen_returnsCorrectResponse() {
         byte[] aeadKey =
                 BaseEncoding.base16()
                         .lowerCase()
@@ -515,9 +506,8 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
                         aeadNonce,
                         cipherText);
 
-        Assert.assertEquals(
-                "7465737420726573706f6e73652031",
-                BaseEncoding.base16().lowerCase().encode(plainText));
+        assertThat(BaseEncoding.base16().lowerCase().encode(plainText))
+                .isEqualTo("7465737420726573706f6e73652031");
     }
 
     @Test
@@ -639,15 +629,16 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
 
         byte[] privateKeyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PRIVATE_KEY);
         HpkeContextNativeRef evpCtxRecipient = HpkeContextNativeRef.createHpkeContextReference();
-        assertTrue(
-                mOhttpJniWrapper.hpkeSetupRecipient(
-                        evpCtxRecipient,
-                        kem,
-                        kdf,
-                        aead,
-                        OhttpGatewayPrivateKey.create(privateKeyBytes),
-                        response.encapsulatedSharedSecret(),
-                        RecipientKeyInfo.create(recipientKeyInfoBytes)));
+        assertThat(
+                        mOhttpJniWrapper.hpkeSetupRecipient(
+                                evpCtxRecipient,
+                                kem,
+                                kdf,
+                                aead,
+                                OhttpGatewayPrivateKey.create(privateKeyBytes),
+                                response.encapsulatedSharedSecret(),
+                                RecipientKeyInfo.create(recipientKeyInfoBytes)))
+                .isTrue();
     }
 
     @Test
@@ -680,15 +671,16 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
 
         byte[] privateKeyBytes = BaseEncoding.base16().lowerCase().decode(SERVER_PRIVATE_KEY);
         HpkeContextNativeRef evpCtxRecipient = HpkeContextNativeRef.createHpkeContextReference();
-        assertTrue(
-                mOhttpJniWrapper.hpkeSetupRecipient(
-                        evpCtxRecipient,
-                        kem,
-                        kdf,
-                        aead,
-                        OhttpGatewayPrivateKey.create(privateKeyBytes),
-                        response.encapsulatedSharedSecret(),
-                        RecipientKeyInfo.create(recipientKeyInfoBytes)));
+        assertThat(
+                        mOhttpJniWrapper.hpkeSetupRecipient(
+                                evpCtxRecipient,
+                                kem,
+                                kdf,
+                                aead,
+                                OhttpGatewayPrivateKey.create(privateKeyBytes),
+                                response.encapsulatedSharedSecret(),
+                                RecipientKeyInfo.create(recipientKeyInfoBytes)))
+                .isTrue();
     }
 
     @Test
@@ -735,7 +727,7 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
 
         String unencryptedText = new String(decryptResponse.getBytes(), StandardCharsets.US_ASCII);
 
-        Assert.assertEquals(plainText, unencryptedText);
+        assertThat(unencryptedText).isEqualTo(plainText);
     }
 
     @Test
@@ -783,7 +775,7 @@ public class OhttpJniWrapperTest extends AdServicesExtendedMockitoTestCase {
 
         String unencryptedText = new String(decryptResponse.getBytes(), StandardCharsets.US_ASCII);
 
-        Assert.assertEquals(plainText, unencryptedText);
+        assertThat(unencryptedText).isEqualTo(plainText);
     }
 
     private HpkeContextNativeRef setupAndGetHpkeContext() throws Exception {

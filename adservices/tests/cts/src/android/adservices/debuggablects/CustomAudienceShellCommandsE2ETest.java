@@ -30,12 +30,12 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.utils.CustomAudienceTestFixture;
-
-import androidx.test.filters.FlakyTest;
+import android.adservices.utils.DevContextUtils;
 
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.shell.CommandResult;
@@ -48,6 +48,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
@@ -57,9 +58,12 @@ import java.util.List;
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetPpapiAppAllowList
-public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggableCtsTest {
-    private static final String OWNER = sPackageName;
+public final class CustomAudienceShellCommandsE2ETest extends AdServicesDebuggableTestCase {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
+
+    @Rule(order = 11)
+    public final SupportedByConditionRule devOptionsEnabled =
+            DevContextUtils.createDevOptionsAvailableRule(mContext, LOGCAT_TAG_FLEDGE);
 
     private final AdServicesShellCommandHelper mShellCommandHelper =
             new AdServicesShellCommandHelper();
@@ -68,15 +72,12 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
     private CustomAudience mShoesCustomAudience;
     private CustomAudienceTestFixture mCustomAudienceTestFixture;
 
+
     @Before
     public void setUp() throws Exception {
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
 
-        if (sdkLevel.isAtLeastT()) {
-            assertForegroundActivityStarted();
-        }
-
-        mCustomAudienceTestFixture = new CustomAudienceTestFixture(sContext);
+        mCustomAudienceTestFixture = new CustomAudienceTestFixture(mContext);
         mShirtsCustomAudience =
                 mCustomAudienceTestFixture.createCustomAudience(
                         "shirts",
@@ -99,19 +100,18 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
     }
 
     @Test
-    @FlakyTest(bugId = 371644277)
     public void testRun_listCustomAudience_happyPath() throws Exception {
         mCustomAudienceTestFixture.joinCustomAudience(mShirtsCustomAudience);
         mCustomAudienceTestFixture.joinCustomAudience(mShoesCustomAudience);
 
         JSONArray customAudiences =
                 runAndParseShellCommandJson(
-                                "custom-audience list --owner %s --buyer %s", OWNER, BUYER)
+                                "custom-audience list --owner %s --buyer %s", mPackageName, BUYER)
                         .getJSONArray("custom_audiences");
         mCustomAudienceTestFixture.leaveCustomAudience(mShirtsCustomAudience);
         JSONArray customAudiencesAfterLeaving =
                 runAndParseShellCommandJson(
-                                "custom-audience list --owner %s --buyer %s", OWNER, BUYER)
+                                "custom-audience list --owner %s --buyer %s", mPackageName, BUYER)
                         .getJSONArray("custom_audiences");
 
         assertThat(
@@ -136,14 +136,13 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
     }
 
     @Test
-    @FlakyTest(bugId = 371644277)
     public void testRun_viewCustomAudience_happyPath() throws Exception {
         mCustomAudienceTestFixture.joinCustomAudience(mShirtsCustomAudience);
 
         JSONObject customAudience =
                 runAndParseShellCommandJson(
                         "custom-audience view --owner %s --buyer %s --name %s",
-                        OWNER, BUYER, mShirtsCustomAudience.getName());
+                        mPackageName, BUYER, mShirtsCustomAudience.getName());
 
         CustomAudience parsedCustomAudience = fromJson(customAudience);
         assertThat(mShirtsCustomAudience).isEqualTo(parsedCustomAudience);
@@ -155,12 +154,11 @@ public final class CustomAudienceShellCommandsE2ETest extends ForegroundDebuggab
     }
 
     @Test
-    @FlakyTest(bugId = 371644277)
     public void testRun_refreshCustomAudiences_verifyNoCustomAudienceChanged() {
         CommandResult commandResult =
                 mShellCommandHelper.runCommandRwe(
                         "custom-audience refresh --owner %s --buyer %s --name %s",
-                        OWNER, BUYER, mShirtsCustomAudience.getName());
+                        mPackageName, BUYER, mShirtsCustomAudience.getName());
 
         assertThat(commandResult.getOut()).isEmpty();
         assertThat(commandResult.getErr()).contains("No custom audience found");

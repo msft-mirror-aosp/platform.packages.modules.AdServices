@@ -34,6 +34,7 @@ import android.content.pm.ProviderInfo;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.DebugFlags;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.testing.mockito.MockitoHelper;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -51,6 +52,8 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
 
     @Mock private Throttler mMockThrottler;
 
+    @Mock private ConsentManager mMockConsentManager;
+
     @Before
     @After
     public void resetApplicationContextSingleton() {
@@ -59,7 +62,9 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
 
     @Before
     public void setFixtures() {
-        mProvider = new AdServicesInternalProvider(mMockFlags, mMockThrottler);
+        mProvider =
+                new AdServicesInternalProvider(
+                        mMockFlags, mMockThrottler, mMockConsentManager, mMockDebugFlags);
     }
 
     @Test
@@ -196,6 +201,16 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
     }
 
     @Test
+    public void testDump_includesConsentManagerDump() throws Exception {
+        String expectedDump = "As you wish!";
+        mockConsentManagerDump(expectedDump);
+
+        String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
+
+        assertWithMessage("content of dump()").that(dump).contains(expectedDump);
+    }
+
+    @Test
     @MockStatic(DebugFlags.class)
     public void testDump_argShortQuiet() throws Exception {
         testDumpQuiet(DUMP_ARG_SHORT_QUIET);
@@ -229,14 +244,13 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
     }
 
     private void mockAdservicesApplicationContextFlagEnabled(boolean value) {
-        mocker.mockGetDeveloperModeFeatureEnabled(value);
+        mocker.mockGetDeveloperSessionFeatureEnabled(value);
     }
 
     // TODO(b/371064777): Ideally we should have a DumpHelper.mockDump() method that could be used
     // below...
 
     private void mockDebugFlagsDump(String dump) {
-        mocker.mockGetDebugFlags(mMockDebugFlags);
         doAnswer(
                         (inv) -> {
                             mLog.d("%s", MockitoHelper.toString(inv));
@@ -267,5 +281,16 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
                         })
                 .when(mMockThrottler)
                 .dump(any());
+    }
+
+    private void mockConsentManagerDump(String dump) {
+        doAnswer(
+                        (inv) -> {
+                            mLog.d("%s", MockitoHelper.toString(inv));
+                            ((PrintWriter) inv.getArgument(0)).println(dump);
+                            return null;
+                        })
+                .when(mMockConsentManager)
+                .dump(any(), any());
     }
 }

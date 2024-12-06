@@ -28,6 +28,15 @@
                  android:theme="@style/Theme.AppCompat">
         <uses-library android:name="android.ext.adservices" android:required="false"/>
 
+        <receiver
+            android:name="com.example.adservices.samples.ui.sampletestapp.MyBroadcastReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.adservices.common.action.ADSERVICES_NOTIFICATION_DISPLAYED" />
+            </intent-filter>
+        </receiver>
+
         <activity
             android:name="com.example.adservices.samples.ui.sampletestapp.MainActivity"
             android:exported="true">

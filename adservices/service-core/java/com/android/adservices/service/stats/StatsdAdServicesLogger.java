@@ -233,7 +233,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.isPARequest(),
                 stats.getNumDeletedEntities(),
                 stats.isEventLevelEpsilonEnabled(),
-                stats.isTriggerAggregatableValueFiltersConfigured());
+                stats.isTriggerAggregatableValueFiltersConfigured(),
+                stats.isTriggerFilteringIdConfigured());
     }
 
     @Override
@@ -920,7 +921,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 ENCODING_JOB_RUN,
                 stats.getSignalEncodingSuccesses(),
                 stats.getSignalEncodingFailures(),
-                stats.getSignalEncodingSkips());
+                stats.getSignalEncodingSkips(),
+                stats.getEncodingSourceType());
     }
 
     @Override

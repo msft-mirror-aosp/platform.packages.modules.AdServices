@@ -17,29 +17,31 @@
 package com.android.adservices.service.stats.pas;
 
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 
 /**
- * The implementation of {@link EncodingJobRunStatsLogger}.
- * The class for logging {@link EncodingJobRunStats}.
+ * The implementation of {@link EncodingJobRunStatsLogger}. The class for logging {@link
+ * EncodingJobRunStats}.
  */
-public class EncodingJobRunStatsLoggerImpl implements EncodingJobRunStatsLogger{
+public final class EncodingJobRunStatsLoggerImpl implements EncodingJobRunStatsLogger {
 
     private final AdServicesLogger mAdServicesLogger;
     private final EncodingJobRunStats.Builder mBuilder;
+    private final boolean mFledgeEnableForcedEncodingAfterSignalsUpdate;
 
-    private int mCountOfSignalEncodingSuccesses = 0;
-    private int mCountOfSignalEncodingFailures = 0;
-    private int mCountOfSignalEncodingSkips = 0;
-    private int mSizeOfFilteredBuyerEncodingList = 0;
+    private int mCountOfSignalEncodingSuccesses;
+    private int mCountOfSignalEncodingFailures;
+    private int mCountOfSignalEncodingSkips;
+    private int mSizeOfFilteredBuyerEncodingList;
 
-    /** Constructs a {@link EncodingJobRunStatsLoggerImpl} instance. */
     public EncodingJobRunStatsLoggerImpl(
-            AdServicesLogger adServicesLogger, EncodingJobRunStats.Builder builder) {
+            AdServicesLogger adServicesLogger,
+            EncodingJobRunStats.Builder builder,
+            boolean fledgeEnableForcedEncodingAfterSignalsUpdate) {
         mAdServicesLogger = adServicesLogger;
         mBuilder = builder;
-        mCountOfSignalEncodingSuccesses = 0;
-        mCountOfSignalEncodingFailures = 0;
-        mCountOfSignalEncodingSkips = 0;
+        mFledgeEnableForcedEncodingAfterSignalsUpdate =
+                fledgeEnableForcedEncodingAfterSignalsUpdate;
     }
 
     /** Logs {@link EncodingJobRunStats}
@@ -59,24 +61,36 @@ public class EncodingJobRunStatsLoggerImpl implements EncodingJobRunStatsLogger{
         mAdServicesLogger.logEncodingJobRunStats(mBuilder.build());
     }
 
-    /** Adds one count to the count of signal encoding failures
-     * when catching an exception during encoding registered buyers. */
     @Override
     public void addOneSignalEncodingFailures() {
         mCountOfSignalEncodingFailures += 1;
     }
 
-    /** Adds one count to the count of signal encoding failures
-     * when skipping the encoding registered buyers. */
     @Override
     public void addOneSignalEncodingSkips() {
         mCountOfSignalEncodingSkips += 1;
     }
 
-    /** Sets the count of signal encoding successes by given size of
-     * filtered buyer encoding list. */
     @Override
     public void setSizeOfFilteredBuyerEncodingList(int sizeOfFilteredBuyerEncodingList) {
         mSizeOfFilteredBuyerEncodingList = sizeOfFilteredBuyerEncodingList;
+    }
+
+    @Override
+    public void resetStatsWithEncodingSourceType(
+            @AdsRelevanceStatusUtils.PasEncodingSourceType int encodingSourceType) {
+        // The logger instance is reused in PeriodicEncodingJobWorker. The counter of each signal
+        // encoding status should be reset before counting.
+        resetCountOfSignalEncodingStatus();
+        if (mFledgeEnableForcedEncodingAfterSignalsUpdate) {
+            mBuilder.setEncodingSourceType(encodingSourceType);
+        }
+    }
+
+    private void resetCountOfSignalEncodingStatus() {
+        mCountOfSignalEncodingSuccesses = 0;
+        mCountOfSignalEncodingFailures = 0;
+        mCountOfSignalEncodingSkips = 0;
+        mSizeOfFilteredBuyerEncodingList = 0;
     }
 }

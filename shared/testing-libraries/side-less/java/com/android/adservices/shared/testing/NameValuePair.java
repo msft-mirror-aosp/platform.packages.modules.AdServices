@@ -17,26 +17,22 @@ package com.android.adservices.shared.testing;
 
 import java.util.Objects;
 
-// TODO(b/324919960): make it package-protected again or make sure it's unit tested.
 /** Simple name-value pair, like a flag or system property. */
 public final class NameValuePair {
 
     public final String name;
-    public final String value;
+    public final @Nullable String value;
     public final @Nullable String separator;
 
-    NameValuePair(String name, String value, @Nullable String separator) {
-        this.name = name;
+    public NameValuePair(String name, @Nullable String value, @Nullable String separator) {
+        this.name = Objects.requireNonNull(name, "name cannot be null");
         this.value = value;
         this.separator = separator;
     }
 
-    NameValuePair(String name, String value) {
+    public NameValuePair(String name, @Nullable String value) {
         this(name, value, /* separator= */ null);
     }
-
-    // TODO(b/294423183): need to add unit test for equals() / hashcode() as they don't use
-    // separator
 
     @Override
     public int hashCode() {
@@ -61,7 +57,6 @@ public final class NameValuePair {
         return string.toString();
     }
 
-    // TODO(b/324919960): make it package-protected again or make sure it's unit tested.
     /** Used to filter {@link NameValuePair} instances. */
     public interface Matcher {
         /** Checks whether the given pair matches the filter. */
