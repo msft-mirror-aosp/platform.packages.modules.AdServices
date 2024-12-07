@@ -34,6 +34,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_IMPRESSION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION;
 
 import android.adservices.adselection.AdSelectionCallback;
 import android.adservices.adselection.AdSelectionConfig;
@@ -901,6 +903,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_IMPRESSION);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -981,6 +987,10 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION);
             // Rethrow because we want to fail fast
             throw exception;
         }
