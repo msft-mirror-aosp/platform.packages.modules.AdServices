@@ -68,7 +68,8 @@ public abstract class AbstractAdServicesFlagsSetterRuleTestCase<
                         new NameValuePair(
                                 KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH, "true"),
                         new NameValuePair(KEY_TOPICS_KILL_SWITCH, "true"),
-                        new NameValuePair(KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH, "true"));
+                        new NameValuePair(KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH, "true"))
+                .inOrder();
     }
 
     @Test
@@ -120,6 +121,7 @@ public abstract class AbstractAdServicesFlagsSetterRuleTestCase<
                         new NameValuePair(key, "null,null", ","),
                         new NameValuePair(key, "mixed of null,null,and empty,,.", ","),
                         new NameValuePair(key, "One Is The Loniest Number"),
-                        new NameValuePair(key, "4,8,15,16,23,42", ","));
+                        new NameValuePair(key, "4,8,15,16,23,42", ","))
+                .inOrder();
     }
 }

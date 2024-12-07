@@ -19,11 +19,11 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase.Mocker;
 import com.android.adservices.mockito.AdServicesDebugFlagsMockerTestCase;
 import com.android.adservices.service.DebugFlags;
 
-@SuppressWarnings("VisibleForTests") // TODO(b/343741206): Remove suppress warning once fixed.
 /**
  * Unit tests for {@link AdServicesExtendedMockitoTestCase.Mocker}'s implementation of {@link
  * com.android.adservices.mockito.AdServicesDebugFlagsMocker}.
  */
+@SuppressWarnings("VisibleForTests") // TODO(b/343741206): Remove suppress warning once fixed.
 public final class AdServicesExtendedMockitoTestCaseAdServicesDebugFlagsMockerTest
         extends AdServicesDebugFlagsMockerTestCase<Mocker> {
 
