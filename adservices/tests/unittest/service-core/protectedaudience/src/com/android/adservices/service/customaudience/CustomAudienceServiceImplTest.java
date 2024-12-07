@@ -99,7 +99,6 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
@@ -183,11 +182,10 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 .createDevContext();
     }
 
-    @After
-    public void teardown() {
-        // TODO(b/315812832): if a test method fails and call below also fails, the test failure
-        // will be the latter - not the former - which would make it harder to debug the real
-        // failure.
+    // Though it applies to all test cases, please do not move this into @After to avoid making
+    // debugging of test cases in this file difficult. A test assertion that could be failing in the
+    // actual @Test will likely be hidden due to verifyNoMoreInteractions failures in @After.
+    private void verifyNoMoreMockInteractions() {
         verifyNoMoreInteractions(
                 mCustomAudienceImplMock,
                 mFledgeAuthorizationFilterMock,
@@ -255,6 +253,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                 CustomAudienceFixture.VALID_OWNER,
                 STATUS_SUCCESS);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -321,6 +321,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         anyInt(),
                         any(),
                         any());
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -366,6 +368,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                 CustomAudienceFixture.VALID_OWNER,
                 STATUS_USER_CONSENT_REVOKED);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -414,6 +418,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                 TEST_PACKAGE_NAME,
                 STATUS_INTERNAL_ERROR);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -443,6 +449,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         CustomAudienceFixture.VALID_OWNER,
                         Process.myUid(),
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -459,6 +467,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                 TEST_PACKAGE_NAME,
                 STATUS_INVALID_ARGUMENT);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -473,6 +483,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                 null,
                 STATUS_INVALID_ARGUMENT);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -487,6 +499,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                 TEST_PACKAGE_NAME,
                 STATUS_INVALID_ARGUMENT);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -548,6 +562,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                 CustomAudienceFixture.VALID_OWNER,
                 STATUS_INTERNAL_ERROR);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -599,6 +615,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                 CustomAudienceFixture.VALID_OWNER,
                 STATUS_INTERNAL_ERROR);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -653,6 +671,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                 CustomAudienceFixture.VALID_OWNER,
                 STATUS_SUCCESS);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -671,6 +691,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE,
                 STATUS_INVALID_ARGUMENT);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -684,6 +706,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         verifyLoggerMock(
                 AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE,
                 STATUS_INVALID_ARGUMENT);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -735,6 +759,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE,
                 TEST_PACKAGE_NAME,
                 STATUS_INTERNAL_ERROR);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -783,6 +809,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
                 CustomAudienceFixture.VALID_OWNER,
                 STATUS_SUCCESS);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -848,6 +876,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         anyInt(),
                         any(),
                         any());
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -893,6 +923,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
                 CustomAudienceFixture.VALID_OWNER,
                 STATUS_USER_CONSENT_REVOKED);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -942,6 +974,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
                 TEST_PACKAGE_NAME,
                 STATUS_INTERNAL_ERROR);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -972,6 +1006,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         CustomAudienceFixture.VALID_OWNER,
                         Process.myUid(),
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -989,6 +1025,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
                 null,
                 STATUS_INVALID_ARGUMENT);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1006,6 +1044,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
                 TEST_PACKAGE_NAME,
                 STATUS_INVALID_ARGUMENT);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1023,6 +1063,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
                 TEST_PACKAGE_NAME,
                 STATUS_INVALID_ARGUMENT);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1040,6 +1082,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
                 TEST_PACKAGE_NAME,
                 STATUS_INVALID_ARGUMENT);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1095,6 +1139,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
                 CustomAudienceFixture.VALID_OWNER,
                 STATUS_INTERNAL_ERROR);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1144,6 +1190,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
                 CustomAudienceFixture.VALID_OWNER,
                 STATUS_INTERNAL_ERROR);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1175,6 +1223,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         MY_UID, AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE, null);
         verifyErrorResponseICustomAudienceCallback(
                 STATUS_BACKGROUND_CALLER, ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1247,6 +1297,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                 CustomAudienceFixture.VALID_OWNER,
                 STATUS_SUCCESS);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1280,6 +1332,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         verifyErrorResponseICustomAudienceCallback(
                 AdServicesStatusUtils.STATUS_BACKGROUND_CALLER,
                 ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1354,6 +1408,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
                 CustomAudienceFixture.VALID_OWNER,
                 STATUS_SUCCESS);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1399,6 +1455,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO,
                 mPackageName,
                 STATUS_BACKGROUND_CALLER);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1471,6 +1529,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO,
                 TEST_PACKAGE_NAME,
                 STATUS_SUCCESS);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1504,6 +1564,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         verifyErrorResponseCustomAudienceOverrideCallback(
                 STATUS_BACKGROUND_CALLER, ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
         verifyLoggerMock(apiName, mPackageName, STATUS_BACKGROUND_CALLER);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1563,6 +1625,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         CustomAudienceFixture.VALID_NAME, CustomAudienceFixture.VALID_OWNER);
         verify(mCustomAudienceOverrideCallbackMock).onSuccess();
         verifyLoggerMock(apiName, TEST_PACKAGE_NAME, STATUS_SUCCESS);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1592,6 +1656,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
         verifyLoggerMock(apiName, TEST_PACKAGE_NAME, STATUS_BACKGROUND_CALLER);
         verifyErrorResponseCustomAudienceOverrideCallback(
                 STATUS_BACKGROUND_CALLER, ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1647,6 +1713,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES,
                 TEST_PACKAGE_NAME,
                 STATUS_SUCCESS);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1666,6 +1734,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                                 VALID_CUSTOM_AUDIENCE,
                                 CustomAudienceFixture.VALID_OWNER,
                                 mICustomAudienceCallbackMock));
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1688,6 +1758,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                                                 CustomAudienceFixture.VALID_OWNER)
                                         .build(),
                                 mFetchAndJoinCustomAudienceCallbackMock));
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1708,6 +1780,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                                 CommonFixture.VALID_BUYER_1,
                                 CustomAudienceFixture.VALID_NAME,
                                 mICustomAudienceCallbackMock));
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1736,6 +1810,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                                 JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3,
                                 AdSelectionSignals.EMPTY,
                                 mCustomAudienceOverrideCallbackMock));
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1763,6 +1839,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                                 CommonFixture.VALID_BUYER_1,
                                 CustomAudienceFixture.VALID_NAME,
                                 mCustomAudienceOverrideCallbackMock));
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1785,6 +1863,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 () ->
                         mService.resetAllCustomAudienceOverrides(
                                 mCustomAudienceOverrideCallbackMock));
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1828,6 +1908,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
         verifyErrorResponseICustomAudienceCallback(
                 STATUS_CALLER_NOT_ALLOWED, SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1895,6 +1977,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
                 CustomAudienceFixture.VALID_OWNER,
                 STATUS_SUCCESS);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -1939,6 +2023,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
         verifyErrorResponseICustomAudienceCallback(
                 STATUS_CALLER_NOT_ALLOWED, SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -2007,6 +2093,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                 AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE,
                 CustomAudienceFixture.VALID_OWNER,
                 STATUS_SUCCESS);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -2050,6 +2138,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         API_CUSTOM_AUDIENCES);
         verifyErrorResponseICustomAudienceCallback(
                 STATUS_CALLER_NOT_ALLOWED, SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -2094,6 +2184,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         API_CUSTOM_AUDIENCES);
         verifyErrorResponseICustomAudienceCallback(
                 STATUS_CALLER_NOT_ALLOWED, SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -2126,6 +2218,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         CustomAudienceFixture.VALID_OWNER,
                         Process.myUid(),
                         AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE);
+
+        verifyNoMoreMockInteractions();
     }
 
     @Test
@@ -2159,6 +2253,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         CustomAudienceFixture.VALID_OWNER,
                         Process.myUid(),
                         AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE);
+
+        verifyNoMoreMockInteractions();
     }
 
     private void verifyErrorResponseICustomAudienceCallback(int statusCode, String errorMessage)
