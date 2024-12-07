@@ -26,7 +26,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.AdTechIdentifier.UNSET_AD_TECH_IDENTIFIER;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithThrowable;
 import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithoutThrowable;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
@@ -1945,20 +1944,18 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
 
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackSync =
-                mockErrorLogUtilWithoutThrowable();
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackAsync =
-                mockErrorLogUtilWithoutThrowable();
+        ErrorLogUtilCallback errorLogUtilWithoutThrowableCallback =
+                mockErrorLogUtilWithoutThrowable(/* numExpectedCalls= */ 2);
 
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
 
-        mErrorLogUtilWithoutThrowableCallbackSync.assertReceived(
+        errorLogUtilWithoutThrowableCallback.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
 
-        mErrorLogUtilWithoutThrowableCallbackAsync.assertReceived(
+        errorLogUtilWithoutThrowableCallback.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
@@ -1996,13 +1993,18 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         .setAdSelectionResult(CIPHER_TEXT_BYTES)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallback =
-                mockErrorLogUtilWithoutThrowable();
+        ErrorLogUtilCallback errorLogUtilWithoutThrowableCallback =
+                mockErrorLogUtilWithoutThrowable(/* numExpectedCalls= */ 2);
 
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
 
-        mErrorLogUtilWithoutThrowableCallback.assertReceived(
+        errorLogUtilWithoutThrowableCallback.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
+
+        errorLogUtilWithoutThrowableCallback.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
@@ -2063,20 +2065,18 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
 
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackSync =
-                mockErrorLogUtilWithoutThrowable();
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackAsync =
-                mockErrorLogUtilWithoutThrowable();
+        ErrorLogUtilCallback errorLogUtilWithoutThrowableCallbackSync =
+                mockErrorLogUtilWithoutThrowable(/* numExpectedCalls= */ 2);
 
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
 
-        mErrorLogUtilWithoutThrowableCallbackSync.assertReceived(
+        errorLogUtilWithoutThrowableCallbackSync.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
 
-        mErrorLogUtilWithoutThrowableCallbackAsync.assertReceived(
+        errorLogUtilWithoutThrowableCallbackSync.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
@@ -2411,28 +2411,17 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
 
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackSync1 =
-                mockErrorLogUtilWithoutThrowable();
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackSync2 =
-                mockErrorLogUtilWithoutThrowable();
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackAsync =
-                mockErrorLogUtilWithoutThrowable();
+        ErrorLogUtilCallback errorLogUtilWithoutThrowableCallback =
+                mockErrorLogUtilWithoutThrowable(/* numExpectedCalls= */ 2);
 
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
 
-        mErrorLogUtilWithoutThrowableCallbackSync1.assertReceived(
+        errorLogUtilWithoutThrowableCallback.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INTERACTION_URI_EXCEEDS_MAXIMUM_LIMIT,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
-        mErrorLogUtilWithoutThrowableCallbackSync2.assertReceived(
-                expect,
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INTERACTION_URI_EXCEEDS_MAXIMUM_LIMIT,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
-        mErrorLogUtilWithoutThrowableCallbackAsync.assertReceived(
-                expect,
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT,
+                /* numExpectedCalls= */ 2);
 
         Assert.assertTrue(callback.mIsSuccess);
         Assert.assertEquals(
@@ -2492,7 +2481,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
             throws Exception {
         // Do not move this into setup as it will conflict with ErrorLogUtil mocking behavior
         // required by the AdServicesLoggingUsageRule.
-        ErrorLogUtilCallback mErrorLogUtilWithThrowableCallback = mockErrorLogUtilWithThrowable();
+        ErrorLogUtilCallback errorLogUtilWithThrowableCallback = mockErrorLogUtilWithoutThrowable();
 
         Flags flagsWithKAnonEnabled =
                 new PersistAdSelectionResultRunnerTestFlagsForKAnon(true, 100);
@@ -2531,7 +2520,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
         countDownLatch.await();
 
-        mErrorLogUtilWithThrowableCallback.assertReceived(
+        errorLogUtilWithThrowableCallback.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_PROCESSING_KANON_ERROR,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
