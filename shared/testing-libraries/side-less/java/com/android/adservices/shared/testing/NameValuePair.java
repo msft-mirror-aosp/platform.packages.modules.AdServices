@@ -21,16 +21,16 @@ import java.util.Objects;
 public final class NameValuePair {
 
     public final String name;
-    public final String value;
+    public final @Nullable String value;
     public final @Nullable String separator;
 
-    NameValuePair(String name, String value, @Nullable String separator) {
+    public NameValuePair(String name, @Nullable String value, @Nullable String separator) {
         this.name = Objects.requireNonNull(name, "name cannot be null");
-        this.value = Objects.requireNonNull(value, "value cannot be null");
+        this.value = value;
         this.separator = separator;
     }
 
-    NameValuePair(String name, String value) {
+    public NameValuePair(String name, @Nullable String value) {
         this(name, value, /* separator= */ null);
     }
 

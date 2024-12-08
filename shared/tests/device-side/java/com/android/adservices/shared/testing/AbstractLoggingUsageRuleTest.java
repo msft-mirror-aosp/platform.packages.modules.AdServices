@@ -73,7 +73,9 @@ public final class AbstractLoggingUsageRuleTest extends SharedExtendedMockitoTes
 
         rule.evaluate(mBaseStatement, mDescription);
 
-        mBaseStatement.assertNotEvaluated();
+        // Base should still be evaluated
+        mBaseStatement.assertEvaluated();
+        // No setup work and verification should take place
         verifyZeroInteractions(mLogVerifier1);
     }
 
@@ -84,7 +86,8 @@ public final class AbstractLoggingUsageRuleTest extends SharedExtendedMockitoTes
 
         rule.evaluate(mBaseStatement, mDescription);
 
-        mBaseStatement.assertNotEvaluated();
+        // Base should still be evaluated
+        mBaseStatement.assertEvaluated();
     }
 
     @Test
