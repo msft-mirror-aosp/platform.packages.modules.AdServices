@@ -23,7 +23,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.common.logging.ErrorLogUtilSyncCallback.mockErrorLogUtilWithoutThrowable;
+import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithThrowable;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_CREATE_ASSET_FILE_DESCRIPTOR_ERROR;
@@ -74,7 +74,7 @@ import android.os.RemoteException;
 import androidx.room.Room;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.ErrorLogUtilSyncCallback;
+import com.android.adservices.common.logging.ErrorLogUtilCallback;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
@@ -944,8 +944,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     }
 
     @Test
-    @SkipLoggingUsageRule(
-            reason = "Using ErrorLogUtilSyncCallback as logging happens in background.")
+    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
     public void testRunner_getAdSelectionData_multiCloudFlagOn_invalidCoordinator_throwsError()
             throws Exception {
 
@@ -966,13 +965,12 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         .setCoordinatorOriginUri(Uri.parse("random-url"))
                         .build();
 
-        ErrorLogUtilSyncCallback errorLogUtilWithoutThrowableCallback =
-                mockErrorLogUtilWithoutThrowable();
+        ErrorLogUtilCallback mErrorLogUtilWithThrowableCallback = mockErrorLogUtilWithThrowable();
 
         GetAdSelectionDataTestCallback callback =
                 invokeGetAdSelectionData(mGetAdSelectionDataRunner, inputParams);
 
-        errorLogUtilWithoutThrowableCallback.assertReceived(
+        mErrorLogUtilWithThrowableCallback.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_INVALID_ARGUMENT,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);

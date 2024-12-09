@@ -26,9 +26,6 @@ import java.lang.annotation.Target;
 /**
  * Annotation used to skip logging usage rule. Use at class level to skip all tests; user at method
  * level to skip individual tests. Reason for usage must be provided.
- *
- * <p>NOTE: If this annotation is used, ErrorLogUtil invocation mocking does not come for "free" as
- * the rule is deactivated for the test method(s); mocking will need to be done explicitly.
  */
 @Retention(RUNTIME)
 @Target({METHOD, TYPE})

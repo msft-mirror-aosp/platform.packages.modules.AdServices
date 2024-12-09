@@ -21,11 +21,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_ALL_APIS_CONSENT_DISABLED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_CONSENT_REVOKED_FOR_APP;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_MISSING_ANY_NOTIFICATION_DISPLAYED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_USER_CONSENT_FOR_API_IS_NOT_GIVEN;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
@@ -127,10 +125,6 @@ public class FledgeConsentFilterTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    @ExpectErrorLogUtilCall(
-            errorCode =
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_CONSENT_REVOKED_FOR_APP,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE)
     public void testAssertAndPersistCallerHasUserConsentForApp_revokedConsent_throwsAndLogsError() {
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(anyString()))
                 .thenReturn(true);

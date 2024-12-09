@@ -29,6 +29,7 @@ import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.EpochComputationClassifierStats;
@@ -73,6 +74,7 @@ public final class OnDeviceClassifierTest extends AdServicesExtendedMockitoTestC
     private static final int DEFAULT_DESCRIPTION_MAX_LENGTH = 2500;
     private static final int DEFAULT_DESCRIPTION_MAX_WORDS = 500;
 
+    @Mock private Flags mMockFlags;
     @Mock private SynchronousFileStorage mMockFileStorage;
     @Mock private ModelManager mModelManager;
     @Mock private CacheManager mCacheManager;

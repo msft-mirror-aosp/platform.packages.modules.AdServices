@@ -16,8 +16,8 @@
 
 package com.android.adservices.service.common;
 
-import static com.android.adservices.common.logging.ErrorLogUtilSyncCallback.mockErrorLogUtilWithThrowable;
-import static com.android.adservices.common.logging.ErrorLogUtilSyncCallback.mockErrorLogUtilWithoutThrowable;
+import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithThrowable;
+import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithoutThrowable;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_ATTRIBUTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_TOPICS;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_ALL;
@@ -45,7 +45,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.ErrorLogUtilSyncCallback;
+import com.android.adservices.common.logging.ErrorLogUtilCallback;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.FlagsFactory;
@@ -183,13 +183,11 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
     @Test
     // TODO (b/355696393): Enhance rule to verify log calls that happen in the background.
-    @SkipLoggingUsageRule(
-            reason = "Using ErrorLogUtilSyncCallback as logging happens in background.")
+    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
     public void testLogUsage_handlesRuntimeException() throws Exception {
         // Do not move this into setup as it will conflict with ErrorLogUtil mocking behavior
         // required by the AdServicesLoggingUsageRule.
-        ErrorLogUtilSyncCallback errorLogUtilWithThrowableCallback =
-                mockErrorLogUtilWithThrowable();
+        ErrorLogUtilCallback mErrorLogUtilWithThrowableCallback = mockErrorLogUtilWithThrowable();
 
         RuntimeException exception = new RuntimeException("D'OH!");
 
@@ -197,7 +195,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
         logUsageAndDontWait(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
 
-        errorLogUtilWithThrowableCallback.assertReceived(
+        mErrorLogUtilWithThrowableCallback.assertReceived(
                 expect,
                 exception,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION,
@@ -207,12 +205,11 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
     @Test
     // TODO (b/355696393): Enhance rule to verify log calls that happen in the background.
-    @SkipLoggingUsageRule(
-            reason = "Using ErrorLogUtilSyncCallback as logging happens in background.")
+    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
     public void testLogUsage_commitFailed() throws Exception {
         // Do not move this into setup as it will conflict with ErrorLogUtil mocking behavior
         // required by the AdServicesLoggingUsageRule.
-        ErrorLogUtilSyncCallback errorLogUtilWithoutThrowableCallback =
+        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallback =
                 mockErrorLogUtilWithoutThrowable();
         mPrefs.onCommitReturns(/* result= */ false);
 
@@ -221,7 +218,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         Map<String, ?> allProps = mPrefs.getAll();
         assertWithMessage("allProps").that(allProps).isEmpty();
 
-        errorLogUtilWithoutThrowableCallback.assertReceived(
+        mErrorLogUtilWithoutThrowableCallback.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);

@@ -160,11 +160,6 @@ public class FailableResultSyncCallback<R, F> extends AbstractSyncCallback
         return getResult();
     }
 
-    protected List<R> internalAssertResultsReceived() throws InterruptedException {
-        assertCalled();
-        return getResults();
-    }
-
     @Override
     public final int getNumberActualCalls() {
         return mCallback.getNumberActualCalls();
