@@ -34,6 +34,7 @@ public @interface SetStringArrayFlag {
     /** Name of the flag. */
     String name();
 
+    // TODO(b/303901926): static import ARRAY_SPLITTER_COMMA from shared code instead
     /** String used to separate the array elements (in the underlying flag sysstem). */
     String separator() default ",";
 
