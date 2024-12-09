@@ -2308,6 +2308,35 @@ public final class FetcherUtilTest {
     }
 
     @Test
+    public void getValidAggregateDebugReportingString_duplicateUnknownTypesInTheSameObject_fails()
+            throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        JSONObject obj = new JSONObject();
+        JSONObject dataObj1 = new JSONObject();
+        JSONObject dataObj2 = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        dataObj1.put("key_piece", "0x3");
+        dataObj1.put("value", 65536);
+        dataObj1.put("types", new JSONArray(Arrays.asList("source-noised")));
+        dataObj2.put("key_piece", "0x3");
+        dataObj2.put("value", 65536);
+        dataObj2.put(
+                "types",
+                new JSONArray(
+                        Arrays.asList(
+                                "invalid-report-type",
+                                "source-storage-limit",
+                                "invalid-report-type")));
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+                .isFalse();
+    }
+
+    @Test
     public void getValidAggregateDebugReportingString_duplicateTypesInDifferentObjects_fails()
             throws JSONException {
         when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
@@ -2327,6 +2356,33 @@ public final class FetcherUtilTest {
         dataObj2.put(
                 "types",
                 new JSONArray(Arrays.asList("source-max-event-states-limit", "source-noised")));
+        obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
+        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+                .isFalse();
+    }
+
+    @Test
+    public void
+            getValidAggregateDebugReportingString_duplicateUnknownTypesInDifferentObjects_fails()
+                    throws JSONException {
+        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+                .thenReturn("https://cloud.coordination.test");
+        JSONObject obj = new JSONObject();
+        JSONObject dataObj1 = new JSONObject();
+        JSONObject dataObj2 = new JSONObject();
+        obj.put("key_piece", "0x3");
+        obj.put("budget", 65536);
+        obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
+        dataObj1.put("key_piece", "0x3");
+        dataObj1.put("value", 65536);
+        dataObj1.put("types", new JSONArray(Arrays.asList("source-noised", "invalid-report-type")));
+        dataObj2.put("key_piece", "0x3");
+        dataObj2.put("value", 65536);
+        dataObj2.put(
+                "types",
+                new JSONArray(
+                        Arrays.asList("source-max-event-states-limit", "invalid-report-type")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
         assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
                 .isFalse();
