@@ -1327,6 +1327,9 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE =
             "measurement_max_aggregate_reports_per_source";
 
+    public static final String KEY_MEASUREMENT_ENABLE_UNBOUNDED_REPORTS_WITH_TRIGGER_CONTEXT_ID =
+            "Measurement__enable_unbounded_reports_with_trigger_context_id";
+
     public static final String KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION =
             "measurement_max_aggregate_keys_per_source_registration";
 

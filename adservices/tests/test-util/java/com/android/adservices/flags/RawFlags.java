@@ -2944,6 +2944,13 @@ public class RawFlags implements Flags {
     }
 
     @Override
+    public final boolean getMeasurementEnableUnboundedReportsWithTriggerContextId() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_ENABLE_UNBOUNDED_REPORTS_WITH_TRIGGER_CONTEXT_ID,
+                MEASUREMENT_ENABLE_UNBOUNDED_REPORTS_WITH_TRIGGER_CONTEXT_ID);
+    }
+
+    @Override
     public final boolean getMeasurementEnableFifoDestinationsDeleteAggregateReports() {
         return mBackend.getFlag(
                 KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS,

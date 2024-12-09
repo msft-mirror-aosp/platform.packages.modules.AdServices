@@ -690,12 +690,13 @@ class MeasurementDao implements IMeasurementDao {
         String query =
                 String.format(
                         Locale.ENGLISH,
-                        "SELECT COUNT(*) FROM %1$s WHERE %2$s = '%3$s' AND %4$s = '%5$s'",
-                        MeasurementTables.AggregateReport.TABLE,
-                        MeasurementTables.AggregateReport.SOURCE_ID,
-                        sourceId,
-                        MeasurementTables.AggregateReport.API,
-                        api);
+                        "SELECT COUNT(*) FROM " + MeasurementTables.AggregateReport.TABLE
+                                + " WHERE " + MeasurementTables.AggregateReport.SOURCE_ID
+                                + " = '" + sourceId + "'"
+                                + " AND " + MeasurementTables.AggregateReport.API
+                                + " = '" + api + "'"
+                                + " AND " + MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID
+                                + " IS NULL");
         return (int) DatabaseUtils.longForQuery(mSQLTransaction.getDatabase(), query, null);
     }
 
