@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.adselection;
+package com.android.adservices.service.adselection.debug;
 
 import androidx.annotation.NonNull;
 
 /** A no-op Debug reporting strategy */
-public class DebugReportingScriptDisabledStrategy extends DebugReportingScriptStrategy {
+public final class DebugReportingScriptDisabledStrategy extends DebugReportingScriptStrategy {
 
     private static final String DEFAULT_SCRIPT =
             HEADER_SCRIPT
@@ -27,12 +27,12 @@ public class DebugReportingScriptDisabledStrategy extends DebugReportingScriptSt
                     + "forDebuggingOnly.reportAdAuctionLoss = function(uri) {};\n";
 
     @Override
-    String wrapGenerateBidsV3Js(@NonNull String jsScript) {
+    public String wrapGenerateBidsV3Js(@NonNull String jsScript) {
         return DEFAULT_SCRIPT + jsScript;
     }
 
     @Override
-    String wrapIterativeJs(@NonNull String jsScript) {
+    public String wrapIterativeJs(@NonNull String jsScript) {
         return DEFAULT_SCRIPT + jsScript;
     }
 }
