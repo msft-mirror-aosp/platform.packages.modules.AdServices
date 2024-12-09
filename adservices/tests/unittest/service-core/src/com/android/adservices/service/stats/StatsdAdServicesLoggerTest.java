@@ -2166,6 +2166,9 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setSignalEncodingSuccesses(5)
                         .setSignalEncodingFailures(3)
                         .setSignalEncodingSkips(2)
+                        .setEncodingSourceType(
+                                AdsRelevanceStatusUtils
+                                        .PAS_ENCODING_SOURCE_TYPE_ENCODING_JOB_SERVICE)
                         .build();
         doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
 
@@ -2175,10 +2178,12 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         MockedVoidMethod writeInvocation =
                 () ->
                         AdServicesStatsLog.write(
-                                eq(ENCODING_JOB_RUN),
-                                eq(5),
-                                eq(3),
-                                eq(2));
+                                ENCODING_JOB_RUN,
+                                5,
+                                3,
+                                2,
+                                AdsRelevanceStatusUtils
+                                        .PAS_ENCODING_SOURCE_TYPE_ENCODING_JOB_SERVICE);
 
         verify(writeInvocation);
 
