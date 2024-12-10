@@ -21,8 +21,8 @@ import com.android.adservices.mockito.StaticClassChecker;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 
-@SuppressWarnings("VisibleForTests") // TODO(b/343741206): Remove suppress warning once fixed.
 /** Test case for the {@code AdServicesJobSTestCase.Mocker} class. */
+@SuppressWarnings("VisibleForTests") // TODO(b/343741206): Remove suppress warning once fixed.
 public final class AdServicesJobTestCaseMockerTest extends AdServicesJobMockerTestCase<Mocker> {
 
     @Override
