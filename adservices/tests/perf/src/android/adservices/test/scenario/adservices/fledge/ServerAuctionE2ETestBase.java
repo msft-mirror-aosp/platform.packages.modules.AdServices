@@ -28,6 +28,10 @@ import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
+
+import org.junit.Rule;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -49,6 +53,10 @@ public abstract class ServerAuctionE2ETestBase {
                     .setContext(CONTEXT)
                     .setExecutor(CALLBACK_EXECUTOR)
                     .build();
+
+    @Rule
+    public final AdServicesFlagsSetterRule adServicesFlagsSetterRule =
+            AdServicesFlagsSetterRule.newInstance().setAllLogcatTags();
 
     protected abstract String getTag();
 
