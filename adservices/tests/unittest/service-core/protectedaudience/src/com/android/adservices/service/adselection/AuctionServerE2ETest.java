@@ -169,7 +169,6 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
-import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
@@ -187,7 +186,6 @@ import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.testutils.DevSessionHelper;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -235,9 +233,8 @@ import java.util.stream.Collectors;
 
 @MockStatic(ConsentManager.class)
 @MockStatic(AppImportanceFilter.class)
-@SpyStatic(DebugFlags.class)
-@SpyStatic(FlagsFactory.class)
-@SpyStatic(JSScriptEngine.class)
+@MockStatic(DebugFlags.class)
+@MockStatic(FlagsFactory.class)
 @SetErrorLogUtilDefaultParams(throwable = ExpectErrorLogUtilWithExceptionCall.Any.class)
 @SkipLoggingUsageRule(reason = "b/355696393")
 public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCase {
