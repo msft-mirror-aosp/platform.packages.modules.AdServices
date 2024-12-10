@@ -16,6 +16,9 @@
 
 package android.adservices.cts;
 
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_DEFAULT_PARTIAL_CUSTOM_AUDIENCES_CONSTRUCTOR;
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.CommonFixture;
@@ -23,6 +26,7 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.PartialCustomAudience;
 import android.adservices.customaudience.ScheduleCustomAudienceUpdateRequest;
 import android.net.Uri;
+import android.platform.test.annotations.RequiresFlagsEnabled;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
@@ -33,6 +37,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 
+@RequiresFlagsEnabled(FLAG_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
 public final class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUnitTestCase {
     public static final Uri VALID_UPDATE_URI_1 =
             CustomAudienceFixture.getValidFetchUriByBuyer(CommonFixture.VALID_BUYER_1, "1");
@@ -60,6 +65,8 @@ public final class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUni
     }
 
     @Test
+    @RequiresFlagsEnabled(
+            FLAG_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_DEFAULT_PARTIAL_CUSTOM_AUDIENCES_CONSTRUCTOR)
     public void testBuildValidRequest_withoutRequiredPartialCustomAudienceList_success() {
         ScheduleCustomAudienceUpdateRequest request =
                 new ScheduleCustomAudienceUpdateRequest.Builder(VALID_UPDATE_URI_1, VALID_DELAY)
@@ -110,6 +117,8 @@ public final class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUni
     }
 
     @Test
+    @RequiresFlagsEnabled(
+            FLAG_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_DEFAULT_PARTIAL_CUSTOM_AUDIENCES_CONSTRUCTOR)
     public void testConstructorWithoutPartialCaList_NullUpdateUri_Throws() {
         assertThrows(
                 NullPointerException.class,
@@ -126,6 +135,8 @@ public final class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUni
     }
 
     @Test
+    @RequiresFlagsEnabled(
+            FLAG_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_DEFAULT_PARTIAL_CUSTOM_AUDIENCES_CONSTRUCTOR)
     public void testConstructorWithoutPartialCaList_NullDelay_Throws() {
         assertThrows(
                 NullPointerException.class,
@@ -142,6 +153,8 @@ public final class ScheduleCustomAudienceUpdateRequestTest extends AdServicesUni
     }
 
     @Test
+    @RequiresFlagsEnabled(
+            FLAG_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_DEFAULT_PARTIAL_CUSTOM_AUDIENCES_CONSTRUCTOR)
     public void testConstructorWithoutPartialCaList_NegativeDelay_Throws() {
         assertThrows(
                 IllegalArgumentException.class,
