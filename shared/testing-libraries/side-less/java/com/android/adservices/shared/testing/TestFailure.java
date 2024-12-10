@@ -15,25 +15,33 @@
  */
 package com.android.adservices.shared.testing;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.util.Locale;
+import java.util.Objects;
 
-// TODO(b/328682831): add unit tests
 /** Exception used to wrap a test failure and provide more information on why it failed. */
 @SuppressWarnings("OverrideThrowableToString")
 public final class TestFailure extends Exception {
 
-    // TODO(b/328682831): rename to extraNnfo or something like that (same on other places)
+    @VisibleForTesting
+    static final String MESSAGE_TEMPLATE = "Test failed (see %s below the stack trace)";
+
+    // TODO(b/383404021): rename to extraInfo or something like that (same on constructor)
     private final String mDump;
 
-    // TODO(b/324919960): make it package-protected again or make sure it's unit tested.
     public TestFailure(Throwable cause, String dumpDescription, StringBuilder dump) {
         super(
-                "Test failed (see " + dumpDescription + " below the stack trace)",
+                String.format(
+                        Locale.ENGLISH,
+                        MESSAGE_TEMPLATE,
+                        Objects.requireNonNull(dumpDescription, "dumpDescription cannot be null")),
                 cause,
                 /* enableSuppression= */ false,
                 /* writableStackTrace= */ false);
-        mDump = dump.toString();
+        mDump = Objects.requireNonNull(dump, "dump cannot be null").toString();
         setStackTrace(cause.getStackTrace());
     }
 
@@ -53,7 +61,7 @@ public final class TestFailure extends Exception {
         return mDump;
     }
 
-    // toString() is overridden to remove the AbstractAdServicesFlagsSetterRule$ from the name
+    // toString() is overridden to remove the package name
     @Override
     public String toString() {
         return getClass().getSimpleName() + ": " + getMessage();
