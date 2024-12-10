@@ -16,6 +16,8 @@
 
 package com.android.adservices.shared.testing.annotations;
 
+import static com.android.adservices.shared.common.flags.Constants.ARRAY_SPLITTER_COMMA;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
@@ -35,7 +37,7 @@ public @interface SetStringArrayFlag {
     String name();
 
     /** String used to separate the array elements (in the underlying flag sysstem). */
-    String separator() default ",";
+    String separator() default ARRAY_SPLITTER_COMMA;
 
     /** Value the flag will be set to when the test is running */
     String[] value();

@@ -16,22 +16,14 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-java_library_host {
-    name: "adservices-shared-hostside-testing",
+filegroup {
+    name: "adservices-shared-sideless-flags-sources",
     srcs: [
-        ":adservices-shared-sideless-flags-sources",
-        ":adservices-shared-sideless-testing-sources",
-        "java/**/*.java",
-    ],
-    libs: [
-        "error_prone_annotations", // @FormatMethod / @FormatString
-        "guava-android-host", // @VisibleForTesting
-        "junit",
-        "tradefed",
+        "java/com/android/adservices/shared/common/flags/Constants.java",
     ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
-        "//packages/modules/ExtServices:__subpackages__",
         "//packages/modules/OnDevicePersonalization:__subpackages__",
     ],
+    path: "java",
 }
