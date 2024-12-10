@@ -595,21 +595,21 @@ public class FetcherUtil {
             }
             List<String> validDebugDataTypes = new ArrayList<>();
             for (String debugDataType : maybeDebugDataTypes.get()) {
+                if (existingReportTypes.contains(debugDataType)) {
+                    LoggerFactory.getMeasurementLogger()
+                            .d(
+                                    "duplicate aggregate debug reporting data types within the"
+                                            + " same object or across multiple objects are not"
+                                            + " allowed.");
+                    return Optional.empty();
+                }
+                // Exclude report type if not recognized
                 Optional<DebugReportApi.Type> maybeType =
                         DebugReportApi.Type.findByValue(debugDataType);
-                // Ignore the type if not recognized
                 if (maybeType.isPresent()) {
-                    if (existingReportTypes.contains(maybeType.get().getValue())) {
-                        LoggerFactory.getMeasurementLogger()
-                                .d(
-                                        "duplicate aggregate debug reporting data types within the"
-                                                + " same object or across multiple objects are not"
-                                                + " allowed.");
-                        return Optional.empty();
-                    }
                     validDebugDataTypes.add(maybeType.get().getValue());
-                    existingReportTypes.add(maybeType.get().getValue());
                 }
+                existingReportTypes.add(debugDataType);
             }
             validDebugDataObj.put(
                     AggregateDebugReportDataHeaderContract.TYPES,

@@ -15,6 +15,8 @@
  */
 package com.android.adservices.shared.testing;
 
+import static com.android.adservices.shared.common.flags.Constants.ARRAY_SPLITTER_COMMA;
+
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.NameValuePair.Matcher;
@@ -213,11 +215,11 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         // is correct for flag-ramp / AOAO testing.
         log(mPreTestFlags, "pre-test flags");
         if (!mSkipStuffWhenObjectsAreNullOnUnitTests) {
-        runSafely(
-                cleanUpErrors,
-                () ->
-                        mPreTestSystemProperties.addAll(
-                                mSystemProperties.getAll(mSystemPropertiesMatcher)));
+            runSafely(
+                    cleanUpErrors,
+                    () ->
+                            mPreTestSystemProperties.addAll(
+                                    mSystemProperties.getAll(mSystemPropertiesMatcher)));
         }
 
         runInitialCommands(testName);
@@ -425,9 +427,6 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     public final T setFlag(String name, String... values) {
         return setArrayFlagWithExplicitSeparator(name, ARRAY_SPLITTER_COMMA, values);
     }
-
-    // TODO(b/303901926): static import from shared code instead
-    private static final String ARRAY_SPLITTER_COMMA = ",";
 
     /**
      * Sets a string array flag with the given elements, separated by {@code separator}.

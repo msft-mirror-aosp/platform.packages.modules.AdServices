@@ -549,14 +549,18 @@ public class AggregateDebugReportApi {
         if (aggregateDebugReportDataList == null) {
             return Optional.empty();
         }
-        return aggregateDebugReportDataList.stream()
-                .filter(
-                        data ->
-                                data.getReportType().contains(reportType.getValue())
-                                        || data.getReportType()
-                                                .contains(
-                                                        DebugReportApi.Type.UNSPECIFIED.getValue()))
-                .findFirst();
+        Optional<AggregateDebugReportData> unspecifiedDebugData = Optional.empty();
+        for (AggregateDebugReportData data : aggregateDebugReportDataList) {
+            for (String type : data.getReportType()) {
+                if (type.equals(reportType.getValue())) {
+                    return Optional.of(data);
+                }
+                if (type.equals(DebugReportApi.Type.UNSPECIFIED.getValue())) {
+                    unspecifiedDebugData = Optional.of(data);
+                }
+            }
+        }
+        return unspecifiedDebugData;
     }
 
     private Uri getSourceDestinationToReport(Source source) {

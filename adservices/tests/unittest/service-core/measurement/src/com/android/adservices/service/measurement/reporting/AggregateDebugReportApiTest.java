@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.measurement.reporting;
 
-import static com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator.POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION;
-import static com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator.PRE_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION;
 import static com.android.adservices.service.measurement.reporting.AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API;
 import static com.android.adservices.service.measurement.util.Applications.ANDROID_APP_SCHEME;
 
@@ -74,12 +72,19 @@ public class AggregateDebugReportApiTest {
 
     private static final String PRE_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "0.1";
     private static final String POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION = "1.0";
-    private static final String AGGREGATE_DEBUG_REPORT_STRING =
+    private static final String AGGREGATE_DEBUG_REPORT_STRING_1 =
             "{\"key_piece\":\"0x222\",\"debug_data\":[{\"types\":"
                     + " [\"trigger-no-matching-source\", "
                     + "\"trigger-aggregate-deduplicated\"],\"key_piece\":"
                     + " \"0x333\",\"value\": 333}],"
                     + "\"aggregation_coordinator_origin\":\"https://aws.example\"}";
+    private static final String AGGREGATE_DEBUG_REPORT_STRING_2 =
+            "{\"budget\":1024,\"key_piece\":\"0x100\",\"debug_data\":[{\"types\":"
+                    + " [\"source-destination-limit\","
+                    + " \"unspecified\"],\"key_piece\": \"0x111\",\"value\": 111},"
+                    + "{\"types\":"
+                    + " [\"source-channel-capacity-limit\"],\"key_piece\":"
+                    + " \"0x222\",\"value\": 222}]}";
     private static final Uri BASE_WEB_DESTINATION = Uri.parse("https://destination.com");
     private static final Uri FULL_WEB_DESTINATION = Uri.parse("https://destination.com/path");
     private static final Uri AGGREGATION_COORDINATOR_ORIGIN =
@@ -957,7 +962,7 @@ public class AggregateDebugReportApiTest {
                 .thenReturn(100);
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
-                        .setAggregateDebugReportingString(AGGREGATE_DEBUG_REPORT_STRING)
+                        .setAggregateDebugReportingString(AGGREGATE_DEBUG_REPORT_STRING_1)
                         .build();
 
         // Execution
@@ -1004,7 +1009,7 @@ public class AggregateDebugReportApiTest {
                 .thenReturn(100);
         Trigger trigger =
                 TriggerFixture.getValidTriggerBuilder()
-                        .setAggregateDebugReportingString(AGGREGATE_DEBUG_REPORT_STRING)
+                        .setAggregateDebugReportingString(AGGREGATE_DEBUG_REPORT_STRING_1)
                         .build();
 
         // Execution
@@ -1288,7 +1293,7 @@ public class AggregateDebugReportApiTest {
                 TriggerFixture.getValidTriggerBuilder()
                         .setDestinationType(EventSurfaceType.WEB)
                         .setAttributionDestination(FULL_WEB_DESTINATION)
-                        .setAggregateDebugReportingString(AGGREGATE_DEBUG_REPORT_STRING)
+                        .setAggregateDebugReportingString(AGGREGATE_DEBUG_REPORT_STRING_1)
                         .setIsDebugReporting(true)
                         .setArDebugPermission(true)
                         .build();
@@ -1339,7 +1344,7 @@ public class AggregateDebugReportApiTest {
                 TriggerFixture.getValidTriggerBuilder()
                         .setDestinationType(EventSurfaceType.WEB)
                         .setAttributionDestination(FULL_WEB_DESTINATION)
-                        .setAggregateDebugReportingString(AGGREGATE_DEBUG_REPORT_STRING)
+                        .setAggregateDebugReportingString(AGGREGATE_DEBUG_REPORT_STRING_1)
                         .setIsDebugReporting(true)
                         .setArDebugPermission(true)
                         .build();
@@ -1371,6 +1376,103 @@ public class AggregateDebugReportApiTest {
         verify(mMeasurementDao)
                 .sumAggregateDebugReportBudgetXPublisherXWindow(
                         any(Uri.class), anyInt(), anyLong());
+    }
+
+    @Test
+    public void scheduleSourceRegistrationDebugReport_unspecifiedPresent_MatchExplicitTypeFirst()
+            throws DatastoreException, JSONException {
+        // Setup
+        when(mMeasurementDao.sumAggregateDebugReportBudgetXOriginXPublisherXWindow(
+                        any(Uri.class), anyInt(), any(Uri.class), anyLong()))
+                .thenReturn(100);
+        when(mMeasurementDao.sumAggregateDebugReportBudgetXPublisherXWindow(
+                        any(Uri.class), anyInt(), anyLong()))
+                .thenReturn(100);
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAggregateDebugReportingString(AGGREGATE_DEBUG_REPORT_STRING_2)
+                        .build();
+
+        // Execution
+        mAggregateDebugReportApi.scheduleSourceRegistrationDebugReport(
+                source, Set.of(DebugReportApi.Type.SOURCE_CHANNEL_CAPACITY_LIMIT), mMeasurementDao);
+
+        // Verification
+        AggregateReport expectedAggregateReport =
+                createAggregateReportBuilder(
+                                source,
+                                (String) null,
+                                Arrays.asList(
+                                        new AggregateHistogramContribution.Builder()
+                                                // 0x100 or 0x222
+                                                .setKey(new BigInteger("322", 16))
+                                                .setValue(222)
+                                                .setId(UnsignedLong.ZERO)
+                                                .build()),
+                                POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION)
+                        .build();
+        ArgumentCaptor<AggregateReport> aggregateReportArgumentCaptor =
+                ArgumentCaptor.forClass(AggregateReport.class);
+        verify(mMeasurementDao).insertAggregateReport(aggregateReportArgumentCaptor.capture());
+        assertThat(aggregateReportArgumentCaptor.getValue()).isEqualTo(expectedAggregateReport);
+        AggregateDebugReportRecord expectedRecord =
+                createAggregateDebugReportRecord(
+                        expectedAggregateReport,
+                        222,
+                        source.getRegistrant(),
+                        extractBaseUri(source.getPublisher()).get(),
+                        extractBaseUri(source.getRegistrationOrigin()).get());
+        verify(mMeasurementDao).insertAggregateDebugReportRecord(eq(expectedRecord));
+        verify(mMeasurementDao, never()).updateSourceAggregateDebugContributions(source);
+    }
+
+    @Test
+    public void
+            scheduleSourceRegistrationDebugReport_unspecifiedPresent_fallbackToUnspecifiedMatch()
+                    throws DatastoreException, JSONException {
+        // Setup
+        when(mMeasurementDao.sumAggregateDebugReportBudgetXOriginXPublisherXWindow(
+                        any(Uri.class), anyInt(), any(Uri.class), anyLong()))
+                .thenReturn(100);
+        when(mMeasurementDao.sumAggregateDebugReportBudgetXPublisherXWindow(
+                        any(Uri.class), anyInt(), anyLong()))
+                .thenReturn(100);
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAggregateDebugReportingString(AGGREGATE_DEBUG_REPORT_STRING_2)
+                        .build();
+
+        // Execution
+        mAggregateDebugReportApi.scheduleSourceRegistrationDebugReport(
+                source, Set.of(DebugReportApi.Type.SOURCE_REPORTING_ORIGIN_LIMIT), mMeasurementDao);
+
+        // Verification
+        AggregateReport expectedAggregateReport =
+                createAggregateReportBuilder(
+                                source,
+                                (String) null,
+                                Arrays.asList(
+                                        new AggregateHistogramContribution.Builder()
+                                                // 0x100 or 0x222
+                                                .setKey(new BigInteger("111", 16))
+                                                .setValue(111)
+                                                .setId(UnsignedLong.ZERO)
+                                                .build()),
+                                POST_FLEXIBLE_CONTRIBUTION_FILTERING_API_VERSION)
+                        .build();
+        ArgumentCaptor<AggregateReport> aggregateReportArgumentCaptor =
+                ArgumentCaptor.forClass(AggregateReport.class);
+        verify(mMeasurementDao).insertAggregateReport(aggregateReportArgumentCaptor.capture());
+        assertThat(aggregateReportArgumentCaptor.getValue()).isEqualTo(expectedAggregateReport);
+        AggregateDebugReportRecord expectedRecord =
+                createAggregateDebugReportRecord(
+                        expectedAggregateReport,
+                        111,
+                        source.getRegistrant(),
+                        extractBaseUri(source.getPublisher()).get(),
+                        extractBaseUri(source.getRegistrationOrigin()).get());
+        verify(mMeasurementDao).insertAggregateDebugReportRecord(eq(expectedRecord));
+        verify(mMeasurementDao, never()).updateSourceAggregateDebugContributions(source);
     }
 
     private AggregateReport.Builder createAggregateReportBuilder(

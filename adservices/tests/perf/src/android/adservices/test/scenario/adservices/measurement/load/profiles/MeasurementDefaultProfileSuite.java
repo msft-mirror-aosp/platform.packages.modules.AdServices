@@ -38,6 +38,7 @@ import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.DebugFlagsConstants;
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.common.flags.Constants;
 
 import com.google.mockwebserver.MockWebServer;
 
@@ -74,9 +75,9 @@ public class MeasurementDefaultProfileSuite {
                     // Override adid kill switch.
                     .setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false)
                     // Override the flag to allow current package to call APIs.
-                    .setPpapiAppAllowList(FlagsConstants.ALLOWLIST_ALL)
+                    .setPpapiAppAllowList(Constants.ALLOWLIST_ALL)
                     // Override the flag to allow current package to call delete API.
-                    .setMsmtWebContextClientAllowList(FlagsConstants.ALLOWLIST_ALL)
+                    .setMsmtWebContextClientAllowList(Constants.ALLOWLIST_ALL)
                     // Override the flag for the global kill switch.
                     .setFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, false)
                     // Override measurement kill switch.

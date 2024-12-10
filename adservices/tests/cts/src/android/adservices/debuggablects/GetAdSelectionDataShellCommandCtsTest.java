@@ -32,7 +32,7 @@ import android.util.Base64;
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesShellCommandHelper;
-import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.common.flags.Constants;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
@@ -78,7 +78,7 @@ public class GetAdSelectionDataShellCommandCtsTest extends FledgeDebuggableScena
 
         startDevSession();
         mCustomAudienceTestFixture = new CustomAudienceTestFixture(mCustomAudienceClient);
-        flags.setPpapiAppAllowList(FlagsConstants.ALLOWLIST_ALL);
+        flags.setPpapiAppAllowList(Constants.ALLOWLIST_ALL);
     }
 
     @After

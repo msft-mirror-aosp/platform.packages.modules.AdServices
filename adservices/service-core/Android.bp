@@ -139,6 +139,7 @@ android_library {
     srcs: [
         ":adservices-service-core-sources",
         ":adservices-service-core-jni-sources",
+        ":adservices-shared-sideless-flags-sources",
         ":cobalt-registry-validated-java",
         ":statslog-adservices-java-gen",
     ],

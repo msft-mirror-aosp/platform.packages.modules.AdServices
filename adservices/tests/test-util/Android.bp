@@ -50,6 +50,7 @@ android_library {
     srcs: [
         ":adservices-test-utility-sideless-sources",
         ":adservices-test-utility-sources",
+        ":adservices-shared-sideless-flags-sources",
         ":adservices-service-core-phflags-sources",
         // TODO(b/345219434): should use java-defaults instead of manually including
         // the 2 sources below
@@ -100,6 +101,7 @@ java_library_host {
     srcs: [
         "host-side/**/*.java",
         ":adservices-service-core-flags-constants-sources",
+        ":adservices-shared-sideless-flags-sources",
         ":adservices-test-utility-sideless-sources",
     ],
     static_libs: [
