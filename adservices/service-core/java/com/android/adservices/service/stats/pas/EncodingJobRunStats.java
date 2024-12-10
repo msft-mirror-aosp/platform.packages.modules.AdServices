@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.stats.pas;
 
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
+
 import com.google.auto.value.AutoValue;
 
 /** Class for logging per encoding background job run stats. */
@@ -30,9 +32,13 @@ public abstract class EncodingJobRunStats {
     /** Returns the number of AdTechs skipped due to their signals being unmodified. */
     public abstract int getSignalEncodingSkips();
 
+    /** Returns the PAS encoding source type. */
+    public abstract int getEncodingSourceType();
+
     /** Returns generic builder. */
     public static Builder builder() {
-        return new AutoValue_EncodingJobRunStats.Builder();
+        return new AutoValue_EncodingJobRunStats.Builder()
+                .setEncodingSourceType(AdsRelevanceStatusUtils.PAS_ENCODING_SOURCE_TYPE_UNSET);
     }
 
     /** Builder class for EncodingJobRunStats. */
@@ -43,6 +49,9 @@ public abstract class EncodingJobRunStats {
         public abstract Builder setSignalEncodingFailures(int value);
 
         public abstract Builder setSignalEncodingSkips(int value);
+
+        public abstract Builder setEncodingSourceType(
+                @AdsRelevanceStatusUtils.PasEncodingSourceType int encodingSourceType);
 
         public abstract EncodingJobRunStats build();
     }

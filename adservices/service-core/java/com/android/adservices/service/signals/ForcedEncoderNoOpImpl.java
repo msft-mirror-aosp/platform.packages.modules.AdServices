@@ -34,10 +34,10 @@ public class ForcedEncoderNoOpImpl implements ForcedEncoder {
      * @return a {@link FluentFuture} that completes when the encoding and encoder updates are
      *     complete. The future's result is {@code null}.
      */
-    public FluentFuture<Void> forceEncodingAndUpdateEncoderForBuyer(AdTechIdentifier buyer) {
+    public FluentFuture<Boolean> forceEncodingAndUpdateEncoderForBuyer(AdTechIdentifier buyer) {
         sLogger.v("Forced encoding is disabled.");
 
         // No-op.
-        return FluentFuture.from(Futures.immediateVoidFuture());
+        return FluentFuture.from(Futures.immediateFuture(false));
     }
 }

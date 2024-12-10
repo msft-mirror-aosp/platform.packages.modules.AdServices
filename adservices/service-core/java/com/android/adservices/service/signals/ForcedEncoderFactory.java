@@ -16,18 +16,28 @@
 
 package com.android.adservices.service.signals;
 
+import android.content.Context;
+
 public class ForcedEncoderFactory {
 
     // Flags determining which ForcedEncoder to create.
     private final boolean mFledgeEnableForcedEncodingAfterSignalsUpdate;
+    private final long mFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds;
+    private final Context mContext;
 
     /**
      * Constructs and initializes a {@link ForcedEncoderFactory} with configuration values to create
      * a relevant {@link ForcedEncoder}.
      */
-    public ForcedEncoderFactory(boolean fledgeEnableForcedEncodingAfterSignalsUpdate) {
+    public ForcedEncoderFactory(
+            boolean fledgeEnableForcedEncodingAfterSignalsUpdate,
+            long fledgeForcedEncodingAfterSignalsUpdateCooldownSeconds,
+            Context context) {
         mFledgeEnableForcedEncodingAfterSignalsUpdate =
                 fledgeEnableForcedEncodingAfterSignalsUpdate;
+        mFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds =
+                fledgeForcedEncodingAfterSignalsUpdateCooldownSeconds;
+        mContext = context;
     }
 
     /**
@@ -37,7 +47,8 @@ public class ForcedEncoderFactory {
      */
     ForcedEncoder createInstance() {
         if (mFledgeEnableForcedEncodingAfterSignalsUpdate) {
-            return new ForcedEncoderImpl();
+            return new ForcedEncoderImpl(
+                    mFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds, mContext);
         }
         return new ForcedEncoderNoOpImpl();
     }

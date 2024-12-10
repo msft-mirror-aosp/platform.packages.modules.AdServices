@@ -18,11 +18,24 @@ package com.android.adservices.service.common;
 
 import static com.android.adservices.service.common.Throttler.ApiKey.ADID_API_APP_PACKAGE_NAME;
 import static com.android.adservices.service.common.Throttler.ApiKey.APPSETID_API_APP_PACKAGE_NAME;
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_PERSIST_AD_SELECTION_RESULT;
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS;
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION;
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SELECT_ADS;
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SELECT_ADS_WITH_OUTCOMES;
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SET_APP_INSTALL_ADVERTISERS;
+import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM;
 import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT_API_REGISTER_SOURCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT_API_REGISTER_SOURCES;
 import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT_API_REGISTER_TRIGGER;
 import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT_API_REGISTER_WEB_SOURCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT_API_REGISTER_WEB_TRIGGER;
+import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS;
 import static com.android.adservices.service.common.Throttler.ApiKey.UNKNOWN;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -134,6 +147,21 @@ public final class ThrottlerTest extends AdServicesMockitoTestCase {
         doReturn(6F).when(mMockFlags).getMeasurementRegisterTriggerRequestPermitsPerSecond();
         doReturn(7F).when(mMockFlags).getMeasurementRegisterWebTriggerRequestPermitsPerSecond();
         doReturn(8F).when(mMockFlags).getMeasurementRegisterSourcesRequestPermitsPerSecond();
+        doReturn(9F).when(mMockFlags).getFledgeJoinCustomAudienceRequestPermitsPerSecond();
+        doReturn(10F).when(mMockFlags).getFledgeFetchAndJoinCustomAudienceRequestPermitsPerSecond();
+        doReturn(11F)
+                .when(mMockFlags)
+                .getFledgeScheduleCustomAudienceUpdateRequestPermitsPerSecond();
+        doReturn(12F).when(mMockFlags).getFledgeLeaveCustomAudienceRequestPermitsPerSecond();
+        doReturn(13F).when(mMockFlags).getFledgeUpdateSignalsRequestPermitsPerSecond();
+        doReturn(14F).when(mMockFlags).getFledgeSelectAdsRequestPermitsPerSecond();
+        doReturn(15F).when(mMockFlags).getFledgeSelectAdsWithOutcomesRequestPermitsPerSecond();
+        doReturn(16F).when(mMockFlags).getFledgeGetAdSelectionDataRequestPermitsPerSecond();
+        doReturn(17F).when(mMockFlags).getFledgeReportImpressionRequestPermitsPerSecond();
+        doReturn(18F).when(mMockFlags).getFledgeReportInteractionRequestPermitsPerSecond();
+        doReturn(19F).when(mMockFlags).getFledgePersistAdSelectionResultRequestPermitsPerSecond();
+        doReturn(20F).when(mMockFlags).getFledgeSetAppInstallAdvertisersRequestPermitsPerSecond();
+        doReturn(21F).when(mMockFlags).getFledgeUpdateAdCounterHistogramRequestPermitsPerSecond();
 
         Throttler throttler = Throttler.newInstance(mMockFlags);
 
@@ -160,6 +188,45 @@ public final class ThrottlerTest extends AdServicesMockitoTestCase {
 
         // Register Sources ApiKey configured with 8 request per second
         assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_SOURCES, 8);
+
+        // Register Sources ApiKey configured with 9 request per second
+        assertAcquireSeveralTimes(throttler, FLEDGE_API_JOIN_CUSTOM_AUDIENCE, 9);
+
+        // Register Sources ApiKey configured with 10 request per second
+        assertAcquireSeveralTimes(throttler, FLEDGE_API_FETCH_CUSTOM_AUDIENCE, 10);
+
+        // Register Sources ApiKey configured with 11 request per second
+        assertAcquireSeveralTimes(throttler, FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE, 11);
+
+        // Register Sources ApiKey configured with 11 request per second
+        assertAcquireSeveralTimes(throttler, FLEDGE_API_LEAVE_CUSTOM_AUDIENCE, 12);
+
+        // Register Sources ApiKey configured with 12 request per second
+        assertAcquireSeveralTimes(throttler, PROTECTED_SIGNAL_API_UPDATE_SIGNALS, 13);
+
+        // Register Sources ApiKey configured with 13 request per second
+        assertAcquireSeveralTimes(throttler, FLEDGE_API_SELECT_ADS, 14);
+
+        // Register Sources ApiKey configured with 14 request per second
+        assertAcquireSeveralTimes(throttler, FLEDGE_API_SELECT_ADS_WITH_OUTCOMES, 15);
+
+        // Register Sources ApiKey configured with 15 request per second
+        assertAcquireSeveralTimes(throttler, FLEDGE_API_GET_AD_SELECTION_DATA, 16);
+
+        // Register Sources ApiKey configured with 16 request per second
+        assertAcquireSeveralTimes(throttler, FLEDGE_API_REPORT_IMPRESSIONS, 17);
+
+        // Register Sources ApiKey configured with 17 request per second
+        assertAcquireSeveralTimes(throttler, FLEDGE_API_REPORT_INTERACTION, 18);
+
+        // Register Sources ApiKey configured with 18 request per second
+        assertAcquireSeveralTimes(throttler, FLEDGE_API_PERSIST_AD_SELECTION_RESULT, 19);
+
+        // Register Sources ApiKey configured with 19 request per second
+        assertAcquireSeveralTimes(throttler, FLEDGE_API_SET_APP_INSTALL_ADVERTISERS, 20);
+
+        // Register Sources ApiKey configured with 20 request per second
+        assertAcquireSeveralTimes(throttler, FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM, 21);
     }
 
     @Test
@@ -305,5 +372,37 @@ public final class ThrottlerTest extends AdServicesMockitoTestCase {
                 .getMeasurementRegisterWebTriggerRequestPermitsPerSecond();
         doReturn(permitsPerSecond).when(mMockFlags).getTopicsApiSdkRequestPermitsPerSecond();
         doReturn(permitsPerSecond).when(mMockFlags).getTopicsApiAppRequestPermitsPerSecond();
+        doReturn(permitsPerSecond)
+                .when(mMockFlags)
+                .getFledgeJoinCustomAudienceRequestPermitsPerSecond();
+        doReturn(permitsPerSecond)
+                .when(mMockFlags)
+                .getFledgeFetchAndJoinCustomAudienceRequestPermitsPerSecond();
+        doReturn(permitsPerSecond)
+                .when(mMockFlags)
+                .getFledgeLeaveCustomAudienceRequestPermitsPerSecond();
+        doReturn(permitsPerSecond).when(mMockFlags).getFledgeUpdateSignalsRequestPermitsPerSecond();
+        doReturn(permitsPerSecond).when(mMockFlags).getFledgeSelectAdsRequestPermitsPerSecond();
+        doReturn(permitsPerSecond)
+                .when(mMockFlags)
+                .getFledgeSelectAdsWithOutcomesRequestPermitsPerSecond();
+        doReturn(permitsPerSecond)
+                .when(mMockFlags)
+                .getFledgeGetAdSelectionDataRequestPermitsPerSecond();
+        doReturn(permitsPerSecond)
+                .when(mMockFlags)
+                .getFledgeReportImpressionRequestPermitsPerSecond();
+        doReturn(permitsPerSecond)
+                .when(mMockFlags)
+                .getFledgeReportInteractionRequestPermitsPerSecond();
+        doReturn(permitsPerSecond)
+                .when(mMockFlags)
+                .getFledgePersistAdSelectionResultRequestPermitsPerSecond();
+        doReturn(permitsPerSecond)
+                .when(mMockFlags)
+                .getFledgeSetAppInstallAdvertisersRequestPermitsPerSecond();
+        doReturn(permitsPerSecond)
+                .when(mMockFlags)
+                .getFledgeUpdateAdCounterHistogramRequestPermitsPerSecond();
     }
 }

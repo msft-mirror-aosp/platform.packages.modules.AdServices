@@ -50,23 +50,35 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.PhFlags;
 import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.adservices.shared.testing.Logger.LogLevel;
+import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.NameValuePair;
 import com.android.modules.utils.build.SdkLevel;
+
+import com.google.common.annotations.VisibleForTesting;
+
+import java.util.function.Consumer;
 
 public final class AdServicesFlagsSetterRule
         extends AbstractAdServicesFlagsSetterRule<AdServicesFlagsSetterRule> {
 
-    private final boolean mAdoptShelPermissions;
+    private final boolean mAdoptShellPermissions;
 
     private AdServicesFlagsSetterRule() {
-        this(/* adoptShelPermissions= */ true);
+        this(/* adoptShellPermissions= */ true);
     }
 
-    private AdServicesFlagsSetterRule(boolean adoptShelPermissions) {
+    private AdServicesFlagsSetterRule(boolean adoptShellPermissions) {
         super(
                 AndroidLogger.getInstance(),
-                namespace -> new DeviceSideDeviceConfigHelper(namespace, adoptShelPermissions),
+                namespace -> new DeviceSideDeviceConfigHelper(namespace, adoptShellPermissions),
                 DeviceSideSystemPropertiesHelper.getInstance());
-        mAdoptShelPermissions = adoptShelPermissions;
+        mAdoptShellPermissions = adoptShellPermissions;
+    }
+
+    @VisibleForTesting
+    AdServicesFlagsSetterRule(RealLogger logger, Consumer<NameValuePair> flagsSetter) {
+        super(logger, flagsSetter);
+        mAdoptShellPermissions = false;
     }
 
     /** Returns a rule that doesn't set anything. */
@@ -76,7 +88,7 @@ public final class AdServicesFlagsSetterRule
 
     /** Returns a rule that won't adopt shell permissions - typically used on unit tests. */
     public static AdServicesFlagsSetterRule withoutAdoptingShellPermissions() {
-        return new AdServicesFlagsSetterRule(/* adoptShelPermissions= */ false);
+        return new AdServicesFlagsSetterRule(/* adoptShellPermissions= */ false);
     }
 
     /** Factory method that only {@link #setDefaultLogcatTags() sets the default logcat tags}. */
@@ -183,7 +195,7 @@ public final class AdServicesFlagsSetterRule
     public float getAdIdRequestPerSecond() {
         try {
             return callWithDeviceConfigPermissions(
-                    mAdoptShelPermissions,
+                    mAdoptShellPermissions,
                     () -> FlagsFactory.getFlags().getAdIdRequestPermitsPerSecond());
         } catch (Throwable t) {
             float defaultValue = Flags.ADID_REQUEST_PERMITS_PER_SECOND;

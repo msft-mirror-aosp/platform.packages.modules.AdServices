@@ -70,20 +70,25 @@ public class UpdateProcessingOrchestrator {
     @NonNull private final UpdateProcessorSelector mUpdateProcessorSelector;
     @NonNull private final UpdateEncoderEventHandler mUpdateEncoderEventHandler;
     @NonNull private final SignalEvictionController mSignalEvictionController;
+    @NonNull private final ForcedEncoder mForcedEncoder;
 
     public UpdateProcessingOrchestrator(
             @NonNull ProtectedSignalsDao protectedSignalsDao,
             @NonNull UpdateProcessorSelector updateProcessorSelector,
             @NonNull UpdateEncoderEventHandler updateEncoderEventHandler,
-            @NonNull SignalEvictionController signalEvictionController) {
+            @NonNull SignalEvictionController signalEvictionController,
+            @NonNull ForcedEncoder forcedEncoder) {
         Objects.requireNonNull(protectedSignalsDao);
         Objects.requireNonNull(updateProcessorSelector);
         Objects.requireNonNull(updateEncoderEventHandler);
         Objects.requireNonNull(signalEvictionController);
+        Objects.requireNonNull(forcedEncoder);
+
         mProtectedSignalsDao = protectedSignalsDao;
         mUpdateProcessorSelector = updateProcessorSelector;
         mUpdateEncoderEventHandler = updateEncoderEventHandler;
         mSignalEvictionController = signalEvictionController;
+        mForcedEncoder = forcedEncoder;
     }
 
     /** Takes a signal update JSON and adds/removes signals based on it. */
@@ -268,11 +273,13 @@ public class UpdateProcessingOrchestrator {
 
         // There is a valid possibility where there is no update for encoder
         if (combinedUpdates.getUpdateEncoderEvent() != null) {
+            sLogger.v("Encoding update is present in CombinedUpdates");
             mUpdateEncoderEventHandler.handle(
                     adTech, combinedUpdates.getUpdateEncoderEvent(), devContext);
             sLogger.v("Completed encoding update handler for buyer: " + adTech);
         } else {
             sLogger.v("No encoding update is present in CombinedUpdates");
+            mForcedEncoder.forceEncodingAndUpdateEncoderForBuyer(adTech);
         }
     }
 }

@@ -24,6 +24,10 @@ android_test {
     ],
     min_sdk_version: "Tiramisu",
     target_sdk_version: "Tiramisu",
+    test_suites: [
+        "general-tests",
+        "mts-adservices",
+    ],
 }
 
 android_test {
@@ -39,6 +43,10 @@ android_test {
     target_sdk_version: "31",
     test_config: "AndroidTest.ExtServices.xml",
     instrumentation_for: "ExtServices-sminus",
+    test_suites: [
+        "general-tests",
+        "mts-extservices",
+    ],
     lint: {
         baseline_filename: "lint-baseline-adextservices.xml",
     },
@@ -59,6 +67,10 @@ android_test {
     test_config: "AndroidTest.ExtServicesRvc.xml",
     manifest: "AndroidManifestExtServicesRvc.xml",
     instrumentation_for: "ExtServices-sminus",
+    test_suites: [
+        "general-tests",
+        "mts-extservices",
+    ],
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
         test: false, // TODO(b/343741206): remove when checks will run on android_test
@@ -81,10 +93,6 @@ java_defaults {
         "framework-annotations-lib",
     ],
     sdk_version: "module_current",
-    test_suites: [
-        "general-tests",
-        "mts-adservices",
-    ],
     instrumentation_for: "AdServicesApk",
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],

@@ -5127,4 +5127,9 @@ public final class PhFlags implements Flags {
                 KEY_FLEDGE_ENABLE_PROD_DEBUG_IN_SERVER_AUCTION,
                 DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER);
     }
+
+    @Override
+    public boolean getEnableRbAtrace() {
+        return getDeviceConfigFlag(FlagsConstants.KEY_ENABLE_RB_ATRACE, DEFAULT_ENABLE_RB_ATRACE);
+    }
 }

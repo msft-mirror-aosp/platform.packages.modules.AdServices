@@ -16,7 +16,6 @@
 package com.android.adservices.common;
 
 import static com.android.adservices.common.AbstractAdServicesSystemPropertiesDumperRule.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX;
-import static com.android.adservices.service.FlagsConstants.ARRAY_SPLITTER_COMMA;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
@@ -37,6 +36,7 @@ import com.android.adservices.shared.testing.AbstractFlagsSetterRule;
 import com.android.adservices.shared.testing.DeviceConfigHelper;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.NameValuePair;
 import com.android.adservices.shared.testing.NameValuePair.Matcher;
 import com.android.adservices.shared.testing.SystemPropertiesHelper;
 
@@ -44,6 +44,7 @@ import org.junit.runner.Description;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 // TODO(b/294423183): add unit tests for the most relevant / less repetitive stuff (don't need to
 // test all setters / getters, for example)
@@ -95,6 +96,12 @@ public abstract class AbstractAdServicesFlagsSetterRule<
                 PROPERTIES_PREFIX_MATCHER,
                 deviceConfigInterfaceFactory,
                 systemPropertiesInterface);
+    }
+
+    // Used for testing purposes only
+    protected AbstractAdServicesFlagsSetterRule(
+            RealLogger logger, Consumer<NameValuePair> flagsSetter) {
+        super(logger, flagsSetter);
     }
 
     @Override
@@ -157,15 +164,6 @@ public abstract class AbstractAdServicesFlagsSetterRule<
 
     // Helper methods to set more commonly used flags such as kill switches.
     // Less common flags can be set directly using setFlags methods.
-
-    // TODO(b/303901926): add unit test
-    /**
-     * Sets a flag that takes an array of strings with just the given value, using the default
-     * separator.
-     */
-    public final T setSimpleArrayFlag(String name, String value) {
-        return setFlag(name, new String[] {value}, ARRAY_SPLITTER_COMMA);
-    }
 
     /**
      * Overrides the flag that sets the global AdServices kill switch.
@@ -401,6 +399,6 @@ public abstract class AbstractAdServicesFlagsSetterRule<
                     name, testPkg);
             values = new String[] {testPkg};
         }
-        return setFlag(name, values, ARRAY_SPLITTER_COMMA);
+        return setFlag(name, values);
     }
 }

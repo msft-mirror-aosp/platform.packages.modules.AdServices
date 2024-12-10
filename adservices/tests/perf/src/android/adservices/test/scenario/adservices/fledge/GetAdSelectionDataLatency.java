@@ -80,8 +80,8 @@ public class GetAdSelectionDataLatency {
                             // AdServices process.
                             new CleanPackageRule(
                                     AdservicesTestHelper.getAdServicesPackageName(CONTEXT),
-                                    /* clearOnStarting = */ true,
-                                    /* clearOnFinished = */ false))
+                                    /* clearOnStarting= */ true,
+                                    /* clearOnFinished= */ false))
                     .around(new SelectAdsFlagRule());
 
     @BeforeClass

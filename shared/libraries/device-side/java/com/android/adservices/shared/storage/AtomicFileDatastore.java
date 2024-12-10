@@ -65,7 +65,7 @@ import java.util.stream.Collectors;
  *
  * @threadsafe
  */
-public class AtomicFileDatastore {
+public final class AtomicFileDatastore {
     public static final int NO_PREVIOUS_VERSION = -1;
 
     /**
@@ -119,7 +119,7 @@ public class AtomicFileDatastore {
      *
      * @throws IOException if file read fails
      */
-    public final void initialize() throws IOException {
+    public void initialize() throws IOException {
         if (DEBUG) {
             LogUtil.d("Reading from store file: %s", mAtomicFile.getBaseFile());
         }
@@ -204,7 +204,7 @@ public class AtomicFileDatastore {
      * @throws IllegalArgumentException if {@code key} is an empty string
      * @throws IOException if file write fails
      */
-    public final void putBoolean(String key, boolean value) throws IOException {
+    public void putBoolean(String key, boolean value) throws IOException {
         put(key, value);
     }
 
@@ -218,7 +218,7 @@ public class AtomicFileDatastore {
      * @throws IllegalArgumentException if {@code key} is an empty string
      * @throws IOException if file write fails
      */
-    public final void putInt(String key, int value) throws IOException {
+    public void putInt(String key, int value) throws IOException {
         put(key, value);
     }
 
@@ -232,7 +232,7 @@ public class AtomicFileDatastore {
      * @throws IllegalArgumentException if {@code key} is an empty string
      * @throws IOException if file write fails
      */
-    public final void putString(String key, @Nullable String value) throws IOException {
+    public void putString(String key, @Nullable String value) throws IOException {
         put(key, value);
     }
 
@@ -270,7 +270,7 @@ public class AtomicFileDatastore {
      * @throws IllegalArgumentException if {@code key} is an empty string
      * @throws IOException if file write fails
      */
-    public final boolean putBooleanIfNew(String key, boolean value) throws IOException {
+    public boolean putBooleanIfNew(String key, boolean value) throws IOException {
         return putIfNew(key, value, Boolean.class);
     }
 
@@ -285,7 +285,7 @@ public class AtomicFileDatastore {
      * @throws IllegalArgumentException if {@code key} is an empty string
      * @throws IOException if file write fails
      */
-    public final int putIntIfNew(String key, int value) throws IOException {
+    public int putIntIfNew(String key, int value) throws IOException {
         return putIfNew(key, value, Integer.class);
     }
 
@@ -300,7 +300,7 @@ public class AtomicFileDatastore {
      * @throws IllegalArgumentException if {@code key} is an empty string
      * @throws IOException if file write fails
      */
-    public final String putStringIfNew(String key, String value) throws IOException {
+    public String putStringIfNew(String key, String value) throws IOException {
         return putIfNew(key, value, String.class);
     }
 
@@ -350,7 +350,7 @@ public class AtomicFileDatastore {
      * @throws IllegalArgumentException if {@code key} is an empty string
      */
     @Nullable
-    public final Boolean getBoolean(String key) {
+    public Boolean getBoolean(String key) {
         return get(key, Boolean.class);
     }
 
@@ -362,7 +362,7 @@ public class AtomicFileDatastore {
      * @throws IllegalArgumentException if {@code key} is an empty string
      */
     @Nullable
-    public final Integer getInt(String key) {
+    public Integer getInt(String key) {
         return get(key, Integer.class);
     }
 
@@ -374,7 +374,7 @@ public class AtomicFileDatastore {
      * @throws IllegalArgumentException if {@code key} is an empty string
      */
     @Nullable
-    public final String getString(String key) {
+    public String getString(String key) {
         return get(key, String.class);
     }
 
@@ -402,7 +402,7 @@ public class AtomicFileDatastore {
      * @return The value stored against a {@code key}, or {@code defaultValue} if it doesn't exist
      * @throws IllegalArgumentException if {@code key} is an empty string
      */
-    public final boolean getBoolean(String key, boolean defaultValue) {
+    public boolean getBoolean(String key, boolean defaultValue) {
         return get(key, defaultValue, Boolean.class);
     }
 
@@ -414,7 +414,7 @@ public class AtomicFileDatastore {
      * @return The value stored against a {@code key}, or {@code defaultValue} if it doesn't exist
      * @throws IllegalArgumentException if {@code key} is an empty string
      */
-    public final int getInt(String key, int defaultValue) {
+    public int getInt(String key, int defaultValue) {
         return get(key, defaultValue, Integer.class);
     }
 
@@ -426,7 +426,7 @@ public class AtomicFileDatastore {
      * @return The value stored against a {@code key}, or {@code defaultValue} if it doesn't exist
      * @throws IllegalArgumentException if {@code key} is an empty string
      */
-    public final String getString(String key, String defaultValue) {
+    public String getString(String key, String defaultValue) {
         return get(key, defaultValue, String.class);
     }
 
@@ -451,7 +451,7 @@ public class AtomicFileDatastore {
      *
      * @return A {@link Set} of {@link String} keys currently in the loaded datastore
      */
-    public final Set<String> keySet() {
+    public Set<String> keySet() {
         mReadLock.lock();
         try {
             return getSafeSetCopy(mLocalMap.keySet());
@@ -478,7 +478,7 @@ public class AtomicFileDatastore {
      *
      * @return A Set of String keys currently in the loaded datastore that have value {@code true}
      */
-    public final Set<String> keySetTrue() {
+    public Set<String> keySetTrue() {
         return keySetFilter(true);
     }
 
@@ -487,7 +487,7 @@ public class AtomicFileDatastore {
      *
      * @return A Set of String keys currently in the loaded datastore that have value {@code false}
      */
-    public final Set<String> keySetFalse() {
+    public Set<String> keySetFalse() {
         return keySetFilter(false);
     }
 
@@ -498,7 +498,7 @@ public class AtomicFileDatastore {
      *
      * @throws IOException if file write fails
      */
-    public final void clear() throws IOException {
+    public void clear() throws IOException {
         mWriteLock.lock();
         if (DEBUG) {
             LogUtil.d(
@@ -547,7 +547,7 @@ public class AtomicFileDatastore {
      *
      * @throws IOException if file write fails
      */
-    public final void clearAllTrue() throws IOException {
+    public void clearAllTrue() throws IOException {
         clearByFilter(true);
     }
 
@@ -559,7 +559,7 @@ public class AtomicFileDatastore {
      *
      * @throws IOException if file write fails
      */
-    public final void clearAllFalse() throws IOException {
+    public void clearAllFalse() throws IOException {
         clearByFilter(false);
     }
 
@@ -572,7 +572,7 @@ public class AtomicFileDatastore {
      * @throws IllegalArgumentException if {@code key} is an empty string
      * @throws IOException if file write fails
      */
-    public final void remove(String key) throws IOException {
+    public void remove(String key) throws IOException {
         checkValidKey(key);
 
         mWriteLock.lock();
@@ -602,7 +602,7 @@ public class AtomicFileDatastore {
      * @throws IllegalArgumentException if {@code prefix} is an empty string
      * @throws IOException if file write fails
      */
-    public final void removeByPrefix(String prefix) throws IOException {
+    public void removeByPrefix(String prefix) throws IOException {
         checkValid("prefix", prefix);
 
         mWriteLock.lock();
@@ -632,7 +632,7 @@ public class AtomicFileDatastore {
      * @param transform The {@link BatchUpdateOperation} to apply to the data.
      * @throws IOException if file write fails
      */
-    public final void update(BatchUpdateOperation transform) throws IOException {
+    public void update(BatchUpdateOperation transform) throws IOException {
         mWriteLock.lock();
         try {
             BatchUpdaterImpl updater = new BatchUpdaterImpl(mLocalMap);
@@ -650,7 +650,7 @@ public class AtomicFileDatastore {
     }
 
     /** Dumps its internal state. */
-    public final void dump(PrintWriter writer, String prefix, @Nullable String[] args) {
+    public void dump(PrintWriter writer, String prefix, @Nullable String[] args) {
         writer.printf("%smDatastoreVersion: %d\n", prefix, mDatastoreVersion);
         writer.printf("%smPreviousStoredVersion: %d\n", prefix, mPreviousStoredVersion);
         writer.printf("%smVersionKey: %s\n", prefix, mVersionKey);
@@ -672,17 +672,17 @@ public class AtomicFileDatastore {
     }
 
     /** Returns the version that was written prior to the device starting. */
-    public final int getPreviousStoredVersion() {
+    public int getPreviousStoredVersion() {
         return mPreviousStoredVersion;
     }
 
     /** Gets the version key. */
-    public final String getVersionKey() {
+    public String getVersionKey() {
         return mVersionKey;
     }
 
     @Override
-    public final String toString() {
+    public String toString() {
         StringBuilder string =
                 new StringBuilder("AtomicFileDatastore[path=")
                         .append(mAtomicFile.getBaseFile().getAbsolutePath())

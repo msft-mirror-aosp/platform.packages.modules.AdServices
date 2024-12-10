@@ -16,7 +16,6 @@
 package com.android.adservices.tests.enrollmentctsroot;
 
 import android.adservices.common.AdServicesCommonManager;
-import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.common.AdServicesStatusUtils;
@@ -61,7 +60,7 @@ public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
         UpdateAdServicesModuleStatesParams updateParams =
                 new UpdateAdServicesModuleStatesParams.Builder()
                         .setModuleState(
-                                Module.MEASUREMENT, AdServicesModuleState.MODULE_STATE_ENABLED)
+                                Module.MEASUREMENT, AdServicesCommonManager.MODULE_STATE_ENABLED)
                         .setNotificationType(NotificationType.NOTIFICATION_ONGOING)
                         .build();
         ListenableFuture<Integer> responseFuture =

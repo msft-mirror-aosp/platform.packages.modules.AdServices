@@ -27,8 +27,6 @@ public final class NameValuePairTest extends SharedSidelessTestCase {
     public void testNullConstructor() {
         assertThrows(
                 NullPointerException.class, () -> new NameValuePair(/* name= */ null, "D'OH!"));
-        assertThrows(
-                NullPointerException.class, () -> new NameValuePair("D'OH", /* value= */ null));
     }
 
     @Test
@@ -51,6 +49,28 @@ public final class NameValuePairTest extends SharedSidelessTestCase {
         expect.withMessage("toString")
                 .that(nvp.toString())
                 .isEqualTo("name=Bond, James Bond! (separator=MI6)");
+    }
+
+    @Test
+    public void testFields_nullValue_noSeparator() {
+        var nvp = new NameValuePair("nameless", /* value= */ null);
+
+        expect.withMessage("name").that(nvp.name).isEqualTo("nameless");
+        expect.withMessage("value").that(nvp.value).isNull();
+        expect.withMessage("separator").that(nvp.separator).isNull();
+        expect.withMessage("toString").that(nvp.toString()).isEqualTo("nameless=null");
+    }
+
+    @Test
+    public void testFields_nullValue_withSeparator() {
+        var nvp = new NameValuePair("nameless", /* value= */ null, "but separable");
+
+        expect.withMessage("name").that(nvp.name).isEqualTo("nameless");
+        expect.withMessage("value").that(nvp.value).isNull();
+        expect.withMessage("separator").that(nvp.separator).isEqualTo("but separable");
+        expect.withMessage("toString")
+                .that(nvp.toString())
+                .isEqualTo("nameless=null (separator=but separable)");
     }
 
     @Test

@@ -25,29 +25,29 @@ import java.util.Objects;
 
 /** Captures the winning and second highest scored bids after ad selection is finished. */
 @AutoValue
-abstract class PostAuctionSignals {
+public abstract class PostAuctionSignals {
 
     /** Gets the winning bid. */
     @Nullable
-    abstract Double getWinningBid();
+    public abstract Double getWinningBid();
 
     /** Gets the winning buyer. */
     @Nullable
-    abstract AdTechIdentifier getWinningBuyer();
+    public abstract AdTechIdentifier getWinningBuyer();
 
     @Nullable
-    abstract String getWinningCustomAudienceName();
+    public abstract String getWinningCustomAudienceName();
 
     /** Gets the second highest scored bid. */
     @Nullable
-    abstract Double getSecondHighestScoredBid();
+    public abstract Double getSecondHighestScoredBid();
 
     /** Gets the second highest scored buyer. */
     @Nullable
-    abstract AdTechIdentifier getSecondHighestScoredBuyer();
+    public abstract AdTechIdentifier getSecondHighestScoredBuyer();
 
     /** Builder */
-    static PostAuctionSignals.Builder builder() {
+    public static PostAuctionSignals.Builder builder() {
         return new AutoValue_PostAuctionSignals.Builder();
     }
 

@@ -56,6 +56,15 @@ public abstract class ProtectedSignalsDao {
     public abstract List<DBProtectedSignal> getSignalsByBuyer(AdTechIdentifier buyer);
 
     /**
+     * Returns if any raw signals exist from the given buyer.
+     *
+     * @param buyer The buyer to check existence of signals for.
+     * @return If any signals exist from the given buyer.
+     */
+    @Query("SELECT EXISTS(SELECT 1 FROM protected_signals WHERE buyer = :buyer)")
+    public abstract boolean hasSignalsFromBuyer(AdTechIdentifier buyer);
+
+    /**
      * Inserts signals into the database.
      *
      * <p>This method is not meant to be called externally. Instead, use {@link

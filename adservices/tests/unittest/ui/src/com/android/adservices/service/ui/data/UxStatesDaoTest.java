@@ -23,16 +23,17 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+import java.io.File;
 import java.io.IOException;
 
 /** This test reads and writes to test files under the test app dir instead of using full mocks. */
@@ -47,9 +48,9 @@ public final class UxStatesDaoTest extends AdServicesExtendedMockitoTestCase {
         mocker.mockGetFlags(mMockFlags);
         AtomicFileDatastore atomicFileDatastore =
                 new AtomicFileDatastore(
-                        mContext,
-                        UxStatesDao.TEST_DATASTORE_NAME,
+                        new File(mContext.getDataDir(), UxStatesDao.TEST_DATASTORE_NAME),
                         UxStatesDao.DATASTORE_VERSION,
+                        /* versionKey= */ "The Key is on the Table",
                         mMockAdServicesErrorLogger);
         mUxStatesDao = new UxStatesDao(atomicFileDatastore);
         when(mMockFlags.getEnableAtomicFileDatastoreBatchUpdateApi()).thenReturn(false);

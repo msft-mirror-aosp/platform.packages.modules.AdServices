@@ -36,6 +36,8 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.adselection.debug.DebugReport;
+import com.android.adservices.service.adselection.debug.DebugReporting;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;

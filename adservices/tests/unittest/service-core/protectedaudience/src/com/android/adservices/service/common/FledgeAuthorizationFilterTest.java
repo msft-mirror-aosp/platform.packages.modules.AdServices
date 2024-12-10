@@ -30,10 +30,14 @@ import static com.android.adservices.service.common.AppManifestConfigCall.API_PR
 import static com.android.adservices.service.common.FledgeAuthorizationFilter.INVALID_API_TYPE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_AD_TECH_NOT_AUTHORIZED_BY_APP;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ANY_PERMISSION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ENROLLMENT_DATA_MATCH_NOT_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NO_MATCH_PACKAGE_NAME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_PERMISSION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -143,6 +147,10 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NO_MATCH_PACKAGE_NAME,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
     public void testAssertCallingPackageName_isNotCallingPackageName_throwSecurityException() {
         when(mPackageManagerMock.getPackagesForUid(UID))
                 .thenReturn(new String[] {PACKAGE_NAME_OTHER});
@@ -168,6 +176,10 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NO_MATCH_PACKAGE_NAME,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
     public void testAssertCallingPackageName_packageNotExist_throwSecurityException() {
         when(mPackageManagerMock.getPackagesForUid(UID)).thenReturn(new String[] {});
 
@@ -371,6 +383,10 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_PERMISSION_FAILURE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
     public void testAssertAppHasCaPermission_appDoesNotHavePermission_throwSecurityException()
             throws PackageManager.NameNotFoundException {
         doReturn(new PackageInfo())
@@ -446,6 +462,10 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ANY_PERMISSION_FAILURE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
     public void testAssertAppHasAnyPermission_appDoesNotHaveAnyPermissions_throwSecurityException()
             throws Exception {
         doReturn(new PackageInfo())
@@ -495,6 +515,10 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_PERMISSION_FAILURE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
     public void testAssertAppHasCaPermission_mismatchedAppPackageName_throwSecurityException()
             throws PackageManager.NameNotFoundException {
         doReturn(new PackageInfo())
@@ -532,6 +556,10 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_PERMISSION_FAILURE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
     public void testAssertAppHasPasPermission_mismatchedAppPackageName_throwSecurityException()
             throws PackageManager.NameNotFoundException {
         doReturn(new PackageInfo())
@@ -723,6 +751,10 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ENROLLMENT_DATA_MATCH_NOT_FOUND,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
     public void testAssertAdTechHasPermission_noEnrollmentForAdTech_throwSecurityException() {
         when(mEnrollmentUtilMock.getBuildId()).thenReturn(2);
         when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(1);
@@ -822,6 +854,10 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_AD_TECH_NOT_AUTHORIZED_BY_APP,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
     public void testAssertAdTechHasPermission_appManifestNoPermission_throwSecurityException() {
         when(mEnrollmentUtilMock.getBuildId()).thenReturn(2);
         when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(1);
@@ -870,6 +906,10 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
     public void testAdTechInBlocklist_throwSecurityException() {
         when(mEnrollmentUtilMock.getBuildId()).thenReturn(2);
         when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(1);

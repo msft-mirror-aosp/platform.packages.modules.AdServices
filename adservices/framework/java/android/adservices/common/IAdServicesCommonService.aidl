@@ -57,7 +57,6 @@ interface IAdServicesCommonService {
 
     void requestAdServicesModuleOverrides(
         in UpdateAdServicesModuleStatesParams params,
-        in int notificationType,
         in IRequestAdServicesModuleOverridesCallback callback);
 
     void requestAdServicesModuleUserChoices(

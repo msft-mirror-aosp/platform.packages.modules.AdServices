@@ -6052,6 +6052,17 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER;
     }
 
+    /**
+     * Feature flag to enable the Android Trace to collect AdServices latency metrics in Crystalball
+     * tests {@code RbATrace}.
+     */
+    @FeatureFlag boolean DEFAULT_ENABLE_RB_ATRACE = false;
+
+    /** Returns whether the AdServices latency metrics {@code RbATrace} is enabled. */
+    default boolean getEnableRbAtrace() {
+        return DEFAULT_ENABLE_RB_ATRACE;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
     ////////////////////////////////////////////////////////////////////////////////////////////////

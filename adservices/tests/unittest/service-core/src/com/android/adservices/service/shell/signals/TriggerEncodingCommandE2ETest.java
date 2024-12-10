@@ -80,6 +80,7 @@ import com.android.adservices.service.devapi.AppPackageNameRetriever;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.devapi.DevSessionInMemoryDataStore;
+import com.android.adservices.service.signals.ForcedEncoder;
 import com.android.adservices.service.signals.PeriodicEncodingJobRunner;
 import com.android.adservices.service.signals.ProtectedSignalsServiceImpl;
 import com.android.adservices.service.signals.SignalsProviderAndArgumentFactory;
@@ -191,6 +192,7 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private UpdateSignalsProcessReportedLoggerImpl mUpdateSignalsProcessReportedLoggerMock;
     private ProtectedSignalsDao mProtectedSignalsDao;
+    @Mock ForcedEncoder mForcedEncoder;
 
     @Before
     public void setUp() throws Exception {
@@ -245,7 +247,10 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                         encoderLogicHandler,
                         new EncodingExecutionLogHelperImpl(
                                 logger, Clock.getInstance(), EnrollmentDao.getInstance()),
-                        new EncodingJobRunStatsLoggerImpl(logger, EncodingJobRunStats.builder()),
+                        new EncodingJobRunStatsLoggerImpl(
+                                logger,
+                                EncodingJobRunStats.builder(),
+                                /* FledgeEnableForcedEncodingAfterSignalsUpdate = */ false),
                         mEncoderLogicMetadataDao);
         mProtectedSignalsService =
                 new ProtectedSignalsServiceImpl(
@@ -262,8 +267,11 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                                                 encoderLogicHandler,
                                                 /* context= */ mContext,
                                                 AdServicesExecutors.getBackgroundExecutor(),
-                                                /* isCompletionBroadcastEnabled= */ true),
-                                        new SignalEvictionController()),
+                                                /* isCompletionBroadcastEnabled= */ true,
+                                                mForcedEncoder,
+                                                false),
+                                        new SignalEvictionController(),
+                                        mForcedEncoder),
                                 new AdTechUriValidator(
                                         "caller",
                                         "",

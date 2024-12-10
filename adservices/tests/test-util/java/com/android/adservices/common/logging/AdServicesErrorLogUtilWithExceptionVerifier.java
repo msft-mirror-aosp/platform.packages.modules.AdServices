@@ -44,6 +44,9 @@ import java.util.stream.Collectors;
 /**
  * Log verifier for scanning usage of {@code ErrorLogUtil.e(Throwable, int, int)} invocations. Use
  * {@link ExpectErrorLogUtilWithExceptionCall} to verify logging calls.
+ *
+ * <p>NOTE: This only verifies sync logging calls. For background logging calls, use {@link
+ * ErrorLogUtilSyncCallback}.
  */
 public final class AdServicesErrorLogUtilWithExceptionVerifier
         extends AbstractLogVerifier<ErrorLogUtilCall> {

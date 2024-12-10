@@ -20,6 +20,7 @@ import static com.android.adservices.data.signals.DBEncodedPayloadFixture.assert
 import static com.android.adservices.data.signals.DBProtectedSignalFixture.assertEqualsExceptId;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
+import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertEquals;
@@ -883,5 +884,22 @@ public final class ProtectedSignalsDaoTest extends AdServicesExtendedMockitoTest
                 .isNotNull();
         assertDBEncodedPayloadsAreEqual(
                 expectedEncodedPayloadBuyer2, postDeletionEncodedPayloadBuyer2);
+    }
+
+    @Test
+    public void testHasSignalsFromBuyer() {
+        // Assert no signals are present in an empty DB.
+        boolean hasSignalsFromBuyer = mProtectedSignalsDao.hasSignalsFromBuyer(BUYER_1);
+        assertThat(hasSignalsFromBuyer).isFalse();
+
+        // Insert a signal and assert its presence in the DB.
+        mProtectedSignalsDao.insertSignals(List.of(DBProtectedSignalFixture.SIGNAL));
+        hasSignalsFromBuyer = mProtectedSignalsDao.hasSignalsFromBuyer(BUYER_1);
+        assertThat(hasSignalsFromBuyer).isTrue();
+
+        // Delete all signals from the buyer and assert absence of signals.
+        mProtectedSignalsDao.deleteByBuyers(List.of(BUYER_1));
+        hasSignalsFromBuyer = mProtectedSignalsDao.hasSignalsFromBuyer(BUYER_1);
+        assertThat(hasSignalsFromBuyer).isFalse();
     }
 }

@@ -158,6 +158,8 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.debug.DebugReportSenderStrategy;
+import com.android.adservices.service.adselection.debug.DebugReporting;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;

@@ -20,11 +20,11 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.common.LegacyAtomicFileDatastoreFactory;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 

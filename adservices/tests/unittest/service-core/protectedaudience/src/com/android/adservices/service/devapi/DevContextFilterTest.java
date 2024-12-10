@@ -105,17 +105,6 @@ public final class DevContextFilterTest extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
-    public void testCreateDevContextWhileEnteringDevSession() throws Exception {
-        enableDeveloperOptions();
-        mockPackageNameForUid(APP_UID, APP_PACKAGE);
-        mockInstalledApplications(aDebuggableAppInfo());
-        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(TRANSITIONING_PROD_TO_DEV));
-
-        assertThrows(
-                IllegalStateException.class, () -> mDevContextFilter.createDevContext(APP_UID));
-    }
-
-    @Test
     public void testCreateDevContextWhileExitingDevSession() throws Exception {
         enableDeveloperOptions();
         mockPackageNameForUid(APP_UID, APP_PACKAGE);

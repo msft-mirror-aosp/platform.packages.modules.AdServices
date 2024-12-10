@@ -32,5 +32,5 @@ public interface ForcedEncoder {
      * @return A {@link FluentFuture} that completes when the encoding and encoder updates are
      *     complete. The future's result is {@code null}.
      */
-    FluentFuture<Void> forceEncodingAndUpdateEncoderForBuyer(AdTechIdentifier buyer);
+    FluentFuture<Boolean> forceEncodingAndUpdateEncoderForBuyer(AdTechIdentifier buyer);
 }

@@ -23,6 +23,13 @@ filegroup {
     ],
 }
 
+filegroup {
+    name: "config-delivery-proto-lite",
+    srcs: [
+        "config-delivery/*.proto",
+    ],
+}
+
 // Generate the Proto POJO builders, etc.
 java_library {
     name: "adservices-proto-lite",
@@ -37,6 +44,7 @@ java_library {
         ],
     },
     srcs: [
+        ":config-delivery-proto-lite",
         ":adservices-proto",
         ":libprotobuf-internal-protos",
         ":act-proto",

@@ -42,6 +42,7 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.profiling.Tracing;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -111,7 +112,8 @@ public class PeriodicEncodingJobService extends JobService {
         int traceCookie = Tracing.beginAsyncSection(Tracing.START_JOB);
         PeriodicEncodingJobWorker encodingWorker = PeriodicEncodingJobWorker.getInstance();
         encodingWorker
-                .encodeProtectedSignals()
+                .encodeProtectedSignals(
+                        AdsRelevanceStatusUtils.PAS_ENCODING_SOURCE_TYPE_ENCODING_JOB_SERVICE)
                 .addCallback(
                         new FutureCallback<Void>() {
                             @Override

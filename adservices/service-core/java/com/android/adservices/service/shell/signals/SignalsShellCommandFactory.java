@@ -121,7 +121,9 @@ public class SignalsShellCommandFactory implements ShellCommandFactory {
                         Clock.getInstance(),
                         EnrollmentDao.getInstance()),
                 new EncodingJobRunStatsLoggerImpl(
-                        AdServicesLoggerImpl.getInstance(), EncodingJobRunStats.builder()),
+                        AdServicesLoggerImpl.getInstance(),
+                        EncodingJobRunStats.builder(),
+                        flags.getFledgeEnableForcedEncodingAfterSignalsUpdate()),
                 ProtectedSignalsDatabase.getInstance().getEncoderLogicMetadataDao());
     }
 

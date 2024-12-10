@@ -26,8 +26,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.AdTechIdentifier.UNSET_AD_TECH_IDENTIFIER;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithThrowable;
-import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithoutThrowable;
+import static com.android.adservices.common.logging.ErrorLogUtilSyncCallback.mockErrorLogUtilWithoutThrowable;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_AUCTION_RESULT_HAS_ERROR;
@@ -87,7 +86,7 @@ import android.os.RemoteException;
 import androidx.room.Room;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.ErrorLogUtilCallback;
+import com.android.adservices.common.logging.ErrorLogUtilSyncCallback;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
@@ -1920,7 +1919,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
-    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
+    @SkipLoggingUsageRule(
+            reason = "Using ErrorLogUtilSyncCallback as logging happens in background.")
     public void testRunner_revokedUserConsent_returnsEmptyResult() throws InterruptedException {
         mocker.mockGetFlags(mFakeFlags);
 
@@ -1945,20 +1945,18 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
 
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackSync =
-                mockErrorLogUtilWithoutThrowable();
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackAsync =
-                mockErrorLogUtilWithoutThrowable();
+        ErrorLogUtilSyncCallback errorLogUtilWithoutThrowableCallback =
+                mockErrorLogUtilWithoutThrowable(/* numExpectedCalls= */ 2);
 
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
 
-        mErrorLogUtilWithoutThrowableCallbackSync.assertReceived(
+        errorLogUtilWithoutThrowableCallback.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
 
-        mErrorLogUtilWithoutThrowableCallbackAsync.assertReceived(
+        errorLogUtilWithoutThrowableCallback.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
@@ -1974,7 +1972,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
-    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
+    @SkipLoggingUsageRule(
+            reason = "Using ErrorLogUtilSyncCallback as logging happens in background.")
     public void testRunner_revokedUserConsent_silentReport() throws InterruptedException {
         mocker.mockGetFlags(mFakeFlags);
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
@@ -1996,13 +1995,18 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         .setAdSelectionResult(CIPHER_TEXT_BYTES)
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallback =
-                mockErrorLogUtilWithoutThrowable();
+        ErrorLogUtilSyncCallback errorLogUtilWithoutThrowableCallback =
+                mockErrorLogUtilWithoutThrowable(/* numExpectedCalls= */ 2);
 
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(mPersistAdSelectionResultRunner, inputParams);
 
-        mErrorLogUtilWithoutThrowableCallback.assertReceived(
+        errorLogUtilWithoutThrowableCallback.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
+
+        errorLogUtilWithoutThrowableCallback.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
@@ -2014,7 +2018,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
-    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
+    @SkipLoggingUsageRule(
+            reason = "Using ErrorLogUtilSyncCallback as logging happens in background.")
     public void testRunner_revokedUserConsent_returnsEmptyResult_UXNotificationEnforcementDisabled()
             throws InterruptedException {
         mocker.mockGetConsentNotificationDebugMode(true);
@@ -2063,20 +2068,18 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
 
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackSync =
-                mockErrorLogUtilWithoutThrowable();
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackAsync =
-                mockErrorLogUtilWithoutThrowable();
+        ErrorLogUtilSyncCallback errorLogUtilWithoutThrowableCallbackSync =
+                mockErrorLogUtilWithoutThrowable(/* numExpectedCalls= */ 2);
 
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
 
-        mErrorLogUtilWithoutThrowableCallbackSync.assertReceived(
+        errorLogUtilWithoutThrowableCallbackSync.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
 
-        mErrorLogUtilWithoutThrowableCallbackAsync.assertReceived(
+        errorLogUtilWithoutThrowableCallbackSync.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
@@ -2349,7 +2352,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     @Test
-    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
+    @SkipLoggingUsageRule(
+            reason = "Using ErrorLogUtilSyncCallback as logging happens in background.")
     public void testRunner_persistResultWithLongInteractionUri_silentReport() throws Exception {
         mocker.mockGetFlags(mFakeFlags);
         mockPersistAdSelectionResultWithFledgeAuctionServerExecutionLogger();
@@ -2411,28 +2415,17 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
 
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackSync1 =
-                mockErrorLogUtilWithoutThrowable();
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackSync2 =
-                mockErrorLogUtilWithoutThrowable();
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallbackAsync =
-                mockErrorLogUtilWithoutThrowable();
+        ErrorLogUtilSyncCallback errorLogUtilWithoutThrowableCallback =
+                mockErrorLogUtilWithoutThrowable(/* numExpectedCalls= */ 2);
 
         PersistAdSelectionResultTestCallback callback =
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
 
-        mErrorLogUtilWithoutThrowableCallbackSync1.assertReceived(
+        errorLogUtilWithoutThrowableCallback.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INTERACTION_URI_EXCEEDS_MAXIMUM_LIMIT,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
-        mErrorLogUtilWithoutThrowableCallbackSync2.assertReceived(
-                expect,
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INTERACTION_URI_EXCEEDS_MAXIMUM_LIMIT,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
-        mErrorLogUtilWithoutThrowableCallbackAsync.assertReceived(
-                expect,
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT,
+                /* numExpectedCalls= */ 2);
 
         Assert.assertTrue(callback.mIsSuccess);
         Assert.assertEquals(
@@ -2487,12 +2480,14 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
     @Test
     // TODO (b/355696393): Enhance rule to verify log calls that happen in the background.
-    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
+    @SkipLoggingUsageRule(
+            reason = "Using ErrorLogUtilSyncCallback as logging happens in background.")
     public void testRunner_kanonSignJoinManagerThrowsException_persistSelectionRunnerIsSuccessful()
             throws Exception {
         // Do not move this into setup as it will conflict with ErrorLogUtil mocking behavior
         // required by the AdServicesLoggingUsageRule.
-        ErrorLogUtilCallback mErrorLogUtilWithThrowableCallback = mockErrorLogUtilWithThrowable();
+        ErrorLogUtilSyncCallback errorLogUtilWithThrowableCallback =
+                mockErrorLogUtilWithoutThrowable();
 
         Flags flagsWithKAnonEnabled =
                 new PersistAdSelectionResultRunnerTestFlagsForKAnon(true, 100);
@@ -2531,7 +2526,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                 invokePersistAdSelectionResult(persistAdSelectionResultRunner, inputParams);
         countDownLatch.await();
 
-        mErrorLogUtilWithThrowableCallback.assertReceived(
+        errorLogUtilWithThrowableCallback.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_PROCESSING_KANON_ERROR,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
