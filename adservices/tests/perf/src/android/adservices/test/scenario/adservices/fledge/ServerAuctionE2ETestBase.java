@@ -28,9 +28,7 @@ import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesFlagsSetterRule;
-
-import org.junit.Rule;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -44,7 +42,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 
-public abstract class ServerAuctionE2ETestBase {
+@SetAllLogcatTags
+public abstract class ServerAuctionE2ETestBase extends FledgePerfTestCase {
     protected static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     protected static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     protected static final int API_RESPONSE_TIMEOUT_SECONDS = 100;
@@ -53,10 +52,6 @@ public abstract class ServerAuctionE2ETestBase {
                     .setContext(CONTEXT)
                     .setExecutor(CALLBACK_EXECUTOR)
                     .build();
-
-    @Rule
-    public final AdServicesFlagsSetterRule adServicesFlagsSetterRule =
-            AdServicesFlagsSetterRule.newInstance().setAllLogcatTags();
 
     protected abstract String getTag();
 
