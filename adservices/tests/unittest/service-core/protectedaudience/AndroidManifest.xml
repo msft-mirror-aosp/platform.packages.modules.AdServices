@@ -51,7 +51,7 @@
 
         <!-- PA Ad selection debug report sender Job -->
         <service android:name=
-                     "com.android.adservices.service.adselection.DebugReportSenderJobService"
+                     "com.android.adservices.service.adselection.debug.DebugReportSenderJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE">
         </service>
 

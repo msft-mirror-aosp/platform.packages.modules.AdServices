@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.adselection;
+package com.android.adservices.service.adselection.debug;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_EXTSERVICES_JOB_ON_TPLUS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
@@ -56,7 +56,7 @@ import java.util.concurrent.TimeoutException;
  */
 @SuppressLint("LineLength")
 @RequiresApi(Build.VERSION_CODES.S)
-public class DebugReportSenderJobService extends JobService {
+public final class DebugReportSenderJobService extends JobService {
     private static final int FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB_ID =
             FLEDGE_AD_SELECTION_DEBUG_REPORT_SENDER_JOB.getJobId();
 

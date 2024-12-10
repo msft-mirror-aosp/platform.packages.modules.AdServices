@@ -1,0 +1,304 @@
+{
+  "description": "One-sided aggregate debug reports",
+  "phflags_override": {
+    "Measurement__enable_aggregate_debug_reporting": "true",
+    "measurement_enable_attribution_scope": "true",
+    "measurement_aggregation_coordinator_origin_list": "https://c1.test,https://c2.test,",
+    "measurement_flex_api_max_trigger_data_cardinality": "4294967295",
+    "measurement_enable_v1_source_trigger_data": "true"
+  },
+  "input": {
+    "sources": [
+      // Source A: unspecified report type (present) + explicit match (true)
+      {
+        "timestamp": "1",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "source.test"
+        },
+        "responses": [{
+          "url": "https://reporter.test/register-source",
+          "response": {
+            "Attribution-Reporting-Register-Source": {
+              "source_event_id": "8955341642118337007",
+              "destination": "android-app://destination.test",
+              "priority": "0",
+              "destination_limit_priority": "0",
+              "trigger_data_matching": "exact",
+              "expiry": "604800",
+              "event_report_windows": {
+                "end_times": [
+                  452841,
+                  578724,
+                  596357,
+                  601553,
+                  603776
+                ]
+              },
+              "trigger_data": [
+                3573496579,
+                3275518554,
+                3263033145
+              ],
+              "max_event_level_reports": 5,
+              "filter_data": {},
+              "aggregatable_debug_reporting": {
+                "key_piece": "0x1DBC9BCB2EA0047096A33E517110ADB9",
+                "debug_data": [
+                  {
+                    "key_piece": "0xF0F18FFB28541DD6AEBF7F6E25F6F879",
+                    "value": 4888,
+                    "types": [
+                      "unspecified",
+                      "source-success",
+                      "source-destination-per-day-rate-limit",
+                      "source-destination-limit-replaced",
+                      "source-reporting-origin-limit",
+                      "source-destination-limit"
+                    ]
+                  },
+                  {
+                    "key_piece": "0x28726FB557F296ECDA6AFF357EBB9A3A",
+                    "value": 3672,
+                    "types": [
+                      "source-noised",
+                      "source-scopes-channel-capacity-limit"
+                    ]
+                  },
+                  {
+                    "key_piece": "0xFA5EE455B77562C348C943712908237C",
+                    "value": 1107,
+                    "types": [
+                      "source-destination-rate-limit",
+                      "source-unknown-error",
+                      "source-storage-limit",
+                      "source-channel-capacity-limit"
+                    ]
+                  },
+                  {
+                    "key_piece": "0xBEB03551B89DE11BACF65C5B05ADE6DC",
+                    "value": 7605,
+                    "types": [
+                      "source-trigger-state-cardinality-limit",
+                      "source-reporting-origin-per-site-limit"
+                    ]
+                  }
+                ],
+                "aggregation_coordinator_origin": "https://c1.test",
+                "budget": 13147
+              },
+              "named_budgets": {
+                "kids": 60318,
+                "groceries": 41959,
+                "yard": 54068
+              }
+            }
+          }
+        }]
+      },
+      // Source B: unspecified report type (present) + explicit match (false)
+      {
+        "timestamp": "2",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "source.test"
+        },
+        "responses": [{
+          "url": "https://reporter.test/register-source",
+          "response": {
+            "Attribution-Reporting-Register-Source": {
+              "source_event_id": "8955341642118337007",
+              "destination": "android-app://destination.test",
+              "priority": "0",
+              "destination_limit_priority": "0",
+              "trigger_data_matching": "exact",
+              "expiry": "604800",
+              "event_report_windows": {
+                "end_times": [
+                  452841,
+                  578724,
+                  596357,
+                  601553,
+                  603776
+                ]
+              },
+              "trigger_data": [
+                3573496579,
+                3275518554,
+                3263033145
+              ],
+              "max_event_level_reports": 5,
+              "filter_data": {},
+              "aggregatable_debug_reporting": {
+                "key_piece": "0x1DBC9BCB2EA0047096A33E517110ADB9",
+                "debug_data": [
+                  {
+                    "key_piece": "0xF0F18FFB28541DD6AEBF7F6E25F6F879",
+                    "value": 4888,
+                    "types": [
+                      "unspecified",
+                      "source-success",
+                      "source-destination-per-day-rate-limit",
+                      "source-destination-limit-replaced",
+                      "source-reporting-origin-limit",
+                      "source-destination-limit"
+                    ]
+                  },
+                  {
+                    "key_piece": "0x28726FB557F296ECDA6AFF357EBB9A3A",
+                    "value": 3672,
+                    "types": [
+                      "source-noised",
+                      "source-scopes-channel-capacity-limit"
+                    ]
+                  },
+                  {
+                    "key_piece": "0xFA5EE455B77562C348C943712908237C",
+                    "value": 1107,
+                    "types": [
+                      "source-destination-rate-limit",
+                      "source-unknown-error",
+                      "source-storage-limit"
+                    ]
+                  },
+                  {
+                    "key_piece": "0xBEB03551B89DE11BACF65C5B05ADE6DC",
+                    "value": 7605,
+                    "types": [
+                      "source-trigger-state-cardinality-limit",
+                      "source-reporting-origin-per-site-limit"
+                    ]
+                  }
+                ],
+                "aggregation_coordinator_origin": "https://c2.test",
+                "budget": 13147
+              },
+              "named_budgets": {
+                "kids": 60318,
+                "groceries": 41959,
+                "yard": 54068
+              }
+            }
+          }
+        }]
+      },
+      // Source C: duplicate unknown report types
+      {
+        "timestamp": "3",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "source.test"
+        },
+        "responses": [{
+          "url": "https://reporter.test/register-source",
+          "response": {
+            "Attribution-Reporting-Register-Source": {
+              "destination": "android-app://destination.test",
+              "source_event_id": "8958704726065156591",
+              "priority": "1",
+              "trigger_data_matching": "exact",
+              "expiry": "604801",
+              "event_report_window": "172801",
+              "attribution_scopes": {
+                "limit": 3,
+                "max_event_states": 20,
+                "values": [
+                  "e",
+                  "b"
+                ]
+              },
+              "filter_data": {},
+              "aggregatable_debug_reporting": {
+                "key_piece": "0x37EC81D5019B66D458ECB4F8C4F442F4",
+                "debug_data": [
+                  {
+                    "key_piece": "0xDADC76A0E79C86F0D4D5B05D64293BEA",
+                    "value": 2796,
+                    "types": [
+                      "unspecified",
+                      "source-channel-capacity-limit",
+                      "source-destination-limit",
+                      "source-reporting-origin-limit",
+                      "source-noised",
+                      "source-destination-global-rate-limit",
+                      "source-max-event-states-limit",
+                      "source-success",
+                      "knifeSchool"
+                    ]
+                  },
+                  {
+                    "key_piece": "0x53FCCC06ED1F2219B7DB3F45BAEF2CBC",
+                    "value": 11500,
+                    "types": [
+                      "source-destination-limit-replaced",
+                      "knifeSchool"
+                    ]
+                  }
+                ],
+                "aggregation_coordinator_origin": "https://c2.test",
+                "budget": 41635
+              },
+              "named_budgets": {
+                "yard": 4043,
+                "groceries": 31432,
+                "kids": 16944,
+                "home": 26018
+              }
+            }
+          }
+        }]
+      }
+    ],
+    "triggers": []
+  },
+  "output": {
+    "event_level_results": [],
+    "aggregatable_results": [],
+    "debug_aggregatable_results": [
+      // Report (Source A)
+      {
+        "report_time": "1",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/report-aggregate-debug",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting-debug",
+            "attribution_destination": "android-app://destination.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "0",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test", // default coordinator is always used on source ADR reports
+          "histograms": [
+            {"key": "0xfffeffdfbff566f3deeb7f717918affd", "value": 1107},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ]
+        }
+      },
+      // Report (Source B)
+      {
+        "report_time": "2",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/debug/report-aggregate-debug",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting-debug",
+            "attribution_destination": "android-app://destination.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "0",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test", // default coordinator is always used on source ADR reports
+          "histograms": [
+            {"key": "0xfdfd9ffb2ef41df6bebf7f7f75f6fdf9", "value": 4888},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ]
+        }
+      }
+    ]
+  }
+}

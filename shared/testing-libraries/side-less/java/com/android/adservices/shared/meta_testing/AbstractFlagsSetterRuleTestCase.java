@@ -57,7 +57,6 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
         expectNameCannotBeNull(() -> rule.setFlag(null, ""));
         expectNameCannotBeNull(
                 () -> rule.setArrayFlagWithExplicitSeparator(null, "'", new String[] {""}));
-        expectNameCannotBeNull(() -> rule.setFlag(null, new String[] {""}, "'"));
         expectNameCannotBeNull(() -> rule.setFlag(null, true));
         expectNameCannotBeNull(() -> rule.setFlag(null, 42));
         expectNameCannotBeNull(() -> rule.setFlag(null, 4815162342L));
@@ -91,12 +90,6 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
                     rule.setArrayFlagWithExplicitSeparator(
                             "iExplicitStringArray", "|",
                             "ExplicitStringArray", "the name is Inside ExplicitStringArray");
-                    rule.setFlag(
-                            "iDeprecatedStringArray",
-                            new String[] {
-                                "DeprecatedStringArray", "the name is Inside DeprecatedStringArray"
-                            },
-                            ", ");
                     rule.setFlag("iBoolean", false);
                     rule.setFlag("iInteger", 42);
                     rule.setFlag("iLong", 4815162342L);
@@ -110,10 +103,6 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
         rule.setArrayFlagWithExplicitSeparator(
                 "bExplicitStringArray", "|",
                 "ExplicitStringArray", "the name is Before ExplicitStringArray");
-        rule.setFlag(
-                "bDeprecatedStringArray",
-                new String[] {"DeprecatedStringArray", "the name is Before DeprecatedStringArray"},
-                ", ");
         rule.setFlag("bBoolean", true);
         rule.setFlag("bInteger", 108);
         rule.setFlag("bLong", 4223161584L);
@@ -132,10 +121,6 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
                                 "bExplicitStringArray",
                                 "ExplicitStringArray|the name is Before ExplicitStringArray",
                                 "|"),
-                        new NameValuePair(
-                                "bDeprecatedStringArray",
-                                "DeprecatedStringArray, the name is Before DeprecatedStringArray",
-                                ","),
                         new NameValuePair("bBoolean", "true"),
                         new NameValuePair("bInteger", "108"),
                         new NameValuePair("bLong", "4223161584"),
@@ -152,10 +137,6 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
                                 "iExplicitStringArray",
                                 "ExplicitStringArray|the name is Inside ExplicitStringArray",
                                 "|"),
-                        new NameValuePair(
-                                "iDeprecatedStringArray",
-                                "DeprecatedStringArray, the name is Inside DeprecatedStringArray",
-                                ","),
                         new NameValuePair("iBoolean", "false"),
                         new NameValuePair("iInteger", "42"),
                         new NameValuePair("iLong", "4815162342"),
@@ -168,10 +149,6 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
         rule.setArrayFlagWithExplicitSeparator(
                 "aExplicitStringArray", "|",
                 "ExplicitStringArray", "the name is After ExplicitStringArray");
-        rule.setFlag(
-                "aDeprecatedStringArray",
-                new String[] {"StringArray", "the name is After StringArray"},
-                ", ");
         rule.setFlag("aBoolean", true);
         rule.setFlag("aInteger", 666);
         rule.setFlag("aLong", 66666666666666666L);
@@ -179,69 +156,6 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
         rule.setFlag("aDouble", 6.66);
 
         expect.withMessage("calls made after the test").that(mFakeFlagsSetter.getCalls()).isEmpty();
-    }
-
-    @Test
-    public void testDeprecatedSetStringArray_invalidArgs() throws Throwable {
-        R rule = newRule();
-
-        Exception e =
-                assertThrows(
-                        NullPointerException.class,
-                        () -> rule.setFlag("DaName", (String[]) null, ","));
-        expect.withMessage("exception message")
-                .that(e)
-                .hasMessageThat()
-                .isEqualTo("values cannot be null");
-
-        e =
-                assertThrows(
-                        NullPointerException.class,
-                        () -> rule.setFlag("DaName", new String[] {"D'OH"}, null));
-        expect.withMessage("exception message")
-                .that(e)
-                .hasMessageThat()
-                .isEqualTo("separator cannot be null");
-
-        e =
-                assertThrows(
-                        IllegalArgumentException.class,
-                        () -> rule.setFlag("DaName", new String[0], ","));
-        expect.withMessage("exception message")
-                .that(e)
-                .hasMessageThat()
-                .isEqualTo("no values (name=DaName)");
-    }
-
-    @Test
-    public void testDeprecatedSetStringArray_cornerCases() throws Throwable {
-        R rule = newRule();
-        List<NameValuePair> cachedCalls = new ArrayList<>();
-        mTest.onEvaluate(() -> cachedCalls.addAll(mFakeFlagsSetter.getAndResetCalls()));
-
-        // TODO(b/303901926, 340882758): should probably ignore null and empty, but it's better to
-        // make this change in a separate CL (just in case it breaks stuff), and AFTER this class
-        // has tests for the annotation as well
-        rule.setFlag("null", new String[] {null}, ",");
-        rule.setFlag("nulls", new String[] {null, null}, ",");
-        rule.setFlag("empty", new String[] {""}, ",");
-        rule.setFlag("empties", new String[] {"", ""}, ",");
-        rule.setFlag("null and empty", new String[] {null, ""}, ",");
-        rule.setFlag("mixed", new String[] {"4", null, "2", ""}, ",");
-        rule.setFlag("one", new String[] {"is the loniest number"}, ",");
-
-        runTest(rule);
-
-        expect.withMessage("cached calls")
-                .that(cachedCalls)
-                .containsExactly(
-                        new NameValuePair("null", null),
-                        new NameValuePair("nulls", "null,null", ","),
-                        new NameValuePair("empty", ""),
-                        new NameValuePair("empties", ",", ","),
-                        new NameValuePair("null and empty", "null,", ","),
-                        new NameValuePair("mixed", "4,null,2,", ","),
-                        new NameValuePair("one", "is the loniest number"));
     }
 
     @Test
@@ -282,13 +196,15 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
         // make this change in a separate CL (just in case it breaks stuff), and AFTER this class
         // has tests for the annotation as well
         rule.setFlag("null", new String[] {null});
-        // TODO(b/3039019260): use varags below once the deprecated method is removed
-        rule.setFlag("nulls", new String[] {null, null});
+        rule.setFlag("null, not stirred", (String) null);
+        rule.setFlag("nulls", null, null);
         rule.setFlag("empty", new String[] {""});
+        rule.setFlag("empty, not stirred", "");
         rule.setFlag("empties", "", "");
         rule.setFlag("null and empty", new String[] {null, ""});
         rule.setFlag("mixed", "4", null, "2", "");
         rule.setFlag("one", new String[] {"is the loniest number"});
+        rule.setFlag("one, not stirred", "is the loniest number");
 
         runTest(rule);
 
@@ -296,12 +212,15 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
                 .that(cachedCalls)
                 .containsExactly(
                         new NameValuePair("null", null),
+                        new NameValuePair("null, not stirred", null),
                         new NameValuePair("nulls", "null,null", ","),
                         new NameValuePair("empty", ""),
+                        new NameValuePair("empty, not stirred", ""),
                         new NameValuePair("empties", ",", ","),
                         new NameValuePair("null and empty", "null,", ","),
                         new NameValuePair("mixed", "4,null,2,", ","),
-                        new NameValuePair("one", "is the loniest number"));
+                        new NameValuePair("one", "is the loniest number"),
+                        new NameValuePair("one, not stirred", "is the loniest number"));
     }
 
     @Test
@@ -313,7 +232,7 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
                         NullPointerException.class,
                         () ->
                                 rule.setArrayFlagWithExplicitSeparator(
-                                        "DaName", ",", /* values= */ (String[]) null));
+                                        "DaName", ",", /* values...= */ (String[]) null));
         expect.withMessage("exception message")
                 .that(e)
                 .hasMessageThat()

@@ -38,6 +38,8 @@ import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.adselection.debug.DebugReport;
+import com.android.adservices.service.adselection.debug.DebugReporting;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.FrequencyCapAdDataValidator;

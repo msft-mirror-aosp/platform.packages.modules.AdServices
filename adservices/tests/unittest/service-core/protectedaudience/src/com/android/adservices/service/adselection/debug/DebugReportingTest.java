@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.adselection;
+package com.android.adservices.service.adselection.debug;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -29,6 +29,7 @@ import android.os.Process;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
+import com.android.adservices.service.adselection.AdIdFetcher;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
 
@@ -145,8 +146,8 @@ public final class DebugReportingTest extends AdServicesMockitoTestCase {
 
         DebugReporting debugReporting = initDebugReporting();
 
-        assertThat(debugReporting.getScriptStrategy()).isInstanceOf(
-                DebugReportingScriptDisabledStrategy.class);
+        assertThat(debugReporting.getScriptStrategy())
+                .isInstanceOf(DebugReportingScriptDisabledStrategy.class);
     }
 
     @Test
@@ -159,8 +160,8 @@ public final class DebugReportingTest extends AdServicesMockitoTestCase {
 
         DebugReporting debugReporting = initDebugReporting();
 
-        assertThat(debugReporting.getSenderStrategy()).isInstanceOf(
-                DebugReportSenderStrategyHttpImpl.class);
+        assertThat(debugReporting.getSenderStrategy())
+                .isInstanceOf(DebugReportSenderStrategyHttpImpl.class);
     }
 
     @Test
@@ -182,8 +183,8 @@ public final class DebugReportingTest extends AdServicesMockitoTestCase {
 
         DebugReporting debugReporting = initDebugReporting();
 
-        assertThat(debugReporting.getSenderStrategy()).isInstanceOf(
-                DebugReportSenderStrategyNoOp.class);
+        assertThat(debugReporting.getSenderStrategy())
+                .isInstanceOf(DebugReportSenderStrategyNoOp.class);
     }
 
     private DebugReporting initDebugReporting() {
