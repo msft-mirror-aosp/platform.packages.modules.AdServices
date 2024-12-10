@@ -15,6 +15,8 @@
  */
 package com.android.adservices.service;
 
+import com.android.adservices.shared.common.flags.Constants;
+
 /**
  * Defines constants used by {@code Flags}, {@code PhFlags} and testing infra (both device and host
  * side).
@@ -44,17 +46,27 @@ public final class FlagsConstants {
     // AdServices Namespace String from DeviceConfig class not available in S Minus
     public static final String NAMESPACE_ADSERVICES = "adservices";
 
-    /** (Default) string used to separate array values on flattened flags. */
-    public static final String ARRAY_SPLITTER_COMMA = ",";
+    // TODO(b/)303901926: remove deprecated constants below
 
-    /** Constant used to allow everything (typically all packages) on allow-list flags. */
-    public static final String ALLOWLIST_ALL = "*";
+    /**
+     * @deprecated use same constant from {@link Constants}.
+     */
+    @Deprecated public static final String ARRAY_SPLITTER_COMMA = Constants.ARRAY_SPLITTER_COMMA;
 
-    /** Constant used to not allow anything (typically all packages) on allow-list flags. */
-    public static final String ALLOWLIST_NONE = "";
+    /**
+     * @deprecated use same constant from {@link Constants}.
+     */
+    @Deprecated public static final String ALLOWLIST_ALL = Constants.ALLOWLIST_ALL;
 
-    // Maximum possible percentage for percentage variables
-    public static final int MAX_PERCENTAGE = 100;
+    /**
+     * @deprecated use same constant from {@link Constants}.
+     */
+    @Deprecated public static final String ALLOWLIST_NONE = Constants.ALLOWLIST_NONE;
+
+    /**
+     * @deprecated use same constant from {@link Constants}.
+     */
+    @Deprecated public static final int MAX_PERCENTAGE = Constants.MAX_PERCENTAGE;
 
     // *********************************************
     // * Flag names (initially defined by PhFlags) *

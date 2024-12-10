@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.adselection;
+package com.android.adservices.service.adselection.debug;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -24,6 +24,7 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.service.adselection.PostAuctionSignals;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.ValidatorUtil;
 import com.android.internal.annotations.VisibleForTesting;
@@ -58,9 +59,7 @@ import java.util.Set;
  *
  *     <p>For the classes that wrap JavaScript code, see {@link DebugReportingScriptStrategy}.
  */
-// TODO(b/284451364): Queue URLs onto background thread for actual calling.
-// TODO(b/284451364): Return script strategy based on flag and AdId.
-class DebugReportProcessor {
+public final class DebugReportProcessor {
 
     // Cap the number of URIs at 75 custom audiences, based on P95 OT results.
     @VisibleForTesting public static final int MAX_NUMBER_OF_URIS_PER_AUCTION_PER_AD_TECH = 75;
@@ -101,7 +100,7 @@ class DebugReportProcessor {
      * @return a list of valid {@link Uri} objects. Make network calls to these to deliver
      *     event-level debug reporting information to SSP and DSPs.
      */
-    static List<Uri> getUrisFromAdAuction(
+    public static List<Uri> getUrisFromAdAuction(
             @NonNull List<DebugReport> debugReports,
             @NonNull PostAuctionSignals postAuctionSignals) {
         checkNotNull(debugReports);
@@ -162,6 +161,7 @@ class DebugReportProcessor {
                 collectVariablesFromAdAuction(
                         debugReport, postAuctionSignals, caToRejectReasonMap, isWinnerCA));
     }
+
     private static List<Uri> applyPerAdTechLimit(List<Uri> debugReportingUris) {
         // Processing for the ad tech limit must be done at the final stage, as each AuctionResult
         // can be 0 or more URIs and for both sell-side and buy-side.
