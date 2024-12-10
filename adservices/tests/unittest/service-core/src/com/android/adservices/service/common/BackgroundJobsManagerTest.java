@@ -59,7 +59,7 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.download.MddJob;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
-import com.android.adservices.service.adselection.DebugReportSenderJobService;
+import com.android.adservices.service.adselection.debug.DebugReportSenderJobService;
 import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;

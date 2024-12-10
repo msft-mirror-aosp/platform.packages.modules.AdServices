@@ -21,6 +21,7 @@ import android.annotation.Nullable;
 import android.net.Uri;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.service.adselection.debug.DebugReport;
 
 import com.google.auto.value.AutoValue;
 

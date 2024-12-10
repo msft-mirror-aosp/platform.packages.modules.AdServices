@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.adselection;
+package com.android.adservices.service.adselection.debug;
 
 import android.annotation.NonNull;
 import android.content.Context;
@@ -43,7 +43,7 @@ import java.util.concurrent.ArrayBlockingQueue;
  * batch.
  */
 @RequiresApi(Build.VERSION_CODES.S)
-public class DebugReportSenderStrategyBatchImpl implements DebugReportSenderStrategy {
+public final class DebugReportSenderStrategyBatchImpl implements DebugReportSenderStrategy {
     private static final int MAX_QUEUE_DEPTH = 1000;
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final Context mContext;
@@ -51,7 +51,7 @@ public class DebugReportSenderStrategyBatchImpl implements DebugReportSenderStra
     @NonNull private final AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @NonNull private final DevContext mDevContext;
 
-    DebugReportSenderStrategyBatchImpl(
+    public DebugReportSenderStrategyBatchImpl(
             @NonNull Context context,
             @NonNull AdSelectionDebugReportDao adSelectionDebugReportDao,
             @NonNull DevContext devContext) {

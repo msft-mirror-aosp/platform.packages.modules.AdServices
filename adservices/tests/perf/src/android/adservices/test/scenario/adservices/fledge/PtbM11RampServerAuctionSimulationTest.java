@@ -130,6 +130,7 @@ public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestB
     @Rule
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.newInstance()
+                    .setAllLogcatTags()
                     .setFlag(
                             FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI,
                             getCoordinator());
