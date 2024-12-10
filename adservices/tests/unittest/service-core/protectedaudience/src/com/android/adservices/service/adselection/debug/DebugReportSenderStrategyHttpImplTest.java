@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.adselection;
+package com.android.adservices.service.adselection.debug;
 
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;

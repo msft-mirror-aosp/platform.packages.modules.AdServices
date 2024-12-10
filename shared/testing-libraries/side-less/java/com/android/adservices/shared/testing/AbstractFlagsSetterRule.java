@@ -430,20 +430,6 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     private static final String ARRAY_SPLITTER_COMMA = ",";
 
     /**
-     * Sets the string array flag with the given value , using the {@code separator} to flatten it.
-     *
-     * <p><b>Note:</b> in most cases, it's clearer to use the {@link SetLogcatTag} annotation
-     * instead.
-     *
-     * @deprecated use {@link #setArrayFlagWithExplicitSeparator(String, String, String...)} or
-     *     {@link #setFlag(String, String...)} instead.
-     */
-    @Deprecated
-    public final T setFlag(String name, String[] value, String separator) {
-        return setArrayFlagWithExplicitSeparator(name, separator, value);
-    }
-
-    /**
      * Sets a string array flag with the given elements, separated by {@code separator}.
      *
      * <p>Use the method when you need to pass a explicitly {@code separator} - otherwise, just use
@@ -954,7 +940,8 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
     // Single SetStringArrayFlag annotations present
     private void setAnnotatedFlag(SetStringArrayFlag annotation) {
-        setFlag(annotation.name(), annotation.value(), annotation.separator());
+        setArrayFlagWithExplicitSeparator(
+                annotation.name(), annotation.separator(), annotation.value());
     }
 
     // Multiple SetStringArrayFlag annotations present
