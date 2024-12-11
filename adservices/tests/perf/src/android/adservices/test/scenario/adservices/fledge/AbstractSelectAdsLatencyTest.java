@@ -25,19 +25,14 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
-import android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule;
 import android.adservices.test.scenario.adservices.utils.StaticAdTechServerUtils;
 import android.content.Context;
 import android.net.Uri;
-import android.platform.test.rule.CleanPackageRule;
-import android.platform.test.rule.KillAppsRule;
 import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesFlagsSetterRule;
-import com.android.adservices.common.AdservicesTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -51,8 +46,6 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -70,7 +63,7 @@ import java.util.concurrent.TimeUnit;
 
 @Scenario
 @RunWith(JUnit4.class)
-public class AbstractSelectAdsLatencyTest {
+public class AbstractSelectAdsLatencyTest extends FledgePerfTestCase {
     protected static final String TAG = "SelectAds";
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
@@ -94,27 +87,6 @@ public class AbstractSelectAdsLatencyTest {
                 }
             };
     protected static List<CustomAudience> sCustomAudiences;
-
-    // Per-test method rules, run in the given order.
-    @Rule
-    public RuleChain rules =
-            RuleChain.outerRule(
-                            // CleanPackageRule should not execute after each test method because
-                            // there's a chance it interferes with ShowmapSnapshotListener snapshot
-                            // at the end of the test, impacting collection of memory metrics for
-                            // AdServices process.
-                            new CleanPackageRule(
-                                    AdservicesTestHelper.getAdServicesPackageName(CONTEXT),
-                                    /* clearOnStarting= */ true,
-                                    /* clearOnFinished= */ false))
-                    .around(
-                            new KillAppsRule(
-                                    AdservicesTestHelper.getAdServicesPackageName(CONTEXT)))
-                    .around(new SelectAdsFlagRule());
-
-    @Rule
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forAllApisEnabledTests().setCompatModeFlags();
 
     @BeforeClass
     public static void setupBeforeClass() {
