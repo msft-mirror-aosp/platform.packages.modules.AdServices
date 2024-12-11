@@ -15,7 +15,6 @@
  */
 package com.android.adservices.service.ui.data;
 
-import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_EEA_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.UNSUPPORTED_UX;
@@ -29,6 +28,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.FlagsFactory;
@@ -196,7 +196,7 @@ public class UxStatesManager {
 
     /** Returns if PAS notification was displayed. */
     private boolean wasPasNotificationDisplayed() {
-        if (getFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)) {
+        if (DebugFlags.getInstance().getConsentNotificationDebugMode()) {
             return getFlag(KEY_PAS_UX_ENABLED);
         }
         return ConsentManager.getInstance().wasPasNotificationDisplayed();
@@ -204,7 +204,7 @@ public class UxStatesManager {
 
     /** Returns if PAS notification was opened. */
     private boolean wasPasNotificationOpened() {
-        if (getFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)) {
+        if (DebugFlags.getInstance().getConsentNotificationDebugMode()) {
             return getFlag(KEY_EEA_PAS_UX_ENABLED);
         }
         return ConsentManager.getInstance().wasPasNotificationOpened();
