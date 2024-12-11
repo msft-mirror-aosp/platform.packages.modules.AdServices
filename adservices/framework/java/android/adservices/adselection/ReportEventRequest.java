@@ -164,7 +164,11 @@ public class ReportEventRequest {
     @IntDef(
             flag = true,
             prefix = {"FLAG_REPORTING_DESTINATION"},
-            value = {FLAG_REPORTING_DESTINATION_SELLER, FLAG_REPORTING_DESTINATION_BUYER})
+            value = {
+                FLAG_REPORTING_DESTINATION_SELLER,
+                FLAG_REPORTING_DESTINATION_BUYER,
+                FLAG_REPORTING_DESTINATION_COMPONENT_SELLER
+            })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ReportingDestination {}
 
