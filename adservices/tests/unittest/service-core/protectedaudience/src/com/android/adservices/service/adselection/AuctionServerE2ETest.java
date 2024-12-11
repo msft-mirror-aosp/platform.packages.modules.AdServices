@@ -1483,6 +1483,11 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                     public boolean getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
                         return false;
                     }
+
+                    @Override
+                    public long getFledgeAuctionServerOverallTimeoutMs() {
+                        return FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS * 2;
+                    }
                 };
 
         AdFilteringFeatureFactory adFilteringFeatureFactory =
