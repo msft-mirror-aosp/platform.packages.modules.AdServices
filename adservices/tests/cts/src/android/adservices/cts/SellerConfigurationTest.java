@@ -21,11 +21,14 @@ import static android.adservices.adselection.SellerConfigurationFixture.PER_BUYE
 import static android.adservices.adselection.SellerConfigurationFixture.SELLER_CONFIGURATION;
 import static android.adservices.adselection.SellerConfigurationFixture.SELLER_TARGET_SIZE_B;
 
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
+
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.PerBuyerConfiguration;
 import android.adservices.adselection.SellerConfiguration;
 import android.os.Parcel;
+import android.platform.test.annotations.RequiresFlagsEnabled;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -33,6 +36,7 @@ import org.junit.Test;
 
 import java.util.Set;
 
+@RequiresFlagsEnabled(FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
 public final class SellerConfigurationTest extends CtsAdServicesDeviceTestCase {
 
     public static final Set<PerBuyerConfiguration> PER_BUYER_CONFIGURATIONS =
