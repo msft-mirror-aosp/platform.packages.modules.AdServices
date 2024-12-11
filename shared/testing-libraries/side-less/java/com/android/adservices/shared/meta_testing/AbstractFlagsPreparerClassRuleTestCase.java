@@ -242,7 +242,7 @@ public abstract class AbstractFlagsPreparerClassRuleTestCase<
         SetSyncModeAction castAction = (SetSyncModeAction) action;
         expect.withMessage("mode on action#%s ", index)
                 .that(castAction.getMode())
-                .isEqualTo(UNTIL_REBOOT);
+                .isEqualTo(expectedMode);
     }
 
     private void assertSdkSandboxStateAction(

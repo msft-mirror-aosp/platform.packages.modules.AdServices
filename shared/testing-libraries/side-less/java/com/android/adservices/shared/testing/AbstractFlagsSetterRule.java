@@ -658,6 +658,13 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     }
 
     private T setOrCacheSystemProperty(String name, String value) {
+        if (mSkipStuffWhenObjectsAreNullOnUnitTests) {
+            mLog.w(
+                    "setOrCacheSystemProperty(%s, %s): skipping (should only happen on rule test"
+                            + " itself)",
+                    name, value);
+            return getThis();
+        }
         NameValuePair systemProperty = new NameValuePair(name, value);
         if (!mIsRunning) {
             cacheCommand(new SetSystemPropertyCommand(systemProperty));

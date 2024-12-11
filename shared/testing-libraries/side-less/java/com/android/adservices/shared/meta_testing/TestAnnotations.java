@@ -28,10 +28,22 @@ import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeast
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastU;
 import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
+import com.android.adservices.shared.testing.annotations.SetDoubleFlag;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetFloatFlag;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
+import com.android.adservices.shared.testing.annotations.SetStringArrayFlag;
+import com.android.adservices.shared.testing.annotations.SetStringFlag;
 
 import com.google.auto.value.AutoAnnotation;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.Objects;
 
 /** Provides {@code auto-value-annotation}s for annotations used on test cases. */
 public final class TestAnnotations {
@@ -116,5 +128,139 @@ public final class TestAnnotations {
     @AutoAnnotation
     public static RequiresGoDevice requiresGoDevice() {
         return new AutoAnnotation_TestAnnotations_requiresGoDevice();
+    }
+
+    /** Redundant javadoc to make checkstyle happy */
+    @AutoAnnotation
+    public static SetStringFlag setStringFlag(String name, String value) {
+        return new AutoAnnotation_TestAnnotations_setStringFlag(name, value);
+    }
+
+    /** Redundant javadoc to make checkstyle happy */
+    @AutoAnnotation
+    public static SetStringArrayFlag setStringArrayFlag(String name, String... value) {
+        return new AutoAnnotation_TestAnnotations_setStringArrayFlag(name, value);
+    }
+
+    /** Redundant javadoc to make checkstyle happy */
+    public static SetStringArrayFlag setStringArrayWithSeparatorFlag(
+            String name, String separator, String... value) {
+        return new SetStringArrayFlagAnnotation(name, separator, value);
+    }
+
+    /** Redundant javadoc to make checkstyle happy */
+    @AutoAnnotation
+    public static SetFlagTrue setFlagTrue(String value) {
+        return new AutoAnnotation_TestAnnotations_setFlagTrue(value);
+    }
+
+    /** Redundant javadoc to make checkstyle happy */
+    @AutoAnnotation
+    public static SetFlagFalse setFlagFalse(String value) {
+        return new AutoAnnotation_TestAnnotations_setFlagFalse(value);
+    }
+
+    /** Redundant javadoc to make checkstyle happy */
+    @AutoAnnotation
+    public static SetFlagEnabled setFlagEnabled(String value) {
+        return new AutoAnnotation_TestAnnotations_setFlagEnabled(value);
+    }
+
+    /** Redundant javadoc to make checkstyle happy */
+    @AutoAnnotation
+    public static SetFlagDisabled setFlagDisabled(String value) {
+        return new AutoAnnotation_TestAnnotations_setFlagDisabled(value);
+    }
+
+    /** Redundant javadoc to make checkstyle happy */
+    @AutoAnnotation
+    public static SetIntegerFlag setIntegerFlag(String name, int value) {
+        return new AutoAnnotation_TestAnnotations_setIntegerFlag(name, value);
+    }
+
+    /** Redundant javadoc to make checkstyle happy */
+    @AutoAnnotation
+    public static SetLongFlag setLongFlag(String name, long value) {
+        return new AutoAnnotation_TestAnnotations_setLongFlag(name, value);
+    }
+
+    /** Redundant javadoc to make checkstyle happy */
+    @AutoAnnotation
+    public static SetFloatFlag setFloatFlag(String name, float value) {
+        return new AutoAnnotation_TestAnnotations_setFloatFlag(name, value);
+    }
+
+    /** Redundant javadoc to make checkstyle happy */
+    @AutoAnnotation
+    public static SetDoubleFlag setDoubleFlag(String name, double value) {
+        return new AutoAnnotation_TestAnnotations_setDoubleFlag(name, value);
+    }
+
+    // TODO(b/340882758): figure out how to use @AutoAnnotation overriding default values (separator
+    // in this case)
+    public static final class SetStringArrayFlagAnnotation implements SetStringArrayFlag {
+
+        private final String mName;
+        private final String mSeparator;
+
+        @SuppressWarnings("ImmutableAnnotationChecker")
+        private final String[] mValue;
+
+        public SetStringArrayFlagAnnotation(String name, String separator, String... value) {
+            mName = name;
+            mSeparator = separator;
+            mValue = value;
+        }
+
+        @Override
+        public Class<? extends Annotation> annotationType() {
+            return SetStringArrayFlag.class;
+        }
+
+        @Override
+        public String name() {
+            return mName;
+        }
+
+        @Override
+        public String separator() {
+            return mSeparator;
+        }
+
+        @Override
+        public String[] value() {
+            return mValue;
+        }
+
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + Arrays.hashCode(mValue);
+            result = prime * result + Objects.hash(mName, mSeparator);
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) return true;
+            if (obj == null) return false;
+            if (getClass() != obj.getClass()) return false;
+            SetStringArrayFlagAnnotation other = (SetStringArrayFlagAnnotation) obj;
+            return Objects.equals(mName, other.mName)
+                    && Objects.equals(mSeparator, other.mSeparator)
+                    && Arrays.equals(mValue, other.mValue);
+        }
+
+        @Override
+        public String toString() {
+            return "@SetStringArrayFlag(name="
+                    + mName
+                    + ", separator="
+                    + mSeparator
+                    + ", value="
+                    + Arrays.toString(mValue)
+                    + ")";
+        }
     }
 }
