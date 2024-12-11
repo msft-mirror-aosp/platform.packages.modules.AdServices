@@ -57,6 +57,15 @@ public final class TestFailureTest extends SharedSidelessTestCase {
     }
 
     @Test
+    public void testGetStackTrace() throws Exception {
+        TestFailure e = new TestFailure(CAUSE, EXTRA_INFO_DESCRIPTION, EXTRA_INFO);
+
+        expect.withMessage("getStackTrace()")
+                .that(e.getStackTrace())
+                .isEqualTo(CAUSE.getStackTrace());
+    }
+
+    @Test
     public void testToString() {
         TestFailure e = new TestFailure(CAUSE, EXTRA_INFO_DESCRIPTION, EXTRA_INFO);
 

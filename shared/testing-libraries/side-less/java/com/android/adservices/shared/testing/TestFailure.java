@@ -38,11 +38,15 @@ public final class TestFailure extends Exception {
                         Locale.ENGLISH,
                         MESSAGE_TEMPLATE,
                         Objects.requireNonNull(dumpDescription, "dumpDescription cannot be null")),
-                cause,
+                Objects.requireNonNull(cause, "cause cannot be null"),
                 /* enableSuppression= */ false,
                 /* writableStackTrace= */ false);
         mDump = Objects.requireNonNull(dump, "dump cannot be null").toString();
-        setStackTrace(cause.getStackTrace());
+    }
+
+    @Override
+    public StackTraceElement[] getStackTrace() {
+        return getCause().getStackTrace();
     }
 
     @Override
