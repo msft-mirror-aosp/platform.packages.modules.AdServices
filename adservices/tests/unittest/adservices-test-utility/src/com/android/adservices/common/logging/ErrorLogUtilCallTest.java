@@ -51,6 +51,25 @@ public final class ErrorLogUtilCallTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    public void testCreateWithNullableThrowable_withNullThrowable_createsObject() {
+        ErrorLogUtilCall actual = ErrorLogUtilCall.createWithNullableThrowable(null, 1, 2, 3);
+        ErrorLogUtilCall expected = ErrorLogUtilCall.createWithNoException(1, 2, 3);
+
+        expect.that(actual).isEqualTo(expected);
+        expect.that(actual.mTimes).isEqualTo(3);
+    }
+
+    @Test
+    public void testCreateWithNullableThrowable_withNonNullThrowable_createsObject() {
+        ErrorLogUtilCall actual =
+                ErrorLogUtilCall.createWithNullableThrowable(new RuntimeException(), 1, 2, 3);
+        ErrorLogUtilCall expected = new ErrorLogUtilCall(RuntimeException.class, 1, 2, 3);
+
+        expect.that(actual).isEqualTo(expected);
+        expect.that(actual.mTimes).isEqualTo(3);
+    }
+
+    @Test
     public void testCreateFrom_withNoExceptionAnnotationNullDefault_createsObject() {
         mockAnnotationWithoutException(20, 30, 2);
         ErrorLogUtilCall expected = ErrorLogUtilCall.createWithNoException(20, 30, 2);

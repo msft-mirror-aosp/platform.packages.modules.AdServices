@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,15 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.adselection;
+package com.android.adservices.service.adselection.debug;
+
+import android.os.Build;
+
+import androidx.annotation.RequiresApi;
 
 /** Class to provide implementation when Debug reporting is disabled for on device auctions. */
-public class DebugReportingDisabled extends DebugReporting {
+@RequiresApi(Build.VERSION_CODES.S)
+public final class DebugReportingDisabled extends DebugReporting {
 
     @Override
     public DebugReportingScriptStrategy getScriptStrategy() {
