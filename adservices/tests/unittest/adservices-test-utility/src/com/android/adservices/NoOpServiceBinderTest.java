@@ -19,21 +19,25 @@ package com.android.adservices;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.junit.Test;
 
+@RequiresSdkLevelAtLeastT(reason = "ServiceBinder is not available on S")
 public final class NoOpServiceBinderTest extends AdServicesUnitTestCase {
 
-    private final NoOpServiceBinder<Object> mServiceBinder = new NoOpServiceBinder<>();
+    // NOTE: cannot use a mServiceBinder as class would not initialize on S
 
     @Test
     public void testGetService() {
-        assertWithMessage("getService()").that(mServiceBinder.getService()).isNull();
+        var serviceBinder = new NoOpServiceBinder<>();
+        assertWithMessage("getService()").that(serviceBinder.getService()).isNull();
     }
 
     @Test
     public void testUnbindFromService() {
+        var serviceBinder = new NoOpServiceBinder<>();
         // TODO(b/336558146): add logic here (for example, add method to assert it's unbound)
-        mServiceBinder.unbindFromService();
+        serviceBinder.unbindFromService();
     }
 }
