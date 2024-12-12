@@ -574,7 +574,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         boolean isVisibleNotificationType = notificationType != NOTIFICATION_NONE;
         boolean isOngoingNotificationType = notificationType == NOTIFICATION_ONGOING;
 
-        // determine conditions
+        // 1. determine conditions
         for (int i = 0; i < moduleStates.size(); i++) {
             int module = moduleStates.keyAt(i);
             int desiredState = moduleStates.valueAt(i);
@@ -600,7 +600,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             }
         }
 
-        // determine all cases that require a notification
+        // 2. determine all cases that require a notification
         boolean isFirstTimeNotification =
                 isVisibleNotificationType && isPersonalizationBeingEnabled && !anyUserChoicesKnown;
         boolean isValidRenotifyWithExistingPersonalization =
@@ -613,7 +613,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         && !isPersonalizationBeingEnabled
                         && hasAnyModuleStateChanges;
 
-        // schedule a notification if required
+        // 3. schedule a notification if required
         if (isFirstTimeNotification
                 || isValidRenotifyWithExistingPersonalization
                 || isLimitedNotification) {
@@ -624,7 +624,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                     isOngoingNotificationType);
         }
 
-        // reset any user choices of disabled modules
+        // 4. reset any user choices of disabled modules
         List<AdServicesModuleUserChoice> adServicesUserChoiceList = new ArrayList<>();
         for (int i = 0; i < moduleStates.size(); i++) {
             int key = moduleStates.keyAt(i);
@@ -636,7 +636,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         }
         consentManager.setUserChoices(adServicesUserChoiceList);
 
-        // finally, set the module state
+        // 5. finally, set the module state
         boolean isPersonalizationEnabledFirstTimeForExistingUser =
                 anyUserChoicesKnown && isPersonalizationBeingEnabled && !hasExistingPersonalization;
         if (isPersonalizationEnabledFirstTimeForExistingUser) {

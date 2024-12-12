@@ -126,6 +126,7 @@ public class ConsentNotificationTrigger {
         // TODO(b/378683120):Notification still recorded as displayed to show entry point.
         //  Change to a unified displayed bit or show entry point bit.
         recordNotificationDisplayed(context, true, consentManager);
+        consentManager.alignUserChoicesIfNeeded();
         UiStatsLogger.logNotificationDisplayed();
         LogUtil.d("Notification was displayed.");
     }
