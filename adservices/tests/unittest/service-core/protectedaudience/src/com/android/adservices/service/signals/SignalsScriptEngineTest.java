@@ -200,6 +200,9 @@ public final class SignalsScriptEngineTest extends AdServicesExtendedMockitoTest
                 assertEquals("Wrong signal values", (byte) 0xA2, result[offset++]);
             }
         }
+
+        verify(mEncodingExecutionLoggerMock)
+                .setEncodedSignalSize(/* encodedSignalSizeInBytes */ 8);
     }
 
     @Test
@@ -273,6 +276,9 @@ public final class SignalsScriptEngineTest extends AdServicesExtendedMockitoTest
                 assertEquals("Wrong signal values", (byte) 0xA2, result[offset++]);
             }
         }
+
+        verify(mEncodingExecutionLoggerMock)
+                .setEncodedSignalSize(/* encodedSignalSizeInBytes */ 8);
     }
 
     @Test
