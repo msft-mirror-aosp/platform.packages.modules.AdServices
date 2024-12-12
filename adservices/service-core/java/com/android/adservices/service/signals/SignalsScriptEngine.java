@@ -143,6 +143,8 @@ public final class SignalsScriptEngine {
                 .transform(
                         encodingResult -> {
                             byte[] result = handleEncodingOutput(encodingResult, logHelper);
+                            // Sets the encoded signal size in bytes.
+                            logHelper.setEncodedSignalSize(result.length);
                             Tracing.endAsyncSection(Tracing.ENCODE_SIGNALS, traceCookie);
                             return result;
                         },

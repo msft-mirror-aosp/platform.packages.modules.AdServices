@@ -29,7 +29,8 @@ public abstract class EncodingJsExecutionStats {
     /** Returns the time to run the JavaScript. */
     public abstract int getJsLatency();
 
-    /** Returns encoded signals size in bytes. */
+    /** Returns encoded signals size in bucket. */
+    @AdsRelevanceStatusUtils.Size
     public abstract int getEncodedSignalsSize();
 
     /** Returns JavaScript run status. */
@@ -57,7 +58,7 @@ public abstract class EncodingJsExecutionStats {
     public abstract static class Builder {
         public abstract Builder setJsLatency(int value);
 
-        public abstract Builder setEncodedSignalsSize(int value);
+        public abstract Builder setEncodedSignalsSize(@AdsRelevanceStatusUtils.Size int value);
 
         public abstract Builder setRunStatus(@AdsRelevanceStatusUtils.JsRunStatus int value);
 

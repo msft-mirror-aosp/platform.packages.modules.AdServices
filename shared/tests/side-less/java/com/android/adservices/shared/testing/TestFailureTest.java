@@ -15,6 +15,8 @@
  */
 package com.android.adservices.shared.testing;
 
+import static com.android.adservices.shared.testing.TestFailure.EXTRA_INFO_HEADER;
+import static com.android.adservices.shared.testing.TestFailure.MESSAGE;
 import static com.android.adservices.shared.testing.TestFailure.throwTestFailure;
 import static com.android.adservices.shared.testing.util.IoHelper.printStreamToString;
 import static com.android.adservices.shared.testing.util.IoHelper.printWriterToString;
@@ -32,8 +34,6 @@ public final class TestFailureTest extends SharedSidelessTestCase {
     private static final Throwable CAUSE = new Throwable("D'OH!");
     private static final String EXTRA_INFO = "Extra! Extra!";
     private static final String ANOTHER_EXTRA_INFO = "Read all about it...Extra!";
-    @Deprecated // TODO(b/383404021): remove it
-    private static final StringBuilder DEPRECATED_EXTRA_INFO = new StringBuilder("Bob");
 
     @Test
     public void testThrowTestFailure_null() {
@@ -51,8 +51,7 @@ public final class TestFailureTest extends SharedSidelessTestCase {
 
         expect.withMessage("getCause()").that(e).hasCauseThat().isSameInstanceAs(CAUSE);
 
-        String expectedMessage = String.format(TestFailure.MESSAGE_TEMPLATE, EXTRA_INFO);
-        expect.withMessage("getMessage()").that(e.getMessage()).isEqualTo(expectedMessage);
+        expect.withMessage("getMessage()").that(e.getMessage()).isEqualTo(MESSAGE);
 
         var extraInfo = e.getExtraInfo();
         assertWithMessage("getExtraInfo()").that(extraInfo).isNotNull();
@@ -78,8 +77,7 @@ public final class TestFailureTest extends SharedSidelessTestCase {
         expect.withMessage("rethrow()").that(e).isSameInstanceAs(cause);
         expect.withMessage("getCause()").that(e).hasCauseThat().isSameInstanceAs(CAUSE);
 
-        String expectedMessage = String.format(TestFailure.MESSAGE_TEMPLATE, EXTRA_INFO);
-        expect.withMessage("getMessage()").that(e.getMessage()).isEqualTo(expectedMessage);
+        expect.withMessage("getMessage()").that(e.getMessage()).isEqualTo(MESSAGE);
 
         var extraInfo = e.getExtraInfo();
         assertWithMessage("getExtraInfo()").that(extraInfo).isNotNull();
@@ -99,86 +97,6 @@ public final class TestFailureTest extends SharedSidelessTestCase {
         assertStackTrace(e, EXTRA_INFO, ANOTHER_EXTRA_INFO);
     }
 
-    @Test
-    @Deprecated // TODO(b/383404021): remove it
-    public void testNullArgs() {
-        assertThrows(
-                NullPointerException.class,
-                () -> new TestFailure(/* cause= */ null, EXTRA_INFO, DEPRECATED_EXTRA_INFO));
-        assertThrows(
-                NullPointerException.class,
-                () -> new TestFailure(CAUSE, /* dumpDescription= */ null, DEPRECATED_EXTRA_INFO));
-        assertThrows(
-                NullPointerException.class,
-                () -> new TestFailure(CAUSE, EXTRA_INFO, /* dump= */ null));
-    }
-
-    @Test
-    @Deprecated // TODO(b/383404021): remove it
-    public void testGetters() {
-        TestFailure e = new TestFailure(CAUSE, EXTRA_INFO, DEPRECATED_EXTRA_INFO);
-        String expectedMessage = String.format(TestFailure.MESSAGE_TEMPLATE, EXTRA_INFO);
-
-        expect.withMessage("getCause()").that(e.getCause()).isSameInstanceAs(CAUSE);
-        expect.withMessage("getMessage()").that(e.getMessage()).isEqualTo(expectedMessage);
-        var extraInfo = e.getExtraInfo();
-        assertWithMessage("getExtraInfo()").that(extraInfo).isNotNull();
-        expect.withMessage("getExtraInfo()")
-                .that(extraInfo)
-                .containsExactly(DEPRECATED_EXTRA_INFO.toString());
-    }
-
-    @Test
-    @Deprecated // TODO(b/383404021): remove it
-    public void testGetStackTrace() throws Exception {
-        TestFailure e = new TestFailure(CAUSE, EXTRA_INFO, DEPRECATED_EXTRA_INFO);
-
-        expect.withMessage("getStackTrace()")
-                .that(e.getStackTrace())
-                .isEqualTo(CAUSE.getStackTrace());
-    }
-
-    @Test
-    @Deprecated // TODO(b/383404021): remove it
-    public void testToString() {
-        TestFailure e = new TestFailure(CAUSE, EXTRA_INFO, DEPRECATED_EXTRA_INFO);
-
-        expect.withMessage("toString()")
-                .that(e.toString())
-                .isEqualTo("TestFailure: " + e.getMessage());
-    }
-
-    @Test
-    @Deprecated // TODO(b/383404021): remove it
-    public void testPrintStackTrace_printWriter() throws Exception {
-        TestFailure e = new TestFailure(CAUSE, EXTRA_INFO, DEPRECATED_EXTRA_INFO);
-        String causeStackTrace = printWriterToString((writer) -> CAUSE.printStackTrace(writer));
-
-        String stackTrace = printWriterToString((writer) -> e.printStackTrace(writer));
-
-        expect.withMessage("stack trace").that(stackTrace).startsWith(e + "\nCaused by: " + CAUSE);
-        expect.withMessage("stack trace").that(stackTrace).contains(causeStackTrace);
-        expect.withMessage("stack trace")
-                .that(stackTrace)
-                .endsWith(DEPRECATED_EXTRA_INFO.toString() + "\n");
-    }
-
-    @Test
-    @Deprecated // TODO(b/383404021): remove it
-    public void testPrintStackTrace_printStream() throws Exception {
-        TestFailure e = new TestFailure(CAUSE, EXTRA_INFO, DEPRECATED_EXTRA_INFO);
-
-        String causeStackTrace = printStreamToString((stream) -> CAUSE.printStackTrace(stream));
-
-        String stackTrace = printStreamToString((stream) -> e.printStackTrace(stream));
-
-        expect.withMessage("stack trace").that(stackTrace).startsWith(e + "\nCaused by: " + CAUSE);
-        expect.withMessage("stack trace").that(stackTrace).contains(causeStackTrace);
-        expect.withMessage("stack trace")
-                .that(stackTrace)
-                .endsWith(DEPRECATED_EXTRA_INFO.toString() + "\n");
-    }
-
     private void assertStackTrace(TestFailure e, String... extraInfo) throws Exception {
         String pwStackTrace = printWriterToString((pw) -> e.printStackTrace(pw));
         assertStackTraceContents(e, "printStackTrace(PrintWriter)", pwStackTrace, extraInfo);
@@ -194,6 +112,8 @@ public final class TestFailureTest extends SharedSidelessTestCase {
 
         expect.withMessage(what).that(stackTrace).startsWith(e + "\nCaused by: " + cause);
         expect.withMessage(what).that(stackTrace).contains(causeStackTrace);
-        expect.withMessage(what).that(stackTrace).endsWith(String.join("\n", extraInfo) + "\n");
+        expect.withMessage(what)
+                .that(stackTrace)
+                .endsWith(EXTRA_INFO_HEADER + String.join("\n", extraInfo) + "\n");
     }
 }
