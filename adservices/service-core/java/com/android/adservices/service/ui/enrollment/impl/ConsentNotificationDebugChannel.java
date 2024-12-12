@@ -16,13 +16,12 @@
 
 package com.android.adservices.service.ui.enrollment.impl;
 
-import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
-
 import android.content.Context;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.common.ConsentNotificationJobService;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
@@ -38,7 +37,7 @@ public class ConsentNotificationDebugChannel implements PrivacySandboxEnrollment
             PrivacySandboxUxCollection uxCollection,
             ConsentManager consentManager,
             UxStatesManager uxStatesManager) {
-        return uxStatesManager.getFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE);
+        return DebugFlags.getInstance().getConsentNotificationDebugMode();
     }
 
     /** Enroll the user through consent notification. */

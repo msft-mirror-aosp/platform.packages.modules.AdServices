@@ -21,8 +21,10 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.fail;
 
+import com.android.adservices.shared.testing.util.IoHelper;
+
+import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -32,13 +34,17 @@ public final class DumpHelper {
 
     /** Calls {@code dump()} in the given dumper, and return its output. */
     public static String dump(Dumper dumper) throws Exception {
-        Objects.requireNonNull(dumper);
-        try (StringWriter sw = new StringWriter()) {
-            PrintWriter pw = new PrintWriter(sw);
-            dumper.dump(pw);
-            pw.flush();
-            return sw.toString();
-        }
+        Objects.requireNonNull(dumper, "dumper cannot be null");
+        return IoHelper.printWriterToString(
+                pw -> {
+                    try {
+                        dumper.dump(pw);
+                    } catch (IOException | RuntimeException e) {
+                        throw e;
+                    } catch (Exception e) {
+                        throw new IllegalStateException("dumper threw checked, non-IOException", e);
+                    }
+                });
     }
 
     /** Asserts that all lines of a {@code dump} start with the given {@code prefix}. */

@@ -101,7 +101,6 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -117,8 +116,8 @@ import java.util.concurrent.ExecutorService;
 // TODO (b/315812832) - Refactor test so strictness can be lenient and enable logging usage rule.
 @SkipLoggingUsageRule(reason = "Overrides mocking strictness to STRICT_STUBS.")
 @MockStatic(BackgroundFetchJob.class)
-@SpyStatic(FlagsFactory.class)
-@SpyStatic(DebugFlags.class)
+@MockStatic(FlagsFactory.class)
+@MockStatic(DebugFlags.class)
 public final class CustomAudienceServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final ExecutorService DIRECT_EXECUTOR = MoreExecutors.newDirectExecutorService();

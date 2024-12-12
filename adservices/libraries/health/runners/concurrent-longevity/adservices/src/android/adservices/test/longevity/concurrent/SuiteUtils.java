@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /** Common Utility class for longevity concurrent framework. */
-final class SuiteUtils {
+public final class SuiteUtils {
 
     private SuiteUtils() {
         throw new AssertionError(
@@ -36,7 +36,7 @@ final class SuiteUtils {
      * @return a {@code Map<String, String>} of all key, value pairs in {@code bundle}.
      * @throws IllegalArgumentException if value does not exist for the key in the bundle.
      */
-    static Map<String, String> bundleToMap(Bundle bundle) {
+    public static Map<String, String> bundleToMap(Bundle bundle) {
         Map<String, String> result = new HashMap<>();
         for (String key : bundle.keySet()) {
             if (!bundle.containsKey(key)) {
