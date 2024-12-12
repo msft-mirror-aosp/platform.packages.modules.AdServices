@@ -80,7 +80,7 @@ public final class SignalsCtsDebuggableTest extends ForegroundDebuggableCtsTest 
 
     @Before
     public void setUp() throws Exception {
-        flags.setFlag(KEY_PAS_APP_ALLOW_LIST, new String[] {CommonFixture.TEST_PACKAGE_NAME}, ",");
+        flags.setFlag(KEY_PAS_APP_ALLOW_LIST, CommonFixture.TEST_PACKAGE_NAME);
 
         AdservicesTestHelper.killAdservicesProcess(mContext);
         ExecutorService executor = Executors.newCachedThreadPool();

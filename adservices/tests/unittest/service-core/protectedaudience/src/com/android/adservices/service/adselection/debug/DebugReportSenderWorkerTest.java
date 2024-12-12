@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.adselection;
+package com.android.adservices.service.adselection.debug;
 
 import static com.google.common.truth.Truth.assertThat;
 

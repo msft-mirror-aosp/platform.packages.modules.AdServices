@@ -28,6 +28,12 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesPermissions;
@@ -79,6 +85,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
@@ -217,6 +224,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName, ownerPackageName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -320,7 +331,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
-
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -404,6 +418,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     input.getCallerPackageName(),
                     STATUS_INVALID_ARGUMENT,
                     /* latencyMs= */ 0);
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE);
 
             // Rethrow because we want to fail fast
             throw exception;
@@ -458,7 +476,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName, ownerPackageName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
-
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -749,6 +770,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     callerAppPackageName,
                     STATUS_INTERNAL_ERROR,
                     /* latencyMs= */ 0);
+            AdsRelevanceStatusUtils.checkAndLogCelByApiNameLoggingId(
+                    illegalStateException,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE,
+                    apiNameLoggingId);
             throw illegalStateException;
         }
     }

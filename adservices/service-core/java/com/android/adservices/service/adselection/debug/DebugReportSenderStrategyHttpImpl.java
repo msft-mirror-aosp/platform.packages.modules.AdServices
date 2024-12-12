@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.adselection;
+package com.android.adservices.service.adselection.debug;
 
 import android.annotation.NonNull;
 import android.net.Uri;
@@ -33,7 +33,7 @@ import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.stream.Collectors;
 
-class DebugReportSenderStrategyHttpImpl implements DebugReportSenderStrategy {
+public final class DebugReportSenderStrategyHttpImpl implements DebugReportSenderStrategy {
 
     private static final int MAX_QUEUE_DEPTH = 1000;
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -41,7 +41,7 @@ class DebugReportSenderStrategyHttpImpl implements DebugReportSenderStrategy {
     @NonNull private final AdServicesHttpsClient mHttpsClient;
     @NonNull private final DevContext mDevContext;
 
-    DebugReportSenderStrategyHttpImpl(
+    public DebugReportSenderStrategyHttpImpl(
             @NonNull AdServicesHttpsClient adServicesHttpsClient, @NonNull DevContext devContext) {
         Objects.requireNonNull(adServicesHttpsClient);
         Objects.requireNonNull(devContext);
@@ -76,7 +76,7 @@ class DebugReportSenderStrategyHttpImpl implements DebugReportSenderStrategy {
                                     return mHttpsClient.getAndReadNothing(uri, mDevContext);
                                 })
                         .collect(Collectors.toList());
-        return Futures.whenAllComplete(futures).call(() -> null,
-                AdServicesExecutors.getBlockingExecutor());
+        return Futures.whenAllComplete(futures)
+                .call(() -> null, AdServicesExecutors.getBlockingExecutor());
     }
 }

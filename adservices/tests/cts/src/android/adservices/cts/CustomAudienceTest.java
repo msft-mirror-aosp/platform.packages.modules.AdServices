@@ -35,7 +35,9 @@ import android.adservices.customaudience.TrustedBiddingData;
 import android.adservices.customaudience.TrustedBiddingDataFixture;
 import android.net.Uri;
 import android.os.Parcel;
+import android.platform.test.annotations.RequiresFlagsEnabled;
 
+import com.android.adservices.flags.Flags;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 
 import com.google.common.collect.ImmutableList;
@@ -88,6 +90,7 @@ public final class CustomAudienceTest extends CtsAdServicesDeviceTestCase {
     }
 
     @Test
+    @RequiresFlagsEnabled(Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
     public void testBuildValidCustomAudienceSuccessWithComponentAds() {
         List<ComponentAdData> componentAdDataList =
                 ComponentAdDataFixture.getValidComponentAdsByBuyer(CommonFixture.VALID_BUYER_1);
@@ -266,6 +269,7 @@ public final class CustomAudienceTest extends CtsAdServicesDeviceTestCase {
     }
 
     @Test
+    @RequiresFlagsEnabled(Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
     public void testParcelValidCustomAudienceSuccessWithComponentAds() {
         CustomAudience validCustomAudience =
                 CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
