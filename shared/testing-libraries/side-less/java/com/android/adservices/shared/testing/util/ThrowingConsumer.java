@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,20 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.adservices.shared.testing.util;
 
-package com.android.adservices.service.adselection;
+/**
+ * Same as {@link java.util.function.Consumer}, but throwing.
+ *
+ * @param <C> type being consumed
+ * @param <T> exception it could throw
+ */
+public interface ThrowingConsumer<C, T extends Throwable> {
 
-import android.net.Uri;
-
-import com.google.common.util.concurrent.ListenableFuture;
-
-import java.util.List;
-
-interface DebugReportSenderStrategy {
-
-    void enqueue(Uri uri);
-
-    void batchEnqueue(List<Uri> uris);
-
-    ListenableFuture<Void> flush();
+    /** I don't always accept C, but when I do, I can throw T */
+    void accept(C consumee) throws T;
 }

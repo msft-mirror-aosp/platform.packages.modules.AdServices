@@ -44,18 +44,6 @@ public final class FlagsConstants {
     // AdServices Namespace String from DeviceConfig class not available in S Minus
     public static final String NAMESPACE_ADSERVICES = "adservices";
 
-    /** (Default) string used to separate array values on flattened flags. */
-    public static final String ARRAY_SPLITTER_COMMA = ",";
-
-    /** Constant used to allow everything (typically all packages) on allow-list flags. */
-    public static final String ALLOWLIST_ALL = "*";
-
-    /** Constant used to not allow anything (typically all packages) on allow-list flags. */
-    public static final String ALLOWLIST_NONE = "";
-
-    // Maximum possible percentage for percentage variables
-    public static final int MAX_PERCENTAGE = 100;
-
     // *********************************************
     // * Flag names (initially defined by PhFlags) *
     // *********************************************
