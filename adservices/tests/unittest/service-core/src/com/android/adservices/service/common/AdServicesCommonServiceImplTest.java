@@ -18,6 +18,7 @@ package com.android.adservices.service.common;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_ACTIVITY_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
@@ -994,6 +995,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
 
     @Test
     public void testRequestAdServicesModuleOverrides() throws Exception {
+        doReturn(true).when(mMockFlags).getAdServicesConsentBusinessLogicMigrationEnabled();
         ExtendedMockito.doReturn(true)
                 .when(
                         () ->
@@ -1053,7 +1055,42 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
+    public void testRequestAdServicesModuleOverrides_callbackFail() throws Exception {
+        doReturn(false).when(mMockFlags).getAdServicesConsentBusinessLogicMigrationEnabled();
+        ExtendedMockito.doReturn(true)
+                .when(
+                        () ->
+                                PermissionHelper.hasAccessAdServicesCommonStatePermission(
+                                        any(), any()));
+
+        ExtendedMockito.doReturn(mConsentManager).when(ConsentManager::getInstance);
+
+        RequestAdServicesModuleOverridesCallback callback =
+                new RequestAdServicesModuleOverridesCallback(BINDER_CONNECTION_TIMEOUT_MS);
+        UpdateAdServicesModuleStatesParams params =
+                new UpdateAdServicesModuleStatesParams.Builder()
+                        .setModuleState(
+                                Module.PROTECTED_AUDIENCE,
+                                AdServicesCommonManager.MODULE_STATE_ENABLED)
+                        .setModuleState(
+                                Module.PROTECTED_APP_SIGNALS,
+                                AdServicesCommonManager.MODULE_STATE_DISABLED)
+                        .setNotificationType(NotificationType.NOTIFICATION_ONGOING)
+                        .build();
+        doNothing()
+                .when(
+                        () ->
+                                ConsentNotificationJobService.scheduleNotificationV2(
+                                        any(), anyBoolean(), anyBoolean(), anyBoolean()));
+        mCommonService.requestAdServicesModuleOverrides(params, callback);
+
+        callback.assertFailed(STATUS_KILLSWITCH_ENABLED);
+        verify(mConsentManager, never()).setModuleStates(any());
+    }
+
+    @Test
     public void testSetAdServicesUserChoices() throws Exception {
+        doReturn(true).when(mMockFlags).getAdServicesConsentBusinessLogicMigrationEnabled();
         ExtendedMockito.doReturn(true)
                 .when(
                         () ->
@@ -1102,6 +1139,33 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         }
         expect.withMessage("isPaAvailable").that(isPaAvailable).isTrue();
         expect.withMessage("isPasAvailable").that(isPasAvailable).isTrue();
+    }
+
+    @Test
+    public void testSetAdServicesUserChoices_callbackFail() throws Exception {
+        doReturn(false).when(mMockFlags).getAdServicesConsentBusinessLogicMigrationEnabled();
+        ExtendedMockito.doReturn(true)
+                .when(
+                        () ->
+                                PermissionHelper.hasAccessAdServicesCommonStatePermission(
+                                        any(), any()));
+        ExtendedMockito.doReturn(mConsentManager).when(ConsentManager::getInstance);
+
+        RequestAdServicesModuleUserChoicesCallback callback =
+                new RequestAdServicesModuleUserChoicesCallback(BINDER_CONNECTION_TIMEOUT_MS);
+
+        UpdateAdServicesUserChoicesParams params =
+                new UpdateAdServicesUserChoicesParams.Builder()
+                        .setUserChoice(
+                                Module.PROTECTED_AUDIENCE,
+                                AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN)
+                        .setUserChoice(
+                                Module.PROTECTED_APP_SIGNALS,
+                                AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT)
+                        .build();
+        mCommonService.requestAdServicesModuleUserChoices(params, callback);
+        callback.assertFailed(STATUS_KILLSWITCH_ENABLED);
+        verify(mConsentManager, never()).setUserChoices(any());
     }
 
     @Test

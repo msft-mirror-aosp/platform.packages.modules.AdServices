@@ -28,6 +28,7 @@ import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_ACTIVITY_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.ConsentStatus.SERVICE_NOT_ENABLED;
@@ -90,6 +91,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdCacheManager;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
@@ -528,6 +530,14 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
                             return;
                         }
+                        boolean businessLogicMigrationEnabled =
+                                FlagsFactory.getFlags()
+                                        .getAdServicesConsentBusinessLogicMigrationEnabled();
+                        if (!businessLogicMigrationEnabled) {
+                            callback.onFailure(STATUS_KILLSWITCH_ENABLED);
+                            LogUtil.d("Business logic migration flag not enabled");
+                            return;
+                        }
                         sendNotificationIfNeededAndUpdateState(updateParams);
                         callback.onSuccess();
                     } catch (Exception e) {
@@ -603,6 +613,14 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         if (!authorizedCaller) {
                             callback.onFailure(STATUS_UNAUTHORIZED);
                             LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
+                            return;
+                        }
+                        boolean businessLogicMigrationEnabled =
+                                FlagsFactory.getFlags()
+                                        .getAdServicesConsentBusinessLogicMigrationEnabled();
+                        if (!businessLogicMigrationEnabled) {
+                            callback.onFailure(STATUS_KILLSWITCH_ENABLED);
+                            LogUtil.d("Business logic migration flag not enabled");
                             return;
                         }
                         ConsentManager consentManager = ConsentManager.getInstance();

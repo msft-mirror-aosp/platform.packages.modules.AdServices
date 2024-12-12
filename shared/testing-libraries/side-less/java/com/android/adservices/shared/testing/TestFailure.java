@@ -15,45 +15,93 @@
  */
 package com.android.adservices.shared.testing;
 
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
+
 import java.io.PrintStream;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 
-// TODO(b/328682831): add unit tests
 /** Exception used to wrap a test failure and provide more information on why it failed. */
 @SuppressWarnings("OverrideThrowableToString")
 public final class TestFailure extends Exception {
 
-    // TODO(b/328682831): rename to extraNnfo or something like that (same on other places)
-    private final String mDump;
+    @VisibleForTesting
+    static final String MESSAGE_TEMPLATE = "Test failed (see %s below the stack trace)";
 
-    // TODO(b/324919960): make it package-protected again or make sure it's unit tested.
-    public TestFailure(Throwable cause, String dumpDescription, StringBuilder dump) {
+    private final List<String> mExtraInfo = new ArrayList<>();
+
+    /**
+     * Throws a {@link TestFailure}.
+     *
+     * @throws the {@code cause} itself (with the {@code extraInfo} added to it if it's already a
+     *     {@link TestFailure}, or a new {@link TestFailure} with the given {@code cause} and {@code
+     *     extraInfo}.
+     */
+    public static void throwTestFailure(Throwable cause, String extraInfo) throws TestFailure {
+        Objects.requireNonNull(cause, "cause cannot be null");
+        Objects.requireNonNull(extraInfo, "extraInfo cannot be null");
+
+        if (cause instanceof TestFailure) {
+            TestFailure testFailure = (TestFailure) cause;
+            testFailure.mExtraInfo.add(extraInfo);
+            throw testFailure;
+        }
+
+        throw new TestFailure(cause, extraInfo);
+    }
+
+    private TestFailure(Throwable cause, String extraInfo) {
         super(
-                "Test failed (see " + dumpDescription + " below the stack trace)",
+                String.format(Locale.ENGLISH, MESSAGE_TEMPLATE, extraInfo),
                 cause,
                 /* enableSuppression= */ false,
+                /* git log= */ false);
+        mExtraInfo.add(extraInfo);
+    }
+
+    /**
+     * @deprecated should call {@link #throwTestFailure(Throwable, String)} instead.
+     */
+    @Deprecated
+    public TestFailure(Throwable cause, String dumpDescription, StringBuilder dump) {
+        super(
+                String.format(
+                        Locale.ENGLISH,
+                        MESSAGE_TEMPLATE,
+                        Objects.requireNonNull(dumpDescription, "dumpDescription cannot be null")),
+                Objects.requireNonNull(cause, "cause cannot be null"),
+                /* enableSuppression= */ false,
                 /* writableStackTrace= */ false);
-        mDump = dump.toString();
-        setStackTrace(cause.getStackTrace());
+        mExtraInfo.add(Objects.requireNonNull(dump, "dump cannot be null").toString());
+    }
+
+    @Override
+    public StackTraceElement[] getStackTrace() {
+        return getCause().getStackTrace();
     }
 
     @Override
     public void printStackTrace(PrintWriter s) {
         super.printStackTrace(s);
-        s.println(mDump);
+        mExtraInfo.forEach(extraInfo -> s.println(extraInfo));
     }
 
     @Override
     public void printStackTrace(PrintStream s) {
         super.printStackTrace(s);
-        s.println(mDump);
+        mExtraInfo.forEach(extraInfo -> s.println(extraInfo));
     }
 
-    public String getExtraInfo() {
-        return mDump;
+    /** Gets the extra info added to the original exception. */
+    public ImmutableList<String> getExtraInfo() {
+        return ImmutableList.copyOf(mExtraInfo);
     }
 
-    // toString() is overridden to remove the AbstractAdServicesFlagsSetterRule$ from the name
+    // toString() is overridden to remove the package name
     @Override
     public String toString() {
         return getClass().getSimpleName() + ": " + getMessage();
