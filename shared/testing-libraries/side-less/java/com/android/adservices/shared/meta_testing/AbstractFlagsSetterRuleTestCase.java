@@ -52,6 +52,8 @@ import org.junit.runner.Description;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.HashMap;
+import java.util.Map;
 
 public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSetterRule<R>>
         extends SharedSidelessTestCase {
@@ -180,6 +182,103 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
         rule.setFlag("aDouble", 6.66);
 
         expect.withMessage("calls made after the test").that(mFakeFlagsSetter.getCalls()).isEmpty();
+    }
+
+    @Test
+    public void testFlagsFromConfig() throws Throwable {
+        R rule = newRule();
+        List<NameValuePair> cachedCalls = new ArrayList<>();
+        mTest.onEvaluate(() -> cachedCalls.addAll(mFakeFlagsSetter.getAndResetCalls()));
+        Map<String, String> argMap = new HashMap<String, String>();
+        argMap.put("some_prefix:name_one", "value1");
+        argMap.put("some_prefix:name_two", "value2");
+        argMap.put("name_three", "value3");
+        argMap.put("name_four", "value4");
+
+        rule.setFlagsFromConfig(argMap, "some_prefix", ":");
+        runTest(rule);
+
+        expect.withMessage("cached calls")
+                .that(cachedCalls)
+                .containsExactly(
+                        new NameValuePair("name_one", "value1"),
+                        new NameValuePair("name_two", "value2"));
+    }
+
+    @Test
+    public void testFlagsFromConfig_invalidParams() throws Throwable {
+        R rule = newRule();
+        Map<String, String> argMap = new HashMap<String, String>();
+
+        Exception e =
+                assertThrows(
+                        NullPointerException.class,
+                        () -> rule.setFlagsFromConfig(argMap, null, ":"));
+        expect.withMessage("exception message")
+                .that(e)
+                .hasMessageThat()
+                .isEqualTo("prefix cannot be null");
+
+        e =
+                assertThrows(
+                        NullPointerException.class,
+                        () -> rule.setFlagsFromConfig(null, "prefix", ":"));
+        expect.withMessage("exception message")
+                .that(e)
+                .hasMessageThat()
+                .isEqualTo("configArgs cannot be null");
+
+        e =
+                assertThrows(
+                        NullPointerException.class,
+                        () -> rule.setFlagsFromConfig(argMap, "prefix", null));
+        expect.withMessage("exception message")
+                .that(e)
+                .hasMessageThat()
+                .isEqualTo("separator cannot be null");
+
+        e =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> rule.setFlagsFromConfig(argMap, "", ":"));
+        expect.withMessage("exception message")
+                .that(e)
+                .hasMessageThat()
+                .isEqualTo("prefix or separator cannot be empty");
+
+        e =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> rule.setFlagsFromConfig(argMap, "prefix", "="));
+        expect.withMessage("exception message")
+                .that(e)
+                .hasMessageThat()
+                .isEqualTo("separator cannot be one of (=,_)");
+    }
+
+    @Test
+    public void testFlagsFromConfig_cornerCases() throws Throwable {
+        R rule = newRule();
+        List<NameValuePair> cachedCalls = new ArrayList<>();
+        mTest.onEvaluate(() -> cachedCalls.addAll(mFakeFlagsSetter.getAndResetCalls()));
+        Map<String, String> argMap = new HashMap<String, String>();
+        argMap.put("pre:name", "invalid wrong prefix");
+        argMap.put("name", "invalid no prefix");
+        argMap.put("prefix:name_one", "validvalue1");
+        argMap.put("prefix:prefix:name", "invalid too many separators");
+        argMap.put("prefix:name_two", "validvalue2");
+        argMap.put("prefix:", "invalid empty named group");
+        argMap.put("prefix_name", "invalid wrong separator");
+        argMap.put("prefix", "invalid no separator");
+
+        rule.setFlagsFromConfig(argMap, "prefix", ":");
+        runTest(rule);
+
+        expect.withMessage("cached calls")
+                .that(cachedCalls)
+                .containsExactly(
+                        new NameValuePair("name_one", "validvalue1"),
+                        new NameValuePair("name_two", "validvalue2"));
     }
 
     @Test
