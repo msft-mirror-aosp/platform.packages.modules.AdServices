@@ -274,19 +274,22 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     }
 
     @Override
-    protected String decorateTestFailureMessage(StringBuilder dump, List<Throwable> cleanUpErrors) {
+    protected void throwTestFailure(Throwable testError, List<Throwable> cleanUpErrors)
+            throws Throwable {
+        StringBuilder extraInfo = new StringBuilder("*** Flags / system properties state ***\n");
         if (mFlagsClearedByTest) {
-            dump.append("NOTE: test explicitly cleared all flags.\n");
+            extraInfo.append("(NOTE: test explicitly cleared all flags.)\n");
         }
 
-        logAllAndDumpDiff("flags", dump, mChangedFlags, mPreTestFlags, mOnTestFailureFlags);
+        logAllAndDumpDiff("flags", extraInfo, mChangedFlags, mPreTestFlags, mOnTestFailureFlags);
         logAllAndDumpDiff(
                 "system properties",
-                dump,
+                extraInfo,
                 mChangedSystemProperties,
                 mPreTestSystemProperties,
                 mOnTestFailureSystemProperties);
-        return "flags / system properties state";
+
+        TestFailure.throwTestFailure(testError, extraInfo.toString());
     }
 
     private void logAllAndDumpDiff(

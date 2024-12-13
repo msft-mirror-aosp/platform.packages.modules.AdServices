@@ -16,10 +16,12 @@
 package com.android.adservices.shared.testing;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableList;
 
 import java.io.PrintStream;
 import java.io.PrintWriter;
-import java.util.Locale;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /** Exception used to wrap a test failure and provide more information on why it failed. */
@@ -27,38 +29,59 @@ import java.util.Objects;
 public final class TestFailure extends Exception {
 
     @VisibleForTesting
-    static final String MESSAGE_TEMPLATE = "Test failed (see %s below the stack trace)";
+    static final String MESSAGE = "Test failed (see extra info below the stack trace)";
 
-    // TODO(b/383404021): rename to extraInfo or something like that (same on constructor)
-    private final String mDump;
+    @VisibleForTesting static final String EXTRA_INFO_HEADER = "EXTRA INFO:\n";
 
-    public TestFailure(Throwable cause, String dumpDescription, StringBuilder dump) {
-        super(
-                String.format(
-                        Locale.ENGLISH,
-                        MESSAGE_TEMPLATE,
-                        Objects.requireNonNull(dumpDescription, "dumpDescription cannot be null")),
-                cause,
-                /* enableSuppression= */ false,
-                /* writableStackTrace= */ false);
-        mDump = Objects.requireNonNull(dump, "dump cannot be null").toString();
-        setStackTrace(cause.getStackTrace());
+    private final List<String> mExtraInfo = new ArrayList<>();
+
+    /**
+     * Throws a {@link TestFailure}.
+     *
+     * @throws the {@code cause} itself (with the {@code extraInfo} added to it if it's already a
+     *     {@link TestFailure}, or a new {@link TestFailure} with the given {@code cause} and {@code
+     *     extraInfo}.
+     */
+    public static void throwTestFailure(Throwable cause, String extraInfo) throws TestFailure {
+        Objects.requireNonNull(cause, "cause cannot be null");
+        Objects.requireNonNull(extraInfo, "extraInfo cannot be null");
+
+        if (cause instanceof TestFailure) {
+            TestFailure testFailure = (TestFailure) cause;
+            testFailure.mExtraInfo.add(extraInfo);
+            throw testFailure;
+        }
+
+        throw new TestFailure(cause, extraInfo);
+    }
+
+    private TestFailure(Throwable cause, String extraInfo) {
+        super(MESSAGE, cause, /* enableSuppression= */ false, /* git log= */ false);
+        mExtraInfo.add(extraInfo);
+    }
+
+    @Override
+    public StackTraceElement[] getStackTrace() {
+        return getCause().getStackTrace();
     }
 
     @Override
     public void printStackTrace(PrintWriter s) {
         super.printStackTrace(s);
-        s.println(mDump);
+        s.print(EXTRA_INFO_HEADER);
+        mExtraInfo.forEach(extraInfo -> s.println(extraInfo));
     }
 
     @Override
     public void printStackTrace(PrintStream s) {
         super.printStackTrace(s);
-        s.println(mDump);
+        s.print(EXTRA_INFO_HEADER);
+        mExtraInfo.forEach(extraInfo -> s.println(extraInfo));
     }
 
-    public String getExtraInfo() {
-        return mDump;
+    /** Gets the extra info added to the original exception. */
+    public ImmutableList<String> getExtraInfo() {
+        return ImmutableList.copyOf(mExtraInfo);
     }
 
     // toString() is overridden to remove the package name

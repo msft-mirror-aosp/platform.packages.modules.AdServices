@@ -17,6 +17,9 @@
 package com.android.adservices.service.stats;
 
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_UNSET;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.service.stats.pas.EncodingJsExecutionStats;
@@ -25,7 +28,7 @@ import org.junit.Test;
 
 public class EncodingJsExecutionStatsTest extends AdServicesUnitTestCase {
     private static final int JS_LATENCY = 123;
-    private static final int ENCODED_SIGNALS_SIZE = 15;
+    private static final int ENCODED_SIGNALS_SIZE = SIZE_MEDIUM;
     private static final int RUN_STATUS = JS_RUN_STATUS_SUCCESS;
     private static final int JS_MEMORY_USED = 20;
     private static final String AD_TECH_ID = "com.google.android";
@@ -46,5 +49,17 @@ public class EncodingJsExecutionStatsTest extends AdServicesUnitTestCase {
         expect.that(stats.getRunStatus()).isEqualTo(RUN_STATUS);
         expect.that(stats.getJsMemoryUsed()).isEqualTo(JS_MEMORY_USED);
         expect.that(stats.getAdTechId()).isEqualTo(AD_TECH_ID);
+    }
+
+    @Test
+    public void testBuildEncodingJsExecutionStats_defaultValue() {
+        EncodingJsExecutionStats stats =
+                EncodingJsExecutionStats.builder().build();
+
+        expect.that(stats.getJsLatency()).isEqualTo(SIZE_UNSET);
+        expect.that(stats.getEncodedSignalsSize()).isEqualTo(SIZE_UNSET);
+        expect.that(stats.getRunStatus()).isEqualTo(JS_RUN_STATUS_UNSET);
+        expect.that(stats.getJsMemoryUsed()).isEqualTo(0);
+        expect.that(stats.getAdTechId()).isEqualTo("");
     }
 }

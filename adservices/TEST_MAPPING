@@ -153,6 +153,14 @@
       ]
     },
     {
+      "name": "AdServicesTestUtilityTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       "name": "CtsAdServicesDeviceTestCases",
       "options": [
         {

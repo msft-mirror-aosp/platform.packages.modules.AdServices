@@ -39,6 +39,9 @@ android_test {
     defaults: ["adservices-extended-mockito-defaults"],
     sdk_version: "module_current",
     plugins: ["auto_annotation_plugin"],
+    test_suites: [
+        "general-tests",
+    ],
     test_config: "AndroidTest.xml",
     min_sdk_version: "31",
     target_sdk_version: "31",

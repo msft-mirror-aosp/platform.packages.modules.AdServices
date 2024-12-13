@@ -30,5 +30,8 @@ public class EncodingExecutionLogHelperNoOpImpl implements EncodingExecutionLogH
     public void setAdtech(AdTechIdentifier adtech) {}
 
     @Override
+    public void setEncodedSignalSize(int encodedSignalSize) {}
+
+    @Override
     public void finish() {}
 }

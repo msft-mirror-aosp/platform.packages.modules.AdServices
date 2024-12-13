@@ -33,6 +33,9 @@ public interface EncodingExecutionLogHelper {
      */
     void setAdtech(AdTechIdentifier adtech);
 
+    /** Set the size of encoded signal size in bytes. */
+    void setEncodedSignalSize(int encodedSignalSize);
+
     /**
      * Finish the timer, and log the metric if not already finished. If already finished, do
      * nothing.

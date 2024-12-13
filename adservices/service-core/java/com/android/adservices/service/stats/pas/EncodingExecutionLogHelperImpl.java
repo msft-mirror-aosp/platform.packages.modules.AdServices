@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.stats.pas;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_JS_EXECUTION_SIGNAL_SIZE_BUCKETS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_EXECUTION_LATENCY_BUCKETS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.computeSize;
 
@@ -75,6 +76,12 @@ public class EncodingExecutionLogHelperImpl implements EncodingExecutionLogHelpe
         if (data != null) {
             mStatsBuilder.setAdTechId(data.getEnrollmentId());
         }
+    }
+
+    @Override
+    public void setEncodedSignalSize(int encodedSignalSize) {
+        mStatsBuilder.setEncodedSignalsSize(
+                computeSize(encodedSignalSize, ENCODING_JS_EXECUTION_SIGNAL_SIZE_BUCKETS));
     }
 
     @Override
