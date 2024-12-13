@@ -516,8 +516,10 @@ public class AdServicesCommonManager {
      * Sets the user choices for AdServices Module(s).
      *
      * <p>This API sets the user consent value for each AdServices module (PAS, Measurement, Topic,
-     * etc). The user consent controls whether the PPAPIs associated with that module can operate or
-     * not.
+     * etc). The user consent controls whether the PPAPI associated with that module can operate or
+     * not. If a module already has a user choice opt-in or opt-out, then only user choice unknown
+     * will be accepted as a hard reset option, after which the user choice should be set to the
+     * desired value as soon as possible.
      *
      * @param updateParams object containing user choices for modules.
      * @param executor the executor for the callback.

@@ -21,6 +21,7 @@ import com.android.adservices.shared.testing.NameValuePair;
 import com.android.adservices.shared.testing.NameValuePair.Matcher;
 import com.android.adservices.shared.testing.Nullable;
 import com.android.adservices.shared.testing.SystemPropertiesHelper;
+import com.android.adservices.shared.testing.TestFailure;
 
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
@@ -69,9 +70,11 @@ abstract class AbstractSystemPropertiesDumperRule extends AbstractRethrowerRule 
     }
 
     @Override
-    protected String decorateTestFailureMessage(StringBuilder dump, List<Throwable> cleanUpErrors) {
+    protected void throwTestFailure(Throwable testError, List<Throwable> cleanUpErrors)
+            throws Throwable {
+        StringBuilder dump = new StringBuilder("*** System properties before / after test ***\n");
         logAndDumpAllProperties(dump);
-        return "system properties before / after test";
+        TestFailure.throwTestFailure(testError, dump.toString());
     }
 
     private void logAndDumpAllProperties(StringBuilder dump) {
