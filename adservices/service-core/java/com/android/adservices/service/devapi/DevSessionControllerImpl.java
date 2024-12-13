@@ -104,7 +104,8 @@ public final class DevSessionControllerImpl implements DevSessionController {
                         state -> {
                             sLogger.v("completed transition to IN_PROD");
                             return SUCCESS;
-                        }, mLightWeightExecutor)
+                        },
+                        mLightWeightExecutor)
                 .catching(
                         Exception.class,
                         e -> {
@@ -123,7 +124,8 @@ public final class DevSessionControllerImpl implements DevSessionController {
                         state -> {
                             sLogger.v("completed transition to IN_DEV");
                             return SUCCESS;
-                        }, mLightWeightExecutor)
+                        },
+                        mLightWeightExecutor)
                 .catching(
                         Exception.class,
                         e -> {
