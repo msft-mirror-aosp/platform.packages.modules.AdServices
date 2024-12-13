@@ -13,25 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.android.adservices.shared.testing.util;
 
-package com.android.adservices.service.stats.pas;
+/**
+ * Same as {@link java.util.function.Consumer}, but throwing.
+ *
+ * @param <C> type being consumed
+ * @param <T> exception it could throw
+ */
+public interface ThrowingConsumer<C, T extends Throwable> {
 
-import android.adservices.common.AdTechIdentifier;
-
-public class EncodingExecutionLogHelperNoOpImpl implements EncodingExecutionLogHelper {
-
-    @Override
-    public void startClock() {}
-
-    @Override
-    public void setStatus(int status) {}
-
-    @Override
-    public void setAdtech(AdTechIdentifier adtech) {}
-
-    @Override
-    public void setEncodedSignalSize(int encodedSignalSize) {}
-
-    @Override
-    public void finish() {}
+    /** I don't always accept C, but when I do, I can throw T */
+    void accept(C consumee) throws T;
 }

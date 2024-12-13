@@ -153,6 +153,14 @@
       ]
     },
     {
+      "name": "AdServicesTestUtilityTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
       "name": "CtsAdServicesDeviceTestCases",
       "options": [
         {
@@ -505,6 +513,14 @@
     },
     {
       "name": "AdExtServicesMddIntegrationTests",
+      "options": [
+        {
+          "exclude-annotation": "androidx.test.filters.FlakyTest"
+        }
+      ]
+    },
+    {
+      "name": "AdExtServicesTestUtilityTests",
       "options": [
         {
           "exclude-annotation": "androidx.test.filters.FlakyTest"
