@@ -30,5 +30,6 @@ android_test_helper_app {
         "//cts/tests/tests:__subpackages__",
         "//packages/modules/AdServices/sdksandbox/tests/cts/endtoendtests",
         "//packages/modules/AdServices/sdksandbox/tests/hostsidetests/SdkSandboxSmallModuleHostTest",
+        "//packages/modules/AdServices/sdksandbox/tests/perf/scenarios/tests",
     ],
 }
