@@ -22,7 +22,6 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 
 /** Exception used to wrap a test failure and provide more information on why it failed. */
@@ -30,7 +29,9 @@ import java.util.Objects;
 public final class TestFailure extends Exception {
 
     @VisibleForTesting
-    static final String MESSAGE_TEMPLATE = "Test failed (see %s below the stack trace)";
+    static final String MESSAGE = "Test failed (see extra info below the stack trace)";
+
+    @VisibleForTesting static final String EXTRA_INFO_HEADER = "EXTRA INFO:\n";
 
     private final List<String> mExtraInfo = new ArrayList<>();
 
@@ -55,28 +56,8 @@ public final class TestFailure extends Exception {
     }
 
     private TestFailure(Throwable cause, String extraInfo) {
-        super(
-                String.format(Locale.ENGLISH, MESSAGE_TEMPLATE, extraInfo),
-                cause,
-                /* enableSuppression= */ false,
-                /* git log= */ false);
+        super(MESSAGE, cause, /* enableSuppression= */ false, /* git log= */ false);
         mExtraInfo.add(extraInfo);
-    }
-
-    /**
-     * @deprecated should call {@link #throwTestFailure(Throwable, String)} instead.
-     */
-    @Deprecated
-    public TestFailure(Throwable cause, String dumpDescription, StringBuilder dump) {
-        super(
-                String.format(
-                        Locale.ENGLISH,
-                        MESSAGE_TEMPLATE,
-                        Objects.requireNonNull(dumpDescription, "dumpDescription cannot be null")),
-                Objects.requireNonNull(cause, "cause cannot be null"),
-                /* enableSuppression= */ false,
-                /* writableStackTrace= */ false);
-        mExtraInfo.add(Objects.requireNonNull(dump, "dump cannot be null").toString());
     }
 
     @Override
@@ -87,12 +68,14 @@ public final class TestFailure extends Exception {
     @Override
     public void printStackTrace(PrintWriter s) {
         super.printStackTrace(s);
+        s.print(EXTRA_INFO_HEADER);
         mExtraInfo.forEach(extraInfo -> s.println(extraInfo));
     }
 
     @Override
     public void printStackTrace(PrintStream s) {
         super.printStackTrace(s);
+        s.print(EXTRA_INFO_HEADER);
         mExtraInfo.forEach(extraInfo -> s.println(extraInfo));
     }
 
