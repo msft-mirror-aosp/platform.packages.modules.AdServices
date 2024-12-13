@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.adselection;
+package com.android.adservices.service.adselection.debug;
 
 import android.annotation.NonNull;
 import android.content.Context;
@@ -29,7 +29,7 @@ import com.android.adservices.service.devapi.DevContext;
 
 /** Class to provide implementation when Debug Reporting is enabled for on device auction. */
 @RequiresApi(Build.VERSION_CODES.S)
-public class DebugReportingEnabled extends DebugReporting {
+public final class DebugReportingEnabled extends DebugReporting {
 
     private final Context mContext;
     private final boolean mShouldSendReportImmediately;

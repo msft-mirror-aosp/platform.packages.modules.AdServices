@@ -17,6 +17,7 @@
 package com.android.adservices.service.common;
 
 import static android.adservices.common.AdServicesCommonManager.MODULE_MEASUREMENT;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_ENABLED;
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN;
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE;
@@ -28,6 +29,7 @@ import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_ACTIVITY_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.ConsentStatus.SERVICE_NOT_ENABLED;
@@ -90,6 +92,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdCacheManager;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
@@ -103,10 +106,11 @@ import com.android.adservices.service.ui.UxEngine;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.shared.util.Clock;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executor;
-import java.util.stream.Collectors;
 
 import javax.annotation.Nonnull;
 
@@ -528,6 +532,14 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
                             return;
                         }
+                        boolean businessLogicMigrationEnabled =
+                                FlagsFactory.getFlags()
+                                        .getAdServicesConsentBusinessLogicMigrationEnabled();
+                        if (!businessLogicMigrationEnabled) {
+                            callback.onFailure(STATUS_KILLSWITCH_ENABLED);
+                            LogUtil.d("Business logic migration flag not enabled");
+                            return;
+                        }
                         sendNotificationIfNeededAndUpdateState(updateParams);
                         callback.onSuccess();
                     } catch (Exception e) {
@@ -581,8 +593,21 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                 && !(personalizedAdsApiDiff && isOptedInPersonalizedAdsApisUser)) {
             boolean isOngoingNotification =
                     notificationType == AdServicesCommonManager.NOTIFICATION_ONGOING;
+            // TODO(b/383589378): Reset user choices to unknown for unknown/disabled module states
+            //  after notification is shown.
             ConsentNotificationJobService.scheduleNotificationV2(
                     mContext, isRenotify, personalizedAdsApiDiff, isOngoingNotification);
+        } else {
+            List<AdServicesModuleUserChoice> adServicesUserChoiceList = new ArrayList<>();
+            for (int i = 0; i < moduleStates.size(); i++) {
+                int key = moduleStates.keyAt(i);
+                int value = moduleStates.valueAt(i);
+                if (value != MODULE_STATE_ENABLED) {
+                    adServicesUserChoiceList.add(
+                            new AdServicesModuleUserChoice(key, USER_CHOICE_UNKNOWN));
+                }
+            }
+            consentManager.setUserChoices(adServicesUserChoiceList);
         }
 
         consentManager.setModuleStates(moduleStates);
@@ -605,15 +630,15 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
                             return;
                         }
-                        ConsentManager consentManager = ConsentManager.getInstance();
-                        List<AdServicesModuleUserChoice> adServicesFeatureUserChoiceList =
-                                updateParams.getUserChoiceMap().entrySet().stream()
-                                        .map(
-                                                entry ->
-                                                        new AdServicesModuleUserChoice(
-                                                                entry.getKey(), entry.getValue()))
-                                        .collect(Collectors.toList());
-                        consentManager.setUserChoices(adServicesFeatureUserChoiceList);
+                        boolean businessLogicMigrationEnabled =
+                                FlagsFactory.getFlags()
+                                        .getAdServicesConsentBusinessLogicMigrationEnabled();
+                        if (!businessLogicMigrationEnabled) {
+                            callback.onFailure(STATUS_KILLSWITCH_ENABLED);
+                            LogUtil.d("Business logic migration flag not enabled");
+                            return;
+                        }
+                        filterAndSetUserChoices(updateParams);
                         LogUtil.i("requestAdServicesModuleUserChoices");
                         callback.onSuccess();
 
@@ -623,6 +648,22 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                         + e.getMessage());
                     }
                 });
+    }
+
+    private void filterAndSetUserChoices(UpdateAdServicesUserChoicesParams updateParams) {
+        ConsentManager consentManager = ConsentManager.getInstance();
+        List<AdServicesModuleUserChoice> adServicesFeatureUserChoiceList = new ArrayList<>();
+        for (Map.Entry<Integer, Integer> entry : updateParams.getUserChoiceMap().entrySet()) {
+            // If current user choice is unknown, then set to desired user choice.
+            // If setting to unknown user choice, then it is an explicit decision by the caller that
+            // plans to override any previous user choice.
+            if (consentManager.getUserChoice(entry.getKey()) == USER_CHOICE_UNKNOWN
+                    || entry.getValue() == USER_CHOICE_UNKNOWN) {
+                adServicesFeatureUserChoiceList.add(
+                        new AdServicesModuleUserChoice(entry.getKey(), entry.getValue()));
+            }
+        }
+        consentManager.setUserChoices(adServicesFeatureUserChoiceList);
     }
 
     private int getLatency(CallerMetadata metadata, long serviceStartTime) {

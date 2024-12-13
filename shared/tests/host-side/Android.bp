@@ -21,6 +21,7 @@ java_test_host {
     team: "trendy_team_android_rubidium",
     srcs: [
         "java/**/*.java",
+        ":adservices-shared-sideless-flags-sources",
         ":adservices-shared-sideless-meta-testing-sources",
         ":adservices-shared-sideless-plus-tests-sources",
     ],

@@ -43,7 +43,7 @@ import androidx.annotation.NonNull;
 
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.common.flags.Constants;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
@@ -983,12 +983,12 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     private void allowAllPackageNamesAccessToMeasurementApis() {
-        String packageName = FlagsConstants.ALLOWLIST_ALL;
+        String packageName = Constants.ALLOWLIST_ALL;
         flags.setMsmtApiAppAllowList(packageName).setMsmtWebContextClientAllowList(packageName);
     }
 
     private void blockAllPackageNamesAccessToMeasurementApis() {
-        String packageName = FlagsConstants.ALLOWLIST_NONE;
+        String packageName = Constants.ALLOWLIST_NONE;
         flags.setMsmtApiAppAllowList(packageName).setMsmtWebContextClientAllowList(packageName);
     }
 

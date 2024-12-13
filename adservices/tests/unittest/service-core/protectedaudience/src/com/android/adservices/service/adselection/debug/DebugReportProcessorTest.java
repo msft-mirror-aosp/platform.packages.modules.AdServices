@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.adselection;
+package com.android.adservices.service.adselection.debug;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -25,6 +25,7 @@ import android.adservices.customaudience.CustomAudienceFixture;
 import android.net.Uri;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.service.adselection.PostAuctionSignals;
 
 import org.junit.Test;
 

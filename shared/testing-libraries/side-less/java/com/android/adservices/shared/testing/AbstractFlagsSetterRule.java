@@ -15,6 +15,8 @@
  */
 package com.android.adservices.shared.testing;
 
+import static com.android.adservices.shared.common.flags.Constants.ARRAY_SPLITTER_COMMA;
+
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.NameValuePair.Matcher;
@@ -60,6 +62,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -213,11 +216,11 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         // is correct for flag-ramp / AOAO testing.
         log(mPreTestFlags, "pre-test flags");
         if (!mSkipStuffWhenObjectsAreNullOnUnitTests) {
-        runSafely(
-                cleanUpErrors,
-                () ->
-                        mPreTestSystemProperties.addAll(
-                                mSystemProperties.getAll(mSystemPropertiesMatcher)));
+            runSafely(
+                    cleanUpErrors,
+                    () ->
+                            mPreTestSystemProperties.addAll(
+                                    mSystemProperties.getAll(mSystemPropertiesMatcher)));
         }
 
         runInitialCommands(testName);
@@ -271,19 +274,22 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     }
 
     @Override
-    protected String decorateTestFailureMessage(StringBuilder dump, List<Throwable> cleanUpErrors) {
+    protected void throwTestFailure(Throwable testError, List<Throwable> cleanUpErrors)
+            throws Throwable {
+        StringBuilder extraInfo = new StringBuilder("*** Flags / system properties state ***\n");
         if (mFlagsClearedByTest) {
-            dump.append("NOTE: test explicitly cleared all flags.\n");
+            extraInfo.append("(NOTE: test explicitly cleared all flags.)\n");
         }
 
-        logAllAndDumpDiff("flags", dump, mChangedFlags, mPreTestFlags, mOnTestFailureFlags);
+        logAllAndDumpDiff("flags", extraInfo, mChangedFlags, mPreTestFlags, mOnTestFailureFlags);
         logAllAndDumpDiff(
                 "system properties",
-                dump,
+                extraInfo,
                 mChangedSystemProperties,
                 mPreTestSystemProperties,
                 mOnTestFailureSystemProperties);
-        return "flags / system properties state";
+
+        TestFailure.throwTestFailure(testError, extraInfo.toString());
     }
 
     private void logAllAndDumpDiff(
@@ -424,23 +430,6 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
      */
     public final T setFlag(String name, String... values) {
         return setArrayFlagWithExplicitSeparator(name, ARRAY_SPLITTER_COMMA, values);
-    }
-
-    // TODO(b/303901926): static import from shared code instead
-    private static final String ARRAY_SPLITTER_COMMA = ",";
-
-    /**
-     * Sets the string array flag with the given value , using the {@code separator} to flatten it.
-     *
-     * <p><b>Note:</b> in most cases, it's clearer to use the {@link SetLogcatTag} annotation
-     * instead.
-     *
-     * @deprecated use {@link #setArrayFlagWithExplicitSeparator(String, String, String...)} or
-     *     {@link #setFlag(String, String...)} instead.
-     */
-    @Deprecated
-    public final T setFlag(String name, String[] value, String separator) {
-        return setArrayFlagWithExplicitSeparator(name, separator, value);
     }
 
     /**
@@ -673,6 +662,13 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     }
 
     private T setOrCacheSystemProperty(String name, String value) {
+        if (mSkipStuffWhenObjectsAreNullOnUnitTests) {
+            mLog.w(
+                    "setOrCacheSystemProperty(%s, %s): skipping (should only happen on rule test"
+                            + " itself)",
+                    name, value);
+            return getThis();
+        }
         NameValuePair systemProperty = new NameValuePair(name, value);
         if (!mIsRunning) {
             cacheCommand(new SetSystemPropertyCommand(systemProperty));
@@ -954,7 +950,8 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
     // Single SetStringArrayFlag annotations present
     private void setAnnotatedFlag(SetStringArrayFlag annotation) {
-        setFlag(annotation.name(), annotation.value(), annotation.separator());
+        setArrayFlagWithExplicitSeparator(
+                annotation.name(), annotation.separator(), annotation.value());
     }
 
     // Multiple SetStringArrayFlag annotations present
@@ -1010,6 +1007,53 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         for (SetLogcatTag annotation : repeatedAnnotation.value()) {
             setAnnotatedFlag(annotation);
         }
+    }
+
+    private void validateArgs(
+        Map<String, String> configArgs, String prefix, String separator) {
+        Objects.requireNonNull(configArgs, "configArgs cannot be null");
+        Objects.requireNonNull(prefix, "prefix cannot be null");
+        Objects.requireNonNull(separator, "separator cannot be null");
+        if (prefix.isEmpty() || separator.isEmpty()) {
+            throw new IllegalArgumentException(
+                "prefix or separator cannot be empty");
+        }
+        if (separator.equals("=") || separator.equals("_")) {
+            throw new IllegalArgumentException(
+                "separator cannot be one of (=,_)");
+        }
+    }
+
+    /**
+     * Sets flags supplied as arguments to the test config.
+     *
+     * @param configArgs Map of arguments provided to the test config.
+     * @param prefix Prefix of arguments which contain a flag.
+     * @param separator separator between the prefix and name of the flag.
+     *
+     * <p> Separators cannot be one of _ or = because _ used in flag names and =
+     * is used to assign values to flags.
+     */
+    public T setFlagsFromConfig(
+            Map<String, String> configArgs, String prefix, String separator) {
+        validateArgs(configArgs, prefix, separator);
+        return runOrCache(
+                "setFlagsFromConfig",
+                () -> {
+                    for (String key : configArgs.keySet()) {
+                        mLog.d("Parsing argument from config: %s", key);
+                        if (!key.contains(separator)) {
+                            continue;
+                        }
+                        String[] keyParts = key.split(separator);
+                        if (keyParts.length == 2 &&
+                                keyParts[0].equals(prefix)) {
+                            mLog.d("Setting flag from config: %s=%s",
+                                    keyParts[1], configArgs.get(key));
+                                setFlag(keyParts[1], configArgs.get(key));
+                        }
+                    }
+                });
     }
 
     @SuppressWarnings("ClassCanBeStatic") // Subclasses reference enclosing class

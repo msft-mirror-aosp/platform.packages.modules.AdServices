@@ -16,7 +16,6 @@
 package com.android.adservices.common;
 
 import static com.android.adservices.common.AbstractAdServicesSystemPropertiesDumperRule.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX;
-import static com.android.adservices.service.FlagsConstants.ARRAY_SPLITTER_COMMA;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
@@ -400,6 +399,6 @@ public abstract class AbstractAdServicesFlagsSetterRule<
                     name, testPkg);
             values = new String[] {testPkg};
         }
-        return setFlag(name, values, ARRAY_SPLITTER_COMMA);
+        return setFlag(name, values);
     }
 }

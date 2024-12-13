@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 The Android Open Source Project
+ * Copyright (C) 2024 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service.adselection;
+package com.android.adservices.service.adselection.debug;
 
 import android.net.Uri;
 
@@ -29,7 +29,7 @@ import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.stream.Collectors;
 
-class DebugReportSenderStrategyNoOp implements DebugReportSenderStrategy {
+public final class DebugReportSenderStrategyNoOp implements DebugReportSenderStrategy {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private final Queue<Uri> mDebugReportQueue;
@@ -50,13 +50,14 @@ class DebugReportSenderStrategyNoOp implements DebugReportSenderStrategy {
 
     @Override
     public ListenableFuture<Void> flush() {
-        return Futures.submit(() -> {
-            List<Uri> uris = mDebugReportQueue.stream().collect(Collectors.toList());
-            mDebugReportQueue.clear();
-            for (Uri uri : uris) {
-                sLogger.v("[DebugReporting] Reporting disabled, but would ping: %s",
-                        uri.toString());
-            }
-        }, AdServicesExecutors.getBlockingExecutor());
+        return Futures.submit(
+                () -> {
+                    List<Uri> uris = mDebugReportQueue.stream().collect(Collectors.toList());
+                    mDebugReportQueue.clear();
+                    for (Uri uri : uris) {
+                        sLogger.v("[DebugReporting] Reporting disabled, but would ping: %s", uri);
+                    }
+                },
+                AdServicesExecutors.getBlockingExecutor());
     }
 }
