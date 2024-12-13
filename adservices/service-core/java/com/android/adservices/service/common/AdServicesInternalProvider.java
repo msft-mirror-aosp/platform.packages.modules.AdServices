@@ -15,8 +15,10 @@
  */
 package com.android.adservices.service.common;
 
+import android.app.adservices.AdServicesManager;
 import android.content.Context;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.shared.common.ApplicationContextProvider;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 
@@ -30,6 +32,13 @@ import java.io.PrintWriter;
 public final class AdServicesInternalProvider extends ApplicationContextProvider {
 
     @Override
+    public boolean onCreate() {
+        LogUtil.d("AdServicesInternalProvider.onCreate()");
+        return super.onCreate();
+    }
+
+    @SuppressWarnings("NewApi")
+    @Override
     public void dump(FileDescriptor fd, PrintWriter writer, String[] args) {
         try {
             Context appContext = ApplicationContextSingleton.get();
@@ -40,5 +49,7 @@ public final class AdServicesInternalProvider extends ApplicationContextProvider
         } catch (Exception e) {
             writer.printf("Failed to get ApplicationContextSingleton: %s\n", e);
         }
+
+        AdServicesManager.dump(writer);
     }
 }

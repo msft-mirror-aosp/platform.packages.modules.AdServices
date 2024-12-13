@@ -16,22 +16,27 @@
 
 package android.adservices.rootcts;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.adselection.AdSelectionOutcome;
-import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 
-import com.android.compatibility.common.util.ShellUtils;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import org.junit.Before;
 import org.junit.Test;
 
-public class AdBeaconRegistrationTest extends FledgeScenarioTest {
-
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
+public class AdBeaconRegistrationTest extends FledgeRootScenarioTest {
     private BackgroundJobHelper mBackgroundJobHelper;
-    private ScenarioDispatcher mScenarioDispatcher;
 
     @Before
     public void setup() {
@@ -39,57 +44,53 @@ public class AdBeaconRegistrationTest extends FledgeScenarioTest {
     }
 
     @Test
+    @SetFlagDisabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
+    @SetFlagDisabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
+    @SetFlagDisabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED)
     public void testAdBeaconRegistration_BeaconCannotRegister_reportEventNotHappen()
             throws Exception {
-        setRegisterAdBeaconEnabled(false);
-        setMeasurementReportAndRegisterEventApiEnabled(false);
-        setMeasurementReportAndRegisterEventApiFallbackEnabled(false);
-
         runAdSelectionAndReporting("scenarios/remarketing-cuj-187.json", false);
     }
 
     @Test
+    @SetFlagEnabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
+    @SetFlagDisabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
+    @SetFlagDisabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED)
     public void testAdBeaconRegistration_RegisteringEventDisabled_eventShouldOnlyBeReported()
             throws Exception {
-        setRegisterAdBeaconEnabled(true);
-        setMeasurementReportAndRegisterEventApiEnabled(false);
-        setMeasurementReportAndRegisterEventApiFallbackEnabled(false);
-
         runAdSelectionAndReporting("scenarios/remarketing-cuj-188.json", false);
     }
 
     @Test
+    @SetFlagEnabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
+    @SetFlagDisabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
+    @SetFlagDisabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED)
     public void
             testAdBeaconRegistration_RegisteringEventEnabled_eventShouldBeReportedInCombinedCall()
                     throws Exception {
-        setRegisterAdBeaconEnabled(true);
-        setMeasurementReportAndRegisterEventApiEnabled(false);
-        setMeasurementReportAndRegisterEventApiFallbackEnabled(false);
-
         runAdSelectionAndReporting("scenarios/remarketing-cuj-188.json", true);
     }
 
     @Test
+    @SetFlagEnabled(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED)
     public void testAdBeaconRegistration_useBothMeasurementAndEventReporting() throws Exception {
-        setRegisterAdBeaconEnabled(true);
-        setMeasurementReportAndRegisterEventApiEnabled(true);
-        setMeasurementReportAndRegisterEventApiFallbackEnabled(true);
-
         runAdSelectionAndReporting("scenarios/remarketing-cuj-188.json", true);
     }
 
     private void runAdSelectionAndReporting(String scenarioJson, boolean shouldRunBackgroundJob)
             throws Exception {
-        mScenarioDispatcher =
+        ScenarioDispatcher scenarioDispatcher =
                 setupDispatcher(
                         ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
                                 scenarioJson));
         joinCustomAudience(SHOES_CA);
         AdSelectionOutcome outcome =
-                doSelectAds(makeAdSelectionConfig(mScenarioDispatcher.getBaseAddressWithPrefix()));
+                doSelectAds(makeAdSelectionConfig(scenarioDispatcher.getBaseAddressWithPrefix()));
         doReportImpression(
                 outcome.getAdSelectionId(),
-                makeAdSelectionConfig(mScenarioDispatcher.getBaseAddressWithPrefix()));
+                makeAdSelectionConfig(scenarioDispatcher.getBaseAddressWithPrefix()));
         try {
             doReportEvent(outcome.getAdSelectionId(), "view");
         } catch (Exception e) {
@@ -100,29 +101,9 @@ public class AdBeaconRegistrationTest extends FledgeScenarioTest {
             mBackgroundJobHelper.runJob(20);
         }
 
-        assertThat(mScenarioDispatcher.getCalledPaths())
-                .containsAtLeastElementsIn(mScenarioDispatcher.getVerifyCalledPaths());
-        assertThat(mScenarioDispatcher.getCalledPaths())
-                .containsNoneIn(mScenarioDispatcher.getVerifyNotCalledPaths());
-    }
-
-    protected static void setRegisterAdBeaconEnabled(boolean enabled) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices fledge_register_ad_beacon_enabled %s",
-                enabled ? "true" : "false");
-    }
-
-    protected static void setMeasurementReportAndRegisterEventApiEnabled(boolean enabled) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices"
-                        + " fledge_measurement_report_and_register_event_api_enabled %s",
-                enabled ? "true" : "false");
-    }
-
-    protected static void setMeasurementReportAndRegisterEventApiFallbackEnabled(boolean enabled) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices"
-                        + " fledge_measurement_report_and_register_event_api_fallback_enabled %s",
-                enabled ? "true" : "false");
+        assertThat(scenarioDispatcher.getCalledPaths())
+                .containsAtLeastElementsIn(scenarioDispatcher.getVerifyCalledPaths());
+        assertThat(scenarioDispatcher.getCalledPaths())
+                .containsNoneIn(scenarioDispatcher.getVerifyNotCalledPaths());
     }
 }

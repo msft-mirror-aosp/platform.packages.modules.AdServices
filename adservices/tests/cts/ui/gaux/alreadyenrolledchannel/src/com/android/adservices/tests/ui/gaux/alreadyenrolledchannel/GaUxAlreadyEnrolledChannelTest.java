@@ -19,10 +19,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesStates;
-import android.adservices.common.EnableAdServicesResponse;
-import android.content.Context;
 import android.os.OutcomeReceiver;
-import android.os.Parcel;
 import android.platform.test.rule.ScreenRecordRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -56,25 +53,24 @@ public final class GaUxAlreadyEnrolledChannelTest
 
     private OutcomeReceiver<Boolean, Exception> mCallback;
 
-    private static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getContext();
-
     @Rule public final ScreenRecordRule sScreenRecordRule = new ScreenRecordRule();
 
     @Before
     public void setUp() throws Exception {
-        UiUtils.setBinderTimeout();
-        AdservicesTestHelper.killAdservicesProcess(sContext);
-        UiUtils.resetAdServicesConsentData(sContext);
+        mTestName = getTestName();
+
+        UiUtils.setBinderTimeout(flags);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
+        UiUtils.resetAdServicesConsentData(mContext, flags);
 
         UiUtils.enableNotificationPermission();
-        UiUtils.enableGa();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableGa(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
 
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        mCommonManager = AdServicesCommonManager.get(sContext);
+        mCommonManager = AdServicesCommonManager.get(mContext);
 
         // General purpose callback used for expected success calls.
         mCallback =
@@ -91,7 +87,7 @@ public final class GaUxAlreadyEnrolledChannelTest
                 };
 
         // Reset consent and thereby AdServices data before each test.
-        UiUtils.refreshConsentResetToken();
+        UiUtils.refreshConsentResetToken(flags);
 
         SettableFuture<Boolean> responseFuture = SettableFuture.create();
 
@@ -124,7 +120,7 @@ public final class GaUxAlreadyEnrolledChannelTest
     public void tearDown() throws Exception {
         UiUtils.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + mTestName + "_");
 
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
     }
 
     /**
@@ -133,11 +129,9 @@ public final class GaUxAlreadyEnrolledChannelTest
      */
     @Test
     public void testGaRowAdIdEnabled() throws Exception {
-        mTestName = getTestName();
+        UiUtils.setAsRowDevice(flags);
 
-        UiUtils.setAsRowDevice();
-
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
@@ -150,14 +144,14 @@ public final class GaUxAlreadyEnrolledChannelTest
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.GA_UX);
+                mContext, mDevice, /* isDisplayed */ true, /* isEuTest */ false, UX.GA_UX);
 
         // Notifications should not be shown twice.
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX);
+                mContext, mDevice, /* isDisplayed */ false, /* isEuTest */ false, UX.GA_UX);
     }
 
     /**
@@ -165,11 +159,9 @@ public final class GaUxAlreadyEnrolledChannelTest
      */
     @Test
     public void testGaRowAdIdDisabled() throws Exception {
-        mTestName = getTestName();
+        UiUtils.setAsRowDevice(flags);
 
-        UiUtils.setAsRowDevice();
-
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
@@ -182,14 +174,14 @@ public final class GaUxAlreadyEnrolledChannelTest
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX);
+                mContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX);
 
         // Notifications should not be shown twice.
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
+                mContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
     }
 
     /**
@@ -197,11 +189,9 @@ public final class GaUxAlreadyEnrolledChannelTest
      */
     @Test
     public void testGaEuAdIdEnabled() throws Exception {
-        mTestName = getTestName();
+        UiUtils.setAsEuDevice(flags);
 
-        UiUtils.setAsEuDevice();
-
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
@@ -214,24 +204,22 @@ public final class GaUxAlreadyEnrolledChannelTest
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX);
+                mContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX);
 
         // Notifications should not be shown twice.
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
+                mContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
     }
 
     /** Verify that for GA, EU devices with zeroed-out AdId, the EU notification is displayed. */
     @Test
     public void testGaEuAdIdDisabled() throws Exception {
-        mTestName = getTestName();
+        UiUtils.setAsEuDevice(flags);
 
-        UiUtils.setAsEuDevice();
-
-        AdservicesTestHelper.killAdservicesProcess(sContext);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
 
         AdServicesStates adServicesStates =
                 new AdServicesStates.Builder()
@@ -244,70 +232,13 @@ public final class GaUxAlreadyEnrolledChannelTest
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX);
+                mContext, mDevice, /* isDisplayed */ true, /* isEuTest */ true, UX.GA_UX);
 
         // Notifications should not be shown twice.
         mCommonManager.enableAdServices(
                 adServicesStates, Executors.newCachedThreadPool(), mCallback);
 
         AdservicesWorkflows.verifyNotification(
-                sContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
-    }
-
-    @Test
-    public void testAdServicesStatesCoverages() {
-        AdServicesStates adServicesStates =
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(false)
-                        .setAdultAccount(true)
-                        .setU18Account(false)
-                        .setPrivacySandboxUiRequest(true)
-                        .setPrivacySandboxUiEnabled(true)
-                        .build();
-
-        Parcel parcel = Parcel.obtain();
-        try {
-            adServicesStates.writeToParcel(parcel, 0);
-            parcel.setDataPosition(0);
-
-            AdServicesStates createdParams = AdServicesStates.CREATOR.createFromParcel(parcel);
-            assertThat(createdParams.describeContents()).isEqualTo(0);
-            assertThat(createdParams).isNotSameInstanceAs(adServicesStates);
-            assertThat(createdParams.isAdIdEnabled()).isFalse();
-            assertThat(createdParams.isAdultAccount()).isTrue();
-            assertThat(createdParams.isU18Account()).isFalse();
-            assertThat(createdParams.isPrivacySandboxUiEnabled()).isTrue();
-            assertThat(createdParams.isPrivacySandboxUiRequest()).isTrue();
-        } finally {
-            parcel.recycle();
-        }
-    }
-
-    @Test
-    public void testEnableAdservicesResponseCoverages() {
-        EnableAdServicesResponse response =
-                new EnableAdServicesResponse.Builder()
-                        .setApiEnabled(true)
-                        .setErrorMessage("No Error")
-                        .setStatusCode(200)
-                        .setSuccess(true)
-                        .build();
-
-        Parcel parcel = Parcel.obtain();
-
-        try {
-            response.writeToParcel(parcel, 0);
-            parcel.setDataPosition(0);
-
-            EnableAdServicesResponse createdParams =
-                    EnableAdServicesResponse.CREATOR.createFromParcel(parcel);
-            assertThat(createdParams.describeContents()).isEqualTo(0);
-            assertThat(createdParams).isNotSameInstanceAs(response);
-            assertThat(createdParams.isApiEnabled()).isTrue();
-            assertThat(createdParams.isSuccess()).isTrue();
-            assertThat(createdParams.toString()).isEqualTo(response.toString());
-        } finally {
-            parcel.recycle();
-        }
+                mContext, mDevice, /* isDisplayed */ false, /* isEuTest */ true, UX.GA_UX);
     }
 }

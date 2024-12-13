@@ -18,25 +18,25 @@ package com.android.adservices.service.exception;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assert.assertEquals;
+import com.android.adservices.common.AdServicesUnitTestCase;
 
 import org.junit.Test;
 
-public class JSExecutionExceptionTest {
+public final class JSExecutionExceptionTest extends AdServicesUnitTestCase {
 
     public static final String ERROR_MESSAGE = "error_message";
 
     @Test
     public void testJSExecutionExceptionTestWithErrorMsg() {
         JSExecutionException exception = new JSExecutionException(ERROR_MESSAGE);
-        assertEquals(exception.getMessage(), ERROR_MESSAGE);
+        assertThat(exception).hasMessageThat().isEqualTo(ERROR_MESSAGE);
     }
 
     @Test
     public void testJSExecutionExceptionTestWithCauseAndErrorMsg() {
         Throwable t = new IllegalStateException();
         JSExecutionException exception = new JSExecutionException(ERROR_MESSAGE, t);
-        assertEquals(exception.getMessage(), ERROR_MESSAGE);
-        assertThat(exception.getCause()).isSameInstanceAs(t);
+        expect.that(exception).hasMessageThat().isEqualTo(ERROR_MESSAGE);
+        expect.that(exception).hasCauseThat().isSameInstanceAs(t);
     }
 }

@@ -24,6 +24,7 @@ import com.android.adservices.shared.testing.Logger.LogLevel;
 
 import com.google.common.collect.ImmutableList;
 
+import org.junit.After;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -36,6 +37,11 @@ public final class HostSideDynamicLoggerTest extends HostSideTestCase {
     private final Throwable mThrowable = new Throwable("D'OH!");
     private final FakeDdmLibLogger mFakeLogger = FakeDdmLibLogger.addToDdmLib();
     private final DynamicLogger mLogger = DynamicLogger.getInstance();
+
+    @After
+    public void unregisterDdmLibLogger() {
+        mFakeLogger.removeSelf();
+    }
 
     @Test
     public void testToString() {

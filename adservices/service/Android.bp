@@ -40,6 +40,7 @@ java_sdk_library {
         "com.android.adservices.shared",
         "com.android.adservices.service", // TODO(b/306522832): needed by CommonFlags, ideally they should be moved to a separate package
         "com.android.server.adservices",
+        "com.android.adservices.jarjar.server", // For packages in jarjar-rules.
         "com.google.errorprone.annotations",
     ],
     libs: [
@@ -50,6 +51,7 @@ java_sdk_library {
     ],
     static_libs: [
         "adservices-shared-storage",
+        "adservices-shared-system-common",
         "modules-utils-backgroundthread",
         "modules-utils-preconditions",
         "modules-utils-shell-command-handler",

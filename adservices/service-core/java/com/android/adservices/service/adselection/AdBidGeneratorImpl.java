@@ -134,7 +134,6 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
         mFlags = flags;
         mAdSelectionScriptEngine =
                 new AdSelectionScriptEngine(
-                        mFlags::getEnforceIsolateMaxHeapSize,
                         mFlags::getIsolateMaxHeapSizeBytes,
                         mAdCounterKeyCopier,
                         debugReporting.getScriptStrategy(),
@@ -280,7 +279,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                                 candidate -> {
                                     if (Objects.isNull(candidate)
                                             || Objects.isNull(candidate.first)
-                                            || candidate.first.getAdWithBid().getBid() <= 0.0) {
+                                            || candidate.first.getAdWithBid().getBid() < 0.0) {
                                         sLogger.v(
                                                 "Bidding for CA completed but result %s is"
                                                         + " filtered out",
@@ -545,7 +544,7 @@ public class AdBidGeneratorImpl implements AdBidGenerator {
                 bidResults.stream().max(Comparator.comparingDouble(
                         value -> value.getAdWithBid().getBid())).get();
         sLogger.v("Obtained #%d ads with bids for current CA", bidResults.size());
-        if (maxBidCandidate.getAdWithBid().getBid() <= 0.0) {
+        if (maxBidCandidate.getAdWithBid().getBid() < 0.0) {
             sLogger.v("No positive bids found, no valid bids to return");
             return null;
         }

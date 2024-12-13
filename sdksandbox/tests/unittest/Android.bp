@@ -36,6 +36,7 @@ java_defaults {
         "SdkSandboxTestUtils",
         "SdkSandbox-java-lib",
     ],
+    jarjar_rules: ":test-service-jarjar-rules",
     jni_libs: [
         // Required for ExtendedMockito
         "libdexmakerjvmtiagent",
@@ -88,6 +89,7 @@ android_test {
         "services.core",
         "modules-utils-build",
         "sdk_sandbox_flags_lib",
+        "adservices_flags_lib",
     ],
     data: [
         ":SampleCodeProviderApp",

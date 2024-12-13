@@ -24,6 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"Gee ’n program toegang tot AdServices Attribution API\'s."</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"kry toegang tot AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"Gee ’n program toegang tot AdServices Custom Audience API."</string>
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"kry toegang tot AdServices Ad Selection API"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"Gee ’n app toegang tot AdServices Ad Selection API."</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"kry toegang tot AdServices Protected Signals API"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"Gee ’n app toegang tot AdServices Protected Signals API."</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"Toegang tot AdID API"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"Gee ’n program toegang tot AdID API."</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"kry toegang tot AdServices Consent API"</string>

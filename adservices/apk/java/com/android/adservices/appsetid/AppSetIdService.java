@@ -15,8 +15,6 @@
  */
 package com.android.adservices.appsetid;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__APPSETID;
-
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
@@ -52,7 +50,6 @@ public class AppSetIdService extends Service {
         AppImportanceFilter appImportanceFilter =
                 AppImportanceFilter.create(
                         this,
-                        AD_SERVICES_API_CALLED__API_CLASS__APPSETID,
                         () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation());
 
         if (mAppSetIdService == null) {
@@ -63,7 +60,7 @@ public class AppSetIdService extends Service {
                             AdServicesLoggerImpl.getInstance(),
                             Clock.getInstance(),
                             FlagsFactory.getFlags(),
-                            Throttler.getInstance(FlagsFactory.getFlags()),
+                            Throttler.getInstance(),
                             appImportanceFilter);
         }
     }

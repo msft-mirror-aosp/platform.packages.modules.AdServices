@@ -63,7 +63,7 @@ public class TriggerSpecs {
         String FLIP_PROBABILITY = "flip_probability";
         String END_TIMES = "end_times";
         String START_TIME = "start_time";
-        String SUMMARY_WINDOW_OPERATOR = "summary_window_operator";
+        String SUMMARY_OPERATOR = "summary_operator";
         String EVENT_REPORT_WINDOWS = "event_report_windows";
         String SUMMARY_BUCKETS = "summary_buckets";
     }
@@ -508,9 +508,8 @@ public class TriggerSpecs {
             }
 
             mNumStates = numStates;
-            mFlipProbability =
-                    Combinatorics.getFlipProbability(
-                            mNumStates, (double) flags.getMeasurementPrivacyEpsilon());
+            double epsilon = source.getConditionalEventLevelEpsilon(flags);
+            mFlipProbability = Combinatorics.getFlipProbability(mNumStates, epsilon);
             mInformationGain = Combinatorics.getInformationGain(mNumStates, mFlipProbability);
         }
 

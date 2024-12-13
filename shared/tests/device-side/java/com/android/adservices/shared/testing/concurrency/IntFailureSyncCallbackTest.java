@@ -42,7 +42,7 @@ public final class IntFailureSyncCallbackTest
 
     @Test
     public void testAssertSuccess() throws Exception {
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.onResult("YES!"));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> mCallback.onResult("YES!"));
 
         String success = mCallback.assertSuccess();
 
@@ -57,7 +57,7 @@ public final class IntFailureSyncCallbackTest
 
     @Test
     public void testAssertFailed() throws Exception {
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.onFailure(42));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> mCallback.onFailure(42));
 
         mCallback.assertFailed(42);
 

@@ -16,12 +16,15 @@
 
 package com.android.adservices.shared.errorlogging;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_PRESENT_MULTIPLE_TIMES_IN_PROTO;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+
 import android.util.Log;
 
 import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.proto.ErrorCodeList;
 import com.android.adservices.shared.proto.ErrorCodeSampleInterval;
-import com.android.adservices.shared.proto.ProtoParser;
+import com.android.adservices.shared.util.ProtoParser;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.HashMap;
@@ -39,15 +42,17 @@ public final class ErrorCodeSampler {
     private static final String TAG = ErrorCodeSampler.class.getSimpleName();
 
     private final Random mRandom;
+    private final AdServicesErrorLogger mErrorLogger;
     private int mDefaultSampleInterval = 1;
     private Map<Integer, Integer> mErrorCodeToSampleInterval = new HashMap<>();
 
-    public ErrorCodeSampler(ModuleSharedFlags flags) {
-        this(flags, new Random());
+    public ErrorCodeSampler(ModuleSharedFlags flags, AdServicesErrorLogger errorLogger) {
+        this(flags, errorLogger, new Random());
     }
 
     @VisibleForTesting
-    ErrorCodeSampler(ModuleSharedFlags flags, Random random) {
+    ErrorCodeSampler(ModuleSharedFlags flags, AdServicesErrorLogger errorLogger, Random random) {
+        mErrorLogger = errorLogger;
         mRandom = random;
         // Reads and parses the flag and creates the map: errorCode -> sampleInterval in the
         // constructor so that we only have to do it once.
@@ -60,6 +65,7 @@ public final class ErrorCodeSampler {
         ErrorCodeSampleInterval errorCodeSampleInterval =
                 ProtoParser.parseBase64EncodedStringToProto(
                         ErrorCodeSampleInterval.parser(),
+                        mErrorLogger,
                         ERROR_CODE_SAMPLE_INTERVAL_PROPERTY,
                         errorCodeSampleIntervalFlag);
         if (errorCodeSampleInterval == null) {
@@ -79,7 +85,9 @@ public final class ErrorCodeSampler {
             for (int errorCode : errorCodeList.getErrorCodeList()) {
                 if (mErrorCodeToSampleInterval.containsKey(errorCode)) {
                     Log.e(TAG, String.format("Error code: %d present multiple times", errorCode));
-                    // TODO(b/315382750): Add Cel for Error code present multiple times in the proto
+                    mErrorLogger.logError(
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_PRESENT_MULTIPLE_TIMES_IN_PROTO,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
                 }
                 mErrorCodeToSampleInterval.put(errorCode, sampleInterval);
             }

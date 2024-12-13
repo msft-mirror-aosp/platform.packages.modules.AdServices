@@ -18,29 +18,33 @@ package com.android.adservices.service.ui.data;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
-
-import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 import java.io.IOException;
 
 /** This test reads and writes to test files under the test app dir instead of using full mocks. */
-public class UxStatesDaoTest {
+public final class UxStatesDaoTest extends AdServicesMockitoTestCase {
     private UxStatesDao mUxStatesDao;
-    private final Context mContext = ApplicationProvider.getApplicationContext();
+
+    @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
 
     @Before
     public void setup() throws IOException {
-        BooleanFileDatastore booleanFileDatastore = new BooleanFileDatastore(
-                mContext, UxStatesDao.TEST_DATASTORE_NAME, UxStatesDao.DATASTORE_VERSION);
-        mUxStatesDao = new UxStatesDao(booleanFileDatastore);
+        AtomicFileDatastore atomicFileDatastore =
+                new AtomicFileDatastore(
+                        mContext,
+                        UxStatesDao.TEST_DATASTORE_NAME,
+                        UxStatesDao.DATASTORE_VERSION,
+                        mMockAdServicesErrorLogger);
+        mUxStatesDao = new UxStatesDao(atomicFileDatastore);
     }
 
     @Test

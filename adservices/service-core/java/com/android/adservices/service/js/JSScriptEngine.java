@@ -21,6 +21,7 @@ import static com.android.adservices.service.js.JSScriptEngineCommonConstants.WA
 import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.os.Trace;
 
 import androidx.javascriptengine.IsolateStartupParameters;
 import androidx.javascriptengine.JavaScriptIsolate;
@@ -61,7 +62,7 @@ import javax.annotation.concurrent.GuardedBy;
  * <p>The class is re-entrant, for best performance when using it on multiple thread is better to
  * have every thread using its own instance.
  */
-public class JSScriptEngine {
+public final class JSScriptEngine {
 
     @VisibleForTesting public static final String TAG = JSScriptEngine.class.getSimpleName();
 
@@ -75,6 +76,9 @@ public class JSScriptEngine {
     public static final Set<Class<? extends Exception>> RETRYABLE_EXCEPTIONS_FROM_JS_ENGINE =
             Set.of(JSScriptEngineConnectionException.class);
     private static final Object sJSScriptEngineLock = new Object();
+
+    // TODO(b/366228321): should not need a sLogger and mLogger, but it's used on initialization
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
 
     @SuppressLint("StaticFieldLeak")
     @GuardedBy("sJSScriptEngineLock")
@@ -97,7 +101,7 @@ public class JSScriptEngine {
      * current version of the WebView
      */
     @VisibleForTesting
-    static class JavaScriptSandboxProvider {
+    static final class JavaScriptSandboxProvider {
         private final Object mSandboxLock = new Object();
         private StopWatch mSandboxInitStopWatch;
         private final Profiler mProfiler;
@@ -249,30 +253,21 @@ public class JSScriptEngine {
         }
     }
 
-    /**
-     * @return JSScriptEngine instance
-     */
-    public static JSScriptEngine getInstance(LoggerFactory.Logger logger) {
-        return getInstance(ApplicationContextSingleton.get(), logger);
-    }
-
-    /**
-     * @return JSScriptEngine instance
-     */
-    @VisibleForTesting
-    public static JSScriptEngine getInstance(Context context, LoggerFactory.Logger logger) {
+    /** Gets the singleton instance. */
+    public static JSScriptEngine getInstance() {
         synchronized (sJSScriptEngineLock) {
             if (sSingleton == null) {
-                logger.d("Creating new instance for JSScriptEngine");
                 Profiler profiler = Profiler.createNoOpInstance(TAG);
+                Context context = ApplicationContextSingleton.get();
+                sLogger.i("Creating JSScriptEngine singleton using default logger (%s)", sLogger);
                 sSingleton =
                         new JSScriptEngine(
                                 context,
-                                new JavaScriptSandboxProvider(profiler, logger),
+                                new JavaScriptSandboxProvider(profiler, sLogger),
                                 profiler,
                                 // There is no blocking call or IO code in the service logic
                                 AdServicesExecutors.getLightWeightExecutor(),
-                                logger);
+                                sLogger);
             }
 
             return sSingleton;
@@ -280,20 +275,24 @@ public class JSScriptEngine {
     }
 
     /**
-     * @return a singleton JSScriptEngine instance with the given profiler
+     * @return a singleton JSScriptEngine instance with the given profiler and logger
      * @throws IllegalStateException if an existing instance exists
      */
     @VisibleForTesting
     public static JSScriptEngine getInstanceForTesting(
-            Context context, Profiler profiler, LoggerFactory.Logger logger) {
+            Profiler profiler, LoggerFactory.Logger logger) {
         synchronized (sJSScriptEngineLock) {
             // If there is no instance already created or the instance was shutdown
             if (sSingleton != null) {
                 throw new IllegalStateException(
                         "Unable to initialize test JSScriptEngine multiple times using"
-                                + "the real JavaScriptSandboxProvider.");
+                                + " the real JavaScriptSandboxProvider.");
             }
-            logger.d("Creating new instance for JSScriptEngine");
+            Context context = ApplicationContextSingleton.get();
+            sLogger.d(
+                    "Creating new instance for JSScriptEngine for tests using profiler %s and"
+                            + " logger %s",
+                    profiler, logger);
             sSingleton =
                     new JSScriptEngine(
                             context,
@@ -301,9 +300,46 @@ public class JSScriptEngine {
                             profiler,
                             AdServicesExecutors.getLightWeightExecutor(),
                             logger);
+            return sSingleton;
         }
+    }
 
-        return sSingleton;
+    /**
+     * @deprecated TODO(b/366228321): used only by JSScriptEngineE2ETest because it needs to update
+     *     the singleton with a mockLogger
+     */
+    @Deprecated
+    @VisibleForTesting
+    public static JSScriptEngine updateSingletonForE2ETest(LoggerFactory.Logger logger) {
+        synchronized (sJSScriptEngineLock) {
+            sLogger.d(
+                    "Setting JSScriptEngine singleton for tests using logger %s (previous singleton"
+                            + " was %s)",
+                    logger, sSingleton);
+            Context context = ApplicationContextSingleton.get();
+            Profiler profiler = Profiler.createNoOpInstance(TAG);
+            sSingleton =
+                    new JSScriptEngine(
+                            context,
+                            new JavaScriptSandboxProvider(profiler, logger),
+                            profiler,
+                            AdServicesExecutors.getLightWeightExecutor(),
+                            logger);
+            return sSingleton;
+        }
+    }
+
+    /**
+     * @deprecated TODO(b/366228321): used only by JSScriptEngineE2ETest because it needs to update
+     *     the singleton with a mockLogger
+     */
+    @Deprecated
+    @VisibleForTesting
+    public static void resetSingletonForE2ETest() {
+        synchronized (sJSScriptEngineLock) {
+            sLogger.i("resetSingletonForE2ETest(): releasing %s", sSingleton);
+            sSingleton = null;
+        }
     }
 
     /**
@@ -695,34 +731,28 @@ public class JSScriptEngine {
      * <p>Throws error in case, we have enforced max heap memory restrictions and isolate does not
      * support that feature
      */
+    @SuppressWarnings("UnclosedTrace")
+    // This is false-positives lint result. The trace is closed in finally.
     private JavaScriptIsolate createIsolate(
             JavaScriptSandbox jsSandbox, IsolateSettings isolateSettings) {
-        // TODO: b/321237839. After upgrading the dependency on javascriptengine to beta1, revisit
-        // the exception handling of this method.
-        int traceCookie = Tracing.beginAsyncSection(Tracing.JSSCRIPTENGINE_CREATE_ISOLATE);
+        Trace.beginSection(Tracing.JSSCRIPTENGINE_CREATE_ISOLATE);
+
+        // TODO (b/321237839): Clean up exception handling after upgrading javascriptengine
+        //  dependency to beta1
         StopWatch isolateStopWatch =
                 mProfiler.start(JSScriptEngineLogConstants.ISOLATE_CREATE_TIME);
         try {
-            if (!isConfigurableHeapSizeSupported(jsSandbox)
-                    && isolateSettings.getEnforceMaxHeapSizeFeature()) {
+            if (!isConfigurableHeapSizeSupported(jsSandbox)) {
                 mLogger.e("Memory limit enforcement required, but not supported by Isolate");
                 throw new IllegalStateException(NON_SUPPORTED_MAX_HEAP_SIZE_EXCEPTION_MSG);
             }
 
-            JavaScriptIsolate javaScriptIsolate;
-            if (isolateSettings.getEnforceMaxHeapSizeFeature()
-                    && isolateSettings.getMaxHeapSizeBytes() > 0) {
-                mLogger.d(
-                        "Creating JS isolate with memory limit: %d bytes",
-                        isolateSettings.getMaxHeapSizeBytes());
-                IsolateStartupParameters startupParams = new IsolateStartupParameters();
-                startupParams.setMaxHeapSizeBytes(isolateSettings.getMaxHeapSizeBytes());
-                javaScriptIsolate = jsSandbox.createIsolate(startupParams);
-            } else {
-                mLogger.d("Creating JS isolate with unbounded memory limit");
-                javaScriptIsolate = jsSandbox.createIsolate();
-            }
-            return javaScriptIsolate;
+            mLogger.d(
+                    "Creating JS isolate with memory limit: %d bytes",
+                    isolateSettings.getMaxHeapSizeBytes());
+            IsolateStartupParameters startupParams = new IsolateStartupParameters();
+            startupParams.setMaxHeapSizeBytes(isolateSettings.getMaxHeapSizeBytes());
+            return jsSandbox.createIsolate(startupParams);
         } catch (RuntimeException jsSandboxPossiblyDisconnected) {
             mLogger.e(
                     jsSandboxPossiblyDisconnected,
@@ -734,7 +764,7 @@ public class JSScriptEngine {
                     JS_SCRIPT_ENGINE_CONNECTION_EXCEPTION_MSG, jsSandboxPossiblyDisconnected);
         } finally {
             isolateStopWatch.stop();
-            Tracing.endAsyncSection(Tracing.JSSCRIPTENGINE_CREATE_ISOLATE, traceCookie);
+            Trace.endSection();
         }
     }
 
@@ -769,16 +799,15 @@ public class JSScriptEngine {
 
         @Override
         public void close() {
-            int traceCookie = Tracing.beginAsyncSection(Tracing.JSSCRIPTENGINE_CLOSE_ISOLATE);
+            Trace.beginSection(Tracing.JSSCRIPTENGINE_CLOSE_ISOLATE);
             mLogger.d("Closing JavaScriptSandbox isolate");
-            // Closing the isolate will also cause the thread in JavaScriptSandbox to be terminated
-            // if
-            // still running.
-            // There is no need to verify if ISOLATE_TERMINATION is supported by JavaScriptSandbox
-            // because there is no new API but just new capability on the JavaScriptSandbox side for
-            // existing API.
+            // Closing the isolate will also cause the thread in JavaScriptSandbox to be
+            // terminated if it's still running.
+            // There is no need to verify if ISOLATE_TERMINATION is supported by
+            // JavaScriptSandbox because there is no new API but just new capability on
+            // the JavaScriptSandbox side for the existing API.
             mIsolate.close();
-            Tracing.endAsyncSection(Tracing.JSSCRIPTENGINE_CLOSE_ISOLATE, traceCookie);
+            Trace.endSection();
         }
     }
 }

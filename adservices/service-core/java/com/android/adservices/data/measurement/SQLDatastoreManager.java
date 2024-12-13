@@ -16,40 +16,47 @@
 
 package com.android.adservices.data.measurement;
 
-import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
 import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
-/** Datastore manager for SQLite database. */
-@VisibleForTesting(visibility = VisibleForTesting.Visibility.PACKAGE)
-public class SQLDatastoreManager extends DatastoreManager {
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
-    private final MeasurementDbHelper mDbHelper;
+/** Datastore manager for SQLite database. */
+@VisibleForTesting
+public final class SQLDatastoreManager extends DatastoreManager {
+
+    private static final Object LOCK = new Object();
+
+    @GuardedBy("LOCK")
     private static SQLDatastoreManager sSingleton;
 
-    /** Acquire an instance of {@link SQLDatastoreManager}. */
-    static synchronized SQLDatastoreManager getInstance(Context context) {
-        if (sSingleton == null) {
-            sSingleton = new SQLDatastoreManager(context);
+    private final MeasurementDbHelper mDbHelper;
+
+    /** Gets the singleton instance of {@link SQLDatastoreManager}. */
+    static synchronized SQLDatastoreManager getInstance() {
+        synchronized (LOCK) {
+            if (sSingleton == null) {
+                Context context = ApplicationContextSingleton.get();
+                sSingleton = new SQLDatastoreManager(context);
+            }
+            return sSingleton;
         }
-        return sSingleton;
     }
 
     @VisibleForTesting
     SQLDatastoreManager(Context context) {
-        super(AdServicesErrorLoggerImpl.getInstance());
-        mDbHelper = MeasurementDbHelper.getInstance(context);
+        this(MeasurementDbHelper.getInstance(), AdServicesErrorLoggerImpl.getInstance());
     }
 
     @VisibleForTesting
-    public SQLDatastoreManager(
-            @NonNull MeasurementDbHelper dbHelper, AdServicesErrorLogger errorLogger) {
+    public SQLDatastoreManager(MeasurementDbHelper dbHelper, AdServicesErrorLogger errorLogger) {
         super(errorLogger);
         mDbHelper = dbHelper;
     }

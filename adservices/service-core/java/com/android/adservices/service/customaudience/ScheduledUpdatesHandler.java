@@ -18,13 +18,17 @@ package com.android.adservices.service.customaudience;
 
 import static com.android.adservices.service.common.ValidatorUtil.AD_TECH_ROLE_BUYER;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.AUCTION_SERVER_REQUEST_FLAGS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceBlob.PRIORITY_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.USER_BIDDING_SIGNALS_KEY;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import android.adservices.common.AdData;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.customaudience.CustomAudience;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
@@ -42,6 +46,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
@@ -55,6 +60,7 @@ import com.android.adservices.service.common.httpclient.AdServicesHttpClientResp
 import com.android.adservices.service.common.httpclient.AdServicesHttpUtil;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ExecutionSequencer;
@@ -78,11 +84,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ScheduledUpdatesHandler {
+public final class ScheduledUpdatesHandler {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     public static final String JOIN_CUSTOM_AUDIENCE_KEY = "join";
     public static final String LEAVE_CUSTOM_AUDIENCE_KEY = "leave";
+    private static final String ACTION_SCHEDULE_CA_COMPLETE_INTENT =
+            "ACTION_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_FINISHED";
     public static final Duration STALE_DELAYED_UPDATE_AGE = Duration.of(24, ChronoUnit.HOURS);
     public static final String FUSED_CUSTOM_AUDIENCE_INCOMPLETE_MESSAGE =
             "Fused custom audience is incomplete.";
@@ -92,6 +100,15 @@ public class ScheduledUpdatesHandler {
             ImmutableMap.of(
                     "Content-Type", "application/json",
                     "Accept", "application/json");
+    // Placeholder value to be used with the CustomAudienceQuantityChecker
+    private static final CustomAudience PLACEHOLDER_CUSTOM_AUDIENCE =
+            new CustomAudience.Builder()
+                    .setName("placeholder")
+                    .setBuyer(AdTechIdentifier.fromString("buyer.com"))
+                    .setDailyUpdateUri(Uri.parse("https://www.buyer.com/update"))
+                    .setBiddingLogicUri(Uri.parse("https://www.buyer.com/bidding"))
+                    .build();
+
     @NonNull private final AdServicesHttpsClient mHttpClient;
     @NonNull private final Clock mClock;
     @NonNull private final Flags mFlags;
@@ -100,6 +117,7 @@ public class ScheduledUpdatesHandler {
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
     @NonNull private final CustomAudienceBlobValidator mCustomAudienceBlobValidator;
     @NonNull private final CustomAudienceImpl mCustomAudienceImpl;
+    @NonNull private final CustomAudienceQuantityChecker mCustomAudienceQuantityChecker;
     @NonNull private final int mMaxNameSizeB;
     @NonNull private final int mMaxUserBiddingSignalsSizeB;
     @NonNull private final long mMaxActivationDelayInMs;
@@ -114,6 +132,7 @@ public class ScheduledUpdatesHandler {
     private final boolean mFledgeAppInstallFilteringEnabled;
     private final boolean mFledgeAuctionServerAdRenderIdEnabled;
     private final boolean mAuctionServerRequestFlagsEnabled;
+    private final boolean mSellerConfigurationEnabled;
     private final long mFledgeAuctionServerAdRenderIdMaxLength;
 
     @VisibleForTesting
@@ -127,7 +146,8 @@ public class ScheduledUpdatesHandler {
             @NonNull FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull AdRenderIdValidator adRenderIdValidator,
             @NonNull AdDataConversionStrategy adDataConversionStrategy,
-            @NonNull CustomAudienceImpl customAudienceImpl) {
+            @NonNull CustomAudienceImpl customAudienceImpl,
+            @NonNull CustomAudienceQuantityChecker customAudienceQuantityChecker) {
         mCustomAudienceDao = customAudienceDao;
         mHttpClient = adServicesHttpsClient;
         mFlags = flags;
@@ -149,11 +169,13 @@ public class ScheduledUpdatesHandler {
         mFledgeAppInstallFilteringEnabled = mFlags.getFledgeAppInstallFilteringEnabled();
         mFledgeAuctionServerAdRenderIdEnabled = mFlags.getFledgeAuctionServerAdRenderIdEnabled();
         mAuctionServerRequestFlagsEnabled = mFlags.getFledgeAuctionServerRequestFlagsEnabled();
+        mSellerConfigurationEnabled =
+                mFlags.getFledgeGetAdSelectionDataSellerConfigurationEnabled();
         mFledgeAuctionServerAdRenderIdMaxLength =
                 mFlags.getFledgeAuctionServerAdRenderIdMaxLength();
         mFledgeCustomAudienceMaxCustomAudienceSizeB =
                 mFlags.getFledgeFetchCustomAudienceMaxCustomAudienceSizeB();
-
+        mCustomAudienceQuantityChecker = customAudienceQuantityChecker;
         mCustomAudienceBlobValidator =
                 new CustomAudienceBlobValidator(
                         clock,
@@ -183,7 +205,7 @@ public class ScheduledUpdatesHandler {
 
     public ScheduledUpdatesHandler(@NonNull Context context) {
         this(
-                CustomAudienceDatabase.getInstance(context).customAudienceDao(),
+                CustomAudienceDatabase.getInstance().customAudienceDao(),
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.createNoOpCache()),
@@ -192,8 +214,8 @@ public class ScheduledUpdatesHandler {
                 AdServicesExecutors.getBackgroundExecutor(),
                 AdServicesExecutors.getLightWeightExecutor(),
                 new AdFilteringFeatureFactory(
-                                SharedStorageDatabase.getInstance(context).appInstallDao(),
-                                SharedStorageDatabase.getInstance(context).frequencyCapDao(),
+                                SharedStorageDatabase.getInstance().appInstallDao(),
+                                SharedStorageDatabase.getInstance().frequencyCapDao(),
                                 FlagsFactory.getFlags())
                         .getFrequencyCapAdDataValidator(),
                 AdRenderIdValidator.createInstance(FlagsFactory.getFlags()),
@@ -201,12 +223,14 @@ public class ScheduledUpdatesHandler {
                         FlagsFactory.getFlags().getFledgeFrequencyCapFilteringEnabled(),
                         FlagsFactory.getFlags().getFledgeAppInstallFilteringEnabled(),
                         FlagsFactory.getFlags().getFledgeAuctionServerAdRenderIdEnabled()),
-                CustomAudienceImpl.getInstance(context));
+                CustomAudienceImpl.getInstance(),
+                new CustomAudienceQuantityChecker(
+                        CustomAudienceDatabase.getInstance().customAudienceDao(),
+                        FlagsFactory.getFlags()));
     }
 
     /** Performs Custom Audience Updates for delayed events in the schedule */
     public FluentFuture<Void> performScheduledUpdates(@NonNull Instant beforeTime) {
-
         FluentFuture<List<Pair<DBScheduledCustomAudienceUpdate, List<DBPartialCustomAudience>>>>
                 scheduledUpdates =
                         FluentFuture.from(
@@ -239,7 +263,12 @@ public class ScheduledUpdatesHandler {
                             mBackgroundExecutor));
         }
         return FluentFuture.from(Futures.successfulAsList(handledUpdates))
-                .transform(ignored -> null, mLightWeightExecutor);
+                .transform(
+                        ignored -> {
+                            sendBroadcastIntentIfEnabled();
+                            return null;
+                        },
+                        mLightWeightExecutor);
     }
 
     private FluentFuture<Void> handleSingleUpdate(
@@ -255,7 +284,8 @@ public class ScheduledUpdatesHandler {
                             mFledgeAppInstallFilteringEnabled,
                             mFledgeAuctionServerAdRenderIdEnabled,
                             mFledgeAuctionServerAdRenderIdMaxLength,
-                            mAuctionServerRequestFlagsEnabled);
+                            mAuctionServerRequestFlagsEnabled,
+                            mSellerConfigurationEnabled);
 
             blob.overrideFromPartialCustomAudience(
                     update.getOwner(),
@@ -295,7 +325,7 @@ public class ScheduledUpdatesHandler {
         // connection from a debuggable app.
         DevContext devContext =
                 update.getIsDebuggable()
-                        ? DevContext.builder().setDevOptionsEnabled(true).build()
+                        ? DevContext.builder().setDeviceDevOptionsEnabled(true).build()
                         : DevContext.createForDevOptionsDisabled();
 
         AdServicesHttpClientRequest request =
@@ -369,6 +399,8 @@ public class ScheduledUpdatesHandler {
         Map<String, CustomAudienceBlob> customAudienceOverrideMap =
                 overrideBlobs.stream().collect(Collectors.toMap(b -> b.getName(), b -> b));
 
+        ExecutionSequencer sequencer = ExecutionSequencer.create();
+
         for (JSONObject customAudience : joinCustomAudienceList) {
             CustomAudienceBlob fusedBlob =
                     new CustomAudienceBlob(
@@ -376,7 +408,8 @@ public class ScheduledUpdatesHandler {
                             mFledgeAppInstallFilteringEnabled,
                             mFledgeAuctionServerAdRenderIdEnabled,
                             mFledgeAuctionServerAdRenderIdMaxLength,
-                            mAuctionServerRequestFlagsEnabled);
+                            mAuctionServerRequestFlagsEnabled,
+                            mSellerConfigurationEnabled);
             try {
                 fusedBlob.overrideFromJSONObject(customAudience);
                 if (customAudienceOverrideMap.containsKey(fusedBlob.getName())) {
@@ -398,7 +431,10 @@ public class ScheduledUpdatesHandler {
                     throw new InvalidObjectException(
                             FUSED_CUSTOM_AUDIENCE_EXCEEDS_SIZE_LIMIT_MESSAGE);
                 }
-                persistCustomAudienceList.add(persistCustomAudience(fusedBlob, devContext));
+                persistCustomAudienceList.add(
+                        sequencer.submitAsync(
+                                () -> persistCustomAudience(fusedBlob, devContext),
+                                mBackgroundExecutor));
             } catch (JSONException e) {
                 sLogger.e(e, "Cannot convert response json to Custom Audience");
             } catch (InvalidObjectException e) {
@@ -417,8 +453,11 @@ public class ScheduledUpdatesHandler {
         return FluentFuture.from(
                         mBackgroundExecutor.submit(
                                 () -> {
+                                    mCustomAudienceQuantityChecker.check(
+                                            PLACEHOLDER_CUSTOM_AUDIENCE,
+                                            fusedCustomAudienceBlob.getOwner());
                                     boolean isDebuggableCustomAudience =
-                                            devContext.getDevOptionsEnabled();
+                                            devContext.getDeviceDevOptionsEnabled();
                                     sLogger.v(
                                             "Is debuggable custom audience: %b",
                                             isDebuggableCustomAudience);
@@ -446,7 +485,9 @@ public class ScheduledUpdatesHandler {
                                                     .setDebuggable(isDebuggableCustomAudience)
                                                     .setAuctionServerRequestFlags(
                                                             fusedCustomAudienceBlob
-                                                                    .getAuctionServerRequestFlags());
+                                                                    .getAuctionServerRequestFlags())
+                                                    .setPriority(
+                                                            fusedCustomAudienceBlob.getPriority());
 
                                     List<DBAdData> ads = new ArrayList<>();
                                     for (AdData ad : fusedCustomAudienceBlob.getAds()) {
@@ -515,6 +556,20 @@ public class ScheduledUpdatesHandler {
         if (mAuctionServerRequestFlagsEnabled) {
             currentKeySet.remove(AUCTION_SERVER_REQUEST_FLAGS_KEY);
         }
+
+        if (mSellerConfigurationEnabled) {
+            currentKeySet.remove(PRIORITY_KEY);
+        }
         return currentKeySet.size() == expectedKeysSet.size();
+    }
+
+    private void sendBroadcastIntentIfEnabled() {
+        if (DebugFlags.getInstance().getFledgeScheduleCACompleteBroadcastEnabled()) {
+            Context context = ApplicationContextSingleton.get();
+            sLogger.d(
+                    "Sending a broadcast intent with intent action: %s",
+                    ACTION_SCHEDULE_CA_COMPLETE_INTENT);
+            context.sendBroadcast(new Intent(ACTION_SCHEDULE_CA_COMPLETE_INTENT));
+        }
     }
 }

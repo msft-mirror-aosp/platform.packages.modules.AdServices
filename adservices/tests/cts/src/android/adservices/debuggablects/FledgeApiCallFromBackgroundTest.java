@@ -21,14 +21,13 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREG
 
 import static com.android.adservices.service.FlagsConstants.KEY_FOREGROUND_STATUS_LEVEL;
 
-import android.adservices.utils.FledgeScenarioTest;
+import static com.google.common.truth.Truth.assertThat;
+
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
 
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
-
-import com.google.common.truth.Truth;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -39,7 +38,7 @@ import java.util.concurrent.ExecutionException;
 
 @SetIntegerFlag(name = KEY_FOREGROUND_STATUS_LEVEL, value = IMPORTANCE_FOREGROUND)
 @RequiresSdkLevelAtLeastT(reason = "No foreground check in S-")
-public class FledgeApiCallFromBackgroundTest extends FledgeScenarioTest {
+public final class FledgeApiCallFromBackgroundTest extends FledgeDebuggableScenarioTest {
     private ScenarioDispatcher mDispatcher;
 
     @Before
@@ -52,7 +51,7 @@ public class FledgeApiCallFromBackgroundTest extends FledgeScenarioTest {
 
     @After
     public void teardown() throws Exception {
-        Truth.assertThat(mDispatcher.getCalledPaths()).isEmpty();
+        assertThat(mDispatcher.getCalledPaths()).isEmpty();
     }
 
     /** CUJ 054: Calling select ads API from background will fail. */
@@ -65,8 +64,10 @@ public class FledgeApiCallFromBackgroundTest extends FledgeScenarioTest {
                                 doSelectAds(
                                         makeAdSelectionConfig(
                                                 mDispatcher.getBaseAddressWithPrefix())));
-        Assert.assertTrue(e.getCause() instanceof IllegalStateException);
-        Assert.assertEquals(
-                ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE, e.getCause().getMessage());
+        assertThat(e).hasCauseThat().isInstanceOf(IllegalStateException.class);
+        assertThat(e)
+                .hasCauseThat()
+                .hasMessageThat()
+                .isEqualTo(ILLEGAL_STATE_BACKGROUND_CALLER_ERROR_MESSAGE);
     }
 }

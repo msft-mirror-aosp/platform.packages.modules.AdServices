@@ -19,6 +19,7 @@ package com.android.adservices.service.customaudience;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.ValidatorUtil.AD_TECH_ROLE_BUYER;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.AUCTION_SERVER_REQUEST_FLAGS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceBlob.PRIORITY_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.USER_BIDDING_SIGNALS_KEY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 
@@ -129,9 +130,11 @@ public class FetchCustomAudienceImpl {
     @NonNull private final long mFledgeCustomAuienceMaxTotal;
     private final boolean mFledgeAuctionServerAdRenderIdEnabled;
     private final boolean mAuctionServerRequestFlagsEnabled;
+    private final boolean mSellerConfigurationEnabled;
     private final long mFledgeAuctionServerAdRenderIdMaxLength;
     private final long mDefaultRetryDurationSeconds;
     private final long mMaxRetryDurationSeconds;
+    private final boolean mEnforceNotification;
 
     // TODO(b/289123035): Make these locally scoped, passed down by the orchestrator function.
     @NonNull private AdTechIdentifier mBuyer;
@@ -192,6 +195,7 @@ public class FetchCustomAudienceImpl {
         boolean appInstallFilteringEnabled = flags.getFledgeAppInstallFilteringEnabled();
         mFledgeAuctionServerAdRenderIdEnabled = flags.getFledgeAuctionServerAdRenderIdEnabled();
         mAuctionServerRequestFlagsEnabled = flags.getFledgeAuctionServerRequestFlagsEnabled();
+        mSellerConfigurationEnabled = flags.getFledgeGetAdSelectionDataSellerConfigurationEnabled();
         mFledgeAuctionServerAdRenderIdMaxLength = flags.getFledgeAuctionServerAdRenderIdMaxLength();
         mFledgeCustomAudienceMaxCustomHeaderSizeB =
                 flags.getFledgeFetchCustomAudienceMaxRequestCustomHeaderSizeB();
@@ -207,21 +211,24 @@ public class FetchCustomAudienceImpl {
                         appInstallFilteringEnabled,
                         mFledgeAuctionServerAdRenderIdEnabled,
                         mFledgeAuctionServerAdRenderIdMaxLength,
-                        mAuctionServerRequestFlagsEnabled);
+                        mAuctionServerRequestFlagsEnabled,
+                        mSellerConfigurationEnabled);
         mResponseCustomAudience =
                 new CustomAudienceBlob(
                         frequencyCapFilteringEnabled,
                         appInstallFilteringEnabled,
                         mFledgeAuctionServerAdRenderIdEnabled,
                         mFledgeAuctionServerAdRenderIdMaxLength,
-                        mAuctionServerRequestFlagsEnabled);
+                        mAuctionServerRequestFlagsEnabled,
+                        mSellerConfigurationEnabled);
         mFusedCustomAudience =
                 new CustomAudienceBlob(
                         frequencyCapFilteringEnabled,
                         appInstallFilteringEnabled,
                         mFledgeAuctionServerAdRenderIdEnabled,
                         mFledgeAuctionServerAdRenderIdMaxLength,
-                        mAuctionServerRequestFlagsEnabled);
+                        mAuctionServerRequestFlagsEnabled,
+                        mSellerConfigurationEnabled);
 
         // Instantiate a CustomAudienceBlobValidator
         mCustomAudienceBlobValidator =
@@ -248,6 +255,8 @@ public class FetchCustomAudienceImpl {
                                 adDataConversionStrategy,
                                 mFledgeCustomAudienceMaxAdsSizeB,
                                 mFledgeCustomAudienceMaxNumAds));
+
+        mEnforceNotification = !flags.getConsentNotificationDebugMode();
     }
 
     /** Adds a user to a fetched custom audience. */
@@ -327,10 +336,14 @@ public class FetchCustomAudienceImpl {
                                                         mDisableFledgeEnrollmentCheck,
                                                         mEnforceForegroundStatus,
                                                         true,
+                                                        mEnforceNotification,
                                                         mCallingAppUid,
                                                         API_NAME,
                                                         FLEDGE_API_FETCH_CUSTOM_AUDIENCE,
                                                         devContext);
+                                sLogger.d(
+                                        "Buyer extracted by Custom Audience Service Filter is: %s",
+                                        mBuyer);
                             } catch (Throwable t) {
                                 throw new FilterException(t);
                             }
@@ -450,7 +463,8 @@ public class FetchCustomAudienceImpl {
         return FluentFuture.from(
                 mExecutorService.submit(
                         () -> {
-                            boolean isDebuggableCustomAudience = devContext.getDevOptionsEnabled();
+                            boolean isDebuggableCustomAudience =
+                                    devContext.getDeviceDevOptionsEnabled();
                             sLogger.v(
                                     "Is debuggable custom audience: %b",
                                     isDebuggableCustomAudience);
@@ -475,7 +489,8 @@ public class FetchCustomAudienceImpl {
                                             .setDebuggable(isDebuggableCustomAudience)
                                             .setAuctionServerRequestFlags(
                                                     mFusedCustomAudience
-                                                            .getAuctionServerRequestFlags());
+                                                            .getAuctionServerRequestFlags())
+                                            .setPriority(mFusedCustomAudience.getPriority());
 
                             List<DBAdData> ads = new ArrayList<>();
                             for (AdData ad : mFusedCustomAudience.getAds()) {
@@ -616,6 +631,10 @@ public class FetchCustomAudienceImpl {
 
         if (mAuctionServerRequestFlagsEnabled) {
             currentKeySet.remove(AUCTION_SERVER_REQUEST_FLAGS_KEY);
+        }
+
+        if (mSellerConfigurationEnabled) {
+            currentKeySet.remove(PRIORITY_KEY);
         }
         return currentKeySet.size() == expectedKeysSet.size();
     }

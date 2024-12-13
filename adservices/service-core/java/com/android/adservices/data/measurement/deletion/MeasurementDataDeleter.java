@@ -22,6 +22,7 @@ import android.adservices.measurement.DeletionParam;
 import android.adservices.measurement.DeletionRequest;
 import android.annotation.NonNull;
 import android.net.Uri;
+import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreException;
@@ -44,6 +45,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -98,7 +100,7 @@ public class MeasurementDataDeleter {
      * @param packageName including android-app:// scheme
      * @return true if deletion deleted any record
      */
-    public boolean deleteAppUninstalledData(@NonNull Uri packageName) {
+    public boolean deleteAppUninstalledData(@NonNull Uri packageName, long eventTime) {
         // Using MATCH_BEHAVIOR_PRESERVE with empty origins and domains to preserve nothing.
         // In other words, to delete all data that only matches the provided app package name.
         final DeletionParam deletionParam =
@@ -115,7 +117,12 @@ public class MeasurementDataDeleter {
         Optional<Boolean> result =
                 mDatastoreManager.runInTransactionWithResult(
                         (dao) -> {
-                            dao.undoInstallAttribution(packageName);
+                            if (!mFlags.getMeasurementEnableReinstallReattribution()) {
+                                dao.undoInstallAttribution(packageName);
+                            }
+                            if (mFlags.getMeasurementEnableMinReportLifespanForUninstall()) {
+                                return deleteUninstall(dao, deletionParam, eventTime);
+                            }
                             return delete(dao, deletionParam);
                         });
         return result.orElse(false);
@@ -140,6 +147,33 @@ public class MeasurementDataDeleter {
                         deletionParam.getOriginUris(),
                         deletionParam.getDomainUris(),
                         deletionParam.getMatchBehavior());
+        return deleteInternal(dao, deletionParam, sourceIds, triggerIds);
+    }
+
+    private boolean deleteUninstall(
+            @NonNull IMeasurementDao dao, @NonNull DeletionParam deletionParam, long eventTime)
+            throws DatastoreException {
+        Pair<List<String>, List<String>> sourceIdsUninstall =
+                dao.fetchMatchingSourcesUninstall(
+                        getRegistrant(deletionParam.getAppPackageName()), eventTime);
+
+        Pair<List<String>, List<String>> triggerIdsUninstall =
+                dao.fetchMatchingTriggersUninstall(
+                        getRegistrant(deletionParam.getAppPackageName()), eventTime);
+
+        dao.updateSourceStatus(sourceIdsUninstall.second, Source.Status.MARKED_TO_DELETE);
+        dao.updateTriggerStatus(triggerIdsUninstall.second, Trigger.Status.MARKED_TO_DELETE);
+
+        deleteInternal(dao, deletionParam, sourceIdsUninstall.first, triggerIdsUninstall.first);
+        return true;
+    }
+
+    private boolean deleteInternal(
+            @NonNull IMeasurementDao dao,
+            @NonNull DeletionParam deletionParam,
+            Collection<String> sourceIds,
+            Collection<String> triggerIds)
+            throws DatastoreException {
         List<String> asyncRegistrationIds =
                 dao.fetchMatchingAsyncRegistrations(
                         getRegistrant(deletionParam.getAppPackageName()),

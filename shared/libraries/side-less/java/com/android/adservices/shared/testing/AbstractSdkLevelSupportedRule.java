@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -63,8 +64,9 @@ public abstract class AbstractSdkLevelSupportedRule implements TestRule {
 
     @VisibleForTesting static final String DEFAULT_REASON = "N/A";
 
-    private final Range mDefaultRequiredRange;
     protected final Logger mLog;
+    private final Range mDefaultRequiredRange;
+    @Nullable private Supplier<Level> mDeviceLevelSupplier;
 
     protected AbstractSdkLevelSupportedRule(RealLogger logger, Range defaultRange) {
         mLog = new Logger(Objects.requireNonNull(logger), TAG);
@@ -289,8 +291,27 @@ public abstract class AbstractSdkLevelSupportedRule implements TestRule {
             return "[range=" + range + ", reasons=" + reasons + "]";
         }
     }
+
     /** Gets the device API level. */
-    public abstract Level getDeviceApiLevel();
+    public final Level getDeviceApiLevel() {
+        if (mDeviceLevelSupplier != null) {
+            Level level = mDeviceLevelSupplier.get();
+            mLog.d("getDeviceApiLevel(): returning %s as set by supplier", level);
+            return level;
+        }
+        return getRawDeviceApiLevel();
+    }
+
+    /**
+     * Gets the "real" device API level (as {@code getDeviceApiLevel()} could use the level injected
+     * for tests.
+     */
+    public abstract Level getRawDeviceApiLevel();
+
+    @VisibleForTesting
+    void setDeviceLevelSupplier(Supplier<Level> levelSupplier) {
+        mDeviceLevelSupplier = Objects.requireNonNull(levelSupplier);
+    }
 
     /** Gets whether the device supports at least Android {@code R}. */
     public final boolean isAtLeastR() {

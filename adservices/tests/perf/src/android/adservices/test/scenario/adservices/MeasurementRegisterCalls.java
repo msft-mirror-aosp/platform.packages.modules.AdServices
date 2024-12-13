@@ -612,13 +612,6 @@ public class MeasurementRegisterCalls {
                 Boolean.toString(true),
                 /* makeDefault */ false);
 
-        // Set flag not match origin.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_enforce_enrollment_origin_match",
-                Boolean.toString(false),
-                /* makeDefault */ false);
-
         // Set aggregate encryption key coordinator origin list.
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
@@ -705,13 +698,6 @@ public class MeasurementRegisterCalls {
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 "enable_enrollment_test_seed",
-                "null",
-                /* makeDefault */ false);
-
-        // Reset origin matching.
-        DeviceConfig.setProperty(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                "measurement_enforce_enrollment_origin_match",
                 "null",
                 /* makeDefault */ false);
 

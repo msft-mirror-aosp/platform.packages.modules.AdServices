@@ -40,6 +40,7 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -69,6 +70,7 @@ public class ConsentNotificationTrigger {
      * @param context Context which is used to display {@link NotificationCompat}
      */
     public static void showConsentNotification(@NonNull Context context, boolean isEuDevice) {
+        LogUtil.d("Started requesting notification.");
         UiStatsLogger.logRequestedNotification();
 
         boolean gaUxFeatureEnabled =
@@ -77,6 +79,7 @@ public class ConsentNotificationTrigger {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
         ConsentManager consentManager = ConsentManager.getInstance();
         if (!notificationManager.areNotificationsEnabled()) {
+            LogUtil.d("Notification is disabled.");
             recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
             UiStatsLogger.logNotificationDisabled();
             return;
@@ -93,11 +96,13 @@ public class ConsentNotificationTrigger {
                 getNotification(context, isEuDevice, gaUxFeatureEnabled, consentManager);
 
         notificationManager.notify(NOTIFICATION_ID, notification);
-
-        setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
-
-        UiStatsLogger.logNotificationDisplayed();
         recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
+
+        // must setup consents after recording notification displayed data to ensure accurate UX in
+        // logs
+        setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
+        UiStatsLogger.logNotificationDisplayed();
+        LogUtil.d("Notification was displayed.");
     }
 
     private static void recordNotificationDisplayed(
@@ -117,9 +122,7 @@ public class ConsentNotificationTrigger {
                     }
                     consentManager.recordGaUxNotificationDisplayed(true);
                     break;
-                // Both U18_UX and RVC_UX are showing U18 Notification
                 case U18_UX:
-                case RVC_UX:
                     consentManager.setU18NotificationDisplayed(true);
                     break;
                 case BETA_UX:
@@ -153,9 +156,7 @@ public class ConsentNotificationTrigger {
                     }
                     notification = getGaV2ConsentNotification(context, isEuDevice);
                     break;
-                // Both U18_UX and RVC_UX are showing U18 Notification
                 case U18_UX:
-                case RVC_UX:
                     notification = getU18ConsentNotification(context);
                     break;
                 case BETA_UX:
@@ -200,15 +201,6 @@ public class ConsentNotificationTrigger {
                 case U18_UX:
                     consentManager.recordMeasurementDefaultConsent(true);
                     consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
-                    break;
-                case RVC_UX:
-                    if (isEuDevice) {
-                        consentManager.recordMeasurementDefaultConsent(false);
-                        consentManager.disable(context, AdServicesApiType.MEASUREMENTS);
-                    } else {
-                        consentManager.recordMeasurementDefaultConsent(true);
-                        consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
-                    }
                     break;
                 case BETA_UX:
                     if (!isEuDevice) {

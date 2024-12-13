@@ -24,6 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"کسی ایپلیکیشن کو AdServices Attribution APIs تک رسائی کی اجازت دیتی ہے۔"</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"AdServices Custom Audience API تک رسائی حاصل کریں"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"کسی ایپلیکیشن کو AdServices Custom Audiences API تک رسائی کی اجازت دیتی ہے۔"</string>
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"‫AdServices Ad Selection API تک رسائی حاصل کریں"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"اس سے ایپلیکیشن کو AdServices Ad Selection API تک رسائی کی اجازت ملتی ہے۔"</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"‫AdServices Protected Signals API تک رسائی حاصل کریں"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"اس سے ایپلیکیشن کو AdServices Protected Signals API تک رسائی کی اجازت ملتی ہے۔"</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"AdId API تک رسائی حاصل کریں"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"کسی ایپلیکیشن کو AdId API تک رسائی کی اجازت دیتی ہے۔"</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"AdServices Consent API تک رسائی حاصل کریں"</string>

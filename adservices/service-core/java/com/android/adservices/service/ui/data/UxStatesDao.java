@@ -19,13 +19,13 @@ package com.android.adservices.service.ui.data;
 import android.content.Context;
 import android.os.Build;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.service.common.compat.FileCompatUtils;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.io.IOException;
@@ -48,23 +48,24 @@ public class UxStatesDao {
 
     private static volatile UxStatesDao sUxStatesDao;
 
-    private final BooleanFileDatastore mDatastore;
+    private final AtomicFileDatastore mDatastore;
 
     @VisibleForTesting
-    public UxStatesDao(@NonNull BooleanFileDatastore datastore) {
+    public UxStatesDao(AtomicFileDatastore datastore) {
         Objects.requireNonNull(datastore);
 
         mDatastore = datastore;
     }
 
     /** Returns an instance of the UxStatesDao. */
-    public static UxStatesDao getInstance(@NonNull Context context) {
+    public static UxStatesDao getInstance() {
 
         if (sUxStatesDao == null) {
             synchronized (LOCK) {
                 if (sUxStatesDao == null) {
-                    BooleanFileDatastore datastore =
-                            new BooleanFileDatastore(context, DATASTORE_NAME, DATASTORE_VERSION);
+                    Context context = ApplicationContextSingleton.get();
+                    AtomicFileDatastore datastore =
+                            new AtomicFileDatastore(context, DATASTORE_NAME, DATASTORE_VERSION);
                     sUxStatesDao = new UxStatesDao(datastore);
                 }
             }
@@ -76,7 +77,7 @@ public class UxStatesDao {
     /** Return the current UX. */
     public PrivacySandboxUxCollection getUx() {
         for (PrivacySandboxUxCollection uxCollection : PrivacySandboxUxCollection.values()) {
-            if (Boolean.TRUE.equals(mDatastore.get(uxCollection.toString()))) {
+            if (Boolean.TRUE.equals(mDatastore.getBoolean(uxCollection.toString()))) {
                 return uxCollection;
             }
         }
@@ -84,10 +85,10 @@ public class UxStatesDao {
     }
 
     /** Set the current UX. */
-    public void setUx(@NonNull PrivacySandboxUxCollection ux) {
+    public void setUx(PrivacySandboxUxCollection ux) {
         try {
             for (PrivacySandboxUxCollection uxCollection : PrivacySandboxUxCollection.values()) {
-                mDatastore.put(uxCollection.toString(), ux.equals(uxCollection));
+                mDatastore.putBoolean(uxCollection.toString(), ux.equals(uxCollection));
             }
         } catch (IOException | RuntimeException e) {
             throw new RuntimeException("UxStatesDao: setUx operation failed.", e);
@@ -96,10 +97,11 @@ public class UxStatesDao {
 
     /** Return the enrollment channel. */
     public PrivacySandboxEnrollmentChannelCollection getEnrollmentChannel(
-            @NonNull PrivacySandboxUxCollection ux) {
+            PrivacySandboxUxCollection ux) {
         for (PrivacySandboxEnrollmentChannelCollection enrollmentChannelCollection :
                 ux.getEnrollmentChannelCollection()) {
-            if (Boolean.TRUE.equals(mDatastore.get(enrollmentChannelCollection.toString()))) {
+            if (Boolean.TRUE.equals(
+                    mDatastore.getBoolean(enrollmentChannelCollection.toString()))) {
                 return enrollmentChannelCollection;
             }
         }
@@ -111,12 +113,12 @@ public class UxStatesDao {
      * particular UX would be a no-op.
      */
     public void setEnrollmentChannel(
-            @NonNull PrivacySandboxUxCollection ux,
-            @NonNull PrivacySandboxEnrollmentChannelCollection enrollmentChannel) {
+            PrivacySandboxUxCollection ux,
+            PrivacySandboxEnrollmentChannelCollection enrollmentChannel) {
         try {
             for (PrivacySandboxEnrollmentChannelCollection enrollmentChannelCollection :
                     ux.getEnrollmentChannelCollection()) {
-                mDatastore.put(
+                mDatastore.putBoolean(
                         enrollmentChannelCollection.toString(),
                         enrollmentChannelCollection.equals(enrollmentChannel));
             }

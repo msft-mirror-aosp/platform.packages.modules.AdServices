@@ -30,7 +30,6 @@ import com.android.adservices.ui.settings.fragments.AdServicesSettingsMeasuremen
 import com.android.adservices.ui.settings.viewmodels.MeasurementViewModel;
 
 /** Android application activity provides functionality to control measurement data and consent. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementActivity extends AdServicesBaseActivity {
     private MeasurementActionDelegate mActionDelegate;
@@ -56,13 +55,6 @@ public class MeasurementActivity extends AdServicesBaseActivity {
     @Override
     public void initU18() {
         initActivity();
-    }
-
-    @Override
-    public void initRvc() {
-        setContentView(R.layout.measurement_activity_v30);
-        new MeasurementActivityActionDelegate(
-                this, new ViewModelProvider(this).get(MeasurementViewModel.class));
     }
 
     private void initFragment() {

@@ -22,7 +22,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.atMost;
@@ -68,7 +67,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import java.util.Arrays;
@@ -95,7 +93,6 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     private final List<Topic> mTopics = Arrays.asList(TOPIC1, TOPIC2, TOPIC3);
     private final ListeningExecutorService mExecutorService =
             MoreExecutors.listeningDecorator(Executors.newSingleThreadExecutor());
-    @Mock private Flags mMockFlags;
 
     @Before
     public void setup() {
@@ -223,16 +220,14 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
         serviceInfo2.packageName = ADEXTSERVICES_PACKAGE_NAME;
         ResolveInfo resolveInfo2 = new ResolveInfo();
         resolveInfo2.serviceInfo = serviceInfo2;
-        Mockito.when(mockPackageManager.queryIntentServices(any(), anyInt()))
-                .thenReturn(List.of(resolveInfo1, resolveInfo2));
+        mocker.mockQueryIntentService(mockPackageManager, resolveInfo1, resolveInfo2);
 
         assertThat(AppSearchConsentWorker.getAdServicesPackageName(context))
                 .isEqualTo(ADSERVICES_PACKAGE_NAME);
 
         // When the resolveInfo returns AdExtServices package name, the AdServices package name
         // is returned.
-        Mockito.when(mockPackageManager.queryIntentServices(any(), anyInt()))
-                .thenReturn(List.of(resolveInfo2));
+        mocker.mockQueryIntentService(mockPackageManager, resolveInfo2);
 
         assertThat(AppSearchConsentWorker.getAdServicesPackageName(context))
                 .isEqualTo(ADSERVICES_PACKAGE_NAME);
@@ -492,26 +487,17 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
 
     @Test
     @SpyStatic(PlatformStorage.class)
-    public void testRecordNotificationDisplayed_failure() {
-        runRecordNotificationDisplayedTestFailure(/* isBetaUx= */ true);
-    }
-
-    @Test
-    @SpyStatic(PlatformStorage.class)
     public void testRecordGaUxNotificationDisplayed_failure() {
-        runRecordNotificationDisplayedTestFailure(/* isBetaUx= */ false);
+        runRecordNotificationDisplayedTestFailure();
     }
 
-    private void runRecordNotificationDisplayedTestFailure(boolean isBetaUx) {
+    private void runRecordNotificationDisplayedTestFailure() {
         initFailureResponse();
         AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
 
         RuntimeException e =
                 assertThrows(
-                        RuntimeException.class,
-                        isBetaUx
-                                ? () -> worker.recordNotificationDisplayed(true)
-                                : () -> worker.recordGaUxNotificationDisplayed(true));
+                        RuntimeException.class, () -> worker.recordGaUxNotificationDisplayed(true));
 
         assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
     }
@@ -519,32 +505,17 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     @Test
     @SpyStatic(PlatformStorage.class)
     @SpyStatic(UserHandle.class)
-    public void testRecordNotificationDisplayed_failure_timeout() {
-        runRecordNotificationDisplayedTestFailureTimeout(/* isBetaUx= */ true);
-    }
-
-    @Test
-    @SpyStatic(PlatformStorage.class)
-    @SpyStatic(UserHandle.class)
     public void testRecordGaUxNotificationDisplayed_failure_timeout() {
-        runRecordNotificationDisplayedTestFailureTimeout(/* isBetaUx= */ false);
+        runRecordNotificationDisplayedTestFailureTimeout();
     }
 
-    private void runRecordNotificationDisplayedTestFailureTimeout(boolean isBetaUx) {
+    private void runRecordNotificationDisplayedTestFailureTimeout() {
         initTimeoutResponse();
         AppSearchConsentWorker worker = AppSearchConsentWorker.getInstance();
 
-        RuntimeException e;
-        if (isBetaUx) {
-            e =
-                    assertThrows(
-                            RuntimeException.class, () -> worker.recordNotificationDisplayed(true));
-        } else {
-            e =
-                    assertThrows(
-                            RuntimeException.class,
-                            () -> worker.recordGaUxNotificationDisplayed(true));
-        }
+        RuntimeException e =
+                assertThrows(
+                        RuntimeException.class, () -> worker.recordGaUxNotificationDisplayed(true));
 
         assertThat(e.getMessage()).isEqualTo(ConsentConstants.ERROR_MESSAGE_APPSEARCH_FAILURE);
         assertThat(e.getCause()).isNotNull();
@@ -555,31 +526,17 @@ public final class AppSearchConsentWorkerTest extends AdServicesExtendedMockitoT
     @MockStatic(AppSearchNotificationDao.class)
     @SpyStatic(PlatformStorage.class)
     @SpyStatic(UserHandle.class)
-    public void testRecordNotificationDisplayed() {
-        runRecordNotificationDisplayed(/* isBetaUx= */ true);
-    }
-
-    @Test
-    @MockStatic(AppSearchNotificationDao.class)
-    @SpyStatic(PlatformStorage.class)
-    @SpyStatic(UserHandle.class)
     public void testRecordGaUxNotificationDisplayed() {
-        runRecordNotificationDisplayed(/* isBetaUx= */ false);
+        runRecordNotificationDisplayed();
     }
 
-    private void runRecordNotificationDisplayed(boolean isBetaUx) {
+    private void runRecordNotificationDisplayed() {
         initSuccessResponse();
         when(AppSearchNotificationDao.getRowId(eq("" + UID))).thenReturn("" + UID);
         // Verify that no exception is thrown.
-        if (isBetaUx) {
-            when(AppSearchNotificationDao.wasGaUxNotificationDisplayed(any(), any(), any(), any()))
-                    .thenReturn(false);
-            AppSearchConsentWorker.getInstance().recordNotificationDisplayed(true);
-        } else {
-            when(AppSearchNotificationDao.wasNotificationDisplayed(any(), any(), any(), any()))
-                    .thenReturn(false);
-            AppSearchConsentWorker.getInstance().recordGaUxNotificationDisplayed(true);
-        }
+        when(AppSearchNotificationDao.wasNotificationDisplayed(any(), any(), any(), any()))
+                .thenReturn(false);
+        AppSearchConsentWorker.getInstance().recordGaUxNotificationDisplayed(true);
     }
 
     @Test

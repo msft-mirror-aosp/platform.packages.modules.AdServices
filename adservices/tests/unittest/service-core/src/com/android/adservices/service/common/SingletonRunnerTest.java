@@ -18,6 +18,7 @@ package com.android.adservices.service.common;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -29,13 +30,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
-public class SingletonRunnerTest {
+public final class SingletonRunnerTest extends AdServicesUnitTestCase {
     private final ListeningExecutorService mRunnerExecutor =
             AdServicesExecutors.getBlockingExecutor();
 
     @Test
     public void testShouldRunTask() throws Exception {
-        final AtomicInteger invocationCount = new AtomicInteger(0);
+        AtomicInteger invocationCount = new AtomicInteger(0);
         SingletonRunner<Integer> singletonRunner =
                 new SingletonRunner<>(
                         "Test task",
@@ -47,10 +48,11 @@ public class SingletonRunnerTest {
     }
 
     @Test
-    public void testShouldReturnSameFutureIfTaskIsNotCompleted() throws Exception {
+    public void testShouldReturnSameFutureIfTaskIsNotCompleted() {
         TestTaskRunner testTaskRunner = new TestTaskRunner();
 
-        SingletonRunner<Integer> singletonRunner = new SingletonRunner<>("Test task", testTaskRunner);
+        SingletonRunner<Integer> singletonRunner =
+                new SingletonRunner<>("Test task", testTaskRunner);
         assertThat(singletonRunner.runSingleInstance())
                 .isSameInstanceAs(singletonRunner.runSingleInstance());
     }
@@ -59,7 +61,8 @@ public class SingletonRunnerTest {
     public void testShouldReturnDifferentFuturesIfTaskIsCompleted() throws Exception {
         TestTaskRunner testTaskRunner = new TestTaskRunner();
 
-        SingletonRunner<Integer> singletonRunner = new SingletonRunner<>("Test task", testTaskRunner);
+        SingletonRunner<Integer> singletonRunner =
+                new SingletonRunner<>("Test task", testTaskRunner);
         FluentFuture<Integer> firstCall = singletonRunner.runSingleInstance();
         testTaskRunner.mTestHasDecidedToStop.countDown();
         // Waiting for first run to complete
@@ -72,7 +75,8 @@ public class SingletonRunnerTest {
     public void testShouldRunOnce() throws Exception {
         TestTaskRunner testTaskRunner = new TestTaskRunner();
 
-        SingletonRunner<Integer> singletonRunner = new SingletonRunner<>("Test task", testTaskRunner);
+        SingletonRunner<Integer> singletonRunner =
+                new SingletonRunner<>("Test task", testTaskRunner);
         FluentFuture<Integer> firstRunResult = singletonRunner.runSingleInstance();
         singletonRunner.runSingleInstance();
         testTaskRunner.mTestHasDecidedToStop.countDown();
@@ -84,7 +88,8 @@ public class SingletonRunnerTest {
     @Test
     public void testShouldRunOnceMultipleStartStops() throws Exception {
         TestTaskRunner testTaskRunner = new TestTaskRunner();
-        SingletonRunner<Integer> singletonRunner = new SingletonRunner<>("Test task", testTaskRunner);
+        SingletonRunner<Integer> singletonRunner =
+                new SingletonRunner<>("Test task", testTaskRunner);
 
         FluentFuture<Integer> firstRunResult = singletonRunner.runSingleInstance();
         FluentFuture<Integer> secondRunResult = singletonRunner.runSingleInstance();
@@ -103,7 +108,8 @@ public class SingletonRunnerTest {
     @Test
     public void testShouldRunAgain() throws Exception {
         TestTaskRunner testTaskRunner = new TestTaskRunner();
-        SingletonRunner<Integer> singletonRunner = new SingletonRunner<>("Test task", testTaskRunner);
+        SingletonRunner<Integer> singletonRunner =
+                new SingletonRunner<>("Test task", testTaskRunner);
 
         FluentFuture<Integer> firstRunResult = singletonRunner.runSingleInstance();
         testTaskRunner.mTestHasDecidedToStop.countDown();
@@ -119,8 +125,8 @@ public class SingletonRunnerTest {
 
     @Test
     public void testShouldStopTask() throws Exception {
-        final CountDownLatch testHasDecidedToStop = new CountDownLatch(1);
-        final AtomicInteger counter = new AtomicInteger(0);
+        CountDownLatch testHasDecidedToStop = new CountDownLatch(1);
+        AtomicInteger counter = new AtomicInteger(0);
         SingletonRunner<Integer> singletonRunner =
                 new SingletonRunner<>(
                         "",
@@ -150,7 +156,7 @@ public class SingletonRunnerTest {
         assertThat(taskResult.get()).isEqualTo(1);
     }
 
-    class TestTaskRunner implements SingletonRunner.InterruptableTaskRunner<Integer> {
+    private class TestTaskRunner implements SingletonRunner.InterruptableTaskRunner<Integer> {
         final AtomicInteger mInvocationCount = new AtomicInteger(0);
         final CountDownLatch mTestHasDecidedToStop = new CountDownLatch(1);
 

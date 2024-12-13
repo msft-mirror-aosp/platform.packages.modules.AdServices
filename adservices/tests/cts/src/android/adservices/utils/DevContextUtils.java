@@ -46,6 +46,6 @@ public class DevContextUtils {
                 logTag,
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode));
-        return mDevContext.getDevOptionsEnabled();
+        return mDevContext.getDeviceDevOptionsEnabled();
     }
 }

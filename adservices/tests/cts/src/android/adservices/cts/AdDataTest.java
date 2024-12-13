@@ -16,8 +16,6 @@
 
 package android.adservices.cts;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
@@ -28,18 +26,14 @@ import android.adservices.common.CommonFixture;
 import android.net.Uri;
 import android.os.Parcel;
 
-import androidx.test.filters.SmallTest;
-
 import org.junit.Test;
 
 import java.util.Collections;
 
 /** Unit tests for {@link AdData} */
-@SmallTest
-public final class AdDataTest {
+public final class AdDataTest extends CtsAdServicesDeviceTestCase {
     private static final Uri VALID_RENDER_URI =
             new Uri.Builder().path("valid.example.com/testing/hello").build();
-
 
     @Test
     public void testBuildValidAdDataSuccess() {
@@ -52,13 +46,13 @@ public final class AdDataTest {
                         .setAdRenderId(AdDataFixture.VALID_RENDER_ID)
                         .build();
 
-        assertThat(validAdData.getRenderUri()).isEqualTo(VALID_RENDER_URI);
-        assertThat(validAdData.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
-        assertThat(validAdData.getAdCounterKeys())
+        expect.that(validAdData.getRenderUri()).isEqualTo(VALID_RENDER_URI);
+        expect.that(validAdData.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
+        expect.that(validAdData.getAdCounterKeys())
                 .containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
-        assertThat(validAdData.getAdFilters())
+        expect.that(validAdData.getAdFilters())
                 .isEqualTo(AdFiltersFixture.getValidUnhiddenFilters());
-        assertThat(validAdData.getAdRenderId()).isEqualTo(AdDataFixture.VALID_RENDER_ID);
+        expect.that(validAdData.getAdRenderId()).isEqualTo(AdDataFixture.VALID_RENDER_ID);
     }
 
     @Test
@@ -74,11 +68,11 @@ public final class AdDataTest {
         p.setDataPosition(0);
         AdData fromParcel = AdData.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getRenderUri()).isEqualTo(VALID_RENDER_URI);
-        assertThat(fromParcel.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
-        assertThat(fromParcel.getAdCounterKeys()).isNotNull();
-        assertThat(fromParcel.getAdCounterKeys()).isEmpty();
-        assertThat(fromParcel.getAdFilters()).isNull();
+        expect.that(fromParcel.getRenderUri()).isEqualTo(VALID_RENDER_URI);
+        expect.that(fromParcel.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
+        expect.that(fromParcel.getAdCounterKeys()).isNotNull();
+        expect.that(fromParcel.getAdCounterKeys()).isEmpty();
+        expect.that(fromParcel.getAdFilters()).isNull();
     }
 
     @Test
@@ -94,7 +88,7 @@ public final class AdDataTest {
         p.setDataPosition(0);
         AdData fromParcel = AdData.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getAdRenderId()).isNull();
+        expect.that(fromParcel.getAdRenderId()).isNull();
     }
 
     @Test
@@ -138,28 +132,28 @@ public final class AdDataTest {
                         .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .build();
 
-        assertThat(validAdData.getRenderUri()).isEqualTo(VALID_RENDER_URI);
-        assertThat(validAdData.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
-        assertThat(validAdData.getAdCounterKeys()).isNotNull();
-        assertThat(validAdData.getAdCounterKeys()).isEmpty();
-        assertThat(validAdData.getAdFilters())
+        expect.that(validAdData.getRenderUri()).isEqualTo(VALID_RENDER_URI);
+        expect.that(validAdData.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
+        expect.that(validAdData.getAdCounterKeys()).isNotNull();
+        expect.that(validAdData.getAdCounterKeys()).isEmpty();
+        expect.that(validAdData.getAdFilters())
                 .isEqualTo(AdFiltersFixture.getValidUnhiddenFilters());
     }
 
     @Test
     public void testBuildValidAdDataWithUnsetFiltersSuccess() {
-        final AdData validAdData =
+        AdData validAdData =
                 new AdData.Builder()
                         .setRenderUri(VALID_RENDER_URI)
                         .setMetadata(AdDataFixture.VALID_METADATA)
                         .setAdCounterKeys(AdDataFixture.getAdCounterKeys())
                         .build();
 
-        assertThat(validAdData.getRenderUri()).isEqualTo(VALID_RENDER_URI);
-        assertThat(validAdData.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
-        assertThat(validAdData.getAdCounterKeys())
+        expect.that(validAdData.getRenderUri()).isEqualTo(VALID_RENDER_URI);
+        expect.that(validAdData.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
+        expect.that(validAdData.getAdCounterKeys())
                 .containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
-        assertThat(validAdData.getAdFilters()).isNull();
+        expect.that(validAdData.getAdFilters()).isNull();
     }
 
     @Test
@@ -172,14 +166,14 @@ public final class AdDataTest {
                         .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .setAdRenderId(AdDataFixture.VALID_RENDER_ID)
                         .build();
-        final String actualString = validAdData.toString();
+        String actualString = validAdData.toString();
 
-        assertThat(actualString).startsWith("AdData{");
-        assertThat(actualString).contains("mRenderUri=" + VALID_RENDER_URI);
-        assertThat(actualString).contains(", mMetadata='" + AdDataFixture.VALID_METADATA + "'");
-        assertThat(actualString).contains(", mAdCounterKeys=" + AdDataFixture.getAdCounterKeys());
-        assertThat(actualString).contains(", mAdRenderId='" + AdDataFixture.VALID_RENDER_ID + "'");
-        assertThat(actualString).endsWith("}");
+        expect.that(actualString).startsWith("AdData{");
+        expect.that(actualString).contains("mRenderUri=" + VALID_RENDER_URI);
+        expect.that(actualString).contains(", mMetadata='" + AdDataFixture.VALID_METADATA + "'");
+        expect.that(actualString).contains(", mAdCounterKeys=" + AdDataFixture.getAdCounterKeys());
+        expect.that(actualString).contains(", mAdRenderId='" + AdDataFixture.VALID_RENDER_ID + "'");
+        expect.that(actualString).endsWith("}");
     }
 
     @Test
@@ -195,7 +189,7 @@ public final class AdDataTest {
 
     @Test
     public void testParcelWithFilters_success() {
-        final AdData originalAdData =
+        AdData originalAdData =
                 new AdData.Builder()
                         .setRenderUri(VALID_RENDER_URI)
                         .setMetadata(AdDataFixture.VALID_METADATA)
@@ -206,80 +200,78 @@ public final class AdDataTest {
         Parcel targetParcel = Parcel.obtain();
         originalAdData.writeToParcel(targetParcel, 0);
         targetParcel.setDataPosition(0);
-        final AdData adDataFromParcel = AdData.CREATOR.createFromParcel(targetParcel);
+        AdData adDataFromParcel = AdData.CREATOR.createFromParcel(targetParcel);
 
-        assertThat(adDataFromParcel.getRenderUri()).isEqualTo(VALID_RENDER_URI);
-        assertThat(adDataFromParcel.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
-        assertThat(adDataFromParcel.getAdCounterKeys())
+        expect.that(adDataFromParcel.getRenderUri()).isEqualTo(VALID_RENDER_URI);
+        expect.that(adDataFromParcel.getMetadata()).isEqualTo(AdDataFixture.VALID_METADATA);
+        expect.that(adDataFromParcel.getAdCounterKeys())
                 .containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
-        assertThat(adDataFromParcel.getAdFilters())
+        expect.that(adDataFromParcel.getAdFilters())
                 .isEqualTo(AdFiltersFixture.getValidUnhiddenFilters());
     }
 
     @Test
     public void testEqualsIdenticalFilters_success() {
-        final AdData originalAdData =
+        AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
                         .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .build();
-        final AdData identicalAdData =
+        AdData identicalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
                         .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .build();
 
-        assertThat(originalAdData.equals(identicalAdData)).isTrue();
+        expect.that(originalAdData.equals(identicalAdData)).isTrue();
     }
 
     @Test
     public void testEqualsDifferentFilters_success() {
-        final AdData originalAdData =
+        AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
                         .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .build();
-        final AdData differentAdData =
+        AdData differentAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
                         .setAdFilters(null)
                         .build();
 
-        assertThat(originalAdData.equals(differentAdData)).isFalse();
+        expect.that(originalAdData.equals(differentAdData)).isFalse();
     }
 
     @Test
     public void testEqualsNullFilters_success() {
-        final AdData originalAdData =
+        AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
                         .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .build();
-        final AdData nullAdData = null;
-
-        assertThat(originalAdData.equals(nullAdData)).isFalse();
+        expect.that(originalAdData.equals(null)).isFalse();
     }
 
     @Test
     public void testHashCodeIdenticalFilters_success() {
-        final AdData originalAdData =
+        AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
                         .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .build();
-        final AdData identicalAdData =
+        AdData identicalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
                         .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .build();
 
-        assertThat(originalAdData.hashCode()).isEqualTo(identicalAdData.hashCode());
+        expect.that(originalAdData.hashCode()).isEqualTo(identicalAdData.hashCode());
     }
 
     @Test
     public void testHashCodeDifferentFilters_success() {
-        final AdData originalAdData =
+        AdData originalAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
                         .setAdFilters(AdFiltersFixture.getValidUnhiddenFilters())
                         .build();
-        final AdData differentAdData =
+        AdData differentAdData =
                 AdDataFixture.getValidAdDataBuilderByBuyer(CommonFixture.VALID_BUYER_1, 0)
                         .setAdFilters(null)
                         .build();
 
-        assertThat(originalAdData.hashCode()).isNotEqualTo(differentAdData.hashCode());
+        expect.that(originalAdData.hashCode()).isNotEqualTo(differentAdData.hashCode());
     }
 }

@@ -41,6 +41,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableSet;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,12 +57,16 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
     public CustomAudienceShellCommandFactory(
             boolean isCustomAudienceCliEnabled,
             BackgroundFetchRunner backgroundFetchRunner,
-            CustomAudienceDao customAudienceDao) {
+            CustomAudienceDao customAudienceDao,
+            Clock clock,
+            long fledgeCustomAudienceActiveTimeWindowInMs) {
         mIsCustomAudienceCliEnabled = isCustomAudienceCliEnabled;
         Set<ShellCommand> allCommands =
                 ImmutableSet.of(
-                        new CustomAudienceListCommand(customAudienceDao),
-                        new CustomAudienceViewCommand(customAudienceDao),
+                        new CustomAudienceListCommand(
+                                customAudienceDao, clock, fledgeCustomAudienceActiveTimeWindowInMs),
+                        new CustomAudienceViewCommand(
+                                customAudienceDao, clock, fledgeCustomAudienceActiveTimeWindowInMs),
                         new CustomAudienceRefreshCommand(
                                 backgroundFetchRunner,
                                 customAudienceDao,
@@ -73,24 +78,24 @@ public class CustomAudienceShellCommandFactory implements ShellCommandFactory {
                                         ShellCommand::getCommandName, Function.identity()));
     }
 
-    /**
-     * @return an instance of the {@link CustomAudienceShellCommandFactory}.
-     */
-    public static ShellCommandFactory getInstance(
+    /** Gets a new {@link CustomAudienceShellCommandFactory} instance . */
+    public static ShellCommandFactory newInstance(
             DebugFlags debugFlags, Flags flags, Context context) {
         CustomAudienceDao customAudienceDao =
-                CustomAudienceDatabase.getInstance(context).customAudienceDao();
+                CustomAudienceDatabase.getInstance().customAudienceDao();
         return new CustomAudienceShellCommandFactory(
                 debugFlags.getFledgeCustomAudienceCLIEnabledStatus(),
                 new BackgroundFetchRunner(
                         customAudienceDao,
-                        SharedStorageDatabase.getInstance(context).appInstallDao(),
+                        SharedStorageDatabase.getInstance().appInstallDao(),
                         ApplicationContextSingleton.get().getPackageManager(),
                         EnrollmentDao.getInstance(),
                         flags,
                         // Avoid logging metrics when using shell commands (such as daily update).
                         CustomAudienceLoggerFactory.getNoOpInstance()),
-                customAudienceDao);
+                customAudienceDao,
+                Clock.systemUTC(),
+                flags.getFledgeCustomAudienceActiveTimeWindowInMs());
     }
 
     @Nullable

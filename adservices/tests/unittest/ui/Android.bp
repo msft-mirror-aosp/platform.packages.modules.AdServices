@@ -1,4 +1,4 @@
-// Copyright (C) 2023 The Android Open Source Project
+// Copyright (C) 2024 The Android Open Source Project
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,7 +50,6 @@ android_test {
         "adservices-assets",
         "adservices-service-core-schema",
         "adservices-shared-testing",
-        "adservices-test-mockito-expectations",
         "adservices-test-utility",
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
@@ -59,6 +58,7 @@ android_test {
         "tflite_support_classifiers_java",
         "opencensus-java-api",
         "opencensus-java-contrib-grpc-metrics",
+        "gson",
     ],
     libs: [
         "android.test.base.stubs.system",
@@ -88,6 +88,7 @@ android_test {
     ],
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
+        baseline_filename: "lint-baseline-adservices.xml",
         test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
@@ -120,7 +121,6 @@ android_test {
         "adservices-service-core-schema",
         "adservices-shared-testing",
         "adservices-test-fixtures",
-        "adservices-test-mockito-expectations",
         "adservices-test-utility",
         "androidx.concurrent_concurrent-futures",
         "androidx.room_room-runtime",
@@ -132,6 +132,7 @@ android_test {
         "opencensus-java-contrib-grpc-metrics",
         "tflite_support_classifiers_java",
         "truth",
+        "gson",
     ],
     libs: [
         "android.ext.adservices",

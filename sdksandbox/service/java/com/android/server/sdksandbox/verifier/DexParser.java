@@ -16,7 +16,7 @@
 
 package com.android.server.sdksandbox.verifier;
 
-import com.android.server.sdksandbox.verifier.SerialDexLoader.DexLoadResult;
+import com.android.server.sdksandbox.verifier.SerialDexLoader.DexSymbols;
 
 import java.io.File;
 import java.io.IOException;
@@ -45,6 +45,5 @@ public interface DexParser {
      * @param dexEntry the specific .dex file to load
      * @param dexLoadResult sparse array to insert the methods loaded from the dex file
      */
-    void loadDexSymbols(File apkFile, String dexEntry, DexLoadResult dexLoadResult)
-            throws IOException;
+    void loadDexSymbols(File apkFile, String dexEntry, DexSymbols dexSymbols) throws IOException;
 }
