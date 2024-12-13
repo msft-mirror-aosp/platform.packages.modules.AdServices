@@ -5990,6 +5990,23 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB;
     }
 
+    /**
+     * Feature flag to provide latest mdd manifest urls for config delivery system.
+     *
+     * <p>Mdd manifest urls in this flag are separated by comma.
+     *
+     * <p>All file groups and files within the mdd manifest urls provided in this flag will be
+     * downloaded.
+     */
+    @FeatureFlag String DEFAULT_CONFIG_DELIVERY__MDD_MANIFEST_URLS = "";
+
+    /**
+     * @return latest mdd manifest urls for config delivery.
+     */
+    default String getConfigDeliveryMddManifestUrls() {
+        return DEFAULT_CONFIG_DELIVERY__MDD_MANIFEST_URLS;
+    }
+
     /** Flag to use configurations manager to query enrollment data. */
     @FeatureFlag boolean DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT = false;
 

@@ -23,6 +23,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODU
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB;
 import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT;
+import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__MDD_MANIFEST_URLS;
 import static com.android.adservices.service.FlagsConstants.KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS;
@@ -4881,6 +4882,12 @@ public final class PhFlags implements Flags {
         return getDeviceConfigFlag(
                 KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT,
                 DEFAULT_USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT);
+    }
+
+    @Override
+    public String getConfigDeliveryMddManifestUrls() {
+        return getDeviceConfigFlag(
+                KEY_CONFIG_DELIVERY__MDD_MANIFEST_URLS, DEFAULT_CONFIG_DELIVERY__MDD_MANIFEST_URLS);
     }
 
     @Override
