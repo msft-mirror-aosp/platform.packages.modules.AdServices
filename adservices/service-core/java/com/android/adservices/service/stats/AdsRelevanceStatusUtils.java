@@ -279,6 +279,9 @@ public class AdsRelevanceStatusUtils {
     /** The PAS raw signals are encoded in {@code PeriodicSignalsServiceImpl}. */
     public static final int PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL = 2;
 
+    /** Buckets for signal size in the encoding JS execution process. */
+    public static final long[] ENCODING_JS_EXECUTION_SIGNAL_SIZE_BUCKETS = {10, 100, 500, 5000};
+
     /** The kind of winner did the beacon come from. */
     @IntDef(
             prefix = {"BEACON_SOURCE_"},
