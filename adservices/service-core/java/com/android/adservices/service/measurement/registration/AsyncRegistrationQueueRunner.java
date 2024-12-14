@@ -341,7 +341,7 @@ public final class AsyncRegistrationQueueRunner {
                     && Applications.anyAppsInstalled(mContext, source.getAppDestinations())) {
                 source.setStatus(Source.Status.MARKED_TO_DELETE);
             }
-            Map<String, String> additionalDebugReportParams = null;
+            Map<String, Object> additionalDebugReportParams = null;
             if (mFlags.getMeasurementEnableSourceDestinationLimitPriority()
                     && InsertSourcePermission.ALLOWED_FIFO_SUCCESS.equals(sourceAllowedToInsert)) {
                 int limit = mFlags.getMeasurementMaxDistinctDestinationsInActiveSource();
@@ -381,9 +381,7 @@ public final class AsyncRegistrationQueueRunner {
                 mDebugReportApi.scheduleSourceReport(
                         source,
                         DebugReportApi.Type.SOURCE_CHANNEL_CAPACITY_LIMIT,
-                        Map.of(
-                                DebugReportApi.Body.LIMIT,
-                                String.valueOf(maxEventLevelChannelCapacity)),
+                        Map.of(DebugReportApi.Body.LIMIT, maxEventLevelChannelCapacity),
                         dao);
                 adrTypes.add(DebugReportApi.Type.SOURCE_CHANNEL_CAPACITY_LIMIT);
                 return false;
@@ -604,7 +602,7 @@ public final class AsyncRegistrationQueueRunner {
             return InsertSourcePermission.NOT_ALLOWED;
         }
 
-        Map<String, String> additionalDebugReportParams = null;
+        Map<String, Object> additionalDebugReportParams = null;
         InsertSourcePermission result = InsertSourcePermission.ALLOWED;
         // Should be deprecated once destination priority is fully launched
         if (extractSourceDestinationLimitingAlgo(mFlags, source)
@@ -1225,7 +1223,7 @@ public final class AsyncRegistrationQueueRunner {
     }
 
     private DebugReportApi.Type scheduleSourceSuccessOrNoisedDebugReport(
-            Source source, IMeasurementDao dao, Map<String, String> additionalDebugReportParams) {
+            Source source, IMeasurementDao dao, Map<String, Object> additionalDebugReportParams) {
         DebugReportApi.Type type = DebugReportApi.Type.SOURCE_SUCCESS;
         if (source.getAttributionMode() != Source.AttributionMode.TRUTHFULLY) {
             type = DebugReportApi.Type.SOURCE_NOISED;

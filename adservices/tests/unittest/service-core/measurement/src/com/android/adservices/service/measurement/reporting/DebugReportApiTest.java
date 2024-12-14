@@ -711,7 +711,7 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        Map<String, String> additionalParam = Map.of("paramKey", "paramValue");
+        Map<String, Object> additionalParam = Map.of("paramKey", "paramValue");
         mDebugReportApi.scheduleSourceReport(
                 source, DebugReportApi.Type.SOURCE_NOISED, additionalParam, mMeasurementDao);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
@@ -742,7 +742,7 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
 
-        Map<String, String> additionalParam = Map.of("paramKey", "paramValue");
+        Map<String, Object> additionalParam = Map.of("paramKey", "paramValue");
         mDebugReportApi.scheduleSourceReport(
                 source, DebugReportApi.Type.SOURCE_NOISED, additionalParam, mMeasurementDao);
         ArgumentCaptor<DebugReport> captor = ArgumentCaptor.forClass(DebugReport.class);
@@ -4952,7 +4952,7 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
                 DebugReportApi.Type.SOURCE_SCOPES_CHANNEL_CAPACITY_LIMIT.getValue(),
                 SourceFixture.ValidSourceParams.PUBLISHER.toString(),
                 SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS.get(0).toString(),
-                Map.of(DebugReportApi.Body.LIMIT, String.valueOf(11.5f)));
+                Map.of(DebugReportApi.Body.LIMIT, 11.5));
     }
 
     private static void assertSourceDebugReportParameters(
@@ -4960,7 +4960,7 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
             String expectedReportType,
             String expectedSourcePublisher,
             String expectedSerializedDestinations,
-            Map<String, String> expectedAdditionalParams)
+            Map<String, Object> expectedAdditionalParams)
             throws JSONException {
         JSONObject actualReportBody = actualReport.getBody();
         assertEquals(SourceFixture.ValidSourceParams.ENROLLMENT_ID, actualReport.getEnrollmentId());
@@ -4977,12 +4977,12 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
         assertEquals(
                 expectedSourcePublisher,
                 actualReportBody.getString(DebugReportApi.Body.SOURCE_SITE));
-        for (Map.Entry<String, String> entry : expectedAdditionalParams.entrySet()) {
+        for (Map.Entry<String, Object> entry : expectedAdditionalParams.entrySet()) {
             assertEquals(
                     entry.getValue(),
                     actualReportBody.isNull(entry.getKey())
                             ? null
-                            : actualReportBody.getString(entry.getKey()));
+                            : actualReportBody.get(entry.getKey()));
         }
     }
 }

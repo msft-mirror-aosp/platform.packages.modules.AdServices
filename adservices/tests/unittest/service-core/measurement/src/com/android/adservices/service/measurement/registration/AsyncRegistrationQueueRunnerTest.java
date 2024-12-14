@@ -5882,7 +5882,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 SOURCE_1, validAsyncRegistration, mMeasurementDao, mAsyncFetchStatus);
 
         // Assertions
-        ArgumentCaptor<Map<String, String>> additionalParamsCaptor =
+        ArgumentCaptor<Map<String, Object>> additionalParamsCaptor =
                 ArgumentCaptor.forClass(Map.class);
         verify(mDebugReportApi)
                 .scheduleSourceReport(
@@ -5917,7 +5917,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 SOURCE_1, validAsyncRegistration, mMeasurementDao, mAsyncFetchStatus);
 
         // Assertions
-        ArgumentCaptor<Map<String, String>> additionalParamsCaptor =
+        ArgumentCaptor<Map<String, Object>> additionalParamsCaptor =
                 ArgumentCaptor.forClass(Map.class);
         verify(mDebugReportApi)
                 .scheduleSourceReport(
@@ -5947,7 +5947,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 SOURCE_1, validAsyncRegistration, mMeasurementDao, mAsyncFetchStatus);
 
         // Assertions
-        ArgumentCaptor<Map<String, String>> additionalParamsCaptor =
+        ArgumentCaptor<Map<String, Object>> additionalParamsCaptor =
                 ArgumentCaptor.forClass(Map.class);
         verify(mDebugReportApi)
                 .scheduleSourceReport(
