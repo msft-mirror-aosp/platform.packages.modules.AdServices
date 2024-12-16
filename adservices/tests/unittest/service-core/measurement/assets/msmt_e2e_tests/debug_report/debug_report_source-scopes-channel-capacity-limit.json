@@ -57,7 +57,7 @@
             "type": "source-scopes-channel-capacity-limit",
             "body": {
               "attribution_destination": "android-app://example.2d1.test",
-              "limit": "6.5",
+              "limit": 6.5,
               "source_debug_key": "111",
               "source_event_id": "1",
               "source_site": "android-app://example.1s1.test"

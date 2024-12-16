@@ -16,6 +16,16 @@
 
 package com.android.adservices.service.consent;
 
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_DISABLED;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_ENABLED;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_UNKNOWN;
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN;
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT;
+import static android.adservices.common.Module.MEASUREMENT;
+import static android.adservices.common.Module.ON_DEVICE_PERSONALIZATION;
+import static android.adservices.common.Module.PROTECTED_APP_SIGNALS;
+import static android.adservices.common.Module.PROTECTED_AUDIENCE;
+
 import static com.android.adservices.service.consent.ConsentConstants.CONSENT_KEY;
 import static com.android.adservices.service.consent.ConsentConstants.CONSENT_KEY_FOR_ALL;
 import static com.android.adservices.service.consent.ConsentConstants.DEFAULT_CONSENT;
@@ -87,6 +97,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroI
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -96,7 +107,6 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
 
-import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.Module;
 import android.annotation.Nullable;
@@ -110,6 +120,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.util.SparseIntArray;
 
 import androidx.test.core.content.pm.ApplicationInfoBuilder;
 import androidx.test.filters.SmallTest;
@@ -124,7 +135,6 @@ import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithE
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
-import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -173,6 +183,7 @@ import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnr
 import com.android.adservices.service.ui.util.EnrollmentData;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -184,11 +195,14 @@ import com.google.common.collect.ImmutableList;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.verification.VerificationMode;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -265,6 +279,10 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Mock private Supplier<EnrollmentDao> mEnrollmentDaoSupplierMock;
     @Mock private Supplier<MeasurementImpl> mMeasurementImplSupplierMock;
 
+    @Captor
+    private ArgumentCaptor<List<AdServicesModuleUserChoice>>
+            mAdservicesModuleUserChoiceArgumentCaptor;
+
     @Before
     public void setup() throws Exception {
         mocker.mockGetFlags(mMockFlags);
@@ -272,9 +290,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
         mDatastore =
                 new AtomicFileDatastore(
-                        mSpyContext,
-                        AppConsentDao.DATASTORE_NAME,
+                        new File(mSpyContext.getDataDir(), AppConsentDao.DATASTORE_NAME),
                         AppConsentDao.DATASTORE_VERSION,
+                        /* versionKey= */ "DaKey",
                         mMockAdServicesErrorLogger);
         // For each file, we should ensure there is only one instance of datastore that is able to
         // access it. (Refer to AtomicFileDatastore.class)
@@ -2657,6 +2675,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mMockIAdServicesManager, never()).recordMeasurementDefaultConsent(anyBoolean());
         verify(mMockIAdServicesManager, never()).recordTopicsDefaultConsent(anyBoolean());
         verify(mMockIAdServicesManager, never()).recordUserManualInteractionWithConsent(anyInt());
+        verify(mMockIAdServicesManager, never()).setModuleEnrollmentState(anyString());
         verify(mockEditor, never()).putBoolean(any(), anyBoolean());
     }
 
@@ -2883,6 +2902,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mockAdServicesManager, never()).recordMeasurementDefaultConsent(anyBoolean());
         verify(mockAdServicesManager, never()).recordTopicsDefaultConsent(anyBoolean());
         verify(mockAdServicesManager, never()).recordUserManualInteractionWithConsent(anyInt());
+        verify(mMockIAdServicesManager, never()).setModuleEnrollmentState(anyString());
     }
 
     @Test
@@ -2890,6 +2910,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(any(), any(), any(), any()))
                 .thenReturn(true);
         when(mAppSearchConsentManagerMock.getConsent(any())).thenReturn(true);
+        when(mMockFlags.getAdServicesConsentBusinessLogicMigrationEnabled()).thenReturn(true);
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
         mConsentDatastore.putBoolean(CONSENT_KEY, true);
         mConsentDatastore.putBoolean(NOTIFICATION_DISPLAYED_ONCE, true);
 
@@ -2961,6 +2983,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         .build();
 
         verify(mStatsdAdServicesLoggerMock).logConsentMigrationStats(consentMigrationStats);
+        verify(mockAdServicesManager).setModuleEnrollmentState(anyString());
     }
 
     @Test
@@ -4923,16 +4946,16 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         EnrollmentData actualData = EnrollmentData.deserialize(dataStringArg[0]);
         assertEquals(
                 "TOPICS User Choice",
-                AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN,
+                USER_CHOICE_OPTED_IN,
                 actualData.getUserChoice(Module.TOPICS));
         assertEquals(
                 "MEASUREMENT User Choice",
-                AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT,
-                actualData.getUserChoice(Module.MEASUREMENT));
+                USER_CHOICE_OPTED_OUT,
+                actualData.getUserChoice(MEASUREMENT));
         assertEquals(
                 "PA User Choice",
                 AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN,
-                actualData.getUserChoice(Module.PROTECTED_AUDIENCE));
+                actualData.getUserChoice(PROTECTED_AUDIENCE));
         assertEquals(
                 "PAS User Choice",
                 AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN,
@@ -4947,28 +4970,26 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 actualData.getUserChoice(Module.ADID));
         assertEquals(
                 "TOPICS Module State",
-                AdServicesModuleState.MODULE_STATE_ENABLED,
+                MODULE_STATE_ENABLED,
                 actualData.getModuleState(Module.TOPICS));
         assertEquals(
                 "MEASUREMENT Module State",
-                AdServicesModuleState.MODULE_STATE_ENABLED,
-                actualData.getModuleState(Module.MEASUREMENT));
+                MODULE_STATE_ENABLED,
+                actualData.getModuleState(MEASUREMENT));
         assertEquals(
                 "PA Module State",
-                AdServicesModuleState.MODULE_STATE_ENABLED,
-                actualData.getModuleState(Module.PROTECTED_AUDIENCE));
+                MODULE_STATE_ENABLED,
+                actualData.getModuleState(PROTECTED_AUDIENCE));
         assertEquals(
                 "PAS Module State",
-                AdServicesModuleState.MODULE_STATE_DISABLED,
+                MODULE_STATE_DISABLED,
                 actualData.getModuleState(Module.PROTECTED_APP_SIGNALS));
         assertEquals(
                 "ODP Module State",
-                AdServicesModuleState.MODULE_STATE_DISABLED,
+                MODULE_STATE_DISABLED,
                 actualData.getModuleState(Module.ON_DEVICE_PERSONALIZATION));
         assertEquals(
-                "ADID Module State",
-                AdServicesModuleState.MODULE_STATE_UNKNOWN,
-                actualData.getModuleState(Module.ADID));
+                "ADID Module State", MODULE_STATE_UNKNOWN, actualData.getModuleState(Module.ADID));
         verify(spyConsentManager).setModuleEnrollmentData(anyString());
         clearInvocations(spyConsentManager);
 
@@ -4979,85 +5000,242 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     private void setupAndVerifyEnrollmentStates(
-            ConsentManager spyConsentManager, int consentSourceOfTruth) throws RemoteException {
+            ConsentManager spyConsentManager, int consentSourceOfTruth)
+            throws RemoteException, IOException {
         EnrollmentData data = EnrollmentData.deserialize("");
-        AdServicesModuleState moduleState =
-                new AdServicesModuleState(
-                        Module.TOPICS, AdServicesModuleState.MODULE_STATE_DISABLED);
-        spyConsentManager.setModuleStates(List.of(moduleState));
-        data.putModuleState(moduleState);
-
-        moduleState =
-                new AdServicesModuleState(
-                        Module.PROTECTED_AUDIENCE, AdServicesModuleState.MODULE_STATE_ENABLED);
-        spyConsentManager.setModuleStates(List.of(moduleState));
-        data.putModuleState(moduleState);
-
-        moduleState =
-                new AdServicesModuleState(
-                        Module.MEASUREMENT, AdServicesModuleState.MODULE_STATE_ENABLED);
-        spyConsentManager.setModuleStates(List.of(moduleState));
+        int[][] moduleStates =
+                new int[][] {
+                    {Module.TOPICS, MODULE_STATE_DISABLED},
+                    {PROTECTED_AUDIENCE, MODULE_STATE_ENABLED},
+                    {MEASUREMENT, MODULE_STATE_ENABLED},
+                    {Module.PROTECTED_APP_SIGNALS, MODULE_STATE_ENABLED},
+                };
+        SparseIntArray moduleStateList = new SparseIntArray(moduleStates.length);
+        for (int[] element : moduleStates) {
+            data.putModuleState(element[0], element[1]);
+            moduleStateList.put(element[0], element[1]);
+        }
+        spyConsentManager.setModuleStates(moduleStateList);
 
         AdServicesModuleUserChoice userChoice =
-                new AdServicesModuleUserChoice(
-                        Module.MEASUREMENT, AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT);
+                new AdServicesModuleUserChoice(MEASUREMENT, USER_CHOICE_OPTED_OUT);
         spyConsentManager.setUserChoices(List.of(userChoice));
-        data.putModuleState(moduleState);
-        data.putUserChoice(Module.MEASUREMENT, AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT);
-
-        moduleState =
-                new AdServicesModuleState(
-                        Module.PROTECTED_APP_SIGNALS, AdServicesModuleState.MODULE_STATE_ENABLED);
-        spyConsentManager.setModuleStates(List.of(moduleState));
+        data.putUserChoice(MEASUREMENT, USER_CHOICE_OPTED_OUT);
 
         AdServicesModuleUserChoice userChoicePa =
-                new AdServicesModuleUserChoice(
-                        Module.PROTECTED_APP_SIGNALS,
-                        AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
+                new AdServicesModuleUserChoice(Module.PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_IN);
         spyConsentManager.setUserChoices(List.of(userChoicePa));
-        data.putModuleState(moduleState);
-        data.putUserChoice(
-                Module.PROTECTED_APP_SIGNALS, AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
+        data.putUserChoice(Module.PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_IN);
 
         switch (consentSourceOfTruth) {
             case Flags.SYSTEM_SERVER_ONLY, Flags.PPAPI_AND_SYSTEM_SERVER:
                 doReturn(EnrollmentData.serialize(data))
                         .when(mMockIAdServicesManager)
                         .getModuleEnrollmentState();
-                verify(mMockIAdServicesManager, times(6)).setModuleEnrollmentState(anyString());
+                verify(mMockIAdServicesManager, times(3)).setModuleEnrollmentState(anyString());
                 break;
             case Flags.APPSEARCH_ONLY:
                 doReturn(EnrollmentData.serialize(data))
                         .when(mAppSearchConsentManagerMock)
                         .getModuleEnrollmentState();
-                verify(mAppSearchConsentManagerMock, times(6))
+                verify(mAppSearchConsentManagerMock, times(3))
                         .setModuleEnrollmentState(anyString());
                 break;
         }
 
         assertThat(spyConsentManager.getModuleState(Module.ON_DEVICE_PERSONALIZATION))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_UNKNOWN);
+                .isEqualTo(MODULE_STATE_UNKNOWN);
         assertThat(spyConsentManager.getUserChoice(Module.ON_DEVICE_PERSONALIZATION))
                 .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN);
         assertThat(spyConsentManager.getModuleState(Module.TOPICS))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_DISABLED);
+                .isEqualTo(MODULE_STATE_DISABLED);
         assertThat(spyConsentManager.getUserChoice(Module.TOPICS))
                 .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN);
-        assertThat(spyConsentManager.getModuleState(Module.PROTECTED_AUDIENCE))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_ENABLED);
-        assertThat(spyConsentManager.getUserChoice(Module.PROTECTED_AUDIENCE))
+        assertThat(spyConsentManager.getModuleState(PROTECTED_AUDIENCE))
+                .isEqualTo(MODULE_STATE_ENABLED);
+        assertThat(spyConsentManager.getUserChoice(PROTECTED_AUDIENCE))
                 .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN);
-        assertThat(spyConsentManager.getModuleState(Module.MEASUREMENT))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_ENABLED);
-        assertThat(spyConsentManager.getUserChoice(Module.MEASUREMENT))
-                .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT);
+        assertThat(spyConsentManager.getModuleState(MEASUREMENT)).isEqualTo(MODULE_STATE_ENABLED);
+        assertThat(spyConsentManager.getUserChoice(MEASUREMENT)).isEqualTo(USER_CHOICE_OPTED_OUT);
         assertThat(spyConsentManager.getModuleState(Module.PROTECTED_APP_SIGNALS))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_ENABLED);
+                .isEqualTo(MODULE_STATE_ENABLED);
         assertThat(spyConsentManager.getUserChoice(Module.PROTECTED_APP_SIGNALS))
-                .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
+                .isEqualTo(USER_CHOICE_OPTED_IN);
     }
 
     private void mockEnableAtomicFileDatastoreBatchUpdateApi(boolean enable) {
         when(mMockFlags.getEnableAtomicFileDatastoreBatchUpdateApi()).thenReturn(enable);
+    }
+
+    @Test
+    public void testSetConsent_businessMigrationLogicEnabled() throws Exception {
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, Flags.PPAPI_AND_SYSTEM_SERVER);
+        EnrollmentData optedOutData = EnrollmentData.deserialize("");
+        optedOutData.putUserChoice(PROTECTED_AUDIENCE, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(Module.PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(ON_DEVICE_PERSONALIZATION, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(MEASUREMENT, USER_CHOICE_OPTED_OUT);
+        doReturn(EnrollmentData.serialize(optedOutData))
+                .when(mMockIAdServicesManager)
+                .getModuleEnrollmentState();
+        when(mMockFlags.getAdServicesConsentBusinessLogicMigrationEnabled()).thenReturn(true);
+        when(mMockFlags.getConsentManagerLazyEnableMode()).thenReturn(true);
+        when(mMockFlags.getPasUxEnabled()).thenReturn(true);
+        when(mMockFlags.getEeaPasUxEnabled()).thenReturn(true);
+
+        clearInvocations(spyConsentManager);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
+
+        verify(spyConsentManager).getUserChoice(PROTECTED_AUDIENCE);
+        verify(spyConsentManager)
+                .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
+        List<AdServicesModuleUserChoice> userChoiceList =
+                mAdservicesModuleUserChoiceArgumentCaptor.getValue();
+        assertThat(userChoiceList).hasSize(3);
+        verify(() -> UiStatsLogger.logOptInSelected(AdServicesApiType.FLEDGE));
+
+        clearInvocations(spyConsentManager);
+        spyConsentManager.disable(mSpyContext, AdServicesApiType.FLEDGE);
+        verify(() -> UiStatsLogger.logOptOutSelected(AdServicesApiType.FLEDGE));
+        verify(spyConsentManager)
+                .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
+        userChoiceList = mAdservicesModuleUserChoiceArgumentCaptor.getValue();
+        assertThat(userChoiceList).hasSize(3);
+        assertFalse(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
+
+        clearInvocations(spyConsentManager);
+        spyConsentManager.disable(mSpyContext, AdServicesApiType.MEASUREMENTS);
+        verify(() -> UiStatsLogger.logOptOutSelected(AdServicesApiType.MEASUREMENTS));
+        verify(spyConsentManager)
+                .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
+        userChoiceList = mAdservicesModuleUserChoiceArgumentCaptor.getValue();
+        assertThat(userChoiceList).hasSize(1);
+        assertFalse(spyConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven());
+
+        clearInvocations(spyConsentManager);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.MEASUREMENTS);
+        verify(() -> UiStatsLogger.logOptInSelected(AdServicesApiType.MEASUREMENTS));
+        verify(spyConsentManager)
+                .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
+        userChoiceList = mAdservicesModuleUserChoiceArgumentCaptor.getValue();
+        assertThat(userChoiceList).hasSize(1);
+    }
+
+    @Test
+    public void testSetConsentPaPasOdp_businessMigrationLogicEnabled() throws Exception {
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, Flags.PPAPI_AND_SYSTEM_SERVER);
+        setModuleStatesTestData();
+
+        clearInvocations(spyConsentManager);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
+
+        verify(spyConsentManager)
+                .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
+        List<AdServicesModuleUserChoice> userChoiceList =
+                mAdservicesModuleUserChoiceArgumentCaptor.getValue();
+        assertThat(userChoiceList).hasSize(3);
+        assertWithMessage("getConsent(AdServicesApiType.FLEDGE)")
+                .that(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven())
+                .isTrue();
+        assertWithMessage("getUserChoice(PROTECTED_AUDIENCE)")
+                .that(spyConsentManager.getUserChoice(PROTECTED_AUDIENCE))
+                .isEqualTo(USER_CHOICE_OPTED_IN);
+        assertWithMessage("getUserChoice(PROTECTED_APP_SIGNALS)")
+                .that(spyConsentManager.getUserChoice(PROTECTED_APP_SIGNALS))
+                .isEqualTo(USER_CHOICE_OPTED_IN);
+        assertWithMessage("getUserChoice(ON_DEVICE_PERSONALIZATION)")
+                .that(spyConsentManager.getUserChoice(ON_DEVICE_PERSONALIZATION))
+                .isEqualTo(USER_CHOICE_OPTED_IN);
+
+        EnrollmentData optedOutData = EnrollmentData.deserialize("");
+        optedOutData.putUserChoice(PROTECTED_AUDIENCE, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(Module.PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(ON_DEVICE_PERSONALIZATION, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(MEASUREMENT, USER_CHOICE_OPTED_OUT);
+        doReturn(EnrollmentData.serialize(optedOutData))
+                .when(mMockIAdServicesManager)
+                .getModuleEnrollmentState();
+
+        clearInvocations(spyConsentManager);
+        spyConsentManager.disable(mSpyContext, AdServicesApiType.FLEDGE);
+
+        verify(spyConsentManager)
+                .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
+        userChoiceList = mAdservicesModuleUserChoiceArgumentCaptor.getValue();
+        assertThat(userChoiceList).hasSize(3);
+        assertWithMessage("getConsent(AdServicesApiType.FLEDGE)")
+                .that(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven())
+                .isFalse();
+        assertWithMessage("getUserChoice(PROTECTED_AUDIENCE)")
+                .that(spyConsentManager.getUserChoice(PROTECTED_AUDIENCE))
+                .isEqualTo(USER_CHOICE_OPTED_OUT);
+        assertWithMessage("getUserChoice(PROTECTED_APP_SIGNALS)")
+                .that(spyConsentManager.getUserChoice(PROTECTED_APP_SIGNALS))
+                .isEqualTo(USER_CHOICE_OPTED_OUT);
+        assertWithMessage("getUserChoice(ON_DEVICE_PERSONALIZATION)")
+                .that(spyConsentManager.getUserChoice(ON_DEVICE_PERSONALIZATION))
+                .isEqualTo(USER_CHOICE_OPTED_OUT);
+    }
+
+    @Test
+    public void testSetConsentPaPasOdp_businessMigrationLogicEnabledThenDisabled()
+            throws Exception {
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, Flags.PPAPI_AND_SYSTEM_SERVER);
+        setModuleStatesTestData();
+
+        clearInvocations(spyConsentManager);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
+
+        verify(() -> UiStatsLogger.logOptInSelected(AdServicesApiType.FLEDGE));
+        assertWithMessage("getConsent(AdServicesApiType.FLEDGE)")
+                .that(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven())
+                .isTrue();
+        assertWithMessage("getUserChoice(PROTECTED_AUDIENCE)")
+                .that(spyConsentManager.getUserChoice(PROTECTED_AUDIENCE))
+                .isEqualTo(USER_CHOICE_OPTED_IN);
+        assertWithMessage("getUserChoice(PROTECTED_APP_SIGNALS)")
+                .that(spyConsentManager.isPasFledgeConsentGiven())
+                .isTrue();
+
+        EnrollmentData optedOutData = EnrollmentData.deserialize("");
+        optedOutData.putUserChoice(PROTECTED_AUDIENCE, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(Module.PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(ON_DEVICE_PERSONALIZATION, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(MEASUREMENT, USER_CHOICE_OPTED_OUT);
+        doReturn(EnrollmentData.serialize(optedOutData))
+                .when(mMockIAdServicesManager)
+                .getModuleEnrollmentState();
+        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.FLEDGE))
+                .when(mMockIAdServicesManager)
+                .getConsent(anyInt());
+
+        when(mMockFlags.getAdServicesConsentBusinessLogicMigrationEnabled()).thenReturn(false);
+
+        assertWithMessage("getConsent(AdServicesApiType.FLEDGE)")
+                .that(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven())
+                .isTrue();
+        assertWithMessage("getUserChoice(PROTECTED_APP_SIGNALS)")
+                .that(spyConsentManager.isPasFledgeConsentGiven())
+                .isFalse();
+    }
+
+    private void setModuleStatesTestData() throws RemoteException {
+        when(mMockFlags.getAdServicesConsentBusinessLogicMigrationEnabled()).thenReturn(true);
+        when(mMockFlags.getPasUxEnabled()).thenReturn(true);
+        when(mMockFlags.getEeaPasUxEnabled()).thenReturn(true);
+        EnrollmentData data = EnrollmentData.deserialize("");
+        data.putUserChoice(PROTECTED_AUDIENCE, USER_CHOICE_OPTED_IN);
+        data.putUserChoice(Module.PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_IN);
+        data.putUserChoice(ON_DEVICE_PERSONALIZATION, USER_CHOICE_OPTED_IN);
+        data.putUserChoice(MEASUREMENT, USER_CHOICE_OPTED_IN);
+        doReturn(EnrollmentData.serialize(data))
+                .when(mMockIAdServicesManager)
+                .getModuleEnrollmentState();
     }
 }

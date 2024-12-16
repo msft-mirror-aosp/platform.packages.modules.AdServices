@@ -16,7 +16,6 @@
 
 package android.adservices.test.scenario.adservices.fledge;
 
-import android.Manifest;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.GetAdSelectionDataOutcome;
 import android.adservices.adselection.GetAdSelectionDataRequest;
@@ -26,29 +25,19 @@ import android.adservices.test.scenario.adservices.fledge.utils.BackgroundJobFix
 import android.adservices.test.scenario.adservices.fledge.utils.FakeAdExchangeServer;
 import android.adservices.test.scenario.adservices.fledge.utils.ProtectedAppSignalsTestFixture;
 import android.adservices.test.scenario.adservices.fledge.utils.SelectAdResponse;
-import android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule;
 import android.platform.test.option.StringOption;
-import android.platform.test.rule.CleanPackageRule;
-import android.platform.test.rule.KillAppsRule;
 import android.platform.test.scenario.annotation.Scenario;
 import android.util.Log;
 
-import androidx.test.platform.app.InstrumentationRegistry;
-
-import com.android.adservices.common.AdServicesFlagsSetterRule;
-import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.FlagsConstants;
 
 import com.google.common.io.BaseEncoding;
 
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -85,37 +74,11 @@ public class PASServerAuctionE2ETest extends ServerAuctionE2ETestBase {
     public static StringOption sellerDomain =
             new StringOption("seller-domain").setRequired(true).setDefault("");
 
-    @Rule
-    public RuleChain rules =
-            RuleChain.outerRule(
-                            new KillAppsRule(
-                                    AdservicesTestHelper.getAdServicesPackageName(CONTEXT)))
-                    .around(
-                            // CleanPackageRule should not execute after each test method because
-                            // there's a chance it interferes with ShowmapSnapshotListener snapshot
-                            // at the end of the test, impacting collection of memory metrics for
-                            // AdServices process.
-                            new CleanPackageRule(
-                                    AdservicesTestHelper.getAdServicesPackageName(CONTEXT),
-                                    /* clearOnStarting= */ true,
-                                    /* clearOnFinished= */ false))
-                    .around(new SelectAdsFlagRule());
-
-    @Rule
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.newInstance()
-                    .setFlag(
-                            FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI,
-                            getEncryptionKeyFetchUri());
-
-    /** Perform the class-wide required setup. */
-    @BeforeClass
-    public static void setupBeforeClass() {
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(
-                        Manifest.permission.WRITE_DEVICE_CONFIG,
-                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG);
+    @Before
+    public void setupFlags() {
+        flags.setFlag(
+                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI,
+                getEncryptionKeyFetchUri());
     }
 
     /**

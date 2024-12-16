@@ -93,7 +93,7 @@ public class FetchAndJoinCustomAudienceTest extends FledgeDebuggableScenarioTest
                         .setName(customAudience.getName())
                         .setUserBiddingSignals(customAudience.getUserBiddingSignals())
                         .build());
-        Log.d(TAG, "Fetched and Joined Custom Audience: " + HATS_CA);
+        Log.d(LOGCAT_TAG_FLEDGE, "Fetched and Joined Custom Audience: " + HATS_CA);
         AdSelectionOutcome result = doSelectAds(adSelectionConfig);
         assertThat(result.hasOutcome()).isTrue();
         assertThat(result.getRenderUri()).isNotNull();

@@ -16,13 +16,27 @@
 
 package com.android.adservices.service.stats;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_IMPRESSION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import android.annotation.IntDef;
 import android.os.Binder;
@@ -256,13 +270,25 @@ public class AdsRelevanceStatusUtils {
     public static final int SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE =
             3;
 
+    /** The PAS encoding source type is unset. */
+    public static final int PAS_ENCODING_SOURCE_TYPE_UNSET = 0;
+
+    /** The PAS raw signals are encoded in {@code PeriodicEncodingJobService}. */
+    public static final int PAS_ENCODING_SOURCE_TYPE_ENCODING_JOB_SERVICE = 1;
+
+    /** The PAS raw signals are encoded in {@code PeriodicSignalsServiceImpl}. */
+    public static final int PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL = 2;
+
+    /** Buckets for signal size in the encoding JS execution process. */
+    public static final long[] ENCODING_JS_EXECUTION_SIGNAL_SIZE_BUCKETS = {10, 100, 500, 5000};
+
     /** The kind of winner did the beacon come from. */
     @IntDef(
             prefix = {"BEACON_SOURCE_"},
             value = {
-                    BEACON_SOURCE_UNSET,
-                    BEACON_SOURCE_PROTECTED_SIGNALS,
-                    BEACON_SOURCE_CUSTOM_AUDIENCE
+                BEACON_SOURCE_UNSET,
+                BEACON_SOURCE_PROTECTED_SIGNALS,
+                BEACON_SOURCE_CUSTOM_AUDIENCE
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface BeaconSource {}
@@ -317,10 +343,10 @@ public class AdsRelevanceStatusUtils {
     @IntDef(
             prefix = {"WINNER_TYPE_"},
             value = {
-                    WINNER_TYPE_UNSET,
-                    WINNER_TYPE_NO_WINNER,
-                    WINNER_TYPE_CA_WINNER,
-                    WINNER_TYPE_PAS_WINNER
+                WINNER_TYPE_UNSET,
+                WINNER_TYPE_NO_WINNER,
+                WINNER_TYPE_CA_WINNER,
+                WINNER_TYPE_PAS_WINNER
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface WinnerType {}
@@ -400,6 +426,16 @@ public class AdsRelevanceStatusUtils {
     @Retention(RetentionPolicy.SOURCE)
     public @interface ScheduleCustomAudienceUpdatePerformedFailureType {}
 
+    @IntDef(
+            prefix = {"PAS_ENCODING_SOURCE_TYPE_"},
+            value = {
+                PAS_ENCODING_SOURCE_TYPE_UNSET,
+                PAS_ENCODING_SOURCE_TYPE_ENCODING_JOB_SERVICE,
+                PAS_ENCODING_SOURCE_TYPE_SERVICE_IMPL
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface PasEncodingSourceType {}
+
     /** Returns the size bucket for a raw value. */
     @Size
     public static int computeSize(long rawSize, long[] buckets) {
@@ -477,6 +513,9 @@ public class AdsRelevanceStatusUtils {
     public static int getCelPpApiNameId(int apiNameLoggingId) {
         int celPpApiNameId = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
         switch (apiNameLoggingId) {
+            case AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS:
+                celPpApiNameId = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+                break;
             case AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA:
                 celPpApiNameId = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
                 break;
@@ -487,6 +526,25 @@ public class AdsRelevanceStatusUtils {
             case AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS:
                 celPpApiNameId = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
                 break;
+            case AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE:
+                celPpApiNameId = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE;
+                break;
+            case AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE:
+                celPpApiNameId = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE;
+                break;
+            case AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE:
+                celPpApiNameId =
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
+                break;
+            case AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION:
+                celPpApiNameId = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_IMPRESSION;
+                break;
+            case AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION:
+                celPpApiNameId = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION;
+                break;
+            case AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE:
+                celPpApiNameId =
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
         }
         return celPpApiNameId;
     }
@@ -514,6 +572,27 @@ public class AdsRelevanceStatusUtils {
             ErrorLogUtil.e(tr, errorCode, ppapiName);
         } finally {
             Binder.restoreCallingIdentity(token);
+        }
+    }
+
+    // Takes an AdServicesApiName, and attempts to log the CEL error.
+    public static void checkAndLogCelByApiNameLoggingId(Throwable throwable, int celErrorCode,
+            int apiNameLoggingId) {
+        checkPpapiNameAndLogCel(throwable, celErrorCode, getCelPpApiNameId(apiNameLoggingId));
+    }
+
+    /**
+     * Logs a CEL error when the API name is not
+     * AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED
+     */
+    public static void checkPpapiNameAndLogCel(Throwable throwable, int celErrorCode,
+            int celApiNameId) {
+        if (celApiNameId != AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED) {
+            if (throwable != null) {
+                ErrorLogUtil.e(throwable, celErrorCode, celApiNameId);
+            } else {
+                ErrorLogUtil.e(celErrorCode, celApiNameId);
+            }
         }
     }
 }

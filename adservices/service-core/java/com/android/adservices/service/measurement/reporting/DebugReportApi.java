@@ -197,7 +197,7 @@ public class DebugReportApi {
     public DebugReportApi.Type scheduleAttributionScopeDebugReport(
             Source source, Source.AttributionScopeValidationResult result, IMeasurementDao dao) {
         DebugReportApi.Type type = null;
-        Map<String, String> additionalBodyParams = new HashMap<>();
+        Map<String, Object> additionalBodyParams = new HashMap<>();
         switch (result) {
             case VALID -> {
                 // No-op.
@@ -209,8 +209,7 @@ public class DebugReportApi {
             case INVALID_INFORMATION_GAIN_LIMIT -> {
                 type = Type.SOURCE_SCOPES_CHANNEL_CAPACITY_LIMIT;
                 additionalBodyParams.put(
-                        Body.LIMIT,
-                        String.valueOf(source.getAttributionScopeInfoGainThreshold(mFlags)));
+                        Body.LIMIT, source.getAttributionScopeInfoGainThreshold(mFlags));
             }
         }
         if (type == null) {
@@ -417,7 +416,7 @@ public class DebugReportApi {
     public void scheduleSourceReport(
             Source source,
             Type type,
-            @Nullable Map<String, String> additionalBodyParams,
+            @Nullable Map<String, Object> additionalBodyParams,
             IMeasurementDao dao) {
         Objects.requireNonNull(source, "source cannot be null");
         Objects.requireNonNull(type, "type cannot be null");
@@ -596,7 +595,7 @@ public class DebugReportApi {
 
     /** Generates source debug report body */
     private JSONObject generateSourceDebugReportBody(
-            Source source, @Nullable Map<String, String> additionalBodyParams) {
+            Source source, @Nullable Map<String, Object> additionalBodyParams) {
         JSONObject body = new JSONObject();
         try {
             body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
@@ -604,7 +603,7 @@ public class DebugReportApi {
             body.put(Body.SOURCE_SITE, generateSourceSite(source));
             body.put(Body.SOURCE_DEBUG_KEY, source.getDebugKey());
             if (additionalBodyParams != null) {
-                for (Map.Entry<String, String> entry : additionalBodyParams.entrySet()) {
+                for (Map.Entry<String, Object> entry : additionalBodyParams.entrySet()) {
                     body.put(entry.getKey(), entry.getValue());
                 }
             }

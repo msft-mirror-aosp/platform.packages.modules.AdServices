@@ -37,10 +37,13 @@ import java.util.Objects;
  * Request object wrapping the required arguments needed to report an ad event.
  */
 public class ReportEventRequest {
+    /** This is used to represent seller as the destination for report event API */
     public static final int FLAG_REPORTING_DESTINATION_SELLER = 1 << 0;
+
+    /** This is used to represent buyer as the destination for report event API. */
     public static final int FLAG_REPORTING_DESTINATION_BUYER = 1 << 1;
 
-    /** @hide */
+    /** This is used to component seller as the destination for report event API */
     @FlaggedApi(Flags.FLAG_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER)
     public static final int FLAG_REPORTING_DESTINATION_COMPONENT_SELLER = 1 << 2;
 
@@ -161,7 +164,11 @@ public class ReportEventRequest {
     @IntDef(
             flag = true,
             prefix = {"FLAG_REPORTING_DESTINATION"},
-            value = {FLAG_REPORTING_DESTINATION_SELLER, FLAG_REPORTING_DESTINATION_BUYER})
+            value = {
+                FLAG_REPORTING_DESTINATION_SELLER,
+                FLAG_REPORTING_DESTINATION_BUYER,
+                FLAG_REPORTING_DESTINATION_COMPONENT_SELLER
+            })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ReportingDestination {}
 

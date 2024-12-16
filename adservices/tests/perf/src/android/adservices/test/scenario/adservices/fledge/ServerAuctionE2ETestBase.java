@@ -28,6 +28,8 @@ import android.util.Log;
 
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.annotations.SetAllLogcatTags;
+
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -40,7 +42,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 
-public abstract class ServerAuctionE2ETestBase {
+@SetAllLogcatTags
+public abstract class ServerAuctionE2ETestBase extends FledgePerfTestCase {
     protected static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     protected static final Context CONTEXT = ApplicationProvider.getApplicationContext();
     protected static final int API_RESPONSE_TIMEOUT_SECONDS = 100;

@@ -186,6 +186,40 @@ public class AdServicesCommonManager {
     public @interface Module {}
 
     /**
+     * Returns {@code module} or throws an {@link IllegalArgumentException} if it's invalid.
+     *
+     * @param module module to validate
+     * @hide
+     */
+    @Module
+    public static int validateModule(@Module int module) {
+        return switch (module) {
+            case MODULE_ADID,
+                            MODULE_MEASUREMENT,
+                            MODULE_ON_DEVICE_PERSONALIZATION,
+                            MODULE_PROTECTED_APP_SIGNALS,
+                            MODULE_PROTECTED_AUDIENCE,
+                            MODULE_TOPICS ->
+                    module;
+            default -> throw new IllegalArgumentException("Invalid Module:" + module);
+        };
+    }
+
+    /**
+     * Returns {@code moduleState} or throws an {@link IllegalArgumentException} if it's invalid.
+     *
+     * @param moduleState module state to validate
+     * @hide
+     */
+    @ModuleState
+    public static int validateModuleState(@ModuleState int moduleState) {
+        return switch (moduleState) {
+            case MODULE_STATE_UNKNOWN, MODULE_STATE_ENABLED, MODULE_STATE_DISABLED -> moduleState;
+            default -> throw new IllegalArgumentException("Invalid Module State:" + moduleState);
+        };
+    }
+
+    /**
      * Create AdServicesCommonManager.
      *
      * @hide
@@ -458,7 +492,6 @@ public class AdServicesCommonManager {
         try {
             service.requestAdServicesModuleOverrides(
                     updateParams,
-                    updateParams.getNotificationType(),
                     new IRequestAdServicesModuleOverridesCallback.Stub() {
                         @Override
                         public void onSuccess() throws RemoteException {
@@ -483,8 +516,10 @@ public class AdServicesCommonManager {
      * Sets the user choices for AdServices Module(s).
      *
      * <p>This API sets the user consent value for each AdServices module (PAS, Measurement, Topic,
-     * etc). The user consent controls whether the PPAPIs associated with that module can operate or
-     * not.
+     * etc). The user consent controls whether the PPAPI associated with that module can operate or
+     * not. If a module already has a user choice opt-in or opt-out, then only user choice unknown
+     * will be accepted as a hard reset option, after which the user choice should be set to the
+     * desired value as soon as possible.
      *
      * @param updateParams object containing user choices for modules.
      * @param executor the executor for the callback.

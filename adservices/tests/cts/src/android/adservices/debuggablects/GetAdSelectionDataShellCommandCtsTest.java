@@ -27,11 +27,13 @@ import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNAL
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.utils.CustomAudienceTestFixture;
+import android.adservices.utils.DevContextUtils;
 import android.util.Base64;
+import android.util.Log;
 
-import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesShellCommandHelper;
-import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.common.flags.Constants;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
@@ -43,6 +45,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
@@ -56,16 +59,18 @@ import java.util.List;
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @RequiresSdkLevelAtLeastS(reason = "Ad Selection is enabled for S+")
 public class GetAdSelectionDataShellCommandCtsTest extends FledgeDebuggableScenarioTest {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
-    private static final AdTechIdentifier SELLER = BUYER;
-
     private static final String SHELL_COMMAND_PREFIX = "ad-selection get-ad-selection-data";
-    public static final String OUTPUT_PROTO_FIELD = "output_proto";
+    private static final String OUTPUT_PROTO_FIELD = "output_proto";
 
-    private CustomAudienceTestFixture mCustomAudienceTestFixture;
+    @Rule(order = 11)
+    public final SupportedByConditionRule devOptionsEnabled =
+            DevContextUtils.createDevOptionsAvailableRule(mContext, LOGCAT_TAG_FLEDGE);
+
     private final AdServicesShellCommandHelper mAdServicesShellCommandHelper =
             new AdServicesShellCommandHelper();
+
+    private CustomAudienceTestFixture mCustomAudienceTestFixture;
 
     @Before
     public void setUp() throws Exception {
@@ -73,7 +78,7 @@ public class GetAdSelectionDataShellCommandCtsTest extends FledgeDebuggableScena
 
         startDevSession();
         mCustomAudienceTestFixture = new CustomAudienceTestFixture(mCustomAudienceClient);
-        flags.setPpapiAppAllowList(FlagsConstants.ALLOWLIST_ALL);
+        flags.setPpapiAppAllowList(Constants.ALLOWLIST_ALL);
     }
 
     @After
@@ -143,9 +148,9 @@ public class GetAdSelectionDataShellCommandCtsTest extends FledgeDebuggableScena
     }
 
     private void setDevSessionState(boolean state) {
-        sLogger.v("Starting setDevSession(%b)", state);
+        Log.v(LOGCAT_TAG_FLEDGE, String.format("Starting setDevSession(%b)", state));
         mAdServicesShellCommandHelper.runCommand(
                 "adservices-api dev-session %s --erase-db", state ? "start" : "end");
-        sLogger.v("Completed setDevSession(%b)", state);
+        Log.v(LOGCAT_TAG_FLEDGE, String.format("Completed setDevSession(%b)", state));
     }
 }

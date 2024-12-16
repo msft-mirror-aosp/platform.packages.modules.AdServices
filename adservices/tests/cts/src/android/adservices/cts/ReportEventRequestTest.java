@@ -24,8 +24,11 @@ import static android.view.KeyEvent.ACTION_DOWN;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.ReportEventRequest;
+import android.platform.test.annotations.RequiresFlagsEnabled;
 import android.view.InputEvent;
 import android.view.KeyEvent;
+
+import com.android.adservices.flags.Flags;
 
 import org.json.JSONObject;
 import org.junit.Before;
@@ -37,9 +40,7 @@ public final class ReportEventRequestTest extends CtsAdServicesDeviceTestCase {
     private static final InputEvent INPUT_EVENT = new KeyEvent(ACTION_DOWN, 0);
     private String mInteractionData;
     private static final int DESTINATIONS =
-            FLAG_REPORTING_DESTINATION_SELLER
-                    | FLAG_REPORTING_DESTINATION_BUYER
-                    | FLAG_REPORTING_DESTINATION_COMPONENT_SELLER;
+            FLAG_REPORTING_DESTINATION_SELLER | FLAG_REPORTING_DESTINATION_BUYER;
 
     @Before
     public void setup() throws Exception {
@@ -122,6 +123,7 @@ public final class ReportEventRequestTest extends CtsAdServicesDeviceTestCase {
     }
 
     @Test
+    @RequiresFlagsEnabled(Flags.FLAG_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER)
     public void testBuildReportEventRequestSuccess_withComponentSellerAsDestination_success() {
         long otherAdSelectionId = AD_SELECTION_ID + 1;
         String hoverKey = "hover";
@@ -146,6 +148,29 @@ public final class ReportEventRequestTest extends CtsAdServicesDeviceTestCase {
         expect.withMessage("Reporting destination")
                 .that(request.getReportingDestinations())
                 .isEqualTo(FLAG_REPORTING_DESTINATION_COMPONENT_SELLER);
+    }
+
+    @Test
+    @RequiresFlagsEnabled(Flags.FLAG_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER)
+    public void testBuildReportEventRequestSuccess_withAllDestinationsIncludingComponentSeller() {
+        int allDestinations =
+                FLAG_REPORTING_DESTINATION_SELLER
+                        | FLAG_REPORTING_DESTINATION_BUYER
+                        | FLAG_REPORTING_DESTINATION_COMPONENT_SELLER;
+        ReportEventRequest request =
+                new ReportEventRequest.Builder(
+                                AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, allDestinations)
+                        .build();
+
+        expect.withMessage("AdSelectionId")
+                .that(request.getAdSelectionId())
+                .isEqualTo(AD_SELECTION_ID);
+        expect.withMessage("Event key").that(request.getKey()).isEqualTo(INTERACTION_KEY);
+        expect.withMessage("Null input event").that(request.getInputEvent()).isNull();
+        expect.withMessage("Event data").that(request.getData()).isEqualTo(mInteractionData);
+        expect.withMessage("Reporting destination")
+                .that(request.getReportingDestinations())
+                .isEqualTo(allDestinations);
     }
 
     @Test
@@ -175,16 +200,6 @@ public final class ReportEventRequestTest extends CtsAdServicesDeviceTestCase {
                 () ->
                         new ReportEventRequest.Builder(
                                         AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, 0)
-                                .build());
-    }
-
-    @Test
-    public void testFailsToBuildWithInvalidDestinations() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        new ReportEventRequest.Builder(
-                                        AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, 9)
                                 .build());
     }
 

@@ -14,16 +14,21 @@
   ~ See the License for the specific language governing permissions and
   ~ limitations under the License.
   -->
-<configuration description="Config needed to run test on S+ only">
+<configuration description="Config needed to run test on T+ only">
     <option name="test-tag" value="AdServicesTestUtilityTests"/>
-
     <!-- Entries below are neceessary so atest can run specific test classes without specifying the
          module name (for example: atest AndroidSdkRangeTest) -->
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
-        <option name="cleanup-apks" value="true" />
-        <option name="test-file-name" value="AdServicesTestUtilityTests.apk" />
+        <option name="cleanup-apks" value="true"/>
+        <option name="test-file-name" value="AdServicesTestUtilityTests.apk"/>
     </target_preparer>
-    <test class="com.android.tradefed.testtype.AndroidJUnitTest" >
-        <option name="package" value="com.android.adservices.testutil.tests" />
+    <test class="com.android.tradefed.testtype.AndroidJUnitTest">
+        <option name="package" value="com.android.adservices.testutil.tests"/>
     </test>
+    <object class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController"
+            type="module_controller">
+        <option name="mainline-module-package-name" value="com.google.android.adservices"/>
+    </object>
+    <option name="config-descriptor:metadata" key="mainline-param"
+            value="com.google.android.adservices.apex"/>
 </configuration>

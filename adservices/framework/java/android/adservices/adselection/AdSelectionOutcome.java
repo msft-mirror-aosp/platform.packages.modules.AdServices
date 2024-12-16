@@ -92,7 +92,6 @@ public class AdSelectionOutcome {
     /**
      * Returns the willing seller that won the auction.
      *
-     * @hide
      */
     @FlaggedApi(Flags.FLAG_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME)
     @NonNull
@@ -100,7 +99,15 @@ public class AdSelectionOutcome {
         return mWinningSeller;
     }
 
-    /** Returns the ad component renderUris that are returned by this auction. */
+    /**
+     * Returns the ad component renderUris that are returned by this auction.
+     *
+     * <p>These URIs represent individual components of a multi-part ad creative. Seller ad tech
+     * SDKs are expected to fetch and render these components in their ad display logic.
+     *
+     * <p>This approach allows for flexible and dynamic ad creatives where different parts of the ad
+     * can be loaded and rendered independently.
+     */
     @FlaggedApi(Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
     @NonNull
     public List<Uri> getComponentAdUris() {

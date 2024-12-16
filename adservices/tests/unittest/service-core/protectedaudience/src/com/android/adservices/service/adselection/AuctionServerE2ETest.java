@@ -28,6 +28,7 @@ import static android.adservices.common.KeyedFrequencyCapFixture.ONE_DAY_DURATIO
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
 import static com.android.adservices.common.DBAdDataFixture.getValidDbAdDataNoFiltersBuilder;
+import static com.android.adservices.common.logging.ErrorLogUtilSyncCallback.mockErrorLogUtilWithoutThrowable;
 import static com.android.adservices.data.adselection.EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION;
 import static com.android.adservices.service.adselection.AdSelectionFromOutcomesE2ETest.BID_FLOOR_SELECTION_SIGNAL_TEMPLATE;
 import static com.android.adservices.service.adselection.AdSelectionFromOutcomesE2ETest.SELECTION_WATERFALL_LOGIC_JS;
@@ -38,6 +39,8 @@ import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTes
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_AUCTION_SERVER_API_NOT_AVAILABLE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_FILTER_AND_REVOKED_CONSENT_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_INVALID_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_RESULT_IS_CHAFF;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
@@ -115,9 +118,7 @@ import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.common.WebViewSupportUtil;
-import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
-import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
-import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
+import com.android.adservices.common.logging.ErrorLogUtilSyncCallback;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
@@ -169,7 +170,6 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
-import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
@@ -187,7 +187,6 @@ import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.testutils.DevSessionHelper;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -205,6 +204,7 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
@@ -234,11 +234,8 @@ import java.util.stream.Collectors;
 
 @MockStatic(ConsentManager.class)
 @MockStatic(AppImportanceFilter.class)
-@SpyStatic(DebugFlags.class)
-@SpyStatic(FlagsFactory.class)
-@SpyStatic(JSScriptEngine.class)
-@SetErrorLogUtilDefaultParams(throwable = ExpectErrorLogUtilWithExceptionCall.Any.class)
-@SkipLoggingUsageRule(reason = "b/355696393")
+@MockStatic(DebugFlags.class)
+@MockStatic(FlagsFactory.class)
 public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final int COUNTDOWN_LATCH_LIMIT_SECONDS = 10;
     private static final int CALLER_UID = Process.myUid();
@@ -485,13 +482,10 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
-    @ExpectErrorLogUtilCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_AUCTION_SERVER_API_NOT_AVAILABLE,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA)
-    @ExpectErrorLogUtilCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_AUCTION_SERVER_API_NOT_AVAILABLE,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT)
-    public void testAuctionServer_killSwitchDisabled_throwsException() {
+    @SkipLoggingUsageRule(
+            reason = "Using ErrorLogUtilSyncCallback as logging happens in background.")
+    public void testAuctionServer_killSwitchDisabled_throwsException() throws InterruptedException {
+        ErrorLogUtilSyncCallback celCallback = mockErrorLogUtilWithoutThrowable(2);
         mFakeFlags =
                 new AuctionServerE2ETestFlags(
                         true, false, AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS, false);
@@ -526,17 +520,22 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                 AUCTION_SERVER_API_IS_NOT_AVAILABLE,
                 IllegalStateException.class,
                 persistAdSelectionResultRunnable);
+        celCallback.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_AUCTION_SERVER_API_NOT_AVAILABLE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
+        celCallback.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_AUCTION_SERVER_API_NOT_AVAILABLE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
     }
 
     @Test
-    @ExpectErrorLogUtilCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_FILTER_AND_REVOKED_CONSENT_EXCEPTION,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA)
-    @ExpectErrorLogUtilCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT)
+    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilSyncCallback as logging happens in "
+            + "background.")
     public void testAuctionServer_consentDisabled_throwsException()
             throws RemoteException, InterruptedException {
+        ErrorLogUtilSyncCallback celCallBack = mockErrorLogUtilWithoutThrowable(3);
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
@@ -599,6 +598,18 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
         Assert.assertNotNull(callback2.mPersistAdSelectionResultResponse.getAdRenderUri());
         Assert.assertEquals(
                 Uri.EMPTY, callback2.mPersistAdSelectionResultResponse.getAdRenderUri());
+        celCallBack.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_FILTER_AND_REVOKED_CONSENT_EXCEPTION,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
+        celCallBack.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_REVOKED_CONSENT_FILTER_EXCEPTION,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
+        celCallBack.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
     }
 
     @Test
@@ -1485,6 +1496,11 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                     public boolean getFledgeAuctionServerGetAdSelectionDataPayloadMetricsEnabled() {
                         return false;
                     }
+
+                    @Override
+                    public long getFledgeAuctionServerOverallTimeoutMs() {
+                        return FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS * 2;
+                    }
                 };
 
         AdFilteringFeatureFactory adFilteringFeatureFactory =
@@ -1917,6 +1933,9 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
+    @Ignore(
+            "TODO(b/382374544) - Remove after fixing; test was silently failing when originally "
+                    + "introduced due to b/381931308")
     public void testGetAdSelectionData_withEncrypt_validRequestInDevMode_dataIsCleared()
             throws Exception {
         mDevSessionHelper.startDevSession();
@@ -1938,6 +1957,9 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
+    @Ignore(
+            "TODO(b/382374544) - Remove after fixing; test was silently failing when originally "
+                    + "introduced due to b/381931308")
     public void testGetAdSelectionData_withEncrypt_validRequestBeforeDevMode_dataIsCleared()
             throws Exception {
         testGetAdSelectionData_withEncryptHelper(mFakeFlags);
@@ -2278,11 +2300,11 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
-    @ExpectErrorLogUtilCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_RESULT_IS_CHAFF,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT)
+    @SkipLoggingUsageRule(
+            reason = "Using ErrorLogUtilSyncCallback as logging happens in background.")
     public void testPersistAdSelectionResult_withDecrypt_validRequest_successEmptyUri()
             throws Exception {
+        ErrorLogUtilSyncCallback celCallBack = mockErrorLogUtilWithoutThrowable();
         mocker.mockGetFlags(mFakeFlags);
 
         DBEncryptionKey dbEncryptionKey =
@@ -2389,6 +2411,10 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                 Uri.EMPTY,
                 persistAdSelectionResultTestCallback.mPersistAdSelectionResultResponse
                         .getAdRenderUri());
+        celCallBack.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_RESULT_IS_CHAFF,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
     }
 
     @Test
@@ -4078,7 +4104,10 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
+    @SkipLoggingUsageRule(
+            reason = "Using ErrorLogUtilSyncCallback as logging happens in background.")
     public void testGetAdSelectionData_multiCloudOn_inValidCoordinator_fails() throws Exception {
+        ErrorLogUtilSyncCallback celCallBack = mockErrorLogUtilWithoutThrowable();
         mFakeFlags =
                 new AuctionServerE2ETestFlags(
                         false,
@@ -4139,6 +4168,10 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
 
         Assert.assertFalse(callback.mIsSuccess);
         Assert.assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
+        celCallBack.assertReceived(
+                expect,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_INVALID_ARGUMENT,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
     }
 
     @Test

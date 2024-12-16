@@ -1001,13 +1001,17 @@ public abstract class CustomAudienceDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract void insertComponentAdData(DBComponentAdData componentAdData);
 
-    /** Inserts a list of component ads in the table. */
+    /**
+     * Clears any existing component ads associated with the primary keys of this custom audience,
+     * then inserts a list of component ads.
+     */
     @Transaction
-    public void insertComponentAds(
+    public void insertAndOverwriteComponentAds(
             List<ComponentAdData> componentAdDataList,
             String owner,
             AdTechIdentifier buyer,
             String name) {
+        deleteComponentAdsByCustomAudienceInfo(owner, buyer, name);
         for (ComponentAdData componentAdData : componentAdDataList) {
             DBComponentAdData dbComponentAdData =
                     DBComponentAdData.builder()
@@ -1029,6 +1033,13 @@ public abstract class CustomAudienceDao {
             "SELECT * FROM component_ad_data WHERE owner = :owner AND buyer = :buyer AND name ="
                     + " :name ORDER BY rowId")
     abstract List<DBComponentAdData> getComponentAdsByCustomAudienceInfo(
+            String owner, AdTechIdentifier buyer, String name);
+
+    /** Deletes all component ads associated with the primary keys of a custom audience. */
+    @Query(
+            "DELETE FROM component_ad_data WHERE owner = :owner AND buyer = :buyer AND name ="
+                    + " :name")
+    abstract void deleteComponentAdsByCustomAudienceInfo(
             String owner, AdTechIdentifier buyer, String name);
 
     @VisibleForTesting
