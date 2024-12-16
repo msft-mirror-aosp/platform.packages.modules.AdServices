@@ -22,8 +22,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JS_S
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB;
-import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT;
 import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__MDD_MANIFEST_URLS;
+import static com.android.adservices.service.FlagsConstants.KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT;
 import static com.android.adservices.service.FlagsConstants.KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS;
@@ -2446,15 +2446,20 @@ public final class PhFlags implements Flags {
         String bucketSizesString =
                 getDeviceConfigFlag(
                         FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES, null);
-        // TODO(b/290401812): Decide the fate of malformed bucket size config string.
-        return Optional.ofNullable(bucketSizesString)
-                .map(
-                        s ->
-                                Arrays.stream(s.split(Constants.ARRAY_SPLITTER_COMMA))
-                                        .map(Integer::valueOf)
-                                        .collect(Collectors.toList()))
-                .map(ImmutableList::copyOf)
-                .orElse(FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
+        try {
+            return Optional.ofNullable(bucketSizesString)
+                    .map(
+                            s ->
+                                    Arrays.stream(s.split(Constants.ARRAY_SPLITTER_COMMA))
+                                            .map(Integer::valueOf)
+                                            .collect(Collectors.toList()))
+                    .map(ImmutableList::copyOf)
+                    .orElse(FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
+        } catch (Exception e) {
+            // TODO(b/384578475): Add CEL here
+            LogUtil.e("Malformed bucket list found in device config, setting to default.");
+            return FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES;
+        }
     }
 
     @Override
