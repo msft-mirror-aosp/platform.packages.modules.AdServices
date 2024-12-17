@@ -127,6 +127,11 @@ public class SdkSandboxScenarioRule implements TestRule {
                     if (textExecutor != null) {
                         mTestExecutor = ISdkSandboxTestExecutor.Stub.asInterface(textExecutor);
                     }
+                    mSdkSandboxManager.addSdkSandboxProcessDeathCallback(
+                            Runnable::run,
+                            () -> {
+                                throw new IllegalStateException("Sandbox process died");
+                            });
                 }
                 try {
                     base.evaluate();
