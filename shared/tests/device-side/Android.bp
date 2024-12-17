@@ -41,6 +41,9 @@ android_ravenwood_test {
         // AdServicesSharedLibrariesUnitTests gets it from adservices-shared-extended-mockito-defaults
         "modules-utils-testable-device-config",
     ],
+    ravenizer: {
+        strip_mockito: true,
+    },
     auto_gen_config: true,
     // TODO(b/335935200): add test_suites once stable
 }
