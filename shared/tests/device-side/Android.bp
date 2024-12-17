@@ -44,6 +44,8 @@ android_ravenwood_test {
     ravenizer: {
         strip_mockito: true,
     },
+    package_name: "com.android.adservices.shared.tests",
+    inst_package_name: "com.android.adservices.shared.tests",
     auto_gen_config: true,
     // TODO(b/335935200): add test_suites once stable
 }
