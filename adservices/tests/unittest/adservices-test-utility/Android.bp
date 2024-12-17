@@ -36,7 +36,14 @@ android_test {
         "mts-extservices",
     ],
     test_config: "AndroidTest.ExtServices.xml",
+    sdk_version: "module_current",
+    // Currently this test module is failing, which results in low test coverage
+    // The reason is the target test coverage system runs on is different as what this test
+    // configures. Add below line to address the issue.
+    // See b/233124651 for details.
+    compile_multilib: "both",
     min_sdk_version: "31",
+    max_sdk_version: "32",
 }
 
 java_defaults {
