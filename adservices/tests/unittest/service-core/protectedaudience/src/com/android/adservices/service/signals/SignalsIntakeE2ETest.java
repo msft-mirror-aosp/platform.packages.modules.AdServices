@@ -288,7 +288,7 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilterSpy,
                         mFledgeApiThrottleFilterMock);
-        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
+        when(mConsentManagerMock.isPasConsentGiven()).thenReturn(true);
         doReturn(DevContext.createForDevOptionsDisabled())
                 .when(mDevContextFilterMock)
                 .createDevContext();
@@ -822,7 +822,7 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
     public void testNoConsentCallerPackageHasNoConsent() throws Exception {
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(true);
-        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
+        when(mConsentManagerMock.isPasConsentGiven()).thenReturn(true);
         baseTestNoConsent();
     }
 
@@ -833,7 +833,7 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
     public void testNoConsentUserNotSeenNotification() throws Exception {
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(false);
-        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(false);
+        when(mConsentManagerMock.isPasConsentGiven()).thenReturn(false);
         baseTestNoConsent();
     }
 

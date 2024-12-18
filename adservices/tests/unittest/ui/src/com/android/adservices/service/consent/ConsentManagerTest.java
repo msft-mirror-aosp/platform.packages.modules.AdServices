@@ -4555,7 +4555,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(spyConsentManager)
                 .getConsent(eq(AdServicesApiType.FLEDGE));
-        assertThat(spyConsentManager.isPasFledgeConsentGiven()).isTrue();
+        assertThat(spyConsentManager.isPasConsentGiven()).isTrue();
     }
 
     @Test
@@ -4568,7 +4568,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(spyConsentManager)
                 .getConsent(eq(AdServicesApiType.FLEDGE));
-        assertThat(spyConsentManager.isPasFledgeConsentGiven()).isFalse();
+        assertThat(spyConsentManager.isPasConsentGiven()).isFalse();
     }
 
     @Test
@@ -4581,7 +4581,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(spyConsentManager)
                 .getConsent(eq(AdServicesApiType.FLEDGE));
-        assertThat(spyConsentManager.isPasFledgeConsentGiven()).isFalse();
+        assertThat(spyConsentManager.isPasConsentGiven()).isFalse();
     }
 
     @Test
@@ -4594,7 +4594,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(spyConsentManager)
                 .getConsent(eq(AdServicesApiType.FLEDGE));
-        assertThat(spyConsentManager.isPasFledgeConsentGiven()).isFalse();
+        assertThat(spyConsentManager.isPasConsentGiven()).isFalse();
     }
 
     @Test
@@ -4607,7 +4607,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(spyConsentManager)
                 .getConsent(eq(AdServicesApiType.MEASUREMENTS));
-        assertThat(spyConsentManager.isPasMeasurementConsentGiven()).isTrue();
+        assertThat(spyConsentManager.isOdpMeasurementConsentGiven()).isTrue();
     }
 
     @Test
@@ -4620,7 +4620,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(spyConsentManager)
                 .getConsent(eq(AdServicesApiType.MEASUREMENTS));
-        assertThat(spyConsentManager.isPasMeasurementConsentGiven()).isFalse();
+        assertThat(spyConsentManager.isOdpMeasurementConsentGiven()).isFalse();
     }
 
     @Test
@@ -4633,7 +4633,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(spyConsentManager)
                 .getConsent(eq(AdServicesApiType.MEASUREMENTS));
-        assertThat(spyConsentManager.isPasMeasurementConsentGiven()).isFalse();
+        assertThat(spyConsentManager.isOdpMeasurementConsentGiven()).isFalse();
     }
 
     @Test
@@ -4646,7 +4646,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(spyConsentManager)
                 .getConsent(eq(AdServicesApiType.MEASUREMENTS));
-        assertThat(spyConsentManager.isPasMeasurementConsentGiven()).isFalse();
+        assertThat(spyConsentManager.isOdpMeasurementConsentGiven()).isFalse();
     }
 
     @Test
@@ -5093,7 +5093,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
         List<AdServicesModuleUserChoice> userChoiceList =
                 mAdservicesModuleUserChoiceArgumentCaptor.getValue();
-        assertThat(userChoiceList).hasSize(3);
+        assertThat(userChoiceList).hasSize(1);
         verify(() -> UiStatsLogger.logOptInSelected(AdServicesApiType.FLEDGE));
 
         clearInvocations(spyConsentManager);
@@ -5102,7 +5102,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(spyConsentManager)
                 .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
         userChoiceList = mAdservicesModuleUserChoiceArgumentCaptor.getValue();
-        assertThat(userChoiceList).hasSize(3);
+        assertThat(userChoiceList).hasSize(1);
         assertFalse(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
 
         clearInvocations(spyConsentManager);
@@ -5137,7 +5137,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
         List<AdServicesModuleUserChoice> userChoiceList =
                 mAdservicesModuleUserChoiceArgumentCaptor.getValue();
-        assertThat(userChoiceList).hasSize(3);
+        assertThat(userChoiceList).hasSize(1);
         assertWithMessage("getConsent(AdServicesApiType.FLEDGE)")
                 .that(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven())
                 .isTrue();
@@ -5166,7 +5166,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(spyConsentManager)
                 .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
         userChoiceList = mAdservicesModuleUserChoiceArgumentCaptor.getValue();
-        assertThat(userChoiceList).hasSize(3);
+        assertThat(userChoiceList).hasSize(1);
         assertWithMessage("getConsent(AdServicesApiType.FLEDGE)")
                 .that(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven())
                 .isFalse();
@@ -5200,7 +5200,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 .that(spyConsentManager.getUserChoice(PROTECTED_AUDIENCE))
                 .isEqualTo(USER_CHOICE_OPTED_IN);
         assertWithMessage("getUserChoice(PROTECTED_APP_SIGNALS)")
-                .that(spyConsentManager.isPasFledgeConsentGiven())
+                .that(spyConsentManager.isPasConsentGiven())
                 .isTrue();
 
         EnrollmentData optedOutData = EnrollmentData.deserialize("");
@@ -5221,7 +5221,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 .that(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven())
                 .isTrue();
         assertWithMessage("getUserChoice(PROTECTED_APP_SIGNALS)")
-                .that(spyConsentManager.isPasFledgeConsentGiven())
+                .that(spyConsentManager.isPasConsentGiven())
                 .isFalse();
     }
 
