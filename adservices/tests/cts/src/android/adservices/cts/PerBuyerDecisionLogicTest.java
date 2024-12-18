@@ -23,7 +23,9 @@ import android.adservices.adselection.PerBuyerDecisionLogic;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.os.Parcel;
+import android.platform.test.annotations.RequiresFlagsEnabled;
 
+import com.android.adservices.flags.Flags;
 import com.android.adservices.shared.testing.EqualsTester;
 
 import com.google.common.collect.ImmutableMap;
@@ -32,6 +34,7 @@ import org.junit.Test;
 
 import java.util.Map;
 
+@RequiresFlagsEnabled(Flags.FLAG_FLEDGE_AD_SELECTION_FILTERING_ENABLED)
 public final class PerBuyerDecisionLogicTest extends CtsAdServicesDeviceTestCase {
 
     private static final AdTechIdentifier BUYER_1 = CommonFixture.VALID_BUYER_1;
