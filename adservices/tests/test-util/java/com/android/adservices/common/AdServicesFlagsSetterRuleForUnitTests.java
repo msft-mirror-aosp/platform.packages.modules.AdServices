@@ -16,12 +16,33 @@
 
 package com.android.adservices.common;
 
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_8;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOGGED_TOPIC;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
+
 import android.os.Build;
 
+import com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.adservices.shared.testing.NameValuePair;
 
+import org.junit.runner.Description;
+
+import java.lang.annotation.Annotation;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -54,8 +75,58 @@ abstract class AdServicesFlagsSetterRuleForUnitTests<
         return mFlags;
     }
 
+    // NOTE: currently is only used by unit tests, but it might be worth to move to superclass so
+    // it can be used by CTS tests as well
+    /**
+     * Sets the default flags used by {@code FLEDGE} tests.
+     *
+     * <p>In other words, the same flags from {@code FakeFlagsFactory.TestFlags}.
+     */
+    public final R setDefaultFledgeFlags() {
+        mLog.i("setDefaultFledgeFlags()");
+        setNameValuePair(KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS, "10000");
+        setNameValuePair(KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS, "10000");
+        setNameValuePair(KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, "600000");
+        setNameValuePair(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, "true");
+        setNameValuePair(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED, "true");
+        setNameValuePair(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, "true");
+        setNameValuePair(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED, "true");
+        setNameValuePair(
+                KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE, "-100");
+        setNameValuePair(KEY_ENABLE_LOGGED_TOPIC, "true");
+        setNameValuePair(KEY_ENABLE_DATABASE_SCHEMA_VERSION_8, "true");
+        setNameValuePair(KEY_FLEDGE_AUCTION_SERVER_ENABLED, "true");
+        setNameValuePair(KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED, "true");
+        setNameValuePair(KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED, "true");
+        setNameValuePair(KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED, "true");
+        setNameValuePair(KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED, "true");
+        setNameValuePair(KEY_PAS_EXTENDED_METRICS_ENABLED, "true");
+        return getThis();
+    }
+
+    @Override
+    protected final boolean isAnnotationSupported(Annotation annotation) {
+        return (annotation instanceof SetDefaultFledgeFlags)
+                || super.isAnnotationSupported(annotation);
+    }
+
+    @Override
+    protected final void processAnnotation(Description description, Annotation annotation) {
+        // NOTE: add annotations sorted by "most likely usage"
+        if (annotation instanceof SetDefaultFledgeFlags) {
+            setDefaultFledgeFlags();
+        } else {
+            super.processAnnotation(description, annotation);
+        }
+    }
+
     @Override
     protected final int getDeviceSdk() {
         return Build.VERSION.SDK_INT;
+    }
+
+    private void setNameValuePair(String name, String value) {
+        mLog.v("setNameValuePair(%s, %s)", name, value);
+        setFlag(new NameValuePair(name, value));
     }
 }

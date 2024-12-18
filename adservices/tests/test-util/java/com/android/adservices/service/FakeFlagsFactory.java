@@ -15,10 +15,22 @@
  */
 package com.android.adservices.service;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * Provides {@link Flags} implementations that override some common values that are used in tests.
  */
 public final class FakeFlagsFactory {
+
+    // TODO(b/332723427): once this class is gone, make it standalone here or move to the same
+    // package as the other similar annotations (if we want it to be supported by the CTS rule)
+    /** Used by {@code FlagSetter} rules to set the default values used by FLEDGE tests. */
+    @Retention(RetentionPolicy.RUNTIME)
+    @Target({ElementType.METHOD, ElementType.TYPE})
+    public @interface SetDefaultFledgeFlags {}
 
     /**
      * @deprecated TODO(b/332723427): each API should use its own fake factory.
