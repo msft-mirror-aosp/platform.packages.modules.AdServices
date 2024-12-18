@@ -146,6 +146,27 @@ public class AdsRelevanceStatusUtils {
     /** The server auction encryption key source is the network. */
     public static final int SERVER_AUCTION_ENCRYPTION_KEY_SOURCE_NETWORK = 2;
 
+    /** Buckets for per buyer signal size in the update signals process. */
+    public static final long[] PER_BUYER_SIGNAL_SIZE_BUCKETS = {10, 100, 500, 5000};
+
+    /** The topics reschedule epoch job status is unset. */
+    public static final int TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET = 0;
+    /** The topics reschedule epoch job status is success. */
+    public static final int TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_RESCHEDULE_SUCCESS = 1;
+    /** The topics reschedule epoch job status is skipped because of empty job scheduler. */
+    public static final int
+            TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_JOB_SCHEDULER = 2;
+    /** The topics reschedule epoch job status is skipped because of empty pending job. */
+    public static final int
+            TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_PENDING_JOB = 3;
+
+    /** The topics epoch job battery constraint is unknown setting. */
+    public static final int TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING = 0;
+    /** The topics epoch job battery constraint is requires charging. */
+    public static final int TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_CHARGING = 1;
+    /** The topics epoch job battery constraint is battery not low. */
+    public static final int TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW = 2;
+
     /** The kind of winner did the beacon come from. */
     @IntDef(
             prefix = {"BEACON_SOURCE_"},
@@ -298,4 +319,27 @@ public class AdsRelevanceStatusUtils {
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface ServerAuctionEncryptionKeySource {}
+
+    /** The status when forcing reschedule Topics API EpochJob. */
+    @IntDef(
+            prefix = {"TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_"},
+            value = {
+                TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET,
+                TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_RESCHEDULE_SUCCESS,
+                TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_JOB_SCHEDULER,
+                TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_PENDING_JOB
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface TopicsRescheduleEpochJobStatus {}
+
+    /** The Epoch job setting of the Topics API EpochJob. */
+    @IntDef(
+            prefix = {"TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_"},
+            value = {
+                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING,
+                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_CHARGING,
+                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface TopicsEpochJobBatteryConstraint {}
 }

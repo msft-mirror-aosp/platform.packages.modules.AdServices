@@ -17,16 +17,13 @@
 package com.android.adservices.service;
 
 import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND_SERVICE;
-import static android.os.Build.VERSION.SDK_INT;
 
-import static com.android.adservices.shared.common.flags.FeatureFlag.Type.DEBUG;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_GLOBAL;
 import static com.android.adservices.shared.common.flags.FeatureFlag.Type.LEGACY_KILL_SWITCH_RAMPED_UP;
 
 import android.annotation.IntDef;
 import android.app.job.JobInfo;
-import android.os.Build;
 
 import androidx.annotation.Nullable;
 
@@ -130,6 +127,15 @@ public interface Flags extends ModuleSharedFlags {
         return TOPICS_ENCRYPTION_METRICS_ENABLED;
     }
 
+    /** Flag to enable Topics epoch job battery constraint logging for Topics API. */
+    @FeatureFlag boolean TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED = false;
+
+    /** Returns the feature flag to enable Topics epoch job battery constraint logging
+     * for Topics API. */
+    default boolean getTopicsEpochJobBatteryConstraintLoggingEnabled() {
+        return TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED;
+    }
+
     /** Flag to disable plaintext Topics for Topics API response. */
     boolean TOPICS_DISABLE_PLAINTEXT_RESPONSE = false;
 
@@ -164,6 +170,32 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the privacy budget for logging topic ID distributions with randomized response. */
     default float getTopicsPrivacyBudgetForTopicIdDistribution() {
         return TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION;
+    }
+
+    /**
+     * Flag to enable rescheduling of Topics job scheduler tasks when modifications are made
+     * to the configuration of the background job.
+     */
+    @FeatureFlag boolean TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED = false;
+
+    /** Returns the feature flag to enable rescheduling of Topics job scheduler. */
+    default boolean getTopicsJobSchedulerRescheduleEnabled() {
+        return TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED;
+    }
+
+    /**
+     * This flag allows you to execute the job regardless of the device's charging status.
+     * By default, the Topics API background job scheduler requires the device to be in charging
+     * mode for job execution. The default value for this flag is false, indicating that the job
+     * should only be executed when the device is charging. By enabling this flag, the job can be
+     * executed when the battery level is not low.
+     */
+    @FeatureFlag boolean TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING = false;
+
+    /** Returns the feature flag to enable the device to be in batter not low mode for
+     * Topics API job execution.  */
+    default boolean getTopicsEpochJobBatteryNotLowInsteadOfCharging() {
+        return TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING;
     }
 
     /** Available types of classifier behaviours for the Topics API. */
@@ -288,11 +320,49 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_PERIOD_MS;
     }
 
+    /* The default value for whether the trigger debugging availability signal is enabled for event
+    or aggregate reports. */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_TRIGGER_DEBUG_SIGNAL = false;
+
+    /**
+     * Returns whether the trigger debugging availability signal is enabled for event or aggregate
+     * reports.
+     */
+    default boolean getMeasurementEnableTriggerDebugSignal() {
+        return MEASUREMENT_ENABLE_TRIGGER_DEBUG_SIGNAL;
+    }
+
+    /* The default value for whether the trigger debugging availability signal is enabled for event
+    reports that have coarse_event_report_destinations = true. */
+    @FeatureFlag
+    boolean MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION = false;
+
+    /**
+     * Returns whether the trigger debugging availability signal is enabled for event reports that
+     * have coarse_event_report_destinations = true.
+     */
+    default boolean getMeasurementEnableEventTriggerDebugSignalForCoarseDestination() {
+        return MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION;
+    }
+
+    /* The float to control the probability to set trigger debugging availability signal for fake
+    event reports. */
+    @ConfigFlag float MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS = 0.5F;
+
+    /**
+     * Returns the possibility of trigger debugging availability signal being true for fake event
+     * reports.
+     */
+    default float getMeasurementTriggerDebugSignalProbabilityForFakeReports() {
+        return MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS;
+    }
+
     /**
      * The suffix that is appended to the aggregation coordinator origin for retrieving the
      * encryption keys.
      */
-    String MEASUREMENT_AGGREGATION_COORDINATOR_PATH = "v1alpha/publicKeys";
+    String MEASUREMENT_AGGREGATION_COORDINATOR_PATH =
+            ".well-known/aggregation-service/v1/public-keys";
 
     /** Returns the URL for fetching public encryption keys for aggregatable reports. */
     default String getMeasurementAggregationCoordinatorPath() {
@@ -311,7 +381,8 @@ public interface Flags extends ModuleSharedFlags {
      * keys for aggregatable reports.
      */
     String MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_LIST =
-            "https://publickeyservice.aws.privacysandboxservices.com";
+            "https://publickeyservice.msmt.aws.privacysandboxservices.com,"
+                    + "https://publickeyservice.msmt.gcp.privacysandboxservices.com";
 
     /**
      * Returns a string which is a comma separated list of origins used to fetch public encryption
@@ -324,7 +395,7 @@ public interface Flags extends ModuleSharedFlags {
     /* The list of origins for creating a URL used to fetch public encryption keys for
     aggregatable reports. AWS is the current default. */
     String MEASUREMENT_DEFAULT_AGGREGATION_COORDINATOR_ORIGIN =
-            "https://publickeyservice.aws.privacysandboxservices.com";
+            "https://publickeyservice.msmt.aws.privacysandboxservices.com";
 
     /**
      * Returns the default origin for creating the URI used to fetch public encryption keys for
@@ -595,7 +666,7 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_MAX_BYTES_PER_ATTRIBUTION_FILTER_STRING;
     }
 
-    int DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET = 5;
+    int DEFAULT_MEASUREMENT_MAX_FILTER_MAPS_PER_FILTER_SET = 20;
 
     /** Maximum number of filter maps allowed in an attribution filter set. */
     default int getMeasurementMaxFilterMapsPerFilterSet() {
@@ -631,6 +702,7 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     @FeatureFlag(LEGACY_KILL_SWITCH_RAMPED_UP)
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH = false;
 
     /** Returns the feature flag for Attribution Fallback Job . */
@@ -643,16 +715,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns the job period in millis for Attribution Fallback Job . */
     default long getMeasurementAttributionFallbackJobPeriodMs() {
         return MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS;
-    }
-
-    int MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
-
-    /**
-     * Returns maximum attributions per rate limit window. Rate limit unit: (Source Site,
-     * Destination Site, Reporting Site, Window).
-     */
-    default int getMeasurementMaxAttributionPerRateLimitWindow() {
-        return MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW;
     }
 
     int MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW = 100;
@@ -701,8 +763,7 @@ public interface Flags extends ModuleSharedFlags {
      * Returns the maximum number of reporting origins per source site, reporting site,
      * reporting-origin-update-window counted per source registration.
      */
-    default int
-        getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow() {
+    default int getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow() {
         return MEASUREMENT_MAX_REPORTING_ORIGINS_PER_SOURCE_REPORTING_SITE_PER_WINDOW;
     }
 
@@ -737,17 +798,43 @@ public interface Flags extends ModuleSharedFlags {
 
     /**
      * Returns the maximum number of distinct destination sites per source site X enrollment per
-     * rate limit window.
+     * minute rate limit window.
      */
     default int getMeasurementMaxDestPerPublisherXEnrollmentPerRateLimitWindow() {
         return MEASUREMENT_MAX_DEST_PER_PUBLISHER_X_ENROLLMENT_PER_RATE_LIMIT_WINDOW;
     }
 
+    @ConfigFlag
     long MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW = TimeUnit.MINUTES.toMillis(1);
 
-    /** Returns the duration that controls the rate-limiting window for destinations. */
+    /** Returns the duration that controls the rate-limiting window for destinations per minute. */
     default long getMeasurementDestinationRateLimitWindow() {
         return MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
+    }
+
+    /**
+     * Returns the maximum number of distinct destination sites per source site X enrollment per day
+     * rate limit.
+     */
+    @ConfigFlag int MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT = 100;
+
+    default int getMeasurementDestinationPerDayRateLimit() {
+        return MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW = false;
+
+    /** Returns true, if rate-limiting window for destinations per day is enabled. */
+    default boolean getMeasurementEnableDestinationPerDayRateLimitWindow() {
+        return MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW;
+    }
+
+    @ConfigFlag
+    long MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS = TimeUnit.DAYS.toMillis(1);
+
+    /** Returns the duration that controls the per day rate-limiting window for destinations. */
+    default long getMeasurementDestinationPerDayRateLimitWindowInMs() {
+        return MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS;
     }
 
     float MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT = 6.5F;
@@ -776,6 +863,47 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns max information gain for Flexible Event, dual destination Navigation sources */
     default float getMeasurementFlexApiMaxInformationGainDualDestinationNavigation() {
         return MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION;
+    }
+
+    @ConfigFlag float MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION = 11.55F;
+
+    /** Returns max information gain for navigation sources with attribution scopes. */
+    default float getMeasurementAttributionScopeMaxInfoGainNavigation() {
+        return MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
+    }
+
+    @ConfigFlag
+    float MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION = 11.55F;
+
+    /**
+     * Returns max information gain for navigation sources with dual destination and attribution
+     * scopes.
+     */
+    default float getMeasurementAttributionScopeMaxInfoGainDualDestinationNavigation() {
+        return MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
+    }
+
+    @ConfigFlag float MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT = 6.5F;
+
+    /** Returns max information gain for event sources with attribution scopes. */
+    default float getMeasurementAttributionScopeMaxInfoGainEvent() {
+        return MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
+    }
+
+    @ConfigFlag float MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT = 6.5F;
+
+    /**
+     * Returns max information gain for event sources with dual destination and attribution scopes.
+     */
+    default float getMeasurementAttributionScopeMaxInfoGainDualDestinationEvent() {
+        return MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME = false;
+
+    /** Returns true if fake report trigger time is enabled. */
+    default boolean getMeasurementEnableFakeReportTriggerTime() {
+        return MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME;
     }
 
     long MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION = (1L << 32) - 1L;
@@ -1586,7 +1714,8 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     String FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
-            "https://publickeyservice.pa.gcp.privacysandboxservices.com/.well-known/protected-auction/v1/public-keys";
+            "https://publickeyservice.pa.gcp.privacysandboxservices.com/"
+                    + ".well-known/protected-auction/v1/public-keys";
 
     /** Returns Uri to fetch auction encryption key for fledge ad selection. */
     default String getFledgeAuctionServerAuctionKeyFetchUri() {
@@ -1829,7 +1958,8 @@ public interface Flags extends ModuleSharedFlags {
 
     String FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST =
             "https://publickeyservice-v150"
-                + ".coordinator-a.bas-gcp.pstest.dev/.well-known/protected-auction/v1/public-keys";
+                    + ".coordinator-a.bas-gcp.pstest.dev/"
+                    + ".well-known/protected-auction/v1/public-keys";
 
     default String getFledgeAuctionServerCoordinatorUrlAllowlist() {
         return FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST;
@@ -1850,11 +1980,32 @@ public interface Flags extends ModuleSharedFlags {
         return FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
     }
 
-    @FeatureFlag int FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION = 0;
+    @ConfigFlag int FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION = 0;
 
     /** Returns the getAdSelectionData data buyer input creator version */
     default int getFledgeGetAdSelectionDataBuyerInputCreatorVersion() {
         return FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION;
+    }
+
+    @ConfigFlag int FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS = 5;
+
+    /**
+     * Returns the maximum number of times we can re-compress the entire payload during
+     * getAdSelectionData payload optimization.
+     */
+    default int getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions() {
+        return FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS;
+    }
+
+    @FeatureFlag boolean FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS = false;
+
+    /**
+     * Returns whether querying custom audiences from the DB, for the getAdSelectionData API, will
+     * deserialize only ad render ids or the entire ad. When enabled, the DB query will only
+     * deserialize ad render ids.
+     */
+    default boolean getFledgeGetAdSelectionDataDeserializeOnlyAdRenderIds() {
+        return FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS;
     }
 
     // Protected signals cleanup feature flag disabled by default
@@ -1869,6 +2020,15 @@ public interface Flags extends ModuleSharedFlags {
 
     default boolean getAdServicesEnabled() {
         return ADSERVICES_ENABLED;
+    }
+
+    @FeatureFlag boolean DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED = false;
+
+    /**
+     * @return {@code true} if the developer mode feature is enabled on this device.
+     */
+    default boolean getDeveloperModeFeatureEnabled() {
+        return DEFAULT_DEVELOPER_MODE_FEATURE_ENABLED;
     }
 
     /**
@@ -1913,7 +2073,8 @@ public interface Flags extends ModuleSharedFlags {
 
     /** MDD Topics API Classifier Manifest Url. Topics classifier v2-3. Build_id = 1467. */
     String MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1467/80c34503413cea9ea44cbe94cd38dabc44ea8d70";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-topics-classifier/1467"
+                    + "/80c34503413cea9ea44cbe94cd38dabc44ea8d70";
 
     default String getMddTopicsClassifierManifestFileUrl() {
         return MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL;
@@ -1952,39 +2113,23 @@ public interface Flags extends ModuleSharedFlags {
         return CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS;
     }
 
-    @FeatureFlag(DEBUG)
-    boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
-
     default boolean getConsentNotificationDebugMode() {
         return DebugFlags.getInstance().getConsentNotificationDebugMode();
     }
-
-    /** The consent notification activity debug mode is off by default. */
-    @FeatureFlag(DEBUG)
-    boolean CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE = false;
 
     /** Returns the consent notification activity debug mode. */
     default boolean getConsentNotificationActivityDebugMode() {
         return DebugFlags.getInstance().getConsentNotificationActivityDebugMode();
     }
 
-    @FeatureFlag(DEBUG)
-    boolean CONSENT_NOTIFIED_DEBUG_MODE = false;
-
     /** Returns whether to suppress consent notified state. */
     default boolean getConsentNotifiedDebugMode() {
         return DebugFlags.getInstance().getConsentNotifiedDebugMode();
     }
 
-    @FeatureFlag(DEBUG)
-    boolean CONSENT_MANAGER_DEBUG_MODE = false;
-
     default boolean getConsentManagerDebugMode() {
         return DebugFlags.getInstance().getConsentManagerDebugMode();
     }
-
-    @FeatureFlag(DEBUG)
-    boolean DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE = false;
 
     /** When enabled, the device is treated as OTA device. */
     default boolean getConsentManagerOTADebugMode() {
@@ -2006,7 +2151,6 @@ public interface Flags extends ModuleSharedFlags {
                 PPAPI_ONLY,
                 PPAPI_AND_SYSTEM_SERVER,
                 APPSEARCH_ONLY,
-                PPAPI_AND_ADEXT_SERVICE,
             })
     @Retention(RetentionPolicy.SOURCE)
     @interface ConsentSourceOfTruth {}
@@ -2029,22 +2173,12 @@ public interface Flags extends ModuleSharedFlags {
     int APPSEARCH_ONLY = FlagsConstants.APPSEARCH_ONLY;
 
     /**
-     * Read and write data that need to be rollback-safe from AdServicesExtDataStorageService; rest
-     * can be handled by PPAPI_API only. This is intended to be used on Android R as AppSearch and
-     * system server are unavailable.
-     */
-    int PPAPI_AND_ADEXT_SERVICE = FlagsConstants.PPAPI_AND_ADEXT_SERVICE;
-
-    /**
      * Consent source of truth intended to be used by default. On S devices, there is no AdServices
-     * code running in the system server, so the default is APPSEARCH_ONLY. On R devices, there is
-     * no system server and appseach, so the default is PPAPI_AND_ADEXT_SERVICE_ONLY.
+     * code running in the system server, so the default for those is PPAPI_ONLY.
      */
     @ConsentSourceOfTruth
     int DEFAULT_CONSENT_SOURCE_OF_TRUTH =
-            SdkLevel.isAtLeastT()
-                    ? PPAPI_AND_SYSTEM_SERVER
-                    : (SdkLevel.isAtLeastS() ? APPSEARCH_ONLY : PPAPI_AND_ADEXT_SERVICE);
+            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : APPSEARCH_ONLY;
 
     /** Returns the consent source of truth currently used for PPAPI. */
     @ConsentSourceOfTruth
@@ -2053,16 +2187,12 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Blocked topics source of truth intended to be used by default. On S devices, there is no
-     * AdServices code running in the system server, so the default is APPSEARCH_ONLY. On R devices,
-     * there is no system server and appseach, so the default is PPAPI_ADEXT_SERVICE_ONLY. However,
-     * note that topics is not supported on R.
+     * Blocked topics source of truth intended to be used by default. On S- devices, there is no
+     * AdServices code running in the system server, so the default for those is PPAPI_ONLY.
      */
     @ConsentSourceOfTruth
     int DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH =
-            SdkLevel.isAtLeastT()
-                    ? PPAPI_AND_SYSTEM_SERVER
-                    : (SdkLevel.isAtLeastS() ? APPSEARCH_ONLY : PPAPI_AND_ADEXT_SERVICE);
+            SdkLevel.isAtLeastT() ? PPAPI_AND_SYSTEM_SERVER : APPSEARCH_ONLY;
 
     /** Returns the blocked topics source of truth currently used for PPAPI */
     @ConsentSourceOfTruth
@@ -2094,6 +2224,7 @@ public interface Flags extends ModuleSharedFlags {
     // Starting M-2023-05, global kill switch is enabled in the binary. Prior to this (namely in
     // M-2022-11), the value of this flag in the binary was false.
     @FeatureFlag(LEGACY_KILL_SWITCH_GLOBAL)
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean GLOBAL_KILL_SWITCH = true;
 
     default boolean getGlobalKillSwitch() {
@@ -2109,6 +2240,7 @@ public interface Flags extends ModuleSharedFlags {
      * <p>This flag is used for emergency turning off the whole Measurement API.
      */
     @FeatureFlag(LEGACY_KILL_SWITCH_RAMPED_UP)
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_KILL_SWITCH = false;
 
     /**
@@ -2134,6 +2266,7 @@ public interface Flags extends ModuleSharedFlags {
      * Delete Registrations API is enabled. This flag is used for emergency turning off the Delete
      * Registrations API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH = false;
 
     /**
@@ -2149,6 +2282,7 @@ public interface Flags extends ModuleSharedFlags {
      * Measurement API Status Kill Switch. The default value is false which means Status API is
      * enabled. This flag is used for emergency turning off the Status API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_API_STATUS_KILL_SWITCH = false;
 
     /**
@@ -2164,6 +2298,7 @@ public interface Flags extends ModuleSharedFlags {
      * Measurement API Register Source Kill Switch. The default value is false which means Register
      * Source API is enabled. This flag is used for emergency turning off the Register Source API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH = false;
 
     /**
@@ -2179,6 +2314,7 @@ public interface Flags extends ModuleSharedFlags {
      * Measurement API Register Trigger Kill Switch. The default value is false which means Register
      * Trigger API is enabled. This flag is used for emergency turning off the Register Trigger API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH = false;
 
     /**
@@ -2195,6 +2331,7 @@ public interface Flags extends ModuleSharedFlags {
      * Register Web Source API is enabled. This flag is used for emergency turning off the Register
      * Web Source API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH = false;
 
     /**
@@ -2210,6 +2347,7 @@ public interface Flags extends ModuleSharedFlags {
      * Measurement API Register Sources Kill Switch. The default value is false which means Register
      * Sources API is enabled. This flag is used for emergency turning off the Register Sources API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH = false;
 
     /**
@@ -2226,6 +2364,7 @@ public interface Flags extends ModuleSharedFlags {
      * Register Web Trigger API is enabled. This flag is used for emergency turning off the Register
      * Web Trigger API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH = false;
 
     /**
@@ -2242,6 +2381,7 @@ public interface Flags extends ModuleSharedFlags {
      * means Aggregate Fallback Reporting Job is enabled. This flag is used for emergency turning
      * off the Aggregate Fallback Reporting Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH = false;
 
     /**
@@ -2259,6 +2399,7 @@ public interface Flags extends ModuleSharedFlags {
      * Aggregate Reporting Job is enabled. This flag is used for emergency turning off the Aggregate
      * Reporting Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH = false;
 
     /**
@@ -2275,6 +2416,7 @@ public interface Flags extends ModuleSharedFlags {
      * means Immediate Aggregate Reporting Job is disabled. This flag is used for emergency turning
      * off of the Immediate Aggregate Reporting Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH = true;
 
     /**
@@ -2291,6 +2433,7 @@ public interface Flags extends ModuleSharedFlags {
      * Measurement Job Attribution Kill Switch. The default value is false which means Attribution
      * Job is enabled. This flag is used for emergency turning off the Attribution Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH = false;
 
     /**
@@ -2306,6 +2449,7 @@ public interface Flags extends ModuleSharedFlags {
      * Measurement Job Delete Expired Kill Switch. The default value is false which means Delete
      * Expired Job is enabled. This flag is used for emergency turning off the Delete Expired Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH = false;
 
     /**
@@ -2322,6 +2466,7 @@ public interface Flags extends ModuleSharedFlags {
      * Uninstalled Job is enabled. This flag is used for emergency turning off the Delete
      * Uninstalled Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH = false;
 
     /**
@@ -2338,6 +2483,7 @@ public interface Flags extends ModuleSharedFlags {
      * Event Fallback Reporting Job is enabled. This flag is used for emergency turning off the
      * Event Fallback Reporting Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH = false;
 
     /**
@@ -2355,6 +2501,7 @@ public interface Flags extends ModuleSharedFlags {
      * Reporting Job is enabled. This flag is used for emergency turning off the Event Reporting
      * Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH = false;
 
     /**
@@ -2371,6 +2518,7 @@ public interface Flags extends ModuleSharedFlags {
      * Reporting Job is enabled. This flag is used for emergency turning off the Debug Reporting
      * Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH = false;
 
     /**
@@ -2387,6 +2535,7 @@ public interface Flags extends ModuleSharedFlags {
      * the job is enabled. This flag is used for emergency turning off the Debug Reporting Fallback
      * Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH = false;
 
     /**
@@ -2404,6 +2553,7 @@ public interface Flags extends ModuleSharedFlags {
      * which means the job is enabled. This flag is used for emergency turning off the Verbose Debug
      * Reporting Fallback Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH = false;
 
     /**
@@ -2441,6 +2591,7 @@ public interface Flags extends ModuleSharedFlags {
      * the Verbose Debug Reporting Job is enabled. This flag is used for emergency turning off the
      * Verbose Debug Reporting Job.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH = false;
 
     /**
@@ -2458,6 +2609,7 @@ public interface Flags extends ModuleSharedFlags {
      * which means Install Attribution is enabled. This flag is used for emergency turning off
      * Install Attribution Broadcast Receiver.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH = false;
 
     /**
@@ -2475,6 +2627,7 @@ public interface Flags extends ModuleSharedFlags {
      * means Delete Packages is enabled. This flag is used for emergency turning off Delete Packages
      * Broadcast Receiver.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH = false;
 
     /**
@@ -2491,6 +2644,7 @@ public interface Flags extends ModuleSharedFlags {
      * handling on measurement service start is enabled. This flag is used for emergency turning off
      * measurement rollback data deletion handling.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH = false;
 
     /**
@@ -2502,24 +2656,13 @@ public interface Flags extends ModuleSharedFlags {
         return getLegacyMeasurementKillSwitch() || MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
     }
 
-    /** Flag for storing Measurement Rollback data in External Storage for Android R. */
-    boolean MEASUREMENT_ROLLBACK_DELETION_R_ENABLED = !SdkLevel.isAtLeastS();
-
-    /**
-     * Returns whether storing Measurement rollback deletion handling data in AdServices external
-     * storage is enabled. Rollback deletion handling on Android R will be disabled if this value is
-     * false.
-     */
-    default boolean getMeasurementRollbackDeletionREnabled() {
-        return MEASUREMENT_ROLLBACK_DELETION_R_ENABLED;
-    }
-
     /**
      * Kill Switch for storing Measurement Rollback data in App Search for Android S. The default
      * value is false which means storing the rollback handling data in App Search is enabled. This
      * flag is used for emergency turning off measurement rollback data deletion handling on Android
      * S.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH = false;
 
     /**
@@ -2536,6 +2679,7 @@ public interface Flags extends ModuleSharedFlags {
      * AdId API Kill Switch. The default value is false which means the AdId API is enabled. This
      * flag is used for emergency turning off the AdId API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean ADID_KILL_SWITCH = false; // By default, the AdId API is enabled.
 
     /** Gets the state of adId kill switch. */
@@ -2548,6 +2692,7 @@ public interface Flags extends ModuleSharedFlags {
      * AppSetId API Kill Switch. The default value is false which means the AppSetId API is enabled.
      * This flag is used for emergency turning off the AppSetId API.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean APPSETID_KILL_SWITCH = false; // By default, the AppSetId API is enabled.
 
     /** Gets the state of the global and appSetId kill switch. */
@@ -2564,6 +2709,7 @@ public interface Flags extends ModuleSharedFlags {
      * <p>This flag is used for emergency turning off the Topics API.
      */
     @FeatureFlag(LEGACY_KILL_SWITCH)
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean TOPICS_KILL_SWITCH = true;
 
     /** Returns value of Topics API kill switch */
@@ -2575,6 +2721,7 @@ public interface Flags extends ModuleSharedFlags {
      * Topics on-device classifier Kill Switch. The default value is false which means the on-device
      * classifier in enabled. This flag is used for emergency turning off the on-device classifier.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH = false;
 
     /** Returns value of Topics on-device classifier kill switch. */
@@ -2588,6 +2735,7 @@ public interface Flags extends ModuleSharedFlags {
      * MDD Background Task Kill Switch. The default value is false which means the MDD background
      * task is enabled. This flag is used for emergency turning off the MDD background tasks.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MDD_BACKGROUND_TASK_KILL_SWITCH = false;
 
     /** Returns value of Mdd Background Task kill switch */
@@ -2600,6 +2748,7 @@ public interface Flags extends ModuleSharedFlags {
      * This flag is used for emergency turning off the MDD Logger.
      */
     @FeatureFlag(LEGACY_KILL_SWITCH_RAMPED_UP)
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MDD_LOGGER_KILL_SWITCH = false;
 
     /**
@@ -2618,6 +2767,7 @@ public interface Flags extends ModuleSharedFlags {
      * Fledge AdSelectionService kill switch. The default value is false which means that
      * AdSelectionService is enabled by default. This flag should be should as emergency andon cord.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean FLEDGE_SELECT_ADS_KILL_SWITCH = false;
 
     /** Returns value of Fledge Ad Selection Service API kill switch . */
@@ -2630,6 +2780,7 @@ public interface Flags extends ModuleSharedFlags {
      * Fledge Auction Server API Kill switch. The default value is true which means that Auction
      * server APIs is disabled by default.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean FLEDGE_AUCTION_SERVER_KILL_SWITCH = true;
 
     /** Returns value of Fledge Auction server API kill switch. */
@@ -2641,6 +2792,7 @@ public interface Flags extends ModuleSharedFlags {
      * Fledge On Device Auction API Kill switch. The default value is false which means that On
      * Device Auction APIs is enabled by default.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH = false;
 
     /** Returns value of On Device Auction API kill switch. */
@@ -2653,6 +2805,7 @@ public interface Flags extends ModuleSharedFlags {
      * Custom Audience API is enabled by default. This flag should be should as emergency andon
      * cord.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH = false;
 
     /** Returns value of Fledge Join Custom Audience API kill switch */
@@ -2682,6 +2835,7 @@ public interface Flags extends ModuleSharedFlags {
      *
      * <p>Set true to disable the function since no adtech actually provide encryption endpoint now.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH = true;
 
     /** Returns value of encryption key new enrollment fetch job kill switch */
@@ -2696,6 +2850,7 @@ public interface Flags extends ModuleSharedFlags {
      *
      * <p>Set true to disable the function since no adtech actually provide encryption endpoint now.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH = true;
 
     /** Returns value of encryption key new enrollment fetch job kill switch */
@@ -2728,7 +2883,8 @@ public interface Flags extends ModuleSharedFlags {
 
     /** Manifest URL for encryption keys file group registered with MDD. */
     String MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-encryption-keys/4543/e9d118728752e6a6bfb5d7d8d1520807591f0717";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-encryption-keys/4543"
+                    + "/e9d118728752e6a6bfb5d7d8d1520807591f0717";
 
     /** Returns manifest URL for encryption keys file group registered with MDD. */
     default String getMddEncryptionKeysManifestFileUrl() {
@@ -2777,33 +2933,6 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENABLE_U18_APPSEARCH_MIGRATION;
     }
 
-    /**
-     * Enable AdServicesExtDataStorageService read for consent data feature flag. The default value
-     * on R devices is true as the consent source of truth is PPAPI_AND_ADEXT_SERVICE_ONLY. The
-     * default value on S+ devices is false which means AdServicesExtDataStorageService is not
-     * considered as source of truth after OTA. This flag should be enabled for OTA support of
-     * consent data on S devices.
-     */
-    boolean ENABLE_ADEXT_SERVICE_CONSENT_DATA = SDK_INT == Build.VERSION_CODES.R;
-
-    /** Returns value of enable AdExt service consent data flag. */
-    default boolean getEnableAdExtServiceConsentData() {
-        return ENABLE_ADEXT_SERVICE_CONSENT_DATA;
-    }
-
-    /**
-     * Enables data migration from AdServicesExtDataStorageService to AppSearch (on S) and System
-     * server (on T+) upon OTA from R.
-     */
-    boolean ENABLE_MIGRATION_FROM_ADEXT_SERVICE = SdkLevel.isAtLeastS();
-
-    /**
-     * @return value of enable migration AdExt service.
-     */
-    default boolean getEnableMigrationFromAdExtService() {
-        return ENABLE_MIGRATION_FROM_ADEXT_SERVICE;
-    }
-
     /*
      * The allow-list for PP APIs. This list has the list of app package names that we allow
      * using PP APIs.
@@ -2814,19 +2943,7 @@ public interface Flags extends ModuleSharedFlags {
     String PPAPI_APP_ALLOW_LIST =
             "android.platform.test.scenario,"
                     + "android.adservices.crystalball,"
-                    + "android.adservices.cts,"
-                    + "android.adservices.debuggablects,"
-                    + "com.android.adservices.endtoendtest,"
-                    + "com.android.adservices.servicecoretest,"
-                    + "com.android.adservices.tests.permissions.appoptout,"
-                    + "com.android.adservices.tests.permissions.valid,"
-                    + "com.android.adservices.tests.adid,"
-                    + "com.android.adservices.tests.appsetid,"
                     + "com.android.sdksandboxclient,"
-                    + "com.android.tests.sandbox.adid,"
-                    + "com.android.tests.sandbox.appsetid,"
-                    + "com.android.tests.sandbox.fledge,"
-                    + "com.android.tests.sandbox.measurement,"
                     + "com.example.adservices.samples.adid.app,"
                     + "com.example.adservices.samples.appsetid.app,"
                     + "com.example.adservices.samples.fledge.sampleapp,"
@@ -2836,8 +2953,7 @@ public interface Flags extends ModuleSharedFlags {
                     + "com.example.adservices.samples.fledge.sampleapp4,"
                     + "com.example.adservices.samples.signals.sampleapp,"
                     + "com.example.measurement.sampleapp,"
-                    + "com.example.measurement.sampleapp2,"
-                    + "com.android.adservices.tests.cts.endtoendtest.measurement";
+                    + "com.example.measurement.sampleapp2";
 
     /**
      * Returns bypass List for PPAPI app signature check. Apps with package name on this list will
@@ -2866,19 +2982,7 @@ public interface Flags extends ModuleSharedFlags {
     String MSMT_API_APP_ALLOW_LIST =
             "android.platform.test.scenario,"
                     + "android.adservices.crystalball,"
-                    + "android.adservices.cts,"
-                    + "android.adservices.debuggablects,"
-                    + "com.android.adservices.endtoendtest,"
-                    + "com.android.adservices.servicecoretest,"
-                    + "com.android.adservices.tests.permissions.appoptout,"
-                    + "com.android.adservices.tests.permissions.valid,"
-                    + "com.android.adservices.tests.adid,"
-                    + "com.android.adservices.tests.appsetid,"
                     + "com.android.sdksandboxclient,"
-                    + "com.android.tests.sandbox.adid,"
-                    + "com.android.tests.sandbox.appsetid,"
-                    + "com.android.tests.sandbox.fledge,"
-                    + "com.android.tests.sandbox.measurement,"
                     + "com.example.adservices.samples.adid.app,"
                     + "com.example.adservices.samples.appsetid.app,"
                     + "com.example.adservices.samples.fledge.sampleapp,"
@@ -2887,8 +2991,7 @@ public interface Flags extends ModuleSharedFlags {
                     + "com.example.adservices.samples.fledge.sampleapp3,"
                     + "com.example.adservices.samples.fledge.sampleapp4,"
                     + "com.example.measurement.sampleapp,"
-                    + "com.example.measurement.sampleapp2,"
-                    + "com.android.adservices.tests.cts.endtoendtest.measurement";
+                    + "com.example.measurement.sampleapp2";
 
     /*
      * App Package Name that does not belong to this allow-list will not be able to use Measurement
@@ -3174,7 +3277,6 @@ public interface Flags extends ModuleSharedFlags {
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS = true;
     boolean MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES = true;
-    boolean MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH = false;
 
     /**
      * Returns true if Measurement Delete Registrations API should require that the calling API is
@@ -3232,10 +3334,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCES;
     }
 
-    /** Returns true if the Enrollment match is based on url origin matching */
-    default boolean getEnforceEnrollmentOriginMatch() {
-        return MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH;
-    }
 
     /** Returns true if Topics API should require that the calling API is running in foreground. */
     default boolean getEnforceForegroundStatusForTopics() {
@@ -3273,7 +3371,6 @@ public interface Flags extends ModuleSharedFlags {
         return WEB_CONTEXT_CLIENT_ALLOW_LIST;
     }
 
-    boolean ENFORCE_ISOLATE_MAX_HEAP_SIZE = true;
     long ISOLATE_MAX_HEAP_SIZE_BYTES = 10 * 1024 * 1024L; // 10 MB
     long MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES = 16 * 1024; // 16 kB
     long MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES = 250 * 1024; // 250 kB
@@ -3294,14 +3391,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns true when the new trigger registration header size limitation are applied. */
     default boolean getMeasurementEnableUpdateTriggerHeaderLimit() {
         return MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT;
-    }
-
-    /**
-     * Returns true if we enforce to check that JavaScriptIsolate supports limiting the max heap
-     * size
-     */
-    default boolean getEnforceIsolateMaxHeapSize() {
-        return ENFORCE_ISOLATE_MAX_HEAP_SIZE;
     }
 
     /** Returns size in bytes we bound the heap memory for JavaScript isolate */
@@ -3327,7 +3416,8 @@ public interface Flags extends ModuleSharedFlags {
 
     /** Ui OTA strings manifest file url, used for MDD download. */
     String UI_OTA_STRINGS_MANIFEST_FILE_URL =
-            "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1341/95580b00edbd8cbf62bfa0df9ebd79fba1e5b7ca";
+            "https://www.gstatic.com/mdi-serving/rubidium-adservices-ui-ota-strings/1341"
+                    + "/95580b00edbd8cbf62bfa0df9ebd79fba1e5b7ca";
 
     /** UI OTA strings manifest file url. */
     default String getUiOtaStringsManifestFileUrl() {
@@ -3537,6 +3627,7 @@ public interface Flags extends ModuleSharedFlags {
      * Registration Job Queue Kill Switch. The default value is false which means Registration Job
      * Queue is enabled. This flag is used for emergency shutdown of the Registration Job Queue.
      */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH = false;
 
     /**
@@ -3548,6 +3639,7 @@ public interface Flags extends ModuleSharedFlags {
         return getLegacyMeasurementKillSwitch() || MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
     }
 
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH = false;
 
     /**
@@ -3585,6 +3677,7 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /** Kill switch to guard backward-compatible logging. See go/rbc-ww-logging */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean COMPAT_LOGGING_KILL_SWITCH = false;
 
     /** Returns true if backward-compatible logging should be disabled; false otherwise. */
@@ -3593,6 +3686,7 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /** Kill switch to guard background jobs logging. */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean BACKGROUND_JOBS_LOGGING_KILL_SWITCH = true;
 
     /** Returns true if background jobs logging should be disabled; false otherwise */
@@ -3750,6 +3844,22 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ADSERVICES_VERSION_MAPPINGS;
     }
 
+    /** Default value for Measurement aggregate contribution budget capacity */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY = false;
+
+    /** Returns whether to enable Measurement aggregate contribution budget capacity */
+    default boolean getMeasurementEnableAggregateContributionBudgetCapacity() {
+        return MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY;
+    }
+
+    /** Default value for Measurement V1 source trigger data */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA = false;
+
+    /** Returns whether to enable Measurement V1 source trigger data */
+    default boolean getMeasurementEnableV1SourceTriggerData() {
+        return MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA;
+    }
+
     /** Default value for Measurement flexible event reporting API */
     boolean MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED = false;
 
@@ -3796,17 +3906,6 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns maximum Event Reports per destination */
     default int getMeasurementMaxEventReportsPerDestination() {
         return MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION;
-    }
-
-    /** Disable maximum number of aggregatable reports per source by default. */
-    boolean MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE = false;
-
-    /**
-     * Returns true if maximum number of aggregatable reports per source is enabled, false
-     * otherwise.
-     */
-    default boolean getMeasurementEnableMaxAggregateReportsPerSource() {
-        return MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE;
     }
 
     /** Maximum Aggregate Reports per source. */
@@ -3865,14 +3964,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS;
     }
 
-    /** Disable aggregate report delay by default. */
-    boolean MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY = false;
-
-    /** Returns true if aggregate report delay configurability is enabled, false otherwise. */
-    default boolean getMeasurementEnableConfigurableAggregateReportDelay() {
-        return MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY;
-    }
-
     /**
      * Default aggregate report delay. Derived from {@link
      * com.android.adservices.service.measurement.PrivacyParams#AGGREGATE_REPORT_MIN_DELAY} and
@@ -3900,18 +3991,11 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT;
     }
 
-    boolean MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO = false;
-
-    /** Enable FIFO destinations based deletion of sources to accommodate an incoming source. */
-    default boolean getMeasurementEnableDestinationXPublisherXEnrollmentFifo() {
-        return MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO;
-    }
-
     boolean MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS = false;
 
     /**
      * Enable deletion of reports along with FIFO destinations. In practice it's a sub flag to
-     * {@link #getMeasurementEnableDestinationXPublisherXEnrollmentFifo}
+     * {@link #getMeasurementEnableSourceDestinationLimitPriority()}
      */
     default boolean getMeasurementEnableFifoDestinationsDeleteAggregateReports() {
         return MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS;
@@ -4371,22 +4455,6 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_U18_UX_ENABLED;
     }
 
-    /** Default RVC UX feature flag.. */
-    boolean DEFAULT_RVC_UX_ENABLED = SDK_INT == Build.VERSION_CODES.R;
-
-    /** RVC UX feature flag.. */
-    default boolean getEnableRvcUx() {
-        return DEFAULT_RVC_UX_ENABLED;
-    }
-
-    /** Default RVC NOTIFICATION feature flag.. */
-    boolean DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED = false;
-
-    /** RVC Notification feature flag.. */
-    default boolean getEnableRvcPostOtaNotification() {
-        return DEFAULT_RVC_POST_OTA_NOTIFICATION_ENABLED;
-    }
-
     /** Default enableAdServices system API feature flag.. */
     boolean DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API = false;
 
@@ -4509,6 +4577,7 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /** Default value of flag for session stable kill switches. */
+    @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean MEASUREMENT_ENABLE_SESSION_STABLE_KILL_SWITCHES = true;
 
     /** Returns true when session stable kill switches are enabled. */
@@ -4534,14 +4603,14 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     @FeatureFlag
-    boolean MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT = false;
+    boolean MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT = false;
 
     /**
      * Enables separate debug report types for event and aggregate attribution rate limit
      * violations.
      */
-    default boolean getMeasurementEnableSeparateReportTypesForAttributionRateLimit() {
-        return MEASUREMENT_ENABLE_SEPARATE_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT;
+    default boolean getMeasurementEnableSeparateDebugReportTypesForAttributionRateLimit() {
+        return MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT;
     }
 
     int MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE = 20;
@@ -4694,6 +4763,54 @@ public interface Flags extends ModuleSharedFlags {
         return ADSERVICES_RELEASE_STAGE_FOR_COBALT;
     }
 
+    /** Default value of whether Cobalt registry out of band update feature is enabled */
+    @FeatureFlag boolean COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED = false;
+
+    /** Returns whether Cobalt registry out of band update feature is enabled. */
+    default boolean getCobaltRegistryOutOfBandUpdateEnabled() {
+        return COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED;
+    }
+
+    /** MDD Cobalt registry manifest url. */
+    String MDD_COBALT_REGISTRY_MANIFEST_FILE_URL = "";
+
+    /** Returns MDD Cobalt registry manifest url. */
+    default String getMddCobaltRegistryManifestFileUrl() {
+        return MDD_COBALT_REGISTRY_MANIFEST_FILE_URL;
+    }
+
+    /** Default value of whether Cobalt operational logging feature is enabled. */
+    @FeatureFlag boolean COBALT_OPERATIONAL_LOGGING_ENABLED = false;
+
+    /** Returns whether Cobalt operational logging is enabled. */
+    default boolean getCobaltOperationalLoggingEnabled() {
+        return COBALT_OPERATIONAL_LOGGING_ENABLED;
+    }
+
+    /**
+     * The flag to enable falling back to the default base registry. It prevents Cobalt using merged
+     * registry. So in case the MDD downloaded registry and merged with default registry already, we
+     * can still fall back to use the default base registry.
+     */
+    @FeatureFlag Boolean COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY = false;
+
+    /** Returns the flag to enable falling back to the default base registry. */
+    default boolean getCobaltFallBackToDefaultBaseRegistry() {
+        return COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY;
+    }
+
+    /**
+     * The flag tells Cobalt to ignore specific list of report id(s). This flag is used for
+     * out-of-band registry update. The format is a comma-separated list of 4 colon separated ints,
+     * e.g. a single value is customer_id:project_id:metric_id:report_id.
+     */
+    @ConfigFlag String COBALT__IGNORED_REPORT_ID_LIST = "";
+
+    /** Returns the flag to ignore specific list of report id(s). */
+    default String getCobaltIgnoredReportIdList() {
+        return COBALT__IGNORED_REPORT_ID_LIST;
+    }
+
     /**
      * A feature flag to enable DB schema change to version 8 in Topics API. Version 8 is to add
      * logged_topic column to ReturnedTopic table.
@@ -4732,16 +4849,6 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK;
     }
 
-    /**
-     * Flag to control whether redirect registration urls should be modified to prefix the path
-     * string with .well-known
-     */
-    boolean MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH = false;
-
-    default boolean getMeasurementEnableRedirectToWellKnownPath() {
-        return MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH;
-    }
-
     @ConfigFlag
     long MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW_SECONDS = TimeUnit.DAYS.toSeconds(90);
 
@@ -4755,6 +4862,21 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether to enable reinstall reattribution. */
     default boolean getMeasurementEnableReinstallReattribution() {
         return MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION;
+    }
+
+    @ConfigFlag
+    long MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS = TimeUnit.DAYS.toSeconds(1);
+
+    /** Minimum time a report can stay on the device after app uninstall. */
+    default long getMeasurementMinReportLifespanForUninstallSeconds() {
+        return MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL = false;
+
+    /** Returns whether to enable uninstall report feature. */
+    default boolean getMeasurementEnableMinReportLifespanForUninstall() {
+        return MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL;
     }
 
     /** Flag to enable context id for triggers */
@@ -4787,6 +4909,84 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_PRIVACY_EPSILON;
     }
 
+    /** Flag for enabling measurement event level epsilon in source */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE = false;
+
+    /** Returns true if measurement event level epsilon in source is enabled */
+    default boolean getMeasurementEnableEventLevelEpsilonInSource() {
+        return MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY = false;
+
+    default boolean getMeasurementEnableSourceDestinationLimitPriority() {
+        return MEASUREMENT_ENABLE_DESTINATION_LIMIT_PRIORITY;
+    }
+
+    /**
+     * Default destination limit algorithm configuration. LIFO (0) by default, can be configured as
+     * FIFO (1).
+     */
+    @ConfigFlag int MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM = 0;
+
+    default int getMeasurementDefaultSourceDestinationLimitAlgorithm() {
+        return MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD = false;
+
+    default boolean getMeasurementEnableSourceDestinationLimitAlgorithmField() {
+        return MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS = false;
+
+    /*
+     * Returns whether filtering in Trigger's AGGREGATABLE_VALUES is allowed.
+     */
+    default boolean getMeasurementEnableAggregateValueFilters() {
+        return MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS;
+    }
+
+    /** Flag for enabling measurement aggregate debug reporting */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING = false;
+
+    /** Returns whether measurement aggregate debug reporting is enabled. */
+    default boolean getMeasurementEnableAggregateDebugReporting() {
+        return MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING;
+    }
+
+    @ConfigFlag int MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW = 65536; // = 2^16
+
+    /** Returns aggregatable debug reporting budget allocated per origin per publisher per window */
+    default int getMeasurementAdrBudgetOriginXPublisherXWindow() {
+        return MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW;
+    }
+
+    @ConfigFlag int MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW = 1048576; // = 2^20
+
+    /** Returns aggregatable debug reporting budget allocated per publisher per window */
+    default int getMeasurementAdrBudgetPublisherXWindow() {
+        return MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW;
+    }
+
+    @ConfigFlag long MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS = TimeUnit.DAYS.toMillis(1);
+
+    /**
+     * Returns aggregatable debug reporting budget consumption tracking window length in
+     * milliseconds.
+     */
+    default long getMeasurementAdrBudgetWindowLengthMillis() {
+        return MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MILLIS;
+    }
+
+    @ConfigFlag int MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE = 5;
+
+    /** Returns maximum number of aggregatable debug reports allowed per source. */
+    default int getMeasurementMaxAdrCountPerSource() {
+        return MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
+    }
+
     /**
      * Default whether to limit logging for enrollment metrics to avoid performance issues. This
      * includes not logging data that requires database queries and downloading MDD files.
@@ -4796,6 +4996,24 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns whether enrollment logging should be limited. */
     default boolean getEnrollmentEnableLimitedLogging() {
         return ENROLLMENT_ENABLE_LIMITED_LOGGING;
+    }
+
+    @ConfigFlag int MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES = 1;
+
+    default int getMeasurementDefaultFilteringIdMaxBytes() {
+        return MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES;
+    }
+
+    @ConfigFlag int MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES = 8;
+
+    default int getMeasurementMaxFilteringIdMaxBytes() {
+        return MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES;
+    }
+
+    @FeatureFlag boolean MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING = false;
+
+    default boolean getMeasurementEnableFlexibleContributionFiltering() {
+        return MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING;
     }
 
     /**
@@ -4890,29 +5108,6 @@ public interface Flags extends ModuleSharedFlags {
         return IS_U18_SUPERVISED_ACCOUNT_ENABLED_DEFAULT;
     }
 
-    /**
-     * Default value to determine whether {@link
-     * com.android.adservices.service.adid.AdIdCacheManager} is enabled to read AdId from and for
-     * AdIdProvider to update AdId to.
-     */
-    boolean DEFAULT_ADID_CACHE_ENABLED = false;
-
-    /**
-     * Returns if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled to read
-     * AdId from and for AdIdProvider to update AdId to.
-     *
-     * <ul>
-     *   <li>When enabled, AdIdCacheManager will read AdId from the cache and AdIdProvider will
-     *       update the cache if AdId changes.
-     *   <li>When disabled, AdIdCacheManager will call AdIdProvider to get the AdId.
-     * </ul>
-     *
-     * Returns if {@link com.android.adservices.service.adid.AdIdCacheManager} is enabled.
-     */
-    default boolean getAdIdCacheEnabled() {
-        return DEFAULT_ADID_CACHE_ENABLED;
-    }
-
     long DEFAULT_AD_ID_FETCHER_TIMEOUT_MS = 50;
 
     /**
@@ -4966,20 +5161,6 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Enable AdServicesExtDataStorageServiceProxy read for consent data feature flag. Its meant to
-     * enable the proxy service for testing when the actual service is unavailable The default value
-     * is false.
-     */
-    boolean DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY = false;
-
-    /**
-     * @return value of enable AdExt service proxy.
-     */
-    default boolean getEnableAdExtServiceDebugProxy() {
-        return DEFAULT_ENABLE_ADEXT_SERVICE_DEBUG_PROXY;
-    }
-
-    /**
      * Default value to determine how many logging events {@link AdServicesJobServiceLogger} should
      * upload to the server.
      *
@@ -5017,36 +5198,6 @@ public interface Flags extends ModuleSharedFlags {
      */
     default int getAppSearchReadTimeout() {
         return DEFAULT_APPSEARCH_READ_TIMEOUT_MS;
-    }
-
-    /** Default value of the timeout for AdExtDataStorageService write operations */
-    @ConfigFlag int DEFAULT_ADEXT_WRITE_TIMEOUT_MS = 3000;
-
-    /**
-     * Gets the value of the timeout for AdExtDataStorageService write operations, in milliseconds.
-     * Note that this is the platform side timeout which awaits for the operation to be completed by
-     * the chimera service, which does not reside in AdServices. Ensure timeout on platform side is
-     * greater with ~100 ms buffer to take into account binder communication latency.
-     *
-     * @return the timeout, in milliseconds, for AdExtDataStorageService write operations
-     */
-    default int getAdExtWriteTimeoutMs() {
-        return DEFAULT_ADEXT_WRITE_TIMEOUT_MS;
-    }
-
-    /** Default value of the timeout for AdExtDataStorageService read operations */
-    @ConfigFlag int DEFAULT_ADEXT_READ_TIMEOUT_MS = 1000;
-
-    /**
-     * Gets the value of the timeout for AdExtDataStorageService read operations, in milliseconds.
-     * Note that this is the platform side timeout which awaits for the operation to be completed by
-     * the chimera service, which does not reside in AdServices. Ensure timeout on platform side is
-     * greater with ~100 ms buffer to take into account binder communication latency.
-     *
-     * @return the timeout, in milliseconds, for AdExtDataStoreageService read operations
-     */
-    default int getAdExtReadTimeoutMs() {
-        return DEFAULT_ADEXT_READ_TIMEOUT_MS;
     }
 
     /** default value for get adservices common states enabled */
@@ -5408,6 +5559,14 @@ public interface Flags extends ModuleSharedFlags {
         return PAS_EXTENDED_METRICS_ENABLED;
     }
 
+    /** Protected app signals API product metrics v1 flag. */
+    @FeatureFlag boolean PAS_PRODUCT_METRICS_V1_ENABLED = false;
+
+    /** Returns whether to enable PAS API product metrics v1. */
+    default boolean getPasProductMetricsV1Enabled() {
+        return PAS_PRODUCT_METRICS_V1_ENABLED;
+    }
+
     /** Default enablement for applying SPE (Scheduling Policy Engine) to pilot jobs. */
     @FeatureFlag boolean DEFAULT_SPE_ON_PILOT_JOBS_ENABLED = false;
 
@@ -5564,8 +5723,16 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
     }
 
+    /** Default value for the enablement the R notification default consent fix. */
+    @FeatureFlag boolean DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED = false;
+
+    /** Returns the default value for the enablement the R notification default consent fix */
+    default boolean getRNotificationDefaultConsentFixEnabled() {
+        return DEFAULT_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED;
+    }
+
     /** Enrollment Manifest File URL, used to provide proto file for MDD download. */
-    String MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL = "";
+    @ConfigFlag String MDD_DEFAULT_ENROLLMENT_MANIFEST_FILE_URL = "";
 
     /**
      * @return default Enrollment Manifest File URL
@@ -5584,6 +5751,102 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENROLLMENT_PROTO_FILE_ENABLED;
     }
 
+    /** Protected app signals encoding job performance improvements flag. */
+    @FeatureFlag boolean PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED = false;
+
+    /** Returns whether the PAS encoding job performance improvements are enabled. */
+    default boolean getPasEncodingJobImprovementsEnabled() {
+        return PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED;
+    }
+
+    /**
+     * Default value to determine whether {@link
+     * com.android.adservices.service.adid.AdIdCacheManager} cache is timeout.
+     */
+    @ConfigFlag long DEFAULT_ADID_CACHE_TTL_MS = 0;
+
+    /**
+     * Returns {@link com.android.adservices.service.adid.AdIdCacheManager} ttl(time to live) time.
+     * It will be used to expire the cached adid.
+     *
+     * <ul>
+     *   <li>if value is 0, the cache has no ttl.
+     *   <li>otherwise, check the stored time and current time inverval, if larger than the ttl,
+     *       refetch the adid.
+     * </ul>
+     *
+     * Returns ttl of {@link com.android.adservices.service.adid.AdIdCacheManager}.
+     */
+    default long getAdIdCacheTtlMs() {
+        return DEFAULT_ADID_CACHE_TTL_MS;
+    }
+
+    /** Feature flag to ramp up use of package deny service. */
+    @FeatureFlag boolean DEFAULT_ENABLE_PACKAGE_DENY_SERVICE = false;
+
+    /**
+     * @return whether to enable use of package deny service.
+     */
+    default boolean getEnablePackageDenyService() {
+        return DEFAULT_ENABLE_PACKAGE_DENY_SERVICE;
+    }
+
+    /** Feature flag to ramp up use of mdd package deny proto file. */
+    @FeatureFlag boolean DEFAULT_ENABLE_PACKAGE_DENY_MDD = false;
+
+    /**
+     * @return whether to enable use of package deny mdd file.
+     */
+    default boolean getEnablePackageDenyMdd() {
+        return DEFAULT_ENABLE_PACKAGE_DENY_MDD;
+    }
+
+    /** Feature flag to ramp up use of package deny service on adding a package. */
+    @FeatureFlag boolean DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD = false;
+
+    /**
+     * @return whether to enable use of package deny service on adding a package.
+     */
+    default boolean getEnablePackageDenyJobOnPackageAdd() {
+        return DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD;
+    }
+
+    /** Feature flag to ramp up use of package deny preprocessing background job. */
+    @FeatureFlag boolean DEFAULT_ENABLE_PACKAGE_DENY_BG_JOB = false;
+
+    /**
+     * @return whether to enable use of package deny preprocessing background job.
+     */
+    default boolean getEnablePackageDenyBgJob() {
+        return DEFAULT_ENABLE_PACKAGE_DENY_BG_JOB;
+    }
+
+    /** Feature flag to ramp up use of package deny preprocessing on mdd file download. */
+    @FeatureFlag boolean DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD = false;
+
+    /**
+     * @return whether to enable use of package deny preprocessing job on mdd file download.
+     */
+    default boolean getEnablePackageDenyJobOnMddDownload() {
+        return DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD;
+    }
+
+    /** MDD package deny registry manifest url. */
+    @ConfigFlag String DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL = "";
+
+    /** Returns MDD package deny registry manifest url. */
+    default String getMddPackageDenyRegistryManifestFileUrl() {
+        return DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+
     /** Dump some debug info for the flags */
     default void dump(PrintWriter writer, @Nullable String[] args) {}
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////
+    // NOTE: do NOT add new getters down here                                                     //
+    ////////////////////////////////////////////////////////////////////////////////////////////////
 }

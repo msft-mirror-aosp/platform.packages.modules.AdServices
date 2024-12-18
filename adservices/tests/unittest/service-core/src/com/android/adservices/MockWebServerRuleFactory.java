@@ -31,11 +31,4 @@ public class MockWebServerRuleFactory {
                 "adservices_test_server.p12",
                 "adservices_test");
     }
-
-    /**
-     * @return A mock {@link MockWebServerRule} initialized to use HTTP cleartext.
-     */
-    public static MockWebServerRule createForHttp() {
-        return MockWebServerRule.forHttp();
-    }
 }

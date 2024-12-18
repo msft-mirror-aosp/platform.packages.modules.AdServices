@@ -19,31 +19,20 @@ package android.adservices.cts;
 import static android.adservices.common.AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE;
 import static android.adservices.common.CommonFixture.VALID_BUYER_1;
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
-import static android.adservices.customaudience.CustomAudienceFixture.INVALID_BEYOND_MAX_EXPIRATION_TIME;
-import static android.adservices.customaudience.CustomAudienceFixture.INVALID_DELAYED_ACTIVATION_TIME;
-import static android.adservices.customaudience.CustomAudienceFixture.VALID_ACTIVATION_TIME;
-import static android.adservices.customaudience.CustomAudienceFixture.VALID_EXPIRATION_TIME;
-import static android.adservices.customaudience.CustomAudienceFixture.VALID_NAME;
-import static android.adservices.customaudience.CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS;
-import static android.adservices.customaudience.CustomAudienceFixture.getValidFetchUriByBuyer;
 
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NUM_ADS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
-
-import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 
 import android.Manifest;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
@@ -85,7 +74,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -93,15 +81,15 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-@RequiresSdkLevelAtLeastS // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
 @DisableGlobalKillSwitch
-@SetFlagDisabled(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH)
-@SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
 @EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
-@SetPpapiAppAllowList
+@RequiresSdkLevelAtLeastS
 @SetAllLogcatTags
+@SetFlagDisabled(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
+@SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
+@SetPpapiAppAllowList
 public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
-
     private AdvertisingCustomAudienceClient mClient;
     private TestAdvertisingCustomAudienceClient mTestClient;
 
@@ -133,7 +121,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                         .setExecutor(MoreExecutors.directExecutor())
                         .build();
         DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
-        mIsDebugMode = devContext.getDevOptionsEnabled();
+        mIsDebugMode = devContext.getDeviceDevOptionsEnabled();
 
         // Needed to test different custom audience limits
         InstrumentationRegistry.getInstrumentation()
@@ -182,8 +170,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                                         CustomAudienceFixture.getValidBuilderForBuyer(
                                                         CommonFixture.NOT_ENROLLED_BUYER)
                                                 .build()));
-        assertThat(exception).hasCauseThat().isInstanceOf(SecurityException.class);
-        assertThat(exception)
+        expect.that(exception).hasCauseThat().isInstanceOf(SecurityException.class);
+        expect.that(exception)
                 .hasCauseThat()
                 .hasMessageThat()
                 .isEqualTo(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
@@ -259,8 +247,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> joinCustomAudience(customAudienceWithInvalidAdDataMetadata));
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
@@ -284,8 +272,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> joinCustomAudience(customAudienceWithInvalidAdDataRenderUris));
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
@@ -323,8 +311,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                         ExecutionException.class,
                         () -> joinCustomAudience(customAudienceWithInvalidAdDataRenderUris));
 
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
@@ -343,8 +331,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> joinCustomAudience(customAudienceWithInvalidNumberOfAds));
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        assertThat(exception).hasCauseThat().hasMessageThat().isNull();
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
@@ -360,8 +348,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> joinCustomAudience(customAudienceWithMismatchedDailyFetchUriDomain));
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
@@ -372,8 +360,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                         .build();
         Exception exception =
                 assertThrows(ExecutionException.class, () -> joinCustomAudience(customAudience));
-        assertTrue(exception.getCause() instanceof IllegalArgumentException);
-        assertThat(exception).hasCauseThat().hasMessageThat().isEqualTo(null);
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
@@ -396,8 +384,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                             joinCustomAudience(customAudience2);
                             joinCustomAudience(customAudience3);
                         });
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        assertThat(exception).hasCauseThat().hasMessageThat().isNull();
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
@@ -420,307 +408,26 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                             joinCustomAudience(customAudience2);
                             joinCustomAudience(customAudience3);
                         });
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-        assertThat(exception).hasCauseThat().hasMessageThat().isNull();
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
+        expect.that(exception).hasCauseThat().hasMessageThat().isNull();
     }
 
     @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_validFetchUri_validRequest() {
-        // NOTE: not using flag annotations because it's called by other test
+    public void testFetchAndJoinCustomAudience_withMissingEnrollment_fail() {
         flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
-        FetchAndJoinCustomAudienceRequest request =
-                new FetchAndJoinCustomAudienceRequest.Builder(
-                                getValidFetchUriByBuyer(VALID_BUYER_1))
-                        .build();
-
-        // Without an actual server to respond to this request, the service will fail while
-        // executing the HTTP request and throw an IllegalStateException. If a request field was
-        // invalid, the service will fail before executing the HTTP request and throw an
-        // IllegalArgumentException.
         Exception exception =
                 assertThrows(
                         ExecutionException.class,
-                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_validFetchUri_validRequest_getMethod() {
-        createClientUsingGetMethod();
-        testFetchAndJoinCustomAudience_validFetchUri_validRequest();
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_unenrolledFetchUri_invalidRequest() {
-        // NOTE: not using flag annotations because it's called by other test
-        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
-        FetchAndJoinCustomAudienceRequest request =
-                new FetchAndJoinCustomAudienceRequest.Builder(Uri.parse("invalid-uri.com")).build();
-
-        // Without an actual server to respond to this request, the service will fail while
-        // executing the HTTP request and throw an IllegalStateException. If a request field was
-        // invalid, the service will fail before executing the HTTP request and throw an
-        // IllegalArgumentException.
-        Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-        // A valid buyer will not be extracted from an invalid uri, thus failing due to lack of
-        // authorization.
-        assertThat(exception).hasCauseThat().isInstanceOf(SecurityException.class);
-        assertThat(exception)
+                        () ->
+                                fetchAndJoinCustomAudience(
+                                        CustomAudienceFixture.getValidBuilderForBuyer(
+                                                        CommonFixture.NOT_ENROLLED_BUYER)
+                                                .build()));
+        expect.that(exception).hasCauseThat().isInstanceOf(SecurityException.class);
+        expect.that(exception)
                 .hasCauseThat()
                 .hasMessageThat()
                 .isEqualTo(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_unenrolledFetchUri_invalidRequest_getMethod() {
-        createClientUsingGetMethod();
-        testFetchAndJoinCustomAudience_unenrolledFetchUri_invalidRequest();
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_validName_validRequest() {
-        // NOTE: not using flag annotations because it's called by other test
-        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
-        FetchAndJoinCustomAudienceRequest request =
-                new FetchAndJoinCustomAudienceRequest.Builder(
-                                getValidFetchUriByBuyer(VALID_BUYER_1))
-                        .setName(VALID_NAME)
-                        .build();
-
-        // Without an actual server to respond to this request, the service will fail while
-        // executing the HTTP request and throw an IllegalStateException. If a request field was
-        // invalid, the service will fail before executing the HTTP request and throw an
-        // IllegalArgumentException.
-        Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_validName_validRequest_getMethod() {
-        createClientUsingGetMethod();
-        testFetchAndJoinCustomAudience_validName_validRequest();
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_tooLongName_invalidRequest() {
-        // NOTE: not using flag annotations because it's called by other test
-        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
-        // Use a clearly small size limit.
-        flags.setFlag(KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_NAME_SIZE_B, 1);
-        FetchAndJoinCustomAudienceRequest request =
-                new FetchAndJoinCustomAudienceRequest.Builder(
-                                getValidFetchUriByBuyer(VALID_BUYER_1))
-                        .setName(VALID_NAME)
-                        .build();
-
-        // Without an actual server to respond to this request, the service will fail while
-        // executing the HTTP request and throw an IllegalStateException. If a request field was
-        // invalid, the service will fail before executing the HTTP request and throw an
-        // IllegalArgumentException.
-        Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-        // The name exceeds size limit.
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_tooLongName_invalidRequest_getMethod() {
-        createClientUsingGetMethod();
-        testFetchAndJoinCustomAudience_tooLongName_invalidRequest();
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_validActivationTime_validRequest() {
-        // NOTE: not using flag annotations because it's called by other test
-        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
-
-        FetchAndJoinCustomAudienceRequest request =
-                new FetchAndJoinCustomAudienceRequest.Builder(
-                                getValidFetchUriByBuyer(VALID_BUYER_1))
-                        .setActivationTime(VALID_ACTIVATION_TIME)
-                        .build();
-
-        // Without an actual server to respond to this request, the service will fail while
-        // executing the HTTP request and throw an IllegalStateException. If a request field was
-        // invalid, the service will fail before executing the HTTP request and throw an
-        // IllegalArgumentException.
-        Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_validActivationTime_validRequest_getMethod() {
-        createClientUsingGetMethod();
-        testFetchAndJoinCustomAudience_validActivationTime_validRequest();
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_activationExceedsDelay_invalidRequest() {
-        // NOTE: not using flag annotations because it's called by other test
-        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
-        FetchAndJoinCustomAudienceRequest request =
-                new FetchAndJoinCustomAudienceRequest.Builder(
-                                getValidFetchUriByBuyer(VALID_BUYER_1))
-                        .setActivationTime(INVALID_DELAYED_ACTIVATION_TIME)
-                        .build();
-
-        // Without an actual server to respond to this request, the service will fail while
-        // executing the HTTP request and throw an IllegalStateException. If a request field was
-        // invalid, the service will fail before executing the HTTP request and throw an
-        // IllegalArgumentException.
-        Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-        // The activation time exceeds delay limit.
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_activationExceedsDelay_invalidRequest_getMethod() {
-        createClientUsingGetMethod();
-        testFetchAndJoinCustomAudience_activationExceedsDelay_invalidRequest();
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_validExpirationTime_validRequest() {
-        // NOTE: not using flag annotations because it's called by other test
-        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
-        FetchAndJoinCustomAudienceRequest request =
-                new FetchAndJoinCustomAudienceRequest.Builder(
-                                getValidFetchUriByBuyer(VALID_BUYER_1))
-                        .setExpirationTime(VALID_EXPIRATION_TIME)
-                        .build();
-
-        // Without an actual server to respond to this request, the service will fail while
-        // executing the HTTP request and throw an IllegalStateException. If a request field was
-        // invalid, the service will fail before executing the HTTP request and throw an
-        // IllegalArgumentException.
-        Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_validExpirationTime_validRequest_getMethod() {
-        createClientUsingGetMethod();
-        testFetchAndJoinCustomAudience_validExpirationTime_validRequest();
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_beyondMaxExpiration_invalidRequest() {
-        // NOTE: not using flag annotations because it's called by other test
-        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
-        FetchAndJoinCustomAudienceRequest request =
-                new FetchAndJoinCustomAudienceRequest.Builder(
-                                getValidFetchUriByBuyer(VALID_BUYER_1))
-                        .setExpirationTime(INVALID_BEYOND_MAX_EXPIRATION_TIME)
-                        .build();
-
-        // Without an actual server to respond to this request, the service will fail while
-        // executing the HTTP request and throw an IllegalStateException. If a request field was
-        // invalid, the service will fail before executing the HTTP request and throw an
-        // IllegalArgumentException.
-        Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-        // The expiration time exceeds max limit.
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_beyondMaxExpiration_invalidRequest_getMethod() {
-        createClientUsingGetMethod();
-        testFetchAndJoinCustomAudience_beyondMaxExpiration_invalidRequest();
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_validUserBiddingSignals_validRequest() {
-        // NOTE: not using flag annotations because it's called by other test
-        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
-        FetchAndJoinCustomAudienceRequest request =
-                new FetchAndJoinCustomAudienceRequest.Builder(
-                                getValidFetchUriByBuyer(VALID_BUYER_1))
-                        .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
-                        .build();
-
-        // Without an actual server to respond to this request, the service will fail while
-        // executing the HTTP request and throw an IllegalStateException. If a request field was
-        // invalid, the service will fail before executing the HTTP request and throw an
-        // IllegalArgumentException.
-        Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-        assertThat(exception.getCause()).isInstanceOf(IllegalStateException.class);
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_validUserBiddingSignals_validRequest_getMethod() {
-        createClientUsingGetMethod();
-        testFetchAndJoinCustomAudience_validUserBiddingSignals_validRequest();
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_tooBigUserBiddingSignals_invalidRequest() {
-        // NOTE: not using flag annotations because it's called by other test
-        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, true);
-        // Use a clearly small size limit.
-        flags.setFlag(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B, 1);
-        FetchAndJoinCustomAudienceRequest request =
-                new FetchAndJoinCustomAudienceRequest.Builder(
-                                getValidFetchUriByBuyer(VALID_BUYER_1))
-                        .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
-                        .build();
-
-        // Without an actual server response, we expect an IllegalStateException if the request
-        // was well-formed and valid.
-        Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> fetchAndJoinCustomAudience(request, VALID_BUYER_1, VALID_NAME));
-        // The user bidding signals exceeds size limit.
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    @Ignore("b/319330548")
-    public void testFetchAndJoinCustomAudience_tooBigUserBiddingSignals_invalidRequest_getMethod() {
-        createClientUsingGetMethod();
-        testFetchAndJoinCustomAudience_tooBigUserBiddingSignals_invalidRequest();
     }
 
     @Test
@@ -746,8 +453,8 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                                                 CommonFixture.NOT_ENROLLED_BUYER,
                                                 CustomAudienceFixture.VALID_NAME)
                                         .get());
-        assertThat(exception).hasCauseThat().isInstanceOf(SecurityException.class);
-        assertThat(exception)
+        expect.that(exception).hasCauseThat().isInstanceOf(SecurityException.class);
+        expect.that(exception)
                 .hasCauseThat()
                 .hasMessageThat()
                 .isEqualTo(SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
@@ -769,7 +476,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
         Exception exception =
                 assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
-        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(SecurityException.class);
     }
 
     @Test
@@ -786,7 +493,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
         Exception exception =
                 assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
-        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(SecurityException.class);
     }
 
     @Test
@@ -797,7 +504,7 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
 
         Exception exception =
                 assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
-        assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
+        expect.that(exception).hasCauseThat().isInstanceOf(SecurityException.class);
     }
 
     private void joinCustomAudience(CustomAudience customAudience)
@@ -807,11 +514,19 @@ public final class CustomAudienceApiCtsTest extends ForegroundCtsTestCase {
                 new Pair<>(customAudience.getBuyer(), customAudience.getName()));
     }
 
-    private void fetchAndJoinCustomAudience(
-            FetchAndJoinCustomAudienceRequest request, AdTechIdentifier buyer, String name)
+    private void fetchAndJoinCustomAudience(CustomAudience customAudience)
             throws ExecutionException, InterruptedException, TimeoutException {
+        FetchAndJoinCustomAudienceRequest request =
+                new FetchAndJoinCustomAudienceRequest.Builder(
+                                Uri.parse(customAudience.getBuyer() + "/fetchCA"))
+                        .setName(customAudience.getName())
+                        .setActivationTime(customAudience.getActivationTime())
+                        .setExpirationTime(customAudience.getExpirationTime())
+                        .setUserBiddingSignals(customAudience.getUserBiddingSignals())
+                        .build();
         mClient.fetchAndJoinCustomAudience(request).get(10, TimeUnit.SECONDS);
-        mCustomAudiencesToCleanUp.add(new Pair<>(buyer, name));
+        mCustomAudiencesToCleanUp.add(
+                new Pair<>(customAudience.getBuyer(), customAudience.getName()));
     }
 
     private void leaveJoinedCustomAudiences()

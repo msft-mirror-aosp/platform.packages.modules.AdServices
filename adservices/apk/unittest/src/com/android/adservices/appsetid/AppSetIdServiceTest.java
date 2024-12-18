@@ -20,7 +20,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -30,7 +29,6 @@ import android.content.pm.PackageManager;
 import android.os.IBinder;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.appsetid.AppSetIdWorker;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -50,7 +48,6 @@ import java.io.StringWriter;
 @SpyStatic(AdServicesLoggerImpl.class)
 @SpyStatic(AppImportanceFilter.class)
 public final class AppSetIdServiceTest extends AdServicesExtendedMockitoTestCase {
-    @Mock Flags mMockFlags;
     @Mock AppSetIdWorker mMockAppSetIdWorker;
     @Mock AppImportanceFilter mMockAppImportanceFilter;
     @Mock PackageManager mMockPackageManager;
@@ -71,8 +68,7 @@ public final class AppSetIdServiceTest extends AdServicesExtendedMockitoTestCase
 
         AppSetIdService spyAppSetIdService = spy(AppSetIdService.class);
         doReturn(mMockPackageManager).when(spyAppSetIdService).getPackageManager();
-        doReturn(mMockAppImportanceFilter)
-                .when(() -> AppImportanceFilter.create(any(), anyInt(), any()));
+        doReturn(mMockAppImportanceFilter).when(() -> AppImportanceFilter.create(any(), any()));
 
         spyAppSetIdService.onCreate();
         IBinder binder = spyAppSetIdService.onBind(getIntentForAppSetIdService());

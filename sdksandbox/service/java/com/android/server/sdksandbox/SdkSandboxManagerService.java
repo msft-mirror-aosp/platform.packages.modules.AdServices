@@ -27,7 +27,9 @@ import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_S
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
+import static com.android.adservices.flags.Flags.sdksandboxInvalidateEffectiveTargetSdkVersionCache;
 import static com.android.sdksandbox.flags.Flags.sandboxActivitySdkBasedContext;
+import static com.android.sdksandbox.flags.Flags.serviceRestrictionPackageNameLogicUpdated;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION;
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
@@ -65,6 +67,8 @@ import android.content.pm.PackageManager;
 import android.content.pm.ProviderInfo;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
+import android.content.pm.SharedLibraryInfo;
+import android.content.pm.VersionedPackage;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
@@ -239,12 +243,14 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         private final SdkSandboxServiceProvider mServiceProvider;
         private final @Nullable String mAdServicesPackageName;
         private final SdkSandboxStatsdLogger mSdkSandboxStatsdLogger;
+        private final SdkSandboxRestrictionManager mSdkSandboxRestrictionManager;
 
         Injector(Context context) {
             mContext = context;
             mServiceProvider = new SdkSandboxServiceProviderImpl(mContext);
             mAdServicesPackageName = resolveAdServicesPackage(mContext);
             mSdkSandboxStatsdLogger = new SdkSandboxStatsdLogger();
+            mSdkSandboxRestrictionManager = new SdkSandboxRestrictionManager(mContext);
         }
 
         private static final boolean IS_EMULATOR =
@@ -316,6 +322,10 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         SdkSandboxStatsdLogger getSdkSandboxStatsdLogger() {
             return mSdkSandboxStatsdLogger;
         }
+
+        SdkSandboxRestrictionManager getSdkSandboxRestrictionManager() {
+            return mSdkSandboxRestrictionManager;
+        }
     }
 
     SdkSandboxManagerService(Context context) {
@@ -333,7 +343,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mSdkSandboxPulledAtoms = mInjector.getSdkSandboxPulledAtoms();
         mSdkSandboxStorageManager = mInjector.getSdkSandboxStorageManager();
         mSdkSandboxStatsdLogger = mInjector.getSdkSandboxStatsdLogger();
-        mSdkSandboxRestrictionManager = new SdkSandboxRestrictionManager(mContext);
+        mSdkSandboxRestrictionManager = mInjector.getSdkSandboxRestrictionManager();
 
         // Start the handler thread.
         HandlerThread handlerThread = new HandlerThread("SdkSandboxManagerServiceHandler");
@@ -357,7 +367,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private void registerPackageUpdateBroadcastReceiver() {
         // Register for package addition and update
-        final IntentFilter packageAddedIntentFilter = new IntentFilter();
+        IntentFilter packageAddedIntentFilter = new IntentFilter();
         packageAddedIntentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
         packageAddedIntentFilter.addAction(Intent.ACTION_PACKAGE_REPLACED);
         packageAddedIntentFilter.addDataScheme("package");
@@ -365,13 +375,21 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 new BroadcastReceiver() {
                     @Override
                     public void onReceive(Context context, Intent intent) {
-                        final String packageName = intent.getData().getSchemeSpecificPart();
-                        final int uid = intent.getIntExtra(Intent.EXTRA_UID, -1);
-                        final CallingInfo callingInfo = new CallingInfo(uid, packageName);
+                        String packageName = intent.getData().getSchemeSpecificPart();
+                        int uid = intent.getIntExtra(Intent.EXTRA_UID, -1);
+                        CallingInfo callingInfo = new CallingInfo(uid, packageName);
                         mHandler.post(
                                 () ->
                                         mSdkSandboxStorageManager.onPackageAddedOrUpdated(
                                                 callingInfo));
+
+                        if (sdksandboxInvalidateEffectiveTargetSdkVersionCache()) {
+                            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                                mHandler.post(() -> invalidateCachePreW(callingInfo));
+                            } else {
+                                invalidateCachePostW(uid);
+                            }
+                        }
                     }
                 };
         mContext.registerReceiver(
@@ -379,6 +397,44 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 packageAddedIntentFilter,
                 /*broadcastPermission=*/ null,
                 mHandler);
+    }
+
+    private void invalidateCachePostW(int appUid) {
+        mSdkSandboxRestrictionManager.clearEffectiveTargetSdkVersion(appUid);
+    }
+
+    private void invalidateCachePreW(CallingInfo callingInfo) {
+        List<SharedLibraryInfo> sharedLibraryInfos =
+                mContext.getPackageManager()
+                        .getDeclaredSharedLibraries(callingInfo.getPackageName(), 0);
+
+        if (sharedLibraryInfos.size() == 0) {
+            // It is an app and cache for the UID needs to be invalidated
+            mSdkSandboxRestrictionManager.clearEffectiveTargetSdkVersion(callingInfo.getUid());
+        } else {
+            // This means that the package is a sharedLibrary and all the packages that depend on
+            // this package should have their cache invalidated
+            for (SharedLibraryInfo sharedLibraryInfo : sharedLibraryInfos) {
+                if (sharedLibraryInfo.getType() != SharedLibraryInfo.TYPE_SDK_PACKAGE) {
+                    continue;
+                }
+                List<VersionedPackage> versionedPackages = sharedLibraryInfo.getDependentPackages();
+
+                for (VersionedPackage versionedPackage : versionedPackages) {
+                    try {
+                        int uid =
+                                mContext.getPackageManager()
+                                        .getPackageUid(versionedPackage.getPackageName(), 0);
+                        mSdkSandboxRestrictionManager.clearEffectiveTargetSdkVersion(uid);
+                    } catch (PackageManager.NameNotFoundException e) {
+                        Log.e(
+                                TAG,
+                                "Could not find UID for " + versionedPackage.getPackageName(),
+                                e);
+                    }
+                }
+            }
+        }
     }
 
     private void registerVerifierBroadcastReceiver() {
@@ -1681,15 +1737,21 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 return;
             }
         }
-
-        if (requestAllowedPerAllowlist(
-                intent.getAction(),
-                intent.getPackage(),
-                /*componentClassName=*/ (component == null) ? null : component.getClassName(),
-                /*componentPackageName=*/ (component == null)
-                        ? null
-                        : component.getPackageName())) {
-            return;
+        // TODO(b/348144532): Make the error message more informative
+        if (serviceRestrictionPackageNameLogicUpdated()) {
+            if (isIntentAllowedPerAllowList(intent)) {
+                return;
+            }
+        } else {
+            if (requestAllowedPerAllowlist(
+                    intent.getAction(),
+                    intent.getPackage(),
+                    /* componentClassName= */ (component == null) ? null : component.getClassName(),
+                    /* componentPackageName= */ (component == null)
+                            ? null
+                            : component.getPackageName())) {
+                return;
+            }
         }
 
         // Default disallow.
@@ -2241,28 +2303,75 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
                         ? mSdkSandboxSettingsListener.getNextServiceAllowlist()
                         : mSdkSandboxSettingsListener.getServiceAllowlistForTargetSdkVersion(
-                                /*targetSdkVersion=*/ 34);
+                                /* targetSdkVersion= */ 34);
 
         if (Objects.isNull(allowedServices)) {
             return false;
         }
-
         for (int i = 0; i < allowedServices.getAllowedServicesCount(); i++) {
             AllowedService allowedService = allowedServices.getAllowedServices(i);
             if (StringHelper.doesInputMatchWildcardPattern(
-                            allowedService.getAction(), action, /*matchOnNullInput=*/ true)
+                            allowedService.getAction(), action, /* matchOnNullInput= */ true)
                     && StringHelper.doesInputMatchWildcardPattern(
                             allowedService.getPackageName(),
                             packageName,
-                            /*matchOnNullInput=*/ true)
+                            /* matchOnNullInput= */ true)
                     && StringHelper.doesInputMatchWildcardPattern(
                             allowedService.getComponentClassName(),
                             componentClassName,
-                            /*matchOnNullInput=*/ true)
+                            /* matchOnNullInput= */ true)
                     && StringHelper.doesInputMatchWildcardPattern(
                             allowedService.getComponentPackageName(),
                             componentPackageName,
-                            /*matchOnNullInput=*/ true)) {
+                            /* matchOnNullInput= */ true)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean isIntentAllowedPerAllowList(Intent intent) {
+        // Implicit intents are disabled by default, and only explicit intents are permitted.
+        // Explicit intents must specify an action and either the package name or the component name
+        if (intent.getAction() == null
+                || (intent.getPackage() == null && intent.getComponent() == null)) {
+            return false;
+        }
+
+        // TODO(b/288873117): Use effective targetSdkVersion of the sandbox for the client app.
+        AllowedServices allowedServices =
+                mSdkSandboxSettingsListener.applySdkSandboxRestrictionsNext()
+                        ? mSdkSandboxSettingsListener.getNextServiceAllowlist()
+                        : mSdkSandboxSettingsListener.getServiceAllowlistForTargetSdkVersion(
+                                /* targetSdkVersion= */ 34);
+
+        if (allowedServices == null) {
+            return false;
+        }
+
+        ComponentName component = intent.getComponent();
+
+        for (int i = 0; i < allowedServices.getAllowedServicesCount(); i++) {
+            AllowedService allowedService = allowedServices.getAllowedServices(i);
+            if (!StringHelper.doesInputMatchWildcardPattern(
+                    allowedService.getAction(), intent.getAction(), /* matchOnNullInput= */ true)) {
+                continue;
+            }
+
+            if (StringHelper.doesInputMatchWildcardPattern(
+                    allowedService.getPackageName(),
+                    intent.getPackage(),
+                    /* matchOnNullInput= */ true)) {
+                return true;
+            } else if (component != null
+                    && StringHelper.doesInputMatchWildcardPattern(
+                            allowedService.getComponentClassName(),
+                            component.getClassName(),
+                            /* matchOnNullInput= */ true)
+                    && StringHelper.doesInputMatchWildcardPattern(
+                            allowedService.getComponentPackageName(),
+                            component.getPackageName(),
+                            /* matchOnNullInput= */ true)) {
                 return true;
             }
         }

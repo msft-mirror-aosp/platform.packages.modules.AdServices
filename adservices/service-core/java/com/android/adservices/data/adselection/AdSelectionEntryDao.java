@@ -51,6 +51,7 @@ import java.util.stream.Collectors;
 @Dao
 public abstract class AdSelectionEntryDao {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
     /**
      * Add a new successful ad selection entry into the table ad_selection.
      *
@@ -180,24 +181,29 @@ public abstract class AdSelectionEntryDao {
      */
     @Query(
             "SELECT ad_selection.ad_selection_id as ad_selection_id,"
-                + " ad_selection.custom_audience_signals_owner as custom_audience_signals_owner,"
-                + " ad_selection.custom_audience_signals_buyer as custom_audience_signals_buyer,"
-                + " ad_selection.custom_audience_signals_name as custom_audience_signals_name,"
-                + " ad_selection.custom_audience_signals_activation_time as"
-                + " custom_audience_signals_activation_time,"
-                + " ad_selection.custom_audience_signals_expiration_time as"
-                + " custom_audience_signals_expiration_time,"
-                + " ad_selection.custom_audience_signals_user_bidding_signals as"
-                + " custom_audience_signals_user_bidding_signals, ad_selection.contextual_signals"
-                + " as contextual_signals,ad_selection.winning_ad_render_uri as"
-                + " winning_ad_render_uri,ad_selection.winning_ad_bid as"
-                + " winning_ad_bid,ad_selection.creation_timestamp as"
-                + " creation_timestamp,buyer_decision_logic.buyer_decision_logic_js as"
-                + " buyer_decision_logic_js, ad_selection.bidding_logic_uri as bidding_logic_uri,"
-                + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
-                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
-                + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id ="
-                + " :adSelectionId")
+                    + " ad_selection.custom_audience_signals_owner as "
+                    + "custom_audience_signals_owner,"
+                    + " ad_selection.custom_audience_signals_buyer as "
+                    + "custom_audience_signals_buyer,"
+                    + " ad_selection.custom_audience_signals_name as custom_audience_signals_name,"
+                    + " ad_selection.custom_audience_signals_activation_time as"
+                    + " custom_audience_signals_activation_time,"
+                    + " ad_selection.custom_audience_signals_expiration_time as"
+                    + " custom_audience_signals_expiration_time,"
+                    + " ad_selection.custom_audience_signals_user_bidding_signals as"
+                    + " custom_audience_signals_user_bidding_signals, ad_selection"
+                    + ".contextual_signals"
+                    + " as contextual_signals,ad_selection.winning_ad_render_uri as"
+                    + " winning_ad_render_uri,ad_selection.winning_ad_bid as"
+                    + " winning_ad_bid,ad_selection.creation_timestamp as"
+                    + " creation_timestamp,buyer_decision_logic.buyer_decision_logic_js as"
+                    + " buyer_decision_logic_js, ad_selection.bidding_logic_uri as "
+                    + "bidding_logic_uri,"
+                    + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
+                    + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection"
+                    + ".bidding_logic_uri ="
+                    + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id ="
+                    + " :adSelectionId")
     public abstract DBAdSelectionEntry getAdSelectionEntityById(long adSelectionId);
 
     /**
@@ -208,28 +214,33 @@ public abstract class AdSelectionEntryDao {
      */
     @Query(
             "SELECT reporting_computation_info.ad_selection_id as ad_selection_id,"
-                + " reporting_computation_info.bidding_logic_uri as bidding_logic_uri,"
-                + " reporting_computation_info.buyer_decision_logic_js as buyer_decision_logic_js,"
-                + " reporting_computation_info.seller_contextual_signals as"
-                + " seller_contextual_signals, reporting_computation_info.buyer_contextual_signals"
-                + " as buyer_contextual_signals,"
-                + " reporting_computation_info.custom_audience_signals_owner as"
-                + " custom_audience_signals_owner,"
-                + " reporting_computation_info.custom_audience_signals_buyer as"
-                + " custom_audience_signals_buyer,"
-                + " reporting_computation_info.custom_audience_signals_name as"
-                + " custom_audience_signals_name,"
-                + " reporting_computation_info.custom_audience_signals_activation_time as"
-                + " custom_audience_signals_activation_time,"
-                + " reporting_computation_info.custom_audience_signals_expiration_time as"
-                + " custom_audience_signals_expiration_time,"
-                + " reporting_computation_info.custom_audience_signals_user_bidding_signals as"
-                + " custom_audience_signals_user_bidding_signals,"
-                + " reporting_computation_info.winning_ad_bid as winning_ad_bid,"
-                + " reporting_computation_info.winning_ad_render_uri as winning_ad_render_uri  FROM"
-                + " reporting_computation_info WHERE reporting_computation_info.ad_selection_id ="
-                + " :adSelectionId")
+                    + " reporting_computation_info.bidding_logic_uri as bidding_logic_uri,"
+                    + " reporting_computation_info.buyer_decision_logic_js as "
+                    + "buyer_decision_logic_js,"
+                    + " reporting_computation_info.seller_contextual_signals as"
+                    + " seller_contextual_signals, reporting_computation_info"
+                    + ".buyer_contextual_signals"
+                    + " as buyer_contextual_signals,"
+                    + " reporting_computation_info.custom_audience_signals_owner as"
+                    + " custom_audience_signals_owner,"
+                    + " reporting_computation_info.custom_audience_signals_buyer as"
+                    + " custom_audience_signals_buyer,"
+                    + " reporting_computation_info.custom_audience_signals_name as"
+                    + " custom_audience_signals_name,"
+                    + " reporting_computation_info.custom_audience_signals_activation_time as"
+                    + " custom_audience_signals_activation_time,"
+                    + " reporting_computation_info.custom_audience_signals_expiration_time as"
+                    + " custom_audience_signals_expiration_time,"
+                    + " reporting_computation_info.custom_audience_signals_user_bidding_signals as"
+                    + " custom_audience_signals_user_bidding_signals,"
+                    + " reporting_computation_info.winning_ad_bid as winning_ad_bid,"
+                    + " reporting_computation_info.winning_ad_render_uri as winning_ad_render_uri"
+                    + "  FROM"
+                    + " reporting_computation_info WHERE reporting_computation_info"
+                    + ".ad_selection_id ="
+                    + " :adSelectionId")
     public abstract DBReportingComputationInfo getReportingComputationInfoById(long adSelectionId);
+
     /**
      * Get the ad selection entries with a batch of ad_selection_ids.
      *
@@ -238,25 +249,29 @@ public abstract class AdSelectionEntryDao {
      */
     @Query(
             "SELECT ad_selection.ad_selection_id AS"
-                + " ad_selection_id,ad_selection.custom_audience_signals_owner as"
-                + " custom_audience_signals_owner, ad_selection.custom_audience_signals_buyer as"
-                + " custom_audience_signals_buyer, ad_selection.custom_audience_signals_name as"
-                + " custom_audience_signals_name,"
-                + " ad_selection.custom_audience_signals_activation_time as"
-                + " custom_audience_signals_activation_time,"
-                + " ad_selection.custom_audience_signals_expiration_time as"
-                + " custom_audience_signals_expiration_time,"
-                + " ad_selection.custom_audience_signals_user_bidding_signals as"
-                + " custom_audience_signals_user_bidding_signals, ad_selection.contextual_signals"
-                + " AS contextual_signals,ad_selection.winning_ad_render_uri AS"
-                + " winning_ad_render_uri,ad_selection.winning_ad_bid AS winning_ad_bid,"
-                + " ad_selection.creation_timestamp as creation_timestamp,"
-                + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js,"
-                + " ad_selection.bidding_logic_uri AS bidding_logic_uri,"
-                + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
-                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
-                + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
-                + " (:adSelectionIds) ")
+                    + " ad_selection_id,ad_selection.custom_audience_signals_owner as"
+                    + " custom_audience_signals_owner, ad_selection.custom_audience_signals_buyer"
+                    + " as"
+                    + " custom_audience_signals_buyer, ad_selection.custom_audience_signals_name as"
+                    + " custom_audience_signals_name,"
+                    + " ad_selection.custom_audience_signals_activation_time as"
+                    + " custom_audience_signals_activation_time,"
+                    + " ad_selection.custom_audience_signals_expiration_time as"
+                    + " custom_audience_signals_expiration_time,"
+                    + " ad_selection.custom_audience_signals_user_bidding_signals as"
+                    + " custom_audience_signals_user_bidding_signals, ad_selection"
+                    + ".contextual_signals"
+                    + " AS contextual_signals,ad_selection.winning_ad_render_uri AS"
+                    + " winning_ad_render_uri,ad_selection.winning_ad_bid AS winning_ad_bid,"
+                    + " ad_selection.creation_timestamp as creation_timestamp,"
+                    + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js,"
+                    + " ad_selection.bidding_logic_uri AS bidding_logic_uri,"
+                    + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
+                    + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection"
+                    + ".bidding_logic_uri ="
+                    + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id"
+                    + " IN"
+                    + " (:adSelectionIds) ")
     public abstract List<DBAdSelectionEntry> getAdSelectionEntities(List<Long> adSelectionIds);
 
     /**
@@ -267,25 +282,30 @@ public abstract class AdSelectionEntryDao {
      */
     @Query(
             "SELECT ad_selection.ad_selection_id AS"
-                + " ad_selection_id,ad_selection.custom_audience_signals_owner as"
-                + " custom_audience_signals_owner, ad_selection.custom_audience_signals_buyer as"
-                + " custom_audience_signals_buyer, ad_selection.custom_audience_signals_name as"
-                + " custom_audience_signals_name,"
-                + " ad_selection.custom_audience_signals_activation_time as"
-                + " custom_audience_signals_activation_time,"
-                + " ad_selection.custom_audience_signals_expiration_time as"
-                + " custom_audience_signals_expiration_time,"
-                + " ad_selection.custom_audience_signals_user_bidding_signals as"
-                + " custom_audience_signals_user_bidding_signals, ad_selection.contextual_signals"
-                + " AS contextual_signals,ad_selection.winning_ad_render_uri AS"
-                + " winning_ad_render_uri,ad_selection.winning_ad_bid AS winning_ad_bid,"
-                + " ad_selection.creation_timestamp as creation_timestamp,"
-                + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js,"
-                + " ad_selection.bidding_logic_uri AS bidding_logic_uri,"
-                + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
-                + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection.bidding_logic_uri ="
-                + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id IN"
-                + " (:adSelectionIds) AND ad_selection.caller_package_name = :callerPackageName")
+                    + " ad_selection_id,ad_selection.custom_audience_signals_owner as"
+                    + " custom_audience_signals_owner, ad_selection.custom_audience_signals_buyer"
+                    + " as"
+                    + " custom_audience_signals_buyer, ad_selection.custom_audience_signals_name as"
+                    + " custom_audience_signals_name,"
+                    + " ad_selection.custom_audience_signals_activation_time as"
+                    + " custom_audience_signals_activation_time,"
+                    + " ad_selection.custom_audience_signals_expiration_time as"
+                    + " custom_audience_signals_expiration_time,"
+                    + " ad_selection.custom_audience_signals_user_bidding_signals as"
+                    + " custom_audience_signals_user_bidding_signals, ad_selection"
+                    + ".contextual_signals"
+                    + " AS contextual_signals,ad_selection.winning_ad_render_uri AS"
+                    + " winning_ad_render_uri,ad_selection.winning_ad_bid AS winning_ad_bid,"
+                    + " ad_selection.creation_timestamp as creation_timestamp,"
+                    + " buyer_decision_logic.buyer_decision_logic_js AS buyer_decision_logic_js,"
+                    + " ad_selection.bidding_logic_uri AS bidding_logic_uri,"
+                    + " ad_selection.seller_contextual_signals as seller_contextual_signals FROM"
+                    + " ad_selection LEFT JOIN buyer_decision_logic ON ad_selection"
+                    + ".bidding_logic_uri ="
+                    + " buyer_decision_logic.bidding_logic_uri WHERE ad_selection.ad_selection_id"
+                    + " IN"
+                    + " (:adSelectionIds) AND ad_selection.caller_package_name = "
+                    + ":callerPackageName")
     public abstract List<DBAdSelectionEntry> getAdSelectionEntities(
             List<Long> adSelectionIds, String callerPackageName);
 
@@ -345,6 +365,20 @@ public abstract class AdSelectionEntryDao {
             long adSelectionId,
             String interactionKey,
             @ReportEventRequest.ReportingDestination int destination);
+
+    /**
+     * List all registered ad interactions for a given auction.
+     *
+     * @param adSelectionId The id of the ad selection / auction to query.
+     * @param destination The reporting desintation (i.e. buyer or seller or other valid option).
+     * @return List of registered ad interactions (empty if none exist).
+     */
+    @Query(
+            "SELECT interaction_key as interactionKey, interaction_reporting_uri as "
+                    + "interactionReportingUri FROM registered_ad_interactions "
+                    + "WHERE ad_selection_id = :adSelectionId AND destination = :destination")
+    public abstract List<RegisteredAdInteraction> listRegisteredAdInteractions(
+            long adSelectionId, @ReportEventRequest.ReportingDestination int destination);
 
     /**
      * Gets the {@link DBAdSelectionHistogramInfo} representing the histogram information associated

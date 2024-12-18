@@ -34,6 +34,30 @@ public class AuctionServerPayloadMetricsStrategyDisabled
     }
 
     @Override
+    public void setSellerConfigurationMetrics(
+            GetAdSelectionDataApiCalledStats.Builder builder,
+            GetAdSelectionDataApiCalledStats.PayloadOptimizationResult payloadOptimizationResult,
+            int inputGenerationLatencyMs,
+            int compressedBuyerInputCreatorVersion,
+            int numReEstimations) {
+        // do nothing
+    }
+
+    @Override
+    public void setSellerMaxPayloadSizeKb(
+            GetAdSelectionDataApiCalledStats.Builder builder, int sellerMaxPayloadSizeKb) {
+        // do nothing
+    }
+
+    @Override
+    public void setInputGenerationLatencyMsAndBuyerCreatorVersion(
+            GetAdSelectionDataApiCalledStats.Builder builder,
+            int inputGenerationLatencyMs,
+            int compressedBuyerInputCreatorVersion) {
+        // do nothing
+    }
+
+    @Override
     public void setServerAuctionCoordinatorSource(
             GetAdSelectionDataApiCalledStats.Builder builder,
             @AdsRelevanceStatusUtils.ServerAuctionCoordinatorSource int coordinatorSource) {

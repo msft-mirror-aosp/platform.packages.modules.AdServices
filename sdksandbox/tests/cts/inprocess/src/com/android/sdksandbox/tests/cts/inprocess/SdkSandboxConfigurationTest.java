@@ -26,7 +26,6 @@ import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -47,8 +46,8 @@ import android.webkit.WebView;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.AdServicesCommon;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -62,11 +61,9 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Tests to check some basic properties of the Sdk Sandbox processes.
- */
+/** Tests to check some basic properties of the Sdk Sandbox processes. */
 @RunWith(JUnit4.class)
-public class SdkSandboxConfigurationTest {
+public class SdkSandboxConfigurationTest extends DeviceSupportedBaseTest {
 
     private static final String TEST_PKG = "com.android.sdksandbox.tests.cts.inprocesstests";
     private static final String CURRENT_USER_ID =
@@ -74,13 +71,6 @@ public class SdkSandboxConfigurationTest {
     private final Context mContext =
             InstrumentationRegistry.getInstrumentation().getTargetContext();
     private final PackageManager mPackageManager = mContext.getPackageManager();
-
-    @Before
-    public void setUp() {
-        assumeTrue(
-                DeviceSupportUtils.isSdkSandboxSupported(
-                        InstrumentationRegistry.getInstrumentation().getContext()));
-    }
 
     /** Tests that uid belongs to the sdk sandbox processes uid range. */
     @Test

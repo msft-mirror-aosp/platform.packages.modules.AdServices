@@ -43,4 +43,5 @@ interface IMeasurementService {
             in IMeasurementApiStatusCallback callback);
     void deleteRegistrations(in DeletionParam params, in CallerMetadata callerMetadata,
             in IMeasurementCallback callback);
+    void schedulePeriodicJobs(in IMeasurementCallback callback);
 }

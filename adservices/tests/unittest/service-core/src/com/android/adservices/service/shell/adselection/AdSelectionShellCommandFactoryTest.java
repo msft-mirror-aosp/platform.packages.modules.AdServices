@@ -16,27 +16,31 @@
 
 package com.android.adservices.service.shell.adselection;
 
+import static com.google.common.truth.Truth.assertThat;
+
 import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.BuyerInputGenerator;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.shell.NoOpShellCommand;
 import com.android.adservices.service.shell.ShellCommand;
 import com.android.adservices.service.shell.ShellCommandFactory;
 
 import com.google.common.collect.Sets;
-import com.google.common.truth.Truth;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-public class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCase {
+public final class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCase {
     private static final boolean CONSENTED_DEBUGGING_CLI_ENABLED = true;
     @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
     @Mock private BuyerInputGenerator mBuyerInputGenerator;
     @Mock private AuctionServerDataCompressor mAuctionServerDataCompressor;
-
+    @Mock private ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
+    @Mock private AdSelectionEntryDao mAdSelectionEntryDao;
     private ShellCommandFactory mFactory;
 
     @Before
@@ -47,19 +51,21 @@ public class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCas
                         true,
                         mConsentedDebugConfigurationDao,
                         mBuyerInputGenerator,
-                        mAuctionServerDataCompressor);
+                        mAuctionServerDataCompressor,
+                        mConsentedDebugConfigurationGenerator,
+                        mAdSelectionEntryDao);
     }
 
     @Test
     public void test_consentedDebugCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand(ConsentedDebugShellCommand.CMD);
-        Truth.assertThat(shellCommand).isInstanceOf(ConsentedDebugShellCommand.class);
+        assertThat(shellCommand).isInstanceOf(ConsentedDebugShellCommand.class);
     }
 
     @Test
     public void test_GetAdSelectionDataCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand(GetAdSelectionDataCommand.CMD);
-        Truth.assertThat(shellCommand).isInstanceOf(GetAdSelectionDataCommand.class);
+        assertThat(shellCommand).isInstanceOf(GetAdSelectionDataCommand.class);
     }
 
     @Test
@@ -70,9 +76,11 @@ public class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCas
                         true,
                         mConsentedDebugConfigurationDao,
                         mBuyerInputGenerator,
-                        mAuctionServerDataCompressor);
+                        mAuctionServerDataCompressor,
+                        mConsentedDebugConfigurationGenerator,
+                        mAdSelectionEntryDao);
         ShellCommand shellCommand = mFactory.getShellCommand(ConsentedDebugShellCommand.CMD);
-        Truth.assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
+        assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
     }
 
     @Test
@@ -83,27 +91,50 @@ public class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCas
                         false,
                         mConsentedDebugConfigurationDao,
                         mBuyerInputGenerator,
-                        mAuctionServerDataCompressor);
+                        mAuctionServerDataCompressor,
+                        mConsentedDebugConfigurationGenerator,
+                        mAdSelectionEntryDao);
         ShellCommand shellCommand = mFactory.getShellCommand(GetAdSelectionDataCommand.CMD);
-        Truth.assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
+        assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
+    }
+
+    @Test
+    public void test_viewAuctionResultCmd() {
+        ShellCommand shellCommand = mFactory.getShellCommand(ViewAuctionResultCommand.CMD);
+        assertThat(shellCommand).isInstanceOf(ViewAuctionResultCommand.class);
+    }
+
+    @Test
+    public void test_viewAuctionResultCmdDisabled() {
+        mFactory =
+                new AdSelectionShellCommandFactory(
+                        false,
+                        false,
+                        mConsentedDebugConfigurationDao,
+                        mBuyerInputGenerator,
+                        mAuctionServerDataCompressor,
+                        mConsentedDebugConfigurationGenerator,
+                        mAdSelectionEntryDao);
+        ShellCommand shellCommand = mFactory.getShellCommand(ViewAuctionResultCommand.CMD);
+        assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
     }
 
     @Test
     public void test_invalidCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand("invalid");
-        Truth.assertThat(shellCommand).isNull();
+        assertThat(shellCommand).isNull();
     }
 
     @Test
     public void test_nullCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand(null);
-        Truth.assertThat(shellCommand).isNull();
+        assertThat(shellCommand).isNull();
     }
 
     @Test
     public void test_emptyCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand("");
-        Truth.assertThat(shellCommand).isNull();
+        assertThat(shellCommand).isNull();
     }
 
     @Test
@@ -114,9 +145,11 @@ public class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCas
                         true,
                         mConsentedDebugConfigurationDao,
                         mBuyerInputGenerator,
-                        mAuctionServerDataCompressor);
+                        mAuctionServerDataCompressor,
+                        mConsentedDebugConfigurationGenerator,
+                        mAdSelectionEntryDao);
         ShellCommand shellCommand = mFactory.getShellCommand("invalid");
-        Truth.assertThat(shellCommand).isNull();
+        assertThat(shellCommand).isNull();
     }
 
     @Test
@@ -127,13 +160,15 @@ public class AdSelectionShellCommandFactoryTest extends AdServicesMockitoTestCas
                         true,
                         mConsentedDebugConfigurationDao,
                         mBuyerInputGenerator,
-                        mAuctionServerDataCompressor);
+                        mAuctionServerDataCompressor,
+                        mConsentedDebugConfigurationGenerator,
+                        mAdSelectionEntryDao);
 
-        Truth.assertThat(Sets.newHashSet(mFactory.getAllCommandsHelp()))
+        assertThat(Sets.newHashSet(mFactory.getAllCommandsHelp()))
                 .containsExactlyElementsIn(
                         Sets.newHashSet(
                                 ConsentedDebugShellCommand.HELP,
                                 GetAdSelectionDataCommand.HELP,
-                                MockAuctionResultCommand.HELP));
+                                ViewAuctionResultCommand.HELP));
     }
 }

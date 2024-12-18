@@ -1,0 +1,20 @@
+{
+  "mocks": [
+    {
+      "request": {
+        "path": "/join"
+      },
+      "response": {
+        "body": "ProtectedSignalsJoin.json"
+      }
+    },
+    {
+      "request": {
+        "path": "/leave"
+      },
+      "response": {
+        "body": "ProtectedSignalsLeave.json"
+      }
+    }
+  ]
+}

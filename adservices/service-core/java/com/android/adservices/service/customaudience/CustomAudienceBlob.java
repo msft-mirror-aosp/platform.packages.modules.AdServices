@@ -17,6 +17,7 @@
 package com.android.adservices.service.customaudience;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+import static android.adservices.customaudience.CustomAudience.PRIORITY_DEFAULT;
 
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
@@ -133,6 +134,7 @@ public class CustomAudienceBlob {
     public static final String OWNER_KEY = "owner";
     public static final String BUYER_KEY = "buyer";
     public static final String AUCTION_SERVER_REQUEST_FLAGS_KEY = "auction_server_request_flags";
+    public static final String PRIORITY_KEY = "priority";
     public static final String OMIT_ADS_VALUE = "omit_ads";
     static final LinkedHashSet<String> mKeysSet =
             new LinkedHashSet<>(
@@ -151,13 +153,15 @@ public class CustomAudienceBlob {
     private final ReadFiltersFromJsonStrategy mReadFiltersFromJsonStrategy;
     private final ReadAdRenderIdFromJsonStrategy mReadAdRenderIdFromJsonStrategy;
     private final boolean mAuctionServerRequestFlagsEnabled;
+    private final boolean mSellerConfigurationEnabled;
 
     public CustomAudienceBlob(
             boolean frequencyCapFilteringEnabled,
             boolean appInstallFilteringEnabled,
             boolean adRenderIdEnabled,
             long adRenderIdMaxLength,
-            boolean auctionServerRequestFlagsEnabled) {
+            boolean auctionServerRequestFlagsEnabled,
+            boolean sellerConfigurationEnabled) {
         mReadFiltersFromJsonStrategy =
                 ReadFiltersFromJsonStrategyFactory.getStrategy(
                         frequencyCapFilteringEnabled, appInstallFilteringEnabled);
@@ -165,12 +169,14 @@ public class CustomAudienceBlob {
                 ReadAdRenderIdFromJsonStrategyFactory.getStrategy(
                         adRenderIdEnabled, adRenderIdMaxLength);
         mAuctionServerRequestFlagsEnabled = auctionServerRequestFlagsEnabled;
+        mSellerConfigurationEnabled = sellerConfigurationEnabled;
     }
 
     @VisibleForTesting
     public CustomAudienceBlob() {
+        // TODO (b/356394210) Move this convenience method into a test fixture (or remove entirely)
         // Filtering enabled by default.
-        this(true, true, true, FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH, false);
+        this(true, true, true, FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH, false, false);
     }
 
     /** Update fields of the {@link CustomAudienceBlob} from a {@link JSONObject}. */
@@ -230,6 +236,11 @@ public class CustomAudienceBlob {
             this.setAuctionServerRequestFlags(
                     this.getAuctionServerRequestFlagsFromJSONObject(
                             json, AUCTION_SERVER_REQUEST_FLAGS_KEY));
+        }
+
+        // Set priority if seller configuration flag is enabled
+        if (mSellerConfigurationEnabled && jsonKeySet.contains(PRIORITY_KEY)) {
+            this.setPriority(this.getDoubleFromJSONObject(json, PRIORITY_KEY));
         }
     }
 
@@ -726,6 +737,32 @@ public class CustomAudienceBlob {
         }
     }
 
+    /**
+     * @return the {@code priority} {@link Field}
+     */
+    public double getPriority() {
+        double result = PRIORITY_DEFAULT;
+        if (mFieldsMap.containsKey(PRIORITY_KEY)) {
+            result = (double) mFieldsMap.get(PRIORITY_KEY).mValue;
+        }
+        return result;
+    }
+
+    /** set the {@code priority} {@link Field} */
+    public void setPriority(double value) {
+        if (mFieldsMap.containsKey(PRIORITY_KEY)) {
+            Field<Double> field = (Field<Double>) mFieldsMap.get(PRIORITY_KEY);
+            field.mValue = value;
+        } else {
+            Field<Double> field = new Field<>((dbl) -> dbl, this::getDoubleFromJSONObject);
+
+            field.mName = PRIORITY_KEY;
+            field.mValue = value;
+
+            mFieldsMap.put(PRIORITY_KEY, field);
+        }
+    }
+
     private JSONArray getAdsAsJSONObject(List<AdData> value) {
         try {
             JSONArray adsJson = new JSONArray();
@@ -868,6 +905,23 @@ public class CustomAudienceBlob {
                     } catch (JSONException e) {
                         throw new RuntimeException(e);
                     }
+                });
+    }
+
+    private Double getDoubleFromJSONObject(JSONObject json, String key) {
+        return getValueFromJSONObject(
+                json,
+                key,
+                (jsonObject, jsonKey) -> {
+                    double priority = PRIORITY_DEFAULT;
+                    try {
+                        priority = jsonObject.getDouble(jsonKey);
+                    } catch (JSONException e) {
+                        // Ignore since we don't want to fail if there is an issue with this
+                        // optional field
+                        sLogger.d(String.valueOf(e));
+                    }
+                    return priority;
                 });
     }
 

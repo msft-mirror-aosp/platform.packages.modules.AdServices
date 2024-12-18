@@ -19,7 +19,6 @@ package com.android.adservices.service.customaudience;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.annotation.NonNull;
-import android.content.Context;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
@@ -46,7 +45,7 @@ import java.util.Objects;
  *
  * <p>This class is thread safe.
  */
-public class CustomAudienceImpl {
+public final class CustomAudienceImpl {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final Object SINGLETON_LOCK = new Object();
 
@@ -59,6 +58,7 @@ public class CustomAudienceImpl {
     @NonNull private final Clock mClock;
     @NonNull private final Flags mFlags;
     private final boolean mAuctionServerRequestFlagsEnabled;
+    private final boolean mSellerConfigurationFlagEnabled;
 
     @VisibleForTesting
     public CustomAudienceImpl(
@@ -80,6 +80,9 @@ public class CustomAudienceImpl {
         mFlags = flags;
         mAuctionServerRequestFlagsEnabled =
                 BinderFlagReader.readFlag(flags::getFledgeAuctionServerRequestFlagsEnabled);
+        mSellerConfigurationFlagEnabled =
+                BinderFlagReader.readFlag(
+                        flags::getFledgeGetAdSelectionDataSellerConfigurationEnabled);
     }
 
     /**
@@ -88,18 +91,17 @@ public class CustomAudienceImpl {
      * <p>If no instance has been initialized yet, a new one will be created. Otherwise, the
      * existing instance will be returned.
      */
-    public static CustomAudienceImpl getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context, "Context must be provided.");
+    public static CustomAudienceImpl getInstance() {
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
                 Flags flags = FlagsFactory.getFlags();
                 CustomAudienceDao customAudienceDao =
-                        CustomAudienceDatabase.getInstance(context).customAudienceDao();
+                        CustomAudienceDatabase.getInstance().customAudienceDao();
                 sSingleton =
                         new CustomAudienceImpl(
                                 customAudienceDao,
                                 new CustomAudienceQuantityChecker(customAudienceDao, flags),
-                                CustomAudienceValidator.getInstance(context, flags),
+                                CustomAudienceValidator.getInstance(),
                                 Clock.systemUTC(),
                                 flags);
             }
@@ -139,11 +141,14 @@ public class CustomAudienceImpl {
                         appInstallFilteringEnabled,
                         adRenderIdEnabled);
 
-        boolean isDebuggableCustomAudience = devContext.getDevOptionsEnabled();
+        boolean isDebuggableCustomAudience = devContext.getDeviceDevOptionsEnabled();
         sLogger.v("Is debuggable custom audience: %b", isDebuggableCustomAudience);
 
         Duration customAudienceDefaultExpireIn =
                 Duration.ofMillis(mFlags.getFledgeCustomAudienceDefaultExpireInMs());
+
+        // TODO (b/352602308) Add priority to fetchAndJoinCustomAudience() and
+        // scheduleCustomAudienceUpdate()
         DBCustomAudience dbCustomAudience =
                 DBCustomAudience.fromServiceObject(
                         customAudience,
@@ -152,7 +157,8 @@ public class CustomAudienceImpl {
                         customAudienceDefaultExpireIn,
                         dataConversionStrategy,
                         isDebuggableCustomAudience,
-                        mAuctionServerRequestFlagsEnabled);
+                        mAuctionServerRequestFlagsEnabled,
+                        mSellerConfigurationFlagEnabled);
 
         sLogger.v("Inserting CA in the DB: %s", dbCustomAudience);
         mCustomAudienceDao.insertOrOverwriteCustomAudience(

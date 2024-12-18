@@ -26,14 +26,13 @@ import static org.junit.Assert.assertThrows;
 import android.adservices.adselection.PerBuyerConfiguration;
 import android.os.Parcel;
 
-import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 @RequiresSdkLevelAtLeastS
-public class PerBuyerConfigurationTest extends AdServicesCtsTestCase {
+public final class PerBuyerConfigurationTest extends CtsAdServicesDeviceTestCase {
     @Test
     public void testPerBuyerConfiguration_success() {
         PerBuyerConfiguration perBuyerConfiguration =

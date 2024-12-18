@@ -49,13 +49,31 @@ import org.junit.runner.Description;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 
-// TODO(b/315542995): provide host-side implementation
 /**
  * Test case for {@link AbstractSdkLevelSupportedRule} implementations.
  *
  * <p>By default, it uses a {@link FakeSdkLevelSupportedRule bogus rule} so it can be run by IDEs,\
  * but subclasses should implement {@link #newRule(Level, Level)} and {@link
  * #newRuleForDeviceLevelAndRuleAtLeastLevel(Level)}.
+ *
+ * <p>Notice that currently there is not Android project to run these side-less tests, so you would
+ * need to use either the device-side ({@code AdServicesSharedLibrariesUnitTests}) or host-side
+ * ({@code AdServicesSharedLibrariesHostTests}) project:
+ *
+ * <ul>
+ *   <li>{@code atest AdServicesSharedLibrariesUnitTests:AbstractSdkLevelSupportedRuleTest}
+ *   <li>{@code atest AdServicesSharedLibrariesHostTests:AbstractSdkLevelSupportedRuleTest}
+ * </ul>
+ *
+ * <p>Similarly, you could use run the "side-specific" test as well:
+ *
+ * <ul>
+ *   <li>{@code atest AdServicesSharedLibrariesUnitTests:SdkLevelSupportedRuleTest}
+ *   <li>{@code atest AdServicesSharedLibrariesHostTests:HostSideSdkLevelSupportedRuleTest}
+ * </ul>
+ *
+ * <p>Notice that when running the host-side tests, you can use the {@code --host} option so it
+ * doesn't require a connected device.
  */
 public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
 
@@ -75,7 +93,7 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
     private final SimpleStatement mBaseStatement = new SimpleStatement();
 
     public AbstractSdkLevelSupportedRuleTest() {
-        this(StandardStreamsLogger.getInstance());
+        this(DynamicLogger.getInstance());
     }
 
     protected AbstractSdkLevelSupportedRuleTest(RealLogger realLogger) {
@@ -955,12 +973,12 @@ public class AbstractSdkLevelSupportedRuleTest extends SharedSidelessTestCase {
         }
 
         private FakeSdkLevelSupportedRule(Range ruleRange, Level deviceLevel) {
-            super(StandardStreamsLogger.getInstance(), ruleRange);
+            super(DynamicLogger.getInstance(), ruleRange);
             mDeviceLevel = deviceLevel;
         }
 
         @Override
-        public Level getDeviceApiLevel() {
+        public Level getRawDeviceApiLevel() {
             if (mDeviceLevel == null) {
                 throw new UnsupportedOperationException(
                         "Rule created with constructor that doesn't provide the device level");

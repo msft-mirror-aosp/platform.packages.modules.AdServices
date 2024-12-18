@@ -118,16 +118,11 @@ public final class AsyncRegistrationFallbackJob implements JobWorker {
 
     @VisibleForTesting
     void processAsyncRecords(Context context) {
-        final JobLockHolder lock = JobLockHolder.getInstance(ASYNC_REGISTRATION_PROCESSING);
-        if (lock.tryLock()) {
-            try {
-                AsyncRegistrationQueueRunner.getInstance(context).runAsyncRegistrationQueueWorker();
-                return;
-            } finally {
-                lock.unlock();
-            }
-        }
-
-        sLogger.d("AsyncRegistrationFallbackJob did not acquire the lock");
+        JobLockHolder.getInstance(ASYNC_REGISTRATION_PROCESSING)
+                .runWithLock(
+                        "AsyncRegistrationFallbackJob",
+                        () ->
+                                AsyncRegistrationQueueRunner.getInstance()
+                                        .runAsyncRegistrationQueueWorker());
     }
 }

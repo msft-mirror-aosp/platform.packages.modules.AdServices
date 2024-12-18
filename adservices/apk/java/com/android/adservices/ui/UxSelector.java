@@ -35,7 +35,6 @@ public interface UxSelector {
         UNKNOWN,
         GA,
         U18,
-        RVC,
         GA_WITH_PAS
     }
 
@@ -61,17 +60,14 @@ public interface UxSelector {
     default EndUserUx initWithUx(Context context, boolean beforePasUxActive) {
         EndUserUx endUserUx = getEndUserUx(context, beforePasUxActive);
         switch (endUserUx) {
-            case U18:
-                initU18();
-                break;
             case GA:
                 initGA();
                 break;
-            case RVC:
-                initRvc();
-                break;
             case GA_WITH_PAS:
                 initGaUxWithPas();
+                break;
+            case U18:
+                initU18();
                 break;
             default:
                 initGA();
@@ -107,8 +103,6 @@ public interface UxSelector {
                     return EndUserUx.GA_WITH_PAS;
                 }
                 return EndUserUx.GA;
-            case RVC_UX:
-                return EndUserUx.RVC;
             default:
                 // TODO: log some warning or error
                 return EndUserUx.GA;
@@ -126,12 +120,6 @@ public interface UxSelector {
      * PrivacySandboxUxCollection#U18_UX} mode.
      */
     void initU18();
-
-    /**
-     * This method will be called in {@link #initWithUx} if app is in {@link
-     * PrivacySandboxUxCollection#RVC_UX} mode.
-     */
-    void initRvc();
 
     /**
      * This method will be called in {@link #initWithUx} if app is in {@link

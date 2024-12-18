@@ -21,6 +21,7 @@ import android.annotation.Nullable;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
@@ -47,8 +48,7 @@ public class UserProfileIdDaoSharedPreferencesImpl implements UserProfileIdDao {
     private static volatile UserProfileIdDao sUserProfileIdDao;
 
     @VisibleForTesting
-    UserProfileIdDaoSharedPreferencesImpl(
-            @NonNull final SharedPreferences sharedPreferences, @NonNull final Clock clock) {
+    UserProfileIdDaoSharedPreferencesImpl(SharedPreferences sharedPreferences, Clock clock) {
         Objects.requireNonNull(sharedPreferences);
 
         mSharedPreferences = sharedPreferences;
@@ -57,11 +57,10 @@ public class UserProfileIdDaoSharedPreferencesImpl implements UserProfileIdDao {
 
     /** Returns the singleton instance of the {@link UserProfileIdDaoSharedPreferencesImpl} */
     @NonNull
-    public static UserProfileIdDao getInstance(@NonNull final Context context) {
-        Objects.requireNonNull(context, "Context must be provided.");
-
+    public static UserProfileIdDao getInstance() {
         synchronized (SINGLETON_LOCK) {
             if (sUserProfileIdDao == null) {
+                Context context = ApplicationContextSingleton.get();
                 sUserProfileIdDao =
                         new UserProfileIdDaoSharedPreferencesImpl(
                                 context.getSharedPreferences(STORAGE_NAME, Context.MODE_PRIVATE),
@@ -85,7 +84,7 @@ public class UserProfileIdDaoSharedPreferencesImpl implements UserProfileIdDao {
     }
 
     @Override
-    public void setUserProfileId(@NonNull final UUID userProfileId) {
+    public void setUserProfileId(final UUID userProfileId) {
         Objects.requireNonNull(userProfileId);
 
         mSharedPreferences.edit().putString(USER_PROFILE_ID_KEY, userProfileId.toString()).commit();

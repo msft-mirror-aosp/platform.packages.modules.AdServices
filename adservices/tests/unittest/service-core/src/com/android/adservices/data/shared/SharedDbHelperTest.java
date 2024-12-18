@@ -16,44 +16,36 @@
 
 package com.android.adservices.data.shared;
 
-import static com.android.adservices.data.measurement.migration.MigrationTestHelper.populateDb;
-import static com.android.adservices.data.measurement.migration.MigrationTestHelper.verifyDataInDb;
 import static com.android.adservices.data.shared.migration.MigrationTestHelper.createReferenceDbAtVersion;
+import static com.android.adservices.data.shared.migration.MigrationTestHelper.populateDb;
+import static com.android.adservices.data.shared.migration.MigrationTestHelper.verifyDataInDb;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
-import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.DbHelperTest;
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.data.DbHelperV1;
 import com.android.adservices.data.enrollment.EnrollmentTables;
-import com.android.adservices.data.measurement.DbHelperV1;
 import com.android.adservices.data.shared.migration.ContentValueFixtures;
 import com.android.adservices.data.shared.migration.SharedDbMigratorV2;
 import com.android.adservices.data.shared.migration.SharedDbMigratorV3;
 import com.android.adservices.data.shared.migration.SharedDbMigratorV4;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -63,52 +55,37 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public class SharedDbHelperTest {
+@SpyStatic(FlagsFactory.class)
+public final class SharedDbHelperTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String MIGRATION_DB_REFERENCE_NAME =
             "adservices_shared_db_migrate_reference.db";
     private static final String OLD_TEST_DB_NAME = "old_test_db.db";
     private static final String SHARED_DB_NAME = "adservices_shared_db_test.db";
     private static final int ENROLLMENT_OLD_DB_FINAL_VERSION = 7;
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
-
-    @Mock private Flags mMockFlags;
-    private MockitoSession mStaticMockSession;
 
     @Before
     public void setup() {
         Stream.of(MIGRATION_DB_REFERENCE_NAME, OLD_TEST_DB_NAME, SHARED_DB_NAME)
-                .map(sContext::getDatabasePath)
+                .map(mContext::getDatabasePath)
                 .filter(File::exists)
                 .forEach(File::delete);
 
-        MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-    }
-
-    @After
-    public void teardown() {
-        mStaticMockSession.finishMocking();
+        mocker.mockGetFlags(mMockFlags);
     }
 
     @Test
     public void testNewInstall() {
         SharedDbHelper sharedDbHelper =
                 new SharedDbHelper(
-                        sContext,
+                        mContext,
                         SHARED_DB_NAME,
                         SharedDbHelper.DATABASE_VERSION_V3,
                         DbTestUtil.getDbHelperForTest());
         SQLiteDatabase db = sharedDbHelper.safeGetWritableDatabase();
         SQLiteDatabase referenceLatestDb =
                 createReferenceDbAtVersion(
-                        sContext, MIGRATION_DB_REFERENCE_NAME, SharedDbHelper.DATABASE_VERSION_V3);
+                        mContext, MIGRATION_DB_REFERENCE_NAME, SharedDbHelper.DATABASE_VERSION_V3);
         DbTestUtil.assertDatabasesEqual(referenceLatestDb, db);
     }
 
@@ -116,68 +93,68 @@ public class SharedDbHelperTest {
     public void testNewInstall_sharedDbV4() {
         SharedDbHelper sharedDbHelper =
                 new SharedDbHelper(
-                        sContext,
+                        mContext,
                         SHARED_DB_NAME,
                         SharedDbHelper.DATABASE_VERSION_V4,
                         DbTestUtil.getDbHelperForTest());
         SQLiteDatabase db = sharedDbHelper.safeGetWritableDatabase();
         SQLiteDatabase referenceLatestDb =
                 createReferenceDbAtVersion(
-                        sContext, MIGRATION_DB_REFERENCE_NAME, SharedDbHelper.DATABASE_VERSION_V4);
+                        mContext, MIGRATION_DB_REFERENCE_NAME, SharedDbHelper.DATABASE_VERSION_V4);
         DbTestUtil.assertDatabasesEqual(referenceLatestDb, db);
     }
 
     @Test
     public void testEnrollmentTableMigrationFromOldDatabase() {
-        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, OLD_TEST_DB_NAME, 1);
+        DbHelperV1 dbHelperV1 = new DbHelperV1(mContext, OLD_TEST_DB_NAME, 1);
         SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
 
-        assertEquals(1, db.getVersion());
+        expect.that(db.getVersion()).isEqualTo(1);
 
         DbHelper dbHelper =
-                new DbHelper(sContext, OLD_TEST_DB_NAME, ENROLLMENT_OLD_DB_FINAL_VERSION);
+                new DbHelper(mContext, OLD_TEST_DB_NAME, ENROLLMENT_OLD_DB_FINAL_VERSION);
         SQLiteDatabase oldDb = dbHelper.safeGetWritableDatabase();
 
-        assertEquals(ENROLLMENT_OLD_DB_FINAL_VERSION, oldDb.getVersion());
+        expect.that(oldDb.getVersion()).isEqualTo(ENROLLMENT_OLD_DB_FINAL_VERSION);
 
         SharedDbHelper sharedDbHelper =
                 new SharedDbHelper(
-                        sContext, SHARED_DB_NAME, SharedDbHelper.DATABASE_VERSION_V3, dbHelper);
+                        mContext, SHARED_DB_NAME, SharedDbHelper.DATABASE_VERSION_V3, dbHelper);
         SQLiteDatabase actualMigratedDb = sharedDbHelper.safeGetWritableDatabase();
 
         SQLiteDatabase referenceLatestDb =
                 createReferenceDbAtVersion(
-                        sContext, MIGRATION_DB_REFERENCE_NAME, SharedDbHelper.DATABASE_VERSION_V3);
+                        mContext, MIGRATION_DB_REFERENCE_NAME, SharedDbHelper.DATABASE_VERSION_V3);
         DbTestUtil.assertDatabasesEqual(referenceLatestDb, actualMigratedDb);
         DbHelperTest.assertEnrollmentTableDoesNotExist(oldDb);
     }
 
     @Test
     public void testMigrationDataIntegrityToV1FromOldDatabase() {
-        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, OLD_TEST_DB_NAME, 1);
+        DbHelperV1 dbHelperV1 = new DbHelperV1(mContext, OLD_TEST_DB_NAME, 1);
         SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
 
-        assertEquals(1, db.getVersion());
+        expect.that(db.getVersion()).isEqualTo(1);
 
         DbHelper dbHelper =
-                new DbHelper(sContext, OLD_TEST_DB_NAME, ENROLLMENT_OLD_DB_FINAL_VERSION);
+                new DbHelper(mContext, OLD_TEST_DB_NAME, ENROLLMENT_OLD_DB_FINAL_VERSION);
         SQLiteDatabase oldDb = dbHelper.safeGetWritableDatabase();
 
-        assertEquals(ENROLLMENT_OLD_DB_FINAL_VERSION, oldDb.getVersion());
+        expect.that(oldDb.getVersion()).isEqualTo(ENROLLMENT_OLD_DB_FINAL_VERSION);
         // Sorted map because in case we need to add in order to avoid FK Constraints
         Map<String, List<ContentValues>> fakeData = createMigrationFakeDataDistinctSites();
 
         populateDb(oldDb, fakeData);
         SharedDbHelper sharedDbHelper =
                 new SharedDbHelper(
-                        sContext, SHARED_DB_NAME, SharedDbHelper.DATABASE_VERSION_V3, dbHelper);
+                        mContext, SHARED_DB_NAME, SharedDbHelper.DATABASE_VERSION_V3, dbHelper);
         SQLiteDatabase newDb = sharedDbHelper.safeGetWritableDatabase();
         DbHelperTest.assertEnrollmentTableDoesNotExist(oldDb);
         SQLiteDatabase referenceLatestDb =
                 createReferenceDbAtVersion(
-                        sContext, MIGRATION_DB_REFERENCE_NAME, SharedDbHelper.DATABASE_VERSION_V3);
+                        mContext, MIGRATION_DB_REFERENCE_NAME, SharedDbHelper.DATABASE_VERSION_V3);
         DbTestUtil.assertDatabasesEqual(referenceLatestDb, newDb);
-        assertEquals(SharedDbHelper.DATABASE_VERSION_V3, newDb.getVersion());
+        expect.that(newDb.getVersion()).isEqualTo(SharedDbHelper.DATABASE_VERSION_V3);
         verifyDataInDb(newDb, fakeData);
         emptyTables(newDb, EnrollmentTables.ENROLLMENT_TABLES);
         emptyTables(oldDb, EnrollmentTables.ENROLLMENT_TABLES);
@@ -185,30 +162,30 @@ public class SharedDbHelperTest {
 
     @Test
     public void testMigrationExcludesDuplicatesSites() {
-        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, OLD_TEST_DB_NAME, 1);
+        DbHelperV1 dbHelperV1 = new DbHelperV1(mContext, OLD_TEST_DB_NAME, 1);
         SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
 
-        assertEquals(1, db.getVersion());
+        expect.that(db.getVersion()).isEqualTo(1);
 
         DbHelper dbHelper =
-                new DbHelper(sContext, OLD_TEST_DB_NAME, ENROLLMENT_OLD_DB_FINAL_VERSION);
+                new DbHelper(mContext, OLD_TEST_DB_NAME, ENROLLMENT_OLD_DB_FINAL_VERSION);
         SQLiteDatabase oldDb = dbHelper.safeGetWritableDatabase();
 
-        assertEquals(ENROLLMENT_OLD_DB_FINAL_VERSION, oldDb.getVersion());
+        expect.that(oldDb.getVersion()).isEqualTo(ENROLLMENT_OLD_DB_FINAL_VERSION);
         // Sorted map because in case we need to add in order to avoid FK Constraints
         Map<String, List<ContentValues>> preFakeData = createMigrationFakeDataFull();
         Map<String, List<ContentValues>> postFakeData = createPostMigrationFakeDataFull();
         populateDb(oldDb, preFakeData);
         SharedDbHelper sharedDbHelper =
                 new SharedDbHelper(
-                        sContext, SHARED_DB_NAME, SharedDbHelper.DATABASE_VERSION_V3, dbHelper);
+                        mContext, SHARED_DB_NAME, SharedDbHelper.DATABASE_VERSION_V3, dbHelper);
         SQLiteDatabase newDb = sharedDbHelper.safeGetWritableDatabase();
         DbHelperTest.assertEnrollmentTableDoesNotExist(oldDb);
         SQLiteDatabase referenceLatestDb =
                 createReferenceDbAtVersion(
-                        sContext, MIGRATION_DB_REFERENCE_NAME, SharedDbHelper.DATABASE_VERSION_V3);
+                        mContext, MIGRATION_DB_REFERENCE_NAME, SharedDbHelper.DATABASE_VERSION_V3);
         DbTestUtil.assertDatabasesEqual(referenceLatestDb, newDb);
-        assertEquals(SharedDbHelper.DATABASE_VERSION_V3, newDb.getVersion());
+        expect.that(newDb.getVersion()).isEqualTo(SharedDbHelper.DATABASE_VERSION_V3);
         verifyDataInDb(newDb, postFakeData);
         emptyTables(newDb, EnrollmentTables.ENROLLMENT_TABLES);
         emptyTables(oldDb, EnrollmentTables.ENROLLMENT_TABLES);
@@ -307,7 +284,7 @@ public class SharedDbHelperTest {
     public void testSupportsEnrollmentAPISchemaColumns() {
         SharedDbHelper sharedDbHelperV3 =
                 new SharedDbHelper(
-                        sContext,
+                        mContext,
                         SHARED_DB_NAME,
                         SharedDbHelper.DATABASE_VERSION_V3,
                         DbTestUtil.getDbHelperForTest());
@@ -315,21 +292,23 @@ public class SharedDbHelperTest {
 
         SharedDbHelper sharedDbHelperV4 =
                 new SharedDbHelper(
-                        sContext,
+                        mContext,
                         SHARED_DB_NAME,
                         SharedDbHelper.DATABASE_VERSION_V4,
                         DbTestUtil.getDbHelperForTest());
-        assertThat(sharedDbHelperV4.supportsEnrollmentAPISchemaColumns()).isTrue();
+        assertWithMessage("supportsEnrollmentAPISchemaColumns")
+                .that(sharedDbHelperV4.supportsEnrollmentAPISchemaColumns())
+                .isTrue();
     }
 
     @Test
     public void testGetDatabaseVersionToCreate() {
         // Test feature flag is off
         Mockito.when(mMockFlags.getSharedDatabaseSchemaVersion4Enabled()).thenReturn(false);
-        assertThat(SharedDbHelper.getDatabaseVersionToCreate()).isEqualTo(3);
+        expect.that(SharedDbHelper.getDatabaseVersionToCreate()).isEqualTo(3);
 
         // Test feature flag is on
         Mockito.when(mMockFlags.getSharedDatabaseSchemaVersion4Enabled()).thenReturn(true);
-        assertThat(SharedDbHelper.getDatabaseVersionToCreate()).isEqualTo(4);
+        expect.that(SharedDbHelper.getDatabaseVersionToCreate()).isEqualTo(4);
     }
 }

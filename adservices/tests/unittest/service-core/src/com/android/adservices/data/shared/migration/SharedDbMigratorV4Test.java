@@ -16,29 +16,26 @@
 
 package com.android.adservices.data.shared.migration;
 
-import static com.android.adservices.data.DbTestUtil.getDbHelperForTest;
+import static com.android.adservices.common.DbTestUtil.getDbHelperForTest;
 
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
 
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 
-import com.android.adservices.data.DbTestUtil;
+import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.encryptionkey.EncryptionKeyTables;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 import com.android.adservices.data.shared.SharedDbHelper;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-@RunWith(MockitoJUnitRunner.class)
-public class SharedDbMigratorV4Test extends SharedDbMigratorTestBase {
+public final class SharedDbMigratorV4Test extends SharedDbMigratorTestBase {
 
     /**
      * @return shared db target version.
@@ -62,14 +59,15 @@ public class SharedDbMigratorV4Test extends SharedDbMigratorTestBase {
         // Set up
         SharedDbHelper dbHelper =
                 new SharedDbHelper(
-                        sContext, SHARED_DATABASE_NAME_FOR_MIGRATION, 3, getDbHelperForTest());
+                        mContext, SHARED_DATABASE_NAME_FOR_MIGRATION, 3, getDbHelperForTest());
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         // Ensures SharedDbV3 only contains 8 columns
-        assertTrue(
-                DbTestUtil.doesTableExistAndColumnCountMatch(
-                        db,
-                        EnrollmentTables.EnrollmentDataContract.TABLE,
-                        /* number Of Columns */ 8));
+        assertThat(
+                        DbTestUtil.doesTableExistAndColumnCountMatch(
+                                db,
+                                EnrollmentTables.EnrollmentDataContract.TABLE,
+                                /* number Of Columns */ 8))
+                .isTrue();
 
         Map<String, List<ContentValues>> fakeData = createFakeDataV3();
         MigrationTestHelper.populateDb(db, fakeData);
@@ -78,23 +76,27 @@ public class SharedDbMigratorV4Test extends SharedDbMigratorTestBase {
         getTestSubject().performMigration(db, 3, 4);
 
         // Assertion
-        assertTrue(SharedDbHelper.hasAllTables(db, EnrollmentTables.ENROLLMENT_TABLES));
-        assertTrue(SharedDbHelper.hasAllTables(db, EncryptionKeyTables.ENCRYPTION_KEY_TABLES));
-        assertTrue(
-                MigrationHelpers.isColumnPresent(
-                        db,
-                        EnrollmentTables.EnrollmentDataContract.TABLE,
-                        EnrollmentTables.EnrollmentDataContract.ENROLLED_SITE));
-        assertTrue(
-                MigrationHelpers.isColumnPresent(
-                        db,
-                        EnrollmentTables.EnrollmentDataContract.TABLE,
-                        EnrollmentTables.EnrollmentDataContract.ENROLLED_APIS));
-        assertTrue(
-                DbTestUtil.doesTableExistAndColumnCountMatch(
-                        db,
-                        EnrollmentTables.EnrollmentDataContract.TABLE,
-                        /* number Of Columns */ 10));
+        assertThat(SharedDbHelper.hasAllTables(db, EnrollmentTables.ENROLLMENT_TABLES)).isTrue();
+        assertThat(SharedDbHelper.hasAllTables(db, EncryptionKeyTables.ENCRYPTION_KEY_TABLES))
+                .isTrue();
+        assertThat(
+                        MigrationHelpers.isColumnPresent(
+                                db,
+                                EnrollmentTables.EnrollmentDataContract.TABLE,
+                                EnrollmentTables.EnrollmentDataContract.ENROLLED_SITE))
+                .isTrue();
+        assertThat(
+                        MigrationHelpers.isColumnPresent(
+                                db,
+                                EnrollmentTables.EnrollmentDataContract.TABLE,
+                                EnrollmentTables.EnrollmentDataContract.ENROLLED_APIS))
+                .isTrue();
+        assertThat(
+                        DbTestUtil.doesTableExistAndColumnCountMatch(
+                                db,
+                                EnrollmentTables.EnrollmentDataContract.TABLE,
+                                /* number Of Columns */ 10))
+                .isTrue();
         // Verify data migrated from existing columns
         MigrationTestHelper.verifyDataInDb(db, createFakeDataV4());
     }
@@ -129,7 +131,7 @@ public class SharedDbMigratorV4Test extends SharedDbMigratorTestBase {
         // Set up
         SharedDbHelper dbHelper =
                 new SharedDbHelper(
-                        sContext, SHARED_DATABASE_NAME_FOR_MIGRATION, 4, getDbHelperForTest());
+                        mContext, SHARED_DATABASE_NAME_FOR_MIGRATION, 4, getDbHelperForTest());
         SQLiteDatabase db = dbHelper.getWritableDatabase();
         Map<String, List<ContentValues>> fakeData = createFakeDataV4();
         MigrationTestHelper.populateDb(db, fakeData);
@@ -138,18 +140,21 @@ public class SharedDbMigratorV4Test extends SharedDbMigratorTestBase {
         getTestSubject().performMigration(db, 4, 4);
 
         // Assertion
-        assertTrue(SharedDbHelper.hasAllTables(db, EnrollmentTables.ENROLLMENT_TABLES));
-        assertTrue(SharedDbHelper.hasAllTables(db, EncryptionKeyTables.ENCRYPTION_KEY_TABLES));
-        assertTrue(
-                MigrationHelpers.isColumnPresent(
-                        db,
-                        EnrollmentTables.EnrollmentDataContract.TABLE,
-                        EnrollmentTables.EnrollmentDataContract.ENROLLED_SITE));
-        assertTrue(
-                MigrationHelpers.isColumnPresent(
-                        db,
-                        EnrollmentTables.EnrollmentDataContract.TABLE,
-                        EnrollmentTables.EnrollmentDataContract.ENROLLED_APIS));
+        assertThat(SharedDbHelper.hasAllTables(db, EnrollmentTables.ENROLLMENT_TABLES)).isTrue();
+        assertThat(SharedDbHelper.hasAllTables(db, EncryptionKeyTables.ENCRYPTION_KEY_TABLES))
+                .isTrue();
+        assertThat(
+                        MigrationHelpers.isColumnPresent(
+                                db,
+                                EnrollmentTables.EnrollmentDataContract.TABLE,
+                                EnrollmentTables.EnrollmentDataContract.ENROLLED_SITE))
+                .isTrue();
+        assertThat(
+                        MigrationHelpers.isColumnPresent(
+                                db,
+                                EnrollmentTables.EnrollmentDataContract.TABLE,
+                                EnrollmentTables.EnrollmentDataContract.ENROLLED_APIS))
+                .isTrue();
         MigrationTestHelper.verifyDataInDb(db, fakeData);
     }
 }

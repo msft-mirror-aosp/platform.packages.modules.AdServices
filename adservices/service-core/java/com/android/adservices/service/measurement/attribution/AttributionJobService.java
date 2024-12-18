@@ -36,6 +36,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandler.ProcessingResult;
+import com.android.adservices.service.measurement.reporting.AggregateDebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService;
@@ -52,7 +53,7 @@ import java.util.concurrent.Future;
  * Service for scheduling attribution jobs. The actual job execution logic is part of {@link
  * AttributionJobHandler}.
  */
-public class AttributionJobService extends JobService {
+public final class AttributionJobService extends JobService {
     private static final int MEASUREMENT_ATTRIBUTION_JOB_ID =
             MEASUREMENT_ATTRIBUTION_JOB.getJobId();
     private static final ListeningExecutorService sBackgroundExecutor =
@@ -122,36 +123,35 @@ public class AttributionJobService extends JobService {
                             DebugReportingJobService.scheduleIfNeeded(
                                     getApplicationContext(), /* forceSchedule */ false);
 
-                            // TODO(b/342687685): fold this service into ReportingJobService
-                            ImmediateAggregateReportingJobService.scheduleIfNeeded(
-                                    getApplicationContext(), /* forceSchedule */ false);
+                            if (isSuccessful) {
+                                // TODO(b/342687685): fold this service into ReportingJobService
+                                ImmediateAggregateReportingJobService.scheduleIfNeeded(
+                                        getApplicationContext(), /* forceSchedule */ false);
 
-                            ReportingJobService.scheduleIfNeeded(
-                                    getApplicationContext(), /* forceSchedule */ false);
+                                ReportingJobService.scheduleIfNeeded(
+                                        getApplicationContext(), /* forceSchedule */ false);
+                            }
                         });
         return true;
     }
 
     @VisibleForTesting
     ProcessingResult acquireLockAndProcessPendingAttributions() {
-        final JobLockHolder lock = JobLockHolder.getInstance(ATTRIBUTION_PROCESSING);
-        if (lock.tryLock()) {
-            try {
-                return processPendingAttributions();
-            } finally {
-                lock.unlock();
-            }
-        }
-        LoggerFactory.getMeasurementLogger().d("AttributionJobService did not acquire the lock");
-        // Another thread is already processing attribution. Returning success to not reschedule.
-        return ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED;
+        return JobLockHolder.getInstance(ATTRIBUTION_PROCESSING)
+                .callWithLock(
+                        "AttributionJobService",
+                        this::processPendingAttributions,
+                        // Another thread is already processing attribution.
+                        // Returning success to not reschedule.
+                        ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED);
     }
 
     @VisibleForTesting
     ProcessingResult processPendingAttributions() {
         return new AttributionJobHandler(
-                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext()),
-                        new DebugReportApi(getApplicationContext(), FlagsFactory.getFlags()))
+                        DatastoreManagerFactory.getDatastoreManager(),
+                        new DebugReportApi(getApplicationContext(), FlagsFactory.getFlags()),
+                        new AggregateDebugReportApi(FlagsFactory.getFlags()))
                 .performPendingAttributions();
     }
 
@@ -179,7 +179,7 @@ public class AttributionJobService extends JobService {
                         new ComponentName(context, AttributionJobService.class))
                 .addTriggerContentUri(
                         new JobInfo.TriggerContentUri(
-                                TriggerContentProvider.TRIGGER_URI,
+                                TriggerContentProvider.getTriggerUri(),
                                 JobInfo.TriggerContentUri.FLAG_NOTIFY_FOR_DESCENDANTS))
                 .setTriggerContentUpdateDelay(flags.getMeasurementAttributionJobTriggeringDelayMs())
                 // Can't call addTriggerContentUri() on a persisted job

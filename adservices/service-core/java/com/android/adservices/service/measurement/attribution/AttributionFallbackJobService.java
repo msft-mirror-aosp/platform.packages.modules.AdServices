@@ -35,6 +35,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.reporting.AggregateDebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService;
@@ -51,7 +52,7 @@ import java.util.concurrent.Future;
  * Fallback attribution job. The actual job execution logic is part of {@link
  * AttributionJobHandler}.
  */
-public class AttributionFallbackJobService extends JobService {
+public final class AttributionFallbackJobService extends JobService {
     private static final int MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID =
             MEASUREMENT_ATTRIBUTION_FALLBACK_JOB.getJobId();
     private static final ListeningExecutorService sBackgroundExecutor =
@@ -115,22 +116,18 @@ public class AttributionFallbackJobService extends JobService {
 
     @VisibleForTesting
     void processPendingAttributions() {
-        final JobLockHolder lock = JobLockHolder.getInstance(ATTRIBUTION_PROCESSING);
-        if (lock.tryLock()) {
-            try {
-                new AttributionJobHandler(
-                                DatastoreManagerFactory.getDatastoreManager(
-                                        getApplicationContext()),
-                                new DebugReportApi(
-                                        getApplicationContext(), FlagsFactory.getFlags()))
-                        .performPendingAttributions();
-                return;
-            } finally {
-                lock.unlock();
-            }
-        }
-        LoggerFactory.getMeasurementLogger()
-                .d("AttributionFallbackJobService did not acquire the lock");
+        JobLockHolder.getInstance(ATTRIBUTION_PROCESSING)
+                .runWithLock(
+                        "AttributionFallbackJobService",
+                        () -> {
+                            new AttributionJobHandler(
+                                            DatastoreManagerFactory.getDatastoreManager(),
+                                            new DebugReportApi(
+                                                    getApplicationContext(),
+                                                    FlagsFactory.getFlags()),
+                                            new AggregateDebugReportApi(FlagsFactory.getFlags()))
+                                    .performPendingAttributions();
+                        });
     }
 
     @Override

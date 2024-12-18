@@ -18,9 +18,10 @@ package com.android.server.adservices.consent;
 
 import android.annotation.NonNull;
 
-import com.android.adservices.shared.storage.BooleanFileDatastore;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
+import com.android.server.adservices.errorlogging.AdServicesErrorLoggerImpl;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -50,15 +51,15 @@ public class AppConsentManager {
     @VisibleForTesting static final String DUMP_PREFIX = "  ";
 
     /**
-     * The {@link BooleanFileDatastore} will store {@code true} if an app has had its consent
-     * revoked and {@code false} if the app is allowed (has not had its consent revoked). Keys in
-     * the datastore consist of a combination of package name and UID.
+     * The {@link AtomicFileDatastore} will store {@code true} if an app has had its consent revoked
+     * and {@code false} if the app is allowed (has not had its consent revoked). Keys in the
+     * datastore consist of a combination of package name and UID.
      */
-    private final BooleanFileDatastore mDatastore;
+    private final AtomicFileDatastore mDatastore;
 
     /** Constructs the {@link AppConsentManager}. */
     @VisibleForTesting
-    public AppConsentManager(@NonNull BooleanFileDatastore datastore) {
+    public AppConsentManager(@NonNull AtomicFileDatastore datastore) {
         Objects.requireNonNull(datastore);
 
         mDatastore = datastore;
@@ -76,9 +77,13 @@ public class AppConsentManager {
                 ConsentDatastoreLocationHelper.getConsentDataStoreDirAndCreateDir(
                         baseDir, userIdentifier);
 
-        BooleanFileDatastore datastore =
-                new BooleanFileDatastore(
-                        consentDataStoreDir, DATASTORE_NAME, DATASTORE_VERSION, VERSION_KEY);
+        AtomicFileDatastore datastore =
+                new AtomicFileDatastore(
+                        consentDataStoreDir,
+                        DATASTORE_NAME,
+                        DATASTORE_VERSION,
+                        VERSION_KEY,
+                        AdServicesErrorLoggerImpl.getInstance());
         datastore.initialize();
 
         return new AppConsentManager(datastore);
@@ -132,7 +137,7 @@ public class AppConsentManager {
     public void setConsentForApp(
             @NonNull String packageName, int packageUid, boolean isConsentRevoked)
             throws IllegalArgumentException, IOException {
-        mDatastore.put(toDatastoreKey(packageName, packageUid), isConsentRevoked);
+        mDatastore.putBoolean(toDatastoreKey(packageName, packageUid), isConsentRevoked);
     }
 
     /**
@@ -149,7 +154,8 @@ public class AppConsentManager {
     public boolean setConsentForAppIfNew(
             @NonNull String packageName, int packageUid, boolean isConsentRevoked)
             throws IllegalArgumentException, IOException {
-        return mDatastore.putIfNew(toDatastoreKey(packageName, packageUid), isConsentRevoked);
+        return mDatastore.putBooleanIfNew(
+                toDatastoreKey(packageName, packageUid), isConsentRevoked);
     }
 
     /**
@@ -165,7 +171,7 @@ public class AppConsentManager {
      */
     public boolean isConsentRevokedForApp(@NonNull String packageName, int packageUid)
             throws IllegalArgumentException, IOException {
-        return Boolean.TRUE.equals(mDatastore.get(toDatastoreKey(packageName, packageUid)));
+        return Boolean.TRUE.equals(mDatastore.getBoolean(toDatastoreKey(packageName, packageUid)));
     }
 
     /**

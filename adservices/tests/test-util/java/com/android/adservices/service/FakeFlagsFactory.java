@@ -53,11 +53,6 @@ public final class FakeFlagsFactory {
         }
 
         @Override
-        public boolean getEnforceIsolateMaxHeapSize() {
-            return false;
-        }
-
-        @Override
         public boolean getDisableFledgeEnrollmentCheck() {
             return true;
         }
@@ -121,6 +116,11 @@ public final class FakeFlagsFactory {
         @Override
         public boolean getPasExtendedMetricsEnabled() {
             return true;
+        }
+
+        @Override
+        public boolean getConsentNotificationDebugMode() {
+            return false;
         }
     }
 
