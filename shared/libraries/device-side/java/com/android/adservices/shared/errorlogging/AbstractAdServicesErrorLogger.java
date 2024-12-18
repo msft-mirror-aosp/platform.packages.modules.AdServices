@@ -67,7 +67,8 @@ public abstract class AbstractAdServicesErrorLogger implements AdServicesErrorLo
             return;
         }
 
-        StackTraceElement stackTraceElement = null;
+        AdServicesErrorStats.Builder builder =
+                AdServicesErrorStats.builder().setErrorCode(errorCode).setPpapiName(ppapiName);
         if (!isSearchingCause) {
             StackTraceElement[] stackTrace = tr.getStackTrace();
             // Look at the 3rd element of the stack trace as that's where we actually log the error.
@@ -78,29 +79,26 @@ public abstract class AbstractAdServicesErrorLogger implements AdServicesErrorLo
                 LogUtil.w("Stack trace length less than 3, skipping client error logging");
                 return;
             }
-            stackTraceElement = stackTrace[elementIdx];
+            StackTraceElement stackTraceElement = stackTrace[elementIdx];
+            populateClassInfo(stackTraceElement, builder);
         } else {
-            stackTraceElement = getRootCauseStackTraceElement(tr);
-            if (stackTraceElement == null) {
-                return;
-            }
+            Throwable rootTr = getRootCauseException(tr);
+            populateExceptionInfo(rootTr, builder);
         }
-        AdServicesErrorStats.Builder builder =
-                AdServicesErrorStats.builder().setErrorCode(errorCode).setPpapiName(ppapiName);
-        populateClassInfo(stackTraceElement, builder);
+
         mStatsdAdServicesErrorLogger.logAdServicesError(builder.build());
     }
 
-    private StackTraceElement getRootCauseStackTraceElement(Throwable tr) {
+    private Throwable getRootCauseException(Throwable tr) {
+        Throwable rootTr = tr;
         int maxCauseNumber = MAX_CAUSE_NUMBER;
-        StackTraceElement stackTraceElement = null;
-        while (tr != null && maxCauseNumber-- > 0) {
-            if (tr.getStackTrace().length > 0) {
-                stackTraceElement = tr.getStackTrace()[0];
-            }
+        while (tr.getCause() != null && maxCauseNumber-- > 0) {
             tr = tr.getCause();
+            if (tr.getStackTrace() != null && tr.getStackTrace().length > 0) {
+                rootTr = tr;
+            }
         }
-        return stackTraceElement;
+        return rootTr;
     }
 
     private void populateExceptionInfo(Throwable tr, AdServicesErrorStats.Builder builder) {
