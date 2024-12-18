@@ -64,9 +64,9 @@ import static com.android.adservices.service.Flags.DEFAULT_AUCTION_SERVER_AD_ID_
 import static com.android.adservices.service.Flags.DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_COMPUTE_VERSION_FROM_MAPPINGS_ENABLED;
+import static com.android.adservices.service.Flags.DEFAULT_CONFIG_DELIVERY__MDD_MANIFEST_URLS;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CUSTOM_ERROR_CODE_SAMPLING_ENABLED;
-import static com.android.adservices.service.Flags.DEFAULT_CONFIG_DELIVERY__MDD_MANIFEST_URLS;
 import static com.android.adservices.service.Flags.DEFAULT_EEA_PAS_UX_ENABLED;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ADEXT_DATA_SERVICE_APIS;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_AD_SERVICES_SYSTEM_API;
@@ -1156,8 +1156,6 @@ import static com.android.adservices.shared.common.flags.ModuleSharedFlags.ENCOD
 import static com.android.adservices.shared.meta_testing.FlagsTestLittleHelper.expectDumpHasAllGetters;
 
 import static com.google.common.truth.Truth.assertThat;
-
-import static org.junit.Assert.assertThrows;
 
 import android.provider.DeviceConfig;
 import android.util.Log;
@@ -3777,7 +3775,7 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
-    public void testGetFledgeAuctionServerPayloadBucketSizes_invalidFlagString() {
+    public void testGetFledgeAuctionServerPayloadBucketSizes_invalidFlagStringReturnsDefault() {
         assertThat(mPhFlags.getFledgeAuctionServerPayloadBucketSizes())
                 .isEqualTo(FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
 
@@ -3787,8 +3785,9 @@ public final class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 "Non,sense,list",
                 /* makeDefault */ false);
 
-        assertThrows(
-                IllegalArgumentException.class, mPhFlags::getFledgeAuctionServerPayloadBucketSizes);
+        // make sure no exception is thrown and default value is set
+        assertThat(mPhFlags.getFledgeAuctionServerPayloadBucketSizes())
+                .isEqualTo(FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES);
     }
 
     @Test
