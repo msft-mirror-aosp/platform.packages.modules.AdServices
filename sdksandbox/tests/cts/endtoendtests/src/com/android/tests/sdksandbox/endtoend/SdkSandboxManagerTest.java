@@ -150,7 +150,8 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(
                         Manifest.permission.READ_DEVICE_CONFIG,
-                        Manifest.permission.WRITE_DEVICE_CONFIG);
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG);
 
         mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
         mScenario = activityScenarioRule.getScenario();
@@ -560,6 +561,7 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
 
         LoadSdkException thrown = callback.getLoadSdkException();
 
+        assertThat(thrown).isNotNull();
         assertEquals(LOAD_SDK_INTERNAL_ERROR, thrown.getLoadSdkErrorCode());
         assertThat(thrown).hasMessageThat().contains("does not run in the foreground");
     }

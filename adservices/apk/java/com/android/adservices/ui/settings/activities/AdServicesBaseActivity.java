@@ -35,7 +35,6 @@ import com.android.settingslib.collapsingtoolbar.CollapsingToolbarBaseActivity;
  * This class is the base class for all other activities. We need an activity for each page in order
  * for {@link CollapsingToolbarBaseActivity} to work properly.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivity
         implements UxSelector {
@@ -52,8 +51,8 @@ public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivi
                 || FlagsFactory.getFlags().getUiOtaResourcesFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(context, false);
         }
-        if (isUxStatesReady(this)) {
-            mCurUx = initWithUx(this, context);
+        if (isUxStatesReady()) {
+            mCurUx = initWithUx();
         }
     }
 
@@ -63,7 +62,7 @@ public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivi
         // if the intended UX is different from the current UX, then recreate activity to update.
         // This may happen due to non-process stable changes such as PAS notification recorded as
         // displayed in ConsentManager, which requires an updated UX to be displayed.
-        if (isUxStatesReady(this) && getEndUserUx(this) != mCurUx) {
+        if (isUxStatesReady() && getEndUserUx() != mCurUx) {
             recreate();
         }
     }

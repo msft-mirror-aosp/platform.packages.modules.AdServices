@@ -18,12 +18,10 @@ package android.adservices.topics;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 /** Unit tests for {@link GetTopicsParam} */
-@RequiresSdkLevelAtLeastS
 public final class GetTopicsParamTest extends AdServicesUnitTestCase {
     private static final String SOME_PACKAGE_NAME = "SomePackageName";
     private static final String SOME_SDK_NAME = "SomeSdkName";

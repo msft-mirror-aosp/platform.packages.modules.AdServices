@@ -16,6 +16,16 @@
 
 package com.android.adservices.service.consent;
 
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_DISABLED;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_ENABLED;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_UNKNOWN;
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN;
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT;
+import static android.adservices.common.Module.MEASUREMENT;
+import static android.adservices.common.Module.ON_DEVICE_PERSONALIZATION;
+import static android.adservices.common.Module.PROTECTED_APP_SIGNALS;
+import static android.adservices.common.Module.PROTECTED_AUDIENCE;
+
 import static com.android.adservices.service.consent.ConsentConstants.CONSENT_KEY;
 import static com.android.adservices.service.consent.ConsentConstants.CONSENT_KEY_FOR_ALL;
 import static com.android.adservices.service.consent.ConsentConstants.DEFAULT_CONSENT;
@@ -30,13 +40,15 @@ import static com.android.adservices.service.consent.ConsentConstants.SHARED_PRE
 import static com.android.adservices.service.consent.ConsentConstants.SHARED_PREFS_KEY_PPAPI_HAS_CLEARED;
 import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.service.consent.ConsentManager.UNKNOWN;
+import static com.android.adservices.service.consent.ConsentManager.consentSourceOfTruthToString;
 import static com.android.adservices.service.consent.ConsentManager.resetSharedPreference;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_SEARCH_DATA_MIGRATION_FAILURE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_DEFAULT_CONSENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
+import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+import static com.android.adservices.spe.AdServicesJobInfo.AD_PACKAGE_DENY_PRE_PROCESS_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.COBALT_LOGGING_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.CONSENT_NOTIFICATION_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
@@ -85,17 +97,18 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verifyZeroI
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.doAnswer;
 
-import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.Module;
-import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.app.adservices.AdServicesManager;
 import android.app.adservices.IAdServicesManager;
@@ -107,6 +120,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.RemoteException;
 import android.os.SystemClock;
+import android.util.SparseIntArray;
 
 import androidx.test.core.content.pm.ApplicationInfoBuilder;
 import androidx.test.filters.SmallTest;
@@ -121,11 +135,11 @@ import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithE
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
-import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.consent.AppConsentDaoFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
@@ -139,7 +153,6 @@ import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
 import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
-import com.android.adservices.service.extdata.AdServicesExtDataStorageServiceManager;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementImpl;
@@ -170,21 +183,26 @@ import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnr
 import com.android.adservices.service.ui.util.EnrollmentData;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatcher;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.verification.VerificationMode;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -226,8 +244,8 @@ import java.util.stream.Collectors;
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX)
 @SmallTest
 public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase {
-    private static final int UX_TYPE_COUNT = 5;
-    private static final int ENROLLMENT_CHANNEL_COUNT = 22;
+    private static final int UX_TYPE_COUNT = PrivacySandboxUxCollection.values().length;
+    private static final int ENROLLMENT_CHANNEL_COUNT = 17;
 
     private AtomicFileDatastore mDatastore;
     private AtomicFileDatastore mConsentDatastore;
@@ -243,6 +261,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Mock private AppInstallDao mAppInstallDaoMock;
     @Mock private ProtectedSignalsDao mProtectedSignalsDaoMock;
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
+    @Mock private EncodedPayloadDao mEncodedPayloadDaoMock;
     @Mock private UiStatsLogger mUiStatsLoggerMock;
     @Mock private AppUpdateManager mAppUpdateManagerMock;
     @Mock private CacheManager mCacheManagerMock;
@@ -251,19 +270,29 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Mock private JobScheduler mJobSchedulerMock;
     @Mock private IAdServicesManager mMockIAdServicesManager;
     @Mock private AppSearchConsentManager mAppSearchConsentManagerMock;
-    @Mock private AdServicesExtDataStorageServiceManager mAdServicesExtDataManagerMock;
     @Mock private UserProfileIdManager mUserProfileIdManagerMock;
     @Mock private UxStatesDao mUxStatesDaoMock;
     @Mock private StatsdAdServicesLogger mStatsdAdServicesLoggerMock;
     @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
+    @Mock private Supplier<TopicsWorker> mTopicsWorksSupplierMock;
+    @Mock private Supplier<AppConsentDao> mAppConsentDaoSupplierMock;
+    @Mock private Supplier<EnrollmentDao> mEnrollmentDaoSupplierMock;
+    @Mock private Supplier<MeasurementImpl> mMeasurementImplSupplierMock;
+
+    @Captor
+    private ArgumentCaptor<List<AdServicesModuleUserChoice>>
+            mAdservicesModuleUserChoiceArgumentCaptor;
 
     @Before
-    public void setup() throws IOException {
+    public void setup() throws Exception {
+        mocker.mockGetFlags(mMockFlags);
+        mockEnableAtomicFileDatastoreBatchUpdateApi(/* enable= */ false);
+
         mDatastore =
                 new AtomicFileDatastore(
-                        mSpyContext,
-                        AppConsentDao.DATASTORE_NAME,
+                        new File(mSpyContext.getDataDir(), AppConsentDao.DATASTORE_NAME),
                         AppConsentDao.DATASTORE_VERSION,
+                        /* versionKey= */ "DaKey",
                         mMockAdServicesErrorLogger);
         // For each file, we should ensure there is only one instance of datastore that is able to
         // access it. (Refer to AtomicFileDatastore.class)
@@ -281,7 +310,6 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         // Default to use PPAPI consent to test migration-irrelevant logics.
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_ONLY);
 
-        mocker.mockGetFlags(mMockFlags);
         doReturn(true).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
         doReturn(true).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
         doReturn(true).when(mMockFlags).getProtectedSignalsCleanupEnabled();
@@ -337,16 +365,20 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doNothing().when(() -> UiStatsLogger.logOptOutSelected(any()));
         // The consent_source_of_truth=APPSEARCH_ONLY value is overridden on T+, so ignore level.
         doReturn(false).when(() -> SdkLevel.isAtLeastT());
+        doReturn(mTopicsWorkerMock).when(mTopicsWorksSupplierMock).get();
+        doReturn(mAppConsentDaoSpy).when(mAppConsentDaoSupplierMock).get();
+        doReturn(mEnrollmentDaoSpy).when(mEnrollmentDaoSupplierMock).get();
+        doReturn(mMeasurementImplMock).when(mMeasurementImplSupplierMock).get();
     }
 
     @After
-    public void teardown() throws IOException {
+    public void teardown() throws Exception {
         mDatastore.clear();
         mConsentDatastore.clear();
     }
 
     @Test
-    public void testConsentIsGivenAfterEnabling_PpApiOnly() throws RemoteException, IOException {
+    public void testConsentIsGivenAfterEnabling_PpApiOnly() throws Exception {
         boolean isGiven = true;
         int consentSourceOfTruth = Flags.PPAPI_ONLY;
         ConsentManager spyConsentManager =
@@ -366,8 +398,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testConsentIsGivenAfterEnabling_SystemServerOnly()
-            throws RemoteException, IOException {
+    public void testConsentIsGivenAfterEnabling_SystemServerOnly() throws Exception {
         boolean isGiven = true;
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
@@ -387,8 +418,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testConsentIsGivenAfterEnabling_PPAPIAndSystemServer()
-            throws RemoteException, IOException {
+    public void testConsentIsGivenAfterEnabling_PPAPIAndSystemServer() throws Exception {
         boolean isGiven = true;
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
@@ -513,16 +543,16 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     private static void verifyResetApiCalled(
-            ConsentManager spyConsentManager, int wantedNumOfInvocations) throws IOException {
+            ConsentManager spyConsentManager, int wantedNumOfInvocations) throws Exception {
         verify(spyConsentManager, times(wantedNumOfInvocations)).resetTopicsAndBlockedTopics();
         verify(spyConsentManager, times(wantedNumOfInvocations)).resetAppsAndBlockedApps();
         verify(spyConsentManager, times(wantedNumOfInvocations)).resetMeasurement();
     }
 
     @Test
-    public void testConsentIsGivenAfterEnabling_notSupportedFlag() throws RemoteException {
+    public void testConsentIsGivenAfterEnabling_notSupportedFlag() throws Exception {
         boolean isGiven = true;
-        int invalidConsentSourceOfTruth = 5;
+        int invalidConsentSourceOfTruth = 4;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, invalidConsentSourceOfTruth);
 
@@ -530,7 +560,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testConsentIsRevokedAfterDisabling_PpApiOnly() throws RemoteException, IOException {
+    public void testConsentIsRevokedAfterDisabling_PpApiOnly() throws Exception {
         boolean isGiven = false;
         int consentSourceOfTruth = Flags.PPAPI_ONLY;
         ConsentManager spyConsentManager =
@@ -550,8 +580,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testConsentIsRevokedAfterDisabling_SystemServerOnly()
-            throws RemoteException, IOException {
+    public void testConsentIsRevokedAfterDisabling_SystemServerOnly() throws Exception {
         boolean isGiven = false;
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
@@ -571,8 +600,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testConsentIsRevokedAfterDisabling_PpApiAndSystemServer()
-            throws RemoteException, IOException {
+    public void testConsentIsRevokedAfterDisabling_PpApiAndSystemServer() throws Exception {
         boolean isGiven = false;
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
@@ -592,8 +620,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testConsentIsRevokedAfterDisabling_AppSearchOnly()
-            throws RemoteException, IOException {
+    public void testConsentIsRevokedAfterDisabling_AppSearchOnly() throws Exception {
         boolean isGiven = false;
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
@@ -615,9 +642,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testConsentIsRevokedAfterDisabling_notSupportedFlag() throws RemoteException {
+    public void testConsentIsRevokedAfterDisabling_notSupportedFlag() throws Exception {
         boolean isGiven = true;
-        int invalidConsentSourceOfTruth = 5;
+        int invalidConsentSourceOfTruth = 4;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(isGiven, invalidConsentSourceOfTruth);
 
@@ -785,12 +812,13 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mJobSchedulerMock).cancel(ENCRYPTION_KEY_PERIODIC_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(COBALT_LOGGING_JOB.getJobId());
         verify(mJobSchedulerMock).cancel(FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB.getJobId());
+        verify(mJobSchedulerMock).cancel(AD_PACKAGE_DENY_PRE_PROCESS_JOB.getJobId());
 
         verifyNoMoreInteractions(mJobSchedulerMock);
     }
 
     @Test
-    public void testDataIsResetAfterConsentIsRevoked() throws IOException {
+    public void testDataIsResetAfterConsentIsRevoked() throws Exception {
         mConsentManager.disable(mSpyContext);
 
         verify(() -> UiStatsLogger.logOptOutSelected());
@@ -806,11 +834,12 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
+        verify(mEncodedPayloadDaoMock).deleteAllEncodedPayloads();
         verify(mUserProfileIdManagerMock).deleteId();
     }
 
     @Test
-    public void testDataIsResetAfterConsentIsRevokedSignalsDisabled() throws IOException {
+    public void testDataIsResetAfterConsentIsRevokedSignalsDisabled() throws Exception {
         doReturn(false).when(mMockFlags).getProtectedSignalsCleanupEnabled();
         mConsentManager.disable(mSpyContext);
 
@@ -827,12 +856,13 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verifyZeroInteractions(mProtectedSignalsDaoMock);
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
+        verifyZeroInteractions(mEncodedPayloadDaoMock);
         verify(mUserProfileIdManagerMock).deleteId();
     }
 
     @Test
     public void testDataIsResetAfterConsentIsRevokedFrequencyCapFilteringDisabled()
-            throws IOException {
+            throws Exception {
         doReturn(false).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
         mConsentManager.disable(mSpyContext);
 
@@ -849,12 +879,12 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verifyZeroInteractions(mFrequencyCapDaoMock);
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
+        verify(mEncodedPayloadDaoMock).deleteAllEncodedPayloads();
         verify(mUserProfileIdManagerMock).deleteId();
     }
 
     @Test
-    public void testDataIsResetAfterConsentIsRevokedAppInstallFilteringDisabled()
-            throws IOException {
+    public void testDataIsResetAfterConsentIsRevokedAppInstallFilteringDisabled() throws Exception {
         doReturn(false).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
         mConsentManager.disable(mSpyContext);
 
@@ -871,11 +901,12 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
         verifyZeroInteractions(mAppInstallDaoMock);
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
+        verify(mEncodedPayloadDaoMock).deleteAllEncodedPayloads();
         verify(mUserProfileIdManagerMock).deleteId();
     }
 
     @Test
-    public void testDataIsResetAfterConsentIsGiven() throws IOException {
+    public void testDataIsResetAfterConsentIsGiven() throws Exception {
         mConsentManager.enable(mSpyContext);
 
         verify(() -> UiStatsLogger.logOptInSelected());
@@ -890,13 +921,13 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
+        verify(mEncodedPayloadDaoMock).deleteAllEncodedPayloads();
         verify(mUserProfileIdManagerMock).deleteId();
         verify(mUserProfileIdManagerMock).getOrCreateId();
     }
 
     @Test
-    public void testDataIsResetAfterConsentIsGivenFrequencyCapFilteringDisabled()
-            throws IOException {
+    public void testDataIsResetAfterConsentIsGivenFrequencyCapFilteringDisabled() throws Exception {
         doReturn(false).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
         mConsentManager.enable(mSpyContext);
 
@@ -916,7 +947,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testDataIsResetAfterConsentIsGivenAppInstallFilteringDisabled() throws IOException {
+    public void testDataIsResetAfterConsentIsGivenAppInstallFilteringDisabled() throws Exception {
         doReturn(false).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
         mConsentManager.enable(mSpyContext);
 
@@ -936,7 +967,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testDataIsResetAfterConsentIsGivenSignalsDisabled() throws IOException {
+    public void testDataIsResetAfterConsentIsGivenSignalsDisabled() throws Exception {
         doReturn(false).when(mMockFlags).getProtectedSignalsCleanupEnabled();
         mConsentManager.enable(mSpyContext);
 
@@ -952,13 +983,14 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verifyZeroInteractions(mProtectedSignalsDaoMock);
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
+        verifyZeroInteractions(mEncodedPayloadDaoMock);
         verify(mUserProfileIdManagerMock).deleteId();
         verify(mUserProfileIdManagerMock).getOrCreateId();
     }
 
     @Test
     public void testIsFledgeConsentRevokedForAppWithFullApiConsentGaUxEnabled_ppApiOnly()
-            throws IOException, PackageManager.NameNotFoundException {
+            throws Exception {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         mConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
         assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
@@ -985,7 +1017,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testIsFledgeConsentRevokedForAppWithFullApiConsentGaUxEnabled_systemServerOnly()
-            throws PackageManager.NameNotFoundException, RemoteException {
+            throws Exception, RemoteException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         mConsentManager = getConsentManagerByConsentSourceOfTruth(consentSourceOfTruth);
@@ -1063,7 +1095,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testIsFledgeConsentRevokedForAppWithFullApiConsentGaUxEnabled_ppApiAndSystemServer()
-            throws PackageManager.NameNotFoundException, RemoteException {
+            throws Exception, RemoteException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         mConsentManager = getConsentManagerByConsentSourceOfTruth(consentSourceOfTruth);
@@ -1102,7 +1134,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testIsFledgeConsentRevokedForAppWithoutPrivacySandboxConsentGaUxEnabled_ppApiOnly()
-            throws PackageManager.NameNotFoundException {
+            throws Exception {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         mConsentManager.disable(mSpyContext, AdServicesApiType.FLEDGE);
         assertFalse(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
@@ -1122,7 +1154,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testIsFledgeConsentRevokedForAppWithoutPrivacySandboxConsentGaUxEnabled_sysServer()
-            throws RemoteException {
+            throws Exception {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
         doReturn(ConsentParcel.createRevokedConsent(ConsentParcel.FLEDGE))
@@ -1140,7 +1172,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testIsFledgeConsentRevokedForAppWithoutPrivacySandboxConsentGaUxEnabled_bothSrc()
-            throws RemoteException {
+            throws Exception {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
         doReturn(ConsentParcel.createRevokedConsent(ConsentParcel.FLEDGE))
@@ -1158,7 +1190,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testIsFledgeConsentRevokedForNotFoundAppGaUxEnabledThrows_ppApiOnly()
-            throws PackageManager.NameNotFoundException {
+            throws Exception {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         mConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
         assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
@@ -1175,7 +1207,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testIsFledgeConsentRevokedForNotFoundAppGaUxEnabledThrows_systemServerOnly()
-            throws PackageManager.NameNotFoundException, RemoteException {
+            throws Exception, RemoteException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
         doReturn(ConsentParcel.createGivenConsent(ConsentParcel.FLEDGE))
@@ -1193,7 +1225,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testIsFledgeConsentRevokedForNotFoundAppGaUxEnabledThrows_ppApiAndSystemServer()
-            throws PackageManager.NameNotFoundException, RemoteException {
+            throws Exception, RemoteException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
         doReturn(ConsentParcel.createGivenConsent(ConsentParcel.FLEDGE))
@@ -1248,7 +1280,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void
             testIsFledgeConsentRevokedForAppAfterSetFledgeUseWithFullApiConsentGaUxEnabled_ppApi()
-                    throws IOException, PackageManager.NameNotFoundException {
+                    throws Exception {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         mConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
         assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
@@ -1276,7 +1308,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void
             testIsFledgeConsentRevokedForAppAfterSetFledgeUseWithFullApiConsentGaUxEnabled_sysSer()
-                    throws PackageManager.NameNotFoundException, RemoteException {
+                    throws Exception, RemoteException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
         doReturn(ConsentParcel.createGivenConsent(ConsentParcel.FLEDGE))
@@ -1321,7 +1353,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void
             testIsFledgeConsentRevokedForAppAfterSetFledgeUseWithFullApiConsentGaUxEnabled_both()
-                    throws PackageManager.NameNotFoundException, RemoteException {
+                    throws Exception, RemoteException {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
         doReturn(ConsentParcel.createGivenConsent(ConsentParcel.FLEDGE))
@@ -1366,7 +1398,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void
             testIsFledgeConsentRevokedForAppSetFledgeUseNoPrivacySandboxConsentGaUxEnabled_ppApi()
-                    throws PackageManager.NameNotFoundException {
+                    throws Exception {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
 
         mConsentManager.disable(mSpyContext, AdServicesApiType.FLEDGE);
@@ -1386,7 +1418,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void
             testIsFledgeConsentRevokedForAppSetFledgeUseNoPrivacySandboxConsentGaUxEnabled_sysSer()
-                    throws RemoteException {
+                    throws Exception {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
         doReturn(ConsentParcel.createRevokedConsent(ConsentParcel.FLEDGE))
@@ -1405,7 +1437,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     public void
             testIsFledgeConsentRevokedForAppSetFledgeUseNoPrivacySandboxConsentGaUxEnabled_both()
-                    throws RemoteException {
+                    throws Exception {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
         doReturn(ConsentParcel.createRevokedConsent(ConsentParcel.FLEDGE))
@@ -1423,7 +1455,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUseThrows_ppApiOnly()
-            throws PackageManager.NameNotFoundException {
+            throws Exception {
         mConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
         assertTrue(mConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
 
@@ -1439,7 +1471,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUseThrows_systemServerOnly()
-            throws PackageManager.NameNotFoundException, RemoteException {
+            throws Exception, RemoteException {
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
         doReturn(ConsentParcel.createGivenConsent(ConsentParcel.FLEDGE))
                 .when(mMockIAdServicesManager)
@@ -1456,7 +1488,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testIsFledgeConsentRevokedForAppAfterSettingFledgeUseThrows_ppApiAndSystemServer()
-            throws PackageManager.NameNotFoundException, RemoteException {
+            throws Exception, RemoteException {
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
         doReturn(ConsentParcel.createGivenConsent(ConsentParcel.FLEDGE))
                 .when(mMockIAdServicesManager)
@@ -1472,8 +1504,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testGetKnownAppsWithConsent_ppApiOnly()
-            throws IOException, PackageManager.NameNotFoundException {
+    public void testGetKnownAppsWithConsent_ppApiOnly() throws Exception {
         mConsentManager.enable(mSpyContext);
         assertTrue(mConsentManager.getConsent().isGiven());
 
@@ -1502,7 +1533,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testGetKnownAppsWithConsent_systemServerOnly() throws RemoteException {
+    public void testGetKnownAppsWithConsent_systemServerOnly() throws Exception {
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
         doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
                 .when(mMockIAdServicesManager)
@@ -1548,7 +1579,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testGetKnownAppsWithConsent_ppApiAndSystemServer() throws RemoteException {
+    public void testGetKnownAppsWithConsent_ppApiAndSystemServer() throws Exception {
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
         doReturn(ConsentParcel.createGivenConsent(ConsentParcel.ALL_API))
                 .when(mMockIAdServicesManager)
@@ -1629,19 +1660,12 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testGetKnownAppsWithConsent_ppapiAndAdExtDataServiceOnly() {
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_ADEXT_SERVICE);
-
-        assertThat(mConsentManager.getKnownAppsWithConsent()).isEqualTo(ImmutableList.of());
-    }
-
-    @Test
     public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevoked_ppApiOnly()
-            throws IOException, PackageManager.NameNotFoundException {
+            throws Exception {
         doNothing()
                 .when(mCustomAudienceDaoMock)
                 .deleteCustomAudienceDataByOwner(any(), anyBoolean());
+
         mConsentManager.enable(mSpyContext);
         assertTrue(mConsentManager.getConsent().isGiven());
 
@@ -1686,7 +1710,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testGetKnownAppsWithConsentAfterConsentForOneOfThemWasRevokedAndRestored_ppApiOnly()
-            throws IOException, PackageManager.NameNotFoundException {
+            throws Exception {
         doNothing()
                 .when(mCustomAudienceDaoMock)
                 .deleteCustomAudienceDataByOwner(any(), anyBoolean());
@@ -1845,26 +1869,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testRevokeConsentForApp_ppapiAndAdExtDataServiceOnly() {
-        mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_ADEXT_SERVICE);
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        App app = App.create(AppConsentDaoFixture.APP10_PACKAGE_NAME);
-
-        assertThrows(RuntimeException.class, () -> mConsentManager.revokeConsentForApp(app));
-    }
-
-    @Test
-    public void testRestoreConsentForApp_ppapiAndAdExtDataServiceOnly() {
-        mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_ADEXT_SERVICE);
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        App app = App.create(AppConsentDaoFixture.APP10_PACKAGE_NAME);
-
-        assertThrows(RuntimeException.class, () -> mConsentManager.restoreConsentForApp(app));
-    }
-
-    @Test
-    public void clearConsentForUninstalledApp_ppApiOnly()
-            throws PackageManager.NameNotFoundException, IOException {
+    public void clearConsentForUninstalledApp_ppApiOnly() throws Exception {
         mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
 
         mConsentManager.restoreConsentForApp(App.create(AppConsentDaoFixture.APP10_PACKAGE_NAME));
@@ -1876,7 +1881,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void clearConsentForUninstalledApp_systemServerOnly() throws RemoteException {
+    public void clearConsentForUninstalledApp_systemServerOnly() throws Exception {
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.SYSTEM_SERVER_ONLY);
         mConsentManager.clearConsentForUninstalledApp(
                 AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
@@ -1886,8 +1891,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void clearConsentForUninstalledApp_ppApiAndSystemServer()
-            throws PackageManager.NameNotFoundException, IOException, RemoteException {
+    public void clearConsentForUninstalledApp_ppApiAndSystemServer() throws Exception {
         mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_SYSTEM_SERVER);
         mockGetPackageUid(AppConsentDaoFixture.APP10_PACKAGE_NAME, AppConsentDaoFixture.APP10_UID);
 
@@ -1919,20 +1923,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void clearConsentForUninstalledApp_ppapiAndAdExtDataServiceOnly() {
-        mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_ADEXT_SERVICE);
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        String packageName = AppConsentDaoFixture.APP10_PACKAGE_NAME;
-
-        assertThrows(
-                RuntimeException.class,
-                () ->
-                        mConsentManager.clearConsentForUninstalledApp(
-                                packageName, AppConsentDaoFixture.APP10_UID));
-    }
-
-    @Test
-    public void clearConsentForUninstalledAppWithoutUid_ppApiOnly() throws IOException {
+    public void clearConsentForUninstalledAppWithoutUid_ppApiOnly() throws Exception {
         mDatastore.putBoolean(AppConsentDaoFixture.APP10_DATASTORE_KEY, true);
         mDatastore.putBoolean(AppConsentDaoFixture.APP20_DATASTORE_KEY, true);
         mDatastore.putBoolean(AppConsentDaoFixture.APP30_DATASTORE_KEY, false);
@@ -1996,8 +1987,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testResetAllAppConsentAndAppData_ppApiOnly()
-            throws IOException, PackageManager.NameNotFoundException {
+    public void testResetAllAppConsentAndAppData_ppApiOnly() throws Exception {
         doNothing()
                 .when(mCustomAudienceDaoMock)
                 .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
@@ -2042,11 +2032,11 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock, times(2)).deleteAllSignals();
         verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
+        verify(mEncodedPayloadDaoMock, times(2)).deleteAllEncodedPayloads();
     }
 
     @Test
-    public void testResetAllAppConsentAndAppData_systemServerOnly()
-            throws IOException, RemoteException {
+    public void testResetAllAppConsentAndAppData_systemServerOnly() throws Exception {
         doNothing()
                 .when(mCustomAudienceDaoMock)
                 .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
@@ -2063,11 +2053,11 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
+        verify(mEncodedPayloadDaoMock).deleteAllEncodedPayloads();
     }
 
     @Test
-    public void testResetAllAppConsentAndAppData_ppApiAndSystemServer()
-            throws IOException, PackageManager.NameNotFoundException, RemoteException {
+    public void testResetAllAppConsentAndAppData_ppApiAndSystemServer() throws Exception {
         doNothing()
                 .when(mCustomAudienceDaoMock)
                 .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
@@ -2123,6 +2113,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock, times(2)).deleteAllSignals();
         verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
+        verify(mEncodedPayloadDaoMock, times(2)).deleteAllEncodedPayloads();
     }
 
     @Test
@@ -2135,16 +2126,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testResetAllAppConsentAndAppData_ppapiAndAdExtDataServiceOnly() {
-        mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_ADEXT_SERVICE);
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-
-        assertThrows(RuntimeException.class, () -> mConsentManager.resetAppsAndBlockedApps());
-    }
-
-    @Test
-    public void testResetAllowedAppConsentAndAppData_ppApiOnly()
-            throws IOException, PackageManager.NameNotFoundException {
+    public void testResetAllowedAppConsentAndAppData_ppApiOnly() throws Exception {
         doNothing()
                 .when(mCustomAudienceDaoMock)
                 .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
@@ -2200,11 +2182,11 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock, times(2)).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock, times(2)).deleteAllSignals();
         verify(mFrequencyCapDaoMock, times(2)).deleteAllHistogramData();
+        verify(mEncodedPayloadDaoMock, times(2)).deleteAllEncodedPayloads();
     }
 
     @Test
-    public void testResetAllowedAppConsentAndAppData_systemServerOnly()
-            throws IOException, RemoteException {
+    public void testResetAllowedAppConsentAndAppData_systemServerOnly() throws Exception {
         doNothing()
                 .when(mCustomAudienceDaoMock)
                 .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
@@ -2221,11 +2203,11 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
+        verify(mEncodedPayloadDaoMock).deleteAllEncodedPayloads();
     }
 
     @Test
-    public void testResetAllowedAppConsentAndAppData_ppApiAndSystemServer()
-            throws IOException, PackageManager.NameNotFoundException, RemoteException {
+    public void testResetAllowedAppConsentAndAppData_ppApiAndSystemServer() throws Exception {
         doNothing()
                 .when(mCustomAudienceDaoMock)
                 .deleteAllCustomAudienceData(/* scheduleCustomAudienceEnabled= */ true);
@@ -2283,6 +2265,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mAppInstallDaoMock).deleteAllAppInstallData();
         verify(mProtectedSignalsDaoMock).deleteAllSignals();
         verify(mFrequencyCapDaoMock).deleteAllHistogramData();
+        verify(mEncodedPayloadDaoMock).deleteAllEncodedPayloads();
     }
 
     @Test
@@ -2295,15 +2278,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testResetAllowedAppConsentAndAppData_ppapiAndAdExtDataServiceOnly() {
-        mConsentManager = getConsentManagerByConsentSourceOfTruth(Flags.PPAPI_AND_ADEXT_SERVICE);
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-
-        assertThrows(RuntimeException.class, () -> mConsentManager.resetApps());
-    }
-
-    @Test
-    public void testNotificationDisplayedRecorded_PpApiOnly() throws RemoteException {
+    public void testNotificationDisplayedRecorded_PpApiOnly() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -2322,7 +2297,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testNotificationDisplayedRecorded_SystemServerOnly() throws RemoteException {
+    public void testNotificationDisplayedRecorded_SystemServerOnly() throws Exception {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -2345,7 +2320,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testNotificationDisplayedRecorded_PpApiAndSystemServer() throws RemoteException {
+    public void testNotificationDisplayedRecorded_PpApiAndSystemServer() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -2370,7 +2345,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testNotificationDisplayedRecorded_appSearchOnly() throws RemoteException {
+    public void testNotificationDisplayedRecorded_appSearchOnly() throws Exception {
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         ConsentManager spyConsentManager =
@@ -2391,19 +2366,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testNotificationDisplayedRecorded_ppapiAndAdExtDataServiceOnly()
-            throws RemoteException {
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-
-        assertThat(spyConsentManager.wasNotificationDisplayed()).isFalse();
-    }
-
-    @Test
-    public void testGaUxNotificationDisplayedRecorded_PpApiOnly() throws RemoteException {
+    public void testGaUxNotificationDisplayedRecorded_PpApiOnly() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -2422,7 +2385,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testGaUxNotificationDisplayedRecorded_SystemServerOnly() throws RemoteException {
+    public void testGaUxNotificationDisplayedRecorded_SystemServerOnly() throws Exception {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -2445,8 +2408,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testGaUxNotificationDisplayedRecorded_PpApiAndSystemServer()
-            throws RemoteException {
+    public void testGaUxNotificationDisplayedRecorded_PpApiAndSystemServer() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -2471,7 +2433,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testGaUxNotificationDisplayedRecorded_appSearchOnly() throws RemoteException {
+    public void testGaUxNotificationDisplayedRecorded_appSearchOnly() throws Exception {
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         ConsentManager spyConsentManager =
@@ -2491,19 +2453,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testGaUxNotificationDisplayedRecorded_ppapiAndAdExtDataServiceOnly()
-            throws RemoteException {
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-
-        assertThat(spyConsentManager.wasGaUxNotificationDisplayed()).isFalse();
-    }
-
-    @Test
-    public void testNotificationDisplayedRecorded_notSupportedFlag() throws RemoteException {
+    public void testNotificationDisplayedRecorded_notSupportedFlag() throws Exception {
         int invalidConsentSourceOfTruth = 5;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -2514,7 +2464,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testClearPpApiConsent() throws IOException {
+    public void testClearPpApiConsent() throws Exception {
         mConsentDatastore.putBoolean(CONSENT_KEY, true);
         mConsentDatastore.putBoolean(NOTIFICATION_DISPLAYED_ONCE, true);
         assertThat(mConsentDatastore.getBoolean(CONSENT_KEY)).isTrue();
@@ -2539,7 +2489,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testMigratePpApiConsentToSystemService() throws RemoteException, IOException {
+    public void testMigratePpApiConsentToSystemService() throws Exception {
         // Disable IPC calls
         doNothing().when(mMockIAdServicesManager).setConsent(any());
         doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed(true);
@@ -2567,7 +2517,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testMigratePpApiConsentToSystemServiceWithSuccessfulConsentMigrationLogging()
-            throws RemoteException, IOException {
+            throws Exception {
         // Disable IPC calls
         doNothing().when(mMockIAdServicesManager).setConsent(any());
         doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed(true);
@@ -2612,7 +2562,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @ExpectErrorLogUtilCall(
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE)
     public void testMigratePpApiConsentToSystemServiceWithUnSuccessfulConsentMigrationLogging()
-            throws RemoteException, IOException {
+            throws Exception {
         // Disable IPC calls
         doNothing().when(mMockIAdServicesManager).setConsent(any());
         doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed(true);
@@ -2652,8 +2602,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testMigratePpApiConsentToSystemServiceThrowsException()
-            throws RemoteException, IOException {
+    public void testMigratePpApiConsentToSystemServiceThrowsException() throws Exception {
         mConsentDatastore.putBoolean(NOTIFICATION_DISPLAYED_ONCE, true);
         doThrow(RemoteException.class)
                 .when(mMockIAdServicesManager)
@@ -2683,7 +2632,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testHandleConsentMigrationIfNeeded_ExtServices() throws RemoteException {
+    public void testHandleConsentMigrationIfNeeded_ExtServices() throws Exception {
         doReturn("com." + AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX)
                 .when(mSpyContext)
                 .getPackageName();
@@ -2726,6 +2675,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mMockIAdServicesManager, never()).recordMeasurementDefaultConsent(anyBoolean());
         verify(mMockIAdServicesManager, never()).recordTopicsDefaultConsent(anyBoolean());
         verify(mMockIAdServicesManager, never()).recordUserManualInteractionWithConsent(anyInt());
+        verify(mMockIAdServicesManager, never()).setModuleEnrollmentState(anyString());
         verify(mockEditor, never()).putBoolean(any(), anyBoolean());
     }
 
@@ -2952,6 +2902,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mockAdServicesManager, never()).recordMeasurementDefaultConsent(anyBoolean());
         verify(mockAdServicesManager, never()).recordTopicsDefaultConsent(anyBoolean());
         verify(mockAdServicesManager, never()).recordUserManualInteractionWithConsent(anyInt());
+        verify(mMockIAdServicesManager, never()).setModuleEnrollmentState(anyString());
     }
 
     @Test
@@ -2959,6 +2910,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         when(mAppSearchConsentManagerMock.migrateConsentDataIfNeeded(any(), any(), any(), any()))
                 .thenReturn(true);
         when(mAppSearchConsentManagerMock.getConsent(any())).thenReturn(true);
+        when(mMockFlags.getAdServicesConsentBusinessLogicMigrationEnabled()).thenReturn(true);
+        doReturn(mMockFlags).when(FlagsFactory::getFlags);
         mConsentDatastore.putBoolean(CONSENT_KEY, true);
         mConsentDatastore.putBoolean(NOTIFICATION_DISPLAYED_ONCE, true);
 
@@ -3030,6 +2983,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         .build();
 
         verify(mStatsdAdServicesLoggerMock).logConsentMigrationStats(consentMigrationStats);
+        verify(mockAdServicesManager).setModuleEnrollmentState(anyString());
     }
 
     @Test
@@ -3125,26 +3079,27 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                                 mBlockedTopicsManagerMock,
                                 mAppUpdateManagerMock,
                                 mMockFlags));
+        doReturn(topicsWorker).when(mTopicsWorksSupplierMock).get();
 
         ConsentManager consentManager =
                 new ConsentManager(
-                        topicsWorker,
-                        mAppConsentDaoSpy,
-                        mEnrollmentDaoSpy,
-                        mMeasurementImplMock,
+                        mTopicsWorksSupplierMock,
+                        mAppConsentDaoSupplierMock,
+                        mEnrollmentDaoSupplierMock,
+                        mMeasurementImplSupplierMock,
                         mCustomAudienceDaoMock,
                         mAppInstallDaoMock,
                         mProtectedSignalsDaoMock,
                         mFrequencyCapDaoMock,
+                        mEncodedPayloadDaoMock,
                         mAdServicesManager,
                         mConsentDatastore,
                         mAppSearchConsentManagerMock,
                         mUserProfileIdManagerMock,
                         mUxStatesDaoMock,
-                        mAdServicesExtDataManagerMock,
                         mMockFlags,
+                        mMockDebugFlags,
                         Flags.PPAPI_ONLY,
-                        true,
                         true);
         doNothing().when(mBlockedTopicsManagerMock).blockTopic(any());
         doNothing().when(mBlockedTopicsManagerMock).unblockTopic(any());
@@ -3183,8 +3138,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testConsentPerApiIsGivenAfterEnabling_PpApiOnly()
-            throws RemoteException, IOException {
+    public void testConsentPerApiIsGivenAfterEnabling_PpApiOnly() throws Exception {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         boolean isGiven = true;
         int consentSourceOfTruth = Flags.PPAPI_ONLY;
@@ -3201,7 +3155,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testConsentPerApiIsGivenAfterEnabling_SystemServerOnly() throws RemoteException {
+    public void testConsentPerApiIsGivenAfterEnabling_SystemServerOnly() throws Exception {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         boolean isGiven = true;
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
@@ -3225,8 +3179,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT)
-    public void testConsentPerApiIsGivenAfterEnabling_PpApiAndSystemServer()
-            throws RemoteException, IOException {
+    public void testConsentPerApiIsGivenAfterEnabling_PpApiAndSystemServer() throws Exception {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         boolean isGiven = true;
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
@@ -3250,7 +3203,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testConsentPerApiIsGivenAfterEnabling_AppSearchOnly() throws RemoteException {
+    public void testConsentPerApiIsGivenAfterEnabling_AppSearchOnly() throws Exception {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
         boolean isGiven = true;
@@ -3270,49 +3223,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testMeasurementConsentIsGivenAfterEnabling_ppapiAndAdExtDataServiceOnly()
-            throws RemoteException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
-        doReturn(true).when(mMockFlags).getEnableAdExtServiceConsentData();
-        boolean isGiven = true;
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        AdServicesApiType apiType = AdServicesApiType.MEASUREMENTS;
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
-
-        spyConsentManager.enable(mSpyContext, AdServicesApiType.MEASUREMENTS);
-        verify(spyConsentManager)
-                .setPerApiConsentToSourceOfTruth(eq(/* isGiven */ true), eq(apiType));
-        verify(mAdServicesExtDataManagerMock).setMsmtConsent(eq(true));
-        when(mAdServicesExtDataManagerMock.getMsmtConsent()).thenReturn(true);
-        assertThat(spyConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven()).isTrue();
-    }
-
-    @Test
-    public void testMeasurementConsentIsRevokedAfterDisabling_ppapiAndAdExtDataServiceOnly()
-            throws RemoteException {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
-        doReturn(true).when(mMockFlags).getEnableAdExtServiceConsentData();
-        boolean isGiven = false;
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        AdServicesApiType apiType = AdServicesApiType.MEASUREMENTS;
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(isGiven, consentSourceOfTruth);
-
-        spyConsentManager.disable(mSpyContext, AdServicesApiType.MEASUREMENTS);
-        verify(spyConsentManager)
-                .setPerApiConsentToSourceOfTruth(eq(/* isGiven */ false), eq(apiType));
-        verify(mAdServicesExtDataManagerMock).setMsmtConsent(eq(false));
-        when(mAdServicesExtDataManagerMock.getMsmtConsent()).thenReturn(false);
-        assertThat(spyConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven())
-                .isFalse();
-    }
-
-    @Test
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT)
-    public void testFledgeConsentIsEnabled_userProfileIdIsClearedThanRecreated()
-            throws RemoteException {
+    public void testFledgeConsentIsEnabled_userProfileIdIsClearedThanRecreated() throws Exception {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         boolean isGiven = true;
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
@@ -3331,7 +3244,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT,
             times = 3)
-    public void testFledgeConsentIsDisabled_userProfileIdIsCleared() throws RemoteException {
+    public void testFledgeConsentIsDisabled_userProfileIdIsCleared() throws Exception {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         boolean isGiven = false;
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
@@ -3346,7 +3259,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testGetDefaultConsent_AppSearchOnly() throws RemoteException {
+    public void testGetDefaultConsent_AppSearchOnly() throws Exception {
         doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         ConsentManager spyConsentManager =
@@ -3359,17 +3272,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testGetDefaultConsent_ppapiAndAdExtDataServiceOnly() throws RemoteException {
-        doReturn(true).when(mMockFlags).getEnableAdExtServiceConsentData();
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(false, consentSourceOfTruth);
-
-        assertThat(spyConsentManager.getDefaultConsent()).isFalse();
-    }
-
-    @Test
-    public void testGetTopicsDefaultConsent_AppSearchOnly() throws RemoteException {
+    public void testGetTopicsDefaultConsent_AppSearchOnly() throws Exception {
         doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         ConsentManager spyConsentManager =
@@ -3383,17 +3286,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testGetTopicsDefaultConsent_ppapiAndAdExtDataServiceOnly() throws RemoteException {
-        doReturn(true).when(mMockFlags).getEnableAdExtServiceConsentData();
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(false, consentSourceOfTruth);
-
-        assertThat(spyConsentManager.getTopicsDefaultConsent()).isFalse();
-    }
-
-    @Test
-    public void testGetFledgeDefaultConsent_AppSearchOnly() throws RemoteException {
+    public void testGetFledgeDefaultConsent_AppSearchOnly() throws Exception {
         doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         ConsentManager spyConsentManager =
@@ -3407,17 +3300,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testGetFledgeDefaultConsent_ppapiAndAdExtDataServiceOnly() throws RemoteException {
-        doReturn(true).when(mMockFlags).getEnableAdExtServiceConsentData();
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(false, consentSourceOfTruth);
-
-        assertThat(spyConsentManager.getFledgeDefaultConsent()).isFalse();
-    }
-
-    @Test
-    public void testGetMeasurementDefaultConsent_AppSearchOnly() throws RemoteException {
+    public void testGetMeasurementDefaultConsent_AppSearchOnly() throws Exception {
         doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         ConsentManager spyConsentManager =
@@ -3432,21 +3315,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testGetMeasurementDefaultConsent_ppapiAndAdExtDataServiceOnly()
-            throws RemoteException {
-        doReturn(true).when(mMockFlags).getEnableAdExtServiceConsentData();
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(false, consentSourceOfTruth);
-
-        spyConsentManager.recordMeasurementDefaultConsent(true);
-        assertThat(spyConsentManager.getMeasurementDefaultConsent()).isTrue();
-        spyConsentManager.recordMeasurementDefaultConsent(false);
-        assertThat(spyConsentManager.getMeasurementDefaultConsent()).isFalse();
-    }
-
-    @Test
-    public void testGetDefaultAdIdState_AppSearchOnly() throws RemoteException {
+    public void testGetDefaultAdIdState_AppSearchOnly() throws Exception {
         doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         ConsentManager spyConsentManager =
@@ -3459,20 +3328,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testGetDefaultAdIdState_ppapiAndAdExtDataServiceOnly() throws RemoteException {
-        doReturn(true).when(mMockFlags).getEnableAdExtServiceConsentData();
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(false, consentSourceOfTruth);
-
-        spyConsentManager.recordDefaultAdIdState(true);
-        assertThat(spyConsentManager.getDefaultAdIdState()).isTrue();
-        spyConsentManager.recordDefaultAdIdState(false);
-        assertThat(spyConsentManager.getDefaultAdIdState()).isFalse();
-    }
-
-    @Test
-    public void testRecordDefaultConsent_AppSearchOnly() throws RemoteException {
+    public void testRecordDefaultConsent_AppSearchOnly() throws Exception {
         doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         ConsentManager spyConsentManager =
@@ -3484,20 +3340,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @ExpectErrorLogUtilWithExceptionCall(
-            errorCode =
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_DEFAULT_CONSENT)
-    public void testRecordDefaultConsent_ppapiAndAdExtDataServiceOnly() throws RemoteException {
-        doReturn(true).when(mMockFlags).getEnableAdExtServiceConsentData();
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(false, consentSourceOfTruth);
-
-        assertThrows(RuntimeException.class, () -> spyConsentManager.recordDefaultConsent(false));
-    }
-
-    @Test
-    public void testRecordTopicsDefaultConsent_AppSearchOnly() throws RemoteException {
+    public void testRecordTopicsDefaultConsent_AppSearchOnly() throws Exception {
         doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         ConsentManager spyConsentManager =
@@ -3509,19 +3352,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testRecordTopicsDefaultConsent_ppapiAndAdExtDataServiceOnly()
-            throws RemoteException {
-        doReturn(true).when(mMockFlags).getEnableAdExtServiceConsentData();
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(false, consentSourceOfTruth);
-
-        assertThrows(
-                RuntimeException.class, () -> spyConsentManager.recordTopicsDefaultConsent(true));
-    }
-
-    @Test
-    public void testRecordFledgeDefaultConsent_AppSearchOnly() throws RemoteException {
+    public void testRecordFledgeDefaultConsent_AppSearchOnly() throws Exception {
         doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         ConsentManager spyConsentManager =
@@ -3533,19 +3364,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testRecordFledgeDefaultConsent_ppapiAndAdExtDataServiceOnly()
-            throws RemoteException {
-        doReturn(true).when(mMockFlags).getEnableAdExtServiceConsentData();
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(false, consentSourceOfTruth);
-
-        assertThrows(
-                RuntimeException.class, () -> spyConsentManager.recordFledgeDefaultConsent(true));
-    }
-
-    @Test
-    public void testRecordMeasurementDefaultConsent_AppSearchOnly() throws RemoteException {
+    public void testRecordMeasurementDefaultConsent_AppSearchOnly() throws Exception {
         doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         ConsentManager spyConsentManager =
@@ -3557,7 +3376,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testRecordDefaultAdIdState_AppSearchOnly() throws RemoteException {
+    public void testRecordDefaultAdIdState_AppSearchOnly() throws Exception {
         doReturn(true).when(mMockFlags).getEnableAppsearchConsentData();
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         ConsentManager spyConsentManager =
@@ -3570,7 +3389,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
 
     @Test
     public void testAllThreeConsentsPerApiAreGivenAggregatedConsentIsSet_PpApiOnly()
-            throws RemoteException, IOException {
+            throws Exception {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         boolean isGiven = true;
         int consentSourceOfTruth = Flags.PPAPI_ONLY;
@@ -3598,7 +3417,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testAllConsentAreRevokedClenaupIsExecuted() throws IOException, RemoteException {
+    public void testAllConsentAreRevokedCleanupIsExecuted() throws Exception {
         when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(true);
         boolean isGiven = true;
         int consentSourceOfTruth = Flags.PPAPI_ONLY;
@@ -3654,7 +3473,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testManualInteractionWithConsentRecorded_PpApiOnly() throws RemoteException {
+    public void testManualInteractionWithConsentRecorded_PpApiOnly() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -3674,7 +3493,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testManualInteractionWithConsentRecorded_SystemServerOnly() throws RemoteException {
+    public void testManualInteractionWithConsentRecorded_SystemServerOnly() throws Exception {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -3700,8 +3519,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testManualInteractionWithConsentRecorded_PpApiAndSystemServer()
-            throws RemoteException {
+    public void testManualInteractionWithConsentRecorded_PpApiAndSystemServer() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -3731,7 +3549,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testManualInteractionWithConsentRecorded_appSearchOnly() throws RemoteException {
+    public void testManualInteractionWithConsentRecorded_appSearchOnly() throws Exception {
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         ConsentManager spyConsentManager =
@@ -3756,54 +3574,31 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         verify(mMockIAdServicesManager, never()).recordUserManualInteractionWithConsent(anyInt());
     }
 
-    @Test
-    public void testManualInteractionWithConsentRecorded_ppapiAndAdExtDataServiceOnly()
-            throws RemoteException {
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-
-        when(mAdServicesExtDataManagerMock.getManualInteractionWithConsentStatus())
-                .thenReturn(UNKNOWN);
-        assertThat(spyConsentManager.getUserManualInteractionWithConsent()).isEqualTo(UNKNOWN);
-        verify(mAdServicesExtDataManagerMock).getManualInteractionWithConsentStatus();
-
-        spyConsentManager.recordUserManualInteractionWithConsent(MANUAL_INTERACTIONS_RECORDED);
-        verify(mAdServicesExtDataManagerMock)
-                .setManualInteractionWithConsentStatus(MANUAL_INTERACTIONS_RECORDED);
-        when(mAdServicesExtDataManagerMock.getManualInteractionWithConsentStatus())
-                .thenReturn(MANUAL_INTERACTIONS_RECORDED);
-        assertThat(spyConsentManager.getUserManualInteractionWithConsent())
-                .isEqualTo(MANUAL_INTERACTIONS_RECORDED);
-    }
-
     // Note this method needs to be invoked after other private variables are initialized.
     private ConsentManager getConsentManagerByConsentSourceOfTruth(int consentSourceOfTruth) {
         return new ConsentManager(
-                mTopicsWorkerMock,
-                mAppConsentDaoSpy,
-                mEnrollmentDaoSpy,
-                mMeasurementImplMock,
+                mTopicsWorksSupplierMock,
+                mAppConsentDaoSupplierMock,
+                mEnrollmentDaoSupplierMock,
+                mMeasurementImplSupplierMock,
                 mCustomAudienceDaoMock,
                 mAppInstallDaoMock,
                 mProtectedSignalsDaoMock,
                 mFrequencyCapDaoMock,
+                mEncodedPayloadDaoMock,
                 mAdServicesManager,
                 mConsentDatastore,
                 mAppSearchConsentManagerMock,
                 mUserProfileIdManagerMock,
                 mUxStatesDaoMock,
-                mAdServicesExtDataManagerMock,
                 mMockFlags,
+                mMockDebugFlags,
                 consentSourceOfTruth,
-                true,
                 true);
     }
 
     private ConsentManager getSpiedConsentManagerForMigrationTesting(
-            boolean isGiven, int consentSourceOfTruth) throws RemoteException {
+            boolean isGiven, int consentSourceOfTruth) throws Exception {
         ConsentManager consentManager =
                 spy(getConsentManagerByConsentSourceOfTruth(consentSourceOfTruth));
 
@@ -3828,7 +3623,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
             boolean isGiven,
             int consentSourceOfTruth,
             @ConsentParcel.ConsentApiType int consentApiType)
-            throws RemoteException {
+            throws Exception {
         ConsentManager consentManager =
                 spy(getConsentManagerByConsentSourceOfTruth(consentSourceOfTruth));
 
@@ -3859,7 +3654,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
             boolean hasWrittenToPpApi,
             boolean hasWrittenToSystemServer,
             boolean hasReadFromSystemServer)
-            throws RemoteException, IOException {
+            throws Exception {
         verify(consentManager, verificationMode(hasWrittenToPpApi)).setConsentToPpApi(isGiven);
         verify(
                 () -> ConsentManager.setConsentToSystemServer(any(), eq(isGiven)),
@@ -3869,7 +3664,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 .getConsent(ConsentParcel.ALL_API);
     }
 
-    private void verifyDataCleanup(ConsentManager consentManager) throws IOException {
+    private void verifyDataCleanup(ConsentManager consentManager) throws Exception {
         verify(consentManager).resetTopicsAndBlockedTopics();
         verify(consentManager).resetAppsAndBlockedApps();
         verify(consentManager).resetMeasurement();
@@ -3879,8 +3674,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         return hasHappened ? atLeastOnce() : never();
     }
 
-    private void mockGetPackageUid(@NonNull String packageName, int uid)
-            throws PackageManager.NameNotFoundException {
+    private void mockGetPackageUid(String packageName, int uid) throws Exception {
         doReturn(uid)
                 .when(
                         () ->
@@ -3893,7 +3687,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 .when(() -> PackageManagerCompatUtils.getInstalledApplications(any(), anyInt()));
     }
 
-    private void mockThrowExceptionOnGetPackageUid(@NonNull String packageName) {
+    private void mockThrowExceptionOnGetPackageUid(String packageName) {
         doThrow(PackageManager.NameNotFoundException.class)
                 .when(
                         () ->
@@ -3912,9 +3706,9 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     private class ListMatcherIgnoreOrder implements ArgumentMatcher<List<String>> {
-        @NonNull private final List<String> mStrings;
+        private final List<String> mStrings;
 
-        private ListMatcherIgnoreOrder(@NonNull List<String> strings) {
+        private ListMatcherIgnoreOrder(List<String> strings) {
             Objects.requireNonNull(strings);
             mStrings = strings;
         }
@@ -3938,19 +3732,62 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testCurrentPrivacySandboxFeature_ppapiOnly() throws RemoteException {
-        getCurrentPrivacySandboxFeatureWithPpApiOnly(Flags.PPAPI_ONLY);
+    public void testCreateAndInitializeDatastore() throws Exception {
+        mConsentDatastore.clear();
+        mockEnableAtomicFileDatastoreBatchUpdateApi(/* enable= */ true);
+
+        mConsentDatastore =
+                ConsentManager.createAndInitializeDataStore(
+                        mSpyContext, mMockAdServicesErrorLogger);
+
+        expect.withMessage("getBoolean(%s)", ConsentConstants.NOTIFICATION_DISPLAYED_ONCE)
+                .that(mConsentDatastore.getBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE))
+                .isFalse();
+        expect.withMessage("getBoolean(%s)", ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE)
+                .that(
+                        mConsentDatastore.getBoolean(
+                                ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE))
+                .isFalse();
+        expect.withMessage("getBoolean(%s)", ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED)
+                .that(mConsentDatastore.getBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED))
+                .isFalse();
+        expect.withMessage("getBoolean(%s)", ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE)
+                .that(
+                        mConsentDatastore.getBoolean(
+                                ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE))
+                .isFalse();
+        expect.withMessage("getBoolean(%s)", ConsentConstants.PAS_NOTIFICATION_OPENED)
+                .that(mConsentDatastore.getBoolean(ConsentConstants.PAS_NOTIFICATION_OPENED))
+                .isFalse();
     }
 
     @Test
-    public void testCurrentPrivacySandboxFeature_ppapiAndAdExtDataServiceOnly()
-            throws RemoteException {
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        getCurrentPrivacySandboxFeatureWithPpApiOnly(Flags.PPAPI_AND_ADEXT_SERVICE);
+    public void testSetPrivacySandboxFeatureTypeInApp_updateAPIEnabled() throws Exception {
+        mockEnableAtomicFileDatastoreBatchUpdateApi(/* enable= */ true);
+
+        runAndVerifyPrivacySandboxFeatureTypeInApp(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_UNSUPPORTED);
+        runAndVerifyPrivacySandboxFeatureTypeInApp(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT);
+        runAndVerifyPrivacySandboxFeatureTypeInApp(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT);
+        runAndVerifyPrivacySandboxFeatureTypeInApp(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_FIRST_CONSENT_FF);
+        runAndVerifyPrivacySandboxFeatureTypeInApp(
+                PrivacySandboxFeatureType.PRIVACY_SANDBOX_RECONSENT_FF);
     }
 
-    private void getCurrentPrivacySandboxFeatureWithPpApiOnly(int consentSourceOfTruth)
-            throws RemoteException {
+    private void runAndVerifyPrivacySandboxFeatureTypeInApp(PrivacySandboxFeatureType featureType)
+            throws Exception {
+        mConsentManager.setPrivacySandboxFeatureTypeInApp(featureType);
+        expect.withMessage("PrivacySandboxFeatureType: %s", featureType)
+                .that(mConsentManager.getCurrentPrivacySandboxFeature())
+                .isEqualTo(featureType);
+    }
+
+    @Test
+    public void testCurrentPrivacySandboxFeature_ppapiOnly() throws Exception {
+        int consentSourceOfTruth = Flags.PPAPI_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
                         /* isGiven */ false, consentSourceOfTruth);
@@ -3971,7 +3808,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE)
-    public void testCurrentPrivacySandboxFeature_SystemServerOnly() throws RemoteException {
+    public void testCurrentPrivacySandboxFeature_SystemServerOnly() throws Exception {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4020,7 +3857,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE)
-    public void testCurrentPrivacySandboxFeature_PpApiAndSystemServer() throws RemoteException {
+    public void testCurrentPrivacySandboxFeature_PpApiAndSystemServer() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4069,7 +3906,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testCurrentPrivacySandboxFeature_appSearchOnly() throws RemoteException {
+    public void testCurrentPrivacySandboxFeature_appSearchOnly() throws Exception {
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         ConsentManager spyConsentManager =
@@ -4096,7 +3933,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isAdIdEnabledTest_SystemServerOnly() throws RemoteException {
+    public void isAdIdEnabledTest_SystemServerOnly() throws Exception {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4116,7 +3953,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isAdIdEnabledTest_PpApiAndSystemServer() throws RemoteException {
+    public void isAdIdEnabledTest_PpApiAndSystemServer() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4138,7 +3975,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isAdIdEnabledTest_appSearchOnly() throws RemoteException {
+    public void isAdIdEnabledTest_appSearchOnly() throws Exception {
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         ConsentManager spyConsentManager =
@@ -4159,7 +3996,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isU18AccountTest_SystemServerOnly() throws RemoteException {
+    public void isU18AccountTest_SystemServerOnly() throws Exception {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4179,7 +4016,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isU18AccountTest_PpApiAndSystemServer() throws RemoteException {
+    public void isU18AccountTest_PpApiAndSystemServer() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4201,7 +4038,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isU18AccountTest_appSearchOnly() throws RemoteException {
+    public void isU18AccountTest_appSearchOnly() throws Exception {
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         ConsentManager spyConsentManager =
@@ -4222,42 +4059,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isU18AccountTest_ppapiAndAdExtDataServiceOnly() throws RemoteException {
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-
-        doReturn(false).when(mAdServicesExtDataManagerMock).getIsU18Account();
-        assertThat(spyConsentManager.isU18Account()).isFalse();
-        verify(mAdServicesExtDataManagerMock).getIsU18Account();
-
-        doReturn(true).when(mAdServicesExtDataManagerMock).getIsU18Account();
-        spyConsentManager.setU18Account(true);
-
-        assertThat(spyConsentManager.isU18Account()).isTrue();
-
-        verify(mAdServicesExtDataManagerMock, times(2)).getIsU18Account();
-        verify(mAdServicesExtDataManagerMock).setIsU18Account(anyBoolean());
-    }
-
-    @Test
-    public void isEntryPointEnabledTest_ppapiAndAdExtDataServiceOnly() throws RemoteException {
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-
-        spyConsentManager.setEntryPointEnabled(true);
-        assertThat(spyConsentManager.isEntryPointEnabled()).isTrue();
-        spyConsentManager.setEntryPointEnabled(false);
-        assertThat(spyConsentManager.isEntryPointEnabled()).isFalse();
-    }
-
-    @Test
-    public void isEntryPointEnabledTest_SystemServerOnly() throws RemoteException {
+    public void isEntryPointEnabledTest_SystemServerOnly() throws Exception {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4277,7 +4079,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isEntryPointEnabledTest_PpApiAndSystemServer() throws RemoteException {
+    public void isEntryPointEnabledTest_PpApiAndSystemServer() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4299,7 +4101,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isEntryPointEnabledTest_appSearchOnly() throws RemoteException {
+    public void isEntryPointEnabledTest_appSearchOnly() throws Exception {
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         ConsentManager spyConsentManager =
@@ -4320,7 +4122,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isAdultAccountTest_SystemServerOnly() throws RemoteException {
+    public void isAdultAccountTest_SystemServerOnly() throws Exception {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4340,7 +4142,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isAdultAccountTest_PpApiAndSystemServer() throws RemoteException {
+    public void isAdultAccountTest_PpApiAndSystemServer() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4362,28 +4164,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isAdultAccountTest_ppapiAndAdExtDataServiceOnly() throws RemoteException {
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-
-        doReturn(false).when(mAdServicesExtDataManagerMock).getIsAdultAccount();
-        assertThat(spyConsentManager.isAdultAccount()).isFalse();
-        verify(mAdServicesExtDataManagerMock).getIsAdultAccount();
-
-        doReturn(true).when(mAdServicesExtDataManagerMock).getIsAdultAccount();
-        spyConsentManager.setAdultAccount(true);
-
-        assertThat(spyConsentManager.isAdultAccount()).isTrue();
-
-        verify(mAdServicesExtDataManagerMock, times(2)).getIsAdultAccount();
-        verify(mAdServicesExtDataManagerMock).setIsAdultAccount(anyBoolean());
-    }
-
-    @Test
-    public void isAdultAccountTest_appSearchOnly() throws RemoteException {
+    public void isAdultAccountTest_appSearchOnly() throws Exception {
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         ConsentManager spyConsentManager =
@@ -4404,7 +4185,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testDefaultConsentRecorded_PpApiOnly() throws RemoteException {
+    public void testDefaultConsentRecorded_PpApiOnly() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4423,7 +4204,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testDefaultConsentRecorded_SystemServerOnly() throws RemoteException {
+    public void testDefaultConsentRecorded_SystemServerOnly() throws Exception {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4446,7 +4227,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testDefaultConsentRecorded_PpApiAndSystemServer() throws RemoteException {
+    public void testDefaultConsentRecorded_PpApiAndSystemServer() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4471,17 +4252,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testDefaultConsentRecorded_ppapiAndAdExtDataServiceOnly() throws RemoteException {
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-        assertThat(spyConsentManager.getDefaultConsent()).isFalse();
-    }
-
-    @Test
-    public void wasU18NotificationDisplayedTest_SystemServerOnly() throws RemoteException {
+    public void wasU18NotificationDisplayedTest_SystemServerOnly() throws Exception {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4501,7 +4272,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void wasU18NotificationDisplayedTest_PpApiAndSystemServer() throws RemoteException {
+    public void wasU18NotificationDisplayedTest_PpApiAndSystemServer() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4523,7 +4294,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void wasU18NotificationDisplayedTest_appSearchOnly() throws RemoteException {
+    public void wasU18NotificationDisplayedTest_appSearchOnly() throws Exception {
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         ConsentManager spyConsentManager =
@@ -4544,104 +4315,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testWasU18NotificationDisplayed_ppapiAndAdExtDataServiceOnly()
-            throws RemoteException {
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-
-        doReturn(false).when(mAdServicesExtDataManagerMock).getNotificationDisplayed();
-        assertThat(spyConsentManager.wasU18NotificationDisplayed()).isFalse();
-        verify(mAdServicesExtDataManagerMock).getNotificationDisplayed();
-
-        doReturn(true).when(mAdServicesExtDataManagerMock).getNotificationDisplayed();
-        spyConsentManager.setU18NotificationDisplayed(true);
-
-        assertThat(spyConsentManager.wasU18NotificationDisplayed()).isTrue();
-
-        verify(mAdServicesExtDataManagerMock, times(2)).getNotificationDisplayed();
-        verify(mAdServicesExtDataManagerMock).setNotificationDisplayed(anyBoolean());
-    }
-
-    @Test
-    public void testIsRvcAdultUser_ageCheckFlagOn() throws RemoteException {
-        int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        when(mMockFlags.getRvcPostOtaNotifAgeCheck()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-
-        doReturn(true).when(mAdServicesExtDataManagerMock).getNotificationDisplayed();
-        doReturn(false).when(mAdServicesExtDataManagerMock).getIsU18Account();
-        doReturn(true).when(mAdServicesExtDataManagerMock).getIsAdultAccount();
-        assertThat(spyConsentManager.isOtaAdultUserFromRvc()).isTrue();
-        verify(mAdServicesExtDataManagerMock).getNotificationDisplayed();
-        verify(mAdServicesExtDataManagerMock).getIsAdultAccount();
-        verify(mAdServicesExtDataManagerMock).getIsU18Account();
-    }
-
-    @Test
-    public void testIsRvcAdultUser_ageCheckFlagOff() throws RemoteException {
-        int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-
-        doReturn(true).when(mAdServicesExtDataManagerMock).getNotificationDisplayed();
-        assertThat(spyConsentManager.isOtaAdultUserFromRvc()).isTrue();
-        verify(mAdServicesExtDataManagerMock).getNotificationDisplayed();
-    }
-
-    @Test
-    public void testGetUx_PpApiOnly() throws RemoteException {
-        getUxWithPpApiOnly(Flags.PPAPI_ONLY);
-    }
-
-    @Test
-    public void testGetUx_ppapiAndAdExtDataServiceOnly() throws RemoteException {
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        getUxWithPpApiOnly(Flags.PPAPI_AND_ADEXT_SERVICE);
-    }
-
-    @Test
-    public void testGetUx_ppapiAndAdExtDataServiceOnly_postRollback_u18Ux() throws RemoteException {
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        when(mMockFlags.getU18UxEnabled()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-
-        when(mUxStatesDaoMock.getUx()).thenReturn(PrivacySandboxUxCollection.UNSUPPORTED_UX);
-        when(mAdServicesExtDataManagerMock.getIsU18Account()).thenReturn(true);
-        assertThat(spyConsentManager.getUx()).isEqualTo(PrivacySandboxUxCollection.U18_UX);
-
-        verify(mAdServicesExtDataManagerMock).getIsU18Account();
-    }
-
-    @Test
-    public void testGetUx_ppapiAndAdExtDataServiceOnly_postRollback_rvcUx() throws RemoteException {
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        when(mMockFlags.getU18UxEnabled()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-
-        when(mUxStatesDaoMock.getUx()).thenReturn(PrivacySandboxUxCollection.UNSUPPORTED_UX);
-        when(mAdServicesExtDataManagerMock.getIsU18Account()).thenReturn(false);
-        when(mAdServicesExtDataManagerMock.getIsAdultAccount()).thenReturn(true);
-        assertThat(spyConsentManager.getUx()).isEqualTo(PrivacySandboxUxCollection.RVC_UX);
-
-        verify(mAdServicesExtDataManagerMock).getIsU18Account();
-        verify(mAdServicesExtDataManagerMock).getIsAdultAccount();
-    }
-
-    private void getUxWithPpApiOnly(int consentSourceOfTruth) throws RemoteException {
+    public void testGetUx_PpApiOnly() throws Exception {
+        int consentSourceOfTruth = Flags.PPAPI_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
                         /* isGiven */ false, consentSourceOfTruth);
@@ -4658,7 +4333,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void getUxTest_SystemServerOnly() throws RemoteException {
+    public void getUxTest_SystemServerOnly() throws Exception {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4676,7 +4351,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void getUxTest_PpApiAndSystemServer() throws RemoteException {
+    public void getUxTest_PpApiAndSystemServer() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4694,7 +4369,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void getUxTest_appSearchOnly() throws RemoteException {
+    public void getUxTest_appSearchOnly() throws Exception {
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         ConsentManager spyConsentManager =
@@ -4713,18 +4388,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testGetEnrollmentChannel_ppapiOnly() throws RemoteException {
-        getEnrollmentChannelWithPpApiOnly(Flags.PPAPI_ONLY);
-    }
-
-    @Test
-    public void testGetEnrollmentChannel_ppapiAndAdExtDataServiceOnly() throws RemoteException {
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        getEnrollmentChannelWithPpApiOnly(Flags.PPAPI_AND_ADEXT_SERVICE);
-    }
-
-    private void getEnrollmentChannelWithPpApiOnly(int consentSourceOfTruth)
-            throws RemoteException {
+    public void testGetEnrollmentChannel_ppapiOnly() throws Exception {
+        int consentSourceOfTruth = Flags.PPAPI_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
                         /* isGiven */ false, consentSourceOfTruth);
@@ -4745,7 +4410,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void getEnrollmentChannel_SystemServerOnly() throws RemoteException {
+    public void getEnrollmentChannel_SystemServerOnly() throws Exception {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4767,7 +4432,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void getEnrollmentChannel_PpApiAndSystemServer() throws RemoteException {
+    public void getEnrollmentChannel_PpApiAndSystemServer() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4789,7 +4454,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void getEnrollmentChannel_appSearchOnly() throws RemoteException {
+    @SuppressWarnings("NewApi")
+    public void getEnrollmentChannel_appSearchOnly() throws Exception {
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         ConsentManager spyConsentManager =
@@ -4813,7 +4479,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testPasNotificationDisplayedRecorded_PpApiOnly() throws RemoteException {
+    public void testPasNotificationDisplayedRecorded_PpApiOnly() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4832,7 +4498,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testPasNotificationDisplayedRecorded_SystemServerOnly() throws RemoteException {
+    public void testPasNotificationDisplayedRecorded_SystemServerOnly() throws Exception {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4855,7 +4521,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testPasNotificationDisplayedRecorded_PpApiAndSystemServer() throws RemoteException {
+    public void testPasNotificationDisplayedRecorded_PpApiAndSystemServer() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -4880,7 +4546,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testIsPasFledgeConsentGiven_happycase() throws RemoteException {
+    public void testIsPasFledgeConsentGiven_happycase() throws Exception {
         when(mMockFlags.getPasUxEnabled()).thenReturn(true);
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
@@ -4893,7 +4559,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testIsPasFledgeConsentGiven_NotificationNotDisplayed() throws RemoteException {
+    public void testIsPasFledgeConsentGiven_NotificationNotDisplayed() throws Exception {
         when(mMockFlags.getPasUxEnabled()).thenReturn(true);
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
@@ -4906,7 +4572,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testIsPasFledgeConsentGiven_FledgeRevoken() throws RemoteException {
+    public void testIsPasFledgeConsentGiven_FledgeRevoken() throws Exception {
         when(mMockFlags.getPasUxEnabled()).thenReturn(true);
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
@@ -4919,7 +4585,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testIsPasFledgeConsentGiven_pasNotEnabled() throws RemoteException {
+    public void testIsPasFledgeConsentGiven_pasNotEnabled() throws Exception {
         when(mMockFlags.getPasUxEnabled()).thenReturn(false);
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
@@ -4932,7 +4598,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testIsPasMeasurementConsentGiven_happycase() throws RemoteException {
+    public void testIsPasMeasurementConsentGiven_happycase() throws Exception {
         when(mMockFlags.getPasUxEnabled()).thenReturn(true);
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
@@ -4945,7 +4611,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testIsPasMeasurementConsentGiven_NotificationNotDisplayed() throws RemoteException {
+    public void testIsPasMeasurementConsentGiven_NotificationNotDisplayed() throws Exception {
         when(mMockFlags.getPasUxEnabled()).thenReturn(true);
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
@@ -4958,7 +4624,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testIsPasMeasurementConsentGiven_consentRevoken() throws RemoteException {
+    public void testIsPasMeasurementConsentGiven_consentRevoken() throws Exception {
         when(mMockFlags.getPasUxEnabled()).thenReturn(true);
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
@@ -4971,7 +4637,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testIsPasMeasurementConsentGiven_pasNotEnabled() throws RemoteException {
+    public void testIsPasMeasurementConsentGiven_pasNotEnabled() throws Exception {
         when(mMockFlags.getPasUxEnabled()).thenReturn(false);
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
@@ -4984,21 +4650,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isMeasurementDataResetTest_ppapiAndAdExtDataServiceOnly() throws RemoteException {
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-
-        spyConsentManager.setMeasurementDataReset(true);
-        assertThat(spyConsentManager.isMeasurementDataReset()).isTrue();
-        spyConsentManager.setMeasurementDataReset(false);
-        assertThat(spyConsentManager.isMeasurementDataReset()).isFalse();
-    }
-
-    @Test
-    public void isMeasurementDataResetTest_SystemServerOnly() throws RemoteException {
+    public void isMeasurementDataResetTest_SystemServerOnly() throws Exception {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -5018,7 +4670,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isMeasurementDataResetTest_PpApiAndSystemServer() throws RemoteException {
+    public void isMeasurementDataResetTest_PpApiAndSystemServer() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -5040,7 +4692,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isMeasurementDataResetTest_appSearchOnly() throws RemoteException {
+    public void isMeasurementDataResetTest_appSearchOnly() throws Exception {
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         ConsentManager spyConsentManager =
@@ -5061,21 +4713,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isPaDataResetTest_ppapiAndAdExtDataServiceOnly() throws RemoteException {
-        int consentSourceOfTruth = Flags.PPAPI_AND_ADEXT_SERVICE;
-        when(mMockFlags.getEnableAdExtServiceConsentData()).thenReturn(true);
-        ConsentManager spyConsentManager =
-                getSpiedConsentManagerForMigrationTesting(
-                        /* isGiven */ false, consentSourceOfTruth);
-
-        spyConsentManager.setPaDataReset(true);
-        assertThat(spyConsentManager.isPaDataReset()).isTrue();
-        spyConsentManager.setPaDataReset(false);
-        assertThat(spyConsentManager.isPaDataReset()).isFalse();
-    }
-
-    @Test
-    public void isPaDataResetTest_SystemServerOnly() throws RemoteException {
+    public void isPaDataResetTest_SystemServerOnly() throws Exception {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -5095,7 +4733,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isPaDataResetTest_PpApiAndSystemServer() throws RemoteException {
+    public void isPaDataResetTest_PpApiAndSystemServer() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -5117,7 +4755,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void isPaDataResetTest_appSearchOnly() throws RemoteException {
+    public void isPaDataResetTest_appSearchOnly() throws Exception {
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         ConsentManager spyConsentManager =
@@ -5138,7 +4776,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testPasNotificationOpenedRecorded_PpApiOnly() throws RemoteException {
+    public void testPasNotificationOpenedRecorded_PpApiOnly() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -5157,7 +4795,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testPasNotificationOpenedRecorded_SystemServerOnly() throws RemoteException {
+    public void testPasNotificationOpenedRecorded_SystemServerOnly() throws Exception {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -5180,7 +4818,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testPasNotificationOpenedRecorded_PpApiAndSystemServer() throws RemoteException {
+    public void testPasNotificationOpenedRecorded_PpApiAndSystemServer() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -5205,7 +4843,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void getEnrollmentState_PpApiOnly() throws RemoteException {
+    public void getEnrollmentState_PpApiOnly() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -5214,7 +4852,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void getEnrollmentState_SystemServerOnly() throws RemoteException {
+    public void getEnrollmentState_SystemServerOnly() throws Exception {
         int consentSourceOfTruth = Flags.SYSTEM_SERVER_ONLY;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -5223,7 +4861,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void getEnrollmentState_PpApiAndSystemServer() throws RemoteException {
+    public void getEnrollmentState_PpApiAndSystemServer() throws Exception {
         int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
         ConsentManager spyConsentManager =
                 getSpiedConsentManagerForMigrationTesting(
@@ -5232,7 +4870,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void getEnrollmentState_appSearchOnly() throws RemoteException {
+    public void getEnrollmentState_appSearchOnly() throws Exception {
         int consentSourceOfTruth = Flags.APPSEARCH_ONLY;
         when(mMockFlags.getEnableAppsearchConsentData()).thenReturn(true);
         ConsentManager spyConsentManager =
@@ -5241,95 +4879,363 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         setupAndVerifyEnrollmentStates(spyConsentManager, consentSourceOfTruth);
     }
 
+    @Test
+    public void testConsentSourceOfTruthToString() {
+        expectConsentSourceOfTruthToString(Flags.SYSTEM_SERVER_ONLY, "SYSTEM_SERVER_ONLY");
+        expectConsentSourceOfTruthToString(Flags.PPAPI_ONLY, "PPAPI_ONLY");
+        expectConsentSourceOfTruthToString(
+                Flags.PPAPI_AND_SYSTEM_SERVER, "PPAPI_AND_SYSTEM_SERVER");
+        expectConsentSourceOfTruthToString(Flags.APPSEARCH_ONLY, "APPSEARCH_ONLY");
+        expectConsentSourceOfTruthToString(666, "UNKNOWN-666");
+    }
+
+    @Test
+    public void testDump() throws Exception {
+        String datastoreDump =
+                dump(pw -> mConsentDatastore.dump(pw, /* prefix= */ "    ", /* args= */ null));
+        String dump = dump(pw -> mConsentManager.dump(pw, /* args= */ null));
+
+        expect.withMessage("dump()")
+                .that(dump)
+                .startsWith(
+                        "ConsentManager\n"
+                                + "  Source of truth: PPAPI_ONLY\n"
+                                + "  sDataMigrationDuration: ");
+        expect.withMessage("dump()")
+                .that(dump)
+                .containsMatch("\n  sDataMigrationDuration: .*ms\n  sInstantiationDuration: .*ms");
+        expect.withMessage("dump()").that(dump).endsWith("\n  Datastore:\n" + datastoreDump);
+    }
+
+    private void expectConsentSourceOfTruthToString(int source, String toString) {
+        expect.withMessage("consentSourceOfTruthToString(%s)", source)
+                .that(consentSourceOfTruthToString(source))
+                .isEqualTo(toString);
+    }
+
+    @Test
+    public void testMigrateEnrollmentData() throws Exception {
+        int consentSourceOfTruth = Flags.PPAPI_AND_SYSTEM_SERVER;
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, consentSourceOfTruth);
+
+        doNothing().when(mMockIAdServicesManager).setConsent(any());
+        doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed(true);
+
+        doReturn(null).when(spyConsentManager).getConsent(any());
+        doReturn(AdServicesApiConsent.GIVEN)
+                .when(spyConsentManager)
+                .getConsent(AdServicesApiType.TOPICS);
+        doReturn(AdServicesApiConsent.REVOKED)
+                .when(spyConsentManager)
+                .getConsent(AdServicesApiType.MEASUREMENTS);
+        doReturn(true).when(spyConsentManager).wasGaUxNotificationDisplayed();
+
+        final String[] dataStringArg = new String[1];
+        doAnswer(
+                        i -> {
+                            dataStringArg[0] = i.getArgument(0);
+                            return null;
+                        })
+                .when(spyConsentManager)
+                .setModuleEnrollmentData(anyString());
+
+        ConsentManager.handleEnrollmentDataMigrationIfNeeded(spyConsentManager);
+
+        EnrollmentData actualData = EnrollmentData.deserialize(dataStringArg[0]);
+        assertEquals(
+                "TOPICS User Choice",
+                USER_CHOICE_OPTED_IN,
+                actualData.getUserChoice(Module.TOPICS));
+        assertEquals(
+                "MEASUREMENT User Choice",
+                USER_CHOICE_OPTED_OUT,
+                actualData.getUserChoice(MEASUREMENT));
+        assertEquals(
+                "PA User Choice",
+                AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN,
+                actualData.getUserChoice(PROTECTED_AUDIENCE));
+        assertEquals(
+                "PAS User Choice",
+                AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN,
+                actualData.getUserChoice(Module.PROTECTED_APP_SIGNALS));
+        assertEquals(
+                "ODP User Choice",
+                AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN,
+                actualData.getUserChoice(Module.ON_DEVICE_PERSONALIZATION));
+        assertEquals(
+                "ADID User Choice",
+                AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN,
+                actualData.getUserChoice(Module.ADID));
+        assertEquals(
+                "TOPICS Module State",
+                MODULE_STATE_ENABLED,
+                actualData.getModuleState(Module.TOPICS));
+        assertEquals(
+                "MEASUREMENT Module State",
+                MODULE_STATE_ENABLED,
+                actualData.getModuleState(MEASUREMENT));
+        assertEquals(
+                "PA Module State",
+                MODULE_STATE_ENABLED,
+                actualData.getModuleState(PROTECTED_AUDIENCE));
+        assertEquals(
+                "PAS Module State",
+                MODULE_STATE_DISABLED,
+                actualData.getModuleState(Module.PROTECTED_APP_SIGNALS));
+        assertEquals(
+                "ODP Module State",
+                MODULE_STATE_DISABLED,
+                actualData.getModuleState(Module.ON_DEVICE_PERSONALIZATION));
+        assertEquals(
+                "ADID Module State", MODULE_STATE_UNKNOWN, actualData.getModuleState(Module.ADID));
+        verify(spyConsentManager).setModuleEnrollmentData(anyString());
+        clearInvocations(spyConsentManager);
+
+        doAnswer(unused -> dataStringArg[0]).when(spyConsentManager).getModuleEnrollmentState();
+        // Verify this should only happen once
+        ConsentManager.handleEnrollmentDataMigrationIfNeeded(spyConsentManager);
+        verify(spyConsentManager, never()).setModuleEnrollmentData(anyString());
+    }
+
     private void setupAndVerifyEnrollmentStates(
-            ConsentManager spyConsentManager, int consentSourceOfTruth) throws RemoteException {
+            ConsentManager spyConsentManager, int consentSourceOfTruth)
+            throws RemoteException, IOException {
         EnrollmentData data = EnrollmentData.deserialize("");
-        AdServicesModuleState moduleState =
-                new AdServicesModuleState.Builder()
-                        .setModule(Module.TOPIC)
-                        .setModuleState(AdServicesModuleState.MODULE_STATE_DISABLED)
-                        .build();
-        spyConsentManager.setModuleStates(List.of(moduleState));
-        data.putModuleState(moduleState);
-
-        moduleState =
-                new AdServicesModuleState.Builder()
-                        .setModule(Module.PA)
-                        .setModuleState(AdServicesModuleState.MODULE_STATE_ENABLED)
-                        .build();
-        spyConsentManager.setModuleStates(List.of(moduleState));
-        data.putModuleState(moduleState);
-
-        moduleState =
-                new AdServicesModuleState.Builder()
-                        .setModule(Module.MEASUREMENT)
-                        .setModuleState(AdServicesModuleState.MODULE_STATE_ENABLED)
-                        .build();
-        spyConsentManager.setModuleStates(List.of(moduleState));
+        int[][] moduleStates =
+                new int[][] {
+                    {Module.TOPICS, MODULE_STATE_DISABLED},
+                    {PROTECTED_AUDIENCE, MODULE_STATE_ENABLED},
+                    {MEASUREMENT, MODULE_STATE_ENABLED},
+                    {Module.PROTECTED_APP_SIGNALS, MODULE_STATE_ENABLED},
+                };
+        SparseIntArray moduleStateList = new SparseIntArray(moduleStates.length);
+        for (int[] element : moduleStates) {
+            data.putModuleState(element[0], element[1]);
+            moduleStateList.put(element[0], element[1]);
+        }
+        spyConsentManager.setModuleStates(moduleStateList);
 
         AdServicesModuleUserChoice userChoice =
-                new AdServicesModuleUserChoice.Builder()
-                        .setModule(Module.MEASUREMENT)
-                        .setUserChoice(AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT)
-                        .build();
+                new AdServicesModuleUserChoice(MEASUREMENT, USER_CHOICE_OPTED_OUT);
         spyConsentManager.setUserChoices(List.of(userChoice));
-        data.putModuleState(moduleState);
-        data.putUserChoice(Module.MEASUREMENT, AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT);
-
-        moduleState =
-                new AdServicesModuleState.Builder()
-                        .setModule(Module.PAS)
-                        .setModuleState(AdServicesModuleState.MODULE_STATE_ENABLED)
-                        .build();
-        spyConsentManager.setModuleStates(List.of(moduleState));
+        data.putUserChoice(MEASUREMENT, USER_CHOICE_OPTED_OUT);
 
         AdServicesModuleUserChoice userChoicePa =
-                new AdServicesModuleUserChoice.Builder()
-                        .setModule(Module.PAS)
-                        .setUserChoice(AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN)
-                        .build();
+                new AdServicesModuleUserChoice(Module.PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_IN);
         spyConsentManager.setUserChoices(List.of(userChoicePa));
-        data.putModuleState(moduleState);
-        data.putUserChoice(Module.PAS, AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
+        data.putUserChoice(Module.PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_IN);
 
         switch (consentSourceOfTruth) {
-            case Flags.PPAPI_ONLY, Flags.PPAPI_AND_ADEXT_SERVICE:
-                verify(mMockIAdServicesManager, never()).setModuleEnrollmentState(anyString());
-                break;
             case Flags.SYSTEM_SERVER_ONLY, Flags.PPAPI_AND_SYSTEM_SERVER:
-                doReturn(EnrollmentData.serializeBase64(data))
+                doReturn(EnrollmentData.serialize(data))
                         .when(mMockIAdServicesManager)
                         .getModuleEnrollmentState();
-                verify(mMockIAdServicesManager, times(6)).setModuleEnrollmentState(anyString());
+                verify(mMockIAdServicesManager, times(3)).setModuleEnrollmentState(anyString());
                 break;
             case Flags.APPSEARCH_ONLY:
-                doReturn(EnrollmentData.serializeBase64(data))
+                doReturn(EnrollmentData.serialize(data))
                         .when(mAppSearchConsentManagerMock)
                         .getModuleEnrollmentState();
-                verify(mAppSearchConsentManagerMock, times(6))
+                verify(mAppSearchConsentManagerMock, times(3))
                         .setModuleEnrollmentState(anyString());
                 break;
         }
 
-        assertThat(spyConsentManager.getModuleState(Module.ODP))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_UNKNOWN);
-        assertThat(spyConsentManager.getUserChoice(Module.ODP))
+        assertThat(spyConsentManager.getModuleState(Module.ON_DEVICE_PERSONALIZATION))
+                .isEqualTo(MODULE_STATE_UNKNOWN);
+        assertThat(spyConsentManager.getUserChoice(Module.ON_DEVICE_PERSONALIZATION))
                 .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN);
-        assertThat(spyConsentManager.getModuleState(Module.TOPIC))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_DISABLED);
-        assertThat(spyConsentManager.getUserChoice(Module.TOPIC))
+        assertThat(spyConsentManager.getModuleState(Module.TOPICS))
+                .isEqualTo(MODULE_STATE_DISABLED);
+        assertThat(spyConsentManager.getUserChoice(Module.TOPICS))
                 .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN);
-        assertThat(spyConsentManager.getModuleState(Module.PA))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_ENABLED);
-        assertThat(spyConsentManager.getUserChoice(Module.PA))
+        assertThat(spyConsentManager.getModuleState(PROTECTED_AUDIENCE))
+                .isEqualTo(MODULE_STATE_ENABLED);
+        assertThat(spyConsentManager.getUserChoice(PROTECTED_AUDIENCE))
                 .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN);
-        assertThat(spyConsentManager.getModuleState(Module.MEASUREMENT))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_ENABLED);
-        assertThat(spyConsentManager.getUserChoice(Module.MEASUREMENT))
-                .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT);
-        assertThat(spyConsentManager.getModuleState(Module.PAS))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_ENABLED);
-        assertThat(spyConsentManager.getUserChoice(Module.PAS))
-                .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
+        assertThat(spyConsentManager.getModuleState(MEASUREMENT)).isEqualTo(MODULE_STATE_ENABLED);
+        assertThat(spyConsentManager.getUserChoice(MEASUREMENT)).isEqualTo(USER_CHOICE_OPTED_OUT);
+        assertThat(spyConsentManager.getModuleState(Module.PROTECTED_APP_SIGNALS))
+                .isEqualTo(MODULE_STATE_ENABLED);
+        assertThat(spyConsentManager.getUserChoice(Module.PROTECTED_APP_SIGNALS))
+                .isEqualTo(USER_CHOICE_OPTED_IN);
+    }
+
+    private void mockEnableAtomicFileDatastoreBatchUpdateApi(boolean enable) {
+        when(mMockFlags.getEnableAtomicFileDatastoreBatchUpdateApi()).thenReturn(enable);
+    }
+
+    @Test
+    public void testSetConsent_businessMigrationLogicEnabled() throws Exception {
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, Flags.PPAPI_AND_SYSTEM_SERVER);
+        EnrollmentData optedOutData = EnrollmentData.deserialize("");
+        optedOutData.putUserChoice(PROTECTED_AUDIENCE, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(Module.PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(ON_DEVICE_PERSONALIZATION, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(MEASUREMENT, USER_CHOICE_OPTED_OUT);
+        doReturn(EnrollmentData.serialize(optedOutData))
+                .when(mMockIAdServicesManager)
+                .getModuleEnrollmentState();
+        when(mMockFlags.getAdServicesConsentBusinessLogicMigrationEnabled()).thenReturn(true);
+        when(mMockFlags.getConsentManagerLazyEnableMode()).thenReturn(true);
+        when(mMockFlags.getPasUxEnabled()).thenReturn(true);
+        when(mMockFlags.getEeaPasUxEnabled()).thenReturn(true);
+
+        clearInvocations(spyConsentManager);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
+
+        verify(spyConsentManager).getUserChoice(PROTECTED_AUDIENCE);
+        verify(spyConsentManager)
+                .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
+        List<AdServicesModuleUserChoice> userChoiceList =
+                mAdservicesModuleUserChoiceArgumentCaptor.getValue();
+        assertThat(userChoiceList).hasSize(3);
+        verify(() -> UiStatsLogger.logOptInSelected(AdServicesApiType.FLEDGE));
+
+        clearInvocations(spyConsentManager);
+        spyConsentManager.disable(mSpyContext, AdServicesApiType.FLEDGE);
+        verify(() -> UiStatsLogger.logOptOutSelected(AdServicesApiType.FLEDGE));
+        verify(spyConsentManager)
+                .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
+        userChoiceList = mAdservicesModuleUserChoiceArgumentCaptor.getValue();
+        assertThat(userChoiceList).hasSize(3);
+        assertFalse(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven());
+
+        clearInvocations(spyConsentManager);
+        spyConsentManager.disable(mSpyContext, AdServicesApiType.MEASUREMENTS);
+        verify(() -> UiStatsLogger.logOptOutSelected(AdServicesApiType.MEASUREMENTS));
+        verify(spyConsentManager)
+                .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
+        userChoiceList = mAdservicesModuleUserChoiceArgumentCaptor.getValue();
+        assertThat(userChoiceList).hasSize(1);
+        assertFalse(spyConsentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven());
+
+        clearInvocations(spyConsentManager);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.MEASUREMENTS);
+        verify(() -> UiStatsLogger.logOptInSelected(AdServicesApiType.MEASUREMENTS));
+        verify(spyConsentManager)
+                .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
+        userChoiceList = mAdservicesModuleUserChoiceArgumentCaptor.getValue();
+        assertThat(userChoiceList).hasSize(1);
+    }
+
+    @Test
+    public void testSetConsentPaPasOdp_businessMigrationLogicEnabled() throws Exception {
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, Flags.PPAPI_AND_SYSTEM_SERVER);
+        setModuleStatesTestData();
+
+        clearInvocations(spyConsentManager);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
+
+        verify(spyConsentManager)
+                .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
+        List<AdServicesModuleUserChoice> userChoiceList =
+                mAdservicesModuleUserChoiceArgumentCaptor.getValue();
+        assertThat(userChoiceList).hasSize(3);
+        assertWithMessage("getConsent(AdServicesApiType.FLEDGE)")
+                .that(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven())
+                .isTrue();
+        assertWithMessage("getUserChoice(PROTECTED_AUDIENCE)")
+                .that(spyConsentManager.getUserChoice(PROTECTED_AUDIENCE))
+                .isEqualTo(USER_CHOICE_OPTED_IN);
+        assertWithMessage("getUserChoice(PROTECTED_APP_SIGNALS)")
+                .that(spyConsentManager.getUserChoice(PROTECTED_APP_SIGNALS))
+                .isEqualTo(USER_CHOICE_OPTED_IN);
+        assertWithMessage("getUserChoice(ON_DEVICE_PERSONALIZATION)")
+                .that(spyConsentManager.getUserChoice(ON_DEVICE_PERSONALIZATION))
+                .isEqualTo(USER_CHOICE_OPTED_IN);
+
+        EnrollmentData optedOutData = EnrollmentData.deserialize("");
+        optedOutData.putUserChoice(PROTECTED_AUDIENCE, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(Module.PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(ON_DEVICE_PERSONALIZATION, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(MEASUREMENT, USER_CHOICE_OPTED_OUT);
+        doReturn(EnrollmentData.serialize(optedOutData))
+                .when(mMockIAdServicesManager)
+                .getModuleEnrollmentState();
+
+        clearInvocations(spyConsentManager);
+        spyConsentManager.disable(mSpyContext, AdServicesApiType.FLEDGE);
+
+        verify(spyConsentManager)
+                .setUserChoices(mAdservicesModuleUserChoiceArgumentCaptor.capture());
+        userChoiceList = mAdservicesModuleUserChoiceArgumentCaptor.getValue();
+        assertThat(userChoiceList).hasSize(3);
+        assertWithMessage("getConsent(AdServicesApiType.FLEDGE)")
+                .that(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven())
+                .isFalse();
+        assertWithMessage("getUserChoice(PROTECTED_AUDIENCE)")
+                .that(spyConsentManager.getUserChoice(PROTECTED_AUDIENCE))
+                .isEqualTo(USER_CHOICE_OPTED_OUT);
+        assertWithMessage("getUserChoice(PROTECTED_APP_SIGNALS)")
+                .that(spyConsentManager.getUserChoice(PROTECTED_APP_SIGNALS))
+                .isEqualTo(USER_CHOICE_OPTED_OUT);
+        assertWithMessage("getUserChoice(ON_DEVICE_PERSONALIZATION)")
+                .that(spyConsentManager.getUserChoice(ON_DEVICE_PERSONALIZATION))
+                .isEqualTo(USER_CHOICE_OPTED_OUT);
+    }
+
+    @Test
+    public void testSetConsentPaPasOdp_businessMigrationLogicEnabledThenDisabled()
+            throws Exception {
+        ConsentManager spyConsentManager =
+                getSpiedConsentManagerForMigrationTesting(
+                        /* isGiven */ false, Flags.PPAPI_AND_SYSTEM_SERVER);
+        setModuleStatesTestData();
+
+        clearInvocations(spyConsentManager);
+        spyConsentManager.enable(mSpyContext, AdServicesApiType.FLEDGE);
+
+        verify(() -> UiStatsLogger.logOptInSelected(AdServicesApiType.FLEDGE));
+        assertWithMessage("getConsent(AdServicesApiType.FLEDGE)")
+                .that(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven())
+                .isTrue();
+        assertWithMessage("getUserChoice(PROTECTED_AUDIENCE)")
+                .that(spyConsentManager.getUserChoice(PROTECTED_AUDIENCE))
+                .isEqualTo(USER_CHOICE_OPTED_IN);
+        assertWithMessage("getUserChoice(PROTECTED_APP_SIGNALS)")
+                .that(spyConsentManager.isPasFledgeConsentGiven())
+                .isTrue();
+
+        EnrollmentData optedOutData = EnrollmentData.deserialize("");
+        optedOutData.putUserChoice(PROTECTED_AUDIENCE, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(Module.PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(ON_DEVICE_PERSONALIZATION, USER_CHOICE_OPTED_OUT);
+        optedOutData.putUserChoice(MEASUREMENT, USER_CHOICE_OPTED_OUT);
+        doReturn(EnrollmentData.serialize(optedOutData))
+                .when(mMockIAdServicesManager)
+                .getModuleEnrollmentState();
+        doReturn(ConsentParcel.createGivenConsent(ConsentParcel.FLEDGE))
+                .when(mMockIAdServicesManager)
+                .getConsent(anyInt());
+
+        when(mMockFlags.getAdServicesConsentBusinessLogicMigrationEnabled()).thenReturn(false);
+
+        assertWithMessage("getConsent(AdServicesApiType.FLEDGE)")
+                .that(spyConsentManager.getConsent(AdServicesApiType.FLEDGE).isGiven())
+                .isTrue();
+        assertWithMessage("getUserChoice(PROTECTED_APP_SIGNALS)")
+                .that(spyConsentManager.isPasFledgeConsentGiven())
+                .isFalse();
+    }
+
+    private void setModuleStatesTestData() throws RemoteException {
+        when(mMockFlags.getAdServicesConsentBusinessLogicMigrationEnabled()).thenReturn(true);
+        when(mMockFlags.getPasUxEnabled()).thenReturn(true);
+        when(mMockFlags.getEeaPasUxEnabled()).thenReturn(true);
+        EnrollmentData data = EnrollmentData.deserialize("");
+        data.putUserChoice(PROTECTED_AUDIENCE, USER_CHOICE_OPTED_IN);
+        data.putUserChoice(Module.PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_IN);
+        data.putUserChoice(ON_DEVICE_PERSONALIZATION, USER_CHOICE_OPTED_IN);
+        data.putUserChoice(MEASUREMENT, USER_CHOICE_OPTED_IN);
+        doReturn(EnrollmentData.serialize(data))
+                .when(mMockIAdServicesManager)
+                .getModuleEnrollmentState();
     }
 }

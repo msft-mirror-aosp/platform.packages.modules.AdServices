@@ -17,18 +17,33 @@
 package android.adservices.cts;
 
 import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
+import android.platform.test.annotations.RequiresFlagsEnabled;
 
+import com.android.adservices.flags.Flags;
 import com.android.adservices.shared.testing.EqualsTester;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
+import java.util.List;
+
 @RequiresSdkLevelAtLeastS
 public final class AdSelectionOutcomeTest extends CtsAdServicesDeviceTestCase {
     private static final Uri VALID_RENDER_URI =
             new Uri.Builder().path("valid.example.com/testing/hello").build();
+    private static final Uri VALID_COMPONENT_AD_RENDER_URI_1 =
+            new Uri.Builder().path("valid.example.com/testing/hello/component/1").build();
+    private static final Uri VALID_COMPONENT_AD_RENDER_URI_2 =
+            new Uri.Builder().path("valid.example.com/testing/hello/component/2").build();
+    private static final List<Uri> AD_COMPONENT_URIS =
+            List.of(VALID_COMPONENT_AD_RENDER_URI_1, VALID_COMPONENT_AD_RENDER_URI_2);
     private static final int TEST_AD_SELECTION_ID = 12345;
+    private static final AdTechIdentifier WINNING_SELLER_FIRST =
+            AdTechIdentifier.fromString("www.winningsellerid.com");
+    private static final AdTechIdentifier WINNING_SELLER_SECOND =
+            AdTechIdentifier.fromString("www.secondwillingsellerid.com");
 
     @Test
     public void testBuildAdSelectionOutcome() {
@@ -38,8 +53,108 @@ public final class AdSelectionOutcomeTest extends CtsAdServicesDeviceTestCase {
                         .setRenderUri(VALID_RENDER_URI)
                         .build();
 
-        expect.that(adSelectionOutcome.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
-        expect.that(adSelectionOutcome.getRenderUri()).isEqualTo(VALID_RENDER_URI);
+        expect.withMessage("Ad selection id")
+                .that(adSelectionOutcome.getAdSelectionId())
+                .isEqualTo(TEST_AD_SELECTION_ID);
+        expect.withMessage("Ad render uri")
+                .that(adSelectionOutcome.getRenderUri())
+                .isEqualTo(VALID_RENDER_URI);
+    }
+
+    @Test
+    @RequiresFlagsEnabled({
+        Flags.FLAG_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME,
+        Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS
+    })
+    public void testBuildAdSelectionOutcome_withoutWinningSellerAndComponentAds() {
+        AdSelectionOutcome adSelectionOutcome =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(VALID_RENDER_URI)
+                        .build();
+
+        expect.withMessage("Ad selection id")
+                .that(adSelectionOutcome.getAdSelectionId())
+                .isEqualTo(TEST_AD_SELECTION_ID);
+        expect.withMessage("Ad render uri")
+                .that(adSelectionOutcome.getRenderUri())
+                .isEqualTo(VALID_RENDER_URI);
+        expect.withMessage("Winning seller")
+                .that(adSelectionOutcome.getWinningSeller())
+                .isEqualTo(AdTechIdentifier.UNSET_AD_TECH_IDENTIFIER);
+        expect.withMessage("Component ad uri")
+                .that(adSelectionOutcome.getComponentAdUris())
+                .isEmpty();
+    }
+
+    @Test
+    @RequiresFlagsEnabled({
+        Flags.FLAG_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME,
+        Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS
+    })
+    public void testBuildAdSelectionOutcome_withWinningSellerAndComponentAds() {
+        AdSelectionOutcome adSelectionOutcome =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(VALID_RENDER_URI)
+                        .setWinningSeller(WINNING_SELLER_FIRST)
+                        .setComponentAdUris(AD_COMPONENT_URIS)
+                        .build();
+
+        expect.withMessage("Ad selection id")
+                .that(adSelectionOutcome.getAdSelectionId())
+                .isEqualTo(TEST_AD_SELECTION_ID);
+        expect.withMessage("Ad render uri")
+                .that(adSelectionOutcome.getRenderUri())
+                .isEqualTo(VALID_RENDER_URI);
+        expect.withMessage("Winning seller")
+                .that(adSelectionOutcome.getWinningSeller())
+                .isEqualTo(WINNING_SELLER_FIRST);
+        expect.withMessage("Component ad uri")
+                .that(adSelectionOutcome.getComponentAdUris())
+                .isEqualTo(AD_COMPONENT_URIS);
+    }
+
+    @Test
+    @RequiresFlagsEnabled(Flags.FLAG_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME)
+    public void testBuildAdSelectionOutcome_withWinningSeller_buildsCorrectly() {
+        AdSelectionOutcome adSelectionOutcome =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(VALID_RENDER_URI)
+                        .setWinningSeller(WINNING_SELLER_FIRST)
+                        .build();
+
+        expect.withMessage("Ad selection id")
+                .that(adSelectionOutcome.getAdSelectionId())
+                .isEqualTo(TEST_AD_SELECTION_ID);
+        expect.withMessage("Ad render uri")
+                .that(adSelectionOutcome.getRenderUri())
+                .isEqualTo(VALID_RENDER_URI);
+        expect.withMessage("Winning seller")
+                .that(adSelectionOutcome.getWinningSeller())
+                .isEqualTo(WINNING_SELLER_FIRST);
+    }
+
+    @Test
+    @RequiresFlagsEnabled(Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
+    public void testBuildAdSelectionOutcomeWithAdComponentUrisSucceeds() {
+        AdSelectionOutcome adSelectionOutcome =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(VALID_RENDER_URI)
+                        .setComponentAdUris(AD_COMPONENT_URIS)
+                        .build();
+
+        expect.withMessage("Ad selection id")
+                .that(adSelectionOutcome.getAdSelectionId())
+                .isEqualTo(TEST_AD_SELECTION_ID);
+        expect.withMessage("Ad render uri")
+                .that(adSelectionOutcome.getRenderUri())
+                .isEqualTo(VALID_RENDER_URI);
+        expect.withMessage("Component ad uri")
+                .that(adSelectionOutcome.getComponentAdUris())
+                .isEqualTo(AD_COMPONENT_URIS);
     }
 
     @Test
@@ -51,8 +166,8 @@ public final class AdSelectionOutcomeTest extends CtsAdServicesDeviceTestCase {
                         .build();
         AdSelectionOutcome emptyOutcome = AdSelectionOutcome.NO_OUTCOME;
 
-        expect.that(notEmptyOutcome.hasOutcome()).isTrue();
-        expect.that(emptyOutcome.hasOutcome()).isFalse();
+        expect.withMessage("Non empty outcome").that(notEmptyOutcome.hasOutcome()).isTrue();
+        expect.withMessage("Empty outcome").that(emptyOutcome.hasOutcome()).isFalse();
     }
 
     @Test
@@ -74,6 +189,64 @@ public final class AdSelectionOutcomeTest extends CtsAdServicesDeviceTestCase {
                         .setAdSelectionId(TEST_AD_SELECTION_ID)
                         .setRenderUri(
                                 new Uri.Builder().path("different.url.com/testing/hello").build())
+                        .build();
+
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(obj1, obj2);
+        et.expectObjectsAreNotEqual(obj1, obj3);
+    }
+
+    @Test
+    @RequiresFlagsEnabled(Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
+    public void testAdSelectionOutcomeWithComponentAdsSameValuesAreEqual() {
+        AdSelectionOutcome obj1 =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(VALID_RENDER_URI)
+                        .setComponentAdUris(AD_COMPONENT_URIS)
+                        .build();
+
+        AdSelectionOutcome obj2 =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(VALID_RENDER_URI)
+                        .setComponentAdUris(AD_COMPONENT_URIS)
+                        .build();
+
+        AdSelectionOutcome obj3 =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(
+                                new Uri.Builder().path("different.url.com/testing/hello").build())
+                        .build();
+
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(obj1, obj2);
+        et.expectObjectsAreNotEqual(obj1, obj3);
+    }
+
+    @Test
+    @RequiresFlagsEnabled(Flags.FLAG_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME)
+    public void testAdSelectionOutcome_withWinningSellerAndSameValues_areEqual() {
+        AdSelectionOutcome obj1 =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(VALID_RENDER_URI)
+                        .setWinningSeller(WINNING_SELLER_FIRST)
+                        .build();
+
+        AdSelectionOutcome obj2 =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(VALID_RENDER_URI)
+                        .setWinningSeller(WINNING_SELLER_FIRST)
+                        .build();
+
+        AdSelectionOutcome obj3 =
+                new AdSelectionOutcome.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setRenderUri(VALID_RENDER_URI)
+                        .setWinningSeller(WINNING_SELLER_SECOND)
                         .build();
 
         EqualsTester et = new EqualsTester(expect);

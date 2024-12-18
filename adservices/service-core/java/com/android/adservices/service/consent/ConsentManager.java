@@ -16,28 +16,49 @@
 
 package com.android.adservices.service.consent;
 
+import static android.adservices.common.AdServicesCommonManager.MODULE_MEASUREMENT;
+import static android.adservices.common.AdServicesCommonManager.MODULE_ON_DEVICE_PERSONALIZATION;
+import static android.adservices.common.AdServicesCommonManager.MODULE_PROTECTED_APP_SIGNALS;
+import static android.adservices.common.AdServicesCommonManager.MODULE_PROTECTED_AUDIENCE;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_DISABLED;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_ENABLED;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_UNKNOWN;
+import static android.adservices.common.AdServicesCommonManager.MODULE_TOPICS;
+import static android.adservices.common.AdServicesCommonManager.ModuleState;
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN;
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT;
+import static android.adservices.common.Module.MEASUREMENT;
+import static android.adservices.common.Module.ON_DEVICE_PERSONALIZATION;
+import static android.adservices.common.Module.PROTECTED_APP_SIGNALS;
+import static android.adservices.common.Module.PROTECTED_AUDIENCE;
+import static android.adservices.common.Module.TOPICS;
+
 import static com.android.adservices.AdServicesCommon.ADEXTSERVICES_PACKAGE_NAME_SUFFIX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_SEARCH_DATA_MIGRATION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_DEFAULT_CONSENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_MANUAL_CONSENT_INTERACTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATASTORE_EXCEPTION_WHILE_RECORDING_NOTIFICATION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_INVALID_CONSENT_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_PPAPI_AND_SYSTEM_SERVER_FLEDGE_CONSENT_CHECK_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_PPAPI_ONLY_FLEDGE_CONSENT_CHECK_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PRIVACY_SANDBOX_SAVE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_RESET_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_MEASUREMENT_WIPEOUT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
+import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.U18_UX;
+import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.UNSUPPORTED_UX;
 
-import android.adservices.common.AdServicesModuleState;
-import android.adservices.common.AdServicesModuleState.ModuleStateCode;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesModuleUserChoice.ModuleUserChoiceCode;
 import android.adservices.common.Module.ModuleCode;
 import android.annotation.IntDef;
-import android.annotation.NonNull;
+import android.annotation.Nullable;
 import android.annotation.SuppressLint;
 import android.app.adservices.AdServicesManager;
 import android.app.adservices.consent.ConsentParcel;
@@ -45,7 +66,9 @@ import android.app.job.JobScheduler;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.os.SystemClock;
 import android.os.Trace;
+import android.util.SparseIntArray;
 
 import androidx.annotation.RequiresApi;
 
@@ -54,24 +77,26 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
-import com.android.adservices.data.common.AtomicFileDatastore;
+import com.android.adservices.data.common.LegacyAtomicFileDatastoreFactory;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsTables;
 import com.android.adservices.errorlogging.AdServicesErrorLoggerImpl;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.Flags.ConsentSourceOfTruth;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
-import com.android.adservices.service.extdata.AdServicesExtDataStorageServiceManager;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -86,13 +111,16 @@ import com.android.adservices.service.ui.util.EnrollmentData;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
 import com.android.modules.utils.build.SdkLevel;
 
+import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableList;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
@@ -121,10 +149,14 @@ import java.util.stream.Stream;
  * IMPORTANT: Until ConsentManagerV2 is launched, keep in sync with ConsentManagerV2
  */
 // TODO(b/259791134): Add a CTS/UI test to test the Consent Migration
-// TODO(b/269798827): Enable for R.
 // TODO(b/279042385): move UI logs to UI.
 @RequiresApi(Build.VERSION_CODES.S)
-public class ConsentManager {
+public final class ConsentManager {
+
+    // Used on dump() / log only
+    private static int sDataMigrationDurationMs;
+    private static int sInstantiationDurationMs;
+
     private static volatile ConsentManager sConsentManager;
 
     @IntDef(value = {NO_MANUAL_INTERACTIONS_RECORDED, UNKNOWN, MANUAL_INTERACTIONS_RECORDED})
@@ -136,48 +168,51 @@ public class ConsentManager {
     public static final int MANUAL_INTERACTIONS_RECORDED = 1;
 
     private final Flags mFlags;
-    private final TopicsWorker mTopicsWorker;
+    private final DebugFlags mDebugFlags;
+    private final Supplier<TopicsWorker> mTopicsWorkerSupplier;
     private final AtomicFileDatastore mDatastore;
-    private final AppConsentDao mAppConsentDao;
-    private final EnrollmentDao mEnrollmentDao;
-    private final MeasurementImpl mMeasurementImpl;
+    private final Supplier<AppConsentDao> mAppConsentDaoSupplier;
+    private final Supplier<EnrollmentDao> mEnrollmentDaoSupplier;
+    private final Supplier<MeasurementImpl> mMeasurementSupplier;
     private final CustomAudienceDao mCustomAudienceDao;
     private final AppInstallDao mAppInstallDao;
     private final ProtectedSignalsDao mProtectedSignalsDao;
     private final FrequencyCapDao mFrequencyCapDao;
+    private final EncodedPayloadDao mEncodedPayloadDao;
     private final AdServicesManager mAdServicesManager;
-    private final int mConsentSourceOfTruth;
+    private final @ConsentSourceOfTruth int mConsentSourceOfTruth;
     private final AppSearchConsentManager mAppSearchConsentManager;
     private final UserProfileIdManager mUserProfileIdManager;
     private final UxStatesDao mUxStatesDao;
-    private final AdServicesExtDataStorageServiceManager mAdExtDataManager;
 
     private static final Object LOCK = new Object();
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
 
     ConsentManager(
-            @NonNull TopicsWorker topicsWorker,
-            @NonNull AppConsentDao appConsentDao,
-            @NonNull EnrollmentDao enrollmentDao,
-            @NonNull MeasurementImpl measurementImpl,
-            @NonNull CustomAudienceDao customAudienceDao,
-            @NonNull AppInstallDao appInstallDao,
-            @NonNull ProtectedSignalsDao protectedSignalsDao,
-            @NonNull FrequencyCapDao frequencyCapDao,
-            @NonNull AdServicesManager adServicesManager,
-            @NonNull AtomicFileDatastore atomicFileDatastore,
-            @NonNull AppSearchConsentManager appSearchConsentManager,
-            @NonNull UserProfileIdManager userProfileIdManager,
-            @NonNull UxStatesDao uxStatesDao,
-            @NonNull AdServicesExtDataStorageServiceManager adExtDataManager,
-            @NonNull Flags flags,
-            @Flags.ConsentSourceOfTruth int consentSourceOfTruth,
-            boolean enableAppsearchConsentData,
-            boolean enableAdExtServiceConsentData) {
-        mTopicsWorker = Objects.requireNonNull(topicsWorker, "topicsWorker cannot be null");
-        mAppConsentDao = Objects.requireNonNull(appConsentDao, "appConsentDao cannot be null");
-        mMeasurementImpl =
-                Objects.requireNonNull(measurementImpl, "measurementImpl cannot be null");
+            Supplier<TopicsWorker> topicsWorkerSupplier,
+            Supplier<AppConsentDao> appConsentDaoSupplier,
+            Supplier<EnrollmentDao> enrollmentDaoSupplier,
+            Supplier<MeasurementImpl> measurementSupplier,
+            CustomAudienceDao customAudienceDao,
+            AppInstallDao appInstallDao,
+            ProtectedSignalsDao protectedSignalsDao,
+            FrequencyCapDao frequencyCapDao,
+            EncodedPayloadDao encodedPayloadDao,
+            AdServicesManager adServicesManager,
+            AtomicFileDatastore atomicFileDatastore,
+            AppSearchConsentManager appSearchConsentManager,
+            UserProfileIdManager userProfileIdManager,
+            UxStatesDao uxStatesDao,
+            Flags flags,
+            DebugFlags debugFlags,
+            @ConsentSourceOfTruth int consentSourceOfTruth,
+            boolean enableAppsearchConsentData) {
+        mTopicsWorkerSupplier =
+                Objects.requireNonNull(topicsWorkerSupplier, "topicsWorker cannot be null");
+        mAppConsentDaoSupplier =
+                Objects.requireNonNull(appConsentDaoSupplier, "appConsentDao cannot be null");
+        mMeasurementSupplier =
+                Objects.requireNonNull(measurementSupplier, "measurementImpl cannot be null");
         mCustomAudienceDao =
                 Objects.requireNonNull(customAudienceDao, "customAudienceDao cannot be null");
         mAppInstallDao = Objects.requireNonNull(appInstallDao, "appInstallDao cannot be null");
@@ -185,6 +220,8 @@ public class ConsentManager {
                 Objects.requireNonNull(protectedSignalsDao, "protectedSignalsDao cannot be null");
         mFrequencyCapDao =
                 Objects.requireNonNull(frequencyCapDao, "frequencyCapDao cannot be null");
+        mEncodedPayloadDao =
+                Objects.requireNonNull(encodedPayloadDao, "encodedPayloadDao cannot be null");
         mDatastore =
                 Objects.requireNonNull(atomicFileDatastore, "atomicFileDatastore cannot be null");
         mUserProfileIdManager =
@@ -200,17 +237,12 @@ public class ConsentManager {
                     appSearchConsentManager, "appSearchConsentManager cannot be null");
         }
 
-        if (enableAdExtServiceConsentData) {
-            Objects.requireNonNull(adExtDataManager, "adExtDataManager cannot be null");
-        }
-
         mAdServicesManager = adServicesManager;
-        mEnrollmentDao = enrollmentDao;
+        mEnrollmentDaoSupplier = enrollmentDaoSupplier;
         mUxStatesDao = uxStatesDao;
-
         mAppSearchConsentManager = appSearchConsentManager;
-        mAdExtDataManager = adExtDataManager;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mConsentSourceOfTruth = consentSourceOfTruth;
     }
 
@@ -220,7 +252,6 @@ public class ConsentManager {
      * <p>If no instance has been initialized yet, a new one will be created. Otherwise, the
      * existing instance will be returned.
      */
-    @NonNull
     public static ConsentManager getInstance() {
         Context context = ApplicationContextSingleton.get();
 
@@ -228,18 +259,20 @@ public class ConsentManager {
         if (sConsentManager == null) {
             synchronized (LOCK) {
                 if (sConsentManager == null) {
+                    long startedTime = SystemClock.uptimeMillis();
                     // Execute one-time consent migration if needed.
+                    LogUtil.d("start consent manager initialization");
                     int consentSourceOfTruth = FlagsFactory.getFlags().getConsentSourceOfTruth();
                     AtomicFileDatastore datastore =
                             createAndInitializeDataStore(
                                     context, AdServicesErrorLoggerImpl.getInstance());
                     AdServicesManager adServicesManager = AdServicesManager.getInstance(context);
-                    AppConsentDao appConsentDao = AppConsentDao.getInstance(context);
+                    Supplier<AppConsentDao> appConsentDaoSupplier =
+                            AppConsentDao.getSingletonSupplier();
 
                     // It is possible that the old value of the flag lingers after OTA until the
-                    // first
-                    // PH sync. In that case, we should not use the stale value, but use the default
-                    // instead. The next PH sync will restore the T+ value.
+                    // first PH sync. In that case, we should not use the stale value, but use the
+                    // default instead. The next PH sync will restore the T+ value.
                     if (SdkLevel.isAtLeastT() && consentSourceOfTruth == Flags.APPSEARCH_ONLY) {
                         consentSourceOfTruth = Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
                     }
@@ -255,32 +288,10 @@ public class ConsentManager {
                         handleConsentMigrationFromAppSearchIfNeeded(
                                 context,
                                 datastore,
-                                appConsentDao,
+                                appConsentDaoSupplier.get(),
                                 appSearchConsentManager,
                                 adServicesManager,
                                 statsdAdServicesLogger);
-                    }
-
-                    AdServicesExtDataStorageServiceManager adServicesExtDataManager = null;
-                    // Flag enable_adext_service_consent_data is true on R and S+ only when
-                    // we want to use AdServicesExtDataStorageService to write to or read from.
-                    boolean enableAdExtServiceConsentData =
-                            FlagsFactory.getFlags().getEnableAdExtServiceConsentData();
-                    if (enableAdExtServiceConsentData) {
-                        adServicesExtDataManager =
-                                AdServicesExtDataStorageServiceManager.getInstance(context);
-                        // NOTE: To disable migration from AdExtService to AppSearch on 2024 M03-
-                        // builds, use the deprecated flag
-                        // enable_adext_service_to_appsearch_migration.
-                        if (FlagsFactory.getFlags().getEnableMigrationFromAdExtService()) {
-                            AdExtDataConsentMigrationUtils
-                                    .handleConsentMigrationFromAdExtDataIfNeeded(
-                                            context,
-                                            appSearchConsentManager,
-                                            adServicesExtDataManager,
-                                            statsdAdServicesLogger,
-                                            adServicesManager);
-                        }
                     }
 
                     // Attempt to migrate consent data from PPAPI to System server if needed.
@@ -290,28 +301,44 @@ public class ConsentManager {
                             adServicesManager,
                             statsdAdServicesLogger,
                             consentSourceOfTruth);
-
+                    long postDataMigrationTime = SystemClock.uptimeMillis();
+                    sDataMigrationDurationMs = (int) (postDataMigrationTime - startedTime);
                     sConsentManager =
                             new ConsentManager(
-                                    TopicsWorker.getInstance(),
-                                    appConsentDao,
-                                    EnrollmentDao.getInstance(),
-                                    MeasurementImpl.getInstance(context),
-                                    CustomAudienceDatabase.getInstance(context).customAudienceDao(),
-                                    SharedStorageDatabase.getInstance(context).appInstallDao(),
+                                    TopicsWorker.getSingletonSupplier(),
+                                    appConsentDaoSupplier,
+                                    EnrollmentDao.getSingletonSupplier(),
+                                    MeasurementImpl.getSingletonSupplier(),
+                                    CustomAudienceDatabase.getInstance().customAudienceDao(),
+                                    SharedStorageDatabase.getInstance().appInstallDao(),
                                     ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
-                                    SharedStorageDatabase.getInstance(context).frequencyCapDao(),
+                                    SharedStorageDatabase.getInstance().frequencyCapDao(),
+                                    ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
                                     adServicesManager,
                                     datastore,
                                     appSearchConsentManager,
-                                    UserProfileIdManager.getInstance(context),
+                                    UserProfileIdManager.getInstance(),
                                     // TODO(b/260601944): Remove Flag Instance.
-                                    UxStatesDao.getInstance(context),
-                                    adServicesExtDataManager,
+                                    UxStatesDao.getInstance(),
                                     FlagsFactory.getFlags(),
+                                    DebugFlags.getInstance(),
                                     consentSourceOfTruth,
-                                    enableAppsearchConsentData,
-                                    enableAdExtServiceConsentData);
+                                    enableAppsearchConsentData);
+
+                    boolean businessLogicMigrationEnabled =
+                            FlagsFactory.getFlags()
+                                    .getAdServicesConsentBusinessLogicMigrationEnabled();
+                    if (businessLogicMigrationEnabled) {
+                        // Attempt to migrate old enrollment data to new format
+                        handleEnrollmentDataMigrationIfNeeded(sConsentManager);
+                    }
+
+                    sInstantiationDurationMs =
+                            (int) (SystemClock.uptimeMillis() - postDataMigrationTime);
+                    LogUtil.d(
+                            "finished consent manager initialization: data migration in %dms,"
+                                    + " instantiation in %dms",
+                            sDataMigrationDurationMs, sInstantiationDurationMs);
                 }
             }
         }
@@ -325,7 +352,7 @@ public class ConsentManager {
      * <p>To write consent to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To
      * write to system server consent if source of truth is system server or dual sources.
      */
-    public void enable(@NonNull Context context) {
+    public void enable(Context context) {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().enable(context);
             return;
@@ -363,7 +390,7 @@ public class ConsentManager {
      * <p>To write consent to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To
      * write to system server consent if source of truth is system server or dual sources.
      */
-    public void disable(@NonNull Context context) {
+    public void disable(Context context) {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().disable(context);
             return;
@@ -399,7 +426,7 @@ public class ConsentManager {
      * @param context Context of the application.
      * @param apiType Type of the API (Topics, Fledge, Measurement) which should be enabled.
      */
-    public void enable(@NonNull Context context, AdServicesApiType apiType) {
+    public void enable(Context context, AdServicesApiType apiType) {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().enable(context, apiType);
             return;
@@ -440,7 +467,7 @@ public class ConsentManager {
      * <p>To write consent to PPAPI if consent source of truth is PPAPI_ONLY or dual sources. To
      * write to system server consent if source of truth is system server or dual sources.
      */
-    public void disable(@NonNull Context context, AdServicesApiType apiType) {
+    public void disable(Context context, AdServicesApiType apiType) {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().disable(context, apiType);
             return;
@@ -484,7 +511,7 @@ public class ConsentManager {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().getConsent();
         }
-        if (mFlags.getConsentManagerDebugMode()) {
+        if (mDebugFlags.getConsentManagerDebugMode()) {
             return AdServicesApiConsent.GIVEN;
         }
 
@@ -500,8 +527,6 @@ public class ConsentManager {
                         AdServicesApiConsent.getConsent(
                                 mAppSearchConsentManager.getConsent(
                                         ConsentConstants.CONSENT_KEY_FOR_ALL)),
-                // Beta UX is never shown on R, so this info is not stored.
-                () -> AdServicesApiConsent.getConsent(false),
                 (e) ->
                         ErrorLogUtil.e(
                                 e,
@@ -520,8 +545,11 @@ public class ConsentManager {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().getConsent(apiType);
         }
-        if (mFlags.getConsentManagerDebugMode()) {
+        if (mDebugFlags.getConsentManagerDebugMode()) {
             return AdServicesApiConsent.GIVEN;
+        }
+        if (mFlags.getAdServicesConsentBusinessLogicMigrationEnabled()) {
+            return getUserChoice(apiType);
         }
 
         return executeGettersByConsentSourceOfTruth(
@@ -537,11 +565,6 @@ public class ConsentManager {
                 () ->
                         AdServicesApiConsent.getConsent(
                                 mAppSearchConsentManager.getConsent(apiType.toPpApiDatastoreKey())),
-                // Only Measurement API is supported on Android R.
-                () ->
-                        AdServicesApiConsent.getConsent(
-                                apiType == AdServicesApiType.MEASUREMENTS
-                                        && mAdExtDataManager.getMsmtConsent()),
                 (e) ->
                         ErrorLogUtil.e(
                                 e,
@@ -550,39 +573,16 @@ public class ConsentManager {
     }
 
     /**
-     * Returns whether the user is adult user who OTA from R.
-     *
-     * @return true if user is adult user who OTA from R, otherwise false.
-     */
-    public boolean isOtaAdultUserFromRvc() {
-        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
-            return ConsentManagerV2.getInstance().isOtaAdultUserFromRvc();
-        }
-        if (mFlags.getConsentManagerOTADebugMode()) {
-            return true;
-        }
-
-        // TODO(313672368) clean up getRvcPostOtaNotifAgeCheck flag after u18 is qualified on R/S
-        return mAdExtDataManager != null
-                && mAdExtDataManager.getNotificationDisplayed()
-                && (mFlags.getRvcPostOtaNotifAgeCheck()
-                        ? !mAdExtDataManager.getIsU18Account()
-                                && mAdExtDataManager.getIsAdultAccount()
-                        : true);
-    }
-
-    /**
      * Proxy call to {@link TopicsWorker} to get {@link ImmutableList} of {@link Topic}s which could
      * be returned to the {@link TopicsWorker} clients.
      *
      * @return {@link ImmutableList} of {@link Topic}s.
      */
-    @NonNull
     public ImmutableList<Topic> getKnownTopicsWithConsent() {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().getKnownTopicsWithConsent();
         }
-        return mTopicsWorker.getKnownTopicsWithConsent();
+        return mTopicsWorkerSupplier.get().getKnownTopicsWithConsent();
     }
 
     /**
@@ -591,12 +591,11 @@ public class ConsentManager {
      *
      * @return {@link ImmutableList} of blocked {@link Topic}s.
      */
-    @NonNull
     public ImmutableList<Topic> getTopicsWithRevokedConsent() {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().getTopicsWithRevokedConsent();
         }
-        return mTopicsWorker.getTopicsWithRevokedConsent();
+        return mTopicsWorkerSupplier.get().getTopicsWithRevokedConsent();
     }
 
     /**
@@ -605,13 +604,12 @@ public class ConsentManager {
      *
      * @param topic {@link Topic} to block.
      */
-    @NonNull
-    public void revokeConsentForTopic(@NonNull Topic topic) {
+    public void revokeConsentForTopic(Topic topic) {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().revokeConsentForTopic(topic);
             return;
         }
-        mTopicsWorker.revokeConsentForTopic(topic);
+        mTopicsWorkerSupplier.get().revokeConsentForTopic(topic);
     }
 
     /**
@@ -620,13 +618,12 @@ public class ConsentManager {
      *
      * @param topic {@link Topic} to restore consent for.
      */
-    @NonNull
-    public void restoreConsentForTopic(@NonNull Topic topic) {
+    public void restoreConsentForTopic(Topic topic) {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().restoreConsentForTopic(topic);
             return;
         }
-        mTopicsWorker.restoreConsentForTopic(topic);
+        mTopicsWorkerSupplier.get().restoreConsentForTopic(topic);
     }
 
     /** Wipes out all the data gathered by Topics API but blocked topics. */
@@ -637,7 +634,7 @@ public class ConsentManager {
         }
         ArrayList<String> tablesToBlock = new ArrayList<>();
         tablesToBlock.add(TopicsTables.BlockedTopicsContract.TABLE);
-        mTopicsWorker.clearAllTopicsData(tablesToBlock);
+        mTopicsWorkerSupplier.get().clearAllTopicsData(tablesToBlock);
     }
 
     /** Wipes out all the data gathered by Topics API. */
@@ -646,7 +643,7 @@ public class ConsentManager {
             ConsentManagerV2.getInstance().resetTopicsAndBlockedTopics();
             return;
         }
-        mTopicsWorker.clearAllTopicsData(new ArrayList<>());
+        mTopicsWorkerSupplier.get().clearAllTopicsData(new ArrayList<>());
     }
 
     /**
@@ -661,7 +658,7 @@ public class ConsentManager {
                 /* defaultReturn= */ ImmutableList.of(),
                 () ->
                         ImmutableList.copyOf(
-                                mAppConsentDao.getKnownAppsWithConsent().stream()
+                                mAppConsentDaoSupplier.get().getKnownAppsWithConsent().stream()
                                         .map(App::create)
                                         .collect(Collectors.toList())),
                 () ->
@@ -669,18 +666,13 @@ public class ConsentManager {
                                 mAdServicesManager
                                         .getKnownAppsWithConsent(
                                                 new ArrayList<>(
-                                                        mAppConsentDao.getInstalledPackages()))
+                                                        mAppConsentDaoSupplier
+                                                                .get()
+                                                                .getInstalledPackages()))
                                         .stream()
                                         .map(App::create)
                                         .collect(Collectors.toList())),
                 () -> mAppSearchConsentManager.getKnownAppsWithConsent(),
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which supports only
-                    // Measurement.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction= */ "fetch apps with consent"));
-                },
                 /* errorLogger= */ null);
     }
 
@@ -696,7 +688,7 @@ public class ConsentManager {
                 /* defaultReturn= */ ImmutableList.of(),
                 () ->
                         ImmutableList.copyOf(
-                                mAppConsentDao.getAppsWithRevokedConsent().stream()
+                                mAppConsentDaoSupplier.get().getAppsWithRevokedConsent().stream()
                                         .map(App::create)
                                         .collect(Collectors.toList())),
                 () ->
@@ -704,18 +696,13 @@ public class ConsentManager {
                                 mAdServicesManager
                                         .getAppsWithRevokedConsent(
                                                 new ArrayList<>(
-                                                        mAppConsentDao.getInstalledPackages()))
+                                                        mAppConsentDaoSupplier
+                                                                .get()
+                                                                .getInstalledPackages()))
                                         .stream()
                                         .map(App::create)
                                         .collect(Collectors.toList())),
                 () -> mAppSearchConsentManager.getAppsWithRevokedConsent(),
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which supports only
-                    // Measurement.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction= */ "fetch apps with revoked consent"));
-                },
                 /* errorLogger= */ null);
     }
 
@@ -727,26 +714,21 @@ public class ConsentManager {
      * @param app {@link App} to block.
      * @throws IOException if the operation fails
      */
-    public void revokeConsentForApp(@NonNull App app) throws IOException {
+    public void revokeConsentForApp(App app) throws IOException {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().revokeConsentForApp(app);
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mAppConsentDao.setConsentForApp(app.getPackageName(), true),
+                () -> mAppConsentDaoSupplier.get().setConsentForApp(app.getPackageName(), true),
                 () ->
                         mAdServicesManager.setConsentForApp(
                                 app.getPackageName(),
-                                mAppConsentDao.getUidForInstalledPackageName(app.getPackageName()),
+                                mAppConsentDaoSupplier
+                                        .get()
+                                        .getUidForInstalledPackageName(app.getPackageName()),
                                 true),
                 () -> mAppSearchConsentManager.revokeConsentForApp(app),
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which supports only
-                    // Measurement.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction= */ "revoke consent for app"));
-                },
                 /* errorLogger= */ null);
 
         asyncExecute(
@@ -775,26 +757,21 @@ public class ConsentManager {
      * @param app {@link App} to restore consent for.
      * @throws IOException if the operation fails
      */
-    public void restoreConsentForApp(@NonNull App app) throws IOException {
+    public void restoreConsentForApp(App app) throws IOException {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().restoreConsentForApp(app);
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mAppConsentDao.setConsentForApp(app.getPackageName(), false),
+                () -> mAppConsentDaoSupplier.get().setConsentForApp(app.getPackageName(), false),
                 () ->
                         mAdServicesManager.setConsentForApp(
                                 app.getPackageName(),
-                                mAppConsentDao.getUidForInstalledPackageName(app.getPackageName()),
+                                mAppConsentDaoSupplier
+                                        .get()
+                                        .getUidForInstalledPackageName(app.getPackageName()),
                                 false),
                 () -> mAppSearchConsentManager.restoreConsentForApp(app),
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which supports only
-                    // Measurement.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction= */ "restore consent for app"));
-                },
                 /* errorLogger= */ null);
     }
 
@@ -811,16 +788,9 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mAppConsentDao.clearAllConsentData(),
+                () -> mAppConsentDaoSupplier.get().clearAllConsentData(),
                 () -> mAdServicesManager.clearAllAppConsentData(),
                 () -> mAppSearchConsentManager.clearAllAppConsentData(),
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which supports only
-                    // Measurement.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction= */ "reset consent for apps"));
-                },
                 /* errorLogger= */ null);
 
         asyncExecute(
@@ -835,6 +805,7 @@ public class ConsentManager {
         }
         if (mFlags.getProtectedSignalsCleanupEnabled()) {
             asyncExecute(mProtectedSignalsDao::deleteAllSignals);
+            asyncExecute(mEncodedPayloadDao::deleteAllEncodedPayloads);
         }
     }
 
@@ -851,15 +822,9 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mAppConsentDao.clearKnownAppsWithConsent(),
+                () -> mAppConsentDaoSupplier.get().clearKnownAppsWithConsent(),
                 () -> mAdServicesManager.clearKnownAppsWithConsent(),
                 () -> mAppSearchConsentManager.clearKnownAppsWithConsent(),
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which supports only
-                    // Measurement.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(/* illegalAction= */ "reset apps"));
-                },
                 /* errorLogger= */ null);
 
         asyncExecute(
@@ -874,6 +839,7 @@ public class ConsentManager {
         }
         if (mFlags.getProtectedSignalsCleanupEnabled()) {
             asyncExecute(mProtectedSignalsDao::deleteAllSignals);
+            asyncExecute(mEncodedPayloadDao::deleteAllEncodedPayloads);
         }
     }
 
@@ -891,7 +857,7 @@ public class ConsentManager {
      * @throws IllegalArgumentException if the package name is invalid or not found as an installed
      *     application
      */
-    public boolean isFledgeConsentRevokedForApp(@NonNull String packageName)
+    public boolean isFledgeConsentRevokedForApp(String packageName)
             throws IllegalArgumentException {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().isFledgeConsentRevokedForApp(packageName);
@@ -906,30 +872,32 @@ public class ConsentManager {
             switch (mConsentSourceOfTruth) {
                 case Flags.PPAPI_ONLY:
                     try {
-                        return mAppConsentDao.isConsentRevokedForApp(packageName);
+                        return mAppConsentDaoSupplier.get().isConsentRevokedForApp(packageName);
                     } catch (IOException exception) {
                         LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
+                        ErrorLogUtil.e(
+                                exception,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_PPAPI_ONLY_FLEDGE_CONSENT_CHECK_FAILED,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
                     }
                     return true;
                 case Flags.SYSTEM_SERVER_ONLY:
                     // Intentional fallthrough
                 case Flags.PPAPI_AND_SYSTEM_SERVER:
                     return mAdServicesManager.isConsentRevokedForApp(
-                            packageName, mAppConsentDao.getUidForInstalledPackageName(packageName));
+                            packageName,
+                            mAppConsentDaoSupplier
+                                    .get()
+                                    .getUidForInstalledPackageName(packageName));
                 case Flags.APPSEARCH_ONLY:
                     if (mFlags.getEnableAppsearchConsentData()) {
                         return mAppSearchConsentManager.isFledgeConsentRevokedForApp(packageName);
                     }
-                    return true;
-                case Flags.PPAPI_AND_ADEXT_SERVICE:
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which supports only
-                    // Measurement.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction= */ "check if consent has been revoked for"
-                                            + " app"));
                 default:
                     LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                    ErrorLogUtil.e(
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_INVALID_CONSENT_SOURCE_OF_TRUTH,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
                     return true;
             }
         }
@@ -951,7 +919,7 @@ public class ConsentManager {
      * @throws IllegalArgumentException if the package name is invalid or not found as an installed
      *     application
      */
-    public boolean isFledgeConsentRevokedForAppAfterSettingFledgeUse(@NonNull String packageName)
+    public boolean isFledgeConsentRevokedForAppAfterSettingFledgeUse(String packageName)
             throws IllegalArgumentException {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance()
@@ -967,42 +935,47 @@ public class ConsentManager {
             switch (mConsentSourceOfTruth) {
                 case Flags.PPAPI_ONLY:
                     try {
-                        return mAppConsentDao.setConsentForAppIfNew(packageName, false);
+                        return mAppConsentDaoSupplier
+                                .get()
+                                .setConsentForAppIfNew(packageName, false);
                     } catch (IOException exception) {
                         LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
+                        ErrorLogUtil.e(
+                                exception,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_PPAPI_ONLY_FLEDGE_CONSENT_CHECK_FAILED,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
                         return true;
                     }
                 case Flags.SYSTEM_SERVER_ONLY:
                     return mAdServicesManager.setConsentForAppIfNew(
                             packageName,
-                            mAppConsentDao.getUidForInstalledPackageName(packageName),
+                            mAppConsentDaoSupplier.get().getUidForInstalledPackageName(packageName),
                             false);
                 case Flags.PPAPI_AND_SYSTEM_SERVER:
                     try {
-                        mAppConsentDao.setConsentForAppIfNew(packageName, false);
+                        mAppConsentDaoSupplier.get().setConsentForAppIfNew(packageName, false);
                     } catch (IOException exception) {
                         LogUtil.e(exception, "FLEDGE consent check failed due to IOException");
+                        ErrorLogUtil.e(
+                                exception,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_PPAPI_AND_SYSTEM_SERVER_FLEDGE_CONSENT_CHECK_FAILED,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
                         return true;
                     }
                     return mAdServicesManager.setConsentForAppIfNew(
                             packageName,
-                            mAppConsentDao.getUidForInstalledPackageName(packageName),
+                            mAppConsentDaoSupplier.get().getUidForInstalledPackageName(packageName),
                             false);
                 case Flags.APPSEARCH_ONLY:
                     if (mFlags.getEnableAppsearchConsentData()) {
                         return mAppSearchConsentManager
                                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(packageName);
                     }
-                    return true;
-                case Flags.PPAPI_AND_ADEXT_SERVICE:
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which supports only
-                    // Measurement.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction= */ "check if consent has been revoked for"
-                                            + " app"));
                 default:
                     LogUtil.e(ConsentConstants.ERROR_MESSAGE_INVALID_CONSENT_SOURCE_OF_TRUTH);
+                    ErrorLogUtil.e(
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_MANAGER_INVALID_CONSENT_SOURCE_OF_TRUTH,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
                     return true;
             }
         }
@@ -1020,16 +993,12 @@ public class ConsentManager {
             return;
         }
         executeSettersByConsentSourceOfTruth(
-                () -> mAppConsentDao.clearConsentForUninstalledApp(packageName, packageUid),
+                () ->
+                        mAppConsentDaoSupplier
+                                .get()
+                                .clearConsentForUninstalledApp(packageName, packageUid),
                 () -> mAdServicesManager.clearConsentForUninstalledApp(packageName, packageUid),
                 () -> mAppSearchConsentManager.clearConsentForUninstalledApp(packageName),
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which supports only
-                    // Measurement.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction= */ "clear consent for uninstalled app"));
-                },
                 /* errorLogger= */ null);
     }
 
@@ -1042,7 +1011,7 @@ public class ConsentManager {
      *
      * @param packageName the package name that had been uninstalled.
      */
-    public void clearConsentForUninstalledApp(@NonNull String packageName) {
+    public void clearConsentForUninstalledApp(String packageName) {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             ConsentManagerV2.getInstance().clearConsentForUninstalledApp(packageName);
             return;
@@ -1051,16 +1020,9 @@ public class ConsentManager {
         Preconditions.checkStringNotEmpty(packageName, "Package name should not be empty");
 
         executeSettersByConsentSourceOfTruth(
-                () -> mAppConsentDao.clearConsentForUninstalledApp(packageName),
+                () -> mAppConsentDaoSupplier.get().clearConsentForUninstalledApp(packageName),
                 /* systemServiceSetter= */ null,
                 () -> mAppSearchConsentManager.clearConsentForUninstalledApp(packageName),
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which supports only
-                    // Measurement.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction= */ "clear consent for uninstalled app"));
-                },
                 /* errorLogger= */ null);
     }
 
@@ -1070,7 +1032,7 @@ public class ConsentManager {
             ConsentManagerV2.getInstance().resetMeasurement();
             return;
         }
-        mMeasurementImpl.deleteAllMeasurementData(List.of());
+        mMeasurementSupplier.get().deleteAllMeasurementData(List.of());
         // Log wipeout event triggered by consent flip to delete data of package
         WipeoutStatus wipeoutStatus = new WipeoutStatus();
         wipeoutStatus.setWipeoutType(WipeoutStatus.WipeoutType.CONSENT_FLIP);
@@ -1080,7 +1042,7 @@ public class ConsentManager {
     /** Wipes out all the Enrollment data */
     @VisibleForTesting
     void resetEnrollment() {
-        mEnrollmentDao.deleteAll();
+        mEnrollmentDaoSupplier.get().deleteAll();
     }
 
     /**
@@ -1101,13 +1063,6 @@ public class ConsentManager {
                 () ->
                         mAppSearchConsentManager.recordNotificationDisplayed(
                                 wasNotificationDisplayed),
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which should never show
-                    // Beta UX.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction= */ "store if beta notif was displayed"));
-                },
                 /* errorLogger= */ null);
     }
 
@@ -1125,7 +1080,6 @@ public class ConsentManager {
                 () -> mDatastore.getBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE),
                 () -> mAdServicesManager.wasNotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasNotificationDisplayed(),
-                () -> false, // Beta UX is never shown on R, so this info is not stored.
                 (e) ->
                         ErrorLogUtil.e(
                                 e,
@@ -1149,13 +1103,6 @@ public class ConsentManager {
                                 wasGaUxDisplayed),
                 () -> mAdServicesManager.recordGaUxNotificationDisplayed(wasGaUxDisplayed),
                 () -> mAppSearchConsentManager.recordGaUxNotificationDisplayed(wasGaUxDisplayed),
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which should never show
-                    // GA UX.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction= */ "store if GA notification was displayed"));
-                },
                 /* errorLogger= */ null);
     }
 
@@ -1173,7 +1120,6 @@ public class ConsentManager {
                 () -> mDatastore.getBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE),
                 () -> mAdServicesManager.wasGaUxNotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasGaUxNotificationDisplayed(),
-                () -> false, // GA UX is never shown on R, so this info is not stored.
                 /* errorLogger= */ null);
     }
 
@@ -1197,13 +1143,6 @@ public class ConsentManager {
                             getAppSearchExceptionMessage(
                                     /* illegalAction */ "store if PAS notification was displayed"));
                 },
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which has not implemented PAS
-                    // updates.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction */ "store if PAS notification was displayed"));
-                },
                 /* errorLogger= */ null);
     }
 
@@ -1221,7 +1160,6 @@ public class ConsentManager {
                 () -> mDatastore.getBoolean(ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE),
                 () -> mAdServicesManager.wasPasNotificationDisplayed(),
                 () -> false, // PAS update not supported on S yet
-                () -> false, // PAS update not supported on R yet
                 /* errorLogger= */ null);
     }
 
@@ -1239,7 +1177,6 @@ public class ConsentManager {
                 () -> mDatastore.getBoolean(ConsentConstants.DEFAULT_CONSENT),
                 () -> mAdServicesManager.getDefaultConsent(),
                 () -> mAppSearchConsentManager.getConsent(ConsentConstants.DEFAULT_CONSENT),
-                () -> false, // Beta UX never shown on R, so we don't store this info.
                 (e) ->
                         ErrorLogUtil.e(
                                 e,
@@ -1261,13 +1198,6 @@ public class ConsentManager {
                 () -> mDatastore.getBoolean(ConsentConstants.TOPICS_DEFAULT_CONSENT),
                 () -> mAdServicesManager.getTopicsDefaultConsent(),
                 () -> mAppSearchConsentManager.getConsent(ConsentConstants.TOPICS_DEFAULT_CONSENT),
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which supports only
-                    // Measurement.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction= */ "retrieve default topics consent"));
-                },
                 /* errorLogger= */ null);
     }
 
@@ -1285,13 +1215,6 @@ public class ConsentManager {
                 () -> mDatastore.getBoolean(ConsentConstants.FLEDGE_DEFAULT_CONSENT),
                 () -> mAdServicesManager.getFledgeDefaultConsent(),
                 () -> mAppSearchConsentManager.getConsent(ConsentConstants.FLEDGE_DEFAULT_CONSENT),
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which supports only
-                    // Measurement.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction= */ "retrieve default FLEDGE consent"));
-                },
                 /* errorLogger= */ null);
     }
 
@@ -1311,7 +1234,6 @@ public class ConsentManager {
                 () ->
                         mAppSearchConsentManager.getConsent(
                                 ConsentConstants.MEASUREMENT_DEFAULT_CONSENT),
-                () -> mDatastore.getBoolean(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT),
                 /* errorLogger= */ null);
     }
 
@@ -1329,7 +1251,6 @@ public class ConsentManager {
                 () -> mDatastore.getBoolean(ConsentConstants.DEFAULT_AD_ID_STATE),
                 () -> mAdServicesManager.getDefaultAdIdState(),
                 () -> mAppSearchConsentManager.getConsent(ConsentConstants.DEFAULT_AD_ID_STATE),
-                () -> mDatastore.getBoolean(ConsentConstants.DEFAULT_AD_ID_STATE),
                 /* errorLogger= */ null);
     }
 
@@ -1345,13 +1266,6 @@ public class ConsentManager {
                 () ->
                         mAppSearchConsentManager.setConsent(
                                 ConsentConstants.DEFAULT_CONSENT, defaultConsent),
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which should never show
-                    // Beta UX.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction= */ "record default beta consent"));
-                },
                 (e) ->
                         ErrorLogUtil.e(
                                 e,
@@ -1373,13 +1287,6 @@ public class ConsentManager {
                 () ->
                         mAppSearchConsentManager.setConsent(
                                 ConsentConstants.TOPICS_DEFAULT_CONSENT, defaultConsent),
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which supports only
-                    // Measurement.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction= */ "record default topics consent"));
-                },
                 /* errorLogger= */ null);
     }
 
@@ -1397,13 +1304,6 @@ public class ConsentManager {
                 () ->
                         mAppSearchConsentManager.setConsent(
                                 ConsentConstants.FLEDGE_DEFAULT_CONSENT, defaultConsent),
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which supports only
-                    // Measurement.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction= */ "record default FLEDGE consent"));
-                },
                 /* errorLogger= */ null);
     }
 
@@ -1421,8 +1321,6 @@ public class ConsentManager {
                 () ->
                         mAppSearchConsentManager.setConsent(
                                 ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent),
-                () -> // Same as PPAPI_ONLY. Rollback-safety not required.
-                mDatastore.putBoolean(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent),
                 /* errorLogger= */ null);
     }
 
@@ -1438,13 +1336,27 @@ public class ConsentManager {
                 () ->
                         mAppSearchConsentManager.setConsent(
                                 ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState),
-                () -> // Same as PPAPI_ONLY. Rollback-safety not required.
-                mDatastore.putBoolean(ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState),
                 /* errorLogger= */ null);
     }
 
-    private void setPrivacySandboxFeatureTypeInApp(PrivacySandboxFeatureType currentFeatureType)
+    @VisibleForTesting
+    void setPrivacySandboxFeatureTypeInApp(PrivacySandboxFeatureType currentFeatureType)
             throws IOException {
+        if (FlagsFactory.getFlags().getEnableAtomicFileDatastoreBatchUpdateApi()) {
+            mDatastore.update(
+                    updateOperation -> {
+                        for (PrivacySandboxFeatureType featureType :
+                                PrivacySandboxFeatureType.values()) {
+                            if (featureType.name().equals(currentFeatureType.name())) {
+                                updateOperation.putBoolean(featureType.name(), true);
+                            } else {
+                                updateOperation.putBoolean(featureType.name(), false);
+                            }
+                        }
+                    });
+            return;
+        }
+
         for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
             if (featureType.name().equals(currentFeatureType.name())) {
                 mDatastore.putBoolean(featureType.name(), true);
@@ -1464,7 +1376,6 @@ public class ConsentManager {
                 () -> setPrivacySandboxFeatureTypeInApp(currentFeatureType),
                 () -> mAdServicesManager.setCurrentPrivacySandboxFeature(currentFeatureType.name()),
                 () -> mAppSearchConsentManager.setCurrentPrivacySandboxFeature(currentFeatureType),
-                () -> setPrivacySandboxFeatureTypeInApp(currentFeatureType),
                 (e) ->
                         ErrorLogUtil.e(
                                 e,
@@ -1482,7 +1393,6 @@ public class ConsentManager {
                 () -> storeUserManualInteractionToPpApi(interaction, mDatastore),
                 () -> mAdServicesManager.recordUserManualInteractionWithConsent(interaction),
                 () -> mAppSearchConsentManager.recordUserManualInteractionWithConsent(interaction),
-                () -> mAdExtDataManager.setManualInteractionWithConsentStatus(interaction),
                 (e) ->
                         ErrorLogUtil.e(
                                 e,
@@ -1523,7 +1433,6 @@ public class ConsentManager {
                 this::getPrivacySandboxFeatureFromApp,
                 this::getPrivacySandboxFeatureFromSystemService,
                 () -> mAppSearchConsentManager.getCurrentPrivacySandboxFeature(),
-                this::getPrivacySandboxFeatureFromApp,
                 (e) ->
                         ErrorLogUtil.e(
                                 e,
@@ -1579,7 +1488,6 @@ public class ConsentManager {
                 this::getUserManualInteractionWithConsentInternal,
                 () -> mAdServicesManager.getUserManualInteractionWithConsent(),
                 () -> mAppSearchConsentManager.getUserManualInteractionWithConsent(),
-                () -> mAdExtDataManager.getManualInteractionWithConsentStatus(),
                 (e) ->
                         ErrorLogUtil.e(
                                 e,
@@ -1588,10 +1496,13 @@ public class ConsentManager {
     }
 
     @VisibleForTesting
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     static AtomicFileDatastore createAndInitializeDataStore(
             Context context, AdServicesErrorLogger adServicesErrorLogger) {
+        @SuppressWarnings("deprecation")
         AtomicFileDatastore atomicFileDatastore =
-                new AtomicFileDatastore(
+                LegacyAtomicFileDatastoreFactory.createAtomicFileDatastore(
                         context,
                         ConsentConstants.STORAGE_XML_IDENTIFIER,
                         ConsentConstants.STORAGE_VERSION,
@@ -1602,6 +1513,23 @@ public class ConsentManager {
             // TODO(b/259607624): implement a method in the datastore which would support
             // this exact scenario - if the value is null, return default value provided
             // in the parameter (similar to SP apply etc.)
+            if (FlagsFactory.getFlags().getEnableAtomicFileDatastoreBatchUpdateApi()) {
+                atomicFileDatastore.update(
+                        updateOperation -> {
+                            updateOperation.putBooleanIfNew(
+                                    ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, false);
+                            updateOperation.putBooleanIfNew(
+                                    ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, false);
+                            updateOperation.putBooleanIfNew(
+                                    ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, false);
+                            updateOperation.putBooleanIfNew(
+                                    ConsentConstants.PAS_NOTIFICATION_DISPLAYED_ONCE, false);
+                            updateOperation.putBooleanIfNew(
+                                    ConsentConstants.PAS_NOTIFICATION_OPENED, false);
+                        });
+                return atomicFileDatastore;
+            }
+
             if (atomicFileDatastore.getBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE)
                     == null) {
                 atomicFileDatastore.putBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, false);
@@ -1636,19 +1564,20 @@ public class ConsentManager {
     //             system server.
     // PPAPI_AND_SYSTEM_SERVER: migrate consent from PPAPI to system server.
     // SYSTEM_SERVER_ONLY: migrate consent from PPAPI to system server and clear PPAPI consent
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     @VisibleForTesting
     static void handleConsentMigrationIfNeeded(
-            @NonNull Context context,
-            @NonNull AtomicFileDatastore datastore,
+            Context context,
+            AtomicFileDatastore datastore,
             AdServicesManager adServicesManager,
-            @NonNull StatsdAdServicesLogger statsdAdServicesLogger,
-            @Flags.ConsentSourceOfTruth int consentSourceOfTruth) {
+            StatsdAdServicesLogger statsdAdServicesLogger,
+            @ConsentSourceOfTruth int consentSourceOfTruth) {
         Objects.requireNonNull(context, "context cannot be null");
         // On R/S, handleConsentMigrationIfNeeded should never be executed.
         // It is a T+ feature. On T+, this function should only execute if it's within the
-        // AdServices
-        // APK and not ExtServices. So check if it's within ExtServices, and bail out if that's the
-        // case on any platform.
+        // AdServices APK and not ExtServices. So check if it's within ExtServices, and bail out if
+        // that's the case on any platform.
         String packageName = context.getPackageName();
         if (packageName != null && packageName.endsWith(ADEXTSERVICES_PACKAGE_NAME_SUFFIX)) {
             LogUtil.d("Aborting attempt to migrate consent in ExtServices");
@@ -1682,9 +1611,6 @@ public class ConsentManager {
                 break;
                 // If this is a S device, the consent source of truth is always APPSEARCH_ONLY.
             case Flags.APPSEARCH_ONLY:
-                // If this is a R device, the consent source of truth is always
-                // PPAPI_AND_ADEXT_SERVICE.
-            case Flags.PPAPI_AND_ADEXT_SERVICE:
                 break;
             default:
                 break;
@@ -1757,8 +1683,7 @@ public class ConsentManager {
     }
 
     @VisibleForTesting
-    static void setConsentToSystemServer(
-            @NonNull AdServicesManager adServicesManager, boolean isGiven) {
+    static void setConsentToSystemServer(AdServicesManager adServicesManager, boolean isGiven) {
         Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
 
         ConsentParcel consentParcel =
@@ -1770,7 +1695,7 @@ public class ConsentManager {
     }
 
     static void setPerApiConsentToSystemServer(
-            @NonNull AdServicesManager adServicesManager,
+            AdServicesManager adServicesManager,
             @ConsentParcel.ConsentApiType int consentApiType,
             boolean isGiven) {
         Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
@@ -1784,27 +1709,28 @@ public class ConsentManager {
 
     @VisibleForTesting
     static boolean getPerApiConsentFromSystemServer(
-            @NonNull AdServicesManager adServicesManager,
-            @ConsentParcel.ConsentApiType int consentApiType) {
+            AdServicesManager adServicesManager, @ConsentParcel.ConsentApiType int consentApiType) {
         Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
         return adServicesManager.getConsent(consentApiType).isIsGiven();
     }
 
     @VisibleForTesting
-    static boolean getConsentFromSystemServer(@NonNull AdServicesManager adServicesManager) {
+    static boolean getConsentFromSystemServer(AdServicesManager adServicesManager) {
         Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
         return getPerApiConsentFromSystemServer(adServicesManager, ConsentParcel.ALL_API);
     }
 
     // Perform a one-time migration to migrate existing PPAPI Consent
     @VisibleForTesting
-    // Suppress lint warning for context.getUser in R since this code is unused in R
-    @SuppressWarnings("NewApi")
+    @SuppressWarnings({
+        "NewApi", // Suppress lint warning for context.getUser in R since this code is unused in R
+        "AvoidStaticContext", // TODO(b/311183933): Remove passed in Context from static method.
+    })
     static void migratePpApiConsentToSystemService(
-            @NonNull Context context,
-            @NonNull AtomicFileDatastore datastore,
-            @NonNull AdServicesManager adServicesManager,
-            @NonNull StatsdAdServicesLogger statsdAdServicesLogger) {
+            Context context,
+            AtomicFileDatastore datastore,
+            AdServicesManager adServicesManager,
+            StatsdAdServicesLogger statsdAdServicesLogger) {
         Objects.requireNonNull(context, "context cannot be null");
         Objects.requireNonNull(datastore, "datastore cannot be null");
         Objects.requireNonNull(adServicesManager, "adServicesManager cannot be null");
@@ -1812,9 +1738,7 @@ public class ConsentManager {
         AppConsents appConsents = null;
         try {
             // Exit if migration has happened.
-            SharedPreferences sharedPreferences =
-                    context.getSharedPreferences(
-                            ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
+            SharedPreferences sharedPreferences = getPrefs(context);
             // If we migrated data to system server either from PPAPI or from AppSearch, do not
             // attempt another migration of data to system server.
             boolean shouldSkipMigration =
@@ -1905,12 +1829,11 @@ public class ConsentManager {
     // Clear PPAPI Consent if fully migrated to use system server consent. This is because system
     // consent cannot be migrated back to PPAPI. This data clearing should only happen once.
     @VisibleForTesting
-    static void clearPpApiConsent(
-            @NonNull Context context, @NonNull AtomicFileDatastore datastore) {
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
+    static void clearPpApiConsent(Context context, AtomicFileDatastore datastore) {
         // Exit if PPAPI consent has cleared.
-        SharedPreferences sharedPreferences =
-                context.getSharedPreferences(
-                        ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getPrefs(context);
         if (sharedPreferences.getBoolean(
                 ConsentConstants.SHARED_PREFS_KEY_PPAPI_HAS_CLEARED, /* defValue */ false)) {
             return;
@@ -1940,14 +1863,13 @@ public class ConsentManager {
 
     // Set the shared preference to false for given key.
     @VisibleForTesting
-    static void resetSharedPreference(
-            @NonNull Context context, @NonNull String sharedPreferenceKey) {
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
+    static void resetSharedPreference(Context context, String sharedPreferenceKey) {
         Objects.requireNonNull(context, "context cannot be null");
         Objects.requireNonNull(sharedPreferenceKey, "sharedPreferenceKey cannot be null");
 
-        SharedPreferences sharedPreferences =
-                context.getSharedPreferences(
-                        ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
+        SharedPreferences sharedPreferences = getPrefs(context);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(sharedPreferenceKey, false);
 
@@ -1961,6 +1883,92 @@ public class ConsentManager {
         }
     }
 
+    @VisibleForTesting
+    static void handleEnrollmentDataMigrationIfNeeded(ConsentManager manager) {
+        String value = manager.getModuleEnrollmentState();
+        if (value != null && !value.isEmpty()) {
+            return;
+        }
+        EnrollmentData data = new EnrollmentData();
+
+        // convert data (Ad ID is left out for now)
+        int[] modules =
+                new int[] {
+                    MEASUREMENT,
+                    PROTECTED_AUDIENCE,
+                    PROTECTED_APP_SIGNALS,
+                    TOPICS,
+                    ON_DEVICE_PERSONALIZATION
+                };
+        for (int module : modules) {
+            data.putModuleState(module, manager.getConvertedModuleState(module));
+            data.putUserChoice(module, manager.getConvertedUserChoice(module));
+        }
+
+        // store data
+        String dataString = EnrollmentData.serialize(data);
+        manager.setModuleEnrollmentData(dataString);
+    }
+
+    @ModuleUserChoiceCode
+    private int getConvertedUserChoice(@ModuleCode int apiType) {
+        Boolean consent = null;
+
+        try {
+            switch (apiType) {
+                case MEASUREMENT -> consent = getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+                case ON_DEVICE_PERSONALIZATION, PROTECTED_APP_SIGNALS -> {
+                    boolean isEuDevice =
+                            DeviceRegionProvider.isEuDevice(ApplicationContextSingleton.get());
+                    boolean isOnboardedEeaPasUser =
+                            isEuDevice && mFlags.getEeaPasUxEnabled() && wasPasNotificationOpened();
+                    boolean isOnboardedRowPasUser =
+                            !isEuDevice
+                                    && mFlags.getPasUxEnabled()
+                                    && wasPasNotificationDisplayed();
+                    if (isOnboardedEeaPasUser || isOnboardedRowPasUser) {
+                        consent = getConsent(AdServicesApiType.FLEDGE).isGiven();
+                    }
+                }
+                case PROTECTED_AUDIENCE -> consent = getConsent(AdServicesApiType.FLEDGE).isGiven();
+                case TOPICS -> consent = getConsent(AdServicesApiType.TOPICS).isGiven();
+                default -> consent = null;
+            }
+        } catch (NullPointerException e) {
+            LogUtil.v("No previous consent for apiType:" + apiType);
+        }
+
+        return consent == null
+                ? AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN
+                : consent ? USER_CHOICE_OPTED_IN : USER_CHOICE_OPTED_OUT;
+    }
+
+    @ModuleState
+    private int getConvertedModuleState(@ModuleCode int apiType) {
+        int state = MODULE_STATE_DISABLED;
+        switch (apiType) {
+            case MEASUREMENT -> {
+                if (wasGaUxNotificationDisplayed()
+                        || wasU18NotificationDisplayed()
+                        || wasPasNotificationDisplayed()) {
+                    state = MODULE_STATE_ENABLED;
+                }
+            }
+            case ON_DEVICE_PERSONALIZATION, PROTECTED_APP_SIGNALS -> {
+                if (wasPasNotificationDisplayed()) {
+                    state = MODULE_STATE_ENABLED;
+                }
+            }
+            case PROTECTED_AUDIENCE, TOPICS -> {
+                if (wasGaUxNotificationDisplayed() || wasPasNotificationDisplayed()) {
+                    state = MODULE_STATE_ENABLED;
+                }
+            }
+            default -> state = MODULE_STATE_UNKNOWN;
+        }
+        return state;
+    }
+
     // To write to PPAPI if consent source of truth is PPAPI_ONLY or dual sources.
     // To write to system server if consent source of truth is SYSTEM_SERVER_ONLY or dual sources.
     @VisibleForTesting
@@ -1971,12 +1979,6 @@ public class ConsentManager {
                 () ->
                         mAppSearchConsentManager.setConsent(
                                 ConsentConstants.CONSENT_KEY_FOR_ALL, isGiven),
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which should never show
-                    // Beta UX.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(/* illegalAction= */ "set beta consent"));
-                },
                 /* errorLogger= */ null);
     }
 
@@ -1987,12 +1989,16 @@ public class ConsentManager {
                 () -> getConsentFromPpApi(),
                 () -> getConsentFromSystemServer(mAdServicesManager),
                 () -> mAppSearchConsentManager.getConsent(ConsentConstants.CONSENT_KEY_FOR_ALL),
-                () -> false, // Beta UX never shown on R, so we don't store this info.
                 /* errorLogger= */ null);
     }
 
     @VisibleForTesting
     boolean getPerApiConsentFromSourceOfTruth(AdServicesApiType apiType) {
+        boolean businessLogicMigrationEnabled =
+                FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled();
+        if (businessLogicMigrationEnabled) {
+            return getUserChoice(apiType).isGiven();
+        }
         return executeGettersByConsentSourceOfTruth(
                 false,
                 () -> getConsentPerApiFromPpApi(apiType),
@@ -2000,15 +2006,16 @@ public class ConsentManager {
                         getPerApiConsentFromSystemServer(
                                 mAdServicesManager, apiType.toConsentApiType()),
                 () -> mAppSearchConsentManager.getConsent(apiType.toPpApiDatastoreKey()),
-                // Only Measurement API is supported on Android R.
-                () ->
-                        apiType == AdServicesApiType.MEASUREMENTS
-                                && mAdExtDataManager.getMsmtConsent(),
                 /* errorLogger= */ null);
     }
 
     @VisibleForTesting
     void setPerApiConsentToSourceOfTruth(boolean isGiven, AdServicesApiType apiType) {
+        boolean businessLogicMigrationEnabled =
+                FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled();
+        if (businessLogicMigrationEnabled) {
+            setUserChoice(apiType, isGiven ? USER_CHOICE_OPTED_IN : USER_CHOICE_OPTED_OUT);
+        }
         executeSettersByConsentSourceOfTruth(
                 () -> {
                     setConsentPerApiToPpApi(apiType, isGiven);
@@ -2018,16 +2025,6 @@ public class ConsentManager {
                         setPerApiConsentToSystemServer(
                                 mAdServicesManager, apiType.toConsentApiType(), isGiven),
                 () -> mAppSearchConsentManager.setConsent(apiType.toPpApiDatastoreKey(), isGiven),
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which supports only
-                    // Measurement. There should never be a call to set consent for other PPAPIs.
-                    if (apiType != AdServicesApiType.MEASUREMENTS) {
-                        throw new IllegalStateException(
-                                getAdExtExceptionMessage(
-                                        /* illegalAction= */ "set consent for a non-msmt API"));
-                    }
-                    mAdExtDataManager.setMsmtConsent(isGiven);
-                },
                 /* errorLogger= */ null);
     }
 
@@ -2037,13 +2034,15 @@ public class ConsentManager {
      * written for consent, we need to make sure it is migrated correctly post-OTA in this method.
      */
     @VisibleForTesting
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     static void handleConsentMigrationFromAppSearchIfNeeded(
-            @NonNull Context context,
-            @NonNull AtomicFileDatastore datastore,
-            @NonNull AppConsentDao appConsentDao,
-            @NonNull AppSearchConsentManager appSearchConsentManager,
-            @NonNull AdServicesManager adServicesManager,
-            @NonNull StatsdAdServicesLogger statsdAdServicesLogger) {
+            Context context,
+            AtomicFileDatastore datastore,
+            AppConsentDao appConsentDao,
+            AppSearchConsentManager appSearchConsentManager,
+            AdServicesManager adServicesManager,
+            StatsdAdServicesLogger statsdAdServicesLogger) {
         Objects.requireNonNull(context, "context cannot be null");
         Objects.requireNonNull(appSearchConsentManager, "appSearchConsentManager cannot be null");
         LogUtil.d("Check migrating Consent from AppSearch to PPAPI and System Service");
@@ -2064,13 +2063,9 @@ public class ConsentManager {
         try {
             // This should be called only once after OTA (if flag is enabled). If we did not record
             // showing the notification on T+ yet and we have shown the notification on S- (as
-            // recorded
-            // in AppSearch), initialize T+ consent data so that we don't show notification twice
-            // (after
-            // OTA upgrade).
-            SharedPreferences sharedPreferences =
-                    context.getSharedPreferences(
-                            ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
+            // recorded in AppSearch), initialize T+ consent data so that we don't show notification
+            // twice (after OTA upgrade).
+            SharedPreferences sharedPreferences = getPrefs(context);
             // If we did not migrate notification data, we should not attempt to migrate anything.
             if (!appSearchConsentManager.migrateConsentDataIfNeeded(
                     sharedPreferences, datastore, adServicesManager, appConsentDao)) {
@@ -2186,6 +2181,17 @@ public class ConsentManager {
                 adServicesManager,
                 AdServicesApiType.MEASUREMENTS.toConsentApiType(),
                 measurementConsented);
+
+        boolean businessLogicMigrationEnabled =
+                FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled();
+        if (businessLogicMigrationEnabled) {
+            String data = appSearchConsentManager.getModuleEnrollmentState();
+            if (data == null) {
+                data = "";
+            }
+            datastore.putString(ConsentConstants.MODULE_ENROLLMENT_STATE, data);
+            adServicesManager.setModuleEnrollmentState(data);
+        }
         return AppConsents.builder()
                 .setMsmtConsent(measurementConsented)
                 .setTopicsConsent(topicsConsented)
@@ -2193,9 +2199,7 @@ public class ConsentManager {
                 .build();
     }
 
-    @NonNull
-    private static ConsentParcel getConsentParcel(
-            @NonNull Integer apiType, @NonNull Boolean consented) {
+    private static ConsentParcel getConsentParcel(Integer apiType, Boolean consented) {
         return new ConsentParcel.Builder().setConsentApiType(apiType).setIsGiven(consented).build();
     }
 
@@ -2237,7 +2241,6 @@ public class ConsentManager {
                 () -> mDatastore.getBoolean(ConsentConstants.IS_AD_ID_ENABLED),
                 () -> mAdServicesManager.isAdIdEnabled(),
                 () -> mAppSearchConsentManager.isAdIdEnabled(),
-                () -> mDatastore.getBoolean(ConsentConstants.IS_AD_ID_ENABLED),
                 /* errorLogger= */ null);
     }
 
@@ -2251,8 +2254,6 @@ public class ConsentManager {
                 () -> mDatastore.putBoolean(ConsentConstants.IS_AD_ID_ENABLED, isAdIdEnabled),
                 () -> mAdServicesManager.setAdIdEnabled(isAdIdEnabled),
                 () -> mAppSearchConsentManager.setAdIdEnabled(isAdIdEnabled),
-                // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
-                () -> mDatastore.putBoolean(ConsentConstants.IS_AD_ID_ENABLED, isAdIdEnabled),
                 /* errorLogger= */ null);
     }
 
@@ -2266,7 +2267,6 @@ public class ConsentManager {
                 () -> mDatastore.getBoolean(ConsentConstants.IS_U18_ACCOUNT),
                 () -> mAdServicesManager.isU18Account(),
                 () -> mAppSearchConsentManager.isU18Account(),
-                () -> mAdExtDataManager.getIsU18Account(),
                 /* errorLogger= */ null);
     }
 
@@ -2280,7 +2280,6 @@ public class ConsentManager {
                 () -> mDatastore.putBoolean(ConsentConstants.IS_U18_ACCOUNT, isU18Account),
                 () -> mAdServicesManager.setU18Account(isU18Account),
                 () -> mAppSearchConsentManager.setU18Account(isU18Account),
-                () -> mAdExtDataManager.setIsU18Account(isU18Account),
                 /* errorLogger= */ null);
     }
 
@@ -2294,7 +2293,6 @@ public class ConsentManager {
                 () -> mDatastore.getBoolean(ConsentConstants.IS_ENTRY_POINT_ENABLED),
                 () -> mAdServicesManager.isEntryPointEnabled(),
                 () -> mAppSearchConsentManager.isEntryPointEnabled(),
-                () -> mDatastore.getBoolean(ConsentConstants.IS_ENTRY_POINT_ENABLED),
                 /* errorLogger= */ null);
     }
 
@@ -2310,10 +2308,6 @@ public class ConsentManager {
                                 ConsentConstants.IS_ENTRY_POINT_ENABLED, isEntryPointEnabled),
                 () -> mAdServicesManager.setEntryPointEnabled(isEntryPointEnabled),
                 () -> mAppSearchConsentManager.setEntryPointEnabled(isEntryPointEnabled),
-                // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
-                () ->
-                        mDatastore.putBoolean(
-                                ConsentConstants.IS_ENTRY_POINT_ENABLED, isEntryPointEnabled),
                 /* errorLogger= */ null);
     }
 
@@ -2327,7 +2321,6 @@ public class ConsentManager {
                 () -> mDatastore.getBoolean(ConsentConstants.IS_ADULT_ACCOUNT),
                 () -> mAdServicesManager.isAdultAccount(),
                 () -> mAppSearchConsentManager.isAdultAccount(),
-                () -> mAdExtDataManager.getIsAdultAccount(),
                 /* errorLogger= */ null);
     }
 
@@ -2341,7 +2334,6 @@ public class ConsentManager {
                 () -> mDatastore.putBoolean(ConsentConstants.IS_ADULT_ACCOUNT, isAdultAccount),
                 () -> mAdServicesManager.setAdultAccount(isAdultAccount),
                 () -> mAppSearchConsentManager.setAdultAccount(isAdultAccount),
-                () -> mAdExtDataManager.setIsAdultAccount(isAdultAccount),
                 /* errorLogger= */ null);
     }
 
@@ -2357,8 +2349,6 @@ public class ConsentManager {
                 () -> mDatastore.getBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED),
                 () -> mAdServicesManager.wasU18NotificationDisplayed(),
                 () -> mAppSearchConsentManager.wasU18NotificationDisplayed(),
-                () -> // On Android R only U18 notification is allowed to be displayed.
-                mAdExtDataManager.getNotificationDisplayed(),
                 /* errorLogger= */ null);
     }
 
@@ -2377,8 +2367,6 @@ public class ConsentManager {
                 () ->
                         mAppSearchConsentManager.setU18NotificationDisplayed(
                                 wasU18NotificationDisplayed),
-                () -> // On Android R only U18 notification is allowed to be displayed.
-                mAdExtDataManager.setNotificationDisplayed(wasU18NotificationDisplayed),
                 /* errorLogger= */ null);
     }
 
@@ -2386,7 +2374,7 @@ public class ConsentManager {
         return Stream.of(PrivacySandboxUxCollection.values())
                 .filter(ux -> uxString.equals(ux.toString()))
                 .findFirst()
-                .orElse(PrivacySandboxUxCollection.UNSUPPORTED_UX);
+                .orElse(UNSUPPORTED_UX);
     }
 
     /** Returns current UX based on consent_source_of_truth. */
@@ -2394,32 +2382,48 @@ public class ConsentManager {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().getUx();
         }
+        boolean businessLogicMigrationEnabled =
+                FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled();
+        if (businessLogicMigrationEnabled) {
+            return determineUxFromEnrollmentData();
+        }
         return executeGettersByConsentSourceOfTruth(
-                /* defaultReturn= */ PrivacySandboxUxCollection.UNSUPPORTED_UX,
+                /* defaultReturn= */ UNSUPPORTED_UX,
                 () -> mUxStatesDao.getUx(),
                 () -> convertUxString(mAdServicesManager.getUx()),
                 () -> mAppSearchConsentManager.getUx(),
-                () -> {
-                    PrivacySandboxUxCollection ux = mUxStatesDao.getUx();
-
-                    // Workaround to make getUx() rollback safe on R. Rollback could change
-                    // ux enum to UNSUPPORTED_UX after daily ping and before the
-                    // notification is displayed.
-
-                    if (ux == PrivacySandboxUxCollection.UNSUPPORTED_UX) {
-                        // Use getIsU18Account to infer ux enum since getIsU18Account is
-                        // rollback safe
-                        if (mFlags.getU18UxEnabled() && mAdExtDataManager.getIsU18Account()) {
-                            ux = PrivacySandboxUxCollection.U18_UX;
-                        } else if (mAdExtDataManager.getIsAdultAccount()) {
-                            // Use getIsAdultAccount to infer ux enum since getIsAdultAccount is
-                            // rollback safe
-                            ux = PrivacySandboxUxCollection.RVC_UX;
-                        }
-                    }
-                    return ux;
-                },
                 /* errorLogger= */ null);
+    }
+
+    private PrivacySandboxUxCollection determineUxFromEnrollmentData() {
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
+        int[] allModules =
+                new int[] {
+                    MODULE_TOPICS,
+                    MODULE_PROTECTED_AUDIENCE,
+                    MODULE_MEASUREMENT,
+                    MODULE_PROTECTED_APP_SIGNALS,
+                    MODULE_ON_DEVICE_PERSONALIZATION
+                };
+        boolean isAnyModuleEnabled = false;
+        boolean isPersonalizedAdsModuleEnabled = false;
+        for (int module : allModules) {
+            int state = data.getModuleState(module);
+            if (state == MODULE_STATE_ENABLED) {
+                isAnyModuleEnabled = true;
+                if (module != MODULE_MEASUREMENT) {
+                    isPersonalizedAdsModuleEnabled = true;
+                }
+            }
+        }
+        // currently PAS UX is within GA UX, once UxSelector is Revamped, this method won't exist
+        // anyways, so no need to have separate bit for PAS/ODP Enabled.
+        if (isPersonalizedAdsModuleEnabled) {
+            return GA_UX;
+        } else if (isAnyModuleEnabled) {
+            return U18_UX;
+        }
+        return UNSUPPORTED_UX;
     }
 
     /** Set the current UX to storage based on consent_source_of_truth. */
@@ -2432,8 +2436,6 @@ public class ConsentManager {
                 () -> mUxStatesDao.setUx(ux),
                 () -> mAdServicesManager.setUx(ux.toString()),
                 () -> mAppSearchConsentManager.setUx(ux),
-                () -> // Same as PPAPI_ONLY. Doesn't need to be rollback safe
-                mUxStatesDao.setUx(ux),
                 /* errorLogger= */ null);
     }
 
@@ -2443,23 +2445,36 @@ public class ConsentManager {
      * @param module desired module
      * @return module state
      */
-    @ModuleStateCode
+    @ModuleState
     public int getModuleState(@ModuleCode int module) {
-        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
         return data.getModuleState(module);
     }
 
     /**
      * Sets module state for a module.
      *
-     * @param moduleState object to set
+     * @param modulesStates object to set
      */
-    public void setModuleStates(List<AdServicesModuleState> moduleStates) {
-        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
-        for (AdServicesModuleState moduleState : moduleStates) {
-            data.putModuleState(moduleState);
+    public void setModuleStates(SparseIntArray modulesStates) {
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
+        for (int i = 0; i < modulesStates.size(); i++) {
+            data.putModuleState(modulesStates.keyAt(i), modulesStates.valueAt(i));
         }
-        setModuleEnrollmentData(EnrollmentData.serializeBase64(data));
+        setModuleEnrollmentData(EnrollmentData.serialize(data));
+    }
+
+    private AdServicesApiConsent getUserChoice(AdServicesApiType apiType) {
+        int module = -1;
+        switch (apiType) {
+            case TOPICS -> module = TOPICS;
+            case FLEDGE -> module = PROTECTED_AUDIENCE;
+            case MEASUREMENTS -> module = MEASUREMENT;
+            default -> {
+                LogUtil.v("Skipping ALL_API and UNKNOWN API Types for getUserChoice.");
+            }
+        }
+        return new AdServicesApiConsent(getUserChoice(module) == USER_CHOICE_OPTED_IN);
     }
 
     /**
@@ -2470,8 +2485,35 @@ public class ConsentManager {
      */
     @ModuleUserChoiceCode
     public int getUserChoice(@ModuleCode int module) {
-        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
         return data.getUserChoice(module);
+    }
+
+    private void setUserChoice(AdServicesApiType apiType, @ModuleUserChoiceCode int userChoice) {
+        List<AdServicesModuleUserChoice> userChoices = new ArrayList<>();
+        switch (apiType) {
+            case TOPICS -> {
+                userChoices.add(new AdServicesModuleUserChoice(TOPICS, userChoice));
+            }
+            case FLEDGE -> {
+                userChoices.add(new AdServicesModuleUserChoice(PROTECTED_AUDIENCE, userChoice));
+                if (mFlags.getPasUxEnabled() || mFlags.getEeaPasUxEnabled()) {
+                    userChoices.add(
+                            new AdServicesModuleUserChoice(PROTECTED_APP_SIGNALS, userChoice));
+                    userChoices.add(
+                            new AdServicesModuleUserChoice(ON_DEVICE_PERSONALIZATION, userChoice));
+                    // set in case flag is ramped down, so legacy logic will still work
+                    recordPasNotificationOpened(true);
+                }
+            }
+            case MEASUREMENTS -> {
+                userChoices.add(new AdServicesModuleUserChoice(MEASUREMENT, userChoice));
+            }
+            default -> {
+                LogUtil.v("Skipping ALL_API and UNKNOWN API Types for setUserChoice.");
+            }
+        }
+        setUserChoices(userChoices);
     }
 
     /**
@@ -2481,31 +2523,29 @@ public class ConsentManager {
      * @param userChoices User choices to store
      */
     public void setUserChoices(List<AdServicesModuleUserChoice> userChoices) {
-        EnrollmentData data = EnrollmentData.deserializeFromBase64(getModuleEnrollmentState());
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
         for (AdServicesModuleUserChoice userChoice : userChoices) {
             data.putUserChoice(userChoice);
         }
-        setModuleEnrollmentData(EnrollmentData.serializeBase64(data));
+        setModuleEnrollmentData(EnrollmentData.serialize(data));
     }
 
     /** Set module enrollment data to storage based on consent_source_of_truth. */
-    private String getModuleEnrollmentState() {
+    String getModuleEnrollmentState() {
         return executeGettersByConsentSourceOfTruth(
                 "",
                 () -> mDatastore.getString(ConsentConstants.MODULE_ENROLLMENT_STATE),
                 () -> mAdServicesManager.getModuleEnrollmentState(),
                 () -> mAppSearchConsentManager.getModuleEnrollmentState(),
-                () -> "", // TODO(b/348473253): implement datastore if needed
                 /* errorLogger= */ null);
     }
 
     /** Set module enrollment data to storage based on consent_source_of_truth. */
-    private void setModuleEnrollmentData(String data) {
+    void setModuleEnrollmentData(String data) {
         executeSettersByConsentSourceOfTruth(
                 () -> mDatastore.putString(ConsentConstants.MODULE_ENROLLMENT_STATE, data),
                 () -> mAdServicesManager.setModuleEnrollmentState(data),
                 () -> mAppSearchConsentManager.setModuleEnrollmentState(data),
-                () -> {}, // TODO(b/348473253): implement datastore if needed
                 /* errorLogger= */ null);
     }
 
@@ -2531,7 +2571,6 @@ public class ConsentManager {
                 () -> mUxStatesDao.getEnrollmentChannel(ux),
                 () -> convertEnrollmentChannelString(ux, mAdServicesManager.getEnrollmentChannel()),
                 () -> mAppSearchConsentManager.getEnrollmentChannel(ux),
-                () -> mUxStatesDao.getEnrollmentChannel(ux),
                 /* errorLogger= */ null);
     }
 
@@ -2546,8 +2585,6 @@ public class ConsentManager {
                 () -> mUxStatesDao.setEnrollmentChannel(ux, channel),
                 () -> mAdServicesManager.setEnrollmentChannel(channel.toString()),
                 () -> mAppSearchConsentManager.setEnrollmentChannel(ux, channel),
-                () -> // Same as PPAPI_ONLY. Doesn't need to be rollback safe
-                mUxStatesDao.setEnrollmentChannel(ux, channel),
                 /* errorLogger= */ null);
     }
 
@@ -2559,8 +2596,12 @@ public class ConsentManager {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().isPasFledgeConsentGiven();
         }
-        if (mFlags.getConsentManagerDebugMode()) {
+        if (mDebugFlags.getConsentManagerDebugMode()) {
             return true;
+        }
+        if (mFlags.getAdServicesConsentBusinessLogicMigrationEnabled()) {
+            return (mFlags.getPasUxEnabled() || mFlags.getEeaPasUxEnabled())
+                    && getConsent(AdServicesApiType.FLEDGE).isGiven();
         }
         if (mFlags.getEeaPasUxEnabled()) {
             if (DeviceRegionProvider.isEuDevice(ApplicationContextSingleton.get())) {
@@ -2578,7 +2619,7 @@ public class ConsentManager {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().isPasMeasurementConsentGiven();
         }
-        if (mFlags.getConsentManagerDebugMode()) {
+        if (mDebugFlags.getConsentManagerDebugMode()) {
             return true;
         }
         if (mFlags.getEeaPasUxEnabled()) {
@@ -2604,8 +2645,6 @@ public class ConsentManager {
                 () -> mDatastore.getBoolean(ConsentConstants.IS_MEASUREMENT_DATA_RESET),
                 () -> mAdServicesManager.isMeasurementDataReset(),
                 () -> mAppSearchConsentManager.isMeasurementDataReset(),
-                () -> // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
-                mDatastore.getBoolean(ConsentConstants.IS_MEASUREMENT_DATA_RESET),
                 /* errorLogger= */ null);
     }
 
@@ -2621,9 +2660,6 @@ public class ConsentManager {
                                 ConsentConstants.IS_MEASUREMENT_DATA_RESET, isMeasurementDataReset),
                 () -> mAdServicesManager.setMeasurementDataReset(isMeasurementDataReset),
                 () -> mAppSearchConsentManager.setMeasurementDataReset(isMeasurementDataReset),
-                () -> // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
-                mDatastore.putBoolean(
-                                ConsentConstants.IS_MEASUREMENT_DATA_RESET, isMeasurementDataReset),
                 /* errorLogger= */ null);
     }
 
@@ -2639,8 +2675,6 @@ public class ConsentManager {
                 () -> mDatastore.getBoolean(ConsentConstants.IS_PA_DATA_RESET),
                 () -> mAdServicesManager.isPaDataReset(),
                 () -> mAppSearchConsentManager.isPaDataReset(),
-                () -> // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
-                mDatastore.getBoolean(ConsentConstants.IS_PA_DATA_RESET),
                 /* errorLogger= */ null);
     }
 
@@ -2654,8 +2688,6 @@ public class ConsentManager {
                 () -> mDatastore.putBoolean(ConsentConstants.IS_PA_DATA_RESET, isPaDataReset),
                 () -> mAdServicesManager.setPaDataReset(isPaDataReset),
                 () -> mAppSearchConsentManager.setPaDataReset(isPaDataReset),
-                () -> // Doesn't need to be rollback-safe. Same as PPAPI_ONLY.
-                mDatastore.putBoolean(ConsentConstants.IS_PA_DATA_RESET, isPaDataReset),
                 /* errorLogger= */ null);
     }
 
@@ -2668,7 +2700,6 @@ public class ConsentManager {
                 /* defaultReturn= */ false,
                 () -> mDatastore.getBoolean(ConsentConstants.PAS_NOTIFICATION_OPENED),
                 () -> mAdServicesManager.wasPasNotificationOpened(),
-                () -> false,
                 () -> false,
                 /* errorLogger= */ null);
     }
@@ -2686,14 +2717,40 @@ public class ConsentManager {
                             getAppSearchExceptionMessage(
                                     /* illegalAction */ "store if PAS notification was displayed"));
                 },
-                () -> {
-                    // PPAPI_AND_ADEXT_SERVICE is only set on R which has not implemented PAS
-                    // updates.
-                    throw new IllegalStateException(
-                            getAdExtExceptionMessage(
-                                    /* illegalAction */ "store if PAS notification was displayed"));
-                },
                 /* errorLogger= */ null);
+    }
+
+    /** Dump its internal state */
+    public void dump(PrintWriter writer, @Nullable String[] args) {
+        writer.println("ConsentManager");
+        String prefix = "  ";
+
+        writer.printf(
+                "%sSource of truth: %s\n",
+                prefix, consentSourceOfTruthToString(mConsentSourceOfTruth));
+
+        writer.printf("%ssDataMigrationDuration: %dms\n", prefix, sDataMigrationDurationMs);
+        writer.printf("%ssInstantiationDuration: %dms\n", prefix, sInstantiationDurationMs);
+
+        writer.printf("%sDatastore:\n", prefix);
+        String prefix2 = "    ";
+        mDatastore.dump(writer, prefix2, /* args= */ null);
+    }
+
+    /** Returns a user-friendly representation of {@code source}. */
+    public static String consentSourceOfTruthToString(@ConsentSourceOfTruth int source) {
+        switch (source) {
+            case Flags.SYSTEM_SERVER_ONLY:
+                return "SYSTEM_SERVER_ONLY";
+            case Flags.PPAPI_ONLY:
+                return "PPAPI_ONLY";
+            case Flags.PPAPI_AND_SYSTEM_SERVER:
+                return "PPAPI_AND_SYSTEM_SERVER";
+            case Flags.APPSEARCH_ONLY:
+                return "APPSEARCH_ONLY";
+            default:
+                return "UNKNOWN-" + source;
+        }
     }
 
     @FunctionalInterface
@@ -2713,8 +2770,6 @@ public class ConsentManager {
      * @param appSetter Function that saves consent data to the app storage.
      * @param systemServiceSetter Function that saves consent data to the system server.
      * @param appSearchSetter Function that saves consent data to the appsearch.
-     * @param ppapiAndAdExtDataServiceSetter Function that saves consent data to the
-     *     AdServicesExDataService or the app.
      * @param errorLogger Function that logs exceptions during write operations.
      */
     private void executeSettersByConsentSourceOfTruth(
@@ -2723,7 +2778,6 @@ public class ConsentManager {
             references for back compat. */
             ThrowableSetter appSearchSetter, /* MUST pass lambdas instead of method references
             for back compat. */
-            ThrowableSetter ppapiAndAdExtDataServiceSetter,
             ErrorLogger errorLogger) {
         Trace.beginSection("ConsentManager#WriteOperation");
         mReadWriteLock.writeLock().lock();
@@ -2742,11 +2796,6 @@ public class ConsentManager {
                 case Flags.APPSEARCH_ONLY:
                     if (mFlags.getEnableAppsearchConsentData()) {
                         appSearchSetter.apply();
-                    }
-                    break;
-                case Flags.PPAPI_AND_ADEXT_SERVICE:
-                    if (mFlags.getEnableAdExtServiceConsentData()) {
-                        ppapiAndAdExtDataServiceSetter.apply();
                     }
                     break;
                 default:
@@ -2778,8 +2827,6 @@ public class ConsentManager {
      * @param appGetter Function that reads consent data from the app storage.
      * @param systemServiceGetter Function that reads consent data from the system server.
      * @param appSearchGetter Function that reads consent data from appsearch.
-     * @param ppapiAndAdExtDataServiceGetter Function that reads consent data from
-     *     AdServicesExDataService or the app.
      * @param errorLogger Function that logs exceptions during read operations.
      */
     private <T> T executeGettersByConsentSourceOfTruth(
@@ -2788,8 +2835,7 @@ public class ConsentManager {
             ThrowableGetter<T> systemServiceGetter, /* MUST pass lambdas instead of method
             references for back compat. */
             ThrowableGetter<T> appSearchGetter, /* MUST pass lambdas instead of method references
-             for back compat. */
-            ThrowableGetter<T> ppapiAndAdExtDataServiceGetter,
+            for back compat. */
             ErrorLogger errorLogger) {
         Trace.beginSection("ConsentManager#ReadOperation");
         mReadWriteLock.readLock().lock();
@@ -2804,11 +2850,6 @@ public class ConsentManager {
                 case Flags.APPSEARCH_ONLY:
                     if (mFlags.getEnableAppsearchConsentData()) {
                         return appSearchGetter.apply();
-                    }
-                    break;
-                case Flags.PPAPI_AND_ADEXT_SERVICE:
-                    if (mFlags.getEnableAdExtServiceConsentData()) {
-                        return ppapiAndAdExtDataServiceGetter.apply();
                     }
                     break;
                 default:
@@ -2829,7 +2870,7 @@ public class ConsentManager {
     }
 
     /* Returns the region od the device */
-    private static int getConsentRegion(@NonNull Context context) {
+    private static int getConsentRegion(Context context) {
         return DeviceRegionProvider.isEuDevice(context)
                 ? AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__EU
                 : AD_SERVICES_SETTINGS_USAGE_REPORTED__REGION__ROW;
@@ -2848,6 +2889,8 @@ public class ConsentManager {
      * @param context Context of the application
      * @return consentMigrationStats returns ConsentMigrationStats for logging
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static ConsentMigrationStats getConsentManagerStatsForLogging(
             AppConsents appConsents,
             ConsentMigrationStats.MigrationStatus migrationStatus,
@@ -2874,9 +2917,9 @@ public class ConsentManager {
                 "Attempting to %s using APPSEARCH_ONLY consent source of truth!", illegalAction);
     }
 
-    private static String getAdExtExceptionMessage(String illegalAction) {
-        return String.format(
-                "Attempting to %s using PPAPI_AND_ADEXT_SERVICE consent source of truth!",
-                illegalAction);
+    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
+    private static SharedPreferences getPrefs(Context context) {
+        return context.getSharedPreferences(
+                ConsentConstants.SHARED_PREFS_CONSENT, Context.MODE_PRIVATE);
     }
 }

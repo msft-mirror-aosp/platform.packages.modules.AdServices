@@ -125,8 +125,7 @@ public final class ReportingJobServiceTest
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
         doReturn(mMockContext).when(mSpyService).getApplicationContext();
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
-        doReturn(new FakeDatastoreManager())
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+        doReturn(new FakeDatastoreManager()).when(DatastoreManagerFactory::getDatastoreManager);
         doReturn(mMockFlags).when(FlagsFactory::getFlags);
         doReturn(MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS)
                 .when(mMockFlags)
@@ -143,7 +142,7 @@ public final class ReportingJobServiceTest
         doReturn(MEASUREMENT_REPORTING_JOB_PERSISTED)
                 .when(mMockFlags)
                 .getMeasurementReportingJobPersisted();
-        mockGetAdServicesJobServiceLogger(mSpyLogger);
+        mocker.mockGetAdServicesJobServiceLogger(mSpyLogger);
     }
 
     @Test
@@ -486,8 +485,7 @@ public final class ReportingJobServiceTest
         // Setup
         when(mMockDatastoreManager.runInTransactionWithResult(any())).thenReturn(Optional.empty());
         when(mMockDatastoreManager.runInTransaction(any())).thenReturn(true);
-        doReturn(mMockDatastoreManager)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+        doReturn(mMockDatastoreManager).when(DatastoreManagerFactory::getDatastoreManager);
         doReturn(true)
                 .when(
                         () ->
@@ -533,8 +531,7 @@ public final class ReportingJobServiceTest
         enableFeature();
         doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
         doReturn(true).when(mMockDatastoreManager).runInTransaction(any());
-        doReturn(mMockDatastoreManager)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
+        doReturn(mMockDatastoreManager).when(DatastoreManagerFactory::getDatastoreManager);
         // Return a null job scheduler to short circuit scheduling
         doReturn(null).when(mMockContext).getSystemService(JobScheduler.class);
 

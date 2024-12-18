@@ -35,6 +35,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.reporting.AggregateDebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService;
@@ -51,6 +52,8 @@ import java.util.concurrent.Future;
  * Fallback attribution job. The actual job execution logic is part of {@link
  * AttributionJobHandler}.
  */
+// TODO(b/311183933): Remove passed in Context from static method.
+@SuppressWarnings("AvoidStaticContext")
 public final class AttributionFallbackJobService extends JobService {
     private static final int MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_ID =
             MEASUREMENT_ATTRIBUTION_FALLBACK_JOB.getJobId();
@@ -120,11 +123,11 @@ public final class AttributionFallbackJobService extends JobService {
                         "AttributionFallbackJobService",
                         () -> {
                             new AttributionJobHandler(
-                                            DatastoreManagerFactory.getDatastoreManager(
-                                                    getApplicationContext()),
+                                            DatastoreManagerFactory.getDatastoreManager(),
                                             new DebugReportApi(
                                                     getApplicationContext(),
-                                                    FlagsFactory.getFlags()))
+                                                    FlagsFactory.getFlags()),
+                                            new AggregateDebugReportApi(FlagsFactory.getFlags()))
                                     .performPendingAttributions();
                         });
     }
@@ -165,6 +168,8 @@ public final class AttributionFallbackJobService extends JobService {
      * @param context the context
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
         if (!flags.getMeasurementAttributionFallbackJobEnabled()) {

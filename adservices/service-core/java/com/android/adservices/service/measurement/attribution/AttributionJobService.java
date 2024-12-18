@@ -36,6 +36,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.attribution.AttributionJobHandler.ProcessingResult;
+import com.android.adservices.service.measurement.reporting.AggregateDebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService;
@@ -139,7 +140,7 @@ public final class AttributionJobService extends JobService {
         return JobLockHolder.getInstance(ATTRIBUTION_PROCESSING)
                 .callWithLock(
                         "AttributionJobService",
-                        () -> processPendingAttributions(),
+                        this::processPendingAttributions,
                         // Another thread is already processing attribution.
                         // Returning success to not reschedule.
                         ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED);
@@ -148,8 +149,9 @@ public final class AttributionJobService extends JobService {
     @VisibleForTesting
     ProcessingResult processPendingAttributions() {
         return new AttributionJobHandler(
-                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext()),
-                        new DebugReportApi(getApplicationContext(), FlagsFactory.getFlags()))
+                        DatastoreManagerFactory.getDatastoreManager(),
+                        new DebugReportApi(getApplicationContext(), FlagsFactory.getFlags()),
+                        new AggregateDebugReportApi(FlagsFactory.getFlags()))
                 .performPendingAttributions();
     }
 
@@ -171,6 +173,8 @@ public final class AttributionJobService extends JobService {
         jobScheduler.schedule(jobInfo);
     }
 
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_ATTRIBUTION_JOB_ID,
@@ -191,6 +195,8 @@ public final class AttributionJobService extends JobService {
      * @param context the context
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
         if (flags.getMeasurementJobAttributionKillSwitch()) {

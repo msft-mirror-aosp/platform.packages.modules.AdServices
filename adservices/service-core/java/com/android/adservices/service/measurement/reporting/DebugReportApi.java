@@ -25,8 +25,6 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.measurement.DatastoreException;
-import com.android.adservices.data.measurement.DatastoreManager;
-import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.WebAddresses;
@@ -54,7 +52,7 @@ public class DebugReportApi {
 
     /** Define different verbose debug report types. */
     public enum Type {
-        DEFAULT("default"),
+        UNSPECIFIED("unspecified"),
         SOURCE_DESTINATION_LIMIT("source-destination-limit"),
         SOURCE_DESTINATION_RATE_LIMIT("source-destination-rate-limit"),
         SOURCE_DESTINATION_PER_DAY_RATE_LIMIT("source-destination-per-day-rate-limit"),
@@ -65,7 +63,13 @@ public class DebugReportApi {
         SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR("source-flexible-event-report-value-error"),
         SOURCE_MAX_EVENT_STATES_LIMIT("source-max-event-states-limit"),
         SOURCE_SCOPES_CHANNEL_CAPACITY_LIMIT("source-scopes-channel-capacity-limit"),
+        SOURCE_CHANNEL_CAPACITY_LIMIT("source-channel-capacity-limit"),
         SOURCE_ATTRIBUTION_SCOPE_INFO_GAIN_LIMIT("source-attribution-scope-info-gain-limit"),
+        SOURCE_DESTINATION_GLOBAL_RATE_LIMIT("source-destination-global-rate-limit"),
+        SOURCE_DESTINATION_LIMIT_REPLACED("source-destination-limit-replaced"),
+        SOURCE_REPORTING_ORIGIN_LIMIT("source-reporting-origin-limit"),
+        SOURCE_REPORTING_ORIGIN_PER_SITE_LIMIT("source-reporting-origin-per-site-limit"),
+        SOURCE_TRIGGER_STATE_CARDINALITY_LIMIT("source-trigger-state-cardinality-limit"),
 
         TRIGGER_AGGREGATE_DEDUPLICATED("trigger-aggregate-deduplicated"),
         TRIGGER_AGGREGATE_INSUFFICIENT_BUDGET("trigger-aggregate-insufficient-budget"),
@@ -92,7 +96,8 @@ public class DebugReportApi {
         TRIGGER_AGGREGATE_EXCESSIVE_REPORTS("trigger-aggregate-excessive-reports"),
         TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED("trigger-event-report-window-not-started"),
         TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA("trigger-event-no-matching-trigger-data"),
-        HEADER_PARSING_ERROR("header-parsing-error");
+        HEADER_PARSING_ERROR("header-parsing-error"),
+        TRIGGER_AGGREGATE_INSUFFICIENT_NAMED_BUDGET("trigger-aggregate-insufficient-named-budget");
 
         private final String mValue;
 
@@ -120,6 +125,7 @@ public class DebugReportApi {
     public interface Body {
         String ATTRIBUTION_DESTINATION = "attribution_destination";
         String LIMIT = "limit";
+        String NAME = "name";
         String RANDOMIZED_TRIGGER_RATE = "randomized_trigger_rate";
         String SCHEDULED_REPORT_TIME = "scheduled_report_time";
         String SOURCE_DEBUG_KEY = "source_debug_key";
@@ -143,7 +149,6 @@ public class DebugReportApi {
 
     private final Context mContext;
     private final Flags mFlags;
-    private final DatastoreManager mDatastoreManager;
     private final EventReportWindowCalcDelegate mEventReportWindowCalcDelegate;
     private final SourceNoiseHandler mSourceNoiseHandler;
 
@@ -155,217 +160,84 @@ public class DebugReportApi {
                 new SourceNoiseHandler(flags));
     }
 
-    // TODO(b/292009320): Keep only one constructor in DebugReportApi
     @VisibleForTesting
-    DebugReportApi(
+    public DebugReportApi(
             Context context,
             Flags flags,
             EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
             SourceNoiseHandler sourceNoiseHandler) {
         mContext = context;
         mFlags = flags;
-        mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
         mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
         mSourceNoiseHandler = sourceNoiseHandler;
-    }
-
-    @VisibleForTesting
-    public DebugReportApi(
-            Context context,
-            Flags flags,
-            EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
-            SourceNoiseHandler sourceNoiseHandler,
-            DatastoreManager datastoreManager) {
-        mContext = context;
-        mFlags = flags;
-        mEventReportWindowCalcDelegate = eventReportWindowCalcDelegate;
-        mSourceNoiseHandler = sourceNoiseHandler;
-        mDatastoreManager = datastoreManager;
-    }
-
-    /** Schedules the Source Success Debug Report */
-    public void scheduleSourceSuccessDebugReport(
-            Source source,
-            IMeasurementDao dao,
-            @Nullable Map<String, String> additionalBodyParams) {
-        if (isSourceDebugFlagDisabled(Type.SOURCE_SUCCESS.getValue())) {
-            return;
-        }
-        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_SUCCESS.getValue())) {
-            return;
-        }
-        if (!isSourcePermissionGranted(source)) {
-            LoggerFactory.getMeasurementLogger()
-                    .d("Skipping debug report %s", Type.SOURCE_SUCCESS.getValue());
-            return;
-        }
-        scheduleReport(
-                Type.SOURCE_SUCCESS.getValue(),
-                generateSourceDebugReportBody(source, additionalBodyParams),
-                source.getEnrollmentId(),
-                source.getRegistrationOrigin(),
-                source.getRegistrant(),
-                dao);
     }
 
     /** Schedules the Source Destination limit Debug Report */
     public void scheduleSourceDestinationLimitDebugReport(
             Source source, String limit, IMeasurementDao dao) {
         scheduleSourceDestinationLimitDebugReport(
-                source, limit, Type.SOURCE_DESTINATION_LIMIT.getValue(), dao);
+                source, limit, Type.SOURCE_DESTINATION_LIMIT, dao);
     }
 
     /** Schedules the Source Destination rate-limit Debug Report */
     public void scheduleSourceDestinationPerMinuteRateLimitDebugReport(
             Source source, String limit, IMeasurementDao dao) {
         scheduleSourceDestinationLimitDebugReport(
-                source, limit, Type.SOURCE_DESTINATION_RATE_LIMIT.getValue(), dao);
+                source, limit, Type.SOURCE_DESTINATION_RATE_LIMIT, dao);
     }
 
     /** Schedules the Source Destination per day rate-limit Debug Report */
     public void scheduleSourceDestinationPerDayRateLimitDebugReport(
             Source source, String limit, IMeasurementDao dao) {
         scheduleSourceDestinationLimitDebugReport(
-                source, limit, Type.SOURCE_DESTINATION_PER_DAY_RATE_LIMIT.getValue(), dao);
-    }
-
-    /** Schedules the Source Noised Debug Report */
-    public void scheduleSourceNoisedDebugReport(
-            Source source,
-            IMeasurementDao dao,
-            @Nullable Map<String, String> additionalDebugReportParams) {
-        if (isSourceDebugFlagDisabled(Type.SOURCE_NOISED.getValue())) {
-            return;
-        }
-        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_NOISED.getValue())) {
-            return;
-        }
-        if (!isSourcePermissionGranted(source)) {
-            LoggerFactory.getMeasurementLogger()
-                    .d("Skipping debug report %s", Type.SOURCE_NOISED.getValue());
-            return;
-        }
-        scheduleReport(
-                Type.SOURCE_NOISED.getValue(),
-                generateSourceDebugReportBody(source, additionalDebugReportParams),
-                source.getEnrollmentId(),
-                source.getRegistrationOrigin(),
-                source.getRegistrant(),
-                dao);
-    }
-
-    /** Schedules Source Storage Limit Debug Report */
-    public void scheduleSourceStorageLimitDebugReport(
-            Source source, String limit, IMeasurementDao dao) {
-        if (isSourceDebugFlagDisabled(Type.SOURCE_STORAGE_LIMIT.getValue())) {
-            return;
-        }
-        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_STORAGE_LIMIT.getValue())) {
-            return;
-        }
-        if (!isSourcePermissionGranted(source)) {
-            LoggerFactory.getMeasurementLogger()
-                    .d("Skipping debug report %s", Type.SOURCE_STORAGE_LIMIT.getValue());
-            return;
-        }
-        scheduleReport(
-                Type.SOURCE_STORAGE_LIMIT.getValue(),
-                generateSourceDebugReportBody(source, Map.of(Body.LIMIT, String.valueOf(limit))),
-                source.getEnrollmentId(),
-                source.getRegistrationOrigin(),
-                source.getRegistrant(),
-                dao);
-    }
-
-    /** Schedules Source Flexible Event API Debug Report */
-    public void scheduleSourceFlexibleEventReportApiDebugReport(
-            Source source, IMeasurementDao dao) {
-        if (isSourceDebugFlagDisabled(Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR.getValue())) {
-            return;
-        }
-        if (isAdTechNotOptIn(
-                source.isDebugReporting(),
-                Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR.getValue())) {
-            return;
-        }
-        if (!isSourcePermissionGranted(source)) {
-            LoggerFactory.getMeasurementLogger()
-                    .d(
-                            "Skipping debug report %s",
-                            Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR.getValue());
-            return;
-        }
-        scheduleReport(
-                Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR.getValue(),
-                generateSourceDebugReportBody(source, null),
-                source.getEnrollmentId(),
-                source.getRegistrationOrigin(),
-                source.getRegistrant(),
-                dao);
+                source, limit, Type.SOURCE_DESTINATION_PER_DAY_RATE_LIMIT, dao);
     }
 
     /** Schedules Source Attribution Scope Debug Report */
-    public void scheduleAttributionScopeDebugReport(
+    public DebugReportApi.Type scheduleAttributionScopeDebugReport(
             Source source, Source.AttributionScopeValidationResult result, IMeasurementDao dao) {
-        String type = null;
-        Map<String, String> additionalBodyParams = new HashMap<>();
+        DebugReportApi.Type type = null;
+        Map<String, Object> additionalBodyParams = new HashMap<>();
         switch (result) {
             case VALID -> {
                 // No-op.
             }
             case INVALID_MAX_EVENT_STATES_LIMIT -> {
-                type = Type.SOURCE_MAX_EVENT_STATES_LIMIT.getValue();
+                type = Type.SOURCE_MAX_EVENT_STATES_LIMIT;
                 additionalBodyParams.put(Body.LIMIT, String.valueOf(source.getMaxEventStates()));
             }
             case INVALID_INFORMATION_GAIN_LIMIT -> {
-                type = Type.SOURCE_SCOPES_CHANNEL_CAPACITY_LIMIT.getValue();
+                type = Type.SOURCE_SCOPES_CHANNEL_CAPACITY_LIMIT;
                 additionalBodyParams.put(
-                        Body.LIMIT,
-                        String.valueOf(source.getAttributionScopeInfoGainThreshold(mFlags)));
+                        Body.LIMIT, source.getAttributionScopeInfoGainThreshold(mFlags));
             }
         }
         if (type == null) {
-            return;
+            return null;
         }
-        if (isSourceDebugFlagDisabled(type)) {
-            return;
-        }
-        if (isAdTechNotOptIn(source.isDebugReporting(), type)) {
-            return;
-        }
-        if (!isSourcePermissionGranted(source)) {
-            LoggerFactory.getMeasurementLogger().d("Skipping debug report %s", type);
-            return;
-        }
-        scheduleReport(
-                type,
-                generateSourceDebugReportBody(source, additionalBodyParams),
-                source.getEnrollmentId(),
-                source.getRegistrationOrigin(),
-                source.getRegistrant(),
-                dao);
+        scheduleSourceReport(source, type, additionalBodyParams, dao);
+        return type;
     }
 
-    /** Schedules the Source Unknown Error Debug Report */
-    public void scheduleSourceUnknownErrorDebugReport(Source source, IMeasurementDao dao) {
-        if (isSourceDebugFlagDisabled(Type.SOURCE_UNKNOWN_ERROR.getValue())) {
-            return;
+    /** Determines if scheduling the Trigger Report is allowed */
+    private boolean isTriggerReportAllowed(
+            Trigger trigger, DebugReportApi.Type type, @Nullable Source source) {
+        Objects.requireNonNull(trigger, "trigger cannot be null");
+        Objects.requireNonNull(type, "type cannot be null");
+
+        if (isTriggerDebugFlagDisabled(type)) {
+            return false;
         }
-        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_UNKNOWN_ERROR.getValue())) {
-            return;
+        if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
+            return false;
         }
-        if (!isSourcePermissionGranted(source)) {
-            LoggerFactory.getMeasurementLogger()
-                    .d("Skipping debug report %s", Type.SOURCE_UNKNOWN_ERROR.getValue());
-            return;
+
+        if (!isSourceAndTriggerPermissionsGranted(source, trigger)) {
+            LoggerFactory.getMeasurementLogger().d("Skipping trigger debug report %s", type);
+            return false;
         }
-        scheduleReport(
-                Type.SOURCE_UNKNOWN_ERROR.getValue(),
-                generateSourceDebugReportBody(source, null),
-                source.getEnrollmentId(),
-                source.getRegistrationOrigin(),
-                source.getRegistrant(),
-                dao);
+
+        return true;
     }
 
     /**
@@ -373,15 +245,9 @@ public class DebugReportApi {
      * doesn't have related source.
      */
     public void scheduleTriggerNoMatchingSourceDebugReport(
-            Trigger trigger, IMeasurementDao dao, String type) throws DatastoreException {
-        if (isTriggerDebugFlagDisabled(type)) {
-            return;
-        }
-        if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
-            return;
-        }
-        if (!isTriggerPermissionGranted(trigger)) {
-            LoggerFactory.getMeasurementLogger().d("Skipping trigger debug report %s", type);
+            Trigger trigger, IMeasurementDao dao, DebugReportApi.Type type)
+            throws DatastoreException {
+        if (!isTriggerReportAllowed(trigger, type, /* source= */ null)) {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -401,16 +267,9 @@ public class DebugReportApi {
             Trigger trigger,
             @Nullable String limit,
             IMeasurementDao dao,
-            String type)
+            DebugReportApi.Type type)
             throws DatastoreException {
-        if (isTriggerDebugFlagDisabled(type)) {
-            return;
-        }
-        if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
-            return;
-        }
-        if (!isSourceAndTriggerPermissionsGranted(source, trigger)) {
-            LoggerFactory.getMeasurementLogger().d("Skipping trigger debug report %s", type);
+        if (!isTriggerReportAllowed(trigger, type, source)) {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -418,6 +277,44 @@ public class DebugReportApi {
         scheduleReport(
                 type,
                 generateTriggerDebugReportBody(source, trigger, limit, debugKeyPair, false),
+                source.getEnrollmentId(),
+                trigger.getRegistrationOrigin(),
+                source.getRegistrant(),
+                dao);
+    }
+
+    /**
+     * Schedules Trigger Debug Reports with/without limit and bucket, pass in Type for different
+     * types.
+     */
+    public void scheduleTriggerDebugReport(
+            Source source,
+            Trigger trigger,
+            String limit,
+            String budgetName,
+            IMeasurementDao dao,
+            DebugReportApi.Type type)
+            throws DatastoreException {
+        Objects.requireNonNull(source, "source cannot be null");
+        Objects.requireNonNull(trigger, "trigger cannot be null");
+        Objects.requireNonNull(limit, "limit cannot be null");
+        Objects.requireNonNull(budgetName, "budgetName cannot be null");
+        Objects.requireNonNull(dao, "dao cannot be null");
+        Objects.requireNonNull(type, "type cannot be null");
+        if (!isTriggerReportAllowed(trigger, type, source)) {
+            return;
+        }
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                new DebugKeyAccessor(dao).getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        scheduleReport(
+                type,
+                generateTriggerDebugReportBody(
+                        source,
+                        trigger,
+                        limit,
+                        budgetName,
+                        debugKeyPair,
+                        /* is TriggerNoMatchingSource= */ false),
                 source.getEnrollmentId(),
                 trigger.getRegistrationOrigin(),
                 source.getRegistrant(),
@@ -433,16 +330,9 @@ public class DebugReportApi {
             Trigger trigger,
             UnsignedLong triggerData,
             IMeasurementDao dao,
-            String type)
+            DebugReportApi.Type type)
             throws DatastoreException {
-        if (isTriggerDebugFlagDisabled(type)) {
-            return;
-        }
-        if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
-            return;
-        }
-        if (!isSourceAndTriggerPermissionsGranted(source, trigger)) {
-            LoggerFactory.getMeasurementLogger().d("Skipping trigger debug report %s", type);
+        if (!isTriggerReportAllowed(trigger, type, source)) {
             return;
         }
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -459,11 +349,11 @@ public class DebugReportApi {
 
     /** Schedules the Source Destination limit type Debug Report */
     private void scheduleSourceDestinationLimitDebugReport(
-            Source source, String limit, String type, IMeasurementDao dao) {
-        if (isSourceDebugFlagDisabled(Type.SOURCE_DESTINATION_LIMIT.getValue())) {
+            Source source, String limit, Type type, IMeasurementDao dao) {
+        if (isSourceDebugFlagDisabled(Type.SOURCE_DESTINATION_LIMIT)) {
             return;
         }
-        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_DESTINATION_LIMIT.getValue())) {
+        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_DESTINATION_LIMIT)) {
             return;
         }
         try {
@@ -503,7 +393,7 @@ public class DebugReportApi {
             body.put(Body.HEADER, headerName);
             body.put(Body.VALUE, originalHeader == null ? "null" : originalHeader);
             scheduleReport(
-                    Type.HEADER_PARSING_ERROR.getValue(),
+                    Type.HEADER_PARSING_ERROR,
                     body,
                     enrollmentId,
                     registrationOrigin,
@@ -511,8 +401,68 @@ public class DebugReportApi {
                     dao);
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
-                    .e(e, "Json error in debug report %s", Type.HEADER_PARSING_ERROR.getValue());
+                    .e(e, "Json error in debug report %s", Type.HEADER_PARSING_ERROR);
         }
+    }
+
+    /**
+     * Schedules the Source Debug Report to be sent
+     *
+     * @param source The source
+     * @param type The type of the debug report
+     * @param additionalBodyParams Additional parameters to add to the body of the debug report
+     * @param dao Measurement DAO
+     */
+    public void scheduleSourceReport(
+            Source source,
+            Type type,
+            @Nullable Map<String, Object> additionalBodyParams,
+            IMeasurementDao dao) {
+        Objects.requireNonNull(source, "source cannot be null");
+        Objects.requireNonNull(type, "type cannot be null");
+        Objects.requireNonNull(dao, "dao cannot be null");
+        String enrollmentId = source.getEnrollmentId();
+        Objects.requireNonNull(enrollmentId, "source enrollmentId cannot be null");
+        JSONObject body = generateSourceDebugReportBody(source, additionalBodyParams);
+        Objects.requireNonNull(body, "debug report body cannot be null");
+
+        if (isSourceDebugFlagDisabled(type)) {
+            return;
+        }
+        if (isAdTechNotOptIn(source.isDebugReporting(), type)) {
+            return;
+        }
+        if (!isSourcePermissionGranted(source)) {
+            LoggerFactory.getMeasurementLogger().d("Skipping source debug report %s", type);
+            return;
+        }
+        if (body.length() == 0) {
+            LoggerFactory.getMeasurementLogger().d("Empty debug report found %s", type);
+            return;
+        }
+        if (enrollmentId.isEmpty()) {
+            LoggerFactory.getMeasurementLogger().d("Empty enrollment found %s", type);
+            return;
+        }
+
+        DebugReport debugReport =
+                new DebugReport.Builder()
+                        .setId(UUID.randomUUID().toString())
+                        .setType(type.getValue())
+                        .setBody(body)
+                        .setEnrollmentId(enrollmentId)
+                        .setRegistrationOrigin(source.getRegistrationOrigin())
+                        .setInsertionTime(System.currentTimeMillis())
+                        .setRegistrant(source.getRegistrant())
+                        .build();
+        try {
+            dao.insertDebugReport(debugReport);
+        } catch (DatastoreException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Failed to insert source debug report %s", type);
+        }
+
+        VerboseDebugReportingJobService.scheduleIfNeeded(mContext, /* forceSchedule= */ false);
     }
 
     /**
@@ -526,17 +476,17 @@ public class DebugReportApi {
      * @param registrant App Registrant
      */
     private void scheduleReport(
-            @NonNull String type,
-            @NonNull JSONObject body,
-            @NonNull String enrollmentId,
-            @NonNull Uri registrationOrigin,
+            Type type,
+            JSONObject body,
+            String enrollmentId,
+            Uri registrationOrigin,
             @Nullable Uri registrant,
-            @NonNull IMeasurementDao dao) {
+            IMeasurementDao dao) {
         Objects.requireNonNull(type);
         Objects.requireNonNull(body);
         Objects.requireNonNull(enrollmentId);
         Objects.requireNonNull(dao);
-        if (type.isEmpty() || body.length() == 0) {
+        if (body.length() == 0) {
             LoggerFactory.getMeasurementLogger().d("Empty debug report found %s", type);
             return;
         }
@@ -548,7 +498,7 @@ public class DebugReportApi {
         DebugReport debugReport =
                 new DebugReport.Builder()
                         .setId(UUID.randomUUID().toString())
-                        .setType(type)
+                        .setType(type.getValue())
                         .setBody(body)
                         .setEnrollmentId(enrollmentId)
                         .setRegistrationOrigin(registrationOrigin)
@@ -618,8 +568,10 @@ public class DebugReportApi {
      * Check AdId and ArDebug permissions for both source and trigger. Return true if all of them
      * are not in {@link PermissionState#DENIED} state.
      */
-    private boolean isSourceAndTriggerPermissionsGranted(Source source, Trigger trigger) {
-        return isSourcePermissionGranted(source) && isTriggerPermissionGranted(trigger);
+    private boolean isSourceAndTriggerPermissionsGranted(@Nullable Source source, Trigger trigger) {
+        return source == null
+                ? isTriggerPermissionGranted(trigger)
+                : (isSourcePermissionGranted(source) && isTriggerPermissionGranted(trigger));
     }
 
     private boolean isSourcePermissionGranted(Source source) {
@@ -633,7 +585,7 @@ public class DebugReportApi {
     }
 
     /** Get is Ad tech not op-in and log */
-    private boolean isAdTechNotOptIn(boolean optIn, String type) {
+    private boolean isAdTechNotOptIn(boolean optIn, DebugReportApi.Type type) {
         if (!optIn) {
             LoggerFactory.getMeasurementLogger()
                     .d("Ad-tech not opt-in. Skipping debug report %s", type);
@@ -643,7 +595,7 @@ public class DebugReportApi {
 
     /** Generates source debug report body */
     private JSONObject generateSourceDebugReportBody(
-            Source source, @Nullable Map<String, String> additionalBodyParams) {
+            Source source, @Nullable Map<String, Object> additionalBodyParams) {
         JSONObject body = new JSONObject();
         try {
             body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
@@ -651,7 +603,7 @@ public class DebugReportApi {
             body.put(Body.SOURCE_SITE, generateSourceSite(source));
             body.put(Body.SOURCE_DEBUG_KEY, source.getDebugKey());
             if (additionalBodyParams != null) {
-                for (Map.Entry<String, String> entry : additionalBodyParams.entrySet()) {
+                for (Map.Entry<String, Object> entry : additionalBodyParams.entrySet()) {
                     body.put(entry.getKey(), entry.getValue());
                 }
             }
@@ -709,6 +661,33 @@ public class DebugReportApi {
         return body;
     }
 
+    /** Generates trigger debug report body */
+    private JSONObject generateTriggerDebugReportBody(
+            Source source,
+            Trigger trigger,
+            String limit,
+            String budgetName,
+            Pair<UnsignedLong, UnsignedLong> debugKeyPair,
+            boolean isTriggerNoMatchingSource) {
+        JSONObject body = new JSONObject();
+        try {
+            body.put(Body.ATTRIBUTION_DESTINATION, trigger.getAttributionDestinationBaseUri());
+            body.put(Body.TRIGGER_DEBUG_KEY, debugKeyPair.second);
+            if (isTriggerNoMatchingSource) {
+                return body;
+            }
+            body.put(Body.LIMIT, limit);
+            body.put(Body.NAME, budgetName);
+            body.put(Body.SOURCE_DEBUG_KEY, debugKeyPair.first);
+            body.put(Body.SOURCE_EVENT_ID, source.getEventId().toString());
+            body.put(Body.SOURCE_SITE, generateSourceSite(source));
+        } catch (JSONException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(e, "Json error while generating trigger debug report body.");
+        }
+        return body;
+    }
+
     /**
      * Generates trigger debug report body with all fields in event-level attribution report. Used
      * for trigger-low-priority, trigger-event-excessive-reports debug reports.
@@ -751,7 +730,7 @@ public class DebugReportApi {
     }
 
     /** Checks flags for source debug reports. */
-    private boolean isSourceDebugFlagDisabled(String type) {
+    private boolean isSourceDebugFlagDisabled(DebugReportApi.Type type) {
         if (!mFlags.getMeasurementEnableDebugReport()
                 || !mFlags.getMeasurementEnableSourceDebugReport()) {
             LoggerFactory.getMeasurementLogger()
@@ -762,7 +741,7 @@ public class DebugReportApi {
     }
 
     /** Checks flags for trigger debug reports. */
-    private boolean isTriggerDebugFlagDisabled(String type) {
+    private boolean isTriggerDebugFlagDisabled(DebugReportApi.Type type) {
         if (!mFlags.getMeasurementEnableDebugReport()
                 || !mFlags.getMeasurementEnableTriggerDebugReport()) {
             LoggerFactory.getMeasurementLogger()

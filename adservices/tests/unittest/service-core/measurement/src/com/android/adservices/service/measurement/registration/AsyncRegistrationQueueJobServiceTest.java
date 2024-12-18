@@ -36,6 +36,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -52,6 +53,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.MeasurementJobServiceTestCase;
+import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
 import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
@@ -65,11 +67,12 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
+import org.mockito.Mock;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.CallsRealMethods;
 
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @SpyStatic(AsyncRegistrationQueueJobService.class)
@@ -79,13 +82,15 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
+@MockStatic(DebugReportingJobService.class)
 public final class AsyncRegistrationQueueJobServiceTest
         extends MeasurementJobServiceTestCase<AsyncRegistrationQueueJobService> {
     private static final int MEASUREMENT_ASYNC_REGISTRATION_JOB_ID =
             MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId();
-    private static final long WAIT_IN_MILLIS = 5_000L;
     private static final long JOB_TRIGGER_MIN_DELAY_MS = TimeUnit.MINUTES.toMillis(2);
     private static final long JOB_TRIGGER_MAX_DELAY_MS = TimeUnit.MINUTES.toMillis(5);
+
+    @Mock private JobInfo mMockJobInfo;
 
     @Override
     protected AsyncRegistrationQueueJobService getSpiedService() {
@@ -105,6 +110,10 @@ public final class AsyncRegistrationQueueJobServiceTest
                 .thenReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
         when(mMockJobParameters.getJobId())
                 .thenReturn(AdServicesJobInfo.MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId());
+        when(mMockJobInfo.getTriggerContentUpdateDelay()).thenReturn(JOB_TRIGGER_MIN_DELAY_MS);
+        when(mMockJobInfo.getTriggerContentMaxDelay()).thenReturn(JOB_TRIGGER_MAX_DELAY_MS);
+        ExtendedMockito.doNothing()
+                .when(() -> DebugReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
     }
 
     @Test
@@ -116,6 +125,9 @@ public final class AsyncRegistrationQueueJobServiceTest
                     onStartJob_killSwitchOn();
 
                     verifyBackgroundJobsSkipLogged(mSpyLogger, callback);
+                    ExtendedMockito.verify(
+                            () -> DebugReportingJobService.scheduleIfNeeded(any(), eq(false)),
+                            never());
                 });
     }
 
@@ -131,7 +143,9 @@ public final class AsyncRegistrationQueueJobServiceTest
 
                     onStartJob_killSwitchOff();
 
-                    verify(mSpyLogger, timeout(WAIT_IN_MILLIS)).recordOnStartJob(anyInt());
+                    verify(mSpyLogger).recordOnStartJob(anyInt());
+                    ExtendedMockito.verify(
+                            () -> DebugReportingJobService.scheduleIfNeeded(any(), eq(false)));
                 });
     }
 
@@ -149,15 +163,16 @@ public final class AsyncRegistrationQueueJobServiceTest
 
                     // Execute
                     mSpyService.onStartJob(mMockJobParameters);
+                    mSpyService.getFutureForTesting().get();
 
                     // Verify before executing again to make sure the lock has been unlocked
                     ExtendedMockito.verify(
                             () ->
                                     AsyncRegistrationQueueJobService.scheduleIfNeeded(
-                                            any(), eq(true)),
-                            timeout(WAIT_IN_MILLIS).atLeast(1));
+                                            any(), eq(true)));
 
                     boolean result = mSpyService.onStartJob(mMockJobParameters);
+                    mSpyService.getFutureForTesting().get();
 
                     // Validate the job ran successfully twice
                     assertTrue(result);
@@ -166,9 +181,12 @@ public final class AsyncRegistrationQueueJobServiceTest
                             () ->
                                     AsyncRegistrationQueueJobService.scheduleIfNeeded(
                                             any(), eq(true)),
-                            timeout(WAIT_IN_MILLIS).atLeast(2));
+                            times(2));
                     verify(mMockJobScheduler, never())
                             .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+                    ExtendedMockito.verify(
+                            () -> DebugReportingJobService.scheduleIfNeeded(any(), eq(false)),
+                            times(2));
                 });
     }
 
@@ -183,6 +201,9 @@ public final class AsyncRegistrationQueueJobServiceTest
                     // Verify logging has not happened even though logging is enabled because this
                     // field is not logged
                     verifyLoggingNotHappened(mSpyLogger);
+                    ExtendedMockito.verify(
+                            () -> DebugReportingJobService.scheduleIfNeeded(any(), eq(false)),
+                            never());
                 });
     }
 
@@ -203,18 +224,20 @@ public final class AsyncRegistrationQueueJobServiceTest
 
                     // Execute
                     boolean result = mSpyService.onStartJob(mMockJobParameters);
+                    mSpyService.getFutureForTesting().get();
 
                     // Validate, reschedule job with jobFinished
                     assertTrue(result);
-                    verify(mSpyLogger, timeout(WAIT_IN_MILLIS))
+                    verify(mSpyLogger)
                             .recordJobFinished(
                                     eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID),
                                     /* isSuccessful= */ eq(false),
                                     /* shouldRetry= */ eq(true));
-                    verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1))
-                            .jobFinished(any(), eq(/* wantsReschedule= */ true));
+                    verify(mSpyService).jobFinished(any(), eq(/* wantsReschedule= */ true));
                     verify(mSpyService, never()).scheduleImmediately(any());
                     verify(mMockJobScheduler, never()).schedule(any());
+                    ExtendedMockito.verify(
+                            () -> DebugReportingJobService.scheduleIfNeeded(any(), eq(false)));
                 });
     }
 
@@ -235,10 +258,11 @@ public final class AsyncRegistrationQueueJobServiceTest
 
                     // Execute
                     boolean result = mSpyService.onStartJob(mMockJobParameters);
+                    mSpyService.getFutureForTesting().get();
 
                     // Validate, do not reschedule with jobFinished, but reschedule manually
                     assertTrue(result);
-                    verify(mSpyLogger, timeout(WAIT_IN_MILLIS))
+                    verify(mSpyLogger)
                             .recordJobFinished(
                                     eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID),
                                     /* isSuccessful= */ eq(true),
@@ -248,8 +272,10 @@ public final class AsyncRegistrationQueueJobServiceTest
                             () ->
                                     AsyncRegistrationQueueJobService.scheduleIfNeeded(
                                             any(), eq(true)),
-                            timeout(WAIT_IN_MILLIS).atLeast(1));
+                            times(1));
                     verify(mSpyService, never()).scheduleImmediately(any());
+                    ExtendedMockito.verify(
+                            () -> DebugReportingJobService.scheduleIfNeeded(any(), eq(false)));
                 });
     }
 
@@ -259,6 +285,7 @@ public final class AsyncRegistrationQueueJobServiceTest
                 () -> {
                     // Setup
                     disableKillSwitch();
+                    doNothing().when(mSpyService).scheduleImmediately(any());
 
                     // Pending records
                     ExtendedMockito.doReturn(
@@ -269,17 +296,19 @@ public final class AsyncRegistrationQueueJobServiceTest
 
                     // Execute
                     boolean result = mSpyService.onStartJob(mMockJobParameters);
+                    mSpyService.getFutureForTesting().get();
 
                     // Validate, do not reschedule with jobFinished, but reschedule immediately
                     assertTrue(result);
-                    verify(mSpyLogger, timeout(WAIT_IN_MILLIS))
+                    verify(mSpyLogger)
                             .recordJobFinished(
                                     eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID),
                                     /* isSuccessful= */ eq(true),
                                     /* shouldRetry= */ eq(true));
                     verify(mSpyService, never()).jobFinished(any(), anyBoolean());
-                    verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1))
-                            .scheduleImmediately(any());
+                    verify(mSpyService).scheduleImmediately(any());
+                    ExtendedMockito.verify(
+                            () -> DebugReportingJobService.scheduleIfNeeded(any(), eq(false)));
                 });
     }
 
@@ -295,8 +324,7 @@ public final class AsyncRegistrationQueueJobServiceTest
 
         // Validate jobInfo params to run immediately
         ArgumentCaptor<JobInfo> captorJobInfo = ArgumentCaptor.forClass(JobInfo.class);
-        verify(mMockJobScheduler, timeout(WAIT_IN_MILLIS).times(1))
-                .schedule(captorJobInfo.capture());
+        verify(mMockJobScheduler, times(1)).schedule(captorJobInfo.capture());
         JobInfo jobInfo = captorJobInfo.getValue();
         assertNotNull(jobInfo);
         assertNull(jobInfo.getTriggerContentUris());
@@ -430,8 +458,7 @@ public final class AsyncRegistrationQueueJobServiceTest
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> AsyncRegistrationQueueJobService.schedule(any(), any()),
-                            timeout(WAIT_IN_MILLIS));
+                            () -> AsyncRegistrationQueueJobService.schedule(any(), any()));
                     verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
@@ -489,9 +516,8 @@ public final class AsyncRegistrationQueueJobServiceTest
 
                     // Validate
                     ExtendedMockito.verify(
-                            () -> AsyncRegistrationQueueJobService.schedule(any(), any()),
-                            timeout(WAIT_IN_MILLIS).atLeast(1));
-                    verify(mMockJobScheduler, timeout(WAIT_IN_MILLIS).times(1))
+                            () -> AsyncRegistrationQueueJobService.schedule(any(), any()));
+                    verify(mMockJobScheduler)
                             .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
                 });
     }
@@ -520,8 +546,7 @@ public final class AsyncRegistrationQueueJobServiceTest
                             atLeast(1));
                     ArgumentCaptor<JobInfo> jobInfoArgumentCaptor =
                             ArgumentCaptor.forClass(JobInfo.class);
-                    verify(mMockJobScheduler, timeout(WAIT_IN_MILLIS).times(1))
-                            .schedule(jobInfoArgumentCaptor.capture());
+                    verify(mMockJobScheduler).schedule(jobInfoArgumentCaptor.capture());
                     JobInfo job = jobInfoArgumentCaptor.getValue();
                     assertEquals(JOB_TRIGGER_MIN_DELAY_MS, job.getTriggerContentUpdateDelay());
                     assertEquals(JOB_TRIGGER_MAX_DELAY_MS, job.getTriggerContentMaxDelay());
@@ -534,17 +559,16 @@ public final class AsyncRegistrationQueueJobServiceTest
                 () -> {
                     disableKillSwitch();
 
-                    doAnswer(new AnswersWithDelay(WAIT_IN_MILLIS * 10, new CallsRealMethods()))
+                    doAnswer(new AnswersWithDelay(50000, new CallsRealMethods()))
                             .when(mSpyService)
                             .processAsyncRecords();
                     mSpyService.onStartJob(mMockJobParameters);
-                    Thread.sleep(WAIT_IN_MILLIS);
+                    Thread.sleep(5000);
 
                     assertNotNull(mSpyService.getFutureForTesting());
 
                     boolean onStopJobResult = mSpyService.onStopJob(mMockJobParameters);
-                    verify(mSpyService, timeout(WAIT_IN_MILLIS).times(0))
-                            .jobFinished(any(), anyBoolean());
+                    verify(mSpyService, timeout(5000).times(0)).jobFinished(any(), anyBoolean());
                     assertTrue(onStopJobResult);
                     assertTrue(mSpyService.getFutureForTesting().isCancelled());
                 });
@@ -580,10 +604,11 @@ public final class AsyncRegistrationQueueJobServiceTest
 
                     // Execute
                     boolean result = mSpyService.onStartJob(mMockJobParameters);
+                    mSpyService.getFutureForTesting().get();
 
                     // Validate, do not reschedule with jobFinished, but reschedule immediately
                     assertTrue(result);
-                    verify(mSpyLogger, timeout(WAIT_IN_MILLIS))
+                    verify(mSpyLogger)
                             .recordJobFinished(
                                     eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID),
                                     /* isSuccessful= */ eq(true),
@@ -614,10 +639,11 @@ public final class AsyncRegistrationQueueJobServiceTest
 
                     // Execute
                     boolean result = mSpyService.onStartJob(mMockJobParameters);
+                    mSpyService.getFutureForTesting().get();
 
                     // Validate, do not reschedule with jobFinished, but reschedule immediately
                     assertTrue(result);
-                    verify(mSpyLogger, timeout(WAIT_IN_MILLIS))
+                    verify(mSpyLogger)
                             .recordJobFinished(
                                     eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID),
                                     /* isSuccessful= */ eq(true),
@@ -644,12 +670,11 @@ public final class AsyncRegistrationQueueJobServiceTest
         assertFalse(result);
 
         callback.assertJobFinished();
-        verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1)).jobFinished(any(), eq(false));
-        verify(mMockJobScheduler, timeout(WAIT_IN_MILLIS).times(1))
-                .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+        verify(mSpyService).jobFinished(any(), eq(false));
+        verify(mMockJobScheduler).cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
     }
 
-    private void onStartJob_killSwitchOn() throws Exception {
+    private void onStartJob_killSwitchOn() throws ExecutionException, InterruptedException {
         // Setup
         enableKillSwitch();
 
@@ -658,42 +683,44 @@ public final class AsyncRegistrationQueueJobServiceTest
 
         // Validate
         assertFalse(result);
-        verify(mSpyService, timeout(WAIT_IN_MILLIS).times(1)).jobFinished(any(), eq(false));
-        verify(mMockJobScheduler, timeout(WAIT_IN_MILLIS).times(1))
-                .cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
+        verify(mSpyService).jobFinished(any(), eq(false));
+        verify(mMockJobScheduler).cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
     }
 
-    private void onStartJob_killSwitchOff() throws Exception {
+    private void onStartJob_killSwitchOff() throws ExecutionException, InterruptedException {
         // Setup
         disableKillSwitch();
         ExtendedMockito.doNothing().when(() -> mSpyService.scheduleIfNeeded(any(), anyBoolean()));
 
         // Execute
         boolean result = mSpyService.onStartJob(mMockJobParameters);
+        mSpyService.getFutureForTesting().get();
 
         // Validate
         assertTrue(result);
         ExtendedMockito.verify(
-                () -> mSpyService.scheduleIfNeeded(any(), eq(true)),
-                timeout(WAIT_IN_MILLIS).atLeast(1));
+                () -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), eq(true)));
         verify(mMockJobScheduler, never()).cancel(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB_ID));
     }
 
     private void runWithMocks(TestUtils.RunnableWithThrow execute) throws Exception {
-        Context context = Mockito.mock(Context.class);
-        doReturn(mContext.getPackageName()).when(context).getPackageName();
-        doReturn(mContext.getPackageManager()).when(context).getPackageManager();
         // Setup mock everything in job
         doReturn(Optional.empty()).when(mMockDatastoreManager).runInTransactionWithResult(any());
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
-        doReturn(context).when(mSpyService).getApplicationContext();
-        ExtendedMockito.doReturn(mock(EnrollmentDao.class)).when(() -> EnrollmentDao.getInstance());
+        doReturn(mMockJobInfo)
+                .when(mMockJobScheduler)
+                .getPendingJob(eq(MEASUREMENT_ASYNC_REGISTRATION_JOB.getJobId()));
+        doReturn(mContext).when(mSpyService).getApplicationContext();
+        doReturn(mContext.getPackageName()).when(mSpyService).getPackageName();
+        ExtendedMockito.doReturn(mock(EnrollmentDao.class)).when(EnrollmentDao::getInstance);
         ExtendedMockito.doReturn(mock(AdServicesLoggerImpl.class))
                 .when(AdServicesLoggerImpl::getInstance);
         ExtendedMockito.doReturn(mMockDatastoreManager)
-                .when(() -> DatastoreManagerFactory.getDatastoreManager(any()));
-        mockGetAdServicesJobServiceLogger(mSpyLogger);
+                .when(DatastoreManagerFactory::getDatastoreManager);
+        ExtendedMockito.doReturn(mMockJobInfo)
+                .when(() -> AsyncRegistrationQueueJobService.buildJobInfo(any(), any()));
+        mocker.mockGetAdServicesJobServiceLogger(mSpyLogger);
         // Execute
         execute.run();
     }

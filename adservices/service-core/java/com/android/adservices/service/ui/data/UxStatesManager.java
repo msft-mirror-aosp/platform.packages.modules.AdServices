@@ -15,7 +15,6 @@
  */
 package com.android.adservices.service.ui.data;
 
-import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_EEA_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.UNSUPPORTED_UX;
@@ -29,6 +28,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.FlagsFactory;
@@ -52,8 +52,8 @@ import java.util.Map;
 @RequiresApi(Build.VERSION_CODES.S)
 public class UxStatesManager {
 
-    private static final Object LOCK = new Object();
-    private static volatile UxStatesManager sUxStatesManager;
+    private static final String UX_SHARED_PREFS = "UX_SHARED_PREFERENCES";
+
     private final Map<String, Boolean> mUxFlags;
     private final ConsentManager mConsentManager;
     private final SharedPreferences mUxSharedPreferences;
@@ -70,8 +70,7 @@ public class UxStatesManager {
         mUxFlags = flags.getUxFlags();
         mConsentManager = consentManager;
         mIsEeaDevice = DeviceRegionProvider.isEuDevice(context);
-        mUxSharedPreferences =
-                context.getSharedPreferences("UX_SHARED_PREFERENCES", Context.MODE_PRIVATE);
+        mUxSharedPreferences = getPrefs(context);
     }
 
     private static class UxStatesManagerLazyInstanceHolder {
@@ -197,7 +196,7 @@ public class UxStatesManager {
 
     /** Returns if PAS notification was displayed. */
     private boolean wasPasNotificationDisplayed() {
-        if (getFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)) {
+        if (DebugFlags.getInstance().getConsentNotificationDebugMode()) {
             return getFlag(KEY_PAS_UX_ENABLED);
         }
         return ConsentManager.getInstance().wasPasNotificationDisplayed();
@@ -205,9 +204,15 @@ public class UxStatesManager {
 
     /** Returns if PAS notification was opened. */
     private boolean wasPasNotificationOpened() {
-        if (getFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)) {
+        if (DebugFlags.getInstance().getConsentNotificationDebugMode()) {
             return getFlag(KEY_EEA_PAS_UX_ENABLED);
         }
         return ConsentManager.getInstance().wasPasNotificationOpened();
+    }
+
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings({"AvoidSharedPreferences", "AvoidStaticContext"}) // Legacy usage
+    private static SharedPreferences getPrefs(Context context) {
+        return context.getSharedPreferences(UX_SHARED_PREFS, Context.MODE_PRIVATE);
     }
 }

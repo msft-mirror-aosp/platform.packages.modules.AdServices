@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesCommonManager.MODULE_MEASUREMENT;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_ENABLED;
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN;
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE_COMPAT;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE;
@@ -25,6 +29,7 @@ import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_ACTIVITY_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.ConsentStatus.SERVICE_NOT_ENABLED;
@@ -50,10 +55,9 @@ import static com.android.adservices.service.ui.constants.DebugMessages.SET_AD_S
 import static com.android.adservices.service.ui.constants.DebugMessages.UNAUTHORIZED_CALLER_MESSAGE;
 
 import android.adservices.adid.AdId;
-import android.adservices.common.AdServicesCommonResponse;
+import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStates;
 import android.adservices.common.AdServicesCommonStatesResponse;
-import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesStates;
 import android.adservices.common.CallerMetadata;
@@ -64,12 +68,13 @@ import android.adservices.common.IAdServicesCommonCallback;
 import android.adservices.common.IAdServicesCommonService;
 import android.adservices.common.IAdServicesCommonStatesCallback;
 import android.adservices.common.IEnableAdServicesCallback;
-import android.adservices.common.ISetAdServicesModuleOverridesCallback;
-import android.adservices.common.ISetAdServicesModuleUserChoicesCallback;
+import android.adservices.common.IRequestAdServicesModuleOverridesCallback;
+import android.adservices.common.IRequestAdServicesModuleUserChoicesCallback;
 import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
-import android.adservices.common.NotificationTypeParams;
 import android.adservices.common.UpdateAdIdRequest;
+import android.adservices.common.UpdateAdServicesModuleStatesParams;
+import android.adservices.common.UpdateAdServicesUserChoicesParams;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.content.Context;
@@ -78,13 +83,16 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.RemoteException;
 import android.os.Trace;
+import android.util.SparseIntArray;
 
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdCacheManager;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
@@ -98,7 +106,9 @@ import com.android.adservices.service.ui.UxEngine;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.shared.util.Clock;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -109,7 +119,6 @@ import javax.annotation.Nonnull;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
@@ -121,12 +130,14 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
     private final AdServicesLogger mAdServicesLogger;
     private final Flags mFlags;
+    private final DebugFlags mDebugFlags;
     private final AdIdWorker mAdIdWorker;
     private final Clock mClock;
 
     public AdServicesCommonServiceImpl(
             Context context,
             Flags flags,
+            DebugFlags debugFlags,
             UxEngine uxEngine,
             UxStatesManager uxStatesManager,
             AdIdWorker adIdWorker,
@@ -134,6 +145,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             @NonNull Clock clock) {
         mContext = context;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mUxEngine = uxEngine;
         mUxStatesManager = uxStatesManager;
         mAdIdWorker = adIdWorker;
@@ -218,9 +230,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             return;
                         }
 
-                        SharedPreferences preferences =
-                                mContext.getSharedPreferences(
-                                        ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
+                        SharedPreferences preferences = getPrefs();
 
                         int adServiceEntryPointStatusInt =
                                 adServicesEntryPointEnabled
@@ -284,9 +294,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             ConsentManager consentManager = ConsentManager.getInstance();
             if (!consentManager.wasGaUxNotificationDisplayed()) {
                 // Check Beta notification displayed and user opt-in, we will re-consent
-                SharedPreferences preferences =
-                        mContext.getSharedPreferences(
-                                ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
+                SharedPreferences preferences = getPrefs();
                 // Check the setAdServicesEnabled was called before
                 if (preferences.contains(KEY_ADSERVICES_ENTRY_POINT_STATUS)
                         && consentManager.getConsent().isGiven()) {
@@ -301,7 +309,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         ConsentManager consentManager = ConsentManager.getInstance();
         return (!consentManager.wasGaUxNotificationDisplayed()
                         && !consentManager.wasNotificationDisplayed())
-                || mFlags.getConsentNotificationDebugMode();
+                || mDebugFlags.getConsentNotificationDebugMode();
     }
 
     /** Check ROW device and see if it fit reconsent */
@@ -511,10 +519,9 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     /** Sets AdServices feature states. */
     @Override
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
-    public void setAdServicesModuleOverrides(
-            List<AdServicesModuleState> adServicesModuleStateList,
-            NotificationTypeParams notificationType,
-            ISetAdServicesModuleOverridesCallback callback) {
+    public void requestAdServicesModuleOverrides(
+            UpdateAdServicesModuleStatesParams updateParams,
+            IRequestAdServicesModuleOverridesCallback callback) {
 
         boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
         sBackgroundExecutor.execute(
@@ -525,18 +532,19 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
                             return;
                         }
-                        ConsentManager consentManager = ConsentManager.getInstance();
-                        consentManager.setModuleStates(adServicesModuleStateList);
-                        callback.onResult(
-                                new AdServicesCommonResponse.Builder()
-                                        .setStatusCode(STATUS_SUCCESS)
-                                        .build());
-
-                        // TODO(361411984): Add the notification trigger logic
-
+                        boolean businessLogicMigrationEnabled =
+                                FlagsFactory.getFlags()
+                                        .getAdServicesConsentBusinessLogicMigrationEnabled();
+                        if (!businessLogicMigrationEnabled) {
+                            callback.onFailure(STATUS_KILLSWITCH_ENABLED);
+                            LogUtil.d("Business logic migration flag not enabled");
+                            return;
+                        }
+                        sendNotificationIfNeededAndUpdateState(updateParams);
+                        callback.onSuccess();
                     } catch (Exception e) {
                         LogUtil.e(
-                                "setAdServicesModuleOverrides() failed to complete: "
+                                "requestAdServicesModuleOverrides() failed to complete: "
                                         + e.getMessage());
                         try {
                             callback.onFailure(STATUS_INTERNAL_ERROR);
@@ -547,12 +555,70 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                 });
     }
 
+    private void sendNotificationIfNeededAndUpdateState(
+            UpdateAdServicesModuleStatesParams updateParams) {
+        SparseIntArray moduleStates = updateParams.getModuleStates();
+        int notificationType = updateParams.getNotificationType();
+        ConsentManager consentManager = ConsentManager.getInstance();
+        boolean apiDiff = false;
+        boolean personalizedAdsApiDiff = false;
+        boolean isRenotify = false;
+        boolean isOptedInPersonalizedAdsApisUser = false;
+        boolean isVisibleNotificationType =
+                notificationType != AdServicesCommonManager.NOTIFICATION_NONE;
+
+        for (int i = 0; i < moduleStates.size(); i++) {
+            int key = moduleStates.keyAt(i);
+            int value = moduleStates.valueAt(i);
+            int curState = consentManager.getModuleState(key);
+            if (curState != value) {
+                apiDiff = true;
+                if (key != MODULE_MEASUREMENT) {
+                    personalizedAdsApiDiff = true;
+                    if (consentManager.getUserChoice(key) == USER_CHOICE_OPTED_IN) {
+                        isOptedInPersonalizedAdsApisUser = true;
+                    }
+                }
+                if (consentManager.getUserChoice(key) != USER_CHOICE_UNKNOWN) {
+                    isRenotify = true;
+                }
+            }
+        }
+
+        // Only need notification if APIs changed. Enabling personalized ads APIs requires the full
+        // notification. Otherwise, show limited notification. If user previously opted-out of all
+        // personalized APIs, then don't show notification.
+        if (apiDiff
+                && isVisibleNotificationType
+                && !(personalizedAdsApiDiff && isOptedInPersonalizedAdsApisUser)) {
+            boolean isOngoingNotification =
+                    notificationType == AdServicesCommonManager.NOTIFICATION_ONGOING;
+            // TODO(b/383589378): Reset user choices to unknown for unknown/disabled module states
+            //  after notification is shown.
+            ConsentNotificationJobService.scheduleNotificationV2(
+                    mContext, isRenotify, personalizedAdsApiDiff, isOngoingNotification);
+        } else {
+            List<AdServicesModuleUserChoice> adServicesUserChoiceList = new ArrayList<>();
+            for (int i = 0; i < moduleStates.size(); i++) {
+                int key = moduleStates.keyAt(i);
+                int value = moduleStates.valueAt(i);
+                if (value != MODULE_STATE_ENABLED) {
+                    adServicesUserChoiceList.add(
+                            new AdServicesModuleUserChoice(key, USER_CHOICE_UNKNOWN));
+                }
+            }
+            consentManager.setUserChoices(adServicesUserChoiceList);
+        }
+
+        consentManager.setModuleStates(moduleStates);
+    }
+
     /** Sets AdServices feature user choices. */
     @Override
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
-    public void setAdServicesModuleUserChoices(
-            List<AdServicesModuleUserChoice> adServicesFeatureUserChoiceList,
-            ISetAdServicesModuleUserChoicesCallback callback) {
+    public void requestAdServicesModuleUserChoices(
+            UpdateAdServicesUserChoicesParams updateParams,
+            IRequestAdServicesModuleUserChoicesCallback callback) {
 
         boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
 
@@ -564,20 +630,40 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
                             return;
                         }
-                        ConsentManager consentManager = ConsentManager.getInstance();
-                        consentManager.setUserChoices(adServicesFeatureUserChoiceList);
-                        LogUtil.i("setAdServicesModuleUserChoices");
-                        callback.onResult(
-                                new AdServicesCommonResponse.Builder()
-                                        .setStatusCode(STATUS_SUCCESS)
-                                        .build());
+                        boolean businessLogicMigrationEnabled =
+                                FlagsFactory.getFlags()
+                                        .getAdServicesConsentBusinessLogicMigrationEnabled();
+                        if (!businessLogicMigrationEnabled) {
+                            callback.onFailure(STATUS_KILLSWITCH_ENABLED);
+                            LogUtil.d("Business logic migration flag not enabled");
+                            return;
+                        }
+                        filterAndSetUserChoices(updateParams);
+                        LogUtil.i("requestAdServicesModuleUserChoices");
+                        callback.onSuccess();
 
                     } catch (Exception e) {
                         LogUtil.e(
-                                "setAdServicesModuleUserChoices() failed to complete: "
+                                "requestAdServicesModuleUserChoices() failed to complete: "
                                         + e.getMessage());
                     }
                 });
+    }
+
+    private void filterAndSetUserChoices(UpdateAdServicesUserChoicesParams updateParams) {
+        ConsentManager consentManager = ConsentManager.getInstance();
+        List<AdServicesModuleUserChoice> adServicesFeatureUserChoiceList = new ArrayList<>();
+        for (Map.Entry<Integer, Integer> entry : updateParams.getUserChoiceMap().entrySet()) {
+            // If current user choice is unknown, then set to desired user choice.
+            // If setting to unknown user choice, then it is an explicit decision by the caller that
+            // plans to override any previous user choice.
+            if (consentManager.getUserChoice(entry.getKey()) == USER_CHOICE_UNKNOWN
+                    || entry.getValue() == USER_CHOICE_UNKNOWN) {
+                adServicesFeatureUserChoiceList.add(
+                        new AdServicesModuleUserChoice(entry.getKey(), entry.getValue()));
+            }
+        }
+        consentManager.setUserChoices(adServicesFeatureUserChoiceList);
     }
 
     private int getLatency(CallerMetadata metadata, long serviceStartTime) {
@@ -585,7 +671,13 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         long serviceLatency = mClock.elapsedRealtime() - serviceStartTime;
         // Double it to simulate the return binder time is same to call binder time
         long binderLatency = (serviceStartTime - binderCallStartTimeMillis) * 2;
-
+        LogUtil.v(
+                "binder call start time "
+                        + binderCallStartTimeMillis
+                        + ", servicve Start time "
+                        + serviceStartTime
+                        + ", service latency "
+                        + serviceLatency);
         return (int) (serviceLatency + binderLatency);
     }
 
@@ -621,5 +713,11 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         .setApiEnabled(apiEnabled)
                         .setSuccess(success)
                         .build());
+    }
+
+    @SuppressWarnings("AvoidSharedPreferences") // Legacy usage
+    private SharedPreferences getPrefs() {
+        return mContext.getSharedPreferences(
+                ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
     }
 }

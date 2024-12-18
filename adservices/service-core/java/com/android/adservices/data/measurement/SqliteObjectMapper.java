@@ -359,6 +359,10 @@ public class SqliteObjectMapper {
                 cursor,
                 MeasurementTables.TriggerContract.AGGREGATE_DEBUG_REPORTING,
                 builder::setAggregateDebugReportingString);
+        setTextColumn(
+                cursor,
+                MeasurementTables.TriggerContract.NAMED_BUDGETS,
+                builder::setNamedBudgetsString);
         return builder.build();
     }
 
@@ -421,6 +425,10 @@ public class SqliteObjectMapper {
         setLongColumn(
                 cursor, MeasurementTables.AggregateReport.TRIGGER_TIME, builder::setTriggerTime);
         setTextColumn(cursor, MeasurementTables.AggregateReport.API, builder::setApi);
+        setIntColumn(
+                cursor,
+                MeasurementTables.AggregateReport.AGGREGATABLE_FILTERING_ID_MAX_BYTES,
+                builder::setAggregatableFilteringIdMaxBytes);
         return builder.build();
     }
 
@@ -601,7 +609,7 @@ public class SqliteObjectMapper {
             Function<DataType, BuilderType> setter) {
         int index = cursor.getColumnIndex(column);
         if (index > -1 && !cursor.isNull(index)) {
-            setter.apply(getColVal.apply(index));
+            BuilderType unused = setter.apply(getColVal.apply(index));
         }
     }
 

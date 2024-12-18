@@ -116,10 +116,6 @@ public class AdservicesWorkflows {
                 UiUtils.enableGa(flags);
                 UiUtils.enableU18(flags);
                 break;
-            case RVC_UX:
-                UiUtils.enableGa(flags);
-                UiUtils.enableRvc(flags);
-                break;
         }
 
         UiUtils.setFlipFlow(flags, isV2);
@@ -163,9 +159,6 @@ public class AdservicesWorkflows {
                 UiUtils.enableGa(flags);
                 UiUtils.enableU18(flags);
                 break;
-            case RVC_UX:
-                UiUtils.enableGa(flags);
-                UiUtils.enableRvc(flags);
         }
         startSettingsActivity(context, device, packageName);
         SettingsPages.testSettingsPageConsents(

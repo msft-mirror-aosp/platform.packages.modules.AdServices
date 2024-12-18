@@ -40,6 +40,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.concurrent.Future;
@@ -111,6 +112,8 @@ public final class DebugReportingJobService extends JobService {
      * @param context the context
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
         if (flags.getMeasurementJobDebugReportingKillSwitch()) {
@@ -137,6 +140,8 @@ public final class DebugReportingJobService extends JobService {
         }
     }
 
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         DEBUG_REPORT_JOB_ID,
@@ -165,15 +170,16 @@ public final class DebugReportingJobService extends JobService {
                         "DebugReportingJobService",
                         () -> {
                             DatastoreManager datastoreManager =
-                                    DatastoreManagerFactory.getDatastoreManager(
-                                            getApplicationContext());
+                                    DatastoreManagerFactory.getDatastoreManager();
+                            AndroidTimeSource timeSource = new AndroidTimeSource();
                             new EventReportingJobHandler(
                                             datastoreManager,
                                             FlagsFactory.getFlags(),
                                             AdServicesLoggerImpl.getInstance(),
                                             ReportingStatus.ReportType.DEBUG_EVENT,
                                             ReportingStatus.UploadMethod.REGULAR,
-                                            getApplicationContext())
+                                            getApplicationContext(),
+                                            timeSource)
                                     .setIsDebugInstance(true)
                                     .performScheduledPendingReportsInWindow(0, 0);
                             new AggregateReportingJobHandler(
@@ -184,7 +190,8 @@ public final class DebugReportingJobService extends JobService {
                                             AdServicesLoggerImpl.getInstance(),
                                             ReportingStatus.ReportType.DEBUG_AGGREGATE,
                                             ReportingStatus.UploadMethod.REGULAR,
-                                            getApplicationContext())
+                                            getApplicationContext(),
+                                            timeSource)
                                     .setIsDebugInstance(true)
                                     .performScheduledPendingReportsInWindow(0, 0);
                         });

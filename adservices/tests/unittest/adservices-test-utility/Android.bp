@@ -16,10 +16,38 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
-// NOTE: it doesn't need the AdExtServicesTestUtilityTests counterpart because
-// the infra being test should run on any release.
 android_test {
     name: "AdServicesTestUtilityTests",
+    defaults: ["AdServicesTestUtilityTests-Defaults"],
+    test_suites: [
+        "mts-adservices",
+    ],
+    test_config: "AndroidTest.xml",
+    min_sdk_version: "33",
+}
+
+android_test {
+    name: "AdExtServicesTestUtilityTests",
+    defaults: ["AdServicesTestUtilityTests-Defaults"],
+    libs: [
+        "android.ext.adservices",
+    ],
+    test_suites: [
+        "mts-extservices",
+    ],
+    test_config: "AndroidTest.ExtServices.xml",
+    sdk_version: "module_current",
+    // Currently this test module is failing, which results in low test coverage
+    // The reason is the target test coverage system runs on is different as what this test
+    // configures. Add below line to address the issue.
+    // See b/233124651 for details.
+    compile_multilib: "both",
+    min_sdk_version: "31",
+    max_sdk_version: "32",
+}
+
+java_defaults {
+    name: "AdServicesTestUtilityTests-Defaults",
     srcs: [
         "src/**/*.java",
         "side-less/**/*.java",
@@ -28,6 +56,7 @@ android_test {
     ],
     libs: [
         "framework-adservices-lib", // Needed to test fake ServiceBinder implementations
+        "framework-configinfrastructure.stubs.module_lib",
     ],
     static_libs: [
         "adservices-test-utility",
@@ -38,9 +67,9 @@ android_test {
     defaults: ["adservices-extended-mockito-defaults"],
     sdk_version: "module_current",
     plugins: ["auto_annotation_plugin"],
-    test_config: "AndroidTest.xml",
-    min_sdk_version: "30",
-    target_sdk_version: "31",
+    test_suites: [
+        "general-tests",
+    ],
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
         baseline_filename: "lint-baseline.xml",

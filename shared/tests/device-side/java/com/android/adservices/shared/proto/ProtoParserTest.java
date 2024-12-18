@@ -16,15 +16,23 @@
 
 package com.android.adservices.shared.proto;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PROTO_PARSER_INVALID_PROTO_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.shared.util.ProtoParser.parseBase64EncodedStringToProto;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 
 import android.util.Base64;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import com.google.protobuf.MessageLite;
 
 import org.junit.Test;
+import org.mockito.Mock;
 
 public final class ProtoParserTest extends SharedMockitoTestCase {
     private static final ErrorCodeSampleInterval SAMPLE_RATE =
@@ -35,13 +43,18 @@ public final class ProtoParserTest extends SharedMockitoTestCase {
 
     private static final String PROPERTY_NAME = "Property";
 
+    @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
+
     @Test
     public void parseBase64EncodedStringToProto_success() {
         String encodedStr = getBase64EncodedString(SAMPLE_RATE, Base64.DEFAULT);
 
         ErrorCodeSampleInterval actual =
                 parseBase64EncodedStringToProto(
-                        ErrorCodeSampleInterval.parser(), PROPERTY_NAME, encodedStr);
+                        ErrorCodeSampleInterval.parser(),
+                        mMockAdServicesErrorLogger,
+                        PROPERTY_NAME,
+                        encodedStr);
 
         expect.that(actual).isNotNull();
         expect.that(actual).isEqualTo(SAMPLE_RATE);
@@ -53,7 +66,10 @@ public final class ProtoParserTest extends SharedMockitoTestCase {
 
         ErrorCodeSampleInterval actual =
                 parseBase64EncodedStringToProto(
-                        ErrorCodeSampleInterval.parser(), PROPERTY_NAME, encodedStr);
+                        ErrorCodeSampleInterval.parser(),
+                        mMockAdServicesErrorLogger,
+                        PROPERTY_NAME,
+                        encodedStr);
 
         expect.that(actual).isNotNull();
         expect.that(actual).isEqualTo(SAMPLE_RATE);
@@ -63,16 +79,28 @@ public final class ProtoParserTest extends SharedMockitoTestCase {
     public void parseBase64EncodedStringToProto_incorrectEncodedString() {
         ErrorCodeSampleInterval actual =
                 parseBase64EncodedStringToProto(
-                        ErrorCodeSampleInterval.parser(), PROPERTY_NAME, /* value= */ "xyz");
+                        ErrorCodeSampleInterval.parser(),
+                        mMockAdServicesErrorLogger,
+                        PROPERTY_NAME,
+                        /* value= */ "xyz");
 
         expect.that(actual).isNull();
+        verify(mMockAdServicesErrorLogger)
+                .logErrorWithExceptionInfo(
+                        any(),
+                        eq(
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PROTO_PARSER_INVALID_PROTO_ERROR),
+                        eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON));
     }
 
     @Test
     public void parseBase64EncodedStringToProto_emptyEncodedString() {
         ErrorCodeSampleInterval actual =
                 parseBase64EncodedStringToProto(
-                        ErrorCodeSampleInterval.parser(), PROPERTY_NAME, /* value= */ "");
+                        ErrorCodeSampleInterval.parser(),
+                        mMockAdServicesErrorLogger,
+                        PROPERTY_NAME,
+                        /* value= */ "");
 
         expect.that(actual).isNull();
     }
@@ -81,7 +109,10 @@ public final class ProtoParserTest extends SharedMockitoTestCase {
     public void parseBase64EncodedStringToProto_nullEncodedString() {
         ErrorCodeSampleInterval actual =
                 parseBase64EncodedStringToProto(
-                        ErrorCodeSampleInterval.parser(), PROPERTY_NAME, /* value= */ null);
+                        ErrorCodeSampleInterval.parser(),
+                        mMockAdServicesErrorLogger,
+                        PROPERTY_NAME,
+                        /* value= */ null);
 
         expect.that(actual).isNull();
     }

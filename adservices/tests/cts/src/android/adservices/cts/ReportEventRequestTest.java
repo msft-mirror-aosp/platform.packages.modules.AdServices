@@ -17,22 +17,23 @@
 package android.adservices.cts;
 
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_COMPONENT_SELLER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 import static android.view.KeyEvent.ACTION_DOWN;
 
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.ReportEventRequest;
+import android.platform.test.annotations.RequiresFlagsEnabled;
 import android.view.InputEvent;
 import android.view.KeyEvent;
 
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.flags.Flags;
 
 import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class ReportEventRequestTest extends CtsAdServicesDeviceTestCase {
     private static final long AD_SELECTION_ID = 1234L;
     private static final String INTERACTION_KEY = "click";
@@ -54,11 +55,15 @@ public final class ReportEventRequestTest extends CtsAdServicesDeviceTestCase {
                                 AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, DESTINATIONS)
                         .build();
 
-        expect.that(request.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
-        expect.that(request.getKey()).isEqualTo(INTERACTION_KEY);
-        expect.that(request.getInputEvent()).isNull();
-        expect.that(request.getData()).isEqualTo(mInteractionData);
-        expect.that(request.getReportingDestinations()).isEqualTo(DESTINATIONS);
+        expect.withMessage("AdSelectionId")
+                .that(request.getAdSelectionId())
+                .isEqualTo(AD_SELECTION_ID);
+        expect.withMessage("Event key").that(request.getKey()).isEqualTo(INTERACTION_KEY);
+        expect.withMessage("Null input event").that(request.getInputEvent()).isNull();
+        expect.withMessage("Event data").that(request.getData()).isEqualTo(mInteractionData);
+        expect.withMessage("Reporting destination")
+                .that(request.getReportingDestinations())
+                .isEqualTo(DESTINATIONS);
     }
 
     @Test
@@ -69,11 +74,15 @@ public final class ReportEventRequestTest extends CtsAdServicesDeviceTestCase {
                         .setInputEvent(INPUT_EVENT)
                         .build();
 
-        expect.that(request.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
-        expect.that(request.getKey()).isEqualTo(INTERACTION_KEY);
-        expect.that(request.getInputEvent()).isEqualTo(INPUT_EVENT);
-        expect.that(request.getData()).isEqualTo(mInteractionData);
-        expect.that(request.getReportingDestinations()).isEqualTo(DESTINATIONS);
+        expect.withMessage("AdSelectionId")
+                .that(request.getAdSelectionId())
+                .isEqualTo(AD_SELECTION_ID);
+        expect.withMessage("Event key").that(request.getKey()).isEqualTo(INTERACTION_KEY);
+        expect.withMessage("Input event").that(request.getInputEvent()).isEqualTo(INPUT_EVENT);
+        expect.withMessage("Event data").that(request.getData()).isEqualTo(mInteractionData);
+        expect.withMessage("Reporting destination")
+                .that(request.getReportingDestinations())
+                .isEqualTo(DESTINATIONS);
     }
 
     @Test
@@ -102,12 +111,66 @@ public final class ReportEventRequestTest extends CtsAdServicesDeviceTestCase {
                         .setInputEvent(INPUT_EVENT)
                         .build();
 
-        expect.that(request.getAdSelectionId()).isEqualTo(otherAdSelectionId);
-        expect.that(request.getKey()).isEqualTo(hoverKey);
-        expect.that(request.getInputEvent()).isEqualTo(INPUT_EVENT);
-        expect.that(request.getData()).isEqualTo(otherInteractionData);
-        expect.that(request.getReportingDestinations())
+        expect.withMessage("AdSelectionId")
+                .that(request.getAdSelectionId())
+                .isEqualTo(otherAdSelectionId);
+        expect.withMessage("Event key").that(request.getKey()).isEqualTo(hoverKey);
+        expect.withMessage("Input event").that(request.getInputEvent()).isEqualTo(INPUT_EVENT);
+        expect.withMessage("Event data").that(request.getData()).isEqualTo(otherInteractionData);
+        expect.withMessage("Reporting destination")
+                .that(request.getReportingDestinations())
                 .isEqualTo(FLAG_REPORTING_DESTINATION_SELLER);
+    }
+
+    @Test
+    @RequiresFlagsEnabled(Flags.FLAG_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER)
+    public void testBuildReportEventRequestSuccess_withComponentSellerAsDestination_success() {
+        long otherAdSelectionId = AD_SELECTION_ID + 1;
+        String hoverKey = "hover";
+        String otherInteractionData = "otherInteractionData";
+
+        ReportEventRequest request =
+                new ReportEventRequest.Builder(
+                                AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, DESTINATIONS)
+                        .setAdSelectionId(otherAdSelectionId)
+                        .setKey(hoverKey)
+                        .setData(otherInteractionData)
+                        .setReportingDestinations(FLAG_REPORTING_DESTINATION_COMPONENT_SELLER)
+                        .setInputEvent(INPUT_EVENT)
+                        .build();
+
+        expect.withMessage("AdSelectionId")
+                .that(request.getAdSelectionId())
+                .isEqualTo(otherAdSelectionId);
+        expect.withMessage("Event key").that(request.getKey()).isEqualTo(hoverKey);
+        expect.withMessage("Input event").that(request.getInputEvent()).isEqualTo(INPUT_EVENT);
+        expect.withMessage("Event data").that(request.getData()).isEqualTo(otherInteractionData);
+        expect.withMessage("Reporting destination")
+                .that(request.getReportingDestinations())
+                .isEqualTo(FLAG_REPORTING_DESTINATION_COMPONENT_SELLER);
+    }
+
+    @Test
+    @RequiresFlagsEnabled(Flags.FLAG_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER)
+    public void testBuildReportEventRequestSuccess_withAllDestinationsIncludingComponentSeller() {
+        int allDestinations =
+                FLAG_REPORTING_DESTINATION_SELLER
+                        | FLAG_REPORTING_DESTINATION_BUYER
+                        | FLAG_REPORTING_DESTINATION_COMPONENT_SELLER;
+        ReportEventRequest request =
+                new ReportEventRequest.Builder(
+                                AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, allDestinations)
+                        .build();
+
+        expect.withMessage("AdSelectionId")
+                .that(request.getAdSelectionId())
+                .isEqualTo(AD_SELECTION_ID);
+        expect.withMessage("Event key").that(request.getKey()).isEqualTo(INTERACTION_KEY);
+        expect.withMessage("Null input event").that(request.getInputEvent()).isNull();
+        expect.withMessage("Event data").that(request.getData()).isEqualTo(mInteractionData);
+        expect.withMessage("Reporting destination")
+                .that(request.getReportingDestinations())
+                .isEqualTo(allDestinations);
     }
 
     @Test
@@ -137,16 +200,6 @@ public final class ReportEventRequestTest extends CtsAdServicesDeviceTestCase {
                 () ->
                         new ReportEventRequest.Builder(
                                         AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, 0)
-                                .build());
-    }
-
-    @Test
-    public void testFailsToBuildWithInvalidDestinations() {
-        assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        new ReportEventRequest.Builder(
-                                        AD_SELECTION_ID, INTERACTION_KEY, mInteractionData, 5)
                                 .build());
     }
 

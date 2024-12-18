@@ -34,7 +34,6 @@ import android.annotation.Nullable;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
-import android.content.res.AssetManager;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 
@@ -42,7 +41,6 @@ import com.android.adservices.LogUtil;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.exception.XmlParseException;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.xmlpull.v1.XmlPullParserException;
 
@@ -183,15 +181,14 @@ public final class AppManifestConfigHelper {
         Resources resources =
                 context.getPackageManager().getResourcesForApplication(appPackageName);
         Integer resId =
-                SdkLevel.isAtLeastS()
-                        ? getAdServicesConfigResourceIdOnExistingPackageOnSPlus(
-                                context, appPackageName)
-                        : getAdServicesConfigResourceIdOnRMinus(context, resources, appPackageName);
+                getAdServicesConfigResourceIdOnExistingPackageOnSPlus(context, appPackageName);
 
         return resId != null ? resources.getXml(resId) : null;
     }
 
     @Nullable
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     private static Integer getAdServicesConfigResourceIdOnExistingPackageOnSPlus(
             Context context, String appPackageName) {
         PackageManager pm = context.getPackageManager();
@@ -203,18 +200,6 @@ public final class AppManifestConfigHelper {
             LogUtil.v("getAdServicesConfigResourceIdOnSPlus(%s) failed: %s", appPackageName, e);
             return null;
         }
-    }
-
-    @Nullable
-    private static Integer getAdServicesConfigResourceIdOnRMinus(
-            Context context, Resources resources, String appPackageName)
-            throws NameNotFoundException, XmlPullParserException, IOException {
-        // PackageManager::getProperty(..) API is only available on S+. For R-, we will need to load
-        // app's manifest and parse. See go/rbp-manifest.
-        AssetManager assetManager =
-                context.createPackageContext(appPackageName, /* flags= */ 0).getAssets();
-        XmlResourceParser parser = assetManager.openXmlResourceParser(ANDROID_MANIFEST_FILE);
-        return AndroidManifestConfigParser.getAdServicesConfigResourceId(parser, resources);
     }
 
     private static boolean isAllowedApiAccess(

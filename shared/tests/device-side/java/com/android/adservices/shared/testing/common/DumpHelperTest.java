@@ -31,6 +31,7 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.Test;
 
+import java.io.IOException;
 import java.io.PrintWriter;
 
 public final class DumpHelperTest extends SharedExtendedMockitoTestCase {
@@ -45,6 +46,44 @@ public final class DumpHelperTest extends SharedExtendedMockitoTestCase {
         String dump = dump(pw -> pw.write("I dump(), therefore I am()"));
 
         assertWithMessage("dump()").that(dump).isEqualTo("I dump(), therefore I am()");
+    }
+
+    @Test
+    public void testDump_throwsRuntimeException() throws Exception {
+        Exception cause = new RuntimeException("D'OH!");
+
+        var actual = assertDumpThrowsWhenConsumerThrows(cause);
+
+        expect.withMessage("actual exception").that(actual).isSameInstanceAs(cause);
+    }
+
+    @Test
+    public void testDump_throwsIOException() throws Exception {
+        Exception cause = new IOException("D'OH!");
+
+        var actual = assertDumpThrowsWhenConsumerThrows(cause);
+
+        expect.withMessage("actual exception").that(actual).isSameInstanceAs(cause);
+    }
+
+    @Test
+    public void testDump_throwsNonIoCheckedException() throws Exception {
+        Exception cause = new Exception("D'OH!");
+
+        var actual = assertDumpThrowsWhenConsumerThrows(cause);
+
+        assertWithMessage("actual exception").that(actual).isNotSameInstanceAs(cause);
+        expect.withMessage("cause").that(actual).hasCauseThat().isSameInstanceAs(cause);
+    }
+
+    private static Exception assertDumpThrowsWhenConsumerThrows(Exception cause) throws Exception {
+        return assertThrows(
+                Exception.class,
+                () ->
+                        dump(
+                                pw -> {
+                                    throw cause;
+                                }));
     }
 
     @Test
@@ -149,7 +188,7 @@ public final class DumpHelperTest extends SharedExtendedMockitoTestCase {
         verify(mockPw).println("El Dumpo!");
     }
 
-    private final class MyStaticDumper {
+    private static final class MyStaticDumper {
 
         static void dump(PrintWriter printWriter) {
             throw new UnsupportedOperationException("Should have been static mocked");

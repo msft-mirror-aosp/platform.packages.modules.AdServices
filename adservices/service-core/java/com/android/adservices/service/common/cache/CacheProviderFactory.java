@@ -33,8 +33,10 @@ public class CacheProviderFactory {
      * @param flags Phenotype flags
      * @return an implementation of {@link HttpCache} as needed based on the flags
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static HttpCache create(Context context, Flags flags) {
-        CacheEntryDao cacheEntryDao = CacheDatabase.getInstance(context).getCacheEntryDao();
+        CacheEntryDao cacheEntryDao = CacheDatabase.getInstance().getCacheEntryDao();
         if (BinderFlagReader.readFlag(flags::getFledgeHttpCachingEnabled)
                 && cacheEntryDao != null) {
             return new FledgeHttpCache(

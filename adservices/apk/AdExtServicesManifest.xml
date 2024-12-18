@@ -53,10 +53,26 @@
                 android:description="@string/permdesc_accessAdServicesAttribution"
                 android:protectionLevel="normal"/>
 
+    <!--
+        Permissions directly related to running ad auctions include those for the Custom Audience,
+        Ad Selection, and Protected Signals APIs.
+    -->
     <!-- Allows an application to access AdServices Custom Audience APIs. -->
     <permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE"
                 android:label="@string/permlab_accessAdServicesCustomAudience"
                 android:description="@string/permdesc_accessAdServicesCustomAudience"
+                android:protectionLevel="normal"/>
+
+    <!-- Allows an application to access AdServices Ad Selection APIs. -->
+    <permission android:name="android.permission.ACCESS_ADSERVICES_AD_SELECTION"
+                android:label="@string/permlab_accessAdServicesAdSelection"
+                android:description="@string/permdesc_accessAdServicesAdSelection"
+                android:protectionLevel="normal"/>
+
+    <!-- Allows an application to access AdServices Protected Signals APIs. -->
+    <permission android:name="android.permission.ACCESS_ADSERVICES_PROTECTED_SIGNALS"
+                android:label="@string/permlab_accessAdServicesProtectedSignals"
+                android:description="@string/permdesc_accessAdServicesProtectedSignals"
                 android:protectionLevel="normal"/>
 
     <!-- Allows an application to access AdServices Ad Id API. -->
@@ -449,7 +465,7 @@
 
         <!-- FLEDGE Ad selection debug report sender Job -->
         <service android:name=
-                     "com.android.adservices.service.adselection.DebugReportSenderJobService"
+                     "com.android.adservices.service.adselection.debug.DebugReportSenderJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE"
                  android:process=".adservices">
         </service>
@@ -504,6 +520,13 @@
 
         <!-- Cobalt Logging Job -->
         <service android:name="com.android.adservices.cobalt.CobaltJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:process=".adservices">
+        </service>
+
+        <!-- Ad Package Deny Pre Process Job -->
+        <service
+            android:name="com.android.adservices.service.common.AdPackageDenyPreProcessJobService"
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:process=".adservices">
         </service>

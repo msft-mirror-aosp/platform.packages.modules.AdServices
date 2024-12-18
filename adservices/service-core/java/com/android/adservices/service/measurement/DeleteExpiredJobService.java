@@ -73,19 +73,22 @@ public final class DeleteExpiredJobService extends JobService {
         sBackgroundExecutor.execute(
                 () -> {
                     Flags flags = FlagsFactory.getFlags();
+                    long currentTimeMillis = System.currentTimeMillis();
                     long earliestValidInsertion =
-                            System.currentTimeMillis()
+                            currentTimeMillis
                                     - FlagsFactory.getFlags().getMeasurementDataExpiryWindowMs();
                     int retryLimit =
                             FlagsFactory.getFlags()
                                     .getMeasurementMaxRetriesPerRegistrationRequest();
-                    DatastoreManagerFactory.getDatastoreManager(this)
+                    DatastoreManagerFactory.getDatastoreManager()
                             .runInTransaction(
                                     dao ->
                                             dao.deleteExpiredRecords(
                                                     earliestValidInsertion,
                                                     retryLimit,
-                                                    getEarliestValidAppReportInsertion(flags)));
+                                                    getEarliestValidAppReportInsertion(flags),
+                                                    getEarliestValidAggregateDebugReportInsertion(
+                                                            flags, currentTimeMillis)));
 
                     boolean shouldRetry = false;
                     AdServicesJobServiceLogger.getInstance()
@@ -99,11 +102,17 @@ public final class DeleteExpiredJobService extends JobService {
         return true;
     }
 
-    private @Nullable Long getEarliestValidAppReportInsertion(Flags flags) {
+    @Nullable
+    private Long getEarliestValidAppReportInsertion(Flags flags) {
         return flags.getMeasurementEnableReinstallReattribution()
                 ? System.currentTimeMillis()
                         - flags.getMeasurementMaxReinstallReattributionWindowSeconds()
                 : null;
+    }
+
+    private long getEarliestValidAggregateDebugReportInsertion(
+            Flags flags, long currentTimeMillis) {
+        return currentTimeMillis - flags.getMeasurementAdrBudgetWindowLengthMillis();
     }
 
     @Override
@@ -128,6 +137,8 @@ public final class DeleteExpiredJobService extends JobService {
      * @param context the context
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
         if (flags.getMeasurementJobDeleteExpiredKillSwitch()) {
@@ -154,6 +165,8 @@ public final class DeleteExpiredJobService extends JobService {
         }
     }
 
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_DELETE_EXPIRED_JOB_ID,

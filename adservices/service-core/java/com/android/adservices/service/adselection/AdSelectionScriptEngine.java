@@ -49,6 +49,8 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.adselection.debug.DebugReportingEnabledScriptStrategy;
+import com.android.adservices.service.adselection.debug.DebugReportingScriptStrategy;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
@@ -253,7 +255,7 @@ public class AdSelectionScriptEngine {
             boolean cpcBillingEnabled,
             RetryStrategy retryStrategy,
             Supplier<Boolean> isolateConsoleMessageInLogsEnabled) {
-        mJsEngine = JSScriptEngine.getInstance(sLogger);
+        mJsEngine = JSScriptEngine.getInstance();
         mAdDataArgumentUtil = new AdDataArgumentUtil(adCounterKeyCopier);
         mAdWithBidArgumentUtil = new AdWithBidArgumentUtil(mAdDataArgumentUtil);
         mDebugReportingScript = debugReportingScript;

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.spe.AdServicesJobInfo.AD_PACKAGE_DENY_PRE_PROCESS_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.COBALT_LOGGING_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.CONSENT_NOTIFICATION_JOB;
 import static com.android.adservices.spe.AdServicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
@@ -58,7 +59,7 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.download.MddJob;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
-import com.android.adservices.service.adselection.DebugReportSenderJobService;
+import com.android.adservices.service.adselection.debug.DebugReportSenderJobService;
 import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
 import com.android.adservices.service.measurement.DeleteUninstalledJobService;
@@ -103,6 +104,7 @@ import org.mockito.Mock;
 @SpyStatic(VerboseDebugReportingFallbackJobService.class)
 @SpyStatic(CobaltJobService.class)
 @SpyStatic(DebugReportSenderJobService.class)
+@SpyStatic(AdPackageDenyPreProcessJobService.class)
 public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTestCase {
 
     @Mock private JobScheduler mJobScheduler;
@@ -140,6 +142,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
                                         any(), anyBoolean()));
         doReturn(true).when(() -> CobaltJobService.scheduleIfNeeded(any(), anyBoolean()));
         doNothing().when(() -> DebugReportSenderJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doReturn(true).when(() -> AdPackageDenyPreProcessJobService.scheduleIfNeeded());
     }
 
     @Test
@@ -151,6 +154,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         when(mMockFlags.getEncryptionKeyPeriodicFetchKillSwitch()).thenReturn(false);
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
         when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
+        when(mMockFlags.getEnablePackageDenyBgJob()).thenReturn(true);
 
         BackgroundJobsManager.scheduleAllBackgroundJobs(mMockContext);
 
@@ -172,6 +176,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         // scheduleMeasurementBackgroundJobs.
         assertCobaltJobScheduled(2);
         assertAdSelectionDebugReportSenderJobScheduled(0);
+        assertPackageDenyJobScheduled(2);
     }
 
     @Test
@@ -186,6 +191,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
 
         when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
+        when(mMockFlags.getEnablePackageDenyBgJob()).thenReturn(true);
 
         BackgroundJobsManager.scheduleAllBackgroundJobs(mMockContext);
 
@@ -204,6 +210,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         assertEncryptionKeyJobsScheduled(1);
         assertCobaltJobScheduled(1);
         assertAdSelectionDebugReportSenderJobScheduled(0);
+        assertPackageDenyJobScheduled(1);
     }
 
     @Test
@@ -219,6 +226,8 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
         when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
 
+        when(mMockFlags.getEnablePackageDenyBgJob()).thenReturn(true);
+
         BackgroundJobsManager.scheduleAllBackgroundJobs(mMockContext);
 
         assertMeasurementJobsScheduled(1);
@@ -232,6 +241,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         // Cobalt Job is scheduled in scheduleMeasurementBackgroundJobs.
         assertCobaltJobScheduled(1);
         assertAdSelectionDebugReportSenderJobScheduled(0);
+        assertPackageDenyJobScheduled(1);
     }
 
     @Test
@@ -244,6 +254,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
 
         when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
+        when(mMockFlags.getEnablePackageDenyBgJob()).thenReturn(true);
 
         BackgroundJobsManager.scheduleAllBackgroundJobs(mMockContext);
 
@@ -260,6 +271,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         // scheduleMeasurementBackgroundJobs.
         assertCobaltJobScheduled(2);
         assertAdSelectionDebugReportSenderJobScheduled(0);
+        assertPackageDenyJobScheduled(2);
     }
 
     @Test
@@ -274,6 +286,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
 
         when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
+        when(mMockFlags.getEnablePackageDenyBgJob()).thenReturn(true);
 
         BackgroundJobsManager.scheduleAllBackgroundJobs(mMockContext);
 
@@ -291,6 +304,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         // scheduleMeasurementBackgroundJobs.
         assertCobaltJobScheduled(2);
         assertAdSelectionDebugReportSenderJobScheduled(0);
+        assertPackageDenyJobScheduled(2);
     }
 
     @Test
@@ -305,6 +319,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
 
         when(mMockFlags.getFledgeEventLevelDebugReportingEnabled()).thenReturn(false);
+        when(mMockFlags.getEnablePackageDenyBgJob()).thenReturn(true);
 
         BackgroundJobsManager.scheduleAllBackgroundJobs(mMockContext);
 
@@ -321,6 +336,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         // scheduleMeasurementBackgroundJobs.
         assertCobaltJobScheduled(2);
         assertAdSelectionDebugReportSenderJobScheduled(0);
+        assertPackageDenyJobScheduled(2);
     }
 
     @Test
@@ -333,6 +349,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
         when(mMockFlags.getEncryptionKeyPeriodicFetchKillSwitch()).thenReturn(false);
         when(mMockFlags.getCobaltLoggingEnabled()).thenReturn(true);
+        when(mMockFlags.getEnablePackageDenyBgJob()).thenReturn(true);
 
         BackgroundJobsManager.scheduleAllBackgroundJobs(mMockContext);
 
@@ -347,6 +364,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         // Cobalt Job is scheduled in scheduleMeasurementBackgroundJobs.
         assertCobaltJobScheduled(1);
         assertAdSelectionDebugReportSenderJobScheduled(0);
+        assertPackageDenyJobScheduled(1);
     }
 
     @Test
@@ -511,6 +529,24 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
     }
 
     @Test
+    public void testSchedulePackageDenyBackgroundJobs_PackageDenyEnabled() {
+        when(mMockFlags.getEnablePackageDenyBgJob()).thenReturn(true);
+
+        BackgroundJobsManager.scheduleAdPackageDenyPreProcessBackgroundJob();
+
+        assertPackageDenyJobScheduled(1);
+    }
+
+    @Test
+    public void testSchedulePackageDenyBackgroundJobs_PackageDenyDisabled() {
+        when(mMockFlags.getEnablePackageDenyBgJob()).thenReturn(false);
+
+        BackgroundJobsManager.scheduleAdPackageDenyPreProcessBackgroundJob();
+
+        assertPackageDenyJobScheduled(0);
+    }
+
+    @Test
     public void testUnscheduleAllBackgroundJobs() {
         BackgroundJobsManager.unscheduleAllBackgroundJobs(mJobScheduler);
 
@@ -540,6 +576,7 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
         verify(mJobScheduler).cancel(MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB.getJobId());
         verify(mJobScheduler).cancel(MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB.getJobId());
         verify(mJobScheduler).cancel(COBALT_LOGGING_JOB.getJobId());
+        verify(mJobScheduler).cancel(AD_PACKAGE_DENY_PRE_PROCESS_JOB.getJobId());
     }
 
     private void assertMeasurementJobsScheduled(int numberOfTimes) {
@@ -611,6 +648,10 @@ public final class BackgroundJobsManagerTest extends AdServicesExtendedMockitoTe
 
     private void assertCobaltJobScheduled(int numberOfTimes) {
         verify(() -> CobaltJobService.scheduleIfNeeded(any(), eq(false)), times(numberOfTimes));
+    }
+
+    private void assertPackageDenyJobScheduled(int numberOfTimes) {
+        verify(() -> AdPackageDenyPreProcessJobService.scheduleIfNeeded(), times(numberOfTimes));
     }
 
     private void mockMeasurementEnabled(boolean value) {

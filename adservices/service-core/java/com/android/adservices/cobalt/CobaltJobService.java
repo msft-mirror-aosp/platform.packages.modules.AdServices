@@ -48,7 +48,6 @@ import com.google.common.util.concurrent.ListenableFuture;
  * Cobalt JobService. This will trigger cobalt generate observation and upload logging in background
  * tasks.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class CobaltJobService extends JobService {
     private static final int COBALT_LOGGING_JOB_ID = COBALT_LOGGING_JOB.getJobId();
@@ -143,6 +142,8 @@ public final class CobaltJobService extends JobService {
         return shouldRetry;
     }
 
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     @VisibleForTesting
     static void schedule(Context context, JobScheduler jobScheduler, Flags flags) {
         JobInfo job =
@@ -165,6 +166,8 @@ public final class CobaltJobService extends JobService {
      * @param forceSchedule a flag to indicate whether to force rescheduling the job.
      * @return a {@code boolean} to indicate if the service job is actually scheduled.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static boolean scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
 

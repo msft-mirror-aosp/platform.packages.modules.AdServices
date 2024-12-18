@@ -41,6 +41,11 @@ android_ravenwood_test {
         // AdServicesSharedLibrariesUnitTests gets it from adservices-shared-extended-mockito-defaults
         "modules-utils-testable-device-config",
     ],
+    ravenizer: {
+        strip_mockito: true,
+    },
+    package_name: "com.android.adservices.shared.tests",
+    inst_package_name: "com.android.adservices.shared.tests",
     auto_gen_config: true,
     // TODO(b/335935200): add test_suites once stable
 }
@@ -59,20 +64,23 @@ java_defaults {
         "adservices-datastore_testing",
         "adservices-shared-error-logging",
         "adservices-shared-exceptions",
+        "adservices-shared-metriclogger",
         "adservices-shared-mockito-expectations",
         "adservices-shared-proto-lite",
         "adservices-shared-proto-utils",
         "adservices-shared-spe",
         "adservices-shared-storage",
+        "adservices-shared-system-common",
         "adservices-shared-testing",
         "adservices-shared-util",
         "androidx.test.core",
         "androidx.test.runner",
         "auto_value_annotations",
+        "compatibility-device-util-axt",
         "truth",
     ],
     libs: [
-        "framework-connectivity",
+        "framework-connectivity.stubs.module_lib",
     ],
     plugins: ["auto_annotation_plugin"],
     min_sdk_version: "30",

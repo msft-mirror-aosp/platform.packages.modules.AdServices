@@ -1,7 +1,11 @@
 # Keep this file in alphabetical order
-binhnguyen@google.com
-felipeal@google.com
+akhilga@google.com
+gehuang@google.com
 hanlixy@google.com
 haoliuu@google.com
+karandadlani@google.com
 pdevpura@google.com
-sahilgoel@google.com
+sawkar@google.com
+
+# Infra team leads
+include platform/packages/modules/AdServices:/OWNERS

@@ -35,6 +35,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueRunner.ProcessingResult;
+import com.android.adservices.service.measurement.reporting.DebugReportingJobService;
 import com.android.adservices.service.measurement.util.JobLockHolder;
 import com.android.adservices.spe.AdServicesJobInfo;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
@@ -117,6 +118,8 @@ public class AsyncRegistrationQueueJobService extends JobService {
                                             // scheduled
                                             jobFinished(params, /* wantsReschedule= */ true);
                                     }
+                                    DebugReportingJobService.scheduleIfNeeded(
+                                            getApplicationContext(), /*force schedule*/ false);
                                     Trace.endSection();
                                 });
         return true;
@@ -128,7 +131,7 @@ public class AsyncRegistrationQueueJobService extends JobService {
                 .callWithLock(
                         "AsyncRegistrationQueueJobService",
                         () ->
-                                AsyncRegistrationQueueRunner.getInstance(getApplicationContext())
+                                AsyncRegistrationQueueRunner.getInstance()
                                         .runAsyncRegistrationQueueWorker(),
                         // Another thread is already processingasync registrations.
                         ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED);
@@ -151,7 +154,10 @@ public class AsyncRegistrationQueueJobService extends JobService {
         jobScheduler.schedule(job);
     }
 
-    private static JobInfo buildJobInfo(Context context, Flags flags) {
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
+    @VisibleForTesting
+    static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_ASYNC_REGISTRATION_JOB_ID,
                         new ComponentName(context, AsyncRegistrationQueueJobService.class))
@@ -176,6 +182,8 @@ public class AsyncRegistrationQueueJobService extends JobService {
      * @param context the context
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
         if (flags.getAsyncRegistrationJobQueueKillSwitch()) {
@@ -209,6 +217,8 @@ public class AsyncRegistrationQueueJobService extends JobService {
      *
      * @param context application context
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     private static void cancelDeprecatedAsyncRegistrationJob(Context context) {
         JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
         int deprecatedAsyncRegJobId =

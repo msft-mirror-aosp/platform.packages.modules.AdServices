@@ -17,6 +17,10 @@
 package com.android.adservices.service.signals;
 
 import static com.android.adservices.service.signals.ProtectedSignalsFixture.getHexString;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_EMPTY_SCRIPT_RESULT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_JS_EXECUTION_STATUS_UNSUCCESSFUL;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_PROCESS_ENCODED_PAYLOAD_RESULT_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OTHER_FAILURE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR;
@@ -29,14 +33,16 @@ import static org.mockito.Mockito.verify;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebViewSupportUtil;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.common.NoOpRetryStrategyImpl;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.util.concurrent.ListenableFuture;
 
@@ -56,8 +62,10 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-@RequiresSdkLevelAtLeastS
-public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
+@SetErrorLogUtilDefaultParams(
+        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
+public final class SignalsScriptEngineTest extends AdServicesExtendedMockitoTestCase {
     private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
     private static final IsolateSettings ISOLATE_SETTINGS =
             IsolateSettings.forMaxHeapSizeEnforcementEnabled(
@@ -192,6 +200,9 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
                 assertEquals("Wrong signal values", (byte) 0xA2, result[offset++]);
             }
         }
+
+        verify(mEncodingExecutionLoggerMock)
+                .setEncodedSignalSize(/* encodedSignalSizeInBytes */ 8);
     }
 
     @Test
@@ -265,6 +276,9 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
                 assertEquals("Wrong signal values", (byte) 0xA2, result[offset++]);
             }
         }
+
+        verify(mEncodingExecutionLoggerMock)
+                .setEncodedSignalSize(/* encodedSignalSizeInBytes */ 8);
     }
 
     @Test
@@ -408,6 +422,8 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_EMPTY_SCRIPT_RESULT)
     public void test_handleEncodingOutput_emptyOutput_throwsException() {
         IllegalStateException exception =
                 assertThrows(
@@ -425,6 +441,8 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_JS_EXECUTION_STATUS_UNSUCCESSFUL)
     public void test_handleEncodingOutput_failedStatus_throwsException() {
         int status = 1;
         String result = "unused";
@@ -449,6 +467,8 @@ public final class SignalsScriptEngineTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_PROCESS_ENCODED_PAYLOAD_RESULT_FAILURE)
     public void test_handleEncodingOutput_missingResult_throwsException() {
         int status = 1;
         String result = "unused";

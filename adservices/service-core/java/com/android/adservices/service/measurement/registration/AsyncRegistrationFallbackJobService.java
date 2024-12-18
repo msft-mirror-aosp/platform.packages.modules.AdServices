@@ -126,7 +126,7 @@ public class AsyncRegistrationFallbackJobService extends JobService {
                 .runWithLock(
                         "AsyncRegistrationFallbackQueueJobService",
                         () ->
-                                AsyncRegistrationQueueRunner.getInstance(getApplicationContext())
+                                AsyncRegistrationQueueRunner.getInstance()
                                         .runAsyncRegistrationQueueWorker());
     }
 
@@ -186,6 +186,8 @@ public class AsyncRegistrationFallbackJobService extends JobService {
         }
     }
 
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_ASYNC_REGISTRATION_FALLBACK_JOB_ID,

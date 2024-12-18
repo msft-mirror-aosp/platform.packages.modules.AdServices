@@ -42,6 +42,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.concurrent.Future;
@@ -113,8 +114,7 @@ public final class AggregateFallbackReportingJobService extends JobService {
                                             - AdServicesConfig
                                                     .getMeasurementAggregateMainReportingJobPeriodMs();
                             DatastoreManager datastoreManager =
-                                    DatastoreManagerFactory.getDatastoreManager(
-                                            getApplicationContext());
+                                    DatastoreManagerFactory.getDatastoreManager();
                             new AggregateReportingJobHandler(
                                             datastoreManager,
                                             new AggregateEncryptionKeyManager(
@@ -123,7 +123,8 @@ public final class AggregateFallbackReportingJobService extends JobService {
                                             AdServicesLoggerImpl.getInstance(),
                                             ReportingStatus.ReportType.AGGREGATE,
                                             ReportingStatus.UploadMethod.FALLBACK,
-                                            getApplicationContext())
+                                            getApplicationContext(),
+                                            new AndroidTimeSource())
                                     .performScheduledPendingReportsInWindow(
                                             windowStartTime, windowEndTime);
                         });
@@ -148,6 +149,8 @@ public final class AggregateFallbackReportingJobService extends JobService {
         jobScheduler.schedule(jobInfo);
     }
 
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     private static JobInfo buildJobInfo(Context context, Flags flags) {
         return new JobInfo.Builder(
                         MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_ID,
@@ -167,6 +170,8 @@ public final class AggregateFallbackReportingJobService extends JobService {
      * @param context the context
      * @param forceSchedule flag to indicate whether to force rescheduling the job.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void scheduleIfNeeded(Context context, boolean forceSchedule) {
         Flags flags = FlagsFactory.getFlags();
         if (flags.getMeasurementJobAggregateFallbackReportingKillSwitch()) {

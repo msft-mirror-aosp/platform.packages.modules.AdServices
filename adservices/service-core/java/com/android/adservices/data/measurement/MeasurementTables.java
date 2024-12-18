@@ -16,7 +16,6 @@
 
 package com.android.adservices.data.measurement;
 
-import com.android.adservices.data.measurement.migration.MeasurementDbMigratorV11;
 import com.android.adservices.data.measurement.migration.MeasurementTablesDeprecated;
 
 import java.util.Arrays;
@@ -40,6 +39,7 @@ public final class MeasurementTables {
         MeasurementTables.SourceContract.TABLE,
         MeasurementTables.SourceDestination.TABLE,
         SourceAttributionScopeContract.TABLE,
+        SourceNamedBudgetContract.TABLE,
         MeasurementTables.TriggerContract.TABLE,
         MeasurementTables.EventReportContract.TABLE,
         MeasurementTables.AggregateReport.TABLE,
@@ -169,6 +169,15 @@ public final class MeasurementTables {
         String ATTRIBUTION_SCOPE = "attribution_scope";
     }
 
+    /** Contract for sub-table for aggregatable named budgets in Source. */
+    public interface SourceNamedBudgetContract {
+        String TABLE = MSMT_TABLE_PREFIX + "source_named_budget";
+        String SOURCE_ID = "source_id";
+        String NAME = "name";
+        String BUDGET = "budget";
+        String AGGREGATE_CONTRIBUTIONS = "aggregate_contributions";
+    }
+
     /** Contract for Trigger. */
     public interface TriggerContract {
         String TABLE = MSMT_TABLE_PREFIX + "trigger";
@@ -202,6 +211,7 @@ public final class MeasurementTables {
         String ATTRIBUTION_SCOPES = "attribution_scope";
         String AGGREGATABLE_FILTERING_ID_MAX_BYTES = "aggregatable_filtering_id_max_bytes";
         String AGGREGATE_DEBUG_REPORTING = "aggregate_debug_reporting";
+        String NAMED_BUDGETS = "named_budgets";
     }
 
     /** Contract for EventReport. */
@@ -272,6 +282,7 @@ public final class MeasurementTables {
         String TRIGGER_CONTEXT_ID = "trigger_context_id";
         String TRIGGER_TIME = "trigger_time";
         String API = "api";
+        String AGGREGATABLE_FILTERING_ID_MAX_BYTES = "aggregatable_filtering_id_max_bytes";
     }
 
     /** Contract for aggregate encryption key. */
@@ -624,6 +635,27 @@ public final class MeasurementTables {
                     + ") ON DELETE CASCADE "
                     + ")";
 
+    public static final String CREATE_TABLE_SOURCE_NAMED_BUDGET_LATEST =
+            "CREATE TABLE "
+                    + SourceNamedBudgetContract.TABLE
+                    + " ("
+                    + SourceNamedBudgetContract.SOURCE_ID
+                    + " TEXT, "
+                    + SourceNamedBudgetContract.NAME
+                    + " TEXT, "
+                    + SourceNamedBudgetContract.BUDGET
+                    + " INTEGER, "
+                    + SourceNamedBudgetContract.AGGREGATE_CONTRIBUTIONS
+                    + " INTEGER, "
+                    + "FOREIGN KEY ("
+                    + SourceNamedBudgetContract.SOURCE_ID
+                    + ") REFERENCES "
+                    + SourceContract.TABLE
+                    + "("
+                    + SourceContract.ID
+                    + ") ON DELETE CASCADE "
+                    + ")";
+
     public static final String CREATE_TABLE_TRIGGER_V6 =
             "CREATE TABLE "
                     + TriggerContract.TABLE
@@ -729,7 +761,9 @@ public final class MeasurementTables {
                     + TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES
                     + " INTEGER, "
                     + TriggerContract.AGGREGATE_DEBUG_REPORTING
-                    + " TEXT "
+                    + " TEXT, "
+                    + TriggerContract.NAMED_BUDGETS
+                    + " TEXT"
                     + ")";
 
     // Only used in V3
@@ -1027,6 +1061,8 @@ public final class MeasurementTables {
                     + " INTEGER, "
                     + AggregateReport.API
                     + " TEXT, "
+                    + AggregateReport.AGGREGATABLE_FILTERING_ID_MAX_BYTES
+                    + " INTEGER, "
                     + "FOREIGN KEY ("
                     + AggregateReport.SOURCE_ID
                     + ") REFERENCES "
@@ -1164,7 +1200,21 @@ public final class MeasurementTables {
             CREATE_TABLE_XNA_IGNORED_SOURCES_V6;
 
     public static final String CREATE_TABLE_KEY_VALUE_STORE_LATEST =
-            MeasurementDbMigratorV11.CREATE_TABLE_KEY_VALUE_DATA_V11;
+            "CREATE TABLE "
+                    + MeasurementTables.KeyValueDataContract.TABLE
+                    + " ("
+                    + MeasurementTables.KeyValueDataContract.DATA_TYPE
+                    + " TEXT NOT NULL, "
+                    + MeasurementTables.KeyValueDataContract.KEY
+                    + " TEXT NOT NULL, "
+                    + MeasurementTables.KeyValueDataContract.VALUE
+                    + " TEXT, "
+                    + " CONSTRAINT type_key_primary_con PRIMARY KEY ( "
+                    + MeasurementTables.KeyValueDataContract.DATA_TYPE
+                    + ", "
+                    + MeasurementTables.KeyValueDataContract.KEY
+                    + " )"
+                    + " )";
 
     public static final String[] CREATE_INDEXES = {
         "CREATE INDEX "
@@ -1263,6 +1313,26 @@ public final class MeasurementTables {
                 + SourceAttributionScopeContract.TABLE
                 + "("
                 + SourceAttributionScopeContract.SOURCE_ID
+                + ")",
+        "CREATE INDEX "
+                + INDEX_PREFIX
+                + SourceNamedBudgetContract.TABLE
+                + "_s_n"
+                + " ON "
+                + SourceNamedBudgetContract.TABLE
+                + "("
+                + SourceNamedBudgetContract.SOURCE_ID
+                + ", "
+                + SourceNamedBudgetContract.NAME
+                + ")",
+        "CREATE INDEX "
+                + INDEX_PREFIX
+                + SourceNamedBudgetContract.TABLE
+                + "_s"
+                + " ON "
+                + SourceNamedBudgetContract.TABLE
+                + "("
+                + SourceNamedBudgetContract.SOURCE_ID
                 + ")",
         "CREATE INDEX "
                 + INDEX_PREFIX
@@ -1441,6 +1511,7 @@ public final class MeasurementTables {
                             CREATE_TABLE_SOURCE_LATEST,
                             CREATE_TABLE_SOURCE_DESTINATION_LATEST,
                             CREATE_TABLE_SOURCE_ATTRIBUTION_SCOPE_LATEST,
+                            CREATE_TABLE_SOURCE_NAMED_BUDGET_LATEST,
                             CREATE_TABLE_TRIGGER_LATEST,
                             CREATE_TABLE_EVENT_REPORT_LATEST,
                             CREATE_TABLE_ATTRIBUTION_LATEST,

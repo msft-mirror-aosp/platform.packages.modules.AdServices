@@ -89,6 +89,9 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.adselection.debug.DebugReport;
+import com.android.adservices.service.adselection.debug.DebugReporting;
+import com.android.adservices.service.adselection.debug.DebugReportingScriptDisabledStrategy;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
@@ -2134,7 +2137,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
         mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride);
 
         // Setting dev context to allow overrides
-        mDevContext = DevContext.builder(APP_PACKAGE_NAME).setDevOptionsEnabled(true).build();
+        mDevContext = DevContext.builder(APP_PACKAGE_NAME).setDeviceDevOptionsEnabled(true).build();
 
         // Resetting adBidGenerator to use the new dev context
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =
@@ -2253,7 +2256,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
         mCustomAudienceDao.persistCustomAudienceOverride(dbCustomAudienceOverride);
 
         // Setting dev context to allow overrides
-        mDevContext = DevContext.builder(myAppPackageName).setDevOptionsEnabled(true).build();
+        mDevContext = DevContext.builder(myAppPackageName).setDeviceDevOptionsEnabled(true).build();
 
         // Resetting adBidGenerator to use the new dev context
         CustomAudienceDevOverridesHelper customAudienceDevOverridesHelper =

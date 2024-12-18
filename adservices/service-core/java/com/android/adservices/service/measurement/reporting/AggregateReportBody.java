@@ -35,12 +35,11 @@ import org.json.JSONObject;
  * Class for constructing the report body of an aggregate report.
  */
 public class AggregateReportBody {
-    // "0" is the convention for indicating an excluded source registration time.
-    public static final String EXCLUDED_SOURCE_REGISTRATION_TIME = "0";
     private String mAttributionDestination;
     private String mSourceRegistrationTime;
     private String mScheduledReportTime;
     private String mApiVersion;
+    private String mApi;
     private String mReportId;
     private String mReportingOrigin;
     private String mDebugCleartextPayload;
@@ -50,8 +49,7 @@ public class AggregateReportBody {
 
     private Uri mAggregationCoordinatorOrigin;
     @Nullable private String mTriggerContextId;
-
-    private static final String API_NAME = "attribution-reporting";
+    @Nullable private Integer mAggregatableFilteringIdMaxBytes;
 
     @VisibleForTesting
     interface PayloadBodyKeys {
@@ -88,6 +86,7 @@ public class AggregateReportBody {
         mSourceRegistrationTime = other.mSourceRegistrationTime;
         mScheduledReportTime = other.mScheduledReportTime;
         mApiVersion = other.mApiVersion;
+        mApi = other.mApi;
         mReportId = other.mReportId;
         mReportingOrigin = other.mReportingOrigin;
         mDebugCleartextPayload = other.mDebugCleartextPayload;
@@ -96,17 +95,30 @@ public class AggregateReportBody {
         mDebugMode = other.mDebugMode;
         mAggregationCoordinatorOrigin = other.mAggregationCoordinatorOrigin;
         mTriggerContextId = other.mTriggerContextId;
+        mAggregatableFilteringIdMaxBytes = other.mAggregatableFilteringIdMaxBytes;
+    }
+
+    /** Returns default or configured filtering id max bytes. */
+    private Integer getOrDefaultFilteringIdMaxBytes(Flags flags) {
+        if (mAggregatableFilteringIdMaxBytes == null) {
+            return flags.getMeasurementDefaultFilteringIdMaxBytes();
+        }
+        return mAggregatableFilteringIdMaxBytes;
     }
 
     /** Generate the JSON serialization of the aggregate report. */
     public JSONObject toJson(AggregateEncryptionKey key, Flags flags) throws JSONException {
         JSONObject aggregateBodyJson = new JSONObject();
 
-        final String sharedInfo = sharedInfoToJson(flags).toString();
+        final String sharedInfo = sharedInfoToJson().toString();
         aggregateBodyJson.put(PayloadBodyKeys.SHARED_INFO, sharedInfo);
+        Integer filteringIdMaxBytes =
+                flags.getMeasurementEnableFlexibleContributionFiltering()
+                        ? getOrDefaultFilteringIdMaxBytes(flags)
+                        : null;
         aggregateBodyJson.put(
                 PayloadBodyKeys.AGGREGATION_SERVICE_PAYLOADS,
-                aggregationServicePayloadsToJson(sharedInfo, key));
+                aggregationServicePayloadsToJson(sharedInfo, key, filteringIdMaxBytes));
 
         if (mSourceDebugKey != null) {
             aggregateBodyJson.put(PayloadBodyKeys.SOURCE_DEBUG_KEY, mSourceDebugKey.toString());
@@ -119,7 +131,7 @@ public class AggregateReportBody {
                     PayloadBodyKeys.AGGREGATION_COORDINATOR_ORIGIN,
                     mAggregationCoordinatorOrigin.toString());
         }
-        if (flags.getMeasurementEnableTriggerContextId() && mTriggerContextId != null) {
+        if (mTriggerContextId != null) {
             aggregateBodyJson.put(PayloadBodyKeys.TRIGGER_CONTEXT_ID, mTriggerContextId);
         }
 
@@ -128,25 +140,19 @@ public class AggregateReportBody {
 
     /** Generate the JSON serialization of the shared_info field of the aggregate report. */
     @VisibleForTesting
-    JSONObject sharedInfoToJson(Flags flags) throws JSONException {
+    JSONObject sharedInfoToJson() throws JSONException {
         JSONObject sharedInfoJson = new JSONObject();
 
-        sharedInfoJson.put(SharedInfoKeys.API_NAME, API_NAME);
+        sharedInfoJson.put(SharedInfoKeys.API_NAME, mApi);
         sharedInfoJson.put(SharedInfoKeys.ATTRIBUTION_DESTINATION, mAttributionDestination);
         sharedInfoJson.put(SharedInfoKeys.REPORT_ID, mReportId);
         sharedInfoJson.put(SharedInfoKeys.REPORTING_ORIGIN, mReportingOrigin);
         sharedInfoJson.put(SharedInfoKeys.SCHEDULED_REPORT_TIME, mScheduledReportTime);
 
-        String sourceRegistrationTime = mSourceRegistrationTime;
-        // A null source registration time implies the source registration time was not set. We
-        // normally include this in the JSON serialization anyway, but when the feature flag for
-        // making source registration time optional is enabled, send a value indicating exclusion.
-        if (flags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled()
-                && mSourceRegistrationTime == null) {
-            sourceRegistrationTime = EXCLUDED_SOURCE_REGISTRATION_TIME;
+        if (mSourceRegistrationTime != null) {
+            sharedInfoJson.put(SharedInfoKeys.SOURCE_REGISTRATION_TIME, mSourceRegistrationTime);
         }
 
-        sharedInfoJson.put(SharedInfoKeys.SOURCE_REGISTRATION_TIME, sourceRegistrationTime);
         sharedInfoJson.put(SharedInfoKeys.API_VERSION, mApiVersion);
 
         if (mDebugMode != null) {
@@ -158,13 +164,16 @@ public class AggregateReportBody {
 
     /** Generate the JSON array serialization of the aggregation service payloads field. */
     @VisibleForTesting
-    JSONArray aggregationServicePayloadsToJson(String sharedInfo, AggregateEncryptionKey key)
+    JSONArray aggregationServicePayloadsToJson(
+            String sharedInfo, AggregateEncryptionKey key, @Nullable Integer filteringIdMaxBytes)
             throws JSONException {
         JSONArray aggregationServicePayloadsJson = new JSONArray();
-
         final String encryptedPayload =
                 AggregateCryptoConverter.encrypt(
-                        key.getPublicKey(), mDebugCleartextPayload, sharedInfo);
+                        key.getPublicKey(),
+                        mDebugCleartextPayload,
+                        sharedInfo,
+                        filteringIdMaxBytes);
 
         final JSONObject aggregationServicePayload = new JSONObject();
         aggregationServicePayload.put(AggregationServicePayloadKeys.PAYLOAD, encryptedPayload);
@@ -173,7 +182,7 @@ public class AggregateReportBody {
         if (mSourceDebugKey != null && mTriggerDebugKey != null) {
             aggregationServicePayload.put(
                     AggregationServicePayloadKeys.DEBUG_CLEARTEXT_PAYLOAD,
-                    AggregateCryptoConverter.encode(mDebugCleartextPayload));
+                    AggregateCryptoConverter.encode(mDebugCleartextPayload, filteringIdMaxBytes));
         }
         aggregationServicePayloadsJson.put(aggregationServicePayload);
 
@@ -219,6 +228,15 @@ public class AggregateReportBody {
          */
         public @NonNull Builder setApiVersion(@NonNull String version) {
             mBuilding.mApiVersion = version;
+            return this;
+        }
+
+        /**
+         * The API name, e.g. "attribution-reporting", "attribution-reporting-debug", used to
+         * generate the aggregate report.
+         */
+        public @NonNull Builder setApi(@NonNull String api) {
+            mBuilding.mApi = api;
             return this;
         }
 
@@ -273,6 +291,12 @@ public class AggregateReportBody {
         /** Trigger context id */
         public Builder setTriggerContextId(@Nullable String triggerContextId) {
             mBuilding.mTriggerContextId = triggerContextId;
+            return this;
+        }
+
+        /** Aggregatable filtering id max bytes from Trigger */
+        public Builder setAggregatableFilteringIdMaxBytes(Integer aggregatableFilteringIdMaxBytes) {
+            mBuilding.mAggregatableFilteringIdMaxBytes = aggregatableFilteringIdMaxBytes;
             return this;
         }
 

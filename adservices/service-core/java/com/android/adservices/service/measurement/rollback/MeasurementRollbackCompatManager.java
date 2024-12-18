@@ -30,7 +30,6 @@ import android.util.Pair;
 import com.android.adservices.LogUtil;
 import com.android.adservices.service.appsearch.AppSearchMeasurementRollbackWorker;
 import com.android.internal.annotations.VisibleForTesting;
-import com.android.modules.utils.build.SdkLevel;
 
 import java.util.List;
 import java.util.Objects;
@@ -41,6 +40,8 @@ import java.util.Objects;
  * devices, so data indicating that a deletion happened prior to rollback is stored in AppSearch on
  * S, and in External Storage on R, in order to make it rollback safe.
  */
+// TODO(b/311183933): Remove passed in Context from static method.
+@SuppressWarnings("AvoidStaticContext")
 public final class MeasurementRollbackCompatManager {
     public static final long APEX_VERSION_WHEN_NOT_FOUND = -1L;
 
@@ -129,10 +130,9 @@ public final class MeasurementRollbackCompatManager {
         return true;
     }
 
+    @SuppressWarnings("NewApi")
     private static MeasurementRollbackWorker<?> getWorker(Context context) {
-        return SdkLevel.isAtLeastS()
-                ? AppSearchMeasurementRollbackWorker.getInstance(context, getUserId())
-                : new AdServicesExtStorageMeasurementRollbackWorker(context);
+        return AppSearchMeasurementRollbackWorker.getInstance(context, getUserId());
     }
 
     @VisibleForTesting

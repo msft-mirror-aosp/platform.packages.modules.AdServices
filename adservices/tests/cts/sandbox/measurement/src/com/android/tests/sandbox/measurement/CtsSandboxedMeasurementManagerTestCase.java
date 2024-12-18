@@ -24,13 +24,17 @@ import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
 import com.android.adservices.common.annotations.SetAllLogcatTags;
 import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
+import com.android.adservices.common.annotations.SetMsmtWebContextClientAppAllowList;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetSdkSandboxStateEnabled;
 
+@SetSdkSandboxStateEnabled
 @DisableGlobalKillSwitch
 @EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
 @EnableDebugFlag(KEY_CONSENT_NOTIFIED_DEBUG_MODE)
 @SetAllLogcatTags
 @SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
 @SetMsmtApiAppAllowList
+@SetMsmtWebContextClientAppAllowList
 public abstract class CtsSandboxedMeasurementManagerTestCase extends AdServicesCtsTestCase {}

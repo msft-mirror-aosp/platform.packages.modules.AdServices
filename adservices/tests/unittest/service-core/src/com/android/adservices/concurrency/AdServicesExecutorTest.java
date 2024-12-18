@@ -16,16 +16,13 @@
 
 package com.android.adservices.concurrency;
 
-import static com.google.common.truth.Truth.assertThat;
-import static com.google.common.truth.Truth.assertWithMessage;
-
+import android.os.Build;
 import android.os.Process;
 import android.os.StrictMode;
 import android.os.StrictMode.ThreadPolicy;
 
-import com.android.adservices.service.common.compat.BuildCompatUtils;
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.compatibility.common.util.ShellUtils;
-
 
 import org.junit.Assume;
 import org.junit.Before;
@@ -34,15 +31,14 @@ import org.junit.Test;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
-public class AdServicesExecutorTest {
+public final class AdServicesExecutorTest extends AdServicesUnitTestCase {
     // Command to kill the adservices process
     public static final String KILL_ADSERVICES_CMD =
             "su 0 killall -9 com.google.android.adservices.api";
 
     @Before
     public void setup() {
-        // TODO(b/265113689) Unsuppress the test for user builds post removing the `su` utility
-        Assume.assumeTrue(BuildCompatUtils.isDebuggable());
+        Assume.assumeTrue(Build.isDebuggable());
         ShellUtils.runShellCommand(KILL_ADSERVICES_CMD);
     }
 
@@ -97,20 +93,20 @@ public class AdServicesExecutorTest {
                                 Thread.currentThread().getName());
         ExecutorResult actualResult = executorService.submit(task).get();
 
-        assertWithMessage("Thread priority")
+        expect.withMessage("Thread priority")
                 .that(actualResult.mPriority)
                 .isEqualTo(expectedResult.mPriority);
-        assertWithMessage("Thread name")
+        expect.withMessage("Thread name")
                 .that(actualResult.mThreadName)
                 .matches(expectedResult.mThreadName);
-        assertThat(actualResult.mThreadPolicy.toString())
+        expect.that(actualResult.mThreadPolicy.toString())
                 .isEqualTo(expectedResult.mThreadPolicy.toString());
     }
 
     private static final class ExecutorResult {
-        private ThreadPolicy mThreadPolicy;
-        private int mPriority;
-        private String mThreadName;
+        private final ThreadPolicy mThreadPolicy;
+        private final int mPriority;
+        private final String mThreadName;
 
         ExecutorResult(ThreadPolicy threadPolicy, int priority, String threadName) {
             mThreadPolicy = threadPolicy;

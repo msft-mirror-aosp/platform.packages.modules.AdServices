@@ -30,24 +30,27 @@ import static org.mockito.Mockito.times;
 
 import android.content.Context;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.service.common.ConsentNotificationJobService;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.enrollment.impl.ConsentNotificationDebugChannel;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
 
 import java.io.IOException;
 
-public class ConsentNotificationDebugChannelTest {
+@SpyStatic(ConsentNotificationJobService.class)
+public class ConsentNotificationDebugChannelTest extends AdServicesExtendedMockitoTestCase {
+    @Rule(order = 11)
+    public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.newInstance();
+
     private final ConsentNotificationDebugChannel mConsentNotificationDebugChannel =
             new ConsentNotificationDebugChannel();
 
@@ -55,22 +58,9 @@ public class ConsentNotificationDebugChannelTest {
     @Mock private PrivacySandboxUxCollection mPrivacySandboxUxCollection;
     @Mock private UxStatesManager mUxStatesManager;
     @Mock private ConsentManager mConsentManager;
-    private MockitoSession mStaticMockSession;
 
     @Before
     public void setup() throws IOException {
-        MockitoAnnotations.initMocks(this);
-
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(UxStatesManager.class)
-                        .spyStatic(ConsentManager.class)
-                        .spyStatic(ConsentNotificationJobService.class)
-                        .strictness(Strictness.WARN)
-                        .initMocks(this)
-                        .startMocking();
-
-        // Do not trigger real notifications.
         doNothing()
                 .when(
                         () ->
@@ -78,16 +68,9 @@ public class ConsentNotificationDebugChannelTest {
                                         any(Context.class), anyBoolean(), anyBoolean()));
     }
 
-    @After
-    public void teardown() throws IOException {
-        if (mStaticMockSession != null) {
-            mStaticMockSession.finishMocking();
-        }
-    }
-
     @Test
     public void isEligibleTest_consentDebugModeOn() {
-        doReturn(true).when(mUxStatesManager).getFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE);
+        flags.setDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, true);
 
         assertThat(
                         mConsentNotificationDebugChannel.isEligible(
@@ -97,7 +80,7 @@ public class ConsentNotificationDebugChannelTest {
 
     @Test
     public void isEligibleTest_consentDebugModeOff() {
-        doReturn(false).when(mUxStatesManager).getFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE);
+        flags.setDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, false);
 
         assertThat(
                         mConsentNotificationDebugChannel.isEligible(

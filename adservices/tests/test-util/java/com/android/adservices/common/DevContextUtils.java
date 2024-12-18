@@ -21,7 +21,6 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Process;
-import android.os.SystemProperties;
 import android.provider.Settings;
 import android.util.Log;
 
@@ -33,7 +32,7 @@ import java.util.Objects;
 
 public class DevContextUtils {
 
-    private static final boolean IS_DEBUGGABLE_BUILD = computeIsDebuggableBuild();
+    private static final boolean IS_DEBUGGABLE_BUILD = Build.isDebuggable();
 
     /** Method to check if Dev Options are enabled based on DevContext. */
     public static boolean isDevOptionsEnabled(Context context, String logTag) {
@@ -145,14 +144,5 @@ public class DevContextUtils {
                             possibleAppPackages.length, possibleAppPackages[0]));
         }
         return possibleAppPackages[0];
-    }
-
-    private static boolean computeIsDebuggableBuild() {
-        if (SdkLevel.isAtLeastS()) {
-            return Build.isDebuggable();
-        }
-
-        // Build.isDebuggable was added in S; duplicate that functionality for R.
-        return SystemProperties.getInt("ro.debuggable", 0) == 1;
     }
 }

@@ -25,10 +25,11 @@ android_test_helper_app {
         "src/**/*.java",
     ],
     min_sdk_version: "33",
-    target_sdk_version: "33",
+    target_sdk_version: "34",
     visibility: [
         "//cts/tests/tests:__subpackages__",
         "//packages/modules/AdServices/sdksandbox/tests/cts/endtoendtests",
         "//packages/modules/AdServices/sdksandbox/tests/hostsidetests/SdkSandboxSmallModuleHostTest",
+        "//packages/modules/AdServices/sdksandbox/tests/perf/scenarios/tests",
     ],
 }

@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.adselection.datahandlers;
 
+import static com.google.common.truth.Truth.assertWithMessage;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
@@ -28,9 +30,7 @@ import android.net.Uri;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.ReportingDataFixture;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -62,10 +62,9 @@ public class ReportingDataTest {
             AdSelectionSignals.fromString("{\"buyer_signals\":1}");
     private static final String TEST_BUYER_DECISION_LOGIC_JS = "fooJs";
     private static final Uri RENDER_URI = Uri.parse("http://www.domain.com/advert");
+    private static final Uri COMPONENT_SELLER_URI =
+            Uri.parse("http://www.componentseller.com/advert");
     private static final double BID = 5;
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuild_bothComputationDataAndUriSet_throwsIAE() {
@@ -125,5 +124,57 @@ public class ReportingDataTest {
                         .build();
 
         assertEquals(reportingComputationData, reportingData.getReportingComputationData());
+    }
+
+    @Test
+    public void testBuild_withOnlyComponentSellerUri_success() {
+
+        ReportingData reportingData =
+                ReportingData.builder()
+                        .setComponentSellerWinReportingUri(COMPONENT_SELLER_URI)
+                        .build();
+
+        assertWithMessage("Component seller win reporting uri")
+                .that(reportingData.getComponentSellerWinReportingUri())
+                .isEqualTo(COMPONENT_SELLER_URI);
+        assertWithMessage("Null seller win reporting uri")
+                .that(reportingData.getSellerWinReportingUri())
+                .isNull();
+        assertWithMessage("Null buyer win reporting uri")
+                .that(reportingData.getBuyerWinReportingUri())
+                .isNull();
+    }
+
+    @Test
+    public void testBuild_withComponentSellerUriAndOtherUris_success() {
+        ReportingData reportingData =
+                ReportingData.builder()
+                        .setBuyerWinReportingUri(ReportingDataFixture.BUYER_REPORTING_URI_1)
+                        .setComponentSellerWinReportingUri(COMPONENT_SELLER_URI)
+                        .setSellerWinReportingUri(ReportingDataFixture.SELLER_REPORTING_URI_1)
+                        .build();
+
+        assertWithMessage("Buyer win reporting uri")
+                .that(reportingData.getBuyerWinReportingUri())
+                .isEqualTo(ReportingDataFixture.BUYER_REPORTING_URI_1);
+        assertWithMessage("Seller win reporting uri")
+                .that(reportingData.getSellerWinReportingUri())
+                .isEqualTo(ReportingDataFixture.SELLER_REPORTING_URI_1);
+        assertWithMessage("Component seller win reporting uri")
+                .that(reportingData.getComponentSellerWinReportingUri())
+                .isEqualTo(COMPONENT_SELLER_URI);
+    }
+
+    @Test
+    public void testBuild_withoutComponentSellerReportingUri_success() {
+        ReportingData reportingData =
+                ReportingData.builder()
+                        .setBuyerWinReportingUri(ReportingDataFixture.BUYER_REPORTING_URI_1)
+                        .setSellerWinReportingUri(ReportingDataFixture.SELLER_REPORTING_URI_1)
+                        .build();
+
+        assertWithMessage("Null component seller win reporting uri")
+                .that(reportingData.getComponentSellerWinReportingUri())
+                .isNull();
     }
 }

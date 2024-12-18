@@ -16,8 +16,17 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_ALL_APIS_CONSENT_DISABLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_CONSENT_REVOKED_FOR_APP;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_MISSING_ANY_NOTIFICATION_DISPLAYED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_USER_CONSENT_FOR_API_IS_NOT_GIVEN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyString;
@@ -32,16 +41,19 @@ import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.CommonFixture;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-@RequiresSdkLevelAtLeastS()
+@SetErrorLogUtilDefaultParams(
+        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class)
 public class FledgeConsentFilterTest extends AdServicesExtendedMockitoTestCase {
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
@@ -88,6 +100,21 @@ public class FledgeConsentFilterTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_USER_CONSENT_FOR_API_IS_NOT_GIVEN,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA)
+    public void testAssertCallerHasApiUserConsent_revokedConsent_throwsGetAdSelectionCel() {
+        when(mConsentManagerMock.getConsent(any())).thenReturn(AdServicesApiConsent.REVOKED);
+
+        assertThrows(
+                ConsentManager.RevokedConsentException.class,
+                () ->
+                        mFledgeConsentFilter.assertCallerHasApiUserConsent(
+                                CommonFixture.TEST_PACKAGE_NAME,
+                                AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA));
+    }
+
+    @Test
     public void testAssertAndPersistCallerHasUserConsentForApp_hasConsent_doesNotThrowOrLogError() {
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(anyString()))
                 .thenReturn(false);
@@ -100,6 +127,10 @@ public class FledgeConsentFilterTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_CONSENT_REVOKED_FOR_APP,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE)
     public void testAssertAndPersistCallerHasUserConsentForApp_revokedConsent_throwsAndLogsError() {
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(anyString()))
                 .thenReturn(true);
@@ -206,6 +237,23 @@ public class FledgeConsentFilterTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_MISSING_ANY_NOTIFICATION_DISPLAYED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT)
+    public void
+    testAssertEnrollmentShouldBeScheduled_noNotificationsDisplayed_throwsPersistAdSelectionResultCel() {
+        disableUXNotification();
+        assertThrows(
+                ConsentManager.RevokedConsentException.class,
+                () ->
+                        mFledgeConsentFilter.assertEnrollmentShouldBeScheduled(
+                                ENFORCE_CONSENT_ENABLED,
+                                ENFORCE_NOTIFICATION_ENABLED,
+                                CommonFixture.TEST_PACKAGE_NAME,
+                                AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT));
+    }
+
+    @Test
     public void testAssertEnrollmentShouldBeScheduled_allAPIsDisabled_throwsAndLogsError() {
         enableUXNotification();
 
@@ -226,6 +274,26 @@ public class FledgeConsentFilterTest extends AdServicesExtendedMockitoTestCase {
                         eq(CommonFixture.TEST_PACKAGE_NAME),
                         eq(AdServicesStatusUtils.STATUS_CONSENT_REVOKED_ALL_APIS),
                         anyInt());
+    }
+
+    @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_CONSENT_FILTER_ALL_APIS_CONSENT_DISABLED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT)
+    public void
+    testAssertEnrollmentShouldBeScheduled_allAPIsDisabled_throwsPersistAdSelectionResultCel() {
+        enableUXNotification();
+
+        stubAllAPIsDisabledToTrue();
+
+        assertThrows(
+                ConsentManager.RevokedConsentException.class,
+                () ->
+                        mFledgeConsentFilter.assertEnrollmentShouldBeScheduled(
+                                ENFORCE_CONSENT_ENABLED,
+                                ENFORCE_NOTIFICATION_ENABLED,
+                                CommonFixture.TEST_PACKAGE_NAME,
+                                AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT));
     }
 
     private void enableUXNotification() {

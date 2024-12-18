@@ -85,6 +85,7 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.adselection.DBBuyerDecisionOverride;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.adselection.debug.DebugReporting;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
@@ -1136,7 +1137,7 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
                         .build();
         mAdSelectionEntryDao.persistPerBuyerDecisionLogicOverride(
                 ImmutableList.of(buyerDecisionOverride));
-        mDevContext = DevContext.builder(myAppPackageName).setDevOptionsEnabled(true).build();
+        mDevContext = DevContext.builder(myAppPackageName).setDeviceDevOptionsEnabled(true).build();
 
         adsWithBid.addAll(contextualBidAds);
         Answer<ListenableFuture<List<ScoreAdResult>>> loggerAnswer =
@@ -1436,7 +1437,7 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
         mAdSelectionEntryDao.persistAdSelectionOverride(adSelectionOverride);
 
         // Resetting Generator to use new dev context
-        mDevContext = DevContext.builder(myAppPackageName).setDevOptionsEnabled(true).build();
+        mDevContext = DevContext.builder(myAppPackageName).setDeviceDevOptionsEnabled(true).build();
 
         boolean dataVersionHeaderEnabled = false;
         mAdsScoreGenerator = initAdScoreGenerator(mFakeFlags, dataVersionHeaderEnabled);

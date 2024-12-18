@@ -16,17 +16,17 @@
 
 package android.adservices.cts;
 
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
+
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.GetAdSelectionDataRequest;
 import android.adservices.adselection.SellerConfigurationFixture;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
-
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import android.platform.test.annotations.RequiresFlagsEnabled;
 
 import org.junit.Test;
 
-@RequiresSdkLevelAtLeastS
 public final class GetAdSelectionDataRequestTest extends CtsAdServicesDeviceTestCase {
 
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
@@ -65,6 +65,7 @@ public final class GetAdSelectionDataRequestTest extends CtsAdServicesDeviceTest
     }
 
     @Test
+    @RequiresFlagsEnabled(FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
     public void testGetAdSelectionDataRequest_sellerConfiguration_success() {
         GetAdSelectionDataRequest request =
                 new GetAdSelectionDataRequest.Builder()
@@ -78,6 +79,7 @@ public final class GetAdSelectionDataRequestTest extends CtsAdServicesDeviceTest
     }
 
     @Test
+    @RequiresFlagsEnabled(FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
     public void testGetAdSelectionDataRequest_withoutSellerConfiguration_success() {
         GetAdSelectionDataRequest request =
                 new GetAdSelectionDataRequest.Builder().setSeller(SELLER).build();

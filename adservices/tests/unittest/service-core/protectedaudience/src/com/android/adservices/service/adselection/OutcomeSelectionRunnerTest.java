@@ -60,7 +60,9 @@ import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
@@ -69,8 +71,8 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -86,7 +88,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-@RequiresSdkLevelAtLeastS()
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(DebugFlags.class)
 public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLER_UID = Process.myUid();
     private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
@@ -122,7 +125,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
     private AdSelectionEntryDao mAdSelectionEntryDao;
     @Mock private AdOutcomeSelector mAdOutcomeSelectorMock;
     private OutcomeSelectionRunner mOutcomeSelectionRunner;
-    private Flags mFakeFlags = new OutcomeSelectionRunnerTestFlags();
+    private Flags mFakeFlags;
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     private ListeningExecutorService mBlockingExecutorService;
@@ -140,7 +143,8 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                                 AdSelectionDatabase.class)
                         .build()
                         .adSelectionEntryDao();
-
+        mFakeFlags = new OutcomeSelectionRunnerTestFlags();
+        mocker.mockGetDebugFlags(mMockDebugFlags);
         mOutcomeSelectionRunner =
                 new OutcomeSelectionRunner(
                         CALLER_UID,
@@ -152,10 +156,10 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                         mAdServicesLoggerMock,
                         mContext,
                         mFakeFlags,
+                        mMockDebugFlags,
                         mAdSelectionServiceFilter,
                         DevContext.createForDevOptionsDisabled(),
                         false);
-
         doNothing()
                 .when(mAdSelectionServiceFilter)
                 .filterRequest(
@@ -263,13 +267,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testRunOutcomeSelectionRevokedUserConsentEmptyResult_UXNotificationNotEnforced() {
-        Flags flagsWithUXConsentEnforcementDisabled =
-                new OutcomeSelectionRunnerTestFlags() {
-                    @Override
-                    public boolean getConsentNotificationDebugMode() {
-                        return true;
-                    }
-                };
+        mocker.mockGetConsentNotificationDebugMode(true);
 
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilter)
@@ -309,7 +307,8 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                         AdServicesExecutors.getScheduler(),
                         mAdServicesLoggerMock,
                         mContext,
-                        flagsWithUXConsentEnforcementDisabled,
+                        mFakeFlags,
+                        mMockDebugFlags,
                         mAdSelectionServiceFilter,
                         DevContext.createForDevOptionsDisabled(),
                         false);
@@ -351,7 +350,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
     @Test
     public void testRunOutcomeSelectionOrchestrationTimeoutFailure() {
         mFakeFlags =
-                new Flags() {
+                new OutcomeSelectionRunnerTestFlags() {
                     @Override
                     public long getAdSelectionSelectingOutcomeTimeoutMs() {
                         return 300;
@@ -402,6 +401,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                         mAdServicesLoggerMock,
                         mContext,
                         mFakeFlags,
+                        mMockDebugFlags,
                         mAdSelectionServiceFilter,
                         DevContext.createForDevOptionsDisabled(),
                         false);

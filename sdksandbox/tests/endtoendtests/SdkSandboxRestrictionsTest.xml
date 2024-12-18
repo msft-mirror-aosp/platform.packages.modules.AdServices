@@ -51,6 +51,9 @@
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
         <option name="teardown-command" value="cmd sdk_sandbox set-state --reset" />
+        <!-- Turn on debug logs for tests -->
+        <option name="run-command" value="setprop persist.log.tag.SDK_SANDBOX DEBUG" />
+        <option name="teardown-command" value="setprop persist.log.tag.SDK_SANDBOX INFO" />
     </target_preparer>
 
 

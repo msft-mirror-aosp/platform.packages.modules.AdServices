@@ -27,14 +27,12 @@ import android.os.Parcel;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.shared.testing.EqualsTester;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Test;
 
 import java.util.Collections;
 
 /** Unit tests for {@link SignedContextualAds} */
-@RequiresSdkLevelAtLeastS
 public final class SignedContextualAdsTest extends AdServicesUnitTestCase {
     public static final byte[] TEST_SIGNATURE = new byte[] {0, 1, 2};
 

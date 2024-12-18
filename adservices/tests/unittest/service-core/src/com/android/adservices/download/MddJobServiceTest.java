@@ -33,8 +33,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -54,7 +52,6 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
 import com.android.adservices.shared.testing.JobServiceLoggingCallback;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.concurrency.JobServiceCallback;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
@@ -73,7 +70,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /** Unit tests for {@link com.android.adservices.download.MddJobService} */
-@RequiresSdkLevelAtLeastS
 @SpyStatic(MddJob.class)
 @SpyStatic(MddJobService.class)
 @SpyStatic(MobileDataDownloadFactory.class)
@@ -118,9 +114,9 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
     public void setup() {
         // Mock JobScheduler invocation in EpochJobService
         assertThat(JOB_SCHEDULER).isNotNull();
-        assertNull(
-                "Job already scheduled before setup!",
-                JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
+        assertWithMessage("Job already scheduled before setup!")
+                .that(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID))
+                .isNull();
 
         mocker.mockGetFlags(mMockFlags);
 
@@ -132,7 +128,7 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
 
         doReturn(JOB_SCHEDULER).when(mSpyMddJobService).getSystemService(JobScheduler.class);
 
-        mLogger = mockAdServicesJobServiceLogger(mContext, mMockFlags);
+        mLogger = mocker.mockNoOpAdServicesJobServiceLogger(mContext, mMockFlags);
 
         // MDD Task Tag.
         PersistableBundle bundle = new PersistableBundle();
@@ -145,11 +141,13 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
 
     @After
     public void teardown() {
-        JOB_SCHEDULER.cancelAll();
+        if (JOB_SCHEDULER != null) {
+            JOB_SCHEDULER.cancelAll();
+        }
     }
 
     @Test
-    public void testSchedule_killswitchOff() throws Exception {
+    public void testSchedule_killSwitchOff() throws Exception {
         mockGetMddFlags();
 
         ResultSyncCallback<Integer> callBack = scheduleJobInBackground(/* forceSchedule */ false);
@@ -375,12 +373,12 @@ public final class MddJobServiceTest extends AdServicesJobServiceTestCase {
                         .setPeriodic(TASK_PERIOD_MS, FLEX_MS)
                         .build();
         JOB_SCHEDULER.schedule(existingJobInfo);
-        assertNotNull(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNotNull();
 
         // Now verify that when the Job starts, it will unschedule itself.
         assertFalse(mSpyMddJobService.onStartJob(mMockJobParameters));
 
-        assertNull(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID));
+        assertThat(JOB_SCHEDULER.getPendingJob(MDD_WIFI_CHARGING_PERIODIC_TASK_JOB_ID)).isNull();
 
         verify(mSpyMddJobService).jobFinished(mMockJobParameters, false);
         verifyNoMoreInteractions(staticMockMarker(MobileDataDownloadFactory.class));

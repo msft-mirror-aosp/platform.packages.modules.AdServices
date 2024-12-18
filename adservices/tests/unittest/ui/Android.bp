@@ -51,6 +51,7 @@ android_test {
         "adservices-service-core-schema",
         "adservices-shared-testing",
         "adservices-test-utility",
+        "adservices-ui-test-utility",
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
         "adservices-test-fixtures",
@@ -61,11 +62,11 @@ android_test {
         "gson",
     ],
     libs: [
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
-        "framework-configinfrastructure",
+        "framework-configinfrastructure.stubs.module_lib",
         "framework-sdksandbox.impl",
         "auto_value_annotations",
     ],
@@ -114,7 +115,7 @@ android_test {
     // configures. Add below line to address the issue.
     // See b/233124651 for details.
     compile_multilib: "both",
-    min_sdk_version: "30",
+    min_sdk_version: "31",
     max_sdk_version: "32",
     static_libs: [
         "adservices-assets",
@@ -122,6 +123,7 @@ android_test {
         "adservices-shared-testing",
         "adservices-test-fixtures",
         "adservices-test-utility",
+        "adservices-ui-test-utility",
         "androidx.concurrent_concurrent-futures",
         "androidx.room_room-runtime",
         "androidx.room_room-testing",
@@ -136,10 +138,10 @@ android_test {
     ],
     libs: [
         "android.ext.adservices",
-        "android.test.base",
+        "android.test.base.stubs.system",
         "android.test.mock.stubs",
         "framework-annotations-lib",
-        "framework-configinfrastructure",
+        "framework-configinfrastructure.stubs.module_lib",
         "framework-sdksandbox.impl",
     ],
     test_suites: [
