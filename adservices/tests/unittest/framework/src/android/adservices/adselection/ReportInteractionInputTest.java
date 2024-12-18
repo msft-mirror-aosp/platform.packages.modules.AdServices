@@ -20,25 +20,22 @@ import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_D
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 import static android.view.KeyEvent.ACTION_UP;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
-
 
 import android.adservices.common.CommonFixture;
 import android.os.Parcel;
 import android.view.InputEvent;
 import android.view.KeyEvent;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
-public class ReportInteractionInputTest {
+@RequiresSdkLevelAtLeastS
+public final class ReportInteractionInputTest extends AdServicesUnitTestCase {
     private static final long AD_SELECTION_ID = 1234L;
     private static final String INTERACTION_KEY = "click";
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
@@ -50,9 +47,6 @@ public class ReportInteractionInputTest {
             new KeyEvent(/* action= */ ACTION_UP, /* code= */ 90);
     private static final String AD_ID = "35a4ac90-e4dc-4fe7-bbc6-95e804aa7dbc";
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setup() throws Exception {
         JSONObject obj = new JSONObject().put("key", "value");
@@ -60,7 +54,7 @@ public class ReportInteractionInputTest {
     }
 
     @Test
-    public void testWriteToParcel_nonNullOptionalParameters() throws Exception {
+    public void testWriteToParcel_nonNullOptionalParameters() {
         ReportInteractionInput input =
                 new ReportInteractionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -79,19 +73,19 @@ public class ReportInteractionInputTest {
 
         ReportInteractionInput fromParcel = ReportInteractionInput.CREATOR.createFromParcel(p);
 
-        assertEquals(AD_SELECTION_ID, fromParcel.getAdSelectionId());
-        assertEquals(INTERACTION_KEY, fromParcel.getInteractionKey());
-        assertEquals(mInteractionData, fromParcel.getInteractionData());
-        assertEquals(CALLER_PACKAGE_NAME, fromParcel.getCallerPackageName());
-        assertEquals(DESTINATIONS, fromParcel.getReportingDestinations());
+        expect.that(fromParcel.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
+        expect.that(fromParcel.getInteractionKey()).isEqualTo(INTERACTION_KEY);
+        expect.that(fromParcel.getInteractionData()).isEqualTo(mInteractionData);
+        expect.that(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
+        expect.that(fromParcel.getReportingDestinations()).isEqualTo(DESTINATIONS);
         // KeyEventTest tests equality using the string representation of its keys
-        assertEquals(CLICK_EVENT.toString(), fromParcel.getInputEvent().toString());
-        assertEquals(AD_ID, fromParcel.getAdId());
-        assertEquals(CALLER_SDK_NAME, fromParcel.getCallerSdkName());
+        expect.that(fromParcel.getInputEvent().toString()).isEqualTo(CLICK_EVENT.toString());
+        expect.that(fromParcel.getAdId()).isEqualTo(AD_ID);
+        expect.that(fromParcel.getCallerSdkName()).isEqualTo(CALLER_SDK_NAME);
     }
 
     @Test
-    public void testWriteToParcel_nullInputEvent() throws Exception {
+    public void testWriteToParcel_nullInputEvent() {
         ReportInteractionInput input =
                 new ReportInteractionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -110,18 +104,18 @@ public class ReportInteractionInputTest {
 
         ReportInteractionInput fromParcel = ReportInteractionInput.CREATOR.createFromParcel(p);
 
-        assertEquals(AD_SELECTION_ID, fromParcel.getAdSelectionId());
-        assertEquals(INTERACTION_KEY, fromParcel.getInteractionKey());
-        assertEquals(mInteractionData, fromParcel.getInteractionData());
-        assertEquals(CALLER_PACKAGE_NAME, fromParcel.getCallerPackageName());
-        assertEquals(DESTINATIONS, fromParcel.getReportingDestinations());
-        assertThat(fromParcel.getInputEvent()).isNull();
-        assertEquals(AD_ID, fromParcel.getAdId());
-        assertEquals(CALLER_SDK_NAME, fromParcel.getCallerSdkName());
+        expect.that(fromParcel.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
+        expect.that(fromParcel.getInteractionKey()).isEqualTo(INTERACTION_KEY);
+        expect.that(fromParcel.getInteractionData()).isEqualTo(mInteractionData);
+        expect.that(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
+        expect.that(fromParcel.getReportingDestinations()).isEqualTo(DESTINATIONS);
+        expect.that(fromParcel.getInputEvent()).isNull();
+        expect.that(fromParcel.getAdId()).isEqualTo(AD_ID);
+        expect.that(fromParcel.getCallerSdkName()).isEqualTo(CALLER_SDK_NAME);
     }
 
     @Test
-    public void testWriteToParcel_nullAdId() throws Exception {
+    public void testWriteToParcel_nullAdId() {
         ReportInteractionInput input =
                 new ReportInteractionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -140,19 +134,19 @@ public class ReportInteractionInputTest {
 
         ReportInteractionInput fromParcel = ReportInteractionInput.CREATOR.createFromParcel(p);
 
-        assertEquals(AD_SELECTION_ID, fromParcel.getAdSelectionId());
-        assertEquals(INTERACTION_KEY, fromParcel.getInteractionKey());
-        assertEquals(mInteractionData, fromParcel.getInteractionData());
-        assertEquals(CALLER_PACKAGE_NAME, fromParcel.getCallerPackageName());
-        assertEquals(DESTINATIONS, fromParcel.getReportingDestinations());
+        expect.that(fromParcel.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
+        expect.that(fromParcel.getInteractionKey()).isEqualTo(INTERACTION_KEY);
+        expect.that(fromParcel.getInteractionData()).isEqualTo(mInteractionData);
+        expect.that(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
+        expect.that(fromParcel.getReportingDestinations()).isEqualTo(DESTINATIONS);
         // KeyEventTest tests equality using the string representation of its keys
-        assertEquals(CLICK_EVENT.toString(), fromParcel.getInputEvent().toString());
-        assertThat(fromParcel.getAdId()).isNull();
-        assertEquals(CALLER_SDK_NAME, fromParcel.getCallerSdkName());
+        expect.that(fromParcel.getInputEvent().toString()).isEqualTo(CLICK_EVENT.toString());
+        expect.that(fromParcel.getAdId()).isNull();
+        expect.that(fromParcel.getCallerSdkName()).isEqualTo(CALLER_SDK_NAME);
     }
 
     @Test
-    public void testWriteToParcel_nullCallerSdkName() throws Exception {
+    public void testWriteToParcel_nullCallerSdkName() {
         ReportInteractionInput input =
                 new ReportInteractionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -171,85 +165,80 @@ public class ReportInteractionInputTest {
 
         ReportInteractionInput fromParcel = ReportInteractionInput.CREATOR.createFromParcel(p);
 
-        assertEquals(AD_SELECTION_ID, fromParcel.getAdSelectionId());
-        assertEquals(INTERACTION_KEY, fromParcel.getInteractionKey());
-        assertEquals(mInteractionData, fromParcel.getInteractionData());
-        assertEquals(CALLER_PACKAGE_NAME, fromParcel.getCallerPackageName());
-        assertEquals(DESTINATIONS, fromParcel.getReportingDestinations());
+        expect.that(fromParcel.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
+        expect.that(fromParcel.getInteractionKey()).isEqualTo(INTERACTION_KEY);
+        expect.that(fromParcel.getInteractionData()).isEqualTo(mInteractionData);
+        expect.that(fromParcel.getCallerPackageName()).isEqualTo(CALLER_PACKAGE_NAME);
+        expect.that(fromParcel.getReportingDestinations()).isEqualTo(DESTINATIONS);
         // KeyEventTest tests equality using the string representation of its keys
-        assertEquals(CLICK_EVENT.toString(), fromParcel.getInputEvent().toString());
-        assertEquals(AD_ID, fromParcel.getAdId());
-        assertThat(fromParcel.getCallerSdkName()).isNull();
+        expect.that(fromParcel.getInputEvent().toString()).isEqualTo(CLICK_EVENT.toString());
+        expect.that(fromParcel.getAdId()).isEqualTo(AD_ID);
+        expect.that(fromParcel.getCallerSdkName()).isNull();
     }
 
     @Test
     public void testFailsToBuildWithUnsetAdSelectionId() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    new ReportInteractionInput.Builder()
-                            .setInteractionKey(INTERACTION_KEY)
-                            .setInteractionData(mInteractionData)
-                            .setCallerPackageName(CALLER_PACKAGE_NAME)
-                            .setReportingDestinations(DESTINATIONS)
-                            .build();
-                });
+                () ->
+                        new ReportInteractionInput.Builder()
+                                .setInteractionKey(INTERACTION_KEY)
+                                .setInteractionData(mInteractionData)
+                                .setCallerPackageName(CALLER_PACKAGE_NAME)
+                                .setReportingDestinations(DESTINATIONS)
+                                .build());
     }
 
     @Test
     public void testFailsToBuildWithNullInteractionKey() {
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    new ReportInteractionInput.Builder()
-                            .setAdSelectionId(AD_SELECTION_ID)
-                            .setInteractionData(mInteractionData)
-                            .setCallerPackageName(CALLER_PACKAGE_NAME)
-                            .setReportingDestinations(DESTINATIONS)
-                            .build();
-                });
+                () ->
+                        new ReportInteractionInput.Builder()
+                                .setAdSelectionId(AD_SELECTION_ID)
+                                .setInteractionData(mInteractionData)
+                                .setCallerPackageName(CALLER_PACKAGE_NAME)
+                                .setReportingDestinations(DESTINATIONS)
+                                .build());
     }
 
     @Test
     public void testFailsToBuildWithNullInteractionData() {
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    new ReportInteractionInput.Builder()
-                            .setAdSelectionId(AD_SELECTION_ID)
-                            .setInteractionKey(INTERACTION_KEY)
-                            .setCallerPackageName(CALLER_PACKAGE_NAME)
-                            .setReportingDestinations(DESTINATIONS)
-                            .build();
-                });
+                () ->
+                        new ReportInteractionInput.Builder()
+                                .setAdSelectionId(AD_SELECTION_ID)
+                                .setInteractionKey(INTERACTION_KEY)
+                                .setCallerPackageName(CALLER_PACKAGE_NAME)
+                                .setReportingDestinations(DESTINATIONS)
+                                .build());
     }
 
     @Test
     public void testFailsToBuildWithUnsetCallerPackageName() {
         assertThrows(
                 NullPointerException.class,
-                () -> {
-                    new ReportInteractionInput.Builder()
-                            .setAdSelectionId(AD_SELECTION_ID)
-                            .setInteractionKey(INTERACTION_KEY)
-                            .setInteractionData(mInteractionData)
-                            .setReportingDestinations(DESTINATIONS)
-                            .build();
-                });
+                () ->
+                        new ReportInteractionInput.Builder()
+                                .setAdSelectionId(AD_SELECTION_ID)
+                                .setInteractionKey(INTERACTION_KEY)
+                                .setInteractionData(mInteractionData)
+                                .setReportingDestinations(DESTINATIONS)
+                                .build());
     }
 
     @Test
     public void testFailsToBuildWithUnsetDestinations() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    new ReportInteractionInput.Builder()
-                            .setAdSelectionId(AD_SELECTION_ID)
-                            .setInteractionKey(INTERACTION_KEY)
-                            .setInteractionData(mInteractionData)
-                            .setCallerPackageName(CALLER_PACKAGE_NAME)
-                            .build();
-                });
+                () ->
+                        new ReportInteractionInput.Builder()
+                                .setAdSelectionId(AD_SELECTION_ID)
+                                .setInteractionKey(INTERACTION_KEY)
+                                .setInteractionData(mInteractionData)
+                                .setCallerPackageName(CALLER_PACKAGE_NAME)
+                                .build());
     }
 
     @Test
@@ -263,6 +252,6 @@ public class ReportInteractionInputTest {
                         .setCallerPackageName(CALLER_PACKAGE_NAME)
                         .build();
 
-        assertEquals(input.describeContents(), 0);
+        expect.that(input.describeContents()).isEqualTo(0);
     }
 }

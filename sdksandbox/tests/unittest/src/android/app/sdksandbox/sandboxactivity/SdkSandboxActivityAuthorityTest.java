@@ -23,10 +23,13 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assume.assumeTrue;
 
+import android.app.sdksandbox.ISdkToServiceCallback;
 import android.app.sdksandbox.SandboxedSdkContext;
+import android.app.sdksandbox.SdkSandboxLocalSingleton;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityHandler;
 import android.app.sdksandbox.sdkprovider.SdkSandboxActivityRegistry;
+import android.app.sdksandbox.testutils.FakeSdkSandboxActivityRegistryInjector;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -39,8 +42,11 @@ import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.sdksandbox.flags.Flags;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.After;
 import org.junit.Before;
@@ -49,26 +55,48 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 import org.mockito.Mockito;
+import org.mockito.quality.Strictness;
 
 @RunWith(JUnit4.class)
-public class SdkSandboxActivityAuthorityTest {
+public class SdkSandboxActivityAuthorityTest extends DeviceSupportedBaseTest {
 
-    @Rule
+    @Rule(order = 0)
     public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     private SdkSandboxActivityRegistry mRegistry;
     private SdkSandboxActivityAuthority mSdkSandboxActivityAuthority;
     private SdkSandboxActivityHandler mHandler;
     private SandboxedSdkContext mSdkContext;
+    private SdkSandboxLocalSingleton mSdkSandboxLocalSingleton;
+    private ISdkToServiceCallback mServiceCallback;
+    private FakeSdkSandboxActivityRegistryInjector mActivityRegistryInjector;
+    private StaticMockitoSession mStaticMockSession;
 
     /** Getting instance of SdkSandboxActivityRegistry and mock the SDK Context. */
     @Before
     public void setUp() {
         assumeTrue(SdkLevel.isAtLeastU());
-        mRegistry = SdkSandboxActivityRegistry.getInstance();
+        mSdkSandboxLocalSingleton = Mockito.mock(SdkSandboxLocalSingleton.class);
+        mServiceCallback = Mockito.mock(ISdkToServiceCallback.class);
+        Mockito.when(mSdkSandboxLocalSingleton.getSdkToServiceCallback())
+                .thenReturn(mServiceCallback);
+        mActivityRegistryInjector =
+                new FakeSdkSandboxActivityRegistryInjector(mSdkSandboxLocalSingleton);
+
+        mRegistry = SdkSandboxActivityRegistry.getInstance(mActivityRegistryInjector);
         mSdkSandboxActivityAuthority = SdkSandboxActivityAuthority.getInstance();
         mHandler = Mockito.spy(activity -> {});
         mSdkContext = Mockito.mock(SandboxedSdkContext.class);
+
+        mStaticMockSession =
+                ExtendedMockito.mockitoSession()
+                        .mockStatic(SdkSandboxLocalSingleton.class)
+                        .strictness(Strictness.LENIENT)
+                        .startMocking();
+        // Statically mock SdkSandboxLocalSingleton instance for all cases except for
+        // SdkSandboxActivityRegistry.
+        ExtendedMockito.doReturn(mSdkSandboxLocalSingleton)
+                .when(() -> SdkSandboxLocalSingleton.getExistingInstance());
     }
 
     /** Ensure to unregister registered handler. */
@@ -79,6 +107,10 @@ public class SdkSandboxActivityAuthorityTest {
                 mRegistry.unregister(mHandler);
             } catch (IllegalArgumentException e) {
                 // safe to ignore, it is already unregistered
+            }
+
+            if (mStaticMockSession != null) {
+                mStaticMockSession.finishMocking();
             }
         }
     }
@@ -112,8 +144,6 @@ public class SdkSandboxActivityAuthorityTest {
         final IBinder token = mRegistry.register(mSdkContext, mHandler);
         Intent intent = buildSandboxActivityIntent(token);
 
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(true);
-
         assertThat(mSdkSandboxActivityAuthority.getActivityContextInfo(intent))
                 .isInstanceOf(ActivityContextInfo.class);
     }
@@ -126,7 +156,6 @@ public class SdkSandboxActivityAuthorityTest {
     @RequiresFlagsEnabled(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
     public void testGetSdkSandboxActivityAuthorityFailForNonRegisteredHandlers() {
         final Intent intent = buildSandboxActivityIntent(new Binder());
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(true);
 
         IllegalArgumentException exception =
                 assertThrows(
@@ -139,25 +168,6 @@ public class SdkSandboxActivityAuthorityTest {
                                         "There is no registered SdkSandboxActivityHandler for the"
                                                 + " passed intent"))
                 .isTrue();
-    }
-
-    /**
-     * Ensure that the customized SDK flag has to be enabled before retrieving the
-     * ActivityContextInfo instance.
-     */
-    @Test
-    @RequiresFlagsEnabled(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
-    public void testGetSdkSandboxActivityAuthorityFailIfCustomizedSdkFlagIsDisabled() {
-        final IBinder token = mRegistry.register(mSdkContext, mHandler);
-        Intent intent = buildSandboxActivityIntent(token);
-
-        Mockito.when(mSdkContext.isCustomizedSdkContextEnabled()).thenReturn(false);
-
-        IllegalStateException exception =
-                assertThrows(
-                        IllegalStateException.class,
-                        () -> mSdkSandboxActivityAuthority.getActivityContextInfo(intent));
-        assertThat(exception.getMessage()).isEqualTo("Customized SDK flag is disabled.");
     }
 
     private Intent buildSandboxActivityIntent(IBinder token) {

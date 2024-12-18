@@ -22,20 +22,18 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.common.UserProfileIdDao;
 import com.android.adservices.shared.util.Clock;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.UUID;
 
-@RunWith(MockitoJUnitRunner.class)
-public class UserProfileIdManagerTest {
+public final class UserProfileIdManagerTest extends AdServicesMockitoTestCase {
 
     @Mock private UserProfileIdDao mUserProfileIdDao;
     private UserProfileIdManager mUserProfileIdManager;

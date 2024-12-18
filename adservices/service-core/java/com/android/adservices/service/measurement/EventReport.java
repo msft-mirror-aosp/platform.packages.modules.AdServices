@@ -34,6 +34,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * POJO for EventReport.
@@ -455,11 +456,13 @@ public class EventReport {
         public Builder populateFromSourceAndTrigger(
                 @NonNull Source source,
                 @NonNull Trigger trigger,
+                @NonNull UnsignedLong effectiveTriggerData,
                 @NonNull EventTrigger eventTrigger,
                 @NonNull Pair<UnsignedLong, UnsignedLong> debugKeyPair,
                 @NonNull EventReportWindowCalcDelegate eventReportWindowCalcDelegate,
                 @NonNull SourceNoiseHandler sourceNoiseHandler,
                 List<Uri> eventReportDestinations) {
+            mBuilding.mId = UUID.randomUUID().toString();
             mBuilding.mTriggerDedupKey = eventTrigger.getDedupKey();
             mBuilding.mTriggerTime = trigger.getTriggerTime();
             mBuilding.mSourceEventId = source.getEventId();
@@ -477,8 +480,7 @@ public class EventReport {
             mBuilding.mTriggerId = trigger.getId();
             mBuilding.mRegistrationOrigin = trigger.getRegistrationOrigin();
             mBuilding.mTriggerPriority = eventTrigger.getTriggerPriority();
-            // truncate trigger data to 3-bit or 1-bit based on {@link Source.SourceType}
-            mBuilding.mTriggerData = getTruncatedTriggerData(source, eventTrigger);
+            mBuilding.mTriggerData = effectiveTriggerData;
             mBuilding.mReportTime =
                     eventReportWindowCalcDelegate.getReportingTime(
                             source, trigger.getTriggerTime(), trigger.getDestinationType());
@@ -498,6 +500,7 @@ public class EventReport {
                 @NonNull List<UnsignedLong> debugKeys,
                 double flipProbability,
                 List<Uri> eventReportDestinations) {
+            mBuilding.mId = UUID.randomUUID().toString();
             mBuilding.mTriggerTime = trigger.getTriggerTime();
             mBuilding.mSourceEventId = source.getEventId();
             mBuilding.mEnrollmentId = source.getEnrollmentId();
@@ -518,11 +521,6 @@ public class EventReport {
             mBuilding.mReportTime = reportTime;
             mBuilding.mTriggerSummaryBucket = triggerSummaryBucket;
             return this;
-        }
-
-        private UnsignedLong getTruncatedTriggerData(Source source, EventTrigger eventTrigger) {
-            UnsignedLong triggerData = eventTrigger.getTriggerData();
-            return triggerData.mod(source.getTriggerDataCardinality());
         }
 
         /**

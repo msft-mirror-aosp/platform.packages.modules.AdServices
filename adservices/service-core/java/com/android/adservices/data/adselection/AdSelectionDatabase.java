@@ -18,7 +18,6 @@ package com.android.adservices.data.adselection;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
 import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.RoomDatabase;
@@ -26,8 +25,9 @@ import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 
-import java.util.Objects;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 /** Room based database for Ad Selection. */
 @Database(
@@ -41,7 +41,8 @@ import java.util.Objects;
             DBReportingData.class,
             DBAdSelectionInitialization.class,
             DBAdSelectionResult.class,
-            DBReportingComputationInfo.class
+            DBReportingComputationInfo.class,
+            DBConsentedDebugConfiguration.class
         },
         version = AdSelectionDatabase.DATABASE_VERSION,
         autoMigrations = {
@@ -51,22 +52,23 @@ import java.util.Objects;
             @AutoMigration(from = 4, to = 5),
             @AutoMigration(from = 5, to = 6),
             @AutoMigration(from = 6, to = 7),
-            @AutoMigration(from = 7, to = 8)
+            @AutoMigration(from = 7, to = 8),
+            @AutoMigration(from = 8, to = 9)
         })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class AdSelectionDatabase extends RoomDatabase {
     private static final Object SINGLETON_LOCK = new Object();
 
-    public static final int DATABASE_VERSION = 8;
+    public static final int DATABASE_VERSION = 9;
     // TODO(b/230653780): Should we separate the DB.
     public static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("adselection.db");
 
-    private static volatile AdSelectionDatabase sSingleton = null;
+    @GuardedBy("SINGLETON_LOCK")
+    private static volatile AdSelectionDatabase sSingleton;
 
     /** Returns an instance of the AdSelectionDatabase given a context. */
-    public static AdSelectionDatabase getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context, "Context must be provided.");
+    public static AdSelectionDatabase getInstance() {
         // Initialization pattern recommended on page 334 of "Effective Java" 3rd edition
         AdSelectionDatabase singleReadResult = sSingleton;
         if (singleReadResult != null) {
@@ -74,6 +76,7 @@ public abstract class AdSelectionDatabase extends RoomDatabase {
         }
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
+                Context context = ApplicationContextSingleton.get();
                 sSingleton =
                         FileCompatUtils.roomDatabaseBuilderHelper(
                                         context, AdSelectionDatabase.class, DATABASE_NAME)
@@ -88,4 +91,9 @@ public abstract class AdSelectionDatabase extends RoomDatabase {
      * @return a Dao to access entities in AdSelection database.
      */
     public abstract AdSelectionEntryDao adSelectionEntryDao();
+
+    /**
+     * @return a Dao to access ConsentedDebugConfiguration entities in AdSelection database.
+     */
+    public abstract ConsentedDebugConfigurationDao consentedDebugConfigurationDao();
 }

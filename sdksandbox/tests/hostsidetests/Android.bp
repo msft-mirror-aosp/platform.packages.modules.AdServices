@@ -31,7 +31,7 @@ java_test_host {
         "modules-utils-build-testing",
         "SdkSandboxHostTestUtils",
     ],
-    data: [
+    device_common_data: [
         ":TestCodeProvider",
         ":TestCodeProvider2",
         ":SdkSandboxTestApp",
@@ -40,6 +40,7 @@ java_test_host {
         ":SdkSandboxTestSharedApp2",
     ],
     compile_multilib: "both",
+    jarjar_rules: ":test-service-jarjar-rules",
 }
 
 java_test_host {
@@ -48,12 +49,16 @@ java_test_host {
     test_config: "SdkSandboxShellHostTest.xml",
     libs: ["tradefed"],
     test_suites: ["general-tests"],
-    data: [
+    static_libs: [
+        "SdkSandboxHostTestUtils",
+    ],
+    device_common_data: [
         ":TestCodeProvider",
         ":TestCodeProvider2",
         ":SdkSandboxTestApp",
         ":SdkSandboxTestDebuggableApp",
     ],
+    jarjar_rules: ":test-service-jarjar-rules",
 }
 
 android_test_helper_app {

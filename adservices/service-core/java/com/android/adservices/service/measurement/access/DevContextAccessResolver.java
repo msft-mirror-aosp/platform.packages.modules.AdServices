@@ -16,10 +16,6 @@
 
 package com.android.adservices.service.measurement.access;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST;
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
-import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
-
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.measurement.RegistrationRequest;
 import android.adservices.measurement.SourceRegistrationRequest;
@@ -43,9 +39,10 @@ public class DevContextAccessResolver implements IAccessResolver {
     public DevContextAccessResolver(
             @NonNull DevContext devContext,
             @NonNull RegistrationRequest registrationRequest) {
-        mIsAllowed = WebAddresses.isLocalhost(registrationRequest.getRegistrationUri())
-                ? devContext.getDevOptionsEnabled()
-                : true;
+        mIsAllowed =
+                WebAddresses.isLocalhost(registrationRequest.getRegistrationUri())
+                        ? devContext.getDeviceDevOptionsEnabled()
+                        : true;
     }
 
     public DevContextAccessResolver(
@@ -58,7 +55,7 @@ public class DevContextAccessResolver implements IAccessResolver {
                 break;
             }
         }
-        mIsAllowed = hasLocalhost ? devContext.getDevOptionsEnabled() : true;
+        mIsAllowed = hasLocalhost ? devContext.getDeviceDevOptionsEnabled() : true;
     }
 
     public DevContextAccessResolver(
@@ -71,7 +68,7 @@ public class DevContextAccessResolver implements IAccessResolver {
                 break;
             }
         }
-        mIsAllowed = hasLocalhost ? devContext.getDevOptionsEnabled() : true;
+        mIsAllowed = hasLocalhost ? devContext.getDeviceDevOptionsEnabled() : true;
     }
 
     public DevContextAccessResolver(
@@ -84,23 +81,16 @@ public class DevContextAccessResolver implements IAccessResolver {
                 break;
             }
         }
-        mIsAllowed = hasLocalhost ? devContext.getDevOptionsEnabled() : true;
+        mIsAllowed = hasLocalhost ? devContext.getDeviceDevOptionsEnabled() : true;
     }
 
     @Override
     public AccessInfo getAccessInfo(@NonNull Context context) {
-        int failureReason =
+        int statusCode =
                 mIsAllowed
-                        ? FAILURE_REASON_UNSET
-                        : FAILURE_REASON_DEV_OPTIONS_DISABLED_WHILE_USING_LOCALHOST;
-        return new AccessInfo(mIsAllowed, failureReason);
-    }
-
-    @NonNull
-    @Override
-    @AdServicesStatusUtils.StatusCode
-    public int getErrorStatusCode() {
-        return STATUS_UNAUTHORIZED;
+                        ? AdServicesStatusUtils.STATUS_SUCCESS
+                        : AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+        return new AccessInfo(mIsAllowed, statusCode);
     }
 
     @NonNull

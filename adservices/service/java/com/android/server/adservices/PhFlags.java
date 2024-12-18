@@ -18,20 +18,18 @@ package com.android.server.adservices;
 import android.annotation.NonNull;
 import android.provider.DeviceConfig;
 
-import com.android.adservices.service.CommonPhFlags;
-
 /**
  * Flags Implementation that delegates to DeviceConfig.
  *
  * @hide
  */
-public final class PhFlags extends CommonPhFlags implements Flags {
+public final class PhFlags implements Flags {
 
     private static final PhFlags sSingleton = new PhFlags();
 
     /** Returns the singleton instance of the PhFlags. */
     @NonNull
-    public static PhFlags getInstance() {
+    static PhFlags getInstance() {
         return sSingleton;
     }
 
@@ -41,12 +39,23 @@ public final class PhFlags extends CommonPhFlags implements Flags {
     // Adservices System Service enable status keys.
     static final String KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED = "adservice_system_service_enabled";
 
+    static final String KEY_CLIENT_ERROR_LOGGING__ENABLE_CEL_FOR_SYSTEM_SERVER =
+            "ClientErrorLogging__enable_cel_for_system_server";
+
     @Override
     public boolean getAdServicesSystemServiceEnabled() {
-        // The priority of applying the flag values: PH (DeviceConfig) and then hard-coded value.
-        return DeviceConfig.getBoolean(
-                DeviceConfig.NAMESPACE_ADSERVICES,
-                /* flagName */ KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED,
-                /* defaultValue */ ADSERVICES_SYSTEM_SERVICE_ENABLED);
+        return getFlag(KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED, ADSERVICES_SYSTEM_SERVICE_ENABLED);
+    }
+
+    @Override
+    public boolean getEnableCelForSystemServer() {
+        return getFlag(
+                KEY_CLIENT_ERROR_LOGGING__ENABLE_CEL_FOR_SYSTEM_SERVER,
+                CLIENT_ERROR_LOGGING__ENABLE_CEL_FOR_SYSTEM_SERVER);
+    }
+
+    @SuppressWarnings("AvoidDeviceConfigUsage") // Helper / infra method
+    private boolean getFlag(String name, boolean defaultValue) {
+        return DeviceConfig.getBoolean(DeviceConfig.NAMESPACE_ADSERVICES, name, defaultValue);
     }
 }

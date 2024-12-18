@@ -24,7 +24,6 @@ import static org.junit.Assume.assumeTrue;
 
 import android.app.sdksandbox.SandboxedSdk;
 import android.app.sdksandbox.SdkSandboxManager;
-import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.content.Context;
 import android.os.Bundle;
@@ -35,6 +34,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.server.sdksandbox.SandboxKillerBeforeTest;
 
 import org.junit.After;
 import org.junit.Before;
@@ -54,14 +54,14 @@ public class SdkSandboxStorageTest extends SandboxKillerBeforeTest {
     private static final String SDK_NAME_1 = "com.android.ctssdkprovider";
     private static final String FD_VALUE = "file-descriptor-value";
 
-    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
+    @Rule(order = 0)
+    public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
 
     private SdkSandboxManager mSdkSandboxManager;
 
     @Before
     public void setup() {
         final Context context = InstrumentationRegistry.getInstrumentation().getContext();
-        assumeTrue(DeviceSupportUtils.isSdkSandboxSupported(context));
         mSdkSandboxManager = context.getSystemService(SdkSandboxManager.class);
         mRule.getScenario();
     }

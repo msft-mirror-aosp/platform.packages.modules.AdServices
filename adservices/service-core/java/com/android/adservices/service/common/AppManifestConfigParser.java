@@ -16,12 +16,15 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.content.res.XmlResourceParser;
 
-import androidx.annotation.VisibleForTesting;
-
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.exception.XmlParseException;
 
 import org.xmlpull.v1.XmlPullParser;
@@ -49,12 +52,6 @@ public class AppManifestConfigParser {
 
     private AppManifestConfigParser() {}
 
-    @VisibleForTesting
-    static AppManifestConfig getConfig(@NonNull XmlResourceParser parser)
-            throws XmlParseException, XmlPullParserException, IOException {
-        return getConfig(parser, /* enabledByDefault=*/ false);
-    }
-
     /**
      * Parses and validates the given XML resource into a {@link AppManifestConfig} object.
      *
@@ -62,9 +59,8 @@ public class AppManifestConfigParser {
      * app_manifest_config.xsd schema.
      *
      * @param parser the XmlParser representing the AdServices App Manifest configuration
-     * @param enabledByDefault whether APIs should be enabled by default when missing from the
      */
-    static AppManifestConfig getConfig(@NonNull XmlResourceParser parser, boolean enabledByDefault)
+    static AppManifestConfig getConfig(@NonNull XmlResourceParser parser)
             throws XmlParseException, XmlPullParserException, IOException {
         AppManifestIncludesSdkLibraryConfig includesSdkLibraryConfig;
         AppManifestAttributionConfig attributionConfig = null;
@@ -202,16 +198,19 @@ public class AppManifestConfigParser {
                     break;
 
                 default:
-                    throw new XmlParseException(
-                            "Unknown tag: "
-                                    + parser.getName()
-                                    + " [Tags and attributes are case sensitive]");
+                    LoggerFactory.getLogger()
+                            .w(
+                                    "Unknown tag: "
+                                            + parser.getName()
+                                            + " [Tags and attributes are case sensitive]");
+                    ErrorLogUtil.e(
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_MANIFEST_CONFIG_PARSING_ERROR,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
             }
             parser.next();
         }
 
-        includesSdkLibraryConfig =
-                new AppManifestIncludesSdkLibraryConfig(enabledByDefault, includesSdkLibraries);
+        includesSdkLibraryConfig = new AppManifestIncludesSdkLibraryConfig(includesSdkLibraries);
         return new AppManifestConfig(
                 includesSdkLibraryConfig,
                 attributionConfig,
@@ -220,8 +219,7 @@ public class AppManifestConfigParser {
                 adSelectionConfig,
                 topicsConfig,
                 adIdConfig,
-                appSetIdConfig,
-                enabledByDefault);
+                appSetIdConfig);
     }
 
     private static String getSdkLibrary(@NonNull XmlResourceParser parser) {

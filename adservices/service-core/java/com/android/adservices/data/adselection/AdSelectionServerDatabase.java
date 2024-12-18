@@ -18,7 +18,6 @@ package com.android.adservices.data.adselection;
 
 import android.content.Context;
 
-import androidx.annotation.NonNull;
 import androidx.room.AutoMigration;
 import androidx.room.Database;
 import androidx.room.RoomDatabase;
@@ -26,6 +25,7 @@ import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.GuardedBy;
 
 import java.util.Objects;
@@ -45,23 +45,24 @@ import java.util.Objects;
             @AutoMigration(from = 1, to = 2),
             @AutoMigration(from = 2, to = 3),
             @AutoMigration(from = 3, to = 4),
+            @AutoMigration(from = 4, to = 5),
         })
 @TypeConverters({FledgeRoomConverters.class})
 public abstract class AdSelectionServerDatabase extends RoomDatabase {
-    public static final int DATABASE_VERSION = 4;
+    public static final int DATABASE_VERSION = 5;
     public static final String DATABASE_NAME =
             FileCompatUtils.getAdservicesFilename("adselectionserver.db");
 
     private static final Object SINGLETON_LOCK = new Object();
 
     @GuardedBy("SINGLETON_LOCK")
-    private static AdSelectionServerDatabase sSingleton = null;
+    private static AdSelectionServerDatabase sSingleton;
 
     /** Returns an instance of the AdSelectionEncryptionDatabase given a context. */
-    public static AdSelectionServerDatabase getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context, "Context must be present.");
+    public static AdSelectionServerDatabase getInstance() {
         synchronized (SINGLETON_LOCK) {
             if (Objects.isNull(sSingleton)) {
+                Context context = ApplicationContextSingleton.get();
                 sSingleton =
                         FileCompatUtils.roomDatabaseBuilderHelper(
                                         context, AdSelectionServerDatabase.class, DATABASE_NAME)

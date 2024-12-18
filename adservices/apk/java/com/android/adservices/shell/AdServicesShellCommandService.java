@@ -19,27 +19,40 @@ package com.android.adservices.shell;
 import android.annotation.Nullable;
 import android.app.Service;
 import android.content.Intent;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.android.adservices.service.FlagsFactory;
+import androidx.annotation.RequiresApi;
+
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.shell.ShellCommandServiceImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
-import java.io.FileDescriptor;
-import java.io.PrintWriter;
 import java.util.Objects;
 
 /** Implements a service which runs the shell command in the adservices process. */
+@RequiresApi(Build.VERSION_CODES.S)
 public final class AdServicesShellCommandService extends Service {
     @VisibleForTesting static final String TAG = "AdServicesShellCommand";
+
+    private final boolean mShellCommandEnabled;
 
     /** The binder service. This field must only be accessed on the main thread. */
     @Nullable private ShellCommandServiceImpl mShellCommandService;
 
+    public AdServicesShellCommandService() {
+        this(DebugFlags.getInstance().getAdServicesShellCommandEnabled());
+    }
+
+    @VisibleForTesting
+    AdServicesShellCommandService(boolean shellCommandEnabled) {
+        mShellCommandEnabled = shellCommandEnabled;
+    }
+
     @Override
     public void onCreate() {
-        if (!FlagsFactory.getFlags().getAdServicesShellCommandEnabled()) {
+        if (!mShellCommandEnabled) {
             Log.e(TAG, "Shell command service is not enabled.");
             return;
         }
@@ -50,16 +63,10 @@ public final class AdServicesShellCommandService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        if (!FlagsFactory.getFlags().getAdServicesShellCommandEnabled()) {
+        if (!mShellCommandEnabled) {
             Log.e(TAG, "Shell command service is not enabled.");
             return null;
         }
         return Objects.requireNonNull(mShellCommandService);
-    }
-
-    @Override
-    public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {
-        // TODO(b/308009734): Add service and flag info to the dump.
-        super.dump(fd, pw, args);
     }
 }

@@ -24,29 +24,24 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
-
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
-
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.topics.Topic;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.cobalt.CobaltLogger;
 import com.android.cobalt.domain.Project;
 
 import com.google.cobalt.MetricDefinition;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.util.Map;
 
-@SmallTest
-public final class TopicsCobaltLoggerTest {
+@RequiresSdkLevelAtLeastS
+public final class TopicsCobaltLoggerTest extends AdServicesMockitoTestCase {
     private static final int COUNT = 5;
 
     private static final int METRIC_ID = 1;
@@ -57,18 +52,12 @@ public final class TopicsCobaltLoggerTest {
     private static final int LAST_TOPIC = FIRST_TOPIC + SUPPORTED_TOPICS_COUNT - 1;
     private static final int LOGGED_TOPICS_COUNT = 10;
 
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
-
     @Mock private CobaltLogger mMockCobaltLogger;
     private TopicsCobaltLogger mTopicsCobaltLogger;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Before
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
-        mTopicsCobaltLogger = new TopicsCobaltLogger(mMockCobaltLogger);
+        mTopicsCobaltLogger = new TopicsCobaltLogger(Suppliers.memoize(() -> mMockCobaltLogger));
     }
 
     @Test
@@ -86,8 +75,8 @@ public final class TopicsCobaltLoggerTest {
                         .findFirst()
                         .orElseThrow();
         assertThat(topicsMetric.getMetricDimensionsCount()).isAtLeast(1);
-        assertThat(topicsMetric.getMetricDimensions(0).getDimension()).isEqualTo("topic");
-        assertThat(topicsMetric.getId()).isEqualTo(METRIC_ID);
+        expect.that(topicsMetric.getMetricDimensions(0).getDimension()).isEqualTo("topic");
+        expect.that(topicsMetric.getId()).isEqualTo(METRIC_ID);
         Map<Integer, String> eventCodes = topicsMetric.getMetricDimensions(0).getEventCodes();
         int unknownTopicEventCode =
                 eventCodes.entrySet().stream()
@@ -102,9 +91,9 @@ public final class TopicsCobaltLoggerTest {
                         .min()
                         .orElseThrow();
 
-        assertThat(unknownTopicEventCode).isEqualTo(UNKNOWN_TOPIC_EVENT_CODE);
-        assertThat(firstEventCode).isEqualTo(FIRST_EVENT_CODE);
-        assertThat(topicsMetric.getMetricDimensions(0).getMaxEventCode())
+        expect.that(unknownTopicEventCode).isEqualTo(UNKNOWN_TOPIC_EVENT_CODE);
+        expect.that(firstEventCode).isEqualTo(FIRST_EVENT_CODE);
+        expect.that(topicsMetric.getMetricDimensions(0).getMaxEventCode())
                 .isEqualTo(SUPPORTED_TOPICS_COUNT);
     }
 

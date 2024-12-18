@@ -16,9 +16,12 @@
 
 package com.android.adservices.errorlogging;
 
+import android.annotation.Nullable;
+
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.errorlogging.AbstractAdServicesErrorLogger;
+import com.android.adservices.shared.errorlogging.ErrorCodeSampler;
 import com.android.adservices.shared.errorlogging.StatsdAdServicesErrorLogger;
 import com.android.adservices.shared.errorlogging.StatsdAdServicesErrorLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
@@ -30,6 +33,8 @@ public final class AdServicesErrorLoggerImpl extends AbstractAdServicesErrorLogg
     private static final Object SINGLETON_LOCK = new Object();
     private static volatile AdServicesErrorLoggerImpl sSingleton;
     private final Flags mFlags;
+
+    @Nullable private final ErrorCodeSampler mErrorCodeSampler;
 
     public static AdServicesErrorLoggerImpl getInstance() {
         if (sSingleton == null) {
@@ -48,13 +53,62 @@ public final class AdServicesErrorLoggerImpl extends AbstractAdServicesErrorLogg
     @VisibleForTesting
     AdServicesErrorLoggerImpl(
             Flags flags, StatsdAdServicesErrorLogger statsdAdServicesErrorLogger) {
-        super(statsdAdServicesErrorLogger);
-        mFlags = Objects.requireNonNull(flags);
+        this(
+                flags,
+                statsdAdServicesErrorLogger,
+                flags.getCustomErrorCodeSamplingEnabled()
+                        ? new ErrorCodeSampler(
+                                flags,
+                                new NoSamplingAdServicesErrorLogger(statsdAdServicesErrorLogger))
+                        : null);
     }
 
+    @VisibleForTesting
+    AdServicesErrorLoggerImpl(
+            Flags flags,
+            StatsdAdServicesErrorLogger statsdAdServicesErrorLogger,
+            @Nullable ErrorCodeSampler errorCodeSampler) {
+        super(statsdAdServicesErrorLogger);
+        mFlags = Objects.requireNonNull(flags);
+        mErrorCodeSampler = errorCodeSampler;
+    }
+
+    /**
+     * Returns {@code true} if error code is not part of deny list and one of these conditions is
+     * met.
+     *
+     * <ul>
+     *   <li>Error code sampler is disabled and initialized to {@code null}.
+     *   <li>Error code sampler is enabled and {@code ErrorCodeSampler#shouldLog} returns {@code
+     *       true}.
+     * </ul>
+     */
     @Override
     protected boolean isEnabled(int errorCode) {
-        return mFlags.getAdServicesErrorLoggingEnabled()
-                && !mFlags.getErrorCodeLoggingDenyList().contains(errorCode);
+        boolean logBasedOnCustomSampleInterval =
+                mErrorCodeSampler == null || mErrorCodeSampler.shouldLog(errorCode);
+        // TODO(b/332599638): Deprecate error code deny list once custom sampling is launched.
+        return !mFlags.getErrorCodeLoggingDenyList().contains(errorCode)
+                && logBasedOnCustomSampleInterval;
+    }
+
+    /**
+     * ErrorLogger class where we are not doing any custom sampling of error codes. We perform
+     * logging every time when error occurs.
+     *
+     * <p>Note: This is intended only to log errors for {@code ErrorCodeSampler} which is
+     * instantiated inside {@code AdServicesErrorLoggerImpl}.
+     */
+    private static final class NoSamplingAdServicesErrorLogger
+            extends AbstractAdServicesErrorLogger {
+        private NoSamplingAdServicesErrorLogger(
+                StatsdAdServicesErrorLogger statsdAdServicesErrorLogger) {
+            super(statsdAdServicesErrorLogger);
+        }
+
+        @Override
+        protected boolean isEnabled(int errorCode) {
+            return true;
+        }
     }
 }

@@ -18,11 +18,12 @@ package com.android.adservices;
 import android.adservices.adid.AdIdProviderService;
 import android.adservices.appsetid.AppSetIdProviderService;
 import android.adservices.cobalt.AdServicesCobaltUploadService;
-import android.adservices.extdata.AdServicesExtDataStorageService;
+import android.annotation.Nullable;
 import android.content.pm.ResolveInfo;
 import android.content.pm.ServiceInfo;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 // TODO(b/295321663): need to split constants into AdServicesCommonConstants so they can be used by
 // host-side test artifacts.
@@ -32,7 +33,7 @@ import java.util.List;
  *
  * @hide
  */
-public class AdServicesCommon {
+public final class AdServicesCommon {
     private AdServicesCommon() {}
 
     /** Intent action to discover the Topics service in the APK. */
@@ -67,10 +68,6 @@ public class AdServicesCommon {
     public static final String ACTION_APPSETID_PROVIDER_SERVICE =
             AppSetIdProviderService.SERVICE_INTERFACE;
 
-    /** Intent action to discover the AdServicesExtDataStorageService. */
-    public static final String ACTION_AD_EXT_DATA_STORAGE_SERVICE =
-            AdServicesExtDataStorageService.SERVICE_INTERFACE;
-
     /** Intent action to discover the AdServicesCommon service in the APK. */
     public static final String ACTION_AD_SERVICES_COMMON_SERVICE =
             "android.adservices.AD_SERVICES_COMMON_SERVICE";
@@ -104,74 +101,84 @@ public class AdServicesCommon {
      */
     public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX = "debug.adservices.";
 
-    /** System property used to simulate AdServices behavior in a device that doesn't support it. */
-    public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_SUPPORTED_ON_DEVICE =
-            SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "supported";
-
     /** System property used to simulate AdServices behavior on devices with low memory. */
     public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_FEATURE_RAM_LOW =
             SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + "low_ram_device";
+
+    /** The name of System Property for the binder timeout */
+    public static final String BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME = "binder_timeout";
+
+    /** System property used to allow test to override the binder's timeout. */
+    public static final String SYSTEM_PROPERTY_FOR_DEBUGGING_BINDER_TIMEOUT =
+            SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME;
 
     /** Path name for Adservice class names */
     public static final String ADSERVICES_CLASS_PATH_PREFIX = "com.android.adservices.";
 
     /** The package name of the active AdServices APK on this device. */
     public static ServiceInfo resolveAdServicesService(
-            List<ResolveInfo> intentResolveInfos, String intentAction) {
-        if (intentResolveInfos == null || intentResolveInfos.isEmpty()) {
-            LogUtil.e(
-                    "Failed to find resolveInfo for adServices service. Intent action: "
-                            + intentAction);
-            return null;
-        }
+            @Nullable List<ResolveInfo> intentResolveInfos, String intentAction) {
+        int size = intentResolveInfos == null ? 0 : intentResolveInfos.size();
 
-        // On T+ devices, we may have two versions of the services present due to
-        // b/263904312.
-        if (intentResolveInfos.size() > 2) {
-            StringBuilder intents = new StringBuilder("");
-            for (ResolveInfo intentResolveInfo : intentResolveInfos) {
-                if (intentResolveInfo != null && intentResolveInfo.serviceInfo != null) {
-                    intents.append(intentResolveInfo.serviceInfo.packageName);
-                }
-            }
-            LogUtil.e("Found multiple services " + intents + " for " + intentAction);
-            return null;
-        }
+        enforceSingleServiceForAdIdAndAppSetId(intentAction, size);
 
-        // On T+ devices, only use the service that comes from AdServices APK. The package name of
-        // AdService is com.[google.]android.adservices.api while the package name of ExtServices
-        // APK is com.[google.]android.ext.services.
-        ServiceInfo serviceInfo = null;
-
-        // We have already checked if there are 0 OR more than 2 services returned.
-        switch (intentResolveInfos.size()) {
-            case 2:
-                // In the case of 2, always use the one from AdServicesApk.
-                if (intentResolveInfos.get(0) != null
-                        && intentResolveInfos.get(0).serviceInfo != null
-                        && intentResolveInfos.get(0).serviceInfo.packageName != null
-                        && intentResolveInfos
-                                .get(0)
-                                .serviceInfo
-                                .packageName
-                                .endsWith(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
-                    serviceInfo = intentResolveInfos.get(0).serviceInfo;
-                } else if (intentResolveInfos.get(1) != null
-                        && intentResolveInfos.get(1).serviceInfo != null
-                        && intentResolveInfos.get(1).serviceInfo.packageName != null
-                        && intentResolveInfos
-                                .get(1)
-                                .serviceInfo
-                                .packageName
-                                .endsWith(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)) {
-                    serviceInfo = intentResolveInfos.get(1).serviceInfo;
-                }
-                break;
+        switch (size) {
+            case 0:
+                LogUtil.e(
+                        "Failed to find resolveInfo for adServices service. Intent action: %s",
+                        intentAction);
+                return null;
 
             case 1:
-                serviceInfo = intentResolveInfos.get(0).serviceInfo;
-                break;
+                return intentResolveInfos.get(0).serviceInfo;
+
+            case 2:
+                // On T+ devices, we may have two versions of the services present due to
+                // b/263904312. Only use the service that comes from AdServices APK. The package
+                // name of AdService is com.[google.]android.adservices.api while the package name
+                // of ExtServices APK is com.[google.]android.ext.services.
+                ServiceInfo serviceInfo = getServiceInfoIfAdServices(intentResolveInfos.get(0));
+                return serviceInfo == null
+                        ? getServiceInfoIfAdServices(intentResolveInfos.get(1))
+                        : serviceInfo;
+
+            default:
+                List<String> intents =
+                        intentResolveInfos.stream()
+                                .filter(s -> s != null && s.serviceInfo != null)
+                                .map(s -> s.serviceInfo.packageName)
+                                .collect(Collectors.toList());
+                LogUtil.e("Found multiple services %s for %s", intents, intentAction);
+                return null;
         }
-        return serviceInfo;
+    }
+
+    private static ServiceInfo getServiceInfoIfAdServices(@Nullable ResolveInfo resolveInfo) {
+        if (resolveInfo == null) {
+            return null;
+        }
+
+        ServiceInfo serviceInfo = resolveInfo.serviceInfo;
+        if (serviceInfo == null || serviceInfo.packageName == null) {
+            return null;
+        }
+
+        return serviceInfo.packageName.endsWith(ADSERVICES_APK_PACKAGE_NAME_SUFFIX)
+                ? serviceInfo
+                : null;
+    }
+
+    // It was designed to allow OEM to override the AdId/AppSetId Provider Service in GMS Core.
+    // However, this is never available because if the device has both GMS Core and an
+    // overriding Provider, it falls into this case and returns null. Therefore, let it
+    // explicitly throw in case any OEM wants to actually override it, and we can apply
+    // a change to allow it if needed.
+    private static void enforceSingleServiceForAdIdAndAppSetId(
+            String intentAction, int numberOfResolvedServices) {
+        if ((ACTION_ADID_PROVIDER_SERVICE.equals(intentAction)
+                        || ACTION_APPSETID_PROVIDER_SERVICE.equals(intentAction))
+                && numberOfResolvedServices > 1) {
+            throw new IllegalStateException("Found multiple services for " + intentAction);
+        }
     }
 }

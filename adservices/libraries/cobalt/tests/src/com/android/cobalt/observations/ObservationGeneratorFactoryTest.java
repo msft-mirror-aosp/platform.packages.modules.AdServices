@@ -29,12 +29,13 @@ import com.android.cobalt.data.ObservationGenerator;
 import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.data.StringListEntry;
 import com.android.cobalt.domain.Project;
-import com.android.cobalt.observations.testing.FakeSecureRandom;
 import com.android.cobalt.system.SystemData;
+import com.android.cobalt.testing.logging.FakeCobaltOperationLogger;
+import com.android.cobalt.testing.observations.FakeSecureRandom;
 
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.ReportDefinition;
-import com.google.cobalt.ReportDefinition.PrivacyLevel;
+import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.common.collect.ImmutableList;
 import com.google.common.hash.HashCode;
@@ -58,18 +59,21 @@ public final class ObservationGeneratorFactoryTest extends AdServicesMockitoTest
 
     @Mock private DaoBuildingBlocks mDaoBuildingBlocks;
     private ObservationGeneratorFactory mFactory;
+    private FakeCobaltOperationLogger mOperationLogger;
 
     @Before
     public void setup() {
         Project project = Project.create(CUSTOMER_ID, PROJECT_ID, /* metrics= */ List.of());
         SecureRandom secureRandom = new FakeSecureRandom();
+        mOperationLogger = new FakeCobaltOperationLogger();
         mFactory =
                 new ObservationGeneratorFactory(
                         project,
                         new SystemData(),
                         mDaoBuildingBlocks,
                         new PrivacyGenerator(secureRandom),
-                        secureRandom);
+                        secureRandom,
+                        mOperationLogger);
     }
 
     @Test
@@ -79,7 +83,7 @@ public final class ObservationGeneratorFactoryTest extends AdServicesMockitoTest
                         MetricDefinition.getDefaultInstance(),
                         ReportDefinition.newBuilder()
                                 .setReportType(ReportType.FLEETWIDE_OCCURRENCE_COUNTS)
-                                .setPrivacyLevel(PrivacyLevel.NO_ADDED_PRIVACY)
+                                .setPrivacyMechanism(PrivacyMechanism.DE_IDENTIFICATION)
                                 .build(),
                         UNUSED_DAY_INDEX);
 
@@ -93,7 +97,7 @@ public final class ObservationGeneratorFactoryTest extends AdServicesMockitoTest
                         MetricDefinition.getDefaultInstance(),
                         ReportDefinition.newBuilder()
                                 .setReportType(ReportType.FLEETWIDE_OCCURRENCE_COUNTS)
-                                .setPrivacyLevel(PrivacyLevel.HIGH_PRIVACY)
+                                .setPrivacyMechanism(PrivacyMechanism.SHUFFLED_DIFFERENTIAL_PRIVACY)
                                 .build(),
                         UNUSED_DAY_INDEX);
 
@@ -101,7 +105,7 @@ public final class ObservationGeneratorFactoryTest extends AdServicesMockitoTest
     }
 
     @Test
-    public void getObservationGenerator_fleetwideOccurrenceCounts_noPrivacyLevelSet()
+    public void getObservationGenerator_fleetwideOccurrenceCounts_noPrivacyMechanismSet()
             throws Exception {
         assertThrows(
                 AssertionError.class,
@@ -121,7 +125,7 @@ public final class ObservationGeneratorFactoryTest extends AdServicesMockitoTest
                         MetricDefinition.getDefaultInstance(),
                         ReportDefinition.newBuilder()
                                 .setReportType(ReportType.STRING_COUNTS)
-                                .setPrivacyLevel(PrivacyLevel.NO_ADDED_PRIVACY)
+                                .setPrivacyMechanism(PrivacyMechanism.DE_IDENTIFICATION)
                                 .build(),
                         UNUSED_DAY_INDEX);
 
@@ -146,7 +150,7 @@ public final class ObservationGeneratorFactoryTest extends AdServicesMockitoTest
                         ReportDefinition.newBuilder()
                                 .setId(REPORT_ID)
                                 .setReportType(ReportType.STRING_COUNTS)
-                                .setPrivacyLevel(PrivacyLevel.NO_ADDED_PRIVACY)
+                                .setPrivacyMechanism(PrivacyMechanism.DE_IDENTIFICATION)
                                 .build(),
                         dayIndex);
 
@@ -165,13 +169,14 @@ public final class ObservationGeneratorFactoryTest extends AdServicesMockitoTest
                                 MetricDefinition.getDefaultInstance(),
                                 ReportDefinition.newBuilder()
                                         .setReportType(ReportType.STRING_COUNTS)
-                                        .setPrivacyLevel(PrivacyLevel.HIGH_PRIVACY)
+                                        .setPrivacyMechanism(
+                                                PrivacyMechanism.SHUFFLED_DIFFERENTIAL_PRIVACY)
                                         .build(),
                                 UNUSED_DAY_INDEX));
     }
 
     @Test
-    public void getObservationGenerator_stringsCounts_noPrivacyLevelSet() throws Exception {
+    public void getObservationGenerator_stringsCounts_noPrivacyMechanismSet() throws Exception {
         assertThrows(
                 AssertionError.class,
                 () ->

@@ -27,7 +27,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.data.common.BooleanFileDatastore;
+import com.android.adservices.data.common.AtomicFileDatastore;
 import com.android.adservices.data.consent.AppConsentDao;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.service.FlagsFactory;
@@ -60,8 +60,9 @@ import java.util.stream.Collectors;
  * This class manages the interface to AppSearch for reading/writing all AdServices consent data on
  * S- devices. This is needed because AdServices does not run any code in the system server on S-
  * devices, so consent data is rollback safe by storing it in AppSearch.
+ *
+ * <p>IMPORTANT: Until ConsentManagerV2 is launched, keep in sync with AppSearchConsentManager.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppSearchConsentStorageManager implements IConsentStorage {
 
@@ -299,7 +300,7 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
      */
     public boolean migrateConsentDataIfNeeded(
             @NonNull SharedPreferences sharedPreferences,
-            @NonNull BooleanFileDatastore datastore,
+            @NonNull AtomicFileDatastore datastore,
             @Nullable AdServicesStorageManager adServicesManager,
             @NonNull AppConsentDao appConsentDao)
             throws IOException {
@@ -322,20 +323,34 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
         // <p>a) The device is T+
         // <p>b) Data is not already migrated
         // <p>c) We showed the notification on S- (as recorded in AppSearch).
-        if (!shouldInitConsentDataFromAppSearch(sharedPreferences, datastore, adServicesManager)) {
+        boolean isU18AppSearchMigrationEnabled =
+                FlagsFactory.getFlags().getEnableU18AppsearchMigration();
+        if (!shouldInitConsentDataFromAppSearch(
+                sharedPreferences, datastore, adServicesManager, isU18AppSearchMigrationEnabled)) {
             return false;
         }
 
-        if (wasNotificationDisplayed()) {
-            datastore.put(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
+        boolean wasNotificationDisplayed = wasNotificationDisplayed();
+        boolean wasGaUxNotificationDisplayed = wasGaUxNotificationDisplayed();
+        boolean wasU18NotificationDisplayed =
+                isU18AppSearchMigrationEnabled && wasU18NotificationDisplayed();
+
+        if (wasNotificationDisplayed) {
+            datastore.putBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE, true);
             adServicesManager.recordNotificationDisplayed(true);
         }
-        if (wasGaUxNotificationDisplayed()) {
-            datastore.put(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
+        if (wasGaUxNotificationDisplayed) {
+            datastore.putBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE, true);
             adServicesManager.recordGaUxNotificationDisplayed(true);
         }
-        if (!wasGaUxNotificationDisplayed() && !wasNotificationDisplayed()) {
-            // This shouldn't happen since we checked that either of these notifications is
+        if (wasU18NotificationDisplayed) {
+            datastore.putBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED, true);
+            adServicesManager.setU18NotificationDisplayed(true);
+        }
+        if (!wasGaUxNotificationDisplayed
+                && !wasNotificationDisplayed
+                && !wasU18NotificationDisplayed) {
+            // This shouldn't happen since we checked that one of these notifications is
             // displayed per AppSearch before entering.
             LogUtil.e("AppSearch has not recorded notification displayed. Aborting migration");
             return false;
@@ -362,9 +377,9 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
         PrivacySandboxFeatureType currentFeatureType = getCurrentPrivacySandboxFeature();
         for (PrivacySandboxFeatureType featureType : PrivacySandboxFeatureType.values()) {
             if (featureType.name().equals(currentFeatureType.name())) {
-                datastore.put(featureType.name(), true);
+                datastore.putBoolean(featureType.name(), true);
             } else {
-                datastore.put(featureType.name(), false);
+                datastore.putBoolean(featureType.name(), false);
             }
         }
 
@@ -456,6 +471,18 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
             mAppSearchConsentWorker.addAppWithConsent(
                     AppSearchAppConsentDao.APPS_WITH_CONSENT, packageName);
         }
+    }
+
+    @Override
+    public void resetAppsAndBlockedApps() throws IOException {
+        mAppSearchConsentWorker.clearAppsWithConsent(AppSearchAppConsentDao.APPS_WITH_CONSENT);
+        mAppSearchConsentWorker.clearAppsWithConsent(
+                AppSearchAppConsentDao.APPS_WITH_REVOKED_CONSENT);
+    }
+
+    @Override
+    public void resetApps() throws IOException {
+        mAppSearchConsentWorker.clearAppsWithConsent(AppSearchAppConsentDao.APPS_WITH_CONSENT);
     }
 
     /**
@@ -564,6 +591,92 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
         return mAppSearchConsentWorker.wasU18NotificationDisplayed();
     }
 
+    @Override
+    public boolean wasPasNotificationDisplayed() throws IOException {
+        // PAS update not supported on S yet
+        return false;
+    }
+
+    @Override
+    public void recordPasNotificationDisplayed(boolean wasPasDisplayed) {
+        // PAS update not supported on S yet
+    }
+
+    /** Set the measurement data reset activity happens based on consent_source_of_truth. */
+    @Override
+    public void setMeasurementDataReset(boolean isMeasurementDataReset) throws IOException {
+        mAppSearchConsentWorker.setMeasurementDataReset(isMeasurementDataReset);
+    }
+
+    /**
+     * Returns whether the measurement data reset activity happens based on consent_source_of_truth.
+     */
+    @Override
+    public boolean isMeasurementDataReset() throws IOException {
+        return mAppSearchConsentWorker.isMeasurementDataReset();
+    }
+
+    @Override
+    public Boolean getDefaultConsent() throws IOException {
+        return mAppSearchConsentWorker.getConsent(ConsentConstants.DEFAULT_CONSENT);
+    }
+
+    @Override
+    public Boolean getTopicsDefaultConsent() {
+        return mAppSearchConsentWorker.getConsent(ConsentConstants.TOPICS_DEFAULT_CONSENT);
+    }
+
+    @Override
+    public Boolean getFledgeDefaultConsent() {
+        return mAppSearchConsentWorker.getConsent(ConsentConstants.FLEDGE_DEFAULT_CONSENT);
+    }
+
+    @Override
+    public Boolean getMeasurementDefaultConsent() {
+        return mAppSearchConsentWorker.getConsent(ConsentConstants.MEASUREMENT_DEFAULT_CONSENT);
+    }
+
+    @Override
+    public Boolean getDefaultAdIdState() {
+        return mAppSearchConsentWorker.getConsent(ConsentConstants.DEFAULT_AD_ID_STATE);
+    }
+
+    @Override
+    public void recordDefaultConsent(boolean defaultConsent) {
+        mAppSearchConsentWorker.setConsent(ConsentConstants.DEFAULT_CONSENT, defaultConsent);
+    }
+
+    @Override
+    public void recordTopicsDefaultConsent(boolean defaultConsent) {
+        mAppSearchConsentWorker.setConsent(ConsentConstants.TOPICS_DEFAULT_CONSENT, defaultConsent);
+    }
+
+    @Override
+    public void recordFledgeDefaultConsent(boolean defaultConsent) {
+        mAppSearchConsentWorker.setConsent(ConsentConstants.FLEDGE_DEFAULT_CONSENT, defaultConsent);
+    }
+
+    @Override
+    public void recordMeasurementDefaultConsent(boolean defaultConsent) {
+        mAppSearchConsentWorker.setConsent(
+                ConsentConstants.MEASUREMENT_DEFAULT_CONSENT, defaultConsent);
+    }
+
+    @Override
+    public void recordDefaultAdIdState(boolean defaultAdIdState) {
+        mAppSearchConsentWorker.setConsent(ConsentConstants.DEFAULT_AD_ID_STATE, defaultAdIdState);
+    }
+
+    @Override
+    public Boolean isPaDataReset() {
+        return mAppSearchConsentWorker.isPaDataReset();
+    }
+
+    @Override
+    public void setPaDataReset(boolean isPaDataReset) {
+        mAppSearchConsentWorker.setConsent(ConsentConstants.IS_PA_DATA_RESET, isPaDataReset);
+    }
+
     /**
      * Checks whether migration of consent data from AppSearch to PPAPI/System server should occur.
      * The migration should only happen once after OTA from S to T.
@@ -575,8 +688,9 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
     @SuppressWarnings("NewApi")
     boolean shouldInitConsentDataFromAppSearch(
             SharedPreferences sharedPreferences,
-            BooleanFileDatastore datastore,
-            AdServicesStorageManager adServicesManager) {
+            AtomicFileDatastore datastore,
+            AdServicesStorageManager adServicesManager,
+            boolean isU18AppSearchMigrationEnabled) {
         if (!SdkLevel.isAtLeastT() || !FlagsFactory.getFlags().getEnableAppsearchConsentData()) {
             return false;
         }
@@ -590,7 +704,12 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
                                 /* defValue= */ false)
                         || sharedPreferences.getBoolean(
                                 ConsentConstants.SHARED_PREFS_KEY_HAS_MIGRATED,
+                                /* defValue= */ false)
+                        || sharedPreferences.getBoolean(
+                                ConsentConstants
+                                        .SHARED_PREFS_KEY_MIGRATED_FROM_ADEXTDATA_TO_SYSTEM_SERVER,
                                 /* defValue= */ false);
+
         if (shouldSkipMigration) {
             LogUtil.d(
                     "Consent migration from AppSearch is already done for user %d.",
@@ -602,13 +721,24 @@ public class AppSearchConsentStorageManager implements IConsentStorage {
         // recorded showing notification in PP API or system service and we have consent data stored
         // in AppSearch, we should migrate that data to AdServices and record notification as
         // displayed. This avoids showing the notification to the user again after OTA to T.
+        boolean wasU18NotificationRecordedInPpapiOrSystemServer =
+                isU18AppSearchMigrationEnabled
+                        && (datastore.getBoolean(ConsentConstants.WAS_U18_NOTIFICATION_DISPLAYED)
+                                || adServicesManager.wasU18NotificationDisplayed());
         boolean wasNotificationDisplayedInAdServices =
-                datastore.get(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE)
-                        || datastore.get(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE)
+                datastore.getBoolean(ConsentConstants.NOTIFICATION_DISPLAYED_ONCE)
+                        || datastore.getBoolean(ConsentConstants.GA_UX_NOTIFICATION_DISPLAYED_ONCE)
                         || adServicesManager.wasNotificationDisplayed()
-                        || adServicesManager.wasGaUxNotificationDisplayed();
+                        || adServicesManager.wasGaUxNotificationDisplayed()
+                        || wasU18NotificationRecordedInPpapiOrSystemServer;
         if (!wasNotificationDisplayedInAdServices) {
-            boolean result = wasNotificationDisplayed() || wasGaUxNotificationDisplayed();
+            // Check notification status in AppSearch
+            boolean wasU18NotificationDisplayed =
+                    isU18AppSearchMigrationEnabled && wasU18NotificationDisplayed();
+            boolean result =
+                    wasU18NotificationDisplayed
+                            || wasNotificationDisplayed()
+                            || wasGaUxNotificationDisplayed();
             LogUtil.d("For consent migration AppSearch notification status: " + result);
             return result;
         }

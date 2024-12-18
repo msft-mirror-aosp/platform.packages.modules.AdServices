@@ -16,124 +16,115 @@
 
 package com.android.adservices.ui.settings;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
+import android.os.Build;
+
 import androidx.test.uiautomator.UiObject2;
-import androidx.test.uiautomator.UiObjectNotFoundException;
 
 import com.android.adservices.api.R;
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetStringFlag;
 import com.android.adservices.ui.util.AdServicesUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
-import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.Assume;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
-@RunWith(AndroidJUnit4.class)
-public class ConsentSettingsUiAutomatorTest extends AdServicesUiTestCase {
-
-    @Rule(order = 0)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
-
-    @Rule(order = 1)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setCompatModeFlags()
-                    .setFlag(KEY_GA_UX_FEATURE_ENABLED, false);
-
+@DisableGlobalKillSwitch
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE)
+@SetAllLogcatTags
+@SetCompatModeFlags
+@SetFlagDisabled(KEY_GA_UX_FEATURE_ENABLED)
+@SetStringFlag(name = "debug_ux", value = "BETA_UX")
+public final class ConsentSettingsUiAutomatorTest extends AdServicesUiTestCase {
     @Test
+    @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = 0)
+    @SetFlagDisabled(KEY_UI_DIALOGS_FEATURE_ENABLED)
+    @RequiresSdkLevelAtLeastT
     @Ignore("b/293366771")
     public void consentSystemServerOnlyTest() {
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
-
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 0");
-        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
         consentTest(false);
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = 1)
+    @SetFlagDisabled(KEY_UI_DIALOGS_FEATURE_ENABLED)
     @Ignore("b/293366771")
     public void consentPpApiOnlyTest() {
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 1");
-        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
         consentTest(false);
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = 2)
+    @SetFlagDisabled(KEY_UI_DIALOGS_FEATURE_ENABLED)
+    @RequiresSdkLevelAtLeastT
     @Ignore("b/293366771")
     public void consentSystemServerAndPpApiTest() {
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
-        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
         consentTest(false);
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = 0)
+    @SetFlagEnabled(KEY_UI_DIALOGS_FEATURE_ENABLED)
+    @RequiresSdkLevelAtLeastT
     @Ignore("b/293366771")
     public void consentSystemServerOnlyDialogsOnTest() {
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 0");
-        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
         consentTest(true);
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = 1)
+    @SetFlagEnabled(KEY_UI_DIALOGS_FEATURE_ENABLED)
     @Ignore("b/293366771")
     public void consentPpApiOnlyDialogsOnTest() {
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 1");
-        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
-
         consentTest(true);
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = 2)
+    @SetFlagEnabled(KEY_UI_DIALOGS_FEATURE_ENABLED)
+    @RequiresSdkLevelAtLeastT
     @Ignore("b/293366771")
     public void consentSystemServerAndPpApiDialogsOnTest() {
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 2");
-        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
         consentTest(true);
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = 3)
+    @SetFlagDisabled(KEY_UI_DIALOGS_FEATURE_ENABLED)
+    @SetFlagEnabled(KEY_ENABLE_APPSEARCH_CONSENT_DATA)
+    @RequiresSdkRange(atLeast = Build.VERSION_CODES.S, atMost = Build.VERSION_CODES.S_V2)
     @Ignore("b/293366771")
     public void consentAppSearchOnlyTest() {
-        // APPSEARCH_ONLY is not a valid choice of consent_source_of_truth on T+.
-        Assume.assumeTrue(!SdkLevel.isAtLeastT());
-        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 3");
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_appsearch_consent_data true");
         consentTest(false);
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = 3)
+    @SetFlagEnabled(KEY_UI_DIALOGS_FEATURE_ENABLED)
+    @SetFlagEnabled(KEY_ENABLE_APPSEARCH_CONSENT_DATA)
+    @RequiresSdkRange(atLeast = Build.VERSION_CODES.S, atMost = Build.VERSION_CODES.S_V2)
     @Ignore("b/293366771")
-    public void consentAppSearchOnlyDialogsOnTest() throws UiObjectNotFoundException {
-        // APPSEARCH_ONLY is not a valid choice of consent_source_of_truth on T+.
-        Assume.assumeTrue(!SdkLevel.isAtLeastT());
-        ShellUtils.runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
-        ShellUtils.runShellCommand("device_config put adservices consent_source_of_truth 3");
-        ShellUtils.runShellCommand(
-                "device_config put adservices enable_appsearch_consent_data true");
+    public void consentAppSearchOnlyDialogsOnTest() {
         consentTest(true);
     }
 
     private void consentTest(boolean dialogsOn) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_activity_debug_mode true");
-        ShellUtils.runShellCommand("device_config put adservices debug_ux BETA_UX");
-
         ApkTestUtil.launchSettingViewGivenUx(mDevice, LAUNCH_TIMEOUT, "BETA_UX");
 
         UiObject2 consentSwitch = ApkTestUtil.getConsentSwitch(mDevice);

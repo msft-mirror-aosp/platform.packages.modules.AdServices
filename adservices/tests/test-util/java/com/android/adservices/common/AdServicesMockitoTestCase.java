@@ -15,7 +15,14 @@
  */
 package com.android.adservices.common;
 
+import android.annotation.CallSuper;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+
+import com.android.adservices.mockito.AndroidMocker;
+import com.android.adservices.mockito.AndroidMockitoMocker;
+import com.android.adservices.service.Flags;
 
 import org.junit.Rule;
 import org.mockito.Mock;
@@ -30,11 +37,37 @@ import org.mockito.quality.Strictness;
  */
 public abstract class AdServicesMockitoTestCase extends AdServicesUnitTestCase {
 
-    @Mock public Context mMockContext;
+    @Mock protected Context mMockContext;
 
-    /** Spy the {@link AdServicesUnitTestCase#sContext} */
-    @Spy protected final Context mSpyContext = sContext;
+    @Mock protected Flags mMockFlags;
+
+    /** Spy the {@link AdServicesUnitTestCase#mContext} */
+    @Spy protected final Context mSpyContext = mContext;
 
     @Rule(order = 10)
     public final MockitoRule mockito = MockitoJUnit.rule().strictness(Strictness.LENIENT);
+
+    /** Provides common expectations. */
+    public final Mocker mocker = new Mocker();
+
+    /** Provides common expectations. */
+    public static final class Mocker implements AndroidMocker {
+
+        private final AndroidMocker mAndroidMocker = new AndroidMockitoMocker();
+
+        @Override
+        public void mockQueryIntentService(PackageManager pm, ResolveInfo... resolveInfos) {
+            mAndroidMocker.mockQueryIntentService(pm, resolveInfos);
+        }
+    }
+
+    // TODO(b/361555631): rename to testAdServicesMockitoTestCaseFixtures() and annotate
+    // it with @MetaTest
+    @CallSuper
+    @Override
+    protected void assertValidTestCaseFixtures() throws Exception {
+        super.assertValidTestCaseFixtures();
+
+        checkProhibitedMockitoFields(AdServicesMockitoTestCase.class, this);
+    }
 }

@@ -16,8 +16,7 @@
 
 package android.adservices.lint.test
 
-import android.adservices.lint.BackCompatNewFileDetector
-import android.adservices.lint.PreconditionsCheckStateDetector
+import android.adservices.lint.common.PreconditionsCheckStateDetector
 import com.android.tools.lint.checks.infrastructure.LintDetectorTest
 import com.android.tools.lint.checks.infrastructure.TestFile
 import com.android.tools.lint.checks.infrastructure.TestLintTask
@@ -86,7 +85,7 @@ public final class FakeClass {
 }
                 """).indented(),
                 *stubs)
-                .issues(BackCompatNewFileDetector.ISSUE)
+                .issues(PreconditionsCheckStateDetector.ISSUE)
                 .run()
                 .expectClean()
     }
@@ -108,7 +107,7 @@ public final class FakeClass {
 }
                 """).indented(),
                 *stubs)
-                .issues(BackCompatNewFileDetector.ISSUE)
+                .issues(PreconditionsCheckStateDetector.ISSUE)
                 .run()
                 .expectClean()
     }

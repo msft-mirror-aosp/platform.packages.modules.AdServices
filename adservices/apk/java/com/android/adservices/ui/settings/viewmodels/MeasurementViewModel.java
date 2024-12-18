@@ -37,7 +37,6 @@ import com.android.settingslib.widget.MainSwitchBar;
  * responsible for serving Measurement to the Measurement view, and interacting with the {@link
  * ConsentManager} that persists and changes the Measurement data in a storage.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class MeasurementViewModel extends AndroidViewModel {
 
@@ -99,6 +98,8 @@ public class MeasurementViewModel extends AndroidViewModel {
     /** Reset all information related to Measurement */
     public void resetMeasurement() {
         mConsentManager.resetMeasurement();
+        // add the msmt data reset bit
+        mConsentManager.setMeasurementDataReset(true);
     }
 
     /** Returns an observable but immutable event enum representing an action on UI. */

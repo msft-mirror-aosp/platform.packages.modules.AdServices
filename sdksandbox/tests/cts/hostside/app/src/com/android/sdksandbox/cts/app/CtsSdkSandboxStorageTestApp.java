@@ -22,6 +22,7 @@ import static org.junit.Assert.fail;
 
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkLifecycleHelper;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -46,7 +47,8 @@ public class CtsSdkSandboxStorageTestApp {
 
     private static final String SDK_NAME = "com.android.sdksandbox.cts.provider.storagetest";
 
-    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
+    @Rule(order = 0)
+    public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(TestActivity.class);
 
     private static final String KEY_TO_SYNC = "hello";
     private static final String BULK_SYNC_VALUE = "bulksync";
@@ -54,23 +56,25 @@ public class CtsSdkSandboxStorageTestApp {
 
     private Context mContext;
     private SdkSandboxManager mSdkSandboxManager;
+    private SdkLifecycleHelper mSdkLifecycleHelper;
     private IStorageTestSdkApi mSdk;
 
     @Before
     public void setup() {
         mContext = ApplicationProvider.getApplicationContext();
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
+        mSdkLifecycleHelper = new SdkLifecycleHelper(mContext);
         assertThat(mSdkSandboxManager).isNotNull();
         mRule.getScenario();
         // unload SDK to fix flakiness
-        mSdkSandboxManager.unloadSdk(SDK_NAME);
+        mSdkLifecycleHelper.unloadSdk(SDK_NAME);
     }
 
     @After
     public void tearDown() {
         // unload SDK to fix flakiness
-        if (mSdkSandboxManager != null) {
-            mSdkSandboxManager.unloadSdk(SDK_NAME);
+        if (mSdkLifecycleHelper != null) {
+            mSdkLifecycleHelper.unloadSdk(SDK_NAME);
         }
     }
 

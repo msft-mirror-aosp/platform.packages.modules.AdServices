@@ -18,45 +18,72 @@ package com.android.adservices.service.signals.updateprocessors;
 
 import android.adservices.common.AdTechIdentifier;
 import android.content.Context;
+import android.content.Intent;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.LoggerFactory;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.signals.DBEncoderEndpoint;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.devapi.DevContext;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.FutureCallback;
 
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.Executor;
 
 /** Takes appropriate action be it update or download encoder based on {@link UpdateEncoderEvent} */
 public class UpdateEncoderEventHandler {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     @NonNull private final EncoderEndpointsDao mEncoderEndpointsDao;
     @NonNull private final EncoderLogicHandler mEncoderLogicHandler;
     private List<Observer> mUpdatesObserver;
+    private final Executor mBackgroundExecutor;
+    private final Context mContext;
+
+    @VisibleForTesting
+    public static final String ACTION_REGISTER_ENCODER_LOGIC_COMPLETE =
+            "android.adservices.debug.REGISTER_ENCODER_LOGIC_COMPLETE";
+
+    private final boolean mIsCompletionBroadcastEnabled; // for testing.
 
     @VisibleForTesting
     public UpdateEncoderEventHandler(
-            @NonNull EncoderEndpointsDao encoderEndpointsDao,
-            @NonNull EncoderLogicHandler encoderLogicHandler) {
-        Objects.requireNonNull(encoderEndpointsDao);
-        Objects.requireNonNull(encoderLogicHandler);
+            EncoderEndpointsDao encoderEndpointsDao,
+            EncoderLogicHandler encoderLogicHandler,
+            Context context,
+            Executor backgroundExecutor,
+            boolean isCompletionBroadcastEnabled) {
+        Objects.requireNonNull(encoderEndpointsDao, "encoderEndpointsDao cannot be null");
+        Objects.requireNonNull(encoderLogicHandler, "encoderLogicHandler cannot be null");
+        Objects.requireNonNull(context, "context cannot be null");
+        Objects.requireNonNull(backgroundExecutor, "backgroundExecutor cannot be null");
         mEncoderEndpointsDao = encoderEndpointsDao;
         mEncoderLogicHandler = encoderLogicHandler;
         mUpdatesObserver = new ArrayList<>();
+        mBackgroundExecutor = backgroundExecutor;
+        mContext = context;
+        mIsCompletionBroadcastEnabled = isCompletionBroadcastEnabled;
     }
 
     public UpdateEncoderEventHandler(@NonNull Context context) {
         this(
-                ProtectedSignalsDatabase.getInstance(context).getEncoderEndpointsDao(),
-                new EncoderLogicHandler(context));
+                ProtectedSignalsDatabase.getInstance().getEncoderEndpointsDao(),
+                new EncoderLogicHandler(context),
+                context,
+                AdServicesExecutors.getBackgroundExecutor(),
+                DebugFlags.getInstance()
+                        .getProtectedAppSignalsEncoderLogicRegisteredBroadcastEnabled());
     }
 
     /**
@@ -76,6 +103,7 @@ public class UpdateEncoderEventHandler {
         Objects.requireNonNull(buyer);
         Objects.requireNonNull(event);
         Objects.requireNonNull(devContext);
+        sLogger.v("Entering UpdateEncoderEventHandler#handle");
 
         switch (event.getUpdateType()) {
             case REGISTER:
@@ -94,12 +122,32 @@ public class UpdateEncoderEventHandler {
                 DBEncoderEndpoint previousRegisteredEncoder =
                         mEncoderEndpointsDao.getEndpoint(buyer);
                 mEncoderEndpointsDao.registerEndpoint(endpoint);
+                sLogger.v(
+                        "Registered new endpoint %s for buyer %s",
+                        endpoint.getDownloadUri(), endpoint.getBuyer());
 
                 if (previousRegisteredEncoder == null) {
+                    sLogger.v("Ran download and update as previous encoder was null");
                     // We immediately download and update if no previous encoder existed
                     FluentFuture<Boolean> downloadAndUpdate =
                             mEncoderLogicHandler.downloadAndUpdate(buyer, devContext);
+                    downloadAndUpdate.addCallback(
+                            new FutureCallback<>() {
+                                @Override
+                                public void onSuccess(Boolean result) {
+                                    // Send the broadcast.
+                                    sendCompletionBroadcastForTesting();
+                                }
+
+                                @Override
+                                public void onFailure(Throwable t) {}
+                            },
+                            mBackgroundExecutor);
                     notifyObservers(buyer, event.getUpdateType().toString(), downloadAndUpdate);
+                } else {
+                    sLogger.v("Did not update encoder as previous encoder exists");
+                    // Signals already exist so send this immediately.
+                    sendCompletionBroadcastForTesting();
                 }
                 break;
             default:
@@ -135,5 +183,15 @@ public class UpdateEncoderEventHandler {
          * @param event the actual event result
          */
         void update(AdTechIdentifier buyer, String eventType, FluentFuture<?> event);
+    }
+
+    private void sendCompletionBroadcastForTesting() {
+        if (!mIsCompletionBroadcastEnabled) {
+            sLogger.d("Not sending REGISTER_ENCODER_LOGIC_COMPLETE broadcast");
+            return;
+        }
+        sLogger.d("Sending REGISTER_ENCODER_LOGIC_COMPLETE broadcast for test to catch");
+        Intent intent = new Intent(ACTION_REGISTER_ENCODER_LOGIC_COMPLETE);
+        mContext.sendBroadcast(intent);
     }
 }

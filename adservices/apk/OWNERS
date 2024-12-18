@@ -1,8 +1,3 @@
-# Bug component: 1159752
-set noparent
-
-albertkong@google.com
-ardroid@google.com
-bozhaobz@google.com
-chenjiahui@google.com
-tccyp@google.com
+per-file publicres/... = file: platform/packages/modules/AdServices:/adservices/OWNERS_UX
+per-file res/... = file: platform/packages/modules/AdServices:/adservices/OWNERS_UX
+per-file tests/... = file: platform/packages/modules/AdServices:/adservices/OWNERS_UX

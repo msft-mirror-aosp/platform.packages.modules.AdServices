@@ -22,12 +22,15 @@ import android.adservices.shell.IShellCommand;
 import android.adservices.shell.IShellCommandCallback;
 import android.adservices.shell.ShellCommandParam;
 import android.adservices.shell.ShellCommandResult;
+import android.os.Build;
 import android.os.RemoteException;
 import android.util.Log;
 
-import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -48,31 +51,31 @@ import java.util.concurrent.TimeUnit;
  *
  * @hide
  */
+@RequiresApi(Build.VERSION_CODES.S)
 public final class ShellCommandServiceImpl extends IShellCommand.Stub {
 
     @VisibleForTesting
     static final int RESULT_SHELL_COMMAND_EXECUTION_TIMED_OUT = Integer.MIN_VALUE;
 
-    private static final long MAX_COMMAND_DURATION_MILLIS = 3000L;
     private final ScheduledThreadPoolExecutor mSchedulingExecutorService;
     private final ListeningExecutorService mExecutorService;
 
-    private final long mMaxCommandDurationMillis;
-    private ShellCommandFactorySupplier mShellCommandFactorySupplier;
+    private final AdServicesLogger mAdServicesLogger;
+    private final ShellCommandFactorySupplier mShellCommandFactorySupplier;
 
     @VisibleForTesting
     public ShellCommandServiceImpl(
-            @NonNull ShellCommandFactorySupplier shellCommandFactorySupplier,
-            @NonNull ListeningExecutorService executorService,
-            @NonNull ScheduledThreadPoolExecutor schedulingExecutorService,
-            long maxCommandDurationMillis) {
+            ShellCommandFactorySupplier shellCommandFactorySupplier,
+            ListeningExecutorService executorService,
+            ScheduledThreadPoolExecutor schedulingExecutorService,
+            AdServicesLogger adServicesLogger) {
         mShellCommandFactorySupplier =
                 Objects.requireNonNull(
                         shellCommandFactorySupplier, "shellCommandFactorySupplier cannot be null");
 
         mExecutorService = executorService;
         mSchedulingExecutorService = schedulingExecutorService;
-        mMaxCommandDurationMillis = maxCommandDurationMillis;
+        mAdServicesLogger = adServicesLogger;
     }
 
     public ShellCommandServiceImpl() {
@@ -80,7 +83,7 @@ public final class ShellCommandServiceImpl extends IShellCommand.Stub {
                 new AdservicesShellCommandFactorySupplier(),
                 AdServicesExecutors.getLightWeightExecutor(),
                 AdServicesExecutors.getScheduler(),
-                MAX_COMMAND_DURATION_MILLIS);
+                AdServicesLoggerImpl.getInstance());
     }
 
     @Override
@@ -92,14 +95,15 @@ public final class ShellCommandServiceImpl extends IShellCommand.Stub {
         PrintWriter errPw = new PrintWriter(errStringWriter);
 
         AdServicesShellCommandHandler handler =
-                new AdServicesShellCommandHandler(outPw, errPw, mShellCommandFactorySupplier);
+                new AdServicesShellCommandHandler(
+                        outPw, errPw, mShellCommandFactorySupplier, mAdServicesLogger);
         FluentFuture.from(mExecutorService.submit(() -> handler.run(param.getCommandArgs())))
                 .withTimeout(
-                        mMaxCommandDurationMillis,
+                        param.getMaxCommandDurationMillis(),
                         TimeUnit.MILLISECONDS,
                         mSchedulingExecutorService)
                 .addCallback(
-                        new FutureCallback<Integer>() {
+                        new FutureCallback<>() {
                             @Override
                             public void onSuccess(Integer resultCode) {
                                 ShellCommandResult response =

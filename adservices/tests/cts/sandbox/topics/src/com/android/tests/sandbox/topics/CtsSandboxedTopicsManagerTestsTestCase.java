@@ -18,12 +18,13 @@ package com.android.tests.sandbox.topics;
 
 import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.service.DebugFlagsConstants;
 import com.android.adservices.service.FlagsConstants;
 
 abstract class CtsSandboxedTopicsManagerTestsTestCase extends AdServicesCtsTestCase {
 
     // Override the Epoch Job Period to this value to speed up the epoch computation.
-    protected static final long TEST_EPOCH_JOB_PERIOD_MS = 3_000;
+    protected static final long TEST_EPOCH_JOB_PERIOD_MS = 5_000;
 
     @Override
     protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
@@ -33,7 +34,7 @@ abstract class CtsSandboxedTopicsManagerTestsTestCase extends AdServicesCtsTestC
                 // TODO(b/328101177): should set flags below (instead of system properties), but
                 // the test could fail if some other test set these properties(and didn't properly
                 // reset them)
-                .setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                .setDebugFlag(DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
                 .setFlag(FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true);
     }
 }

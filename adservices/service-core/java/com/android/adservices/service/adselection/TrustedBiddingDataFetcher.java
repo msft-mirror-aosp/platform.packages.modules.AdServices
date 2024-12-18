@@ -17,7 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.data.customaudience.DBTrustedBiddingData.QUERY_PARAM_KEYS;
-import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_BIDDING_KEY;
+import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
 
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
@@ -107,7 +107,7 @@ public class TrustedBiddingDataFetcher {
     public FluentFuture<Map<Uri, TrustedBiddingResponse>> getTrustedBiddingDataForBuyer(
             List<DBCustomAudience> customAudiences) {
         List<DBCustomAudience> customAudiencesWithoutOverride;
-        if (mDevContext.getDevOptionsEnabled()) {
+        if (mDevContext.getDeviceDevOptionsEnabled()) {
             sLogger.v("Filtering CA with dev override.");
             customAudiencesWithoutOverride =
                     customAudiences.stream()
@@ -189,7 +189,7 @@ public class TrustedBiddingDataFetcher {
     private ListenableFuture<AdServicesHttpClientResponse> fetchTrustedBiddingData(Uri uri) {
         if (mDataVersionHeaderEnabled) {
             return mAdServicesHttpsClient.fetchPayload(
-                    uri, ImmutableSet.of(DATA_VERSION_HEADER_BIDDING_KEY), mDevContext);
+                    uri, ImmutableSet.of(DATA_VERSION_HEADER_KEY), mDevContext);
         } else {
             return mAdServicesHttpsClient.fetchPayload(uri, mDevContext);
         }

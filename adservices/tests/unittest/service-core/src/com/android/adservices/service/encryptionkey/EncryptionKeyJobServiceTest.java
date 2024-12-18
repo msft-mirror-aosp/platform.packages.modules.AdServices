@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.encryptionkey;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockGetAdServicesJobServiceLogger;
-import static com.android.adservices.mockito.MockitoExpectations.getSpiedAdServicesJobServiceLogger;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.spe.AdServicesJobInfo.ENCRYPTION_KEY_PERIODIC_JOB;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -41,11 +39,10 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.AdServicesConfig;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
@@ -67,12 +64,11 @@ import org.mockito.internal.stubbing.answers.CallsRealMethods;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
-public final class EncryptionKeyJobServiceTest extends AdServicesExtendedMockitoTestCase {
+public final class EncryptionKeyJobServiceTest extends AdServicesJobServiceTestCase {
 
     private static final int ENCRYPTION_KEY_JOB_ID = ENCRYPTION_KEY_PERIODIC_JOB.getJobId();
     private static final long WAIT_IN_MILLIS = 1_000L;
 
-    @Mock private Flags mMockFlags;
     @Mock private JobScheduler mMockJobScheduler;
     @Mock private JobParameters mMockJobParameters;
     @Mock private JobInfo mMockJobInfo;
@@ -82,10 +78,10 @@ public final class EncryptionKeyJobServiceTest extends AdServicesExtendedMockito
 
     @Before
     public void setUp() {
-        extendedMockito.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(mMockFlags);
         mSpyService = spy(new EncryptionKeyJobService());
 
-        mSpyLogger = getSpiedAdServicesJobServiceLogger(sContext, mMockFlags);
+        mSpyLogger = getSpiedAdServicesJobServiceLogger(mContext, mMockFlags);
 
         setDefaultExpectations();
     }
@@ -286,8 +282,8 @@ public final class EncryptionKeyJobServiceTest extends AdServicesExtendedMockito
         doNothing().when(mSpyService).jobFinished(any(), anyBoolean());
         doReturn(mMockJobScheduler).when(mSpyService).getSystemService(JobScheduler.class);
         doReturn(mMockContext).when(mSpyService).getApplicationContext();
-        doReturn(mock(EnrollmentDao.class)).when(() -> EnrollmentDao.getInstance(any()));
-        doReturn(mock(EncryptionKeyDao.class)).when(() -> EncryptionKeyDao.getInstance(any()));
+        doReturn(mock(EnrollmentDao.class)).when(EnrollmentDao::getInstance);
+        doReturn(mock(EncryptionKeyDao.class)).when(EncryptionKeyDao::getInstance);
         doNothing().when(() -> EncryptionKeyJobService.schedule(any(), any()));
         mockGetAdServicesJobServiceLogger(mSpyLogger);
     }

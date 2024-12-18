@@ -17,12 +17,12 @@
 package android.adservices.test.scenario.adservices.measurement;
 
 import android.Manifest;
-import android.adservices.common.AdServicesOutcomeReceiver;
 import android.adservices.measurement.MeasurementManager;
 import android.annotation.NonNull;
 import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
+import android.os.OutcomeReceiver;
 import android.platform.test.rule.CleanPackageRule;
 import android.platform.test.rule.DropCachesRule;
 import android.platform.test.rule.KillAppsRule;
@@ -33,9 +33,8 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.service.DebugFlagsConstants;
 import com.android.adservices.service.FlagsConstants;
-import com.android.compatibility.common.util.ShellUtils;
-import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.base.Stopwatch;
 
@@ -93,7 +92,7 @@ public class AbstractMeasurementLatencyTest {
                 Uri.parse(path),
                 /* inputEvent */ null,
                 CALLBACK_EXECUTOR,
-                new AdServicesOutcomeReceiver<>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Object ignoredResult) {
                         timer.stop();
@@ -114,7 +113,7 @@ public class AbstractMeasurementLatencyTest {
 
         MEASUREMENT_MANAGER.getMeasurementApiStatus(
                 CALLBACK_EXECUTOR,
-                new AdServicesOutcomeReceiver<>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Integer ignoredResult) {
                         timer.stop();
@@ -148,7 +147,7 @@ public class AbstractMeasurementLatencyTest {
                 Uri.parse(path),
                 /* inputEvent */ null,
                 CALLBACK_EXECUTOR,
-                new AdServicesOutcomeReceiver<>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Object ignoredResult) {}
 
@@ -160,23 +159,17 @@ public class AbstractMeasurementLatencyTest {
     }
 
     protected void setFlagsForMeasurement() throws Exception {
-        if (!SdkLevel.isAtLeastS()) {
-            // Enable airplane mode to disable flag sync as an alternative solution on Android R-.
-            ShellUtils.runShellCommand("settings put global airplane_mode_on 1");
-            ShellUtils.runShellCommand("am broadcast -a android.intent.action.AIRPLANE_MODE");
-        }
-
         // Override consent manager behavior to give user consent.
-        flags.setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true);
+        flags.setDebugFlag(DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true);
 
         // Override adid kill switch.
         flags.setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false);
 
         // Override the flag to allow current package to call APIs.
-        flags.setPpapiAppAllowList("*");
+        flags.setPpapiAppAllowList(FlagsConstants.ALLOWLIST_ALL);
 
         // Override the flag to allow current package to call delete API.
-        flags.setMsmtWebContextClientAllowList("*");
+        flags.setMsmtWebContextClientAllowList(FlagsConstants.ALLOWLIST_ALL);
 
         // Override the flag for the global kill switch.
         flags.setFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, false);
@@ -199,8 +192,5 @@ public class AbstractMeasurementLatencyTest {
 
         // Set flag to pre seed enrollment.
         flags.setFlag(FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED, true);
-
-        // Set flag not match origin.
-        flags.setFlag(FlagsConstants.KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH, false);
     }
 }

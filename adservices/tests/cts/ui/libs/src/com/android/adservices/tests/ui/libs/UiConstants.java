@@ -33,6 +33,7 @@ public class UiConstants {
 
     public static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS = 1000;
     public static final String SYSTEM_UI_NAME = "com.android.systemui";
+    public static final String NOTIFICATION_SCROLLER = "notification_stack_scroller";
 
     public static final String SYSTEM_UI_RESOURCE_ID =
             "com.android.systemui:id/notification_stack_scroller";
@@ -41,6 +42,5 @@ public class UiConstants {
         GA_UX,
         BETA_UX,
         U18_UX,
-        RVC_UX,
     }
 }

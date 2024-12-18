@@ -27,10 +27,11 @@ java_defaults {
         "truth",
         "adservices-clients",
         "adservices-test-utility",
+        "framework-adservices-lib",
     ],
     libs: [
-        "android.test.base",
-        "framework-adservices",
+        "android.test.base.stubs.system",
+        "framework-adservices.stubs.module_lib",
         "framework-sdksandbox.impl",
     ],
     sdk_version: "module_current",
@@ -38,6 +39,7 @@ java_defaults {
 
 android_test {
     name: "CtsAdServicesEndToEndTests",
+    team: "trendy_team_android_rubidium",
     defaults: ["cts-adservices-endtoend-defaults"],
     test_suites: [
         "cts",
@@ -48,6 +50,10 @@ android_test {
     min_sdk_version: "Tiramisu",
     manifest: "CtsAdServicesEndToEndTestsManifest.xml",
     test_config: "CtsAdServicesEndToEndTests.xml",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_test {
@@ -63,4 +69,8 @@ android_test {
     max_sdk_version: "32",
     manifest: "CtsAdExtServicesEndToEndTestsManifest.xml",
     test_config: "CtsAdExtServicesEndToEndTests.xml",
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }

@@ -16,10 +16,14 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_CONVERTING_UPDATE_SIGNALS_RESPONSE_TO_JSON_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+
 import android.annotation.NonNull;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -83,6 +87,10 @@ public class UpdatesDownloader {
             return new JSONObject(response.getResponseBody());
         } catch (JSONException e) {
             sLogger.e(e, "Error converting updateSignals response body to JSON");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_CONVERTING_UPDATE_SIGNALS_RESPONSE_TO_JSON_ERROR,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
             throw new IllegalArgumentException(CONVERSION_ERROR_MSG, e);
         }
     }

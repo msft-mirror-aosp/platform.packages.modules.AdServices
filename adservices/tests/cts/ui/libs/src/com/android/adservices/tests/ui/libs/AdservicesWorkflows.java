@@ -29,6 +29,7 @@ import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.Until;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.tests.ui.libs.pages.NotificationPages;
 import com.android.adservices.tests.ui.libs.pages.SettingsPages;
 
@@ -69,6 +70,7 @@ public class AdservicesWorkflows {
     public static void testNotificationActivityFlow(
             Context context,
             UiDevice device,
+            AdServicesFlagsSetterRule flags,
             boolean isEuDevice,
             UiConstants.UX ux,
             boolean isV2,
@@ -76,12 +78,21 @@ public class AdservicesWorkflows {
             boolean isOptin)
             throws Exception {
         testNotificationActivityFlow(
-                context, device, NOTIFICATION_PACKAGE, isEuDevice, ux, isV2, isGoSettings, isOptin);
+                context,
+                device,
+                flags,
+                NOTIFICATION_PACKAGE,
+                isEuDevice,
+                ux,
+                isV2,
+                isGoSettings,
+                isOptin);
     }
 
     public static void testNotificationActivityFlow(
             Context context,
             UiDevice device,
+            AdServicesFlagsSetterRule flags,
             String packageName,
             boolean isEuDevice,
             UiConstants.UX ux,
@@ -90,28 +101,24 @@ public class AdservicesWorkflows {
             boolean isOptin)
             throws Exception {
         if (isEuDevice) {
-            UiUtils.setAsEuDevice();
+            UiUtils.setAsEuDevice(flags);
         } else {
-            UiUtils.setAsRowDevice();
+            UiUtils.setAsRowDevice(flags);
         }
         switch (ux) {
             case GA_UX:
-                UiUtils.enableGa();
+                UiUtils.enableGa(flags);
                 break;
             case BETA_UX:
-                UiUtils.enableBeta();
+                UiUtils.enableBeta(flags);
                 break;
             case U18_UX:
-                UiUtils.enableGa();
-                UiUtils.enableU18();
-                break;
-            case RVC_UX:
-                UiUtils.enableGa();
-                UiUtils.enableRvc();
+                UiUtils.enableGa(flags);
+                UiUtils.enableU18(flags);
                 break;
         }
 
-        UiUtils.setFlipFlow(isV2);
+        UiUtils.setFlipFlow(flags, isV2);
 
         startNotificationActivity(context, device, isEuDevice, packageName);
         notificationConfirmWorkflow(
@@ -121,18 +128,20 @@ public class AdservicesWorkflows {
     public static void testSettingsPageFlow(
             Context context,
             UiDevice device,
+            AdServicesFlagsSetterRule flags,
             UiConstants.UX ux,
             boolean isOptin,
             boolean flipConsent,
             boolean assertOptIn)
             throws Exception {
         testSettingsPageFlow(
-                context, device, SETTINGS_PACKAGE, ux, isOptin, flipConsent, assertOptIn);
+                context, device, flags, SETTINGS_PACKAGE, ux, isOptin, flipConsent, assertOptIn);
     }
 
     public static void testSettingsPageFlow(
             Context context,
             UiDevice device,
+            AdServicesFlagsSetterRule flags,
             String packageName,
             UiConstants.UX ux,
             boolean isOptin,
@@ -141,18 +150,15 @@ public class AdservicesWorkflows {
             throws Exception {
         switch (ux) {
             case GA_UX:
-                UiUtils.enableGa();
+                UiUtils.enableGa(flags);
                 break;
             case BETA_UX:
-                UiUtils.enableBeta();
+                UiUtils.enableBeta(flags);
                 break;
             case U18_UX:
-                UiUtils.enableGa();
-                UiUtils.enableU18();
+                UiUtils.enableGa(flags);
+                UiUtils.enableU18(flags);
                 break;
-            case RVC_UX:
-                UiUtils.enableGa();
-                UiUtils.enableRvc();
         }
         startSettingsActivity(context, device, packageName);
         SettingsPages.testSettingsPageConsents(
@@ -166,7 +172,8 @@ public class AdservicesWorkflows {
             boolean isEuDevice,
             UiConstants.UX ux)
             throws Exception {
-        NotificationPages.verifyNotification(context, device, isDisplayed, isEuDevice, ux, true);
+        NotificationPages.verifyNotification(
+                context, device, isDisplayed, isEuDevice, ux, true, false, false);
     }
 
     public static void verifyNotification(
@@ -177,7 +184,8 @@ public class AdservicesWorkflows {
             UiConstants.UX ux,
             boolean isV2)
             throws Exception {
-        NotificationPages.verifyNotification(context, device, isDisplayed, isEuDevice, ux, isV2);
+        NotificationPages.verifyNotification(
+                context, device, isDisplayed, isEuDevice, ux, isV2, false, false);
     }
 
     public static void testClickNotificationFlow(
@@ -189,7 +197,23 @@ public class AdservicesWorkflows {
             boolean isV2,
             boolean isOptin)
             throws Exception {
-        NotificationPages.verifyNotification(context, device, isDisplayed, isEuDevice, ux, isV2);
+        testClickNotificationFlow(
+                context, device, isDisplayed, isEuDevice, ux, isV2, isOptin, false, false);
+    }
+
+    public static void testClickNotificationFlow(
+            Context context,
+            UiDevice device,
+            boolean isDisplayed,
+            boolean isEuDevice,
+            UiConstants.UX ux,
+            boolean isV2,
+            boolean isOptin,
+            boolean isPas,
+            boolean isPasRenotify)
+            throws Exception {
+        NotificationPages.verifyNotification(
+                context, device, isDisplayed, isEuDevice, ux, isV2, isPas, isPasRenotify);
         // Only GA and row devices needs to got to settings page to set up consent.
         boolean isGoSettings = !isEuDevice;
         notificationConfirmWorkflow(

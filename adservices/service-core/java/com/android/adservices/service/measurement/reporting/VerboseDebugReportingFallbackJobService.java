@@ -72,7 +72,7 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementVerboseDebugReportingFallbackJobKillSwitch()) {
@@ -94,8 +94,7 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
                         () -> {
                             sendReports();
                             boolean shouldRetry = false;
-                            AdServicesJobServiceLogger.getInstance(
-                                            VerboseDebugReportingFallbackJobService.this)
+                            AdServicesJobServiceLogger.getInstance()
                                     .recordJobFinished(
                                             MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID,
                                             /* isSuccessful */ true,
@@ -113,7 +112,7 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(
                         params, MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID, shouldRetry);
         return shouldRetry;
@@ -179,7 +178,7 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(
                             MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_ID, skipReason);
         }
@@ -193,25 +192,20 @@ public class VerboseDebugReportingFallbackJobService extends JobService {
 
     @VisibleForTesting
     void sendReports() {
-        final JobLockHolder lock = JobLockHolder.getInstance(VERBOSE_DEBUG_REPORTING);
-        if (lock.tryLock()) {
-            try {
-                DatastoreManager datastoreManager =
-                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
-                new DebugReportingJobHandler(
-                                datastoreManager,
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.UploadMethod.FALLBACK,
-                                getApplicationContext())
-                        .performScheduledPendingReports();
-                return;
-            } finally {
-                lock.unlock();
-            }
-        }
-        LoggerFactory.getMeasurementLogger()
-                .d("VerboseDebugReportingFallbackJobService did not acquire the lock");
+        JobLockHolder.getInstance(VERBOSE_DEBUG_REPORTING)
+                .runWithLock(
+                        "VerboseDebugReportingFallbackJobService",
+                        () -> {
+                            DatastoreManager datastoreManager =
+                                    DatastoreManagerFactory.getDatastoreManager();
+                            new DebugReportingJobHandler(
+                                            datastoreManager,
+                                            FlagsFactory.getFlags(),
+                                            AdServicesLoggerImpl.getInstance(),
+                                            ReportingStatus.UploadMethod.FALLBACK,
+                                            getApplicationContext())
+                                    .performScheduledPendingReports();
+                        });
     }
 
     @VisibleForTesting

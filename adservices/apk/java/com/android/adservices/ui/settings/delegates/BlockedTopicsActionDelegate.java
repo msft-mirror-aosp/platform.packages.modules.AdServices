@@ -36,7 +36,6 @@ import com.android.adservices.ui.settings.viewmodels.BlockedTopicsViewModel.Bloc
 /**
  * Delegate class that helps AdServices Settings fragments to respond to all view model/user events.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class BlockedTopicsActionDelegate {
     private final BlockedTopicsActivity mBlockedTopicsActivity;
@@ -89,10 +88,6 @@ public class BlockedTopicsActionDelegate {
      * AdServicesSettingsBlockedTopicsFragment} to handle user actions.
      */
     public void initBlockedTopicsFragment() {
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            mBlockedTopicsActivity.setTitle(R.string.settingsUI_blocked_topics_ga_title);
-        } else {
-            mBlockedTopicsActivity.setTitle(R.string.settingsUI_blocked_topics_title);
-        }
+        mBlockedTopicsActivity.setTitle(R.string.settingsUI_blocked_topics_ga_title);
     }
 }

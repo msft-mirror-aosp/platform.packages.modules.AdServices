@@ -20,13 +20,18 @@ import android.adservices.common.AdSelectionSignals;
 
 import androidx.annotation.Nullable;
 
+import com.android.adservices.LoggerFactory;
+
 import com.google.auto.value.AutoValue;
 
-import java.util.Objects;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /** Represents buyer contextual signals that will be passed through buyer JS functions. */
 @AutoValue
 public abstract class BuyerContextualSignals {
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+
     @Nullable
     abstract AdCost getAdCost();
 
@@ -53,12 +58,18 @@ public abstract class BuyerContextualSignals {
     /** Returns {@link BuyerContextualSignals} in a JSON format */
     @Override
     public final String toString() {
-        return "{"
-                + (Objects.nonNull(getAdCost()) ? "\"adCost\":" + getAdCost() : "")
-                + (Objects.nonNull(getDataVersion())
-                        ? "\"dataVersion\":" + getDataVersion().toString()
-                        : "")
-                + "}";
+        try {
+            JSONObject json = new JSONObject();
+            json.put("adCost", getAdCost());
+            json.put("dataVersion", getDataVersion());
+            return json.toString();
+        } catch (JSONException e) {
+            sLogger.e(
+                    e,
+                    "BuyerContextualSignals's String representation is invalid. "
+                            + "Returning empty AdSelectionSignals");
+            return AdSelectionSignals.EMPTY.toString();
+        }
     }
 
     public AdSelectionSignals toAdSelectionSignals() {

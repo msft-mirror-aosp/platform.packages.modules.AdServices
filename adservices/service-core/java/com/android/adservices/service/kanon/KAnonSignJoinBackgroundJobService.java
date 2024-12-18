@@ -85,8 +85,7 @@ public class KAnonSignJoinBackgroundJobService extends JobService {
                     @Override
                     public void onSuccess(Void result) {
                         boolean shouldRetry = false;
-                        AdServicesJobServiceLogger.getInstance(
-                                        KAnonSignJoinBackgroundJobService.this)
+                        AdServicesJobServiceLogger.getInstance()
                                 .recordJobFinished(
                                         FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB.getJobId(),
                                         /* isSuccessful= */ true,
@@ -97,8 +96,7 @@ public class KAnonSignJoinBackgroundJobService extends JobService {
                     @Override
                     public void onFailure(Throwable t) {
                         boolean shouldRetry = false;
-                        AdServicesJobServiceLogger.getInstance(
-                                        KAnonSignJoinBackgroundJobService.this)
+                        AdServicesJobServiceLogger.getInstance()
                                 .recordJobFinished(
                                         FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB.getJobId(),
                                         /* isSuccessful= */ false,
@@ -112,9 +110,9 @@ public class KAnonSignJoinBackgroundJobService extends JobService {
 
     @Override
     public boolean onStopJob(JobParameters params) {
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB.getJobId(), false);
-        KAnonSignJoinBackgroundJobWorker.getInstance(this).stopWork();
+        KAnonSignJoinBackgroundJobWorker.getInstance().stopWork();
         return false;
     }
 
@@ -126,7 +124,7 @@ public class KAnonSignJoinBackgroundJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB.getJobId(), skipReason);
         }
 
@@ -161,16 +159,18 @@ public class KAnonSignJoinBackgroundJobService extends JobService {
                 new JobInfo.Builder(
                                 FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB.getJobId(),
                                 new ComponentName(context, KAnonSignJoinBackgroundJobService.class))
-                        .setRequiresBatteryNotLow(true)
-                        .setRequiresDeviceIdle(true)
+                        .setRequiresBatteryNotLow(
+                                flags.getFledgeKAnonBackgroundJobRequiresBatteryNotLow())
+                        .setRequiresDeviceIdle(
+                                flags.getFledgeKAnonBackgroundJobRequiresDeviceIdle())
                         .setPeriodic(flags.getFledgeKAnonBackgroundProcessTimePeriodInMs())
-                        .setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED)
+                        .setRequiredNetworkType(flags.getFledgeKanonBackgroundJobConnectionType())
                         .setPersisted(true)
                         .build();
         jobScheduler.schedule(job);
     }
 
     private FluentFuture<Void> doSignJoinBackgroundJob() {
-        return KAnonSignJoinBackgroundJobWorker.getInstance(this).runSignJoinBackgroundProcess();
+        return KAnonSignJoinBackgroundJobWorker.getInstance().runSignJoinBackgroundProcess();
     }
 }

@@ -27,6 +27,7 @@ import androidx.core.view.WindowCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.api.R;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.UiStatsLogger;
@@ -89,40 +90,40 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
         Context context = getApplicationContext();
 
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
-        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()
+                || FlagsFactory.getFlags().getUiOtaResourcesFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(context, true);
         }
+        boolean debugModeEnabled =
+                FlagsFactory.getFlags().getConsentNotificationActivityDebugMode();
+        boolean isUxStateReady = isUxStatesReady(this);
 
-        if (FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()
-                || isUxStatesReady(this)) {
-            initWithUx(this, context);
+        LoggerFactory.getUILogger()
+                .d(
+                        "getting debug mode %b, getting ux state ready %b",
+                        debugModeEnabled, isUxStateReady);
+        if (debugModeEnabled || isUxStateReady) {
+            initWithUx(context, /* beforePasUxActive */ true);
         } else {
             initFragment();
         }
     }
 
     @Override
-    public void initBeta() {
-        setContentView(R.layout.consent_notification_activity);
-    }
-
-    @Override
     public void initGA() {
+        LoggerFactory.getUILogger().d("consent activity init GA");
         setContentView(R.layout.consent_notification_ga_v2_activity);
     }
 
     @Override
     public void initU18() {
+        LoggerFactory.getUILogger().d("consent activity init u18");
         setContentView(R.layout.consent_notification_u18_activity);
     }
 
     @Override
-    public void initRvc() {
-        initU18();
-    }
-
-    @Override
     public void initGaUxWithPas() {
+        LoggerFactory.getUILogger().d("consent activity init GA PAS");
         setContentView(R.layout.consent_notification_pas_activity);
     }
 
@@ -132,11 +133,7 @@ public class ConsentNotificationActivity extends FragmentActivity implements UxS
     }
 
     private void initFragment() {
-        if (FlagsFactory.getFlags().getGaUxFeatureEnabled()) {
-            setContentView(R.layout.consent_notification_ga_v2_activity);
-        } else {
-            setContentView(R.layout.consent_notification_activity);
-        }
+        setContentView(R.layout.consent_notification_ga_v2_activity);
     }
 
     /**

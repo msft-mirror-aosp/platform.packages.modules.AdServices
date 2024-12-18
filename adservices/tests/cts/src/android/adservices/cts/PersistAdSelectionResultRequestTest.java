@@ -16,24 +16,19 @@
 
 package android.adservices.cts;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.PersistAdSelectionResultRequest;
 import android.adservices.common.AdTechIdentifier;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public class PersistAdSelectionResultRequestTest {
+@RequiresSdkLevelAtLeastS
+public final class PersistAdSelectionResultRequestTest extends CtsAdServicesDeviceTestCase {
     private static final AdTechIdentifier SELLER = AdSelectionConfigFixture.SELLER;
     private static final long AD_SELECTION_ID = 123456789L;
     private static final byte[] AD_SELECTION_RESULT = new byte[10];
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testPersistAdSelectionResultRequest_validInput_successWithDeprecatedField() {
@@ -45,10 +40,10 @@ public class PersistAdSelectionResultRequestTest {
                         .setAdSelectionResult(AD_SELECTION_RESULT)
                         .build();
 
-        assertThat(request.getSeller()).isEqualTo(SELLER);
-        assertThat(request.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
-        assertThat(request.getAdSelectionDataId()).isEqualTo(AD_SELECTION_ID);
-        assertThat(request.getAdSelectionResult()).isEqualTo(AD_SELECTION_RESULT);
+        expect.that(request.getSeller()).isEqualTo(SELLER);
+        expect.that(request.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
+        expect.that(request.getAdSelectionDataId()).isEqualTo(AD_SELECTION_ID);
+        expect.that(request.getAdSelectionResult()).isEqualTo(AD_SELECTION_RESULT);
     }
 
     @Test
@@ -60,10 +55,10 @@ public class PersistAdSelectionResultRequestTest {
                         .setAdSelectionResult(AD_SELECTION_RESULT)
                         .build();
 
-        assertThat(request.getSeller()).isEqualTo(SELLER);
-        assertThat(request.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
-        assertThat(request.getAdSelectionDataId()).isEqualTo(AD_SELECTION_ID);
-        assertThat(request.getAdSelectionResult()).isEqualTo(AD_SELECTION_RESULT);
+        expect.that(request.getSeller()).isEqualTo(SELLER);
+        expect.that(request.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
+        expect.that(request.getAdSelectionDataId()).isEqualTo(AD_SELECTION_ID);
+        expect.that(request.getAdSelectionResult()).isEqualTo(AD_SELECTION_RESULT);
     }
 
     @Test
@@ -77,9 +72,9 @@ public class PersistAdSelectionResultRequestTest {
                         .setAdSelectionResult(AD_SELECTION_RESULT)
                         .build();
 
-        assertThat(request.getSeller()).isEqualTo(SELLER);
-        assertThat(request.getAdSelectionId()).isEqualTo(AD_SELECTION_ID + 1);
-        assertThat(request.getAdSelectionDataId()).isEqualTo(AD_SELECTION_ID + 1);
-        assertThat(request.getAdSelectionResult()).isEqualTo(AD_SELECTION_RESULT);
+        expect.that(request.getSeller()).isEqualTo(SELLER);
+        expect.that(request.getAdSelectionId()).isEqualTo(AD_SELECTION_ID + 1);
+        expect.that(request.getAdSelectionDataId()).isEqualTo(AD_SELECTION_ID + 1);
+        expect.that(request.getAdSelectionResult()).isEqualTo(AD_SELECTION_RESULT);
     }
 }

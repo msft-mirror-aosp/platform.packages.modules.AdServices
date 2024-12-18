@@ -36,6 +36,13 @@ flag {
 }
 
 flag {
+    name: "adservices_enable_per_module_overrides_api"
+    namespace: "adservices_aconfig"
+    bug: "346669688"
+    description: "Enables apis for adservices allow caller to enable individual module(PA/TOPIC/MSMT). This api only make the module available on the device, each module can still have own flag/logic to turn on off themself."
+}
+
+flag {
     name: "enable_adservices_api_enabled"
     namespace: "adservices"
     # TODO(b/320156647): Add bug number and description
@@ -79,6 +86,13 @@ flag {
 }
 
 flag {
+    name: "fledge_get_ad_selection_data_seller_configuration_enabled"
+    namespace: "adservices"
+    bug: "342332791"
+    description: "Enable the seller configuration feature for the getAdSelectionData API"
+}
+
+flag {
     name: "get_adservices_common_states_api_enabled"
     namespace: "adservices"
     bug: "322635374"
@@ -90,6 +104,14 @@ flag {
     namespace: "adservices"
     bug: "299946888"
     description: "Enables Protected Signals API"
+}
+
+flag {
+    name: "sdksandbox_invalidate_effective_target_sdk_version_cache"
+    namespace: "adservices_aconfig"
+    description: "Invalidate the effective target SDK version cache"
+    bug: "328202544"
+    is_fixed_read_only: true
 }
 
 flag {

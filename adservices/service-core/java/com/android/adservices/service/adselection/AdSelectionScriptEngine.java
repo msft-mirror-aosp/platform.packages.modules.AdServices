@@ -18,10 +18,21 @@ package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.js.JSScriptArgument.arrayArg;
 import static com.android.adservices.service.js.JSScriptArgument.jsonArg;
-import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.recordArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArrayArg;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.ENTRY_POINT_FUNC_NAME;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.JS_EXECUTION_RESULT_INVALID;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.JS_EXECUTION_STATUS_UNSUCCESSFUL;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.JS_SCRIPT_STATUS_SUCCESS;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.RESULTS_FIELD_NAME;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.SCRIPT_ARGUMENT_NAME_IGNORED;
+import static com.android.adservices.service.js.JSScriptEngineCommonConstants.STATUS_FIELD_NAME;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_JS_REFERENCE_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OTHER_FAILURE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
 
 import static com.google.common.util.concurrent.Futures.transform;
 
@@ -30,7 +41,6 @@ import android.adservices.adselection.AdWithBid;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.annotation.NonNull;
-import android.content.Context;
 import android.net.Uri;
 import android.webkit.URLUtil;
 
@@ -44,18 +54,16 @@ import com.android.adservices.service.exception.JSExecutionException;
 import com.android.adservices.service.js.IsolateSettings;
 import com.android.adservices.service.js.JSScriptArgument;
 import com.android.adservices.service.js.JSScriptEngine;
+import com.android.adservices.service.js.JSScriptEngineCommonConstants;
 import com.android.adservices.service.profiling.Tracing;
-import com.android.adservices.service.signals.ProtectedSignal;
-import com.android.adservices.service.signals.ProtectedSignalsArgumentUtil;
 import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.FluentFuture;
-import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.MoreExecutors;
 
@@ -64,7 +72,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.function.Function;
@@ -83,17 +90,7 @@ import java.util.stream.Collectors;
 public class AdSelectionScriptEngine {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
-    private static final String JS_EXECUTION_STATUS_UNSUCCESSFUL =
-            "Outcome selection script failed with status '%s' or returned unexpected result '%s'";
-
-    private static final String JS_EXECUTION_RESULT_INVALID =
-            "Result of outcome selection script result is invalid: %s";
-
-    // TODO: (b/228094391): Put these common constants in a separate class
-    private static final String SCRIPT_ARGUMENT_NAME_IGNORED = "ignored";
     public static final String FUNCTION_NAMES_ARG_NAME = "__rb_functionNames";
-    public static final String RESULTS_FIELD_NAME = "results";
-    public static final String STATUS_FIELD_NAME = "status";
     // This is a local variable and doesn't need any prefix.
     public static final String CUSTOM_AUDIENCE_ARG_NAME = "__rb_custom_audience";
     public static final String AD_VAR_NAME = "ad";
@@ -111,13 +108,9 @@ public class AdSelectionScriptEngine {
     public static final String TRUSTED_SCORING_SIGNALS_ARG_NAME = "__rb_trusted_scoring_signals";
     public static final String GENERATE_BID_FUNCTION_NAME = "generateBid";
     public static final String SCORE_AD_FUNCTION_NAME = "scoreAd";
-    public static final String ENCODE_SIGNALS_DRIVER_FUNCTION_NAME = "encodeSignalsDriver";
-    public static final String ENCODE_SIGNALS_FUNCTION_NAME = "encodeSignals";
+
     public static final String USER_SIGNALS_ARG_NAME = "__rb_user_signals";
     public static final String AD_SCORE_FIELD_NAME = "score";
-
-    public static final String SIGNALS_ARG_NAME = "__rb_protected_signals";
-    public static final String MAX_SIZE_BYTES_ARG_NAME = "__rb_max_size_bytes";
     public static final String DEBUG_REPORTING_WIN_URI_FIELD_NAME = "debug_reporting_win_uri";
     public static final String DEBUG_REPORTING_LOSS_URI_FIELD_NAME = "debug_reporting_loss_uri";
     public static final String DEBUG_REPORTING_SELLER_REJECT_REASON_FIELD_NAME = "rejectReason";
@@ -130,7 +123,7 @@ public class AdSelectionScriptEngine {
      */
     public static final String AD_SELECTION_ITERATIVE_PROCESSING_JS =
             "function "
-                    + JSScriptEngine.ENTRY_POINT_FUNC_NAME
+                    + ENTRY_POINT_FUNC_NAME
                     + "(%s) {\n"
                     + " let status = 0;\n"
                     + " const results = []; \n"
@@ -167,7 +160,7 @@ public class AdSelectionScriptEngine {
      */
     public static final String AD_SELECTION_BATCH_PROCESSING_JS =
             "function "
-                    + JSScriptEngine.ENTRY_POINT_FUNC_NAME
+                    + ENTRY_POINT_FUNC_NAME
                     + "(%s) {\n"
                     + "  let status = 0;\n"
                     + "  const results = []; \n"
@@ -186,7 +179,7 @@ public class AdSelectionScriptEngine {
 
     public static final String AD_SELECTION_GENERATE_BID_JS_V3 =
             "function "
-                    + JSScriptEngine.ENTRY_POINT_FUNC_NAME
+                    + ENTRY_POINT_FUNC_NAME
                     + "(%s) {\n"
                     + "    let status = 0;\n"
                     + "    let results = null;\n"
@@ -215,7 +208,7 @@ public class AdSelectionScriptEngine {
 
     public static final String CHECK_FUNCTIONS_EXIST_JS =
             "function "
-                    + JSScriptEngine.ENTRY_POINT_FUNC_NAME
+                    + ENTRY_POINT_FUNC_NAME
                     + "(names) {\n"
                     + " for (const name of names) {\n"
                     + "     try {\n"
@@ -228,7 +221,7 @@ public class AdSelectionScriptEngine {
                     + "}";
     public static final String GET_FUNCTION_ARGUMENT_COUNT =
             "function "
-                    + JSScriptEngine.ENTRY_POINT_FUNC_NAME
+                    + ENTRY_POINT_FUNC_NAME
                     + "(names) {\n"
                     + " for (const name of names) {\n"
                     + "     try {\n"
@@ -241,120 +234,33 @@ public class AdSelectionScriptEngine {
                     + " return -1;\n"
                     + "}";
 
-    /**
-     * Minified JS that un-marshals signals to map their keys and values to byte[]. Should be
-     * invoked by the driver script before passing the signals to encodeSignals() function.
-     *
-     * <pre>
-     * function decodeHex(hexString) {
-     *     hexString = hexString.replace(/\\s/g, '');
-     *     if (hexString.length % 2 !== 0) {
-     *         throw new Error('hex must have even chars.');
-     *     }
-     *     const byteArray = new Uint8Array(hexString.length / 2);
-     *     for (let i = 0; i < hexString.length; i += 2) {
-     *         const byteValue = parseInt(hexString.substr(i, 2), 16);
-     *         byteArray[i / 2] = byteValue;
-     *     }
-     *
-     *     return byteArray;
-     * }
-     *
-     * function unmarshal(signalObjects){
-     *    const result=new Map();
-     *    signalObjects.forEach(
-     *      (signalGroup=> {
-     *        for(const key in signalGroup){
-     *          const signal_key = decodeHex(key)
-     *          const decodedValues= signalGroup[key].map((entry=>({
-     *                 signal_value: decodeHex(entry.val),
-     *                 creation_time: entry.time,
-     *                 package_name: entry.app.trim()
-     *               })));
-     *
-     *           result.set(signal_key, decodedValues)
-     *         }
-     *        })
-     *     )
-     *   return result;
-     * }
-     * </pre>
-     */
-    private static final String UNMARSHAL_SIGNALS_JS =
-            "function decodeHex(e){if((e=e.replace(/\\\\s/g,\"\")).length%2!=0)throw Error(\"hex "
-                    + "must have even chars.\");let t=new Uint8Array(e.length/2);for(let n=0;n<e"
-                    + ".length;n+=2){let a=parseInt(e.substr(n,2),16);t[n/2]=a}return t}function "
-                    + "unmarshal(e){let t=new Map;return e.forEach(e=>{for(let n in e){let a=e[n]."
-                    + "map(e=>({signal_value:decodeHex(e.val),creation_time:e.time,package_name:e."
-                    + "app.trim()}));t.set(decodeHex(n),a)}}),t}";
-
-    /**
-     * Function used to marshal the Uint8Array returned by encodeSignals into an hex string.
-     *
-     * <pre>
-     * function encodeHex(signals) {
-     *    return signals.reduce(
-     *      (output, byte) => output + byte.toString(16).padStart(2, '0'), ''
-     *    );
-     * };
-     * </pre>
-     */
-    private static final String MARSHALL_ENCODED_SIGNALS_JS =
-            "function encodeHex(e){return e.reduce((e,n)=>e+n.toString(16).padStart(2,"
-                    + " '0'),\"\");}";
-
-    /**
-     * This JS wraps around encodeSignals() logic. Un-marshals the signals and then invokes the
-     * encodeSignals() script.
-     */
-    private static final String ENCODE_SIGNALS_DRIVER_JS =
-            "function "
-                    + ENCODE_SIGNALS_DRIVER_FUNCTION_NAME
-                    + "(signals, maxSize) {\n"
-                    + "  const unmarshalledSignals = unmarshal(signals);\n"
-                    + "\n"
-                    + "  "
-                    + "  let encodeResult = "
-                    + ENCODE_SIGNALS_FUNCTION_NAME
-                    + "(unmarshalledSignals, maxSize);\n"
-                    + "   return { 'status': encodeResult.status, "
-                    + "'results': encodeHex(encodeResult.results) };\n"
-                    + "}\n"
-                    + "\n"
-                    + UNMARSHAL_SIGNALS_JS
-                    + "\n"
-                    + MARSHALL_ENCODED_SIGNALS_JS
-                    + "\n";
-
-    private static final int JS_SCRIPT_STATUS_SUCCESS = 0;
     private static final String ARG_PASSING_SEPARATOR = ", ";
-    private final JSScriptEngine mJsEngine;
-    // Used for the Futures.transform calls to compose futures.
-    private final Executor mExecutor = MoreExecutors.directExecutor();
-    private final Supplier<Boolean> mEnforceMaxHeapSizeFeatureSupplier;
-    private final Supplier<Long> mMaxHeapSizeBytesSupplier;
     private final AdWithBidArgumentUtil mAdWithBidArgumentUtil;
     private final AdDataArgumentUtil mAdDataArgumentUtil;
     private final DebugReportingScriptStrategy mDebugReportingScript;
     private final boolean mCpcBillingEnabled;
+    private final JSScriptEngine mJsEngine;
+    // Used for the Futures.transform calls to compose futures.
+    private final Executor mExecutor = MoreExecutors.directExecutor();
+    private final Supplier<Long> mMaxHeapSizeBytesSupplier;
     private final RetryStrategy mRetryStrategy;
+    private final Supplier<Boolean> mIsolateConsoleMessageInLogsEnabled;
 
     public AdSelectionScriptEngine(
-            Context context,
-            Supplier<Boolean> enforceMaxHeapSizeFeatureSupplier,
             Supplier<Long> maxHeapSizeBytesSupplier,
             AdCounterKeyCopier adCounterKeyCopier,
             DebugReportingScriptStrategy debugReportingScript,
             boolean cpcBillingEnabled,
-            RetryStrategy retryStrategy) {
-        mJsEngine = JSScriptEngine.getInstance(context, sLogger);
-        mEnforceMaxHeapSizeFeatureSupplier = enforceMaxHeapSizeFeatureSupplier;
-        mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
+            RetryStrategy retryStrategy,
+            Supplier<Boolean> isolateConsoleMessageInLogsEnabled) {
+        mJsEngine = JSScriptEngine.getInstance();
         mAdDataArgumentUtil = new AdDataArgumentUtil(adCounterKeyCopier);
         mAdWithBidArgumentUtil = new AdWithBidArgumentUtil(mAdDataArgumentUtil);
         mDebugReportingScript = debugReportingScript;
         mCpcBillingEnabled = cpcBillingEnabled;
+        mMaxHeapSizeBytesSupplier = maxHeapSizeBytesSupplier;
         mRetryStrategy = retryStrategy;
+        mIsolateConsoleMessageInLogsEnabled = isolateConsoleMessageInLogsEnabled;
     }
 
     /**
@@ -413,7 +319,8 @@ public class AdSelectionScriptEngine {
                                         this::callGenerateBid),
                                 result -> {
                                     List<GenerateBidResult> bidsResults =
-                                            handleGenerateBidsOutput(result);
+                                            handleGenerateBidsOutput(
+                                                    result, runAdBiddingPerCAExecutionLogger);
                                     runAdBiddingPerCAExecutionLogger.endGenerateBids();
                                     Tracing.endAsyncSection(Tracing.GENERATE_BIDS, traceCookie);
                                     return bidsResults;
@@ -422,6 +329,13 @@ public class AdSelectionScriptEngine {
                 .catchingAsync(
                         JSExecutionException.class,
                         e -> {
+                            if (e.getMessage().contains("Uncaught ReferenceError:")) {
+                                runAdBiddingPerCAExecutionLogger.setGenerateBidJsScriptResultCode(
+                                        JS_RUN_STATUS_JS_REFERENCE_ERROR);
+                            } else {
+                                runAdBiddingPerCAExecutionLogger.setGenerateBidJsScriptResultCode(
+                                        JS_RUN_STATUS_OTHER_FAILURE);
+                            }
                             Tracing.endAsyncSection(Tracing.GENERATE_BIDS, traceCookie);
                             sLogger.e(
                                     e,
@@ -476,7 +390,9 @@ public class AdSelectionScriptEngine {
                         runAuctionScriptGenerateBidV3(
                                 generateBidJS, signals, this::callGenerateBidV3),
                         result -> {
-                            List<GenerateBidResult> bidResults = handleGenerateBidsOutput(result);
+                            List<GenerateBidResult> bidResults =
+                                    handleGenerateBidsOutput(
+                                            result, runAdBiddingPerCAExecutionLogger);
                             runAdBiddingPerCAExecutionLogger.endGenerateBids();
                             Tracing.endAsyncSection(Tracing.GENERATE_BIDS, traceCookie);
                             return bidResults;
@@ -538,59 +454,20 @@ public class AdSelectionScriptEngine {
                                 scoreAdJS, adWithBidArguments.build(), args, this::callScoreAd))
                 .transform(
                         result -> handleScoreAdsOutput(result, adSelectionExecutionLogger),
+                        mExecutor)
+                .catchingAsync(
+                        JSExecutionException.class,
+                        e -> {
+                            if (e.getMessage().contains("Uncaught ReferenceError:")) {
+                                adSelectionExecutionLogger.setScoreAdJsScriptResultCode(
+                                        JS_RUN_STATUS_JS_REFERENCE_ERROR);
+                            } else {
+                                adSelectionExecutionLogger.setScoreAdJsScriptResultCode(
+                                        JS_RUN_STATUS_OTHER_FAILURE);
+                            }
+                            throw e;
+                        },
                         mExecutor);
-    }
-
-    /**
-     * Injects buyer provided encodeSignals() logic into a driver JS. The driver script first
-     * un-marshals the signals, which would be marshaled by {@link ProtectedSignalsArgumentUtil},
-     * and then invokes the buyer provided encoding logic. The script marshals the Uint8Array
-     * returned by encodeSignals as HEX string and converts it into the byte[] returned by this
-     * method.
-     *
-     * @param encodingLogic The buyer provided encoding logic
-     * @param rawSignals The signals fetched from buyer delegation
-     * @param maxSize maxSize of payload generated by the buyer
-     * @throws IllegalStateException if the JSON created from raw Signals is invalid
-     */
-    public ListenableFuture<byte[]> encodeSignals(
-            @NonNull String encodingLogic,
-            @NonNull Map<String, List<ProtectedSignal>> rawSignals,
-            @NonNull int maxSize)
-            throws IllegalStateException {
-
-        if (rawSignals.isEmpty()) {
-            return Futures.immediateFuture(new byte[0]);
-        }
-
-        String combinedDriverAndEncodingLogic = ENCODE_SIGNALS_DRIVER_JS + encodingLogic;
-        ImmutableList<JSScriptArgument> args;
-        try {
-            args =
-                    ImmutableList.<JSScriptArgument>builder()
-                            .add(
-                                    ProtectedSignalsArgumentUtil.asScriptArgument(
-                                            SIGNALS_ARG_NAME, rawSignals))
-                            .add(numericArg(MAX_SIZE_BYTES_ARG_NAME, maxSize))
-                            .build();
-        } catch (JSONException e) {
-            throw new IllegalStateException("Exception processing JSON version of signals");
-        }
-
-        IsolateSettings isolateSettings =
-                mEnforceMaxHeapSizeFeatureSupplier.get()
-                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
-                                mMaxHeapSizeBytesSupplier.get())
-                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
-
-        return FluentFuture.from(
-                        mJsEngine.evaluate(
-                                combinedDriverAndEncodingLogic,
-                                args,
-                                ENCODE_SIGNALS_DRIVER_FUNCTION_NAME,
-                                isolateSettings,
-                                mRetryStrategy))
-                .transform(this::handleEncodingOutput, mExecutor);
     }
 
     /**
@@ -605,11 +482,13 @@ public class AdSelectionScriptEngine {
     public ListenableFuture<Long> selectOutcome(
             @NonNull String selectionLogic,
             @NonNull List<AdSelectionResultBidAndUri> adSelectionIdWithBidAndRenderUris,
-            @NonNull AdSelectionSignals selectionSignals)
+            @NonNull AdSelectionSignals selectionSignals,
+            @NonNull SelectAdsFromOutcomesExecutionLogger selectAdsFromOutcomesExecutionLogger)
             throws JSONException, IllegalStateException {
         Objects.requireNonNull(selectionLogic);
         Objects.requireNonNull(adSelectionIdWithBidAndRenderUris);
         Objects.requireNonNull(selectionSignals);
+        Objects.requireNonNull(selectAdsFromOutcomesExecutionLogger);
 
         ImmutableList<JSScriptArgument> args =
                 ImmutableList.<JSScriptArgument>builder()
@@ -628,9 +507,11 @@ public class AdSelectionScriptEngine {
         ImmutableList<JSScriptArgument> advertArgs = adSelectionIdWithBidArguments.build();
         sLogger.v("Advert args created " + advertArgs);
 
+        // Start selectOutcome script execution process.
+        selectAdsFromOutcomesExecutionLogger.startExecutionScriptTimestamp();
         return transform(
                 runAuctionScriptBatch(selectionLogic, advertArgs, args, this::callSelectOutcome),
-                this::handleSelectOutcomesOutput,
+                result -> handleSelectOutcomesOutput(result, selectAdsFromOutcomesExecutionLogger),
                 mExecutor);
     }
 
@@ -639,13 +520,17 @@ public class AdSelectionScriptEngine {
      * and convert it to a list of {@link GenerateBidResult} objects. The script output has been
      * pre-parsed into an {@link AuctionScriptResult} object that will contain the script status
      * code and the list of ads. The method will return an empty list of ads if the status code is
-     * not {@link #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS
-     * response.
+     * not {@link JSScriptEngineCommonConstants#JS_SCRIPT_STATUS_SUCCESS} or if there has been any
+     * problem parsing the JS response.
      */
-    private List<GenerateBidResult> handleGenerateBidsOutput(AuctionScriptResult batchBidResult) {
+    private List<GenerateBidResult> handleGenerateBidsOutput(
+            AuctionScriptResult batchBidResult,
+            RunAdBiddingPerCAExecutionLogger runAdBiddingPerCAExecutionLogger) {
         ImmutableList.Builder<GenerateBidResult> results = ImmutableList.builder();
         if (batchBidResult.status != JS_SCRIPT_STATUS_SUCCESS) {
             sLogger.v("Bid script failed, returning empty result.");
+            runAdBiddingPerCAExecutionLogger.setGenerateBidJsScriptResultCode(
+                    JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR);
             return ImmutableList.of();
         }
 
@@ -678,9 +563,12 @@ public class AdSelectionScriptEngine {
                     e,
                     "Invalid ad with bid returned by a generateBid script. Returning empty"
                             + " list of ad with bids.");
+            runAdBiddingPerCAExecutionLogger.setGenerateBidJsScriptResultCode(
+                    JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR);
             return ImmutableList.of();
         }
 
+        runAdBiddingPerCAExecutionLogger.setGenerateBidJsScriptResultCode(JS_RUN_STATUS_SUCCESS);
         return results.build();
     }
 
@@ -689,7 +577,8 @@ public class AdSelectionScriptEngine {
      * associated bids {@link Double}. The script output has been pre-parsed into an {@link
      * AuctionScriptResult} object that will contain the script sstatus code and the list of scores.
      * The method will return an empty list of ads if the status code is not {@link
-     * #JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem parsing the JS response.
+     * JSScriptEngineCommonConstants#JS_SCRIPT_STATUS_SUCCESS} or if there has been any problem
+     * parsing the JS response.
      */
     private List<ScoreAdResult> handleScoreAdsOutput(
             AuctionScriptResult batchBidResult,
@@ -698,6 +587,8 @@ public class AdSelectionScriptEngine {
 
         if (batchBidResult.status != JS_SCRIPT_STATUS_SUCCESS) {
             sLogger.v("Scoring script failed, returning empty result.");
+            adSelectionExecutionLogger.setScoreAdJsScriptResultCode(
+                    JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR);
         } else {
             for (int i = 0; i < batchBidResult.results.length(); i++) {
                 // If the output of the score for this advert is invalid JSON or doesn't have a
@@ -718,6 +609,7 @@ public class AdSelectionScriptEngine {
                                 .setLossDebugReportUri(debugReportingLossUri)
                                 .build());
             }
+            adSelectionExecutionLogger.setScoreAdJsScriptResultCode(JS_RUN_STATUS_SUCCESS);
         }
 
         adSelectionExecutionLogger.endScoreAds();
@@ -730,15 +622,18 @@ public class AdSelectionScriptEngine {
      * been pre-parsed into an {@link AuctionScriptResult} object that will contain the script
      * status code and the results as a list. This handler expects a single result in the {@code
      * results} or an empty list which is also valid as long as {@code status} is {@link
-     * #JS_SCRIPT_STATUS_SUCCESS}
+     * JSScriptEngineCommonConstants#JS_SCRIPT_STATUS_SUCCESS}
      *
-     * <p>The method will return a status code is not {@link #JS_SCRIPT_STATUS_SUCCESS} if there has
-     * been any problem executing JS script or parsing the JS response.
+     * <p>The method will return a status code is not {@link
+     * JSScriptEngineCommonConstants#JS_SCRIPT_STATUS_SUCCESS} if there has been any problem
+     * executing JS script or parsing the JS response.
      *
      * @throws IllegalStateException is thrown in case the status is not success or the results has
      *     more than one item.
      */
-    private Long handleSelectOutcomesOutput(AuctionScriptResult scriptResults)
+    private Long handleSelectOutcomesOutput(
+            AuctionScriptResult scriptResults,
+            SelectAdsFromOutcomesExecutionLogger selectAdsFromOutcomesExecutionLogger)
             throws IllegalStateException {
         if (scriptResults.status != JS_SCRIPT_STATUS_SUCCESS
                 || scriptResults.results.length() != 1) {
@@ -748,74 +643,30 @@ public class AdSelectionScriptEngine {
                             scriptResults.status,
                             scriptResults.results);
             sLogger.v(errorMsg);
+            selectAdsFromOutcomesExecutionLogger.endExecutionScriptTimestamp(
+                    JS_RUN_STATUS_OUTPUT_SYNTAX_ERROR);
             throw new IllegalStateException(errorMsg);
         }
 
         if (scriptResults.results.isNull(0)) {
+            selectAdsFromOutcomesExecutionLogger.endExecutionScriptTimestamp(JS_RUN_STATUS_SUCCESS);
             return null;
         }
 
         try {
             JSONObject resultOutcomeJson = scriptResults.results.getJSONObject(0);
             // Use Long class to parse from string
-            return Long.valueOf(
+            Long result = Long.valueOf(
                     resultOutcomeJson.optString(SelectAdsFromOutcomesArgumentUtil.ID_FIELD_NAME));
+            selectAdsFromOutcomesExecutionLogger.endExecutionScriptTimestamp(JS_RUN_STATUS_SUCCESS);
+            return result;
         } catch (JSONException e) {
             String errorMsg = String.format(JS_EXECUTION_RESULT_INVALID, scriptResults.results);
             sLogger.v(errorMsg);
+            selectAdsFromOutcomesExecutionLogger.endExecutionScriptTimestamp(
+                    JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR);
             throw new IllegalStateException(errorMsg);
         }
-    }
-
-    @VisibleForTesting
-    byte[] handleEncodingOutput(String encodingScriptResult) throws IllegalStateException {
-
-        if (encodingScriptResult == null || encodingScriptResult.isEmpty()) {
-            throw new IllegalStateException(
-                    "The encoding script either doesn't contain the required function or the"
-                            + " function returned null");
-        }
-
-        try {
-            JSONObject jsonResult = new JSONObject(encodingScriptResult);
-            int status = jsonResult.getInt(STATUS_FIELD_NAME);
-            String result = jsonResult.getString(RESULTS_FIELD_NAME);
-
-            if (status != JS_SCRIPT_STATUS_SUCCESS || result == null) {
-                String errorMsg = String.format(JS_EXECUTION_STATUS_UNSUCCESSFUL, status, result);
-                sLogger.v(errorMsg);
-                throw new IllegalStateException(errorMsg);
-            }
-
-            try {
-                return decodeHexString(result);
-            } catch (IllegalArgumentException e) {
-                throw new IllegalStateException("Malformed encoded payload.", e);
-            }
-        } catch (JSONException e) {
-            sLogger.e("Could not extract the Encoded Payload result");
-            throw new IllegalStateException("Exception processing result from encoding");
-        }
-    }
-
-    private byte[] decodeHexString(String hexString) {
-        Preconditions.checkArgument(
-                hexString.length() % 2 == 0, "Expected an hex string but the arg length is odd");
-
-        byte[] result = new byte[hexString.length() / 2];
-        for (int i = 0; i < hexString.length() / 2; i++) {
-            result[i] = byteValue(hexString.charAt(2 * i), hexString.charAt(2 * i + 1));
-        }
-        return result;
-    }
-
-    private byte byteValue(char highNibble, char lowNibble) {
-        int high = Character.digit(highNibble, 16);
-        Preconditions.checkArgument(high >= 0, "Invalid value for HEX string char");
-        int low = Character.digit(lowNibble, 16);
-        Preconditions.checkArgument(low >= 0, "Invalid value for HEX string char");
-
-        return (byte) (high << 4 | low);
     }
 
     /**
@@ -927,17 +778,14 @@ public class AdSelectionScriptEngine {
      */
     ListenableFuture<Boolean> validateAuctionScript(
             String jsScript, List<String> expectedFunctionsNames) {
-        IsolateSettings isolateSettings =
-                mEnforceMaxHeapSizeFeatureSupplier.get()
-                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
-                                mMaxHeapSizeBytesSupplier.get())
-                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
         return transform(
                 mJsEngine.evaluate(
                         jsScript + "\n" + CHECK_FUNCTIONS_EXIST_JS,
                         ImmutableList.of(
                                 stringArrayArg(FUNCTION_NAMES_ARG_NAME, expectedFunctionsNames)),
-                        isolateSettings,
+                        buildIsolateSettings(
+                                mMaxHeapSizeBytesSupplier,
+                                mIsolateConsoleMessageInLogsEnabled),
                         mRetryStrategy),
                 Boolean::parseBoolean,
                 mExecutor);
@@ -963,7 +811,8 @@ public class AdSelectionScriptEngine {
         return transform(
                 biddingResult,
                 result -> {
-                    List<GenerateBidResult> bidResults = handleGenerateBidsOutput(result);
+                    List<GenerateBidResult> bidResults =
+                            handleGenerateBidsOutput(result, runAdBiddingPerCAExecutionLogger);
                     runAdBiddingPerCAExecutionLogger.endGenerateBids();
                     return bidResults;
                 },
@@ -976,18 +825,15 @@ public class AdSelectionScriptEngine {
      */
     @VisibleForTesting
     ListenableFuture<Integer> getAuctionScriptArgCount(String jsScript, String functionName) {
-        IsolateSettings isolateSettings =
-                mEnforceMaxHeapSizeFeatureSupplier.get()
-                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
-                                mMaxHeapSizeBytesSupplier.get())
-                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
         return transform(
                 mJsEngine.evaluate(
                         jsScript + "\n" + GET_FUNCTION_ARGUMENT_COUNT,
                         ImmutableList.of(
                                 stringArrayArg(
                                         FUNCTION_NAMES_ARG_NAME, ImmutableList.of(functionName))),
-                        isolateSettings,
+                        buildIsolateSettings(
+                                mMaxHeapSizeBytesSupplier,
+                                mIsolateConsoleMessageInLogsEnabled),
                         mRetryStrategy),
                 Integer::parseInt,
                 mExecutor);
@@ -1078,12 +924,6 @@ public class AdSelectionScriptEngine {
                         .map(JSScriptArgument::name)
                         .collect(Collectors.joining(ARG_PASSING_SEPARATOR));
 
-        IsolateSettings isolateSettings =
-                mEnforceMaxHeapSizeFeatureSupplier.get()
-                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
-                                mMaxHeapSizeBytesSupplier.get())
-                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
-
         return mJsEngine.evaluate(
                 jsScript
                         + "\n"
@@ -1092,7 +932,9 @@ public class AdSelectionScriptEngine {
                                 argPassing,
                                 auctionFunctionCallGenerator.apply(args)),
                 args,
-                isolateSettings,
+                buildIsolateSettings(
+                        mMaxHeapSizeBytesSupplier,
+                        mIsolateConsoleMessageInLogsEnabled),
                 mRetryStrategy);
     }
 
@@ -1135,12 +977,6 @@ public class AdSelectionScriptEngine {
                         .map(JSScriptArgument::name)
                         .collect(Collectors.joining(ARG_PASSING_SEPARATOR));
 
-        IsolateSettings isolateSettings =
-                mEnforceMaxHeapSizeFeatureSupplier.get()
-                        ? IsolateSettings.forMaxHeapSizeEnforcementEnabled(
-                                mMaxHeapSizeBytesSupplier.get())
-                        : IsolateSettings.forMaxHeapSizeEnforcementDisabled();
-
         return mJsEngine.evaluate(
                 jsScript
                         + "\n"
@@ -1149,7 +985,9 @@ public class AdSelectionScriptEngine {
                                 argPassing,
                                 auctionFunctionCallGenerator.apply(otherArgs)),
                 allArgs,
-                isolateSettings,
+                buildIsolateSettings(
+                        mMaxHeapSizeBytesSupplier,
+                        mIsolateConsoleMessageInLogsEnabled),
                 mRetryStrategy);
     }
 
@@ -1193,16 +1031,6 @@ public class AdSelectionScriptEngine {
         return String.format("selectOutcome(%s)", callArgs);
     }
 
-    static class AuctionScriptResult {
-        public final int status;
-        public final JSONArray results;
-
-        AuctionScriptResult(int status, JSONArray results) {
-            this.status = status;
-            this.results = results;
-        }
-    }
-
     JSScriptArgument translateCustomAudience(DBCustomAudience customAudience) throws JSONException {
         ImmutableList.Builder<JSScriptArgument> adsArg = ImmutableList.builder();
         for (DBAdData ad : customAudience.getAds()) {
@@ -1217,10 +1045,29 @@ public class AdSelectionScriptEngine {
                 arrayArg("ads", adsArg.build()));
     }
 
+    public static class AuctionScriptResult {
+        public final int status;
+        public final JSONArray results;
+
+        public AuctionScriptResult(int status, JSONArray results) {
+            this.status = status;
+            this.results = results;
+        }
+    }
+
     private static Uri extractValidUri(String uriString) {
         if (Strings.isNullOrEmpty(uriString) || !URLUtil.isValidUrl(uriString)) {
             return Uri.EMPTY;
         }
         return Uri.parse(uriString);
+    }
+
+    private static IsolateSettings buildIsolateSettings(
+            Supplier<Long> maxHeapSizeBytesSupplier,
+            Supplier<Boolean> isolateConsoleMessageInLogsEnabled) {
+        return IsolateSettings.builder()
+                .setMaxHeapSizeBytes(maxHeapSizeBytesSupplier.get())
+                .setIsolateConsoleMessageInLogsEnabled(isolateConsoleMessageInLogsEnabled.get())
+                .build();
     }
 }

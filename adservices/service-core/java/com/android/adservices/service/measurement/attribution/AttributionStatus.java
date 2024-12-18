@@ -116,6 +116,7 @@ public class AttributionStatus {
     private long mAttributionDelay;
     private String mSourceRegistrant;
     private int mAggregateReportCount;
+    private int mNullAggregateReportCount;
     private int mAggregateDebugReportCount;
     private int mEventReportCount;
     private int mEventDebugReportCount;
@@ -187,19 +188,6 @@ public class AttributionStatus {
         mAttributionResult = attributionResult;
     }
 
-    /** Set the result of attribution base on the type of generated reports. */
-    public void setAttributionResult(
-            boolean aggregateReportGenerated, boolean eventReportGenerated) {
-        if (aggregateReportGenerated && !eventReportGenerated) {
-            mAttributionResult = AttributionResult.AGGREGATE_REPORT_GENERATED_SUCCESS_STATUS;
-        } else if (!aggregateReportGenerated && eventReportGenerated) {
-            mAttributionResult = AttributionResult.EVENT_REPORT_GENERATED_SUCCESS_STATUS;
-        } else if (aggregateReportGenerated && eventReportGenerated) {
-            mAttributionResult =
-                    AttributionResult.AGGREGATE_AND_EVENT_REPORTS_GENERATED_SUCCESS_STATUS;
-        }
-    }
-
     /** Get failure type. */
     public FailureType getFailureType() {
         return mFailureType;
@@ -210,16 +198,6 @@ public class AttributionStatus {
         mFailureType = failureType;
     }
 
-    /** Set failure type using Trigger.Status. */
-    public void setFailureTypeFromTriggerStatus(int triggerStatus) {
-        if (triggerStatus == Trigger.Status.IGNORED) {
-            setFailureType(FailureType.TRIGGER_IGNORED);
-        } else if (triggerStatus == Trigger.Status.ATTRIBUTED) {
-            setFailureType(FailureType.TRIGGER_ALREADY_ATTRIBUTED);
-        } else if (triggerStatus == Trigger.Status.MARKED_TO_DELETE) {
-            setFailureType(FailureType.TRIGGER_MARKED_FOR_DELETION);
-        }
-    }
 
     /** See if source is derived. */
     public boolean isSourceDerived() {
@@ -269,6 +247,16 @@ public class AttributionStatus {
     /** Set aggregate report count. */
     public void setAggregateReportCount(int aggregateReportCount) {
         mAggregateReportCount = aggregateReportCount;
+    }
+
+    /** Get null aggregate report count. */
+    public int getNullAggregateReportCount() {
+        return mNullAggregateReportCount;
+    }
+
+    /** Set null aggregate report count. */
+    public void setNullAggregateReportCount(int nullAggregateReportCount) {
+        mNullAggregateReportCount = nullAggregateReportCount;
     }
 
     /** Get aggregate debug report count. */

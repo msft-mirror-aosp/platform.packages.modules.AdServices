@@ -16,6 +16,8 @@
 
 package com.android.server.sdksandbox;
 
+import static com.android.sdksandbox.flags.Flags.sdkSandboxVerifySdkDexFiles;
+
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -31,6 +33,7 @@ import android.util.Log;
 
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.sdksandbox.verifier.SdkDexVerifier;
+import com.android.server.sdksandbox.verifier.SdkDexVerifier.VerificationResult;
 
 /**
  * Broadcast Receiver for receiving new Sdk install requests and verifying Sdk code before running
@@ -72,12 +75,13 @@ public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
     void verifySdkHandler(Context context, Intent intent, Handler handler) {
         int verificationId = intent.getIntExtra(PackageManager.EXTRA_VERIFICATION_ID, -1);
 
-        boolean enforceRestrictions =
-                DeviceConfig.getBoolean(
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        SdkSandboxManagerService.PROPERTY_ENFORCE_RESTRICTIONS,
-                        SdkSandboxManagerService.DEFAULT_VALUE_ENFORCE_RESTRICTIONS);
-        if (!enforceRestrictions) {
+        boolean isRestrictionsEnabled =
+                sdkSandboxVerifySdkDexFiles()
+                        && DeviceConfig.getBoolean(
+                                DeviceConfig.NAMESPACE_ADSERVICES,
+                                SdkSandboxManagerService.PROPERTY_ENFORCE_RESTRICTIONS,
+                                SdkSandboxManagerService.DEFAULT_VALUE_ENFORCE_RESTRICTIONS);
+        if (!isRestrictionsEnabled) {
             context.getPackageManager()
                     .verifyPendingInstall(verificationId, PackageManager.VERIFICATION_ALLOW);
             Log.d(TAG, "Restrictions disabled. Sent VERIFICATION_ALLOW");
@@ -111,9 +115,9 @@ public class SdkSandboxVerifierReceiver extends BroadcastReceiver {
                                 apkPath,
                                 packageInfo.packageName,
                                 targetSdkVersion,
-                                new OutcomeReceiver<Void, Exception>() {
+                                new OutcomeReceiver<VerificationResult, Exception>() {
                                     @Override
-                                    public void onResult(Void result) {}
+                                    public void onResult(VerificationResult result) {}
 
                                     @Override
                                     public void onError(Exception e) {

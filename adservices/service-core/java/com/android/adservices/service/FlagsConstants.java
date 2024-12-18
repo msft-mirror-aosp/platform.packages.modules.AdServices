@@ -35,7 +35,6 @@ public final class FlagsConstants {
     public static final int PPAPI_ONLY = 1;
     public static final int PPAPI_AND_SYSTEM_SERVER = 2;
     public static final int APPSEARCH_ONLY = 3;
-    public static final int PPAPI_AND_ADEXT_SERVICE = 4;
     public static final float ADID_REQUEST_PERMITS_PER_SECOND = 25;
 
     // **************************************************
@@ -45,7 +44,14 @@ public final class FlagsConstants {
     // AdServices Namespace String from DeviceConfig class not available in S Minus
     public static final String NAMESPACE_ADSERVICES = "adservices";
 
+    /** (Default) string used to separate array values on flattened flags. */
     public static final String ARRAY_SPLITTER_COMMA = ",";
+
+    /** Constant used to allow everything (typically all packages) on allow-list flags. */
+    public static final String ALLOWLIST_ALL = "*";
+
+    /** Constant used to not allow anything (typically all packages) on allow-list flags. */
+    public static final String ALLOWLIST_NONE = "";
 
     // Maximum possible percentage for percentage variables
     public static final int MAX_PERCENTAGE = 100;
@@ -86,12 +92,20 @@ public final class FlagsConstants {
             "topics_number_of_lookback_epochs";
     public static final String KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION =
             "topics_privacy_budget_for_topic_ids_distribution";
+    public static final String KEY_TOPICS_JOB_SCHEDULER_RESCHEDULE_ENABLED =
+            "topics_job_scheduler_reschedule_enabled";
+    public static final String KEY_TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING =
+            "topics_epoch_job_battery_not_low_instead_of_charging";
     public static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
     public static final String KEY_GLOBAL_BLOCKED_TOPIC_IDS = "topics_global_blocked_topic_ids";
     public static final String KEY_TOPICS_DISABLE_DIRECT_APP_CALLS =
             "topics_disable_direct_app_calls";
     public static final String KEY_TOPICS_ENCRYPTION_ENABLED = "topics_encryption_enabled";
+    public static final String KEY_TOPICS_ENCRYPTION_METRICS_ENABLED =
+            "topics_encryption_metrics_enabled";
+    public static final String KEY_TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_LOGGING_ENABLED =
+            "topics_epoch_job_battery_constraint_logging_enabled";
     public static final String KEY_TOPICS_DISABLE_PLAINTEXT_RESPONSE =
             "topics_disable_plaintext_response";
     public static final String KEY_TOPICS_TEST_ENCRYPTION_PUBLIC_KEY =
@@ -111,6 +125,12 @@ public final class FlagsConstants {
 
     // Cobalt keys
     public static final String KEY_TOPICS_COBALT_LOGGING_ENABLED = "topics_cobalt_logging_enabled";
+    public static final String KEY_MSMT_REGISTRATION_COBALT_LOGGING_ENABLED =
+            "msmt_registration_cobalt_logging_enabled";
+    public static final String KEY_MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED =
+            "msmt_attribution_cobalt_logging_enabled";
+    public static final String KEY_MSMT_REPORTING_COBALT_LOGGING_ENABLED =
+            "msmt_reporting_cobalt_logging_enabled";
     public static final String KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED =
             "app_name_api_error_cobalt_logging_enabled";
     public static final String KEY_APP_NAME_API_ERROR_COBALT_LOGGING_SAMPLING_RATE =
@@ -122,6 +142,14 @@ public final class FlagsConstants {
     public static final String KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS =
             "cobalt_upload_service_unbind_delay_ms";
     public static final String KEY_COBALT_LOGGING_ENABLED = "cobalt_logging_enabled";
+    public static final String KEY_COBALT_REGISTRY_OUT_OF_BAND_UPDATE_ENABLED =
+            "cobalt_registry_out_of_band_update_enabled";
+    public static final String KEY_COBALT_OPERATIONAL_LOGGING_ENABLED =
+            "cobalt_operational_logging_enabled";
+    public static final String KEY_COBALT__FALL_BACK_TO_DEFAULT_BASE_REGISTRY =
+            "Cobalt__fall_back_to_default_base_registry";
+    public static final String KEY_COBALT__IGNORED_REPORT_ID_LIST =
+            "Cobalt__ignored_report_id_list";
 
     // Measurement keys
     public static final String KEY_MEASUREMENT_EVENT_MAIN_REPORTING_JOB_PERIOD_MS =
@@ -159,6 +187,13 @@ public final class FlagsConstants {
     public static final String
             KEY_MEASUREMENT_SOURCE_REGISTRATION_TIME_OPTIONAL_FOR_AGG_REPORTS_ENABLED =
                     "measurement_source_registration_time_optional_for_agg_reports_enabled";
+
+    public static final String KEY_MEASUREMENT_ENABLE_TRIGGER_CONTEXT_ID =
+            "measurement_enable_trigger_context_id";
+
+    public static final String KEY_MEASUREMENT_MAX_LENGTH_OF_TRIGGER_CONTEXT_ID =
+            "measurement_max_length_of_trigger_context_id";
+
     public static final String KEY_MEASUREMENT_NETWORK_CONNECT_TIMEOUT_MS =
             "measurement_network_connect_timeout_ms";
     public static final String KEY_MEASUREMENT_NETWORK_READ_TIMEOUT_MS =
@@ -187,8 +222,6 @@ public final class FlagsConstants {
             "measurement_enforce_foreground_status_register_web_source";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_WEB_TRIGGER =
             "measurement_enforce_foreground_status_register_web_trigger";
-    public static final String KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH =
-            "measurement_enforce_enrollment_origin_match";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_DELETE_REGISTRATIONS =
             "measurement_enforce_foreground_status_delete_registrations";
     public static final String KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_GET_STATUS =
@@ -206,6 +239,8 @@ public final class FlagsConstants {
             "measurement_enable_source_debug_report";
     public static final String KEY_MEASUREMENT_ENABLE_TRIGGER_DEBUG_REPORT =
             "measurement_enable_trigger_debug_report";
+    public static final String KEY_MEASUREMENT_ENABLE_HEADER_ERROR_DEBUG_REPORT =
+            "measurement_enable_header_error_debug_report";
     public static final String KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS =
             "measurement_data_expiry_window_ms";
 
@@ -263,16 +298,13 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_PERIOD_MS =
             "measurement_attribution_fallback_job_period_ms";
 
-    public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_PER_RATE_LIMIT_WINDOW =
-            "measurement_max_attribution_per_rate_limit_window";
-
     public static final String KEY_MEASUREMENT_MAX_EVENT_ATTRIBUTION_PER_RATE_LIMIT_WINDOW =
             "measurement_max_event_attribution_per_rate_limit_window";
 
     public static final String KEY_MEASUREMENT_MAX_AGGREGATE_ATTRIBUTION_PER_RATE_LIMIT_WINDOW =
             "measurement_max_aggregate_attribution_per_rate_limit_window";
 
-    public static final String KEY_MEASUREMENT_MAX_DISTINCT_ENROLLMENTS_IN_ATTRIBUTION =
+    public static final String KEY_MEASUREMENT_MAX_DISTINCT_REPORTING_ORIGINS_IN_ATTRIBUTION =
             "measurement_max_distinct_enrollments_in_attribution";
 
     public static final String KEY_MEASUREMENT_MAX_DISTINCT_DESTINATIONS_IN_ACTIVE_SOURCE =
@@ -299,23 +331,26 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW =
             "measurement_destination_rate_limit_window";
 
+    public static final String KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT =
+            "measurement_destination_per_day_rate_limit";
+
+    public static final String KEY_MEASUREMENT_ENABLE_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW =
+            "measurement_enable_destination_per_day_rate_limit_window";
+
+    public static final String KEY_MEASUREMENT_DESTINATION_PER_DAY_RATE_LIMIT_WINDOW_IN_MS =
+            "measurement_destination_per_day_rate_limit_window_in_ms";
+
     public static final String KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS =
             "measurement_enable_coarse_event_report_destinations";
 
     public static final String KEY_MEASUREMENT_VTC_CONFIGURABLE_MAX_EVENT_REPORTS_COUNT =
             "measurement_vtc_configurable_max_event_reports_count";
 
-    public static final String KEY_MEASUREMENT_ENABLE_ARA_PARSING_ALIGNMENT_V1 =
-            "measurement_enable_ara_parsing_alignment_v1";
-
     public static final String KEY_MEASUREMENT_ENABLE_ARA_DEDUPLICATION_ALIGNMENT_V1 =
             "measurement_enable_ara_deduplication_alignment_v1";
 
     public static final String KEY_MEASUREMENT_ENABLE_SOURCE_DEACTIVATION_AFTER_FILTERING =
             "measurement_enable_source_deactivation_after_filtering";
-
-    public static final String KEY_MEASUREMENT_ENABLE_SCOPED_ATTRIBUTION_RATE_LIMIT =
-            "measurement_enable_scoped_attribution_rate_limit";
 
     public static final String KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_PERIOD_MS =
             "measurement_debug_reporting_fallback_job_period_ms";
@@ -352,6 +387,14 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_EVENT_REPORTING_JOB_PERSISTED =
             "measurement_event_reporting_job_persisted";
+
+    public static final String KEY_MEASUREMENT_ENABLE_TRIGGER_DEBUG_SIGNAL =
+            "measurement_enable_trigger_debug_signal";
+    public static final String
+            KEY_MEASUREMENT_ENABLE_EVENT_TRIGGER_DEBUG_SIGNAL_FOR_COARSE_DESTINATION =
+                    "measurement_enable_event_trigger_debug_signal_for_coarse_destination";
+    public static final String KEY_MEASUREMENT_TRIGGER_DEBUG_SIGNAL_PROBABILITY_FOR_FAKE_REPORTS =
+            "measurement_trigger_debug_signal_probability_for_fake_reports";
 
     public static final String
             KEY_MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
@@ -442,6 +485,26 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_AGGREGATE_FALLBACK_REPORTING_JOB_PERSISTED =
             "measurement_aggregate_fallback_reporting_job_persisted";
 
+    public static final String
+            KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
+                    "measurement_immediate_aggregate_reporting_job_required_battery_not_low";
+
+    public static final String
+            KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+                    "measurement_immediate_aggregate_reporting_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_IMMEDIATE_AGGREGATE_REPORTING_JOB_PERSISTED =
+            "measurement_immediate_aggregate_reporting_job_persisted";
+
+    public static final String KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_BATTERY_NOT_LOW =
+            "measurement_reporting_job_required_battery_not_low";
+
+    public static final String KEY_MEASUREMENT_REPORTING_JOB_REQUIRED_NETWORK_TYPE =
+            "measurement_reporting_job_required_network_type";
+
+    public static final String KEY_MEASUREMENT_REPORTING_JOB_PERSISTED =
+            "measurement_reporting_job_persisted";
+
     public static final String KEY_MEASUREMENT_ENABLE_AGGREGATABLE_REPORT_PAYLOAD_PADDING =
             "measurement_enable_aggregatable_report_payload_padding";
 
@@ -451,6 +514,24 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED =
             "fledge_app_package_name_logging_enabled";
 
+    public static final String KEY_MEASUREMENT_ENABLE_ODP_WEB_TRIGGER_REGISTRATION =
+            "measurement_enable_odp_web_trigger_registration";
+
+    public static final String KEY_MEASUREMENT_ENABLE_DESTINATION_PUBLISHER_ENROLLMENT_FIFO =
+            "measurement_enable_destination_publisher_enrollment_fifo";
+
+    public static final String KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS =
+            "measurement_enable_fifo_destinations_delete_aggregate_reports";
+    public static final String KEY_MEASUREMENT_REPORTING_JOB_SERVICE_BATCH_WINDOW_MILLIS =
+            "measurement_reporting_job_service_batch_window_millis";
+    public static final String KEY_MEASUREMENT_REPORTING_JOB_SERVICE_MIN_EXECUTION_WINDOW_MILLIS =
+            "measurement_reporting_job_service_min_execution_window_millis";
+    public static final String KEY_MEASUREMENT_ENABLE_SOURCE_DESTINATION_LIMIT_PRIORITY =
+            "measurement_enable_source_destination_limit_priority";
+    public static final String KEY_MEASUREMENT_DEFAULT_DESTINATION_LIMIT_ALGORITHM =
+            "measurement_default_destination_limit_algorithm";
+    public static final String KEY_MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD =
+            "measurement_enable_destination_limit_algorithm_field";
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
@@ -550,8 +631,18 @@ public final class FlagsConstants {
             "fledge_ad_selection_from_outcomes_overall_timeout_ms";
     public static final String KEY_FLEDGE_AD_SELECTION_EXPIRATION_WINDOW_S =
             "fledge_ad_selection_expiration_window_s";
-    public static final String KEY_FLEDGE_AD_SELECTION_FILTERING_ENABLED =
-            "fledge_ad_selection_filtering_enabled";
+    public static final String KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED =
+            "fledge_app_install_filtering_enabled";
+    public static final String KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED =
+            "fledge_app_install_filtering_metrics_enabled";
+    public static final String KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED =
+            "fledge_frequency_cap_filtering_enabled";
+    public static final String KEY_FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED =
+            "fledge_frequency_cap_filtering_metrics_enabled";
+    public static final String KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED =
+            "fledge_ad_selection_contextual_ads_enabled";
+    public static final String KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED =
+            "fledge_ad_selection_contextual_ads_metrics_enabled";
     public static final String KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED =
             "fledge_fetch_custom_audience_enabled";
     public static final String KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS =
@@ -602,9 +693,6 @@ public final class FlagsConstants {
             "fledge_ad_selection_off_device_overall_timeout_ms";
     public static final String KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION =
             "fledge_ad_selection_bidding_logic_js_version";
-    // Whether to call trusted servers for off device ad selection.
-    public static final String KEY_FLEDGE_AD_SELECTION_OFF_DEVICE_ENABLED =
-            "fledge_ad_selection_off_device_enabled";
     public static final String KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED =
             "fledge_ad_selection_ad_selection_prebuilt_uri_enabled";
     // Whether to compress the request object when calling trusted servers for off device ad
@@ -644,10 +732,14 @@ public final class FlagsConstants {
             "fledge_auction_server_enabled_for_select_ads_mediation";
     public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLE_AD_FILTER_IN_GET_AD_SELECTION_DATA =
             "fledge_auction_server_enable_ad_filter_in_get_ad_selection_data";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_MEDIA_TYPE_CHANGE_ENABLED =
+            "fledge_auction_server_media_type_change_enabled";
     public static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES =
             "fledge_auction_server_payload_bucket_sizes";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI =
             "fledge_auction_server_auction_key_fetch_uri";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_REFRESH_EXPIRED_KEYS_DURING_AUCTION =
+            "fledge_auction_server_refresh_expired_keys_during_auction";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING =
             "fledge_auction_server_auction_key_sharding";
     public static final String KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI =
@@ -689,6 +781,13 @@ public final class FlagsConstants {
 
     public static final String KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_JOB_FLEX_MS =
             "fledge_auction_server_background_key_fetch_job_flex_ms";
+
+    public static final String
+            KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_ON_EMPTY_DB_AND_IN_ADVANCE_ENABLED =
+                    "fledge_auction_server_background_key_fetch_on_empty_db_and_in_advance_enabled";
+    public static final String
+            KEY_FLEDGE_AUCTION_SERVER_BACKGROUND_KEY_FETCH_IN_ADVANCE_INTERVAL_MS =
+                    "fledge_auction_server_background_key_fetch_in_advance_interval_ms";
     public static final String KEY_FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION =
             "fledge_auction_server_compression_algorithm_version";
     public static final String KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_FORMAT_VERSION =
@@ -697,6 +796,8 @@ public final class FlagsConstants {
             "fledge_auction_server_enable_debug_reporting";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS =
             "fledge_auction_server_ad_id_fetcher_timeout_ms";
+    public static final String KEY_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS =
+            "fledge_auction_server_enable_pas_unlimited_egress";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH =
             "fledge_auction_server_ad_render_id_max_length";
     public static final String KEY_FLEDGE_AUCTION_SERVER_AD_RENDER_ID_ENABLED =
@@ -715,6 +816,19 @@ public final class FlagsConstants {
     public static final String
             KEY_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_PAYLOAD_METRICS_ENABLED =
                     "fledge_auction_server_get_ad_selection_data_payload_metrics_enabled";
+
+    public static final String KEY_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED =
+            "fledge_get_ad_selection_data_seller_configuration_enabled";
+
+    public static final String KEY_FLEDGE_GET_AD_SELECTION_DATA_BUYER_INPUT_CREATOR_VERSION =
+            "fledge_get_ad_selection_data_buyer_input_creator_version";
+
+    public static final String
+            KEY_FLEDGE_GET_AD_SELECTION_DATA_MAX_NUM_ENTIRE_PAYLOAD_COMPRESSIONS =
+                    "fledge_get_ad_selection_data_max_num_entire_payload_compressions";
+
+    public static final String KEY_FLEDGE_GET_AD_SELECTION_DATA_DESERIALIZE_ONLY_AD_RENDER_IDS =
+            "fledge_get_ad_selection_data_deserialize_only_ad_render_ids";
 
     // Fledge invoking app status keys
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION =
@@ -746,11 +860,8 @@ public final class FlagsConstants {
             "adid_enforce_foreground_status";
 
     // Fledge JS isolate setting keys
-    public static final String KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE =
-            "fledge_js_isolate_enforce_max_heap_size";
     public static final String KEY_ISOLATE_MAX_HEAP_SIZE_BYTES =
             "fledge_js_isolate_max_heap_size_bytes";
-
     // AppSetId invoking app status key.
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_APPSETID =
             "appsetid_enforce_foreground_status";
@@ -763,6 +874,8 @@ public final class FlagsConstants {
             "downloader_max_download_threads";
     public static final String KEY_MDD_TOPICS_CLASSIFIER_MANIFEST_FILE_URL =
             "mdd_topics_classifier_manifest_file_url";
+    public static final String KEY_MDD_COBALT_REGISTRY_MANIFEST_FILE_URL =
+            "mdd_cobalt_registry_manifest_file_url";
 
     // Killswitch keys
     public static final String KEY_GLOBAL_KILL_SWITCH = "global_kill_switch";
@@ -785,6 +898,8 @@ public final class FlagsConstants {
             "measurement_job_aggregate_fallback_reporting_kill_switch";
     public static final String KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH =
             "measurement_job_aggregate_reporting_kill_switch";
+    public static final String KEY_MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH =
+            "measurement_job_immediate_aggregate_reporting_kill_switch";
     public static final String KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH =
             "measurement_job_attribution_kill_switch";
     public static final String KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH =
@@ -795,6 +910,8 @@ public final class FlagsConstants {
             "measurement_job_event_fallback_reporting_kill_switch";
     public static final String KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH =
             "measurement_job_event_reporting_kill_switch";
+    public static final String KEY_MEASUREMENT_REPORTING_JOB_SERVICE_ENABLED =
+            "measurement_reporting_job_service_enabled";
     public static final String KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH =
             "measurement_receiver_install_attribution_kill_switch";
     public static final String KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH =
@@ -809,8 +926,6 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH =
             "measurement_rollback_deletion_app_search_kill_switch";
-    public static final String KEY_MEASUREMENT_ROLLBACK_DELETION_R_ENABLED =
-            "measurement_rollback_deletion_r_enabled";
     public static final String KEY_TOPICS_KILL_SWITCH = "topics_kill_switch";
     public static final String KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH =
             "topics_on_device_classifier_kill_switch";
@@ -833,8 +948,7 @@ public final class FlagsConstants {
             "fledge_custom_audience_service_kill_switch";
     public static final String KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH =
             "fledge_auction_server_kill_switch";
-    public static final String KEY_BACKGROUND_JOBS_LOGGING_KILL_SWITCH =
-            "background_jobs_logging_kill_switch";
+
     public static final String KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH =
             "fledge_on_device_auction_kill_switch";
 
@@ -848,6 +962,9 @@ public final class FlagsConstants {
             "encryption_key_job_required_network_type";
 
     public static final String KEY_ENCRYPTION_KEY_JOB_PERIOD_MS = "encryption_key_job_period_ms";
+    public static final String KEY_ENABLE_MDD_ENCRYPTION_KEYS = "enable_mdd_encryption_keys";
+    public static final String KEY_MDD_ENCRYPTION_KEYS_MANIFEST_FILE_URL =
+            "mdd_encryption_keys_manifest_file_url";
 
     // App/SDK AllowList/DenyList keys
     public static final String KEY_PPAPI_APP_ALLOW_LIST = "ppapi_app_allow_list";
@@ -929,29 +1046,12 @@ public final class FlagsConstants {
     public static final String KEY_CONSENT_NOTIFICATION_MINIMAL_DELAY_BEFORE_INTERVAL_ENDS =
             "consent_notification_minimal_delay_before_interval_ends";
 
-    // Consent Notification debug mode keys.
-    public static final String KEY_CONSENT_NOTIFICATION_DEBUG_MODE =
-            "consent_notification_debug_mode";
-
     public static final String KEY_CONSENT_MANAGER_LAZY_ENABLE_MODE =
             "consent_manager_lazy_enable_mode";
-
-    public static final String KEY_CONSENT_NOTIFIED_DEBUG_MODE = "consent_notified_debug_mode";
-
-    // Consent Manager debug mode keys.
-    public static final String KEY_CONSENT_MANAGER_DEBUG_MODE = "consent_manager_debug_mode";
-
-    // Consent Manager ota debug mode keys.
-    public static final String KEY_CONSENT_MANAGER_OTA_DEBUG_MODE =
-            "consent_manager_ota_debug_mode";
 
     // Rvc post ota notification age check keys.
     public static final String KEY_RVC_POST_OTA_NOTIF_AGE_CHECK =
             "rvc_post_ota_notification_age_check";
-
-    // Consent notification activity debug mode keys.
-    public static final String KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE =
-            "consent_notification_activity_debug_mode";
 
     // Source of truth to get consent for PPAPI
     public static final String KEY_CONSENT_SOURCE_OF_TRUTH = "consent_source_of_truth";
@@ -965,17 +1065,25 @@ public final class FlagsConstants {
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
     public static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
 
+    // If the developer session feature is enabled.
+    public static final String KEY_DEVELOPER_MODE_FEATURE_ENABLED =
+            "CommonInfra__enable_developer_mode";
+
     // Max response payload size allowed per source/trigger registration
     public static final String KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES =
             "max_response_based_registration_size_bytes";
     public static final String KEY_MAX_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES =
             "max_trigger_registration_header_size_bytes";
+    public static final String KEY_MAX_ODP_TRIGGER_REGISTRATION_HEADER_SIZE_BYTES =
+            "max_odp_trigger_registration_header_size_bytes";
 
     public static final String KEY_MEASUREMENT_ENABLE_UPDATE_TRIGGER_REGISTRATION_HEADER_LIMIT =
             "enable_update_trigger_registration_header_limit";
 
     // UI keys
     public static final String KEY_PAS_UX_ENABLED = "pas_ux_enabled";
+
+    public static final String KEY_EEA_PAS_UX_ENABLED = "eea_pas_ux_enabled";
 
     public static final String KEY_UI_FEATURE_TYPE_LOGGING_ENABLED =
             "ui_feature_type_logging_enabled";
@@ -999,6 +1107,12 @@ public final class FlagsConstants {
     public static final String KEY_UI_OTA_STRINGS_FEATURE_ENABLED =
             "ui_ota_strings_feature_enabled";
 
+    public static final String KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL =
+            "mdd_ui_ota_resources_manifest_file_url";
+
+    public static final String KEY_UI_OTA_RESOURCES_FEATURE_ENABLED =
+            "ui_ota_resources_feature_enabled";
+
     public static final String KEY_UI_OTA_STRINGS_DOWNLOAD_DEADLINE =
             "ui_ota_strings_download_deadline";
 
@@ -1017,25 +1131,17 @@ public final class FlagsConstants {
     // Back-compat keys
     public static final String KEY_COMPAT_LOGGING_KILL_SWITCH = "compat_logging_kill_switch";
 
-    public static final String ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED =
+    public static final String KEY_ADSERVICES_CONSENT_MIGRATION_LOGGING_ENABLED =
             "adservices_consent_migration_logging_enabled";
 
     public static final String KEY_ENABLE_BACK_COMPAT = "enable_back_compat";
 
-    public static final String KEY_ENABLE_APPSEARCH_CONSENT_DATA = "enable_appsearch_consent_data";
+    public static final String KEY_ENABLE_BACK_COMPAT_INIT = "enable_back_compat_init";
 
-    public static final String KEY_ENABLE_ADEXT_SERVICE_CONSENT_DATA =
-            "enable_adext_service_consent_data";
+    public static final String KEY_ENABLE_APPSEARCH_CONSENT_DATA = "enable_appsearch_consent_data";
 
     public static final String KEY_ENABLE_U18_APPSEARCH_MIGRATION =
             "enable_u18_appsearch_migration";
-
-    // NOTE: To disable migration from AdExtService to AppSearch on 2024 M03- build, use the
-    // deprecated flag enable_adext_service_to_appsearch_migration. This flag is introduced to
-    // unify flag-guarding from AdExtData service to AppSearch and System Server based on SDK
-    // version.
-    public static final String KEY_ENABLE_MIGRATION_FROM_ADEXT_SERVICE =
-            "enable_migration_from_adext_service";
 
     // Whether to call trusted servers for off device ad selection.
     public static final String KEY_OFF_DEVICE_AD_SELECTION_ENABLED =
@@ -1049,6 +1155,11 @@ public final class FlagsConstants {
     public static final String KEY_ENROLLMENT_BLOCKLIST_IDS = "enrollment_blocklist_ids";
     public static final String KEY_ENROLLMENT_ENABLE_LIMITED_LOGGING =
             "enrollment_enable_limited_logging";
+    public static final String KEY_ENROLLMENT_API_BASED_SCHEMA_ENABLED =
+            "enrollment_api_based_schema_enabled";
+    public static final String KEY_MDD_ENROLLMENT_MANIFEST_FILE_URL =
+            "mdd_enrollment_manifest_file_url";
+    public static final String KEY_ENROLLMENT_PROTO_FILE_ENABLED = "enrollment_proto_file_enabled";
 
     // New Feature Flags
     public static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED =
@@ -1065,6 +1176,30 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED =
             "fledge_auction_server_api_usage_metrics_enabled";
 
+    // Fledge auction server key fetch metrics flag
+    public static final String KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED =
+            "fledge_auction_server_key_fetch_metrics_enabled";
+
+    // Fledge select ads from outcomes API metrics flag
+    public static final String KEY_FLEDGE_SELECT_ADS_FROM_OUTCOMES_API_METRICS_ENABLED =
+            "fledge_select_ads_from_outcomes_api_metrics_enabled";
+
+    // FledgeCPC billing metrics key.
+    public static final String KEY_FLEDGE_CPC_BILLING_METRICS_ENABLED =
+            "fledge_cpc_billing_metrics_enabled";
+
+    // Fledge data version header metrics key.
+    public static final String KEY_FLEDGE_DATA_VERSION_HEADER_METRICS_ENABLED =
+            "fledge_data_version_header_metrics_enabled";
+
+    // Fledge report impression API metrics key.
+    public static final String KEY_FLEDGE_REPORT_IMPRESSION_API_METRICS_ENABLED =
+            "fledge_report_impression_api_metrics_enabled";
+
+    // Fledge report impression API metrics key.
+    public static final String KEY_FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED =
+            "fledge_js_script_result_code_metrics_enabled";
+
     public static final String KEY_MEASUREMENT_DEBUG_JOIN_KEY_HASH_LIMIT =
             "measurement_debug_join_key_hash_limit";
 
@@ -1076,14 +1211,17 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST =
             "measurement_debug_key_ad_id_matching_enrollment_blocklist";
 
+    public static final String KEY_MEASUREMENT_ENABLE_AGGREGATE_CONTRIBUTION_BUDGET_CAPACITY =
+            "Measurement__enable_aggregate_contribution_budget_capacity";
+
+    public static final String KEY_MEASUREMENT_ENABLE_V1_SOURCE_TRIGGER_DATA =
+            "measurement_enable_v1_source_trigger_data";
+
     public static final String KEY_MEASUREMENT_FLEXIBLE_EVENT_REPORTING_API_ENABLED =
             "measurement_flexible_event_reporting_api_enabled";
 
     public static final String KEY_MEASUREMENT_ENABLE_TRIGGER_DATA_MATCHING =
             "measurement_enable_trigger_data_matching";
-
-    public static final String KEY_MEASUREMENT_FLEX_LITE_API_ENABLED =
-            "measurement_flex_lite_api_enabled";
 
     public static final String KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_EVENT =
             "measurement_flex_api_max_information_gain_event";
@@ -1098,6 +1236,26 @@ public final class FlagsConstants {
     public static final String
             KEY_MEASUREMENT_FLEX_API_MAX_INFORMATION_GAIN_DUAL_DESTINATION_NAVIGATION =
                     "measurement_flex_api_max_information_gain_dual_destination_navigation";
+
+    public static final String KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION =
+            "measurement_attribution_scope_max_info_gain_navigation";
+
+    public static final String
+            KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION =
+                    "measurement_attribution_scope_max_info_gain_dual_destination_navigation";
+
+    public static final String KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT =
+            "measurement_attribution_scope_max_info_gain_event";
+
+    public static final String
+            KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_EVENT =
+                    "measurement_attribution_scope_max_info_gain_dual_destination_event";
+
+    public static final String KEY_MEASUREMENT_ENABLE_FAKE_REPORT_TRIGGER_TIME =
+            "measurement_enable_fake_report_trigger_time";
+
+    public static final String KEY_MEASUREMENT_MAX_REPORT_STATES_PER_SOURCE_REGISTRATION =
+            "measurement_max_report_states_per_source_registration";
 
     public static final String KEY_MEASUREMENT_FLEX_API_MAX_EVENT_REPORTS =
             "measurement_flex_api_max_event_reports";
@@ -1126,9 +1284,6 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_EVENT_REPORTS_PER_DESTINATION =
             "measurement_max_event_reports_per_destination";
 
-    public static final String KEY_MEASUREMENT_ENABLE_MAX_AGGREGATE_REPORTS_PER_SOURCE =
-            "measurement_enable_max_aggregate_reports_per_source";
-
     public static final String KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE =
             "measurement_max_aggregate_reports_per_source";
 
@@ -1138,17 +1293,11 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_TRIGGER_REGISTRATION =
             "measurement_max_aggregate_keys_per_trigger_registration";
 
-    public static final String KEY_MEASUREMENT_MIN_EVENT_REPORT_DELAY_MILLIS =
-            "measurement_min_event_report_delay_millis";
-
     public static final String KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS =
             "measurement_event_reports_vtc_early_reporting_windows";
 
     public static final String KEY_MEASUREMENT_EVENT_REPORTS_CTC_EARLY_REPORTING_WINDOWS =
             "measurement_event_reports_ctc_early_reporting_windows";
-
-    public static final String KEY_MEASUREMENT_ENABLE_CONFIGURABLE_AGGREGATE_REPORT_DELAY =
-            "measurement_enable_configurable_aggregate_report_delay";
 
     public static final String KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG =
             "measurement_aggregate_report_delay_config";
@@ -1202,22 +1351,79 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_ENABLE_API_STATUS_ALLOW_LIST_CHECK =
             "measurement_enable_api_status_allow_list_check";
+    public static final String KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE =
+            "measurement_enable_attribution_scope";
 
-    public static final String KEY_MEASUREMENT_ENABLE_REDIRECT_TO_WELL_KNOWN_PATH =
-            "measurement_enable_redirect_to_well_known_path";
+    public static final String KEY_MEASUREMENT_ENABLE_REINSTALL_REATTRIBUTION =
+            "measurement_enable_reinstall_reattribution";
+
+    public static final String KEY_MEASUREMENT_MAX_REINSTALL_REATTRIBUTION_WINDOW =
+            "measurement_max_reinstall_reattribution_window";
+
+    public static final String KEY_MEASUREMENT_ENABLE_MIN_REPORT_LIFESPAN_FOR_UNINSTALL =
+            "Measurement__enable_min_report_lifespan_for_uninstall";
+
+    public static final String KEY_MEASUREMENT_MIN_REPORT_LIFESPAN_FOR_UNINSTALL_SECONDS =
+            "Measurement__min_report_lifespan_for_uninstall_seconds";
+
+    public static final String KEY_MEASUREMENT_ENABLE_NAVIGATION_REPORTING_ORIGIN_CHECK =
+            "measurement_enable_navigation_reporting_origin_check";
+
+    public static final String
+            KEY_MEASUREMENT_ENABLE_SEPARATE_DEBUG_REPORT_TYPES_FOR_ATTRIBUTION_RATE_LIMIT =
+                    "measurement_enable_separate_report_types_for_attribution_rate_limit";
+
+    public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPES_PER_SOURCE =
+            "measurement_max_attribution_scopes_per_source";
+
+    public static final String KEY_MEASUREMENT_MAX_ATTRIBUTION_SCOPE_LENGTH =
+            "measurement_max_attribution_scope_length";
+
+    public static final String KEY_MEASUREMENT_EVENT_API_DEFAULT_EPSILON =
+            "measurement_event_api_default_epsilon";
+
+    public static final String KEY_MEASUREMENT_ENABLE_EVENT_LEVEL_EPSILON_IN_SOURCE =
+            "measurement_enable_event_level_epsilon_in_source";
+
+    public static final String KEY_MEASUREMENT_ENABLE_AGGREGATE_VALUE_FILTERS =
+            "measurement_enable_aggregate_value_filters";
+
+    public static final String KEY_MEASUREMENT_DEFAULT_FILTERING_ID_MAX_BYTES =
+            "measurement_default_filtering_id_max_bytes";
+
+    public static final String KEY_MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES =
+            "Measurement__max_filtering_id_max_bytes";
+
+    public static final String KEY_MEASUREMENT_ENABLE_FLEXIBLE_CONTRIBUTION_FILTERING =
+            "measurement_enable_flexible_contribution_filtering";
+
+    public static final String KEY_MEASUREMENT_ENABLE_AGGREGATE_DEBUG_REPORTING =
+            "Measurement__enable_aggregate_debug_reporting";
+
+    public static final String KEY_MEASUREMENT_ADR_BUDGET_PER_ORIGIN_PUBLISHER_WINDOW =
+            "Measurement__adr_budget_per_origin_publisher_window";
+
+    public static final String KEY_MEASUREMENT_ADR_BUDGET_PER_PUBLISHER_WINDOW =
+            "Measurement__adr_budget_per_publisher_window";
+
+    public static final String KEY_MEASUREMENT_ADR_BUDGET_WINDOW_LENGTH_MS =
+            "Measurement__adr_budget_window_length_ms";
+
+    public static final String KEY_MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE =
+            "Measurement__max_adr_count_per_source";
 
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_9 =
             "enable_database_schema_version_9";
+    public static final String KEY_SHARED_DATABASE_SCHEMA_VERSION_4_ENABLED =
+            "shared_database_schema_version_4_enabled";
 
     public static final String KEY_NOTIFICATION_DISMISSED_ON_CLICK =
             "notification_dmsmissed_on_click";
 
     public static final String KEY_U18_UX_ENABLED = "u18_ux_enabled";
-
-    public static final String KEY_RVC_UX_ENABLED = "rvc_ux_enabled";
 
     public static final String KEY_RVC_POST_OTA_NOTIFICATION_ENABLED =
             "rvc_post_ota_notification_enabled";
@@ -1234,8 +1440,10 @@ public final class FlagsConstants {
 
     public static final String KEY_AD_ID_FETCHER_TIMEOUT_MS = "ad_id_fetcher_timeout_ms";
 
-    public static final String KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT =
-            "app_config_returns_enabled_by_detault";
+    // NOTE: retired (it's on by default) - constant is here to keep track (for example, if we move
+    // to a metadata-driven flag management, we could still list this one as "retired").
+    //    public static final String KEY_APP_CONFIG_RETURNS_ENABLED_BY_DEFAULT =
+    //            "app_config_returns_enabled_by_detault";
 
     public static final String KEY_ENABLE_ADEXT_DATA_SERVICE_APIS =
             "adext_data_service_apis_enabled";
@@ -1257,6 +1465,14 @@ public final class FlagsConstants {
     /** Key for kanon sign join feature flag */
     public static final String KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE =
             "fledge_kanon_sign_join_enabled";
+
+    /** Key for kanon sign join on device feature flag */
+    public static final String KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE =
+            "fledge_kanon_sign_join_on_device_auction_enabled";
+
+    /** Key for kanon sign join on device feature flag */
+    public static final String KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE =
+            "fledge_kanon_sign_join_auction_server_enabled";
 
     /** Key for kanon fetch parameters url. */
     public static final String KEY_KANON_FETCH_PARAMETERS_URL = "kanon_fetch_parameters_url";
@@ -1309,6 +1525,18 @@ public final class FlagsConstants {
     public static final String KEY_FLEDGE_KANON_SET_TYPE_TO_SIGN_JOIN =
             "fledge_kanon_set_type_to_sign_join";
 
+    public static final String KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_DEVICE_IDLE =
+            "fledge_kanon_background_job_requires_device_idle";
+
+    public static final String KEY_FLEDGE_KANON_BACKGROUND_JOB_REQUIRES_BATTERY_NOT_LOW =
+            "fledge_kanon_background_job_requires_battery_not_low";
+
+    public static final String KEY_FLEDGE_KANON_BACKGROUND_JOB_TYPE_OF_CONNECTION =
+            "fledge_kanon_background_job_type_of_meter_connection";
+
+    public static final String KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT =
+            "fledge_kanon_http_client_timeout";
+
     /** Key for kanon join url authoriy. */
     public static final String KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY =
             "fledge_kanon_join_url_authoriy";
@@ -1316,10 +1544,6 @@ public final class FlagsConstants {
     /** key for allow list of get adservices common states. */
     public static final String KEY_GET_ADSERVICES_COMMON_STATES_ALLOW_LIST =
             "get_adservices_common_states_allow_list";
-
-    /** Key for feature flagging custom audiences CLI. */
-    public static final String KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED =
-            "fledge_is_custom_audience_cli_enabled";
 
     /** Key for AdServices' module job policy. */
     public static final String KEY_AD_SERVICES_MODULE_JOB_POLICY = "ad_services_module_job_policy";
@@ -1334,4 +1558,113 @@ public final class FlagsConstants {
      */
     public static final String KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS =
             "ad_services_js_engine_max_retry_attempts";
+
+    /** Key for feature flagging AdServices consent manager v2. */
+    public static final String KEY_ENABLE_CONSENT_MANAGER_V2 = "enable_consent_manager_v2";
+
+    /** Key for PAS API extended metrics flag. */
+    public static final String KEY_PAS_EXTENDED_METRICS_ENABLED = "pas_extended_metrics_enabled";
+
+    /** Key for PAS API product metrics v1 flag. */
+    public static final String KEY_PAS_PRODUCT_METRICS_V1_ENABLED =
+            "pas_product_metrics_v1_enabled";
+
+    /** Key for enabling SPE on pilot background jobs. */
+    public static final String KEY_SPE_ON_PILOT_JOBS_ENABLED = "spe_on_pilot_jobs_enabled";
+
+    /** Key for enabling job scheduling logging rate. */
+    public static final String KEY_JOB_SCHEDULING_LOGGING_ENABLED =
+            "job_scheduling_logging_enabled";
+
+    /** Key for the sampling rate of job scheduling logging. */
+    public static final String KEY_JOB_SCHEDULING_LOGGING_SAMPLING_RATE =
+            "job_scheduling_logging_sampling_rate";
+
+    /** Key for enabling tablet region fix. */
+    public static final String KEY_ENABLE_TABLET_REGION_FIX = "enable_tablet_region_fix";
+
+    /**
+     * Key for getting base64 encoded String which describes a map of sampling interval to a list of
+     * error codes.
+     */
+    public static final String KEY_ENCODED_ERROR_CODE_LIST_PER_SAMPLE_INTERVAL =
+            "encoded_error_code_list_per_sample_interval";
+
+    /** Key for enabling custom error code sampling. */
+    public static final String KEY_CUSTOM_ERROR_CODE_SAMPLING_ENABLED =
+            "custom_error_code_sampling_enabled";
+
+    /** Key for PAS script download read timeout flag */
+    public static final String KEY_PAS_SCRIPT_DOWNLOAD_READ_TIMEOUT_MS =
+            "pas_script_download_read_timeout_ms";
+
+    /** Key for PAS script download connection timeout flag */
+    public static final String KEY_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS =
+            "pas_script_download_connection_timeout_ms";
+
+    /** Key for PAS signals download read timeout flag */
+    public static final String KEY_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS =
+            "pas_signals_download_read_timeout_ms";
+
+    /** Key for PAS signals download connection timeout flag */
+    public static final String KEY_PAS_SIGNALS_DOWNLOAD_CONNECTION_TIMEOUT_MS =
+            "pas_signals_download_connection_timeout_ms";
+
+    /** Key for PAS script execution timeout flag */
+    public static final String KEY_PAS_SCRIPT_EXECUTION_TIMEOUT_MS =
+            "pas_script_execution_timeout_ms";
+
+    /** Key for enabling SPE on pilot background jobs. */
+    public static final String KEY_SPE_ON_PILOT_JOBS_BATCH_2_ENABLED =
+            "spe_on_pilot_jobs_batch_2_enabled";
+
+    /** Key for enabling SPE on {@code EpochJobService}. */
+    public static final String KEY_SPE_ON_EPOCH_JOB_ENABLED = "spe_on_epoch_job_enabled";
+
+    /** Key for enabling SPE on {@code BackgroundFetchJobService}. */
+    public static final String KEY_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED =
+            "spe_on_background_fetch_job_enabled";
+
+    /** Key for enabling SPE on {@code AsyncRegistrationFallbackJobService}. */
+    public static final String KEY_SPE_ON_ASYNC_REGISTRATION_FALLBACK_JOB_ENABLED =
+            "spe_on_async_registration_fallback_job_enabled";
+
+    /** Key for enabling adservices apis v2. */
+    public static final String KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED =
+            "adservices_consent_business_logic_migration_enabled";
+
+    /** Key for enabling R notification default consent fix. */
+    public static final String KEY_R_NOTIFICATION_DEFAULT_CONSENT_FIX_ENABLED =
+            "r_notification_default_consent_fix_enabled";
+
+    /** Key for the PAS encoding job performance improvements. */
+    public static final String KEY_PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED =
+            "pas_encoding_job_improvements_enabled";
+
+    /** Key for ad id cache ttl. */
+    public static final String KEY_AD_ID_CACHE_TTL_MS = "ad_id_cache_ttl_ms";
+
+    /** Key for package deny service enabled. */
+    public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_SERVICE =
+            "PackageDeny__enable_package_deny_service";
+
+    /** Key for package deny mdd file download enabled */
+    public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_MDD =
+            "PackageDeny__enable_package_deny_mdd";
+
+    /** Key for package deny preprocess job on package add */
+    public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD =
+            "PackageDeny__enable_package_deny_job_on_package_add";
+
+    /** Key for package deny preprocess periodic job */
+    public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_BG_JOB =
+            "PackageDeny__enable_package_deny_bg_job";
+
+    /** Key for package deny preprocess job on mdd file download */
+    public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD =
+            "PackageDeny__enable_package_deny_job_on_mdd_download";
+
+    /** Key for MDD Package Deny registry manifest file url */
+    public static final String KEY_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL =
+            "DownloadConfig__default_mdd_package_deny_manifest_file_url";
 }

@@ -16,27 +16,18 @@
 
 package android.adservices.common;
 
-import static com.google.common.truth.Truth.assertThat;
-
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.os.Parcel;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import com.android.adservices.common.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link FledgeErrorResponse} */
-@SmallTest
-public final class FledgeErrorResponseTest {
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
+@RequiresSdkLevelAtLeastS
+public final class FledgeErrorResponseTest extends AdServicesUnitTestCase {
     @Test
     public void testBuildFledgeErrorResponse() {
         String notImplementedMessage = "Not Implemented!";
@@ -46,8 +37,9 @@ public final class FledgeErrorResponseTest {
                         .setErrorMessage(notImplementedMessage)
                         .build();
 
-        assertThat(response.getStatusCode()).isEqualTo(AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
-        assertThat(response.getErrorMessage()).isEqualTo(notImplementedMessage);
+        expect.that(response.getStatusCode())
+                .isEqualTo(AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
+        expect.that(response.getErrorMessage()).isEqualTo(notImplementedMessage);
     }
 
     @Test
@@ -64,9 +56,9 @@ public final class FledgeErrorResponseTest {
 
         FledgeErrorResponse fromParcel = FledgeErrorResponse.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getStatusCode())
+        expect.that(fromParcel.getStatusCode())
                 .isEqualTo(AdServicesStatusUtils.STATUS_INTERNAL_ERROR);
-        assertThat(fromParcel.getErrorMessage()).isEqualTo(notImplementedMessage);
+        expect.that(fromParcel.getErrorMessage()).isEqualTo(notImplementedMessage);
     }
 
     @Test
@@ -81,20 +73,19 @@ public final class FledgeErrorResponseTest {
 
         FledgeErrorResponse fromParcel = FledgeErrorResponse.CREATOR.createFromParcel(p);
 
-        assertThat(AdServicesStatusUtils.isSuccess(fromParcel.getStatusCode())).isTrue();
-        assertThat(fromParcel.getErrorMessage()).isNull();
+        expect.that(AdServicesStatusUtils.isSuccess(fromParcel.getStatusCode())).isTrue();
+        expect.that(fromParcel.getErrorMessage()).isNull();
     }
 
     @Test
     public void testFailsForNotSetStatus() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> {
-                    new FledgeErrorResponse.Builder()
-                            .setErrorMessage("Status not set!")
-                            // Not setting status code making it -1.
-                            .build();
-                });
+                () ->
+                        new FledgeErrorResponse.Builder()
+                                .setErrorMessage("Status not set!")
+                                // Not setting status code making it -1.
+                                .build());
     }
 
     @Test
@@ -106,7 +97,7 @@ public final class FledgeErrorResponseTest {
                         .setErrorMessage(notImplementedMessage)
                         .build();
 
-        assertEquals(0, response.describeContents());
+        expect.that(response.describeContents()).isEqualTo(0);
     }
 
     @Test
@@ -118,7 +109,7 @@ public final class FledgeErrorResponseTest {
                         .setErrorMessage(notImplementedMessage)
                         .build();
 
-        assertThat(response.toString())
+        expect.that(response.toString())
                 .isEqualTo(
                         String.format(
                                 "FledgeErrorResponse{mStatusCode=%s, mErrorMessage='%s'}",

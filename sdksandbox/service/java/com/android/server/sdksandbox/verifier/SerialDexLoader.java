@@ -18,7 +18,13 @@ package com.android.server.sdksandbox.verifier;
 
 import android.os.Handler;
 
+import com.android.internal.annotations.VisibleForTesting;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Handles the loading of dex files for multiple apks to be verified, ensures that a single dex file
@@ -31,36 +37,51 @@ public class SerialDexLoader {
 
     private DexParser mParser;
     private Handler mHandler;
-    private DexLoadResult mDexLoadResult;
+    private DexSymbols mDexSymbols;
 
     public SerialDexLoader(DexParser parser, Handler handler) {
         mParser = parser;
         mHandler = handler;
-        mDexLoadResult = new DexLoadResult();
+        mDexSymbols = new DexSymbols();
     }
 
     /**
      * Queues all dex files found for an apk for serially loading and analyzing.
      *
-     * @param apkPath path to an apk containing one or more dex files
+     * @param apkPathFile path to apk containing one or more dex files
      * @param packagename packagename associated with the apk
      * @param verificationHandler object to handle the verification of the loaded dex
      */
     public void queueApkToLoad(
-            String apkPath, String packagename, VerificationHandler verificationHandler) {
-        List<String> dexFiles = mParser.getDexList(apkPath);
+            File apkPathFile, String packagename, VerificationHandler verificationHandler) {
 
         mHandler.post(
                 () -> {
-                    for (String dexFile : dexFiles) {
-                        mParser.loadDexSymbols(dexFile, mDexLoadResult);
+                    Map<File, List<String>> dexEntries;
+                    try {
+                        dexEntries = mParser.getDexFilePaths(apkPathFile);
+                    } catch (IOException e) {
+                        verificationHandler.onVerificationErrorForPackage(e);
+                        return;
+                    }
 
-                        if (!verificationHandler.verify(mDexLoadResult)) {
-                            verificationHandler.verificationFinishedForPackage(false);
-                            return;
+                    for (Map.Entry<File, List<String>> dexFileEntries : dexEntries.entrySet()) {
+                        for (String dexEntry : dexFileEntries.getValue()) {
+                            try {
+                                mParser.loadDexSymbols(
+                                        dexFileEntries.getKey(), dexEntry, mDexSymbols);
+                            } catch (IOException e) {
+                                verificationHandler.onVerificationErrorForPackage(e);
+                                return;
+                            }
+                            if (!verificationHandler.verify(mDexSymbols)) {
+                                verificationHandler.onVerificationCompleteForPackage(false);
+                                return;
+                            }
                         }
                     }
-                    verificationHandler.verificationFinishedForPackage(true);
+
+                    verificationHandler.onVerificationCompleteForPackage(true);
                 });
     }
 
@@ -68,11 +89,11 @@ public class SerialDexLoader {
     public interface VerificationHandler {
 
         /**
-         * Takes in the DexLoadResult and verifies its contents.
+         * Takes in the DexSymbols and verifies its contents.
          *
          * @param result object contains the symbols parsed from the loaded dex file
          */
-        boolean verify(DexLoadResult result);
+        boolean verify(DexSymbols result);
 
         /**
          * Called when all the loaded dex files have passed verification, or when one has failed.
@@ -80,9 +101,97 @@ public class SerialDexLoader {
          * @param passed is false if the last loaded dex failed verification, or true if all dexes
          *     passed.
          */
-        void verificationFinishedForPackage(boolean passed);
+        void onVerificationCompleteForPackage(boolean result);
+
+        /**
+         * Error occurred on verifying.
+         *
+         * @param e exception thrown while attempting to load and verify the apk.
+         */
+        void onVerificationErrorForPackage(Exception e);
     }
 
     /** Result class that contains symbols loaded from a DEX file */
-    public static class DexLoadResult {}
+    public static class DexSymbols {
+
+        private static final int DEX_MAX_METHOD_COUNT = 65536;
+
+        private String mDexEntry;
+
+        /** The table of classes referenced by the DEX file. */
+        private ArrayList<String> mReferencedClasses = new ArrayList<>(DEX_MAX_METHOD_COUNT);
+
+        /** The table of methods referenced by the DEX file. */
+        private ArrayList<String> mReferencedMethods = new ArrayList<>(DEX_MAX_METHOD_COUNT);
+
+        /** Maps referenced methods to their declaring class in the referenced classes table. */
+        private ArrayList<Integer> mClassIndex = new ArrayList<>(DEX_MAX_METHOD_COUNT);
+
+        /**
+         * Adds a new method to the referencedMethods table and its containing class to the
+         * referenced classes table if it's different to the last seen class.
+         *
+         * <p>Referenced methods should be added in the order that they are present in the methods
+         * table from the dex file.
+         *
+         * @param classname describes the class with / as separator of its subpackages
+         * @param method the method name, parameter types and return types with ; as separator
+         */
+        public void addReferencedMethod(String classname, String method) {
+            // the method table is sorted by class, so new classnames can be stored when first
+            // encountered
+            if (mReferencedClasses.size() == 0
+                    || !mReferencedClasses.get(mReferencedClasses.size() - 1).equals(classname)) {
+                mReferencedClasses.add(classname);
+            }
+            mReferencedMethods.add(method);
+            mClassIndex.add(mReferencedClasses.size() - 1);
+        }
+
+        @VisibleForTesting
+        boolean hasReferencedMethod(String classname, String method) {
+            int methodIdx = mReferencedMethods.indexOf(method);
+            return methodIdx >= 0
+                    && mReferencedClasses.get(mClassIndex.get(methodIdx)).equals(classname);
+        }
+
+        /**
+         * Clears the internal state of DexSymbols and sets dex entry name to load next dex file.
+         */
+        public void clearAndSetDexEntry(String dexEntry) {
+            this.mDexEntry = dexEntry;
+            mReferencedClasses.clear();
+            mReferencedMethods.clear();
+            mClassIndex.clear();
+        }
+
+        /** Returns the number of referenced methods loaded for the current dex */
+        public int getReferencedMethodCount() {
+            return mReferencedMethods.size();
+        }
+
+        /**
+         * Returns the method indexed by methodIndex in the table of loaded methods from the dex
+         * file
+         */
+        public String getReferencedMethodAtIndex(int methodIndex) {
+            if (methodIndex < 0 || methodIndex >= mReferencedMethods.size()) {
+                throw new IndexOutOfBoundsException("Method index out of bounds: " + methodIndex);
+            }
+            return mReferencedMethods.get(methodIndex);
+        }
+
+        /** Returns the declaring class for the method indexed by methodIndex */
+        public String getClassForMethodAtIndex(int methodIndex) {
+            if (methodIndex < 0 || methodIndex >= mReferencedMethods.size()) {
+                throw new IndexOutOfBoundsException("Method index out of bounds: " + methodIndex);
+            }
+            return mReferencedClasses.get(mClassIndex.get(methodIndex));
+        }
+
+        @Override
+        public String toString() {
+            return "DexSymbols: " + mDexEntry;
+        }
+    }
 }

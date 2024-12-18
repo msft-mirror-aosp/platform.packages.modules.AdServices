@@ -21,7 +21,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 
-import android.adservices.common.AdServicesStatusUtils.StatusCode;
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 import android.content.pm.PackageManager;
@@ -44,6 +43,7 @@ import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
 import com.google.common.util.concurrent.FluentFuture;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.concurrent.CancellationException;
@@ -141,8 +141,7 @@ public class BackgroundFetchRunner {
     }
 
     /** Updates a single given custom audience and persists the results. */
-    @StatusCode
-    public FluentFuture<Integer> updateCustomAudience(
+    public FluentFuture<UpdateResultType> updateCustomAudience(
             @NonNull Instant jobStartTime,
             @NonNull final DBCustomAudienceBackgroundFetchData fetchData) {
         Objects.requireNonNull(jobStartTime);
@@ -173,7 +172,11 @@ public class BackgroundFetchRunner {
                                 if (Objects.nonNull(updatableData.getAds())) {
                                     numOfAds = updatableData.getAds().size();
                                     adsDataSizeInBytes =
-                                            updatableData.getAds().toString().getBytes().length;
+                                            updatableData
+                                                    .getAds()
+                                                    .toString()
+                                                    .getBytes(StandardCharsets.UTF_8)
+                                                    .length;
                                 }
                                 resultCode = STATUS_SUCCESS;
                             } else {
@@ -194,7 +197,7 @@ public class BackgroundFetchRunner {
                                         e.getMessage());
                             }
 
-                            return resultCode;
+                            return updatableData.getInitialUpdateResult();
                         },
                         AdServicesExecutors.getBackgroundExecutor());
     }
@@ -219,7 +222,7 @@ public class BackgroundFetchRunner {
         // connection from a debuggable app.
         DevContext devContext =
                 isDebuggable
-                        ? DevContext.builder().setDevOptionsEnabled(true).build()
+                        ? DevContext.createForDevIdentity()
                         : DevContext.createForDevOptionsDisabled();
 
         // TODO(b/234884352): Perform k-anon check on daily fetch URI

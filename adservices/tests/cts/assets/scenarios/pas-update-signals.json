@@ -1,0 +1,23 @@
+{
+  "mocks": [
+    {
+      "request": {
+        "path": "/signals"
+      },
+      "response": {
+        "body": "UpdateSignalsResponse.json"
+      }
+    },
+    {
+      "request": {
+        "path": "/encode_signals.js"
+      },
+      "response": {
+        "body": "EncodeSignalsResponse.js"
+      }
+    }
+  ],
+  "substitutions": {
+    "<encode-signals-script>": "{base_url_with_prefix}/encode_signals.js"
+  }
+}

@@ -54,6 +54,8 @@ public class ReportingStatus {
         VERBOSE_DEBUG_TRIGGER_AGGREGATE_EXCESSIVE_REPORTS(28),
         VERBOSE_DEBUG_TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED(29),
         VERBOSE_DEBUG_TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA(30),
+        VERBOSE_DEBUG_TRIGGER_EVENT_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT(31),
+        VERBOSE_DEBUG_TRIGGER_AGG_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT(32),
         VERBOSE_DEBUG_UNKNOWN(9999);
 
         private final int mValue;
@@ -93,7 +95,8 @@ public class ReportingStatus {
         SERIALIZATION_ERROR(6),
         ENCRYPTION_ERROR(7),
         UNSUCCESSFUL_HTTP_RESPONSE_CODE(8),
-        REPORT_NOT_FOUND(9);
+        REPORT_NOT_FOUND(9),
+        APP_UNINSTALLED_OR_OUTSIDE_WINDOW(10);
         private final int mValue;
 
         FailureStatus(int value) {
@@ -177,7 +180,17 @@ public class ReportingStatus {
             mReportType = ReportType.VERBOSE_DEBUG_TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED;
         } else if (reportType.equals(
                 DebugReportApi.Type.TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT)) {
-            mReportType = ReportType.VERBOSE_DEBUG_SOURCE_DESTINATION_LIMIT;
+            mReportType =
+                    ReportType.VERBOSE_DEBUG_TRIGGER_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT;
+        } else if (reportType.equals(
+                DebugReportApi.Type.TRIGGER_EVENT_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT)) {
+            mReportType =
+                    ReportType
+                            .VERBOSE_DEBUG_TRIGGER_EVENT_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT;
+        } else if (reportType.equals(
+                DebugReportApi.Type.TRIGGER_AGGREGATE_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT)) {
+            mReportType =
+                    ReportType.VERBOSE_DEBUG_TRIGGER_AGG_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT;
         } else if (reportType.equals(DebugReportApi.Type.TRIGGER_EVENT_DEDUPLICATED)) {
             mReportType = ReportType.VERBOSE_DEBUG_TRIGGER_EVENT_DEDUPLICATED;
         } else if (reportType.equals(DebugReportApi.Type.TRIGGER_EVENT_EXCESSIVE_REPORTS)) {

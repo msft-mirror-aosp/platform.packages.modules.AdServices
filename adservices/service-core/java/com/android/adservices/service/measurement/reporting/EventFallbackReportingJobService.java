@@ -40,6 +40,7 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.android.libraries.mobiledatadownload.internal.AndroidTimeSource;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.util.concurrent.Future;
@@ -69,7 +70,7 @@ public final class EventFallbackReportingJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobEventFallbackReportingKillSwitch()) {
@@ -87,8 +88,7 @@ public final class EventFallbackReportingJobService extends JobService {
                         () -> {
                             processPendingReports();
 
-                            AdServicesJobServiceLogger.getInstance(
-                                            EventFallbackReportingJobService.this)
+                            AdServicesJobServiceLogger.getInstance()
                                     .recordJobFinished(
                                             MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID,
                                             /* isSuccessful= */ true,
@@ -101,31 +101,29 @@ public final class EventFallbackReportingJobService extends JobService {
 
     @VisibleForTesting
     void processPendingReports() {
-        final JobLockHolder lock = JobLockHolder.getInstance(EVENT_REPORTING);
-        if (lock.tryLock()) {
-            try {
-                long maxEventReportUploadRetryWindowMs =
-                        FlagsFactory.getFlags().getMeasurementMaxEventReportUploadRetryWindowMs();
-                long eventMainReportingJobPeriodMs =
-                        AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs();
-                new EventReportingJobHandler(
-                                DatastoreManagerFactory.getDatastoreManager(
-                                        getApplicationContext()),
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.ReportType.EVENT,
-                                ReportingStatus.UploadMethod.FALLBACK,
-                                getApplicationContext())
-                        .performScheduledPendingReportsInWindow(
-                                System.currentTimeMillis() - maxEventReportUploadRetryWindowMs,
-                                System.currentTimeMillis() - eventMainReportingJobPeriodMs);
-                return;
-            } finally {
-                lock.unlock();
-            }
-        }
-        LoggerFactory.getMeasurementLogger()
-                .d("EventFallbackReportingJobService did not acquire the lock");
+        JobLockHolder.getInstance(EVENT_REPORTING)
+                .runWithLock(
+                        "EventFallbackReportingJobService",
+                        () -> {
+                            long maxEventReportUploadRetryWindowMs =
+                                    FlagsFactory.getFlags()
+                                            .getMeasurementMaxEventReportUploadRetryWindowMs();
+                            long eventMainReportingJobPeriodMs =
+                                    AdServicesConfig.getMeasurementEventMainReportingJobPeriodMs();
+                            new EventReportingJobHandler(
+                                            DatastoreManagerFactory.getDatastoreManager(),
+                                            FlagsFactory.getFlags(),
+                                            AdServicesLoggerImpl.getInstance(),
+                                            ReportingStatus.ReportType.EVENT,
+                                            ReportingStatus.UploadMethod.FALLBACK,
+                                            getApplicationContext(),
+                                            new AndroidTimeSource())
+                                    .performScheduledPendingReportsInWindow(
+                                            System.currentTimeMillis()
+                                                    - maxEventReportUploadRetryWindowMs,
+                                            System.currentTimeMillis()
+                                                    - eventMainReportingJobPeriodMs);
+                        });
     }
 
     @Override
@@ -135,7 +133,7 @@ public final class EventFallbackReportingJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -200,7 +198,7 @@ public final class EventFallbackReportingJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(MEASUREMENT_EVENT_FALLBACK_REPORTING_JOB_ID, skipReason);
         }
 

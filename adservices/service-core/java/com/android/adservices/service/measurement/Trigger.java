@@ -24,10 +24,14 @@ import android.net.Uri;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
+import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig;
+import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateTriggerData;
 import com.android.adservices.service.measurement.util.Filter;
+import com.android.adservices.service.measurement.util.Filter.FilterContract;
+import com.android.adservices.service.measurement.util.JsonUtil;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.measurement.util.Validation;
 
@@ -60,7 +64,7 @@ public class Trigger {
     @Status private int mStatus;
     private Uri mRegistrant;
     private String mAggregateTriggerData;
-    private String mAggregateValues;
+    private String mAggregateValuesString;
     private String mAggregateDeduplicationKeys;
     private boolean mIsDebugReporting;
     private Optional<AggregatableAttributionTrigger> mAggregatableAttributionTrigger;
@@ -77,6 +81,11 @@ public class Trigger {
     private Uri mRegistrationOrigin;
     @Nullable private Uri mAggregationCoordinatorOrigin;
     private SourceRegistrationTimeConfig mAggregatableSourceRegistrationTimeConfig;
+    @Nullable private String mTriggerContextId;
+    @Nullable private String mAttributionScopesString;
+    @Nullable private Integer mAggregatableFilteringIdMaxBytes;
+    @Nullable private String mAggregateDebugReportingString;
+    @Nullable private AggregateDebugReporting mAggregateDebugReporting;
 
     @IntDef(value = {Status.PENDING, Status.IGNORED, Status.ATTRIBUTED, Status.MARKED_TO_DELETE})
     @Retention(RetentionPolicy.SOURCE)
@@ -120,7 +129,7 @@ public class Trigger {
                         == trigger.mAggregatableSourceRegistrationTimeConfig
                 && Objects.equals(mRegistrant, trigger.mRegistrant)
                 && Objects.equals(mAggregateTriggerData, trigger.mAggregateTriggerData)
-                && Objects.equals(mAggregateValues, trigger.mAggregateValues)
+                && Objects.equals(mAggregateValuesString, trigger.mAggregateValuesString)
                 && Objects.equals(
                         mAggregatableAttributionTrigger, trigger.mAggregatableAttributionTrigger)
                 && Objects.equals(mFilters, trigger.mFilters)
@@ -131,7 +140,13 @@ public class Trigger {
                 && Objects.equals(mDebugJoinKey, trigger.mDebugJoinKey)
                 && Objects.equals(mPlatformAdId, trigger.mPlatformAdId)
                 && Objects.equals(mDebugAdId, trigger.mDebugAdId)
-                && Objects.equals(mRegistrationOrigin, trigger.mRegistrationOrigin);
+                && Objects.equals(mRegistrationOrigin, trigger.mRegistrationOrigin)
+                && Objects.equals(mTriggerContextId, trigger.mTriggerContextId)
+                && Objects.equals(mAttributionScopesString, trigger.mAttributionScopesString)
+                && Objects.equals(
+                        mAggregatableFilteringIdMaxBytes, trigger.mAggregatableFilteringIdMaxBytes)
+                && Objects.equals(
+                        mAggregateDebugReportingString, trigger.mAggregateDebugReportingString);
     }
 
     @Override
@@ -145,7 +160,7 @@ public class Trigger {
                 mEventTriggers,
                 mStatus,
                 mAggregateTriggerData,
-                mAggregateValues,
+                mAggregateValuesString,
                 mAggregatableAttributionTrigger,
                 mFilters,
                 mNotFilters,
@@ -159,7 +174,11 @@ public class Trigger {
                 mPlatformAdId,
                 mDebugAdId,
                 mRegistrationOrigin,
-                mAggregatableSourceRegistrationTimeConfig);
+                mAggregatableSourceRegistrationTimeConfig,
+                mTriggerContextId,
+                mAttributionScopesString,
+                mAggregatableFilteringIdMaxBytes,
+                mAggregateDebugReportingString);
     }
 
     /** Unique identifier for the {@link Trigger}. */
@@ -237,15 +256,17 @@ public class Trigger {
     }
 
     /**
-     * Returns aggregate value string used for aggregation. aggregate value json is a JSONObject.
-     * example:
-     * {
-     *   "campaignCounts": 32768,
-     *   "geoValue": 1664
-     * }
+     * Returns aggregate value string used for aggregation.
+     * Aggregate value can be either JSONObject or JSONArray.
+     * example: {"campaignCounts": 32768, "geoValue": 1664}
+     * example: [{
+     *   "values": {"campaignCounts" :32768, "geoValue": 1664},
+     *   "filters": {"category": ["filter_1", "filter_2"]},
+     *   "not_filters": {"category": ["filter_3", "filter_4"]}
+     * }]
      */
-    public String getAggregateValues() {
-        return mAggregateValues;
+    public String getAggregateValuesString() {
+        return mAggregateValuesString;
     }
 
     /**
@@ -377,18 +398,32 @@ public class Trigger {
     public SourceRegistrationTimeConfig getAggregatableSourceRegistrationTimeConfig() {
         return mAggregatableSourceRegistrationTimeConfig;
     }
+
+    /** Returns the context id */
+    @Nullable
+    public String getTriggerContextId() {
+        return mTriggerContextId;
+    }
+
+    /** Returns the aggregatable filtering id max bytes. */
+    @Nullable
+    public Integer getAggregatableFilteringIdMaxBytes() {
+        return mAggregatableFilteringIdMaxBytes;
+    }
+
     /**
      * Generates AggregatableAttributionTrigger from aggregate trigger data string and aggregate
      * values string in Trigger.
      */
     private Optional<AggregatableAttributionTrigger> parseAggregateTrigger(Flags flags)
             throws JSONException, NumberFormatException {
-        if (this.mAggregateValues == null) {
+        if (mAggregateValuesString == null) {
             return Optional.empty();
         }
-        JSONArray triggerDataArray = this.mAggregateTriggerData == null
-                ? new JSONArray()
-                : new JSONArray(this.mAggregateTriggerData);
+        JSONArray triggerDataArray =
+                mAggregateTriggerData == null
+                        ? new JSONArray()
+                        : new JSONArray(mAggregateTriggerData);
         List<AggregateTriggerData> triggerDataList = new ArrayList<>();
         Filter filter = new Filter(flags);
         for (int i = 0; i < triggerDataArray.length(); i++) {
@@ -405,13 +440,15 @@ public class Trigger {
                     new AggregateTriggerData.Builder()
                             .setKey(bigInteger)
                             .setSourceKeys(sourceKeySet);
-            if (triggerDatum.has("filters") && !triggerDatum.isNull("filters")) {
+            if (triggerDatum.has(FilterContract.FILTERS)
+                    && !triggerDatum.isNull(FilterContract.FILTERS)) {
                 List<FilterMap> filterSet =
-                        filter.deserializeFilterSet(triggerDatum.getJSONArray("filters"));
+                        filter.deserializeFilterSet(
+                                triggerDatum.getJSONArray(FilterContract.FILTERS));
                 builder.setFilterSet(filterSet);
             }
-            if (triggerDatum.has("not_filters")
-                    && !triggerDatum.isNull("not_filters")) {
+            if (triggerDatum.has(FilterContract.NOT_FILTERS)
+                    && !triggerDatum.isNull(FilterContract.NOT_FILTERS)) {
                 List<FilterMap> notFilterSet =
                         filter.deserializeFilterSet(triggerDatum.getJSONArray("not_filters"));
                 builder.setNotFilterSet(notFilterSet);
@@ -423,14 +460,9 @@ public class Trigger {
             }
             triggerDataList.add(builder.build());
         }
-        JSONObject values = new JSONObject(this.mAggregateValues);
-        Map<String, Integer> valueMap = new HashMap<>();
-        for (String key : values.keySet()) {
-            valueMap.put(key, values.getInt(key));
-        }
         List<AggregateDeduplicationKey> dedupKeyList = new ArrayList<>();
         if (getAggregateDeduplicationKeys() != null) {
-            JSONArray dedupKeyObjects = new JSONArray(this.getAggregateDeduplicationKeys());
+            JSONArray dedupKeyObjects = new JSONArray(getAggregateDeduplicationKeys());
             for (int i = 0; i < dedupKeyObjects.length(); i++) {
                 JSONObject dedupKeyObject = dedupKeyObjects.getJSONObject(i);
                 AggregateDeduplicationKey.Builder builder = new AggregateDeduplicationKey.Builder();
@@ -439,25 +471,50 @@ public class Trigger {
                     builder.setDeduplicationKey(
                             new UnsignedLong(dedupKeyObject.getString("deduplication_key")));
                 }
-                if (dedupKeyObject.has("filters") && !dedupKeyObject.isNull("filters")) {
+                if (dedupKeyObject.has(FilterContract.FILTERS)
+                        && !dedupKeyObject.isNull(FilterContract.FILTERS)) {
                     List<FilterMap> filterSet =
-                            filter.deserializeFilterSet(dedupKeyObject.getJSONArray("filters"));
+                            filter.deserializeFilterSet(
+                                    dedupKeyObject.getJSONArray(FilterContract.FILTERS));
                     builder.setFilterSet(filterSet);
                 }
-                if (dedupKeyObject.has("not_filters") && !dedupKeyObject.isNull("not_filters")) {
+                if (dedupKeyObject.has(FilterContract.NOT_FILTERS)
+                        && !dedupKeyObject.isNull(FilterContract.NOT_FILTERS)) {
                     List<FilterMap> notFilterSet =
-                            filter.deserializeFilterSet(dedupKeyObject.getJSONArray("not_filters"));
+                            filter.deserializeFilterSet(
+                                    dedupKeyObject.getJSONArray(FilterContract.NOT_FILTERS));
                     builder.setNotFilterSet(notFilterSet);
                 }
                 dedupKeyList.add(builder.build());
             }
         }
-        return Optional.of(
+        AggregatableAttributionTrigger.Builder aggregatableAttributionTriggerBuilder =
                 new AggregatableAttributionTrigger.Builder()
                         .setTriggerData(triggerDataList)
-                        .setValues(valueMap)
-                        .setAggregateDeduplicationKeys(dedupKeyList)
-                        .build());
+                        .setAggregateDeduplicationKeys(dedupKeyList);
+        Optional<JSONArray> maybeAggregateValuesArr =
+                JsonUtil.maybeGetJsonArray(mAggregateValuesString);
+        if (maybeAggregateValuesArr.isPresent()) {
+            if (!flags.getMeasurementEnableAggregateValueFilters()) {
+                return Optional.empty();
+            }
+            List<AggregatableValuesConfig> aggregatableValuesConfigList = new ArrayList<>();
+            for (int i = 0; i < maybeAggregateValuesArr.get().length(); i++) {
+                JSONObject valuesObj = maybeAggregateValuesArr.get().getJSONObject(i);
+                AggregatableValuesConfig aggregatableValuesConfig =
+                        new AggregatableValuesConfig.Builder(valuesObj, flags).build();
+                aggregatableValuesConfigList.add(aggregatableValuesConfig);
+            }
+            aggregatableAttributionTriggerBuilder.setValueConfigs(aggregatableValuesConfigList);
+        } else {
+            // Default case: Convert value from integer to AggregatableKeyValue.
+            AggregatableValuesConfig aggregatableValuesConfig =
+                    new AggregatableValuesConfig.Builder(new JSONObject(mAggregateValuesString))
+                            .build();
+            aggregatableAttributionTriggerBuilder.setValueConfigs(
+                    List.of(aggregatableValuesConfig));
+        }
+        return Optional.of(aggregatableAttributionTriggerBuilder.build());
     }
 
     /**
@@ -467,7 +524,7 @@ public class Trigger {
      * @throws JSONException if JSON parsing fails
      */
     public List<EventTrigger> parseEventTriggers(Flags flags) throws JSONException {
-        JSONArray jsonArray = new JSONArray(this.mEventTriggers);
+        JSONArray jsonArray = new JSONArray(mEventTriggers);
         List<EventTrigger> eventTriggers = new ArrayList<>();
         boolean readValue = flags.getMeasurementFlexibleEventReportingApiEnabled();
         for (int i = 0; i < jsonArray.length(); i++) {
@@ -496,20 +553,19 @@ public class Trigger {
                         eventTrigger.getString(EventTriggerContract.DEDUPLICATION_KEY)));
             }
 
-            if (!eventTrigger.isNull(EventTriggerContract.FILTERS)) {
+            if (!eventTrigger.isNull(FilterContract.FILTERS)) {
                 List<FilterMap> filterSet =
                         new Filter(flags)
                                 .deserializeFilterSet(
-                                        eventTrigger.getJSONArray(EventTriggerContract.FILTERS));
+                                        eventTrigger.getJSONArray(FilterContract.FILTERS));
                 eventTriggerBuilder.setFilterSet(filterSet);
             }
 
-            if (!eventTrigger.isNull(EventTriggerContract.NOT_FILTERS)) {
+            if (!eventTrigger.isNull(FilterContract.NOT_FILTERS)) {
                 List<FilterMap> notFilterSet =
                         new Filter(flags)
                                 .deserializeFilterSet(
-                                        eventTrigger.getJSONArray(
-                                                EventTriggerContract.NOT_FILTERS));
+                                        eventTrigger.getJSONArray(FilterContract.NOT_FILTERS));
                 eventTriggerBuilder.setNotFilterSet(notFilterSet);
             }
             eventTriggers.add(eventTriggerBuilder.build());
@@ -558,6 +614,47 @@ public class Trigger {
             Optional<Uri> uri = WebAddresses.topPrivateDomainAndScheme(mAttributionDestination);
             return uri.orElse(null);
         }
+    }
+
+    /** Returns attribution scope string for the trigger. */
+    @Nullable
+    public String getAttributionScopesString() {
+        return mAttributionScopesString;
+    }
+
+    /** Returns attribution scopes for the trigger. */
+    @Nullable
+    public List<String> getAttributionScopes() throws JSONException {
+        if (mAttributionScopesString == null) {
+            return null;
+        }
+        JSONArray jsonArray = new JSONArray(mAttributionScopesString);
+        List<String> attributionScopes = new ArrayList<>();
+        for (int i = 0; i < jsonArray.length(); ++i) {
+            attributionScopes.add(jsonArray.getString(i));
+        }
+        return attributionScopes;
+    }
+
+    /** Returns the aggregate debug reporting object as a string */
+    @Nullable
+    public String getAggregateDebugReportingString() {
+        return mAggregateDebugReportingString;
+    }
+
+    /** Returns the aggregate debug reporting object as a string */
+    @Nullable
+    public AggregateDebugReporting getAggregateDebugReportingObject() throws JSONException {
+        if (mAggregateDebugReportingString == null) {
+            return null;
+        }
+        if (mAggregateDebugReporting == null) {
+            mAggregateDebugReporting =
+                    new AggregateDebugReporting.Builder(
+                                    new JSONObject(mAggregateDebugReportingString))
+                            .build();
+        }
+        return mAggregateDebugReporting;
     }
 
     /** Builder for {@link Trigger}. */
@@ -635,10 +732,10 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getAggregateValues()} */
+        /** See {@link Trigger#getAggregateValuesString()} */
         @NonNull
-        public Builder setAggregateValues(@Nullable String aggregateValues) {
-            mBuilding.mAggregateValues = aggregateValues;
+        public Builder setAggregateValuesString(@Nullable String aggregateValuesString) {
+            mBuilding.mAggregateValuesString = aggregateValuesString;
             return this;
         }
 
@@ -687,13 +784,13 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getAttributionConfig()} ()} */
+        /** See {@link Trigger#getAttributionConfig()} */
         public Builder setAttributionConfig(@Nullable String attributionConfig) {
             mBuilding.mAttributionConfig = attributionConfig;
             return this;
         }
 
-        /** See {@link Trigger#getAdtechKeyMapping()} ()} */
+        /** See {@link Trigger#getAdtechKeyMapping()} */
         public Builder setAdtechBitMapping(@Nullable String adtechBitMapping) {
             mBuilding.mAdtechKeyMapping = adtechBitMapping;
             return this;
@@ -729,14 +826,14 @@ public class Trigger {
             return this;
         }
 
-        /** See {@link Trigger#getRegistrationOrigin()} ()} */
+        /** See {@link Trigger#getRegistrationOrigin()} */
         @NonNull
         public Builder setRegistrationOrigin(Uri registrationOrigin) {
             mBuilding.mRegistrationOrigin = registrationOrigin;
             return this;
         }
 
-        /** See {@link Trigger#getAggregationCoordinatorOrigin()} ()} */
+        /** See {@link Trigger#getAggregationCoordinatorOrigin()} */
         public Builder setAggregationCoordinatorOrigin(Uri aggregationCoordinatorOrigin) {
             mBuilding.mAggregationCoordinatorOrigin = aggregationCoordinatorOrigin;
             return this;
@@ -747,6 +844,33 @@ public class Trigger {
         public Builder setAggregatableSourceRegistrationTimeConfig(
                 SourceRegistrationTimeConfig config) {
             mBuilding.mAggregatableSourceRegistrationTimeConfig = config;
+            return this;
+        }
+        /** See {@link Trigger#getTriggerContextId()}. */
+        public Builder setTriggerContextId(@Nullable String triggerContextId) {
+            mBuilding.mTriggerContextId = triggerContextId;
+            return this;
+        }
+
+        /** See {@link Trigger#getAttributionScopesString()}. */
+        @NonNull
+        public Builder setAttributionScopesString(@Nullable String attributionScopesString) {
+            mBuilding.mAttributionScopesString = attributionScopesString;
+            return this;
+        }
+
+        /** See {@link Trigger#getAggregatableFilteringIdMaxBytes()} */
+        public Builder setAggregatableFilteringIdMaxBytes(
+                @Nullable Integer aggregatableFilteringIdMaxBytes) {
+            mBuilding.mAggregatableFilteringIdMaxBytes = aggregatableFilteringIdMaxBytes;
+            return this;
+        }
+
+        /** See {@link Trigger#getAggregateDebugReportingString()}. */
+        @NonNull
+        public Builder setAggregateDebugReportingString(
+                @Nullable String aggregateDebugReportingString) {
+            mBuilding.mAggregateDebugReportingString = aggregateDebugReportingString;
             return this;
         }
 
@@ -770,7 +894,5 @@ public class Trigger {
         String PRIORITY = "priority";
         String VALUE = "value";
         String DEDUPLICATION_KEY = "deduplication_key";
-        String FILTERS = "filters";
-        String NOT_FILTERS = "not_filters";
     }
 }

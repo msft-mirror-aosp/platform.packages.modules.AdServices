@@ -20,7 +20,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesStates;
-import android.content.Context;
 import android.os.OutcomeReceiver;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -35,7 +34,6 @@ import com.google.common.util.concurrent.SettableFuture;
 
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -43,35 +41,33 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
 /** CTS test for U18 users */
-public class U18UxDetentionChannelTest {
+public final class U18UxDetentionChannelTest
+        extends AdServicesU18UxDetentionChannelCtsRootTestCase {
 
     private AdServicesCommonManager mCommonManager;
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     private UiDevice mDevice;
     private OutcomeReceiver<Boolean, Exception> mCallback;
-    private static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getContext();
 
     @Before
     public void setUp() throws Exception {
-        // Skip the test if it runs on unsupported platforms.
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
-        UiUtils.resetAdServicesConsentData(sContext);
+        UiUtils.setBinderTimeout(flags);
+        AdservicesTestHelper.killAdservicesProcess(mContext);
+        UiUtils.resetAdServicesConsentData(mContext, flags);
         UiUtils.enableNotificationPermission();
-        UiUtils.enableGa();
-        UiUtils.disableNotificationFlowV2();
-        UiUtils.disableOtaStrings();
+        UiUtils.enableGa(flags);
+        UiUtils.disableNotificationFlowV2(flags);
+        UiUtils.disableOtaStrings(flags);
         mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
 
-        mCommonManager = AdServicesCommonManager.get(sContext);
+        mCommonManager = AdServicesCommonManager.get(mContext);
 
-        UiUtils.enableU18();
+        UiUtils.enableU18(flags);
 
         // General purpose callback used for expected success calls.
         mCallback =
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         assertThat(result).isTrue();
@@ -84,7 +80,7 @@ public class U18UxDetentionChannelTest {
                 };
 
         // Reset consent and thereby AdServices data before each test.
-        UiUtils.refreshConsentResetToken();
+        UiUtils.refreshConsentResetToken(flags);
 
         SettableFuture<Boolean> responseFuture = SettableFuture.create();
 
@@ -95,7 +91,7 @@ public class U18UxDetentionChannelTest {
                         .setPrivacySandboxUiEnabled(true)
                         .build(),
                 Executors.newCachedThreadPool(),
-                new OutcomeReceiver<Boolean, Exception>() {
+                new OutcomeReceiver<>() {
                     @Override
                     public void onResult(Boolean result) {
                         responseFuture.set(result);
@@ -117,8 +113,6 @@ public class U18UxDetentionChannelTest {
 
     @After
     public void tearDown() throws Exception {
-        if (!AdservicesTestHelper.isDeviceSupported()) return;
-
         mDevice.pressHome();
 
         UiUtils.restartAdservices();
@@ -126,8 +120,8 @@ public class U18UxDetentionChannelTest {
 
     @Test
     public void testGaUxU18DetentionChannel() throws Exception {
-        UiUtils.enableGa();
-        UiUtils.setAsRowDevice();
+        UiUtils.enableGa(flags);
+        UiUtils.setAsRowDevice(flags);
 
         AdServicesStates adServicesAdultStates =
                 new AdServicesStates.Builder()
@@ -141,7 +135,7 @@ public class U18UxDetentionChannelTest {
         mCommonManager.enableAdServices(adServicesAdultStates, CALLBACK_EXECUTOR, mCallback);
 
         AdservicesWorkflows.verifyNotification(
-                sContext,
+                mContext,
                 mDevice,
                 /* isDisplayed= */ true,
                 /* isEuTest= */ false,
@@ -160,50 +154,7 @@ public class U18UxDetentionChannelTest {
 
         // Verify no U18 UX notification can be triggered.
         AdservicesWorkflows.verifyNotification(
-                sContext,
-                mDevice,
-                /* isDisplayed= */ false,
-                /* isEuTest= */ false,
-                UiConstants.UX.U18_UX);
-    }
-
-    @Test
-    public void testBetaUxU18DetentionChannel() throws Exception {
-        UiUtils.enableBeta();
-        UiUtils.setAsRowDevice();
-
-        AdServicesStates adServicesAdultStates =
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(true)
-                        .setAdultAccount(true)
-                        .setU18Account(false)
-                        .setPrivacySandboxUiEnabled(true)
-                        .setPrivacySandboxUiRequest(false)
-                        .build();
-
-        mCommonManager.enableAdServices(adServicesAdultStates, CALLBACK_EXECUTOR, mCallback);
-
-        AdservicesWorkflows.verifyNotification(
-                sContext,
-                mDevice,
-                /* isDisplayed= */ true,
-                /* isEuTest= */ false,
-                UiConstants.UX.BETA_UX);
-
-        AdServicesStates adServicesU18States =
-                new AdServicesStates.Builder()
-                        .setAdIdEnabled(true)
-                        .setAdultAccount(false)
-                        .setU18Account(true)
-                        .setPrivacySandboxUiEnabled(true)
-                        .setPrivacySandboxUiRequest(false)
-                        .build();
-
-        mCommonManager.enableAdServices(adServicesU18States, CALLBACK_EXECUTOR, mCallback);
-
-        // Verify no U18 UX notification can be triggered.
-        AdservicesWorkflows.verifyNotification(
-                sContext,
+                mContext,
                 mDevice,
                 /* isDisplayed= */ false,
                 /* isEuTest= */ false,

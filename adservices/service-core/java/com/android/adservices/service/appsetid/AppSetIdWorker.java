@@ -16,7 +16,9 @@
 
 package com.android.adservices.service.appsetid;
 
+import static android.adservices.appsetid.AppSetId.SCOPE_APP;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_PROVIDER_SERVICE_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_PROVIDER_SERVICE;
@@ -27,7 +29,6 @@ import android.adservices.appsetid.GetAppSetIdResult;
 import android.adservices.appsetid.IAppSetIdProviderService;
 import android.adservices.appsetid.IGetAppSetIdCallback;
 import android.adservices.appsetid.IGetAppSetIdProviderCallback;
-import android.annotation.NonNull;
 import android.annotation.WorkerThread;
 import android.content.Context;
 import android.os.RemoteException;
@@ -35,8 +36,6 @@ import android.os.RemoteException;
 import com.android.adservices.LogUtil;
 import com.android.adservices.ServiceBinder;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -53,54 +52,34 @@ import javax.annotation.concurrent.ThreadSafe;
  */
 @ThreadSafe
 @WorkerThread
-public class AppSetIdWorker {
-    // Singleton instance of the AppSetIdWorker.
-    private static volatile AppSetIdWorker sAppSetIdWorker;
-    private static final String APPSETID_DEFAULT = "00000000-0000-0000-0000-000000000000";
+public final class AppSetIdWorker {
 
-    private final Context mContext;
-    private final Flags mFlags;
+    private static final String APPSETID_DEFAULT = "00000000-0000-0000-0000-000000000000";
+    private static final String UNAUTHORIZED = "Unauthorized caller";
+
+    private static final AppSetIdWorker sInstance =
+            new AppSetIdWorker(ApplicationContextSingleton.get());
+
     private final ServiceBinder<IAppSetIdProviderService> mServiceBinder;
 
-    // @VisibleForTesting(visibility = VisibleForTesting.Visibility.PROTECTED)
-    public AppSetIdWorker(Context context, Flags flags) {
-        mContext = context;
-        mFlags = flags;
-        mServiceBinder =
+    private AppSetIdWorker(Context context) {
+        this(
                 ServiceBinder.getServiceBinder(
                         context,
                         ACTION_APPSETID_PROVIDER_SERVICE,
-                        IAppSetIdProviderService.Stub::asInterface);
+                        IAppSetIdProviderService.Stub::asInterface));
     }
 
-    /**
-     * Gets an instance of AppSetIdWorker to be used.
-     *
-     * <p>If no instance has been initialized yet, a new one will be created. Otherwise, the
-     * existing instance will be returned.
-     */
-    @NonNull
-    public static AppSetIdWorker getInstance() {
-        if (sAppSetIdWorker == null) {
-            synchronized (AppSetIdWorker.class) {
-                if (sAppSetIdWorker == null) {
-                    sAppSetIdWorker =
-                            new AppSetIdWorker(
-                                    ApplicationContextSingleton.get(), FlagsFactory.getFlags());
-                }
-            }
-        }
-        return sAppSetIdWorker;
-    }
-
-    @NonNull
     @VisibleForTesting
-    IAppSetIdProviderService getService() {
-        IAppSetIdProviderService service = mServiceBinder.getService();
-        return service;
+    AppSetIdWorker(ServiceBinder<IAppSetIdProviderService> serviceBinder) {
+        mServiceBinder = Objects.requireNonNull(serviceBinder, "serviceBinder cannot be null");
     }
 
-    @NonNull
+    /** Gets the singleton instance of {@link AppSetIdWorker} to be used. */
+    public static AppSetIdWorker getInstance() {
+        return sInstance;
+    }
+
     private void unbindFromService() {
         mServiceBinder.unbindFromService();
     }
@@ -112,13 +91,11 @@ public class AppSetIdWorker {
      * @param appUid is the current UID of the calling app;
      * @param callback is used to return the result.
      */
-    @NonNull
-    public void getAppSetId(
-            @NonNull String packageName, int appUid, @NonNull IGetAppSetIdCallback callback) {
-        Objects.requireNonNull(packageName);
-        Objects.requireNonNull(callback);
+    public void getAppSetId(String packageName, int appUid, IGetAppSetIdCallback callback) {
+        Objects.requireNonNull(packageName, "packageName cannot be null");
+        Objects.requireNonNull(callback, "callback cannot be null");
         LogUtil.v("AppSetIdWorker.getAppSetId for %s, %d", packageName, appUid);
-        final IAppSetIdProviderService service = getService();
+        IAppSetIdProviderService service = mServiceBinder.getService();
 
         // Unable to find appSetId provider service. Return default values.
         if (service == null) {
@@ -127,19 +104,21 @@ public class AppSetIdWorker {
                             .setStatusCode(STATUS_SUCCESS)
                             .setErrorMessage("")
                             .setAppSetId(APPSETID_DEFAULT)
-                            .setAppSetIdScope(0)
+                            .setAppSetIdScope(SCOPE_APP)
                             .build();
             try {
                 callback.onResult(result);
             } catch (RemoteException e) {
-                LogUtil.e("RemoteException");
+                LogUtil.e(
+                        e,
+                        "AppSetIdWorker.getAppSetId(): RemoteException calling"
+                                + " callback.onResult()");
                 ErrorLogUtil.e(
                         e,
                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_REMOTE_EXCEPTION,
                         AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__APP_SET_ID);
-            } finally {
-                return;
             }
+            return;
         }
 
         try {
@@ -160,7 +139,10 @@ public class AppSetIdWorker {
                             try {
                                 callback.onResult(result);
                             } catch (RemoteException e) {
-                                LogUtil.e("RemoteException");
+                                LogUtil.e(
+                                        e,
+                                        "AppSetIdWorker.getAppSetId(): RemoteException calling"
+                                                + " callback.onResult()");
                                 ErrorLogUtil.e(
                                         e,
                                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_REMOTE_EXCEPTION,
@@ -180,9 +162,23 @@ public class AppSetIdWorker {
                                 LogUtil.e(
                                         "Get AppSetId Error Message from Provider: %s",
                                         errorMessage);
-                                callback.onError(STATUS_INTERNAL_ERROR);
+                                if (errorMessage.startsWith(UNAUTHORIZED)) {
+                                    GetAppSetIdResult result =
+                                            new GetAppSetIdResult.Builder()
+                                                    .setStatusCode(STATUS_SUCCESS)
+                                                    .setErrorMessage(errorMessage)
+                                                    .setAppSetId(APPSETID_DEFAULT)
+                                                    .setAppSetIdScope(SCOPE_APP)
+                                                    .build();
+                                    callback.onResult(result);
+                                } else {
+                                    callback.onError(STATUS_PROVIDER_SERVICE_INTERNAL_ERROR);
+                                }
                             } catch (RemoteException e) {
-                                LogUtil.e("RemoteException");
+                                LogUtil.e(
+                                        e,
+                                        "AppSetIdWorker.getAppSetId(): RemoteException calling"
+                                                + " callback.onError()");
                                 ErrorLogUtil.e(
                                         e,
                                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_REMOTE_EXCEPTION,
@@ -196,7 +192,11 @@ public class AppSetIdWorker {
                     });
 
         } catch (RemoteException e) {
-            LogUtil.e(e, "RemoteException");
+            LogUtil.e(
+                    e,
+                    "AppSetIdWorker.getAppSetId() failed for pkg=%s and uid=%d",
+                    packageName,
+                    appUid);
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_REMOTE_EXCEPTION,
@@ -204,7 +204,9 @@ public class AppSetIdWorker {
             try {
                 callback.onError(STATUS_INTERNAL_ERROR);
             } catch (RemoteException err) {
-                LogUtil.e("RemoteException");
+                LogUtil.e(
+                        err,
+                        "AppSetIdWorker.getAppSetId(): RemoteException calling callback.onError()");
             } finally {
                 unbindFromService();
             }

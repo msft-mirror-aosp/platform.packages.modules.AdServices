@@ -22,17 +22,18 @@ import androidx.test.runner.AndroidJUnit4;
 
 import com.android.cobalt.data.EventRecordAndSystemProfile;
 import com.android.cobalt.data.EventVector;
-import com.android.cobalt.observations.testing.FakeSecureRandom;
+import com.android.cobalt.testing.logging.FakeCobaltOperationLogger;
+import com.android.cobalt.testing.observations.FakeSecureRandom;
+import com.android.cobalt.testing.observations.ObservationFactory;
 
 import com.google.cobalt.AggregateValue;
-import com.google.cobalt.IntegerObservation;
 import com.google.cobalt.MetricDefinition;
 import com.google.cobalt.MetricDefinition.MetricType;
 import com.google.cobalt.MetricDefinition.TimeZonePolicy;
 import com.google.cobalt.Observation;
 import com.google.cobalt.ObservationMetadata;
 import com.google.cobalt.ReportDefinition;
-import com.google.cobalt.ReportDefinition.PrivacyLevel;
+import com.google.cobalt.ReportDefinition.PrivacyMechanism;
 import com.google.cobalt.ReportDefinition.ReportType;
 import com.google.cobalt.SystemProfile;
 import com.google.cobalt.UnencryptedObservationBatch;
@@ -94,46 +95,17 @@ public final class NonPrivateObservationGeneratorTest {
     private static final ByteString RANDOM_BYTES_4 =
             ByteString.copyFrom(new byte[] {3, 3, 3, 3, 3, 3, 3, 3});
     private static final Observation OBSERVATION_1 =
-            Observation.newBuilder()
-                    .setInteger(
-                            IntegerObservation.newBuilder()
-                                    .addValues(
-                                            IntegerObservation.Value.newBuilder()
-                                                    .setValue(EVENT_COUNT_1)
-                                                    .addAllEventCodes(EVENT_VECTOR_1.eventCodes())))
-                    .setRandomId(RANDOM_BYTES_1)
-                    .build();
+            ObservationFactory.createIntegerObservation(
+                    EVENT_VECTOR_1, EVENT_COUNT_1, RANDOM_BYTES_1);
     private static final Observation OBSERVATION_1_AND_2 =
-            Observation.newBuilder()
-                    .setInteger(
-                            IntegerObservation.newBuilder()
-                                    .addValues(
-                                            IntegerObservation.Value.newBuilder()
-                                                    .setValue(EVENT_COUNT_1)
-                                                    .addAllEventCodes(EVENT_VECTOR_1.eventCodes()))
-                                    .addValues(
-                                            IntegerObservation.Value.newBuilder()
-                                                    .setValue(EVENT_COUNT_2)
-                                                    .addAllEventCodes(EVENT_VECTOR_2.eventCodes())))
-                    .setRandomId(RANDOM_BYTES_1)
-                    .build();
+            ObservationFactory.createIntegerObservation(
+                    EVENT_VECTOR_1, EVENT_COUNT_1, EVENT_VECTOR_2, EVENT_COUNT_2, RANDOM_BYTES_1);
     private static final Observation OBSERVATION_2 =
-            Observation.newBuilder()
-                    .setInteger(
-                            IntegerObservation.newBuilder()
-                                    .addValues(
-                                            IntegerObservation.Value.newBuilder()
-                                                    .setValue(EVENT_COUNT_2)
-                                                    .addAllEventCodes(EVENT_VECTOR_2.eventCodes())))
-                    .setRandomId(RANDOM_BYTES_3)
-                    .build();
+            ObservationFactory.createIntegerObservation(
+                    EVENT_VECTOR_2, EVENT_COUNT_2, RANDOM_BYTES_3);
     private static final Observation NO_EVENT_CODES_OBSERVATION =
-            Observation.newBuilder()
-                    .setInteger(
-                            IntegerObservation.newBuilder()
-                                    .addValues(IntegerObservation.Value.newBuilder().setValue(7)))
-                    .setRandomId(RANDOM_BYTES_1)
-                    .build();
+            ObservationFactory.createIntegerObservation(
+                    EventVector.create(), /* countValue= */ 7, RANDOM_BYTES_1);
 
     private static final MetricDefinition METRIC =
             MetricDefinition.newBuilder()
@@ -146,15 +118,17 @@ public final class NonPrivateObservationGeneratorTest {
             ReportDefinition.newBuilder()
                     .setId(REPORT_ID)
                     .setReportType(ReportType.FLEETWIDE_OCCURRENCE_COUNTS)
-                    .setPrivacyLevel(PrivacyLevel.NO_ADDED_PRIVACY)
+                    .setPrivacyMechanism(PrivacyMechanism.DE_IDENTIFICATION)
                     .build();
 
     private final SecureRandom mSecureRandom;
     private NonPrivateObservationGenerator mGenerator;
+    private FakeCobaltOperationLogger mOperationLogger;
 
     public NonPrivateObservationGeneratorTest() {
         mSecureRandom = new FakeSecureRandom();
         mGenerator = null;
+        mOperationLogger = new FakeCobaltOperationLogger();
     }
 
     private NonPrivateObservationGenerator createObservationGenerator(
@@ -162,6 +136,7 @@ public final class NonPrivateObservationGeneratorTest {
         return new NonPrivateObservationGenerator(
                 mSecureRandom,
                 new IntegerEncoder(mSecureRandom),
+                mOperationLogger,
                 customerId,
                 projectId,
                 metric.getId(),
@@ -187,7 +162,7 @@ public final class NonPrivateObservationGeneratorTest {
     }
 
     @Test
-    public void generateObservations_noEvents_nothingGenerated() throws Exception {
+    public void testGenerateObservations_noEvents_nothingGenerated() throws Exception {
         mGenerator = createObservationGenerator(CUSTOMER, PROJECT, METRIC, REPORT);
         List<UnencryptedObservationBatch> result =
                 mGenerator.generateObservations(DAY_INDEX, ImmutableListMultimap.of());
@@ -195,7 +170,7 @@ public final class NonPrivateObservationGeneratorTest {
     }
 
     @Test
-    public void generateObservations_oneEvent_generated() throws Exception {
+    public void testGenerateObservations_oneEvent_generated() throws Exception {
         mGenerator = createObservationGenerator(CUSTOMER, PROJECT, METRIC, REPORT);
         List<UnencryptedObservationBatch> result =
                 mGenerator.generateObservations(
@@ -210,7 +185,7 @@ public final class NonPrivateObservationGeneratorTest {
     }
 
     @Test
-    public void generateObservations_oneEventWithNoEventCodes_generated() throws Exception {
+    public void testGenerateObservations_oneEventWithNoEventCodes_generated() throws Exception {
         mGenerator = createObservationGenerator(CUSTOMER, PROJECT, METRIC, REPORT);
         List<UnencryptedObservationBatch> result =
                 mGenerator.generateObservations(
@@ -227,7 +202,7 @@ public final class NonPrivateObservationGeneratorTest {
     }
 
     @Test
-    public void generateObservations_twoEvents_oneObservationGenerated() throws Exception {
+    public void testGenerateObservations_twoEvents_oneObservationGenerated() throws Exception {
         mGenerator = createObservationGenerator(CUSTOMER, PROJECT, METRIC, REPORT);
         List<UnencryptedObservationBatch> result =
                 mGenerator.generateObservations(
@@ -246,7 +221,7 @@ public final class NonPrivateObservationGeneratorTest {
     }
 
     @Test
-    public void generateObservations_twoEventsInTwoSystemProfiles_separateObservations()
+    public void testGenerateObservations_twoEventsInTwoSystemProfiles_separateObservations()
             throws Exception {
         mGenerator = createObservationGenerator(CUSTOMER, PROJECT, METRIC, REPORT);
         List<UnencryptedObservationBatch> result =
@@ -272,7 +247,7 @@ public final class NonPrivateObservationGeneratorTest {
     }
 
     @Test
-    public void generateObservations_eventVectorBufferMax_oneEventSent() throws Exception {
+    public void testGenerateObservations_eventVectorBufferMax_oneEventSent() throws Exception {
         mGenerator =
                 createObservationGenerator(
                         CUSTOMER,
@@ -293,5 +268,48 @@ public final class NonPrivateObservationGeneratorTest {
                 .isEqualTo(RANDOM_BYTES_2);
         assertThat(result.get(0).getUnencryptedObservations(0).getObservation())
                 .isEqualTo(OBSERVATION_1);
+    }
+
+    @Test
+    public void
+            testGenerateObservations_eventVectorBufferMaxLimit_eventVectorBufferMaxExceededLogged()
+                    throws Exception {
+        mGenerator =
+                createObservationGenerator(
+                        CUSTOMER,
+                        PROJECT,
+                        METRIC,
+                        REPORT.toBuilder().setEventVectorBufferMax(1).build());
+        mGenerator.generateObservations(
+                DAY_INDEX,
+                ImmutableListMultimap.of(SYSTEM_PROFILE_1, EVENT_1, SYSTEM_PROFILE_1, EVENT_2));
+
+        // Check that it was recorded that event vector buffer max was exceeded for the metric id
+        // and report id.
+        assertThat(
+                        mOperationLogger.getNumEventVectorBufferMaxExceededOccurrences(
+                                METRIC_ID, REPORT_ID))
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void
+            testGenerateObservations_underEventVectorBufferMaxLimit_noEventVectorBufferMaxExceededLogged()
+                    throws Exception {
+        mGenerator =
+                createObservationGenerator(
+                        CUSTOMER,
+                        PROJECT,
+                        METRIC,
+                        REPORT.toBuilder().setEventVectorBufferMax(1).build());
+        mGenerator.generateObservations(
+                DAY_INDEX,
+                ImmutableListMultimap.of(SYSTEM_PROFILE_1, EVENT_1, SYSTEM_PROFILE_2, EVENT_2));
+
+        // Check that no event vector buffer max exceeded recorded for the metric id and report id.
+        assertThat(
+                        mOperationLogger.getNumEventVectorBufferMaxExceededOccurrences(
+                                METRIC_ID, REPORT_ID))
+                .isEqualTo(0);
     }
 }

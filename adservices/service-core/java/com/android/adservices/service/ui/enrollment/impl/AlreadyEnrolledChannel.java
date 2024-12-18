@@ -17,6 +17,7 @@
 package com.android.adservices.service.ui.enrollment.impl;
 
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_ALREADY_INTERACTED_FIX_ENABLE;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
 
 import android.content.Context;
@@ -24,7 +25,6 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -44,7 +44,7 @@ public class AlreadyEnrolledChannel implements PrivacySandboxEnrollmentChannel {
             UxStatesManager uxStatesManager) {
         switch (uxCollection) {
             case GA_UX:
-                if (FlagsFactory.getFlags().getPasUxEnabled()) {
+                if (uxStatesManager.getFlag(KEY_PAS_UX_ENABLED)) {
                     // PreNotificationManualUsers should be in PasReconsentNotificationChannel.
                     return consentManager.wasPasNotificationDisplayed()
                             || isManuallyOptedOutOfPaAndMsmt(consentManager);
@@ -54,7 +54,6 @@ public class AlreadyEnrolledChannel implements PrivacySandboxEnrollmentChannel {
             case BETA_UX:
                 return consentManager.wasNotificationDisplayed();
             case U18_UX:
-            case RVC_UX:
                 return consentManager.wasU18NotificationDisplayed();
             default:
                 // Unsupported and non-valid UXs can never have enrollment channels.

@@ -18,6 +18,8 @@ package com.android.adservices.service.customaudience;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 
 import android.app.job.JobInfo;
@@ -38,6 +40,8 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -66,30 +70,30 @@ public class BackgroundFetchJobService extends JobService {
             LogUtil.d(
                     "Disabling BackgroundFetchJobService job because it's running in ExtServices"
                             + " on T+");
-            return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
+            return skipAndCancelBackgroundJob(params, /* skipReason= */ 0, /* doRecord= */ false);
         }
 
         LoggerFactory.getFledgeLogger().d("BackgroundFetchJobService.onStartJob");
 
-        AdServicesJobServiceLogger.getInstance(this)
-                .recordOnStartJob(FLEDGE_BACKGROUND_FETCH_JOB_ID);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(FLEDGE_BACKGROUND_FETCH_JOB_ID);
 
-        if (!FlagsFactory.getFlags().getFledgeBackgroundFetchEnabled()) {
+        Flags flags = FlagsFactory.getFlags();
+        if (!flags.getFledgeBackgroundFetchEnabled()) {
             LoggerFactory.getFledgeLogger()
                     .d("FLEDGE background fetch is disabled; skipping and cancelling job");
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
-                    /* doRecord=*/ true);
+                    /* doRecord= */ true);
         }
 
-        if (FlagsFactory.getFlags().getFledgeCustomAudienceServiceKillSwitch()) {
+        if (flags.getFledgeCustomAudienceServiceKillSwitch()) {
             LoggerFactory.getFledgeLogger()
                     .d("FLEDGE Custom Audience API is disabled ; skipping and cancelling job");
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
-                    /* doRecord=*/ true);
+                    /* doRecord= */ true);
         }
 
         // Skip the execution and cancel the job if user consent is revoked.
@@ -100,7 +104,7 @@ public class BackgroundFetchJobService extends JobService {
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_USER_CONSENT_REVOKED,
-                    /* doRecord=*/ true);
+                    /* doRecord= */ true);
         }
 
         // TODO(b/235841960): Consider using com.android.adservices.service.stats.Clock instead of
@@ -109,7 +113,7 @@ public class BackgroundFetchJobService extends JobService {
         LoggerFactory.getFledgeLogger()
                 .d("Starting FLEDGE background fetch job at %s", jobStartTime.toString());
 
-        BackgroundFetchWorker.getInstance(this)
+        BackgroundFetchWorker.getInstance()
                 .runBackgroundFetch()
                 .addCallback(
                         new FutureCallback<Void>() {
@@ -119,8 +123,7 @@ public class BackgroundFetchJobService extends JobService {
                             @Override
                             public void onSuccess(Void result) {
                                 boolean shouldRetry = false;
-                                AdServicesJobServiceLogger.getInstance(
-                                                BackgroundFetchJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
                                                 /* isSuccessful= */ true,
@@ -155,8 +158,7 @@ public class BackgroundFetchJobService extends JobService {
                                 }
 
                                 boolean shouldRetry = false;
-                                AdServicesJobServiceLogger.getInstance(
-                                                BackgroundFetchJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
                                                 /* isSuccessful= */ false,
@@ -178,7 +180,7 @@ public class BackgroundFetchJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(FLEDGE_BACKGROUND_FETCH_JOB_ID, skipReason);
         }
 
@@ -189,11 +191,11 @@ public class BackgroundFetchJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LoggerFactory.getFledgeLogger().d("BackgroundFetchJobService.onStopJob");
-        BackgroundFetchWorker.getInstance(this).stopWork();
+        BackgroundFetchWorker.getInstance().stopWork();
 
         boolean shouldRetry = true;
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, FLEDGE_BACKGROUND_FETCH_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -205,11 +207,13 @@ public class BackgroundFetchJobService extends JobService {
      * <p>The background fetch primarily updates custom audiences' ads and bidding data. It also
      * prunes the custom audience database of any expired data.
      */
-    public static void scheduleIfNeeded(Context context, Flags flags, boolean forceSchedule) {
+    @JobSchedulingResultCode
+    public static int scheduleIfNeeded(Flags flags, boolean forceSchedule) {
+        Context context = ApplicationContextSingleton.get();
         if (!flags.getFledgeBackgroundFetchEnabled()) {
             LoggerFactory.getFledgeLogger()
                     .v("FLEDGE background fetch is disabled; skipping schedule");
-            return;
+            return SCHEDULING_RESULT_CODE_SKIPPED;
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
@@ -220,17 +224,19 @@ public class BackgroundFetchJobService extends JobService {
         if ((jobScheduler.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID) == null) || forceSchedule) {
             schedule(context, flags);
             LoggerFactory.getFledgeLogger().d("Scheduled FLEDGE Background Fetch job");
+            return SCHEDULING_RESULT_CODE_SUCCESSFUL;
         } else {
             LoggerFactory.getFledgeLogger()
                     .v("FLEDGE Background Fetch job already scheduled, skipping reschedule");
+            return SCHEDULING_RESULT_CODE_SKIPPED;
         }
     }
 
     /**
      * Actually schedules the FLEDGE Background Fetch as a singleton periodic job.
      *
-     * <p>Split out from {@link #scheduleIfNeeded(Context, Flags, boolean)} for mockable testing
-     * without pesky permissions.
+     * <p>Split out from {@link #scheduleIfNeeded(Flags, boolean)} for mockable testing without
+     * pesky permissions.
      */
     @VisibleForTesting
     protected static void schedule(Context context, Flags flags) {

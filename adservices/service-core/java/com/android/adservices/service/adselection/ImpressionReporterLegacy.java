@@ -23,6 +23,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
 
 import android.adservices.adselection.AdSelectionConfig;
@@ -31,11 +32,9 @@ import android.adservices.adselection.ReportImpressionCallback;
 import android.adservices.adselection.ReportImpressionInput;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
-import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
-import android.content.Context;
 import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
@@ -68,6 +67,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
 import com.android.internal.util.Preconditions;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -91,7 +91,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /** Encapsulates the Impression Reporting logic */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ImpressionReporterLegacy {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -122,11 +121,11 @@ public class ImpressionReporterLegacy {
     @NonNull private final FrequencyCapAdDataValidator mFrequencyCapAdDataValidator;
     @NonNull private final DevContext mDevContext;
     @NonNull private final ReportingComputationHelper mReportingComputationHelper;
+    @NonNull private final ReportImpressionExecutionLogger mReportImpressionExecutionLogger;
     private int mCallerUid;
     @NonNull private String mCallerAppPackageName;
 
     public ImpressionReporterLegacy(
-            @NonNull Context context,
             @NonNull ExecutorService lightweightExecutor,
             @NonNull ExecutorService backgroundExecutor,
             @NonNull ScheduledThreadPoolExecutor scheduledExecutor,
@@ -141,8 +140,8 @@ public class ImpressionReporterLegacy {
             @NonNull final FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             final int callerUid,
             boolean shouldUseUnifiedTables,
-            @NonNull final RetryStrategy retryStrategy) {
-        Objects.requireNonNull(context);
+            @NonNull final RetryStrategy retryStrategy,
+            ReportImpressionExecutionLogger reportImpressionExecutionLogger) {
         Objects.requireNonNull(lightweightExecutor);
         Objects.requireNonNull(backgroundExecutor);
         Objects.requireNonNull(scheduledExecutor);
@@ -184,11 +183,10 @@ public class ImpressionReporterLegacy {
         }
         mJsEngine =
                 new ReportImpressionScriptEngine(
-                        context,
-                        () -> flags.getEnforceIsolateMaxHeapSize(),
-                        () -> flags.getIsolateMaxHeapSizeBytes(),
+                        flags::getIsolateMaxHeapSizeBytes,
                         registerAdBeaconScriptEngineHelper,
-                        retryStrategy);
+                        retryStrategy,
+                        mDevContext);
 
         mAdSelectionDevOverridesHelper =
                 new AdSelectionDevOverridesHelper(devContext, mAdSelectionEntryDao);
@@ -217,6 +215,7 @@ public class ImpressionReporterLegacy {
             mReportingComputationHelper =
                     new ReportingComputationHelperUnifiedTablesDisabled(mAdSelectionEntryDao);
         }
+        mReportImpressionExecutionLogger = reportImpressionExecutionLogger;
     }
 
     /** Invokes the onFailure function from the callback and handles the exception. */
@@ -230,7 +229,11 @@ public class ImpressionReporterLegacy {
                             .build());
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send failed result to the callback");
-            throw e.rethrowFromSystemServer();
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                    mCallerAppPackageName,
+                    AdServicesStatusUtils.STATUS_CALLBACK_SHUTDOWN,
+                    0);
         }
     }
 
@@ -240,7 +243,11 @@ public class ImpressionReporterLegacy {
             callback.onSuccess();
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send successful result to the callback");
-            throw e.rethrowFromSystemServer();
+            mAdServicesLogger.logFledgeApiCallStats(
+                    AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                    mCallerAppPackageName,
+                    AdServicesStatusUtils.STATUS_CALLBACK_SHUTDOWN,
+                    0);
         }
     }
 
@@ -275,6 +282,7 @@ public class ImpressionReporterLegacy {
                                         mFlags
                                                 .getEnforceForegroundStatusForFledgeReportImpression(),
                                         true,
+                                        !mFlags.getConsentNotificationDebugMode(),
                                         mCallerUid,
                                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                                         Throttler.ApiKey.FLEDGE_API_REPORT_IMPRESSIONS,
@@ -314,11 +322,15 @@ public class ImpressionReporterLegacy {
                             public void onSuccess(Pair<ReportingUris, ReportingContext> result) {
                                 sLogger.d("Computed reporting uris successfully!");
                                 performReporting(result.first, result.second);
+                                mReportImpressionExecutionLogger
+                                        .logReportImpressionApiCalledStats();
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
                                 sLogger.e(t, "Report Impression invocation failed!");
+                                mReportImpressionExecutionLogger
+                                        .logReportImpressionApiCalledStats();
                                 if (t instanceof FilterException
                                         && t.getCause()
                                                 instanceof ConsentManager.RevokedConsentException) {
@@ -462,9 +474,10 @@ public class ImpressionReporterLegacy {
             try {
                 buyerValidator.validate(reportingUris.buyerReportingUri);
                 if (!mFlags.getDisableFledgeEnrollmentCheck()) {
-                    mFledgeAuthorizationFilter.assertAdTechEnrolled(
-                            AdTechIdentifier.fromString(reportingUris.buyerReportingUri.getHost()),
-                            AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION);
+                    mFledgeAuthorizationFilter.assertAdTechFromUriEnrolled(
+                            reportingUris.buyerReportingUri,
+                            AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
+                            API_AD_SELECTION);
                 }
                 // Perform reporting if no exception was thrown
                 buyerFuture =
@@ -626,7 +639,8 @@ public class ImpressionReporterLegacy {
                                     ctx.mAdSelectionConfig,
                                     ctx.mReportingComputationData.getWinningRenderUri(),
                                     ctx.mReportingComputationData.getWinningBid(),
-                                    sellerContextualSignals))
+                                    sellerContextualSignals,
+                                    mReportImpressionExecutionLogger))
                     .transform(
                             sellerResult -> Pair.create(sellerResult, ctx),
                             mLightweightExecutorService);
@@ -662,7 +676,8 @@ public class ImpressionReporterLegacy {
                                     signals,
                                     sellerReportingResult.getSignalsForBuyer(),
                                     ctx.mReportingComputationData.getBuyerContextualSignals(),
-                                    customAudienceSignals))
+                                    customAudienceSignals,
+                                    mReportImpressionExecutionLogger))
                     .transform(
                             buyerReportingResult ->
                                     Pair.create(

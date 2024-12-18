@@ -16,8 +16,15 @@
 
 package com.android.adservices.ui.util;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE;
+import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_DIALOGS_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
 import static com.android.adservices.ui.util.AdServicesUiTestCase.LAUNCH_TIMEOUT;
-import static com.android.compatibility.common.util.ShellUtils.runShellCommand;
+import static com.android.adservices.ui.util.ApkTestUtil.getConsentSwitch;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -26,18 +33,15 @@ import android.os.Build;
 import android.os.RemoteException;
 import android.util.Log;
 
-import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
-import com.android.compatibility.common.util.ShellUtils;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 
 /** Util class for Settings tests. */
 public final class SettingsTestUtil {
-
-    private static final String ANDROID_WIDGET_SWITCH = "android.widget.Switch";
 
     private static final String TAG = SettingsTestUtil.class.getSimpleName();
     private static final int WINDOW_LAUNCH_TIMEOUT = 2_000;
@@ -86,8 +90,9 @@ public final class SettingsTestUtil {
         assertNotNull(appButton, R.string.settingsUI_measurement_view_title);
     }
 
-    public static void measurementDialogTestUtil(UiDevice device) throws RemoteException {
-        runShellCommand("device_config put adservices ui_dialogs_feature_enabled true");
+    public static void measurementDialogTestUtil(UiDevice device, AdServicesFlagsSetterRule flags)
+            throws RemoteException {
+        flags.setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, true);
         device.setOrientationNatural();
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         // open measurement view
@@ -106,14 +111,15 @@ public final class SettingsTestUtil {
         assertNotNull(resetButton, R.string.settingsUI_measurement_view_reset_title);
     }
 
-    public static void topicsToggleTestUtil(UiDevice device) throws RemoteException {
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled false");
+    public static void topicsToggleTestUtil(UiDevice device, AdServicesFlagsSetterRule flags)
+            throws RemoteException {
+        flags.setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
 
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         // 1) disable Topics API is enabled
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_topics_ga_title);
 
-        UiObject2 topicsToggle = getToggleSwitch(device);
+        UiObject2 topicsToggle = getConsentSwitch(device);
         if (topicsToggle.isChecked()) {
             topicsToggle.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         }
@@ -123,7 +129,7 @@ public final class SettingsTestUtil {
         // 2) enable Topics API
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_topics_ga_title);
 
-        topicsToggle = getToggleSwitch(device);
+        topicsToggle = getConsentSwitch(device);
         assertToggleState(topicsToggle, /* checked= */ false);
         topicsToggle.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         assertToggleState(topicsToggle, /* checked= */ true);
@@ -134,19 +140,20 @@ public final class SettingsTestUtil {
         // rotate device to test rotating as well
         device.setOrientationLeft();
         device.setOrientationNatural();
-        topicsToggle = getToggleSwitch(device);
+        topicsToggle = getConsentSwitch(device);
         assertToggleState(topicsToggle, /* checked= */ true);
         pressBack(device);
     }
 
-    public static void fledgeToggleTestUtil(UiDevice device) throws RemoteException {
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled false");
+    public static void fledgeToggleTestUtil(UiDevice device, AdServicesFlagsSetterRule flags)
+            throws RemoteException {
+        flags.setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
 
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         // 1) disable Fledge API is enabled
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_apps_ga_title);
 
-        UiObject2 fledgeToggle = getToggleSwitch(device);
+        UiObject2 fledgeToggle = getConsentSwitch(device);
         if (fledgeToggle.isChecked()) {
             fledgeToggle.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         }
@@ -156,7 +163,7 @@ public final class SettingsTestUtil {
         // 2) enable Fledge API
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_apps_ga_title);
 
-        fledgeToggle = getToggleSwitch(device);
+        fledgeToggle = getConsentSwitch(device);
         assertToggleState(fledgeToggle, /* checked= */ false);
         fledgeToggle.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         assertToggleState(fledgeToggle, /* checked= */ true);
@@ -167,19 +174,20 @@ public final class SettingsTestUtil {
         // rotate device to test rotating as well
         device.setOrientationLeft();
         device.setOrientationNatural();
-        fledgeToggle = getToggleSwitch(device);
+        fledgeToggle = getConsentSwitch(device);
         assertToggleState(fledgeToggle, /* checked= */ true);
         pressBack(device);
     }
 
-    public static void measurementToggleTestUtil(UiDevice device) throws RemoteException {
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled false");
+    public static void measurementToggleTestUtil(UiDevice device, AdServicesFlagsSetterRule flags)
+            throws RemoteException {
+        flags.setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
 
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         // 1) disable Measurement API is enabled
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_title);
 
-        UiObject2 measurementToggle = getToggleSwitch(device);
+        UiObject2 measurementToggle = getConsentSwitch(device);
         if (measurementToggle.isChecked()) {
             measurementToggle.clickAndWait(
                     Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
@@ -190,7 +198,7 @@ public final class SettingsTestUtil {
         // 2) enable Measurement API
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_view_title);
 
-        measurementToggle = getToggleSwitch(device);
+        measurementToggle = getConsentSwitch(device);
         assertToggleState(measurementToggle, /* checked= */ false);
         measurementToggle.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         assertToggleState(measurementToggle, /* checked= */ true);
@@ -201,14 +209,14 @@ public final class SettingsTestUtil {
         // rotate device to test rotating as well
         device.setOrientationLeft();
         device.setOrientationNatural();
-        measurementToggle = getToggleSwitch(device);
+        measurementToggle = getConsentSwitch(device);
         assertToggleState(measurementToggle, /* checked= */ true);
         pressBack(device);
     }
 
-    public static void topicsSubtitleTestUtil(UiDevice device) {
-        runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled false");
+    public static void topicsSubtitleTestUtil(UiDevice device, AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, false)
+                .setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
 
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         SettingsTestUtil.checkSubtitleMatchesToggle(
@@ -217,9 +225,9 @@ public final class SettingsTestUtil {
                 R.string.settingsUI_topics_ga_title);
     }
 
-    public static void appsSubtitleTestUtil(UiDevice device) {
-        runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled false");
+    public static void appsSubtitleTestUtil(UiDevice device, AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, false)
+                .setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
 
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         SettingsTestUtil.checkSubtitleMatchesToggle(
@@ -228,9 +236,10 @@ public final class SettingsTestUtil {
                 R.string.settingsUI_apps_ga_title);
     }
 
-    public static void measurementSubtitleTestUtil(UiDevice device) {
-        runShellCommand("device_config put adservices ui_dialogs_feature_enabled false");
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled false");
+    public static void measurementSubtitleTestUtil(
+            UiDevice device, AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_UI_DIALOGS_FEATURE_ENABLED, false)
+                .setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
 
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         SettingsTestUtil.checkSubtitleMatchesToggle(
@@ -239,13 +248,15 @@ public final class SettingsTestUtil {
                 R.string.settingsUI_measurement_view_title);
     }
 
-    public static void topicsToggleDialogTestUtil(UiDevice device) {
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled true");
+    public static void topicsToggleDialogTestUtil(
+            UiDevice device, AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, true);
+
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
 
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_topics_ga_title);
 
-        UiObject2 topicsToggle = getToggleSwitch(device);
+        UiObject2 topicsToggle = getConsentSwitch(device);
         if (topicsToggle.isChecked()) {
             // turn it off
             topicsToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
@@ -257,7 +268,7 @@ public final class SettingsTestUtil {
             assertNotNull(dialogOptOutTitle, R.string.settingsUI_dialog_topics_opt_out_title);
             positiveButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
-            topicsToggle = getToggleSwitch(device);
+            topicsToggle = getConsentSwitch(device);
             assertToggleState(topicsToggle, /* checked= */ false);
             // then turn it on again
             topicsToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
@@ -268,7 +279,7 @@ public final class SettingsTestUtil {
             assertNotNull(dialogOptInTitle, R.string.settingsUI_dialog_topics_opt_in_title);
             okButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
-            topicsToggle = getToggleSwitch(device);
+            topicsToggle = getConsentSwitch(device);
             assertToggleState(topicsToggle, /* checked= */ true);
         } else {
             // turn it on
@@ -280,7 +291,7 @@ public final class SettingsTestUtil {
             assertNotNull(dialogOptInTitle, R.string.settingsUI_dialog_topics_opt_in_title);
             okButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
-            topicsToggle = getToggleSwitch(device);
+            topicsToggle = getConsentSwitch(device);
             assertToggleState(topicsToggle, /* checked= */ true);
             // then turn it off
             topicsToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
@@ -292,18 +303,18 @@ public final class SettingsTestUtil {
             assertNotNull(dialogOptOutTitle, R.string.settingsUI_dialog_topics_opt_out_title);
             positiveButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
-            topicsToggle = getToggleSwitch(device);
+            topicsToggle = getConsentSwitch(device);
             assertToggleState(topicsToggle, /* checked= */ false);
         }
     }
 
-    public static void appsToggleDialogTestUtil(UiDevice device) {
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled true");
+    public static void appsToggleDialogTestUtil(UiDevice device, AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, true);
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
 
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_apps_ga_title);
 
-        UiObject2 appsToggle = getToggleSwitch(device);
+        UiObject2 appsToggle = getConsentSwitch(device);
         if (appsToggle.isChecked()) {
             // turn it off
             appsToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
@@ -315,7 +326,7 @@ public final class SettingsTestUtil {
             assertNotNull(dialogOptOutTitle, R.string.settingsUI_dialog_apps_opt_out_title);
             positiveButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
-            appsToggle = getToggleSwitch(device);
+            appsToggle = getConsentSwitch(device);
             assertToggleState(appsToggle, /* checked= */ false);
             // then turn it on again
             appsToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
@@ -326,7 +337,7 @@ public final class SettingsTestUtil {
             assertNotNull(dialogOptInTitle, R.string.settingsUI_dialog_apps_opt_in_title);
             okButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
-            appsToggle = getToggleSwitch(device);
+            appsToggle = getConsentSwitch(device);
             assertToggleState(appsToggle, /* checked= */ true);
         } else {
             // turn it on
@@ -338,7 +349,7 @@ public final class SettingsTestUtil {
             assertNotNull(dialogOptInTitle, R.string.settingsUI_dialog_apps_opt_in_title);
             okButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
-            appsToggle = getToggleSwitch(device);
+            appsToggle = getConsentSwitch(device);
             assertToggleState(appsToggle, /* checked= */ true);
             // then turn it off
             appsToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
@@ -350,18 +361,19 @@ public final class SettingsTestUtil {
             assertNotNull(dialogOptOutTitle, R.string.settingsUI_dialog_apps_opt_out_title);
             positiveButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
-            appsToggle = getToggleSwitch(device);
+            appsToggle = getConsentSwitch(device);
             assertToggleState(appsToggle, /* checked= */ false);
         }
     }
 
-    public static void measurementToggleDialogTestUtil(UiDevice device) {
-        runShellCommand("device_config put adservices ui_toggle_speed_bump_enabled true");
+    public static void measurementToggleDialogTestUtil(
+            UiDevice device, AdServicesFlagsSetterRule flags) {
+        flags.setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, true);
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
 
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_measurement_ga_title);
 
-        UiObject2 measurementToggle = getToggleSwitch(device);
+        UiObject2 measurementToggle = getConsentSwitch(device);
 
         if (measurementToggle.isChecked()) {
             // turn it off
@@ -377,7 +389,7 @@ public final class SettingsTestUtil {
                     R.string.settingsUI_dialog_measurement_opt_out_title);
             positiveButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
-            measurementToggle = getToggleSwitch(device);
+            measurementToggle = getConsentSwitch(device);
             assertToggleState(measurementToggle, /* checked= */ false);
             // then turn it on again
             measurementToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
@@ -389,7 +401,7 @@ public final class SettingsTestUtil {
             assertNotNull(dialogOptInTitle, R.string.settingsUI_dialog_measurement_opt_in_title);
             okButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
-            measurementToggle = getToggleSwitch(device);
+            measurementToggle = getConsentSwitch(device);
             assertToggleState(measurementToggle, /* checked= */ true);
         } else {
             // turn it on
@@ -402,7 +414,7 @@ public final class SettingsTestUtil {
             assertNotNull(dialogOptInTitle, R.string.settingsUI_dialog_measurement_opt_in_title);
             okButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
-            measurementToggle = getToggleSwitch(device);
+            measurementToggle = getConsentSwitch(device);
             assertToggleState(measurementToggle, /* checked= */ true);
             // then turn it off
             measurementToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
@@ -417,7 +429,7 @@ public final class SettingsTestUtil {
                     R.string.settingsUI_dialog_measurement_opt_out_title);
             positiveButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             // Retrieve new instance to avoid android.support.test.uiautomator.StaleObjectException.
-            measurementToggle = getToggleSwitch(device);
+            measurementToggle = getConsentSwitch(device);
             assertToggleState(measurementToggle, /* checked= */ false);
         }
     }
@@ -425,53 +437,47 @@ public final class SettingsTestUtil {
     /**
      * Tests whether the new PAS Fledge view has updated PAS text.
      *
-     * @param context Android context
      * @param device UiDevice
+     * @param flags AdServicesFlagsSetterRule used for setting the flags
      * @throws RemoteException during screen rotation
      */
-    public static void fledgeViewTextPasEnabledTest(UiDevice device) throws RemoteException {
-        ShellUtils.runShellCommand("device_config put adservices ga_ux_enabled true");
-        ShellUtils.runShellCommand("device_config put adservices pas_ux_enabled true");
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_debug_mode true");
-        ShellUtils.runShellCommand(
-                "device_config put adservices is_eea_device_feature_enabled true");
-        ShellUtils.runShellCommand("device_config put adservices is_eea_device false");
-        ShellUtils.runShellCommand(
-                "device_config put adservices ui_toggle_speed_bump_enabled false");
+    public static void fledgeViewTextPasEnabledTest(
+            UiDevice device, AdServicesFlagsSetterRule flags) throws RemoteException {
+        flags.setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
+                .setFlag(KEY_PAS_UX_ENABLED, true)
+                .setFlag(KEY_IS_EEA_DEVICE_FEATURE_ENABLED, true)
+                .setFlag(KEY_IS_EEA_DEVICE, false)
+                .setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false)
+                .setDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, true);
 
         ApkTestUtil.launchSettingView(device, LAUNCH_TIMEOUT);
         // 1) disable Fledge API is enabled
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_apps_ga_title);
         device.waitForIdle();
 
-        UiObject2 fledgeToggle = getToggleSwitch(device);
+        UiObject2 fledgeToggle = getConsentSwitch(device);
         if (fledgeToggle.isChecked()) {
-            fledgeToggle.click();
-            device.waitForIdle();
+            fledgeToggle.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         }
         assertThat(fledgeToggle.isChecked()).isFalse();
         device.pressBack();
 
         // 2) enable Fledge API
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_apps_ga_title);
-        device.waitForIdle();
 
-        fledgeToggle = getToggleSwitch(device);
+        fledgeToggle = getConsentSwitch(device);
         assertThat(fledgeToggle.isChecked()).isFalse();
-        fledgeToggle.click();
-        device.waitForIdle();
-        fledgeToggle = getToggleSwitch(device);
+        fledgeToggle.clickAndWait(Until.newWindow(), PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
+        fledgeToggle = getConsentSwitch(device);
         assertThat(fledgeToggle.isChecked()).isTrue();
         device.pressBack();
 
         // 3) check if Fledge API is enabled
         ApkTestUtil.scrollToAndClick(device, R.string.settingsUI_apps_ga_title);
-        device.waitForIdle();
         // rotate device to test rotating as well
         device.setOrientationLeft();
         device.setOrientationNatural();
-        fledgeToggle = getToggleSwitch(device);
+        fledgeToggle = getConsentSwitch(device);
         assertThat(fledgeToggle.isChecked()).isTrue();
 
         // 4) check text is PAS text
@@ -487,7 +493,7 @@ public final class SettingsTestUtil {
         if (subtitle.getText()
                 .equals(ApkTestUtil.getString(R.string.settingsUI_subtitle_consent_off))) {
             ApkTestUtil.scrollToAndClick(device, stringIdOfTitle);
-            UiObject2 toggle = getToggleSwitch(device);
+            UiObject2 toggle = getConsentSwitch(device);
             assertToggleState(toggle, /* checked= */ false);
             toggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             pressBack(device);
@@ -500,7 +506,7 @@ public final class SettingsTestUtil {
                     .isFalse();
         } else {
             ApkTestUtil.scrollToAndClick(device, stringIdOfTitle);
-            UiObject2 toggle = getToggleSwitch(device);
+            UiObject2 toggle = getConsentSwitch(device);
             assertToggleState(toggle, /* checked= */ true);
             toggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
             pressBack(device);
@@ -535,13 +541,6 @@ public final class SettingsTestUtil {
         } else {
             assertWithMessage("Toggle switch checked").that(toggleSwitch.isChecked()).isFalse();
         }
-    }
-
-    /** Creates a toggleable button. */
-    private static UiObject2 getToggleSwitch(UiDevice device) {
-        return device.wait(
-                Until.findObject(By.clazz(ANDROID_WIDGET_SWITCH)),
-                PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
     }
 
     /** Presses the Back button. */

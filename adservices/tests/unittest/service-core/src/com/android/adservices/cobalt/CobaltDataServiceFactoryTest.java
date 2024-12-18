@@ -18,43 +18,45 @@ package com.android.adservices.cobalt;
 
 import static org.junit.Assert.assertThrows;
 
-import android.content.Context;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.cobalt.testing.logging.FakeCobaltOperationLogger;
 
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.runner.AndroidJUnit4;
-
-import com.android.adservices.common.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-@RunWith(AndroidJUnit4.class)
-public final class CobaltDataServiceFactoryTest {
-    private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+@RequiresSdkLevelAtLeastS
+public final class CobaltDataServiceFactoryTest extends AdServicesUnitTestCase {
     private static final ExecutorService EXECUTOR_SERVICE = Executors.newCachedThreadPool();
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Test
-    public void nullContext_throwsNullPointerException() throws Exception {
+    public void testNullContext_throwsNullPointerException() throws Exception {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    CobaltDataServiceFactory.createDataService(null, EXECUTOR_SERVICE);
+                    CobaltDataServiceFactory.createDataService(
+                            null, EXECUTOR_SERVICE, new FakeCobaltOperationLogger());
                 });
     }
 
     @Test
-    public void nullExecutorService_throwsNullPointerException() throws Exception {
+    public void testNullExecutorService_throwsNullPointerException() throws Exception {
         assertThrows(
                 NullPointerException.class,
                 () -> {
-                    CobaltDataServiceFactory.createDataService(CONTEXT, null);
+                    CobaltDataServiceFactory.createDataService(
+                            sContext, null, new FakeCobaltOperationLogger());
+                });
+    }
+
+    @Test
+    public void testNullOperationLogger_throwsNullPointerException() throws Exception {
+        assertThrows(
+                NullPointerException.class,
+                () -> {
+                    CobaltDataServiceFactory.createDataService(sContext, EXECUTOR_SERVICE, null);
                 });
     }
 }

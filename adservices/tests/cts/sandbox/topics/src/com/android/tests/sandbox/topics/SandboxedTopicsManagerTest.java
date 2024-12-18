@@ -16,6 +16,7 @@
 
 package com.android.tests.sandbox.topics;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
 import static com.android.tests.sandbox.topics.CtsSandboxedTopicsManagerTestsTestCase.TEST_EPOCH_JOB_PERIOD_MS;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -24,18 +25,20 @@ import android.adservices.clients.topics.AdvertisingTopicsClient;
 import android.adservices.topics.GetTopicsResponse;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.os.Bundle;
 
-import androidx.test.filters.FlakyTest;
-
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.common.annotations.SetIntegerFlag;
-import com.android.adservices.common.annotations.SetLongFlag;
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
+import com.android.adservices.topics.TopicsTestHelper;
 import com.android.compatibility.common.util.ShellUtils;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -49,6 +52,7 @@ import java.util.concurrent.TimeoutException;
 @SetLongFlag(name = FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value = TEST_EPOCH_JOB_PERIOD_MS)
 // We need to turn off random topic so that we can verify the returned topic.
 @SetIntegerFlag(name = FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC, value = 0)
+@EnableDebugFlag(KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED)
 public final class SandboxedTopicsManagerTest extends CtsSandboxedTopicsManagerTestsTestCase {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SDK_NAME = "com.android.tests.providers.sdk1";
@@ -58,6 +62,9 @@ public final class SandboxedTopicsManagerTest extends CtsSandboxedTopicsManagerT
 
     private final String mAdServicesPackageName =
             AdservicesTestHelper.getAdServicesPackageName(sContext, mTag);
+
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
 
     @Before
     public void setup() throws TimeoutException, InterruptedException {
@@ -78,7 +85,6 @@ public final class SandboxedTopicsManagerTest extends CtsSandboxedTopicsManagerT
     }
 
     @Test
-    @FlakyTest(bugId = 301370748)
     public void loadSdkAndRunTopicsApi() throws Exception {
         SdkSandboxManager sdkSandboxManager = sContext.getSystemService(SdkSandboxManager.class);
 
@@ -97,7 +103,10 @@ public final class SandboxedTopicsManagerTest extends CtsSandboxedTopicsManagerT
                         .setSdkName(SDK_NAME)
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
-        GetTopicsResponse response = advertisingTopicsClient.getTopics().get();
+
+        GetTopicsResponse response =
+                TopicsTestHelper.getTopicsWithBroadcast(sContext, advertisingTopicsClient);
+
         assertThat(response.getTopics()).isEmpty();
 
         // Now force the Epoch Computation Job. This should be done in the same epoch for

@@ -24,6 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"允許應用程式存取 AdServices Attribution API。"</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"存取 AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"允許應用程式存取 AdServices Custom Audience API。"</string>
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"存取 AdServices Ad Selection API"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"允許應用程式存取 AdServices Ad Selection API。"</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"存取 AdServices Protected Signals API"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"允許應用程式存取 AdServices Protected Signals API。"</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"AdID API 存取權"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"允許應用程式存取 AdID API。"</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"存取 AdServices Consent API"</string>
@@ -62,7 +66,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"你已選擇不參與"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"感謝回覆。你的裝置已關閉 Privacy Sandbox。\n\n如果你改變心意或者想瞭解詳情，請前往隱私權設定。"</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"隱私權設定"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"我知道了"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"你已加入 Beta 版測試計畫"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"你的裝置已啟用 Privacy Sandbox，應用程式可以測試這些新技術，以更保護隱私的方式向你顯示廣告。你隨時可以前往隱私權設定關閉 Beta 版。"</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"知道了"</string>
@@ -254,10 +257,10 @@
     <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"我可以如何管理這類資料？"</string>
     <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"你可以禁止特定應用程式向廣告合作夥伴提供活動資料，並隨時前往隱私權設定，重設或關閉應用程式建議廣告功能。Android 也會定期自動刪除這類資料。"</string>
     <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解 Android 如何保護隱私權"</a></string>
-    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"應用程式和其廣告合作夥伴可根據你在這部裝置上其他應用程式中的活動，放送個人化廣告，同時保障身分隱私和安全。\n\n舉例來說，如果你定期使用烹飪應用程式，可能會在其他應用程式中看到生鮮雜貨外送服務或相關內容的廣告。\n\nAndroid 會定期自動刪除活動資料，不過你也能禁止應用程式向廣告合作夥伴提供這類資訊。"</string>
-    <string name="settingsUI_pas_apps_view_footer" msgid="272934340041202862">"應用程式和其廣告合作夥伴往往會記住你感興趣的內容，用來提供個人化體驗。應用程式可安全儲存這類資訊，只供廣告合作夥伴用來在其他應用程式中放送廣告。\n\n你可以禁止應用程式向廣告合作夥伴提供活動資料。Android 也會定期自動刪除收到的活動資料，但如果你再次使用應用程式，該應用程式可能會重新出現在這份清單中。\n\n你看見的廣告是否為個人化廣告，具體取決於多項因素，例如這項設定、廣告主題設定、廣告 ID 設定，以及所用應用程式是否提供個人化廣告。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解應用程式建議廣告"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="2824173687944664612">"應用程式和其廣告合作夥伴可根據你在這部裝置上其他應用程式中的活動，放送個人化廣告，同時保障身分隱私和安全。\n\n舉例來說，假設你經常使用烹飪應用程式，可能會在其他應用程式中看到生鮮雜貨外送服務或相關內容的廣告。\n\nAndroid 會定期自動刪除活動資料，但你也可以禁止應用程式將這類資訊提供給廣告合作夥伴。\n\n這項功能雖然已可開啟，但可能要等到功能完全開放，且應用程式開始使用後，你才會看到應用程式清單。"</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="7911915685966727993">"一般來說，應用程式及其廣告合作夥伴會記住你感興趣的內容，用於提供個人化體驗。應用程式可安全儲存這類資訊，只供廣告合作夥伴用來在其他應用程式中放送廣告。\n\n你可以禁止應用程式將活動資料提供給廣告合作夥伴。Android 也會定期自動刪除收到的活動資料，但如果你再次使用應用程式，該應用程式可能會重新出現在這份清單中。\n\n你看見的廣告是否為個人化廣告，取決於多項因素，例如這項設定、廣告主題設定、廣告 ID 設定，以及你使用的應用程式是否會放送個人化廣告。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解應用程式建議廣告"</a></string>
     <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"為了限制可在應用程式之間分享哪些資訊，並協助保護你的身分資料，Android 會採用多項隱私保護措施，例如匯總資料和加入雜訊。\n\n瀏覽器可能具有類似設定。如果 Android 和瀏覽器都開啟了廣告評估功能，相關公司或許能在你使用的應用程式和造訪的網站上評估廣告成效差異。瀏覽記錄只會儲存在你的裝置上。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解廣告評估"</a></string>
-    <string name="settingsUI_pas_topics_view_footer" msgid="4765854921394271217">"Android 會根據過去幾週的應用程式使用情形，記錄你感興趣的主題。\n\n之後，你所用的應用程式就能要求 Android 提供這項資訊，為你顯示個人化廣告。Android 最多會提供 3 個主題，同時保護你的身分和應用程式使用情形資訊。\n\nAndroid 會定期自動刪除主題資料，但如果你繼續使用應用程式，可能會在清單中看到先前刪除的主題。或者，你可以禁止 Android 向應用程式提供特定主題。\n\n你看見的廣告是否為個人化廣告，具體取決於多項因素，例如這項設定、應用程式建議廣告設定、廣告 ID 設定，以及所用應用程式是否提供個人化廣告。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解廣告主題"</a></string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4957955199367073977">"Android 會根據你最近幾週的應用程式使用情形，記錄你感興趣的主題。\n\n之後，你使用的應用程式可以要求 Android 提供這類資訊，用於放送個人化廣告。Android 最多會分享 3 個主題，同時保護你的身分和應用程式使用情形資訊。\n\nAndroid 會定期自動刪除主題，但如果你繼續使用應用程式，就可能會在清單中再次看到已刪除的主題。你也可以禁止 Android 將你感興趣的特定主題告知應用程式。\n\n你可能會在應用程式中看到個人化廣告，實際情況取決於多項因素，例如這項設定、應用程式建議廣告設定、廣告 ID 設定，以及你使用的應用程式是否會顯示個人化廣告。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解廣告主題"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"這張彩色插圖中的符號代表音樂、新聞和體育賽事等興趣喜好主題"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"這張彩色插圖中的圓圈內有一個鎖頭"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"這張小型黑白插圖中有由九個圓點組成的正方形"</string>
@@ -591,7 +594,7 @@
     <string name="topic10327" msgid="3594488251348215868">"相片與影片分享"</string>
     <string name="topic10328" msgid="5431605505487660527">"相片與圖片分享"</string>
     <string name="topic10329" msgid="2949598007790820705">"影片分享"</string>
-    <string name="topic10330" msgid="4210169032750748349">"外觀"</string>
+    <string name="topic10330" msgid="4210169032750748349">"造型"</string>
     <string name="topic10331" msgid="9148081156366912077">"社群網路應用程式與外掛程式"</string>
     <string name="topic10332" msgid="1812925257476776861">"社群網路"</string>
     <string name="topic10333" msgid="5793613565022694596">"人文與社會"</string>

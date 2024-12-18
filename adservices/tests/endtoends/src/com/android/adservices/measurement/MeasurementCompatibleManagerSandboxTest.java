@@ -16,6 +16,14 @@
 
 package com.android.adservices.measurement;
 
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -39,58 +47,35 @@ import android.adservices.measurement.WebSourceRegistrationRequestInternal;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
-import android.app.sdksandbox.SandboxedSdkContext;
-import android.content.Context;
 import android.net.Uri;
 
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
-import androidx.test.runner.AndroidJUnit4;
+import com.android.adservices.AdServicesEndToEndTestCase;
+import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.common.SdkLevelSupportRule;
-import com.android.compatibility.common.util.ShellUtils;
-
-import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 
 import java.util.Collections;
 import java.util.concurrent.Executor;
 
-@SmallTest
-@RunWith(AndroidJUnit4.class)
-public final class MeasurementCompatibleManagerSandboxTest {
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
-    protected static final Context sSandboxedSdkContext =
-            new SandboxedSdkContext(
-                    /* baseContext = */ sContext,
-                    /* classLoader = */ sContext.getClassLoader(),
-                    /* clientPackageName = */ sContext.getPackageName(),
-                    /* info = */ sContext.getApplicationInfo(),
-                    /* sdkName = */ "sdkName",
-                    /* sdkCeDataDir = */ null,
-                    /* sdkDeDataDir = */ null,
-                    /* isCustomizedSdkContext = */ false);
-
+@DisableGlobalKillSwitch
+@RequiresSdkLevelAtLeastT
+@SetFlagDisabled(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH)
+@SetFlagDisabled(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH)
+@SetFlagDisabled(KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH)
+@SetFlagDisabled(KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH)
+@SetFlagDisabled(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH)
+@SetFlagDisabled(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH)
+@SetFlagDisabled(KEY_MEASUREMENT_KILL_SWITCH)
+public final class MeasurementCompatibleManagerSandboxTest extends AdServicesEndToEndTestCase {
     private Executor mMockCallbackExecutor;
     private AdServicesOutcomeReceiver mMockOutcomeReceiver;
     private IMeasurementService mMockMeasurementService;
 
     private MeasurementCompatibleManager mMeasurementManager;
-
-    // Ignore tests when device is not at least T
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastT();
-
-    // Skip the test if it runs on unsupported platforms.
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
 
     @Before
     public void setUp() {
@@ -115,13 +100,6 @@ public final class MeasurementCompatibleManagerSandboxTest {
                         })
                 .when(adIdManager)
                 .getAdId(any(), any(AdServicesOutcomeReceiver.class));
-
-        overrideMeasurementKillSwitches(true);
-    }
-
-    @After
-    public void teardown() {
-        overrideMeasurementKillSwitches(false);
     }
 
     @Test
@@ -137,8 +115,8 @@ public final class MeasurementCompatibleManagerSandboxTest {
                 ArgumentCaptor.forClass(RegistrationRequest.class);
 
         verify(mMockMeasurementService, timeout(2000)).register(captor.capture(), any(), any());
-        Assert.assertNotNull(captor.getValue());
-        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
+        expect.that(captor.getValue()).isNotNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(mPackageName);
     }
 
     @Test
@@ -154,8 +132,8 @@ public final class MeasurementCompatibleManagerSandboxTest {
                 ArgumentCaptor.forClass(RegistrationRequest.class);
 
         verify(mMockMeasurementService, timeout(2000)).register(captor.capture(), any(), any());
-        Assert.assertNotNull(captor.getValue());
-        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
+        expect.that(captor.getValue()).isNotNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(mPackageName);
     }
 
     @Test
@@ -187,8 +165,8 @@ public final class MeasurementCompatibleManagerSandboxTest {
 
         verify(mMockMeasurementService, timeout(2000))
                 .registerWebSource(captor.capture(), any(), any());
-        Assert.assertNotNull(captor.getValue());
-        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
+        expect.that(captor.getValue()).isNotNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(mPackageName);
     }
 
     @Test
@@ -213,8 +191,8 @@ public final class MeasurementCompatibleManagerSandboxTest {
 
         verify(mMockMeasurementService, timeout(2000))
                 .registerWebTrigger(captor.capture(), any(), any());
-        Assert.assertNotNull(captor.getValue());
-        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
+        expect.that(captor.getValue()).isNotNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(mPackageName);
     }
 
     @Test
@@ -235,8 +213,8 @@ public final class MeasurementCompatibleManagerSandboxTest {
 
         verify(mMockMeasurementService, timeout(2000))
                 .deleteRegistrations(captor.capture(), any(), any());
-        Assert.assertNotNull(captor.getValue());
-        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
+        expect.that(captor.getValue()).isNotNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(mPackageName);
     }
 
     @Test
@@ -249,37 +227,7 @@ public final class MeasurementCompatibleManagerSandboxTest {
 
         verify(mMockMeasurementService, timeout(2000))
                 .getMeasurementApiStatus(captor.capture(), any(), any());
-        Assert.assertNotNull(captor.getValue());
-        Assert.assertEquals(sContext.getPackageName(), captor.getValue().getAppPackageName());
-    }
-
-    // Override measurement related kill switch to ignore the effect of actual PH values.
-    // If isOverride = true, override measurement related kill switch to OFF to allow adservices
-    // If isOverride = false, override measurement related kill switch to meaningless value so that
-    // PhFlags will use the default value.
-    private void overrideMeasurementKillSwitches(boolean isOverride) {
-        String overrideString = isOverride ? "false" : "null";
-        ShellUtils.runShellCommand(
-                "device_config put adservices global_kill_switch " + overrideString);
-        ShellUtils.runShellCommand(
-                "device_config put adservices measurement_kill_switch " + overrideString);
-        ShellUtils.runShellCommand(
-                "device_config put adservices measurement_api_register_source_kill_switch "
-                        + overrideString);
-        ShellUtils.runShellCommand(
-                "device_config put adservices measurement_api_register_trigger_kill_switch "
-                        + overrideString);
-        ShellUtils.runShellCommand(
-                "device_config put adservices measurement_api_register_web_source_kill_switch "
-                        + overrideString);
-        ShellUtils.runShellCommand(
-                "device_config put adservices measurement_api_register_web_trigger_kill_switch "
-                        + overrideString);
-        ShellUtils.runShellCommand(
-                "device_config put adservices measurement_api_delete_registrations_kill_switch "
-                        + overrideString);
-        ShellUtils.runShellCommand(
-                "device_config put adservices measurement_api_status_kill_switch "
-                        + overrideString);
+        expect.that(captor.getValue()).isNotNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(mPackageName);
     }
 }

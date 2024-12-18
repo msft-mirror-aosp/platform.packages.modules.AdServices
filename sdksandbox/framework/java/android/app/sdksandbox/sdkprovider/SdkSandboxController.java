@@ -15,6 +15,7 @@
  */
 package android.app.sdksandbox.sdkprovider;
 
+import static android.app.sdksandbox.SdkSandboxManager.getResultCodeForLoadSdkException;
 import static android.app.sdksandbox.sdkprovider.SdkSandboxController.SDK_SANDBOX_CONTROLLER_SERVICE;
 
 import android.annotation.CallbackExecutor;
@@ -132,10 +133,18 @@ public class SdkSandboxController {
      */
     public @NonNull List<SandboxedSdk> getSandboxedSdks() {
         enforceSandboxedSdkContextInitialization();
+        SandboxLatencyInfo sandboxLatencyInfo =
+                new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_GET_SANDBOXED_SDKS_VIA_CONTROLLER);
+        // TODO(b/319659746) : Rename the method to something more generic than using App.
+        // TODO(b/321909787) : Use injector to set time in order to write unit tests.
+        sandboxLatencyInfo.setTimeAppCalledSystemServer(SystemClock.elapsedRealtime());
+
         try {
             return mSdkSandboxLocalSingleton
                     .getSdkToServiceCallback()
-                    .getSandboxedSdks(((SandboxedSdkContext) mContext).getClientPackageName());
+                    .getSandboxedSdks(
+                            ((SandboxedSdkContext) mContext).getClientPackageName(),
+                            sandboxLatencyInfo);
         } catch (RemoteException e) {
             throw e.rethrowFromSystemServer();
         }
@@ -165,13 +174,13 @@ public class SdkSandboxController {
             @NonNull OutcomeReceiver<SandboxedSdk, LoadSdkException> receiver) {
         enforceSandboxedSdkContextInitialization();
         final LoadSdkReceiverProxy callbackProxy = new LoadSdkReceiverProxy(executor, receiver);
+        SandboxLatencyInfo sandboxLatencyInfo =
+                new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_LOAD_SDK_VIA_CONTROLLER);
+        // TODO(b/319659746) : Rename the method to something more generic than using App.
+        // TODO(b/321909787) : Use injector to set time in order to write unit tests.
+        sandboxLatencyInfo.setTimeAppCalledSystemServer(SystemClock.elapsedRealtime());
 
         try {
-            SandboxLatencyInfo sandboxLatencyInfo =
-                    new SandboxLatencyInfo(SandboxLatencyInfo.METHOD_LOAD_SDK_VIA_CONTROLLER);
-            // TODO(b/319659746) : Rename the method to something more generic than using App.
-            // TODO(b/321909787) : Use injector to set time in order to write unit tests.
-            sandboxLatencyInfo.setTimeAppCalledSystemServer(SystemClock.elapsedRealtime());
             mSdkSandboxLocalSingleton
                     .getSdkToServiceCallback()
                     .loadSdk(
@@ -401,6 +410,7 @@ public class SdkSandboxController {
         @Override
         public void onLoadSdkFailure(
                 LoadSdkException exception, SandboxLatencyInfo sandboxLatencyInfo) {
+            sandboxLatencyInfo.setResultCode(getResultCodeForLoadSdkException(exception));
             SdkSandboxController.this.logLatenciesFromSandbox(sandboxLatencyInfo);
             mExecutor.execute(() -> mCallback.onError(exception));
         }

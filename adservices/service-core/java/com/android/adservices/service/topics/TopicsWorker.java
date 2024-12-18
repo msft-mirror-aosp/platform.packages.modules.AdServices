@@ -37,6 +37,8 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
@@ -53,7 +55,6 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 @ThreadSafe
 @WorkerThread
@@ -64,6 +65,16 @@ public class TopicsWorker {
     // Singleton instance of the TopicsWorker.
     @GuardedBy("SINGLETON_LOCK")
     private static volatile TopicsWorker sTopicsWorker;
+
+    private static Supplier<TopicsWorker> sTopicsWorkerSupplier =
+            Suppliers.memoize(
+                    () ->
+                            new TopicsWorker(
+                                    EpochManager.getInstance(),
+                                    CacheManager.getInstance(),
+                                    BlockedTopicsManager.getInstance(),
+                                    AppUpdateManager.getInstance(),
+                                    FlagsFactory.getFlags()));
 
     // Lock for concurrent Read and Write processing in TopicsWorker.
     // Read-only API will only need to acquire Read Lock.
@@ -98,21 +109,21 @@ public class TopicsWorker {
      * existing instance will be returned.
      */
     @NonNull
-    public static TopicsWorker getInstance(Context context) {
+    public static TopicsWorker getInstance() {
         if (sTopicsWorker == null) {
             synchronized (SINGLETON_LOCK) {
                 if (sTopicsWorker == null) {
-                    sTopicsWorker =
-                            new TopicsWorker(
-                                    EpochManager.getInstance(context),
-                                    CacheManager.getInstance(context),
-                                    BlockedTopicsManager.getInstance(context),
-                                    AppUpdateManager.getInstance(context),
-                                    FlagsFactory.getFlags());
+                    sTopicsWorker = sTopicsWorkerSupplier.get();
                 }
             }
         }
         return sTopicsWorker;
+    }
+
+    /** Gets the singleton to be used for lazy initialization. */
+    @NonNull
+    public static Supplier<TopicsWorker> getSingletonSupplier() {
+        return sTopicsWorkerSupplier;
     }
 
     /**

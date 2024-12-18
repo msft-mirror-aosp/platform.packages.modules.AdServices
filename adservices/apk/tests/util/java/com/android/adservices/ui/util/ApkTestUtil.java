@@ -17,6 +17,7 @@
 package com.android.adservices.ui.util;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.app.Instrumentation;
 import android.content.Intent;
@@ -27,6 +28,7 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
+import androidx.test.uiautomator.BySelector;
 import androidx.test.uiautomator.Direction;
 import androidx.test.uiautomator.UiDevice;
 import androidx.test.uiautomator.UiObject;
@@ -36,7 +38,6 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.shared.testing.common.FileHelper;
-import com.android.compatibility.common.util.ShellUtils;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -70,10 +71,7 @@ public class ApkTestUtil {
     }
 
     public static UiObject2 getConsentSwitch(UiDevice device) {
-        UiObject2 consentSwitch =
-                device.wait(
-                        Until.findObject(By.clazz("android.widget.Switch")),
-                        PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
+        UiObject2 consentSwitch = scrollToFindElement(device, By.clazz("android.widget.Switch"));
         // Swipe the screen by the width of the toggle so it's not blocked by the nav bar on AOSP
         // devices.
         if (device.getDisplayHeight() - consentSwitch.getVisibleBounds().centerY() < 100) {
@@ -121,39 +119,50 @@ public class ApkTestUtil {
     }
 
     public static UiObject2 scrollTo(UiDevice device, int resId) {
-        device.waitForWindowUpdate(null, WINDOW_LAUNCH_TIMEOUT);
-        UiObject2 scrollView = device.wait(
-                Until.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW)),
-                PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         String targetStr = getString(resId);
-        if (scrollView != null) {
-            scrollView.scrollUntil(
-                    Direction.DOWN,
-                    Until.findObject(
-                            By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE))));
-            scrollView.scrollUntil(
-                    Direction.UP,
-                    Until.findObject(
-                            By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE))));
+        if (targetStr == null) {
+            assertWithMessage("scrollTo() didn't find string with resource id %s)", resId).fail();
         }
-        return getElement(device, resId);
+        UiObject2 uiObject2 =
+                scrollToFindElement(
+                        device, By.text(Pattern.compile(targetStr, Pattern.CASE_INSENSITIVE)));
+
+        if (uiObject2 == null) {
+            assertWithMessage(
+                            "scrollTo() didn't find element with text \"%s\" (resId=%s)",
+                            targetStr, resId)
+                    .fail();
+        }
+        return uiObject2;
     }
 
     public static UiObject2 scrollTo(UiDevice device, String regexStr) {
+        UiObject2 uiObject2 =
+                scrollToFindElement(
+                        device, By.res(Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE)));
+        if (uiObject2 == null) {
+            assertWithMessage(
+                            "scrollTo() didn't find element whose text matches regex \"%s\")",
+                            regexStr)
+                    .fail();
+        }
+        return uiObject2;
+    }
+
+    public static UiObject2 scrollToFindElement(UiDevice device, BySelector selector) {
         device.waitForWindowUpdate(null, WINDOW_LAUNCH_TIMEOUT);
         UiObject2 scrollView =
                 device.wait(
                         Until.findObject(By.scrollable(true).clazz(ANDROID_WIDGET_SCROLLVIEW)),
                         PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
-        if (scrollView != null) {
-            scrollView.scrollUntil(
-                    Direction.DOWN,
-                    Until.findObject(By.res(Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE))));
-            scrollView.scrollUntil(
-                    Direction.UP,
-                    Until.findObject(By.res(Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE))));
+        if (scrollView == null) {
+            return null;
         }
-        return getElement(device, regexStr);
+        UiObject2 element = scrollView.scrollUntil(Direction.DOWN, Until.findObject(selector));
+
+        return element != null
+                ? element
+                : scrollView.scrollUntil(Direction.UP, Until.findObject(selector));
     }
 
     /** Returns the UiObject corresponding to a resource ID. */
@@ -191,20 +200,6 @@ public class ApkTestUtil {
         return objs.get(index);
     }
 
-    /** Returns the string corresponding to a resource regex string and index. */
-    public static UiObject2 getElement(UiDevice device, String regexStr) {
-        Log.d(
-                TAG,
-                "Waiting for object using res id regex "
-                        + regexStr
-                        + " until a timeout of "
-                        + PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS
-                        + " ms");
-        return device.wait(
-                Until.findObject(By.res(Pattern.compile(regexStr, Pattern.CASE_INSENSITIVE))),
-                PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
-    }
-
     /** Returns the UiObject corresponding to a resource ID. */
     public static UiObject getPageElement(UiDevice device, int resId) {
         return device.findObject(new UiSelector().text(getString(resId)));
@@ -223,9 +218,6 @@ public class ApkTestUtil {
 
     /** Launch Privacy Sandbox Setting View with UX extra. */
     public static void launchSettingViewGivenUx(UiDevice device, int launchTimeout, String ux) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices consent_notification_activity_debug_mode true");
-
         // Launch the setting view.
         Intent intent = new Intent(PRIVACY_SANDBOX_UI);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

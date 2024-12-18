@@ -24,6 +24,10 @@
     <string name="permdesc_accessAdServicesAttribution" msgid="4553614196392171">"允許應用程式存取 AdServices Attribution API。"</string>
     <string name="permlab_accessAdServicesCustomAudience" msgid="4365562651019065480">"存取 AdServices Custom Audience API"</string>
     <string name="permdesc_accessAdServicesCustomAudience" msgid="6713089438953075862">"允許應用程式存取 AdServices Custom Audience API。"</string>
+    <string name="permlab_accessAdServicesAdSelection" msgid="672819511145374384">"存取 AdServices Ad Selection API"</string>
+    <string name="permdesc_accessAdServicesAdSelection" msgid="6095291420798129879">"允許應用程式存取 AdServices Ad Selection API。"</string>
+    <string name="permlab_accessAdServicesProtectedSignals" msgid="147489803040522247">"存取 AdServices Protected Signals API"</string>
+    <string name="permdesc_accessAdServicesProtectedSignals" msgid="2320760922272886523">"允許應用程式存取 AdServices Protected Signals API。"</string>
     <string name="permlab_accessAdServicesAdId" msgid="1615451959935917231">"廣告 ID API 存取權"</string>
     <string name="permdesc_accessAdServicesAdId" msgid="6145143976659732220">"允許應用程式存取廣告 ID API。"</string>
     <string name="permlab_accessAdServicesConsent" msgid="4218463631288201212">"存取 AdServices Consent API"</string>
@@ -62,7 +66,6 @@
     <string name="notificationUI_confirmation_decline_title" msgid="2937414869667970488">"你已選擇不參與"</string>
     <string name="notificationUI_confirmation_decline_subtitle" msgid="3295085635387592533">"感謝你的回覆。你的裝置已停用私隱沙箱。\n\n如果你改變主意或希望瞭解詳情，請前往私隱權設定。"</string>
     <string name="notificationUI_confirmation_left_control_button_text" msgid="3258790274841570794">"私隱權設定"</string>
-    <string name="notificationUI_confirmation_right_control_button_text" msgid="5562016954716134614">"知道了"</string>
     <string name="notificationUI_container2_title" msgid="3719027076775659791">"你已加入 Beta 版本測試計劃"</string>
     <string name="notificationUI_container2_body_text" msgid="939678704046987170">"你的裝置已啟用私隱沙箱，因此應用程式可測試這些更能保護私隱的新方式，向你顯示廣告。你可隨時在私隱權設定中停用 Beta 版本。"</string>
     <string name="notificationUI_right_control_button_text" msgid="3316102543563013793">"知道了"</string>
@@ -254,10 +257,10 @@
     <string name="notificationUI_pas_app_dropdown_subtitle3" msgid="140629612535108432">"如何管理這些資料？"</string>
     <string name="notificationUI_pas_app_body3" msgid="6455200181055776674">"你可禁止特定應用程式與廣告合作夥伴分享活動資料，並隨時前往私隱權設定，重設或關閉應用程式建議廣告。Android 亦會定期自動刪除這些資料。"</string>
     <string name="notificationUI_pas_leanr_more_link" msgid="8029331460965381868"><a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解 Android 如何協助保障你的私隱"</a></string>
-    <string name="settingsUI_pas_apps_view_body_text" msgid="4229629051979290546">"應用程式及其廣告合作夥伴可根據此裝置上其他應用程式的活動放送個人化廣告，同時保護你的資料私隱和安全。\n\n例如，如果你定期使用烹飪應用程式，可能會在其他應用程式中看到雜貨送貨服務或相關內容。\n\nAndroid 會定期自動刪除你的活動，你亦可禁止應用程式與廣告合作夥伴分享這些資料。"</string>
-    <string name="settingsUI_pas_apps_view_footer" msgid="272934340041202862">"應用程式及其廣告合作夥伴通常會記住你感興趣的項目，以便為你提供個人化體驗。應用程式可安全儲存這些資料，只有廣告合作夥伴才可用來在其他應用程式中顯示廣告。\n\n你可禁止應用程式與廣告合作夥伴分享活動資料。Android 亦會定期自動刪除已分享的活動資料。因此，如果你再次使用應用程式，該應用程式便可能會再次在此清單中顯示。\n\n你看到的廣告是否個人化廣告基於多項因素，例如此設定、應用程式建議廣告設定、廣告 ID 設定，以及所用應用程式是否提供個人化廣告。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解應用程式建議廣告"</a></string>
+    <string name="settingsUI_pas_apps_view_body_text" msgid="2824173687944664612">"應用程式及其廣告合作夥伴可根據此裝置上其他應用程式的活動放送個人化廣告，同時保護你的資料私隱和安全。\n\n例如，如果你定期使用烹飪應用程式，可能會在其他應用程式中看到雜貨送貨服務或相關內容。\n\nAndroid 會定期自動刪除你的活動，你亦可禁止應用程式與廣告合作夥伴分享這些資料。\n\n雖然你可以啟用此功能，但在功能全面提供，應用程式亦開始使用後，你才會看到主題清單。"</string>
+    <string name="settingsUI_pas_apps_view_footer" msgid="7911915685966727993">"應用程式及其廣告合作夥伴通常會記住你感興趣的項目，以便為你提供個人化體驗。應用程式可安全儲存這些資料，只有廣告合作夥伴才可用來在其他應用程式中顯示廣告。\n\n你可禁止應用程式與廣告合作夥伴分享活動資料。Android 亦會定期自動刪除已分享的活動資料。因此，如果你再次使用應用程式，該應用程式便可能會再次在此清單中顯示。\n\n你看到的廣告是否個人化廣告基於多項因素，例如此設定、應用程式建議廣告設定、廣告 ID 設定，以及所用應用程式是否提供個人化廣告。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解應用程式建議廣告"</a></string>
     <string name="settingsUI_pas_msmt_view_footer" msgid="1547779101661050529">"為限制可在應用程式之間分享的資料，並協助保護你的身分，Android 會採用多項私隱保護措施，例如彙整資料和加入雜訊。\n\n你的瀏覽器可能會有類似設定。如果 Android 和瀏覽器都開啟了廣告成效評估設定，廣告商或許能在你使用的應用程式和瀏覽的網站上評估廣告成效。你的瀏覽記錄會保留在裝置上，絕不會外洩。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解廣告成效評估"</a></string>
-    <string name="settingsUI_pas_topics_view_footer" msgid="4765854921394271217">"Android 會根據你過去幾星期使用過的應用程式，記住你感興趣的主題。\n\n你日後使用的應用程式可以要求 Android 提供相關主題，以便向你顯示個人化廣告。Android 最多會分享 3 個主題，並同時保護你的身分，以及與應用程式使用情況相關的資料。\n\nAndroid 會定期自動刪除主題，如果你繼續使用應用程式，特定主題可能會再次顯示在清單中。你亦可封鎖不希望 Android 與應用程式分享的主題。\n\n你看到的廣告是否個人化廣告基於多項因素，例如此設定、應用程式建議廣告設定、廣告 ID 設定，以及所用應用程式是否提供個人化廣告。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解廣告主題"</a></string>
+    <string name="settingsUI_pas_topics_view_footer" msgid="4957955199367073977">"Android 會根據你過去幾星期使用過的應用程式，記住你感興趣的主題。\n\n你日後使用的應用程式可以要求 Android 提供相關主題，以便向你顯示個人化廣告。Android 最多會分享 3 個主題，並同時保護你的身分，以及與應用程式使用情況相關的資料。\n\nAndroid 會定期自動刪除主題，如果你繼續使用應用程式，特定主題可能會再次顯示在清單中。你亦可封鎖不希望 Android 與應用程式分享的主題。\n\n你看到的廣告是否個人化廣告基於多項因素，例如此設定、應用程式建議廣告設定、廣告 ID 設定，以及所用應用程式是否提供個人化廣告。\n\n"<a href="https://support.google.com/android?p=ad_privacy">"進一步瞭解廣告主題"</a></string>
     <string name="ic_consent_notification_ga_image_description" msgid="3533533250410782396">"呢張彩色插圖入面嘅符號代表音樂、新聞同體育賽事之類嘅興趣主題"</string>
     <string name="ic_main_view_ga_image_description" msgid="2629819188282778867">"呢張彩色插圖入面嘅圓圈入面有一個鎖"</string>
     <string name="ic_placeholder_icon_for_empty_apps_list_description" msgid="966722661475466048">"呢張細嘅黑白插圖入面有由九個圓點組成嘅正方形"</string>

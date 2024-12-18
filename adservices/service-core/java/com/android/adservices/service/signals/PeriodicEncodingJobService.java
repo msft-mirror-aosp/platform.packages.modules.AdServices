@@ -39,6 +39,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -70,7 +71,7 @@ public class PeriodicEncodingJobService extends JobService {
 
         LoggerFactory.getFledgeLogger().d("PeriodicEncodingJobService.onStartJob");
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID);
 
         if (!FlagsFactory.getFlags().getProtectedSignalsPeriodicEncodingEnabled()) {
@@ -102,7 +103,8 @@ public class PeriodicEncodingJobService extends JobService {
                     /* doRecord=*/ true);
         }
 
-        PeriodicEncodingJobWorker encodingWorker = PeriodicEncodingJobWorker.getInstance(this);
+        int traceCookie = Tracing.beginAsyncSection(Tracing.START_JOB);
+        PeriodicEncodingJobWorker encodingWorker = PeriodicEncodingJobWorker.getInstance();
         encodingWorker
                 .encodeProtectedSignals()
                 .addCallback(
@@ -113,26 +115,26 @@ public class PeriodicEncodingJobService extends JobService {
                                         .d("PeriodicEncodingJobService encoding completed");
 
                                 boolean shouldRetry = false;
-                                AdServicesJobServiceLogger.getInstance(
-                                                PeriodicEncodingJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
                                                 /* isSuccessful= */ true,
                                                 shouldRetry);
 
+                                Tracing.endAsyncSection(Tracing.START_JOB, traceCookie);
                                 jobFinished(params, shouldRetry);
                             }
 
                             @Override
                             public void onFailure(Throwable t) {
                                 boolean shouldRetry = false;
-                                AdServicesJobServiceLogger.getInstance(
-                                                PeriodicEncodingJobService.this)
+                                AdServicesJobServiceLogger.getInstance()
                                         .recordJobFinished(
                                                 PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
                                                 /* isSuccessful= */ false,
                                                 shouldRetry);
 
+                                Tracing.endAsyncSection(Tracing.START_JOB, traceCookie);
                                 jobFinished(params, shouldRetry);
                             }
                         },
@@ -143,10 +145,10 @@ public class PeriodicEncodingJobService extends JobService {
     @Override
     public boolean onStopJob(JobParameters params) {
         LoggerFactory.getFledgeLogger().d("PeriodicEncodingJobService.onStopJob");
-        PeriodicEncodingJobWorker.getInstance(this).stopWork();
+        PeriodicEncodingJobWorker.getInstance().stopWork();
 
         boolean shouldRetry = true;
-        AdServicesJobServiceLogger.getInstance(PeriodicEncodingJobService.this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID, shouldRetry);
 
         return shouldRetry;
@@ -173,8 +175,13 @@ public class PeriodicEncodingJobService extends JobService {
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
-        if ((jobScheduler.getPendingJob(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID) == null)
-                || forceSchedule) {
+        JobInfo job = jobScheduler.getPendingJob(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID);
+        long existingJobPeriodMillis = flags.getProtectedSignalPeriodicEncodingJobPeriodMs();
+        if (job == null
+                || forceSchedule
+                // Reschedule the job if the period flag has changed
+                || (job.getIntervalMillis() != existingJobPeriodMillis
+                        && JobInfo.getMinPeriodMillis() < existingJobPeriodMillis)) {
             schedule(context, flags);
         } else {
             LoggerFactory.getFledgeLogger()
@@ -182,7 +189,6 @@ public class PeriodicEncodingJobService extends JobService {
                             "Protected Signals periodic encoding job already scheduled, skipping "
                                     + "reschedule");
         }
-        // TODO(b/267651517) Jobs should be rescheduled if the job-params get updated
     }
 
     /**
@@ -204,7 +210,6 @@ public class PeriodicEncodingJobService extends JobService {
                                 PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID,
                                 new ComponentName(context, PeriodicEncodingJobService.class))
                         .setRequiresBatteryNotLow(true)
-                        .setRequiresDeviceIdle(true)
                         .setPeriodic(
                                 flags.getProtectedSignalPeriodicEncodingJobPeriodMs(),
                                 flags.getProtectedSignalsPeriodicEncodingJobFlexMs())
@@ -221,7 +226,7 @@ public class PeriodicEncodingJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_ID, skipReason);
         }
 

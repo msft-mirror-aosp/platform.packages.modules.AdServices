@@ -17,24 +17,28 @@
 package android.adservices.debuggablects;
 
 import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
-import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
 import static com.android.adservices.service.FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
-import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
+import android.adservices.utils.ScenarioDispatcherFactory;
 import android.adservices.utils.Scenarios;
 import android.net.Uri;
 
-import com.android.adservices.common.annotations.SetFlagEnabled;
-import com.android.adservices.common.annotations.SetIntegerFlag;
-import com.android.compatibility.common.util.ShellUtils;
+import com.android.adservices.common.AdServicesShellCommandHelper;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,47 +48,55 @@ import java.util.List;
 
 @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = PPAPI_AND_SYSTEM_SERVER)
-@SetFlagEnabled(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
-@SetFlagEnabled(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED)
-public class CustomAudienceShellCommandsScenarioTest extends FledgeScenarioTest {
-    private static final String OWNER = "android.adservices.debuggablects";
+@EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
+@EnableDebugFlag(KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
+@RequiresSdkLevelAtLeastS(reason = "Custom Audience is enabled for S+")
+public final class CustomAudienceShellCommandsScenarioTest extends FledgeDebuggableScenarioTest {
+    private final AdServicesShellCommandHelper mShellCommandHelper =
+            new AdServicesShellCommandHelper();
 
     @Test
     public void testRun_refreshCustomAudiences_verifyCustomAudienceChanged() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-refresh-ca.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-refresh-ca.json"));
         joinCustomAudience(SHOES_CA);
+        AdTechIdentifier adTechIdentifier =
+                AdTechIdentifier.fromString(dispatcher.getBaseAddressWithPrefix().getHost());
+        String baseAddressWithPrefix = dispatcher.getBaseAddressWithPrefix().toString();
 
-        CustomAudience customAudienceBefore = getCustomAudience();
-        runAndParseShellCommand(
-                "custom-audience", "refresh", OWNER, mAdTechIdentifier.toString(), SHOES_CA);
-        CustomAudience customAudienceAfter = getCustomAudience();
+        CustomAudience customAudienceBefore = getCustomAudience(adTechIdentifier);
+        mShellCommandHelper.runCommand(
+                "custom-audience refresh --owner %s --buyer %s --name %s",
+                mPackageName, adTechIdentifier, SHOES_CA);
+        CustomAudience customAudienceAfter = getCustomAudience(adTechIdentifier);
 
         assertThat(customAudienceBefore).isNotEqualTo(customAudienceAfter);
         assertThat(customAudienceAfter.getTrustedBiddingData().getTrustedBiddingUri())
-                .isEqualTo(Uri.parse(getServerBaseAddress() + Scenarios.BIDDING_SIGNALS_PATH));
+                .isEqualTo(Uri.parse(baseAddressWithPrefix + Scenarios.BIDDING_SIGNALS_PATH));
         assertThat(customAudienceAfter.getTrustedBiddingData().getTrustedBiddingKeys())
                 .isEqualTo(List.of("key1", "key2"));
         assertThat(customAudienceAfter.getUserBiddingSignals())
                 .isEqualTo(
                         AdSelectionSignals.fromString(
                                 "{\"valid\":true,\"arbitrary\":\"yes\"}", true));
+
         assertThat(customAudienceAfter.getAds())
                 .isEqualTo(
                         List.of(
                                 new AdData.Builder()
                                         .setRenderUri(
                                                 Uri.parse(
-                                                        getServerBaseAddress()
+                                                        baseAddressWithPrefix
                                                                 + Scenarios.AD_RENDER_1))
                                         .setMetadata("{\"valid\":1}")
                                         .build(),
                                 new AdData.Builder()
                                         .setRenderUri(
                                                 Uri.parse(
-                                                        getServerBaseAddress()
+                                                        baseAddressWithPrefix
                                                                 + Scenarios.AD_RENDER_2))
                                         .setMetadata("{\"valid\":2}")
                                         .build()));
@@ -93,20 +105,12 @@ public class CustomAudienceShellCommandsScenarioTest extends FledgeScenarioTest 
         leaveCustomAudience(SHOES_CA);
     }
 
-    private CustomAudience getCustomAudience() throws JSONException {
+    private CustomAudience getCustomAudience(AdTechIdentifier adTechIdentifier)
+            throws JSONException {
         return CustomAudienceShellCommandHelper.fromJson(
                 new JSONObject(
-                        runAndParseShellCommand(
-                                "custom-audience",
-                                "view",
-                                OWNER,
-                                mAdTechIdentifier.toString(),
-                                SHOES_CA)));
-    }
-
-    private static String runAndParseShellCommand(String... commandArgs) {
-        return ShellUtils.runShellCommand(
-                "cmd adservices_manager %s %s --owner %s --buyer %s --name %s",
-                (Object[]) commandArgs);
+                        mShellCommandHelper.runCommand(
+                                "custom-audience view --owner %s --buyer %s --name %s",
+                                mPackageName, adTechIdentifier, SHOES_CA)));
     }
 }

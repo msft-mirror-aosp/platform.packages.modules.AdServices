@@ -18,13 +18,12 @@ package com.android.cobalt.observations;
 
 import static java.util.Objects.requireNonNull;
 
-import android.annotation.NonNull;
-
 import com.android.cobalt.data.DaoBuildingBlocks;
 import com.android.cobalt.data.ObservationGenerator;
 import com.android.cobalt.data.ReportKey;
 import com.android.cobalt.data.StringListEntry;
 import com.android.cobalt.domain.Project;
+import com.android.cobalt.logging.CobaltOperationLogger;
 import com.android.cobalt.system.SystemData;
 
 import com.google.cobalt.MetricDefinition;
@@ -40,18 +39,21 @@ public final class ObservationGeneratorFactory {
     private final DaoBuildingBlocks mDaoBuildingBlocks;
     private final PrivacyGenerator mPrivacyGenerator;
     private final SecureRandom mSecureRandom;
+    private final CobaltOperationLogger mOperationLogger;
 
     public ObservationGeneratorFactory(
-            @NonNull Project project,
-            @NonNull SystemData systemData,
-            @NonNull DaoBuildingBlocks daoBuildingBlocks,
-            @NonNull PrivacyGenerator privacyGenerator,
-            @NonNull SecureRandom secureRandom) {
+            Project project,
+            SystemData systemData,
+            DaoBuildingBlocks daoBuildingBlocks,
+            PrivacyGenerator privacyGenerator,
+            SecureRandom secureRandom,
+            CobaltOperationLogger operationLogger) {
         mProject = requireNonNull(project);
         mSystemData = requireNonNull(systemData);
         mDaoBuildingBlocks = requireNonNull(daoBuildingBlocks);
         mPrivacyGenerator = requireNonNull(privacyGenerator);
         mSecureRandom = requireNonNull(secureRandom);
+        mOperationLogger = requireNonNull(operationLogger);
     }
 
     /**
@@ -72,16 +74,14 @@ public final class ObservationGeneratorFactory {
      */
     public ObservationGenerator getObservationGenerator(
             MetricDefinition metric, ReportDefinition report, int dayIndex) {
-        switch (report.getPrivacyLevel()) {
-            case NO_ADDED_PRIVACY:
+        switch (report.getPrivacyMechanism()) {
+            case DE_IDENTIFICATION:
                 return getNonPrivateObservationGenerator(metric, report, dayIndex);
-            case LOW_PRIVACY:
-            case MEDIUM_PRIVACY:
-            case HIGH_PRIVACY:
+            case SHUFFLED_DIFFERENTIAL_PRIVACY:
                 return getPrivateObservationGenerator(metric, report);
             default:
                 throw new AssertionError(
-                        "Unknown or unset privacy level: " + report.getPrivacyLevelValue());
+                        "Unknown or unset privacy mechanism: " + report.getPrivacyMechanismValue());
         }
     }
 
@@ -92,6 +92,7 @@ public final class ObservationGeneratorFactory {
                 return new NonPrivateObservationGenerator(
                         mSecureRandom,
                         new IntegerEncoder(mSecureRandom),
+                        mOperationLogger,
                         mProject.getCustomerId(),
                         mProject.getProjectId(),
                         metric.getId(),
@@ -109,6 +110,7 @@ public final class ObservationGeneratorFactory {
                 return new NonPrivateObservationGenerator(
                         mSecureRandom,
                         new StringHistogramEncoder(stringHashList, mSecureRandom),
+                        mOperationLogger,
                         mProject.getCustomerId(),
                         mProject.getProjectId(),
                         metric.getId(),
@@ -127,7 +129,8 @@ public final class ObservationGeneratorFactory {
                         mSystemData,
                         mPrivacyGenerator,
                         mSecureRandom,
-                        new PrivateIntegerEncoder(mSecureRandom, metric, report),
+                        new PrivateIntegerEncoder(mSecureRandom, metric, report, mOperationLogger),
+                        mOperationLogger,
                         mProject.getCustomerId(),
                         mProject.getProjectId(),
                         metric,

@@ -1,0 +1,51 @@
+// Copyright (C) 2024 The Android Open Source Project
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+package {
+    default_applicable_licenses: ["Android-Apache-2.0"],
+}
+
+// Source for all tests - ideally should be used by a host-side
+// project to run all of them (without "host-side" dependencies like
+// tradefed), although currently is running on device
+// TODO(b/347083260): create a AdServicesSharedLibrariesSidelessTests
+// project, then don't test them on device anymore.
+filegroup {
+    name: "adservices-shared-sideless-tests-sources",
+    srcs: [
+        "java/**/*.java",
+    ],
+    visibility: [
+        "//packages/modules/AdServices/shared/tests:__subpackages__",
+    ],
+}
+
+// Source for tests that can run by themselves in a side-less project,
+// but could also be extended on device-side or host-side to provide
+// tests for the device-side / host-side counterpart (typically rules)
+// TODO(b/347083260): ideally it should be all of them (i.e, we should
+// get rid of this and use "adservices-shared-sideless-tests-sources"),
+// but there are some dependencies that are not available on host-side
+// (like SyncCallback)
+filegroup {
+    name: "adservices-shared-sideless-plus-tests-sources",
+    srcs: [
+        "java/com/android/adservices/shared/testing/flags/AbstractFlagsPreparerClassRuleTest.java",
+        "java/com/android/adservices/shared/testing/AbstractRuleTest.java",
+        "java/com/android/adservices/shared/testing/AbstractSdkLevelSupportedRuleTest.java",
+        "java/com/android/adservices/shared/testing/SharedSidelessTestCase.java",
+    ],
+    visibility: [
+        "//packages/modules/AdServices/shared/tests:__subpackages__",
+    ],
+}

@@ -166,9 +166,9 @@ public class UpdateAdCounterHistogramWorker {
     private Void validateRequest(@NonNull UpdateAdCounterHistogramInput inputParams) {
         sLogger.v("Validating updateAdCounterHistogram request");
 
-        if (!mFlags.getFledgeAdSelectionFilteringEnabled()) {
-            sLogger.v("Warning: Ad selection filtering disabled");
-            throw new IllegalStateException("Ad selection filtering disabled");
+        if (!mFlags.getFledgeFrequencyCapFilteringEnabled()) {
+            sLogger.v("Frequency cap filtering disabled");
+            throw new IllegalStateException();
         }
 
         mAdSelectionServiceFilter.filterRequest(
@@ -176,6 +176,7 @@ public class UpdateAdCounterHistogramWorker {
                 inputParams.getCallerPackageName(),
                 true,
                 false,
+                !mFlags.getConsentNotificationDebugMode(),
                 mCallerUid,
                 LOGGING_API_NAME,
                 FLEDGE_API_UPDATE_AD_COUNTER_HISTOGRAM,

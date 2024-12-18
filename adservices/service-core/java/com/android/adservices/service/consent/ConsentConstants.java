@@ -58,9 +58,6 @@ public class ConsentConstants {
     // happens again.
     static final String SHARED_PREFS_CONSENT = "PPAPI_Consent";
 
-    public static final String SHARED_PREFS_KEY_HAS_MIGRATED_TO_APP_SEARCH =
-            "CONSENT_HAS_MIGRATED_TO_APP_SEARCH";
-
     // Shared preferences to mark whether consent data from AppSearch has migrated to AdServices.
     public static final String SHARED_PREFS_KEY_APPSEARCH_HAS_MIGRATED =
             "CONSENT_HAS_MIGRATED_FROM_APPSEARCH";
@@ -101,4 +98,12 @@ public class ConsentConstants {
     public static final String WAS_U18_NOTIFICATION_DISPLAYED = "WAS_U18_NOTIFICATION_DISPLAYED";
 
     public static final String PAS_NOTIFICATION_DISPLAYED_ONCE = "PAS_NOTIFICATION_DISPLAYED_ONCE";
+
+    public static final String PAS_NOTIFICATION_OPENED = "PAS_NOTIFICATION_OPENED";
+
+    public static final String IS_MEASUREMENT_DATA_RESET = "IS_MEASUREMENT_DATA_RESET";
+
+    public static final String IS_PA_DATA_RESET = "IS_PA_DATA_RESET";
+
+    public static final String MODULE_ENROLLMENT_STATE = "MODULE_ENROLLMENT_STATE";
 }

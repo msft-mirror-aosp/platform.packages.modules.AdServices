@@ -16,6 +16,9 @@
 
 package android.adservices.rootcts;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_JOB_MAX_RUNTIME_MS;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -23,22 +26,27 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
-import android.adservices.utils.FledgeScenarioTest;
 import android.adservices.utils.ScenarioDispatcher;
+import android.adservices.utils.ScenarioDispatcherFactory;
 
-import com.android.compatibility.common.util.ShellUtils;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
+@EnableDebugFlag(KEY_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED)
+public final class CustomAudienceBackgroundFetchTest extends FledgeRootScenarioTest {
 
     private static final String CA_NAME = "shoes";
+    private static final String ACTION_BACKGROUND_FETCH_JOB_FINISHED =
+            "ACTION_BACKGROUND_FETCH_JOB_FINISHED";
     private BackgroundJobHelper mBackgroundJobHelper;
+    private static final int HIGH_LATENCY_TIMEOUT = 31_000;
 
     @Override
     @Before
@@ -54,16 +62,17 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
     public void testAdSelection_withInvalidFields_backgroundJobUpdatesSuccessfully()
             throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-020.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-020.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(makeCustomAudience(CA_NAME).setAds(List.of()).build());
             assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
-            assertThat(mBackgroundJobHelper.runJob(FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
-                    .isTrue();
+            mBackgroundJobHelper.runJobWithBroadcastIntent(
+                    FLEDGE_BACKGROUND_FETCH_JOB.getJobId(), ACTION_BACKGROUND_FETCH_JOB_FINISHED);
             assertThat(doSelectAds(adSelectionConfig).hasOutcome()).isTrue();
         } finally {
             leaveCustomAudience(CA_NAME);
@@ -80,16 +89,17 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withInvalidAds_backgroundJobUpdateFails() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-034.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-034.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(makeCustomAudience(CA_NAME).setAds(List.of()).build());
             assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
-            assertThat(mBackgroundJobHelper.runJob(FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
-                    .isTrue();
+            mBackgroundJobHelper.runJobWithBroadcastIntent(
+                    FLEDGE_BACKGROUND_FETCH_JOB.getJobId(), ACTION_BACKGROUND_FETCH_JOB_FINISHED);
             assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
         } finally {
             leaveCustomAudience(CA_NAME);
@@ -103,24 +113,22 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
      * Test to ensure that trusted signals are not updated if a daily update server response exceeds
      * the 30-second timeout.
      */
-    @Ignore("b/315008031")
     @Test
     public void testAdSelection_withHighLatencyBackend_backgroundJobFails() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-030-032.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-030-032.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(makeCustomAudience(CA_NAME).setAds(List.of()).build());
             assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
-            assertThat(mBackgroundJobHelper.runJob(FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
-                    .isTrue();
-            // Wait for the execution to complete. As this is an asynchronous operation, there is no
-            // better alternative to Thread.sleep().
-            // In this case, the background job should timeout and the subsequent call fail.
-            Thread.sleep(31 * 1000);
+            mBackgroundJobHelper.runJobWithBroadcastIntentWithTimeout(
+                    FLEDGE_BACKGROUND_FETCH_JOB.getJobId(),
+                    ACTION_BACKGROUND_FETCH_JOB_FINISHED,
+                    HIGH_LATENCY_TIMEOUT);
             assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
         } finally {
             leaveCustomAudience(CA_NAME);
@@ -137,16 +145,17 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
     @Test
     public void testAdSelection_withOverlyLargeDailyUpdate_backgroundJobFails() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-033.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-033.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
 
         try {
             joinCustomAudience(makeCustomAudience(CA_NAME).setAds(List.of()).build());
             assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
-            assertThat(mBackgroundJobHelper.runJob(FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
-                    .isTrue();
+            mBackgroundJobHelper.runJobWithBroadcastIntent(
+                    FLEDGE_BACKGROUND_FETCH_JOB.getJobId(), ACTION_BACKGROUND_FETCH_JOB_FINISHED);
             assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
         } finally {
             leaveCustomAudience(CA_NAME);
@@ -160,42 +169,25 @@ public class CustomAudienceBackgroundFetchTest extends FledgeScenarioTest {
      * Test to ensure that trusted signals are not updated if the daily update job exceeds the
      * default timeout.
      */
-    @Ignore("b/315008031")
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_BACKGROUND_FETCH_JOB_MAX_RUNTIME_MS, value = 50)
     public void testAdSelection_withLongRunningJob_backgroundJobFails() throws Exception {
         ScenarioDispatcher dispatcher =
-                ScenarioDispatcher.fromScenario(
-                        "scenarios/remarketing-cuj-020.json", getCacheBusterPrefix());
-        setupDefaultMockWebServer(dispatcher);
-        AdSelectionConfig adSelectionConfig = makeAdSelectionConfig();
-        int startBackgroundFetchTimeoutMs = getBackgroundFetchJobTimeout();
-        int overrideBackgroundFetchTimeoutMs = 50;
+                setupDispatcher(
+                        ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
+                                "scenarios/remarketing-cuj-020.json"));
+        AdSelectionConfig adSelectionConfig =
+                makeAdSelectionConfig(dispatcher.getBaseAddressWithPrefix());
+        int overrideBackgroundFetchTimeoutMs = 50; // Matches value in annotation
 
         try {
-            overrideBackgroundFetchJobTimeout(overrideBackgroundFetchTimeoutMs);
             joinCustomAudience(makeCustomAudience(CA_NAME).setAds(List.of()).build());
             assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
-            assertThat(mBackgroundJobHelper.runJob(FLEDGE_BACKGROUND_FETCH_JOB.getJobId()))
-                    .isTrue();
-            Thread.sleep(overrideBackgroundFetchTimeoutMs + 100);
+            mBackgroundJobHelper.runJobWithBroadcastIntent(
+                    FLEDGE_BACKGROUND_FETCH_JOB.getJobId(), ACTION_BACKGROUND_FETCH_JOB_FINISHED);
             assertThrows(ExecutionException.class, () -> doSelectAds(adSelectionConfig));
         } finally {
-            overrideBackgroundFetchJobTimeout(startBackgroundFetchTimeoutMs);
             leaveCustomAudience(CA_NAME);
         }
-    }
-
-    private static void overrideBackgroundFetchJobTimeout(int timeout) {
-        ShellUtils.runShellCommand(
-                String.format(
-                        "device_config put adservices fledge_background_fetch_job_max_runtime_ms"
-                                + " %s",
-                        timeout));
-    }
-
-    private static int getBackgroundFetchJobTimeout() {
-        return Integer.parseInt(
-                ShellUtils.runShellCommand(
-                        "device_config get adservices fledge_background_fetch_job_max_runtime_ms"));
     }
 }

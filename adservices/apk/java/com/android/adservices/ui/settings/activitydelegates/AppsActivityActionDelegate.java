@@ -50,11 +50,6 @@ import java.util.function.Function;
 // TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AppsActivityActionDelegate extends BaseActionDelegate {
-
-    private static final int[] BetaOnlyElements =
-            new int[] {R.id.apps_introduction, R.id.apps_view_footer};
-    private static final int[] GaOnlyElements =
-            new int[] {R.id.apps_ga_introduction, R.id.apps_view_ga_footer};
     private final AppsViewModel mAppsViewModel;
 
     public AppsActivityActionDelegate(AppsActivity appsActivity, AppsViewModel appsViewModel) {
@@ -65,55 +60,7 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
     }
 
     @Override
-    public void initBeta() {
-        // hidden elements
-        hideElements(GaOnlyElements);
-        // show elements
-        showElements(BetaOnlyElements);
-
-        // set title
-        mActivity.setTitle(R.string.settingsUI_apps_view_title);
-        // reset button
-        configureElement(R.id.reset_apps_button_child, R.string.settingsUI_reset_apps_title);
-        // zero-state text
-        configureElement(R.id.no_apps_state, R.string.settingsUI_apps_view_no_apps_text);
-        // empty state blocked apps button
-        Function<View, Observer<ImmutableList<App>>> observerProvider =
-                controls ->
-                        list -> {
-                            if (list.isEmpty()) {
-                                controls.setEnabled(false);
-                                controls.setAlpha(
-                                        mActivity
-                                                .getResources()
-                                                .getFloat(R.dimen.disabled_button_alpha));
-                                ((Button) controls)
-                                        .setText(
-                                                R.string.settingsUI_apps_view_no_blocked_apps_text);
-                            } else {
-                                controls.setEnabled(true);
-                                controls.setAlpha(
-                                        mActivity
-                                                .getResources()
-                                                .getFloat(R.dimen.enabled_button_alpha));
-                                ((Button) controls).setText(R.string.settingsUI_blocked_apps_title);
-                            }
-                        };
-        configureElement(
-                R.id.blocked_apps_when_empty_state_button,
-                mAppsViewModel.getBlockedApps(),
-                observerProvider);
-        // buttons
-        configureSharedElements();
-    }
-
-    @Override
     public void initGA() {
-        // hidden elements
-        hideElements(BetaOnlyElements);
-        // show elements
-        showElements(GaOnlyElements);
-
         // set title
         mActivity.setTitle(R.string.settingsUI_apps_ga_title);
         // consent switch
@@ -158,9 +105,6 @@ public class AppsActivityActionDelegate extends BaseActionDelegate {
 
     @Override
     public void initU18() {}
-
-    @Override
-    public void initRvc() {}
 
     @Override
     public void initGaUxWithPas() {

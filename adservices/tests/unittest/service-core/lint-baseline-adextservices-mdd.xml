@@ -1,0 +1,730 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<issues format="6" by="lint 8.4.0-alpha08" type="baseline" client="" dependencies="true" name="" variant="all" version="8.4.0-alpha08">
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getInstance`"
+        errorLine1="        doReturn(mockedAdServicesJobScheduler).when(AdServicesJobScheduler::getInstance);"
+        errorLine2="                                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/test-util/java/com/android/adservices/mockito/AdServicesExtendedMockitoMocker.java"
+            line="57"
+            column="53"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getInstance`"
+        errorLine1="        doReturn(mockedAdServicesJobServiceFactory).when(AdServicesJobServiceFactory::getInstance);"
+        errorLine2="                                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/test-util/java/com/android/adservices/mockito/AdServicesExtendedMockitoMocker.java"
+            line="65"
+            column="58"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getFileStorage`"
+        errorLine1="        mFileStorage = MobileDataDownloadFactory.getFileStorage();"
+        errorLine2="                                                 ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="194"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getFileDownloader`"
+        errorLine1="        mFileDownloader = MobileDataDownloadFactory.getFileDownloader(mMockFlags, mFileStorage);"
+        errorLine2="                                                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="195"
+            column="53"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getConsent`"
+        errorLine1="        doReturn(AdServicesApiConsent.GIVEN).when(mConsentManager).getConsent();"
+        errorLine2="                                                                   ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="199"
+            column="68"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getInstance`"
+        errorLine1="        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());"
+        errorLine2="                                                            ~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="201"
+            column="61"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getInstance`"
+        errorLine1="        doReturn(mUxStatesManager).when(() -> UxStatesManager.getInstance());"
+        errorLine2="                                                              ~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="202"
+            column="63"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getConsent`"
+        errorLine1="        when(mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS))"
+        errorLine2="                             ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="443"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getConsent`"
+        errorLine1="        when(mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS))"
+        errorLine2="                             ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="466"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getConsent`"
+        errorLine1="        when(mConsentManager.getConsent(AdServicesApiType.TOPICS))"
+        errorLine2="                             ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="489"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getConsent`"
+        errorLine1="        when(mConsentManager.getConsent(AdServicesApiType.TOPICS))"
+        errorLine2="                             ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="513"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getConsent`"
+        errorLine1="        when(mConsentManager.getConsent(AdServicesApiType.TOPICS))"
+        errorLine2="                             ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="536"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getConsent`"
+        errorLine1="        when(mConsentManager.getConsent(AdServicesApiType.TOPICS))"
+        errorLine2="                             ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="565"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getConsent`"
+        errorLine1="        when(mConsentManager.getConsent(AdServicesApiType.MEASUREMENTS))"
+        errorLine2="                             ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="567"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getConsent`"
+        errorLine1="        when(mConsentManager.getConsent(AdServicesApiType.FLEDGE))"
+        errorLine2="                             ~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="569"
+            column="30"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getUx`"
+        errorLine1="        doReturn(PrivacySandboxUxCollection.U18_UX).when(mUxStatesManager).getUx();"
+        errorLine2="                                                                           ~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="588"
+            column="76"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Field requires API level 31 (current min is 30): `U18_UX`"
+        errorLine1="        doReturn(PrivacySandboxUxCollection.U18_UX).when(mUxStatesManager).getUx();"
+        errorLine2="                                            ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="588"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getMddLogger`"
+        errorLine1="        Optional&lt;Logger> mddLogger = MobileDataDownloadFactory.getMddLogger(mMockFlags);"
+        errorLine2="                                                               ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="606"
+            column="64"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getMddLogger`"
+        errorLine1="        Optional&lt;Logger> mddLogger = MobileDataDownloadFactory.getMddLogger(mMockFlags);"
+        errorLine2="                                                               ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="614"
+            column="64"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getFileStorage`"
+        errorLine1="        SynchronousFileStorage fileStorage = MobileDataDownloadFactory.getFileStorage();"
+        errorLine2="                                                                       ~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="775"
+            column="72"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getFileDownloader`"
+        errorLine1="                MobileDataDownloadFactory.getFileDownloader(flags, fileStorage);"
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="777"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getControlExecutor`"
+        errorLine1="                .setControlExecutor(MobileDataDownloadFactory.getControlExecutor())"
+        errorLine2="                                                              ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="795"
+            column="63"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getMddLogger`"
+        errorLine1="                .setLoggerOptional(MobileDataDownloadFactory.getMddLogger(flags))"
+        errorLine2="                                                             ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="800"
+            column="62"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getEncryptionKeysManifestPopulator`"
+        errorLine1="                MobileDataDownloadFactory.getEncryptionKeysManifestPopulator("
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="814"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getMeasurementManifestPopulator`"
+        errorLine1="                MobileDataDownloadFactory.getMeasurementManifestPopulator("
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="841"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getTopicsManifestPopulator`"
+        errorLine1="                MobileDataDownloadFactory.getTopicsManifestPopulator("
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="864"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getUiOtaResourcesManifestPopulator`"
+        errorLine1="                MobileDataDownloadFactory.getUiOtaResourcesManifestPopulator("
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="884"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getCobaltRegistryManifestPopulator`"
+        errorLine1="                MobileDataDownloadFactory.getCobaltRegistryManifestPopulator("
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="904"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getDenyPackageManifestPopulator`"
+        errorLine1="                MobileDataDownloadFactory.getDenyPackageManifestPopulator("
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="974"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getMdd`"
+        errorLine1="        doReturn(mMdd).when(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));"
+        errorLine2="                                                            ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="949"
+            column="61"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `EncryptionDataDownloadManager`"
+        errorLine1="                new EncryptionDataDownloadManager(mMockFlags, encryptionKeyDao, mMockClock);"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="953"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `readAndInsertEncryptionDataFromMdd`"
+        errorLine1="        expect.that(encryptionDataDownloadManager.readAndInsertEncryptionDataFromMdd().get())"
+        errorLine2="                                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="957"
+            column="51"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Field requires API level 31 (current min is 30): `SUCCESS`"
+        errorLine1="                .isEqualTo(EncryptionDataDownloadManager.DownloadStatus.SUCCESS);"
+        errorLine2="                                                                        ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="958"
+            column="73"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `EnrollmentDataDownloadManager`"
+        errorLine1="                new EnrollmentDataDownloadManager(mContext, mMockFlags);"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="979"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `getMdd`"
+        errorLine1="        doReturn(mMdd).when(() -> MobileDataDownloadFactory.getMdd(any(Flags.class)));"
+        errorLine2="                                                            ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="1006"
+            column="61"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Call requires API level 31 (current min is 30): `readAndInsertEnrollmentDataFromMdd`"
+        errorLine1="        assertThat(enrollmentDataDownloadManager.readAndInsertEnrollmentDataFromMdd().get())"
+        errorLine2="                                                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="1019"
+            column="50"/>
+    </issue>
+
+    <issue
+        id="NewApi"
+        message="Field requires API level 31 (current min is 30): `SUCCESS`"
+        errorLine1="                .isEqualTo(SUCCESS);"
+        errorLine2="                           ~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="1020"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        new DbHelper(sContext, DATABASE_NAME_FOR_TEST, DbHelper.DATABASE_VERSION_7);"
+        errorLine2="                        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/data/DbTestUtil.java"
+            line="69"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        new MeasurementDbHelper("
+        errorLine2="                        ^">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/data/DbTestUtil.java"
+            line="79"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                        new SharedDbHelper("
+        errorLine2="                        ^">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/data/DbTestUtil.java"
+            line="93"
+            column="25"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        mFileDownloader = MobileDataDownloadFactory.getFileDownloader(mMockFlags, mFileStorage);"
+        errorLine2="                                                    ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="195"
+            column="53"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        Optional&lt;Logger> mddLogger = MobileDataDownloadFactory.getMddLogger(mMockFlags);"
+        errorLine2="                                                               ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="606"
+            column="64"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        Optional&lt;Logger> mddLogger = MobileDataDownloadFactory.getMddLogger(mMockFlags);"
+        errorLine2="                                                               ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="614"
+            column="64"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                MobileDataDownloadFactory.getFileDownloader(flags, fileStorage);"
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="777"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setControlExecutor(MobileDataDownloadFactory.getControlExecutor())"
+        errorLine2="                                                              ~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="795"
+            column="63"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                .setLoggerOptional(MobileDataDownloadFactory.getMddLogger(flags))"
+        errorLine2="                                                             ~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="800"
+            column="62"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                MobileDataDownloadFactory.getEncryptionKeysManifestPopulator("
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="814"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                MobileDataDownloadFactory.getMeasurementManifestPopulator("
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="841"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                MobileDataDownloadFactory.getTopicsManifestPopulator("
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="864"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                MobileDataDownloadFactory.getUiOtaResourcesManifestPopulator("
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="884"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                MobileDataDownloadFactory.getCobaltRegistryManifestPopulator("
+        errorLine2="                                          ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="904"
+            column="43"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        EncryptionKeyDao encryptionKeyDao = new EncryptionKeyDao(mDbHelper);"
+        errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="951"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                new EncryptionDataDownloadManager(mMockFlags, encryptionKeyDao, mMockClock);"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="953"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        EnrollmentDao enrollmentDao = new EnrollmentDao(mContext, mDbHelper, mMockFlags);"
+        errorLine2="                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="972"
+            column="39"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="                new EnrollmentDataDownloadManager(mContext, mMockFlags);"
+        errorLine2="                ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="979"
+            column="17"/>
+    </issue>
+
+    <issue
+        id="VisibleForTests"
+        message="This method should only be accessed from tests or within private scope"
+        errorLine1="        EncryptionKeyDao encryptionKeyDao = new EncryptionKeyDao(mDbHelper);"
+        errorLine2="                                            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/download/MobileDataDownloadTest.java"
+            line="981"
+            column="45"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionCode` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="MissingVersion"
+        message="Should set `android:versionName` to specify the application version"
+        errorLine1="&lt;manifest xmlns:android=&quot;http://schemas.android.com/apk/res/android&quot;"
+        errorLine2=" ~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/manifest_merger/AndroidManifest.xml"
+            line="17"
+            column="2"/>
+    </issue>
+
+    <issue
+        id="HardcodedDebugMode"
+        message="Avoid hardcoding the debug mode; leaving it out allows debug and release builds to automatically assign one"
+        errorLine1="        android:debuggable=&quot;true&quot;"
+        errorLine2="        ~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/manifest_merger/AndroidManifest.xml"
+            line="56"
+            column="9"/>
+    </issue>
+
+    <issue
+        id="QueryAllPackagesPermission"
+        message="A `&lt;queries>` declaration should generally be used instead of QUERY_ALL_PACKAGES; see https://g.co/dev/packagevisibility for details"
+        errorLine1="    &lt;uses-permission android:name=&quot;android.permission.QUERY_ALL_PACKAGES&quot; />"
+        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/manifest_merger/AndroidManifest.xml"
+            line="33"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="QueryAllPackagesPermission"
+        message="A `&lt;queries>` declaration should generally be used instead of QUERY_ALL_PACKAGES; see https://g.co/dev/packagevisibility for details"
+        errorLine1="    &lt;uses-permission android:name=&quot;android.permission.QUERY_ALL_PACKAGES&quot; />"
+        errorLine2="                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/manifest_merger/AndroidManifest.xml"
+            line="33"
+            column="22"/>
+    </issue>
+
+    <issue
+        id="Recycle"
+        message="This `Cursor` should be freed up after use with `#close()`"
+        errorLine1="        Cursor cursor = db.rawQuery(query, null);"
+        errorLine2="                           ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/data/DbTestUtil.java"
+            line="120"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="Recycle"
+        message="This `Cursor` should be freed up after use with `#close()`"
+        errorLine1="        Cursor cursor = db.rawQuery(query, null);"
+        errorLine2="                           ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/data/DbTestUtil.java"
+            line="136"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="Recycle"
+        message="This `Cursor` should be freed up after use with `#close()`"
+        errorLine1="        Cursor cursor = db.rawQuery(query, null);"
+        errorLine2="                           ~~~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/data/DbTestUtil.java"
+            line="142"
+            column="28"/>
+    </issue>
+
+    <issue
+        id="StaticFieldLeak"
+        message="Do not place Android context classes in static fields; this is a memory leak"
+        errorLine1="    private static final Context sContext = ApplicationProvider.getApplicationContext();"
+        errorLine2="            ~~~~~~">
+        <location
+            file="packages/modules/AdServices/adservices/tests/unittest/service-core/src/com/android/adservices/data/DbTestUtil.java"
+            line="41"
+            column="13"/>
+    </issue>
+
+    <issue
+        id="MissingApplicationIcon"
+        message="Should explicitly set `android:icon`, there is no default"
+        errorLine1="    &lt;application"
+        errorLine2="     ~~~~~~~~~~~">
+        <location
+            file="./out/soong/.intermediates/packages/modules/AdServices/adservices/tests/unittest/service-core/AdExtServicesMddIntegrationTests/android_common/manifest_merger/AndroidManifest.xml"
+            line="54"
+            column="6"/>
+    </issue>
+
+</issues>

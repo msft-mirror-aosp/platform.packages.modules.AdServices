@@ -15,11 +15,11 @@
  */
 package com.android.adservices.measurement;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.after;
@@ -50,22 +50,18 @@ import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.app.sdksandbox.SandboxedSdkContext;
-import android.content.Context;
 import android.net.Uri;
 import android.os.RemoteException;
 
 import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.AdServicesEndToEndTestCase;
 import com.android.adservices.LogUtil;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
-import com.android.compatibility.common.util.ShellUtils;
+import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.Answer;
@@ -77,7 +73,8 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public class MeasurementCompatibleManagerTest {
+@SetMsmtApiAppAllowList
+public final class MeasurementCompatibleManagerTest extends AdServicesEndToEndTestCase {
     private static final String CLIENT_PACKAGE_NAME = "com.android.adservices.endtoendtest";
     private static final long TIMEOUT = 5000L;
     private static final long CALLBACK_TIMEOUT = 1000L;
@@ -86,7 +83,6 @@ public class MeasurementCompatibleManagerTest {
 
     public static final String AD_ID = "35a4ac90-e4dc-4fe7-bbc6-95e804aa7dbc";
 
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final SandboxedSdkContext sSandboxedSdkContext =
             new SandboxedSdkContext(
@@ -95,29 +91,17 @@ public class MeasurementCompatibleManagerTest {
                     CLIENT_PACKAGE_NAME,
                     sContext.getApplicationInfo(),
                     "sdkName",
-                    /* sdkCeDataDir = */ null,
-                    /* sdkDeDataDir = */ null,
-                    /* isCustomizedSdkContext = */ false);
+                    /* sdkCeDataDir= */ null,
+                    /* sdkDeDataDir= */ null);
 
-    private String getPackageName() {
+    private static String getPackageName() {
         return SdkLevel.isAtLeastT()
                 ? "com.android.adservices.endtoendtest"
                 : "com.android.adextservices.endtoendtest";
     }
 
-    private MeasurementCompatibleManager getMeasurementCompatibleManager() {
+    private static MeasurementCompatibleManager getMeasurementCompatibleManager() {
         return spy(MeasurementCompatibleManager.get(sContext));
-    }
-
-    @Rule
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setCompatModeFlags()
-                    .setMsmtApiAppAllowList(sContext.getPackageName());
-
-    @After
-    public void tearDown() {
-        resetOverrideConsentManagerDebugMode();
     }
 
     @Test
@@ -141,9 +125,9 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(captor.getValue().getAppPackageName()).isNotNull();
+        assertThat(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
@@ -193,9 +177,9 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertTrue(captor.getValue().isAdIdPermissionGranted());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().isAdIdPermissionGranted()).isTrue();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
         verify(mock(LogUtil.class), never()).w(anyString());
     }
 
@@ -232,9 +216,9 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertFalse(captor.getValue().isAdIdPermissionGranted());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().isAdIdPermissionGranted()).isFalse();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
@@ -270,9 +254,9 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertFalse(captor.getValue().isAdIdPermissionGranted());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().isAdIdPermissionGranted()).isFalse();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
         verify(mock(LogUtil.class)).w(anyString());
     }
 
@@ -308,9 +292,9 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertFalse(captor.getValue().isAdIdPermissionGranted());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().isAdIdPermissionGranted()).isFalse();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
@@ -356,8 +340,8 @@ public class MeasurementCompatibleManagerTest {
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT
     public void testRegisterSource_callingSdk_expectedAttributionSource() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
         MeasurementCompatibleManager mm =
                 spy(MeasurementCompatibleManager.get(sSandboxedSdkContext));
         IMeasurementService mockService = mock(IMeasurementService.class);
@@ -378,15 +362,15 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(captor.getValue().getAppPackageName()).isNotNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
     public void testRegisterSource_executorAndCallbackCalled() throws Exception {
-        final MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
-        final CountDownLatch anyCountDownLatch = new CountDownLatch(1);
+        MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
+        CountDownLatch anyCountDownLatch = new CountDownLatch(1);
 
         mm.registerSource(
                 Uri.parse("https://registration-source"),
@@ -404,10 +388,10 @@ public class MeasurementCompatibleManagerTest {
                     }
                 });
 
-        assertTrue(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
+        assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
-    private WebSourceRegistrationRequest buildDefaultWebSourceRegistrationRequest() {
+    private static WebSourceRegistrationRequest buildDefaultWebSourceRegistrationRequest() {
         WebSourceParams webSourceParams =
                 new WebSourceParams.Builder(Uri.parse("https://example.com"))
                         .setDebugKeyAllowed(false)
@@ -443,14 +427,14 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(captor.getValue().getAppPackageName()).isNotNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT
     public void testRegisterWebSource_callingSdk_expectedAttributionSource() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
         MeasurementCompatibleManager mm =
                 spy(MeasurementCompatibleManager.get(sSandboxedSdkContext));
         IMeasurementService mockService = mock(IMeasurementService.class);
@@ -470,15 +454,15 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(captor.getValue().getAppPackageName()).isNotNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
     public void testRegisterWebSource_executorAndCallbackCalled() throws Exception {
-        final MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
-        final CountDownLatch anyCountDownLatch = new CountDownLatch(1);
+        MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
+        CountDownLatch anyCountDownLatch = new CountDownLatch(1);
 
         mm.registerWebSource(
                 buildDefaultWebSourceRegistrationRequest(),
@@ -495,7 +479,7 @@ public class MeasurementCompatibleManagerTest {
                     }
                 });
 
-        assertTrue(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
+        assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
     @Test
@@ -530,9 +514,9 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertTrue(captor.getValue().isAdIdPermissionGranted());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(captor.getValue().isAdIdPermissionGranted()).isTrue();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
         verify(mock(LogUtil.class), never()).w(anyString());
     }
 
@@ -568,9 +552,9 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertFalse(captor.getValue().isAdIdPermissionGranted());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().isAdIdPermissionGranted()).isFalse();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
@@ -605,9 +589,9 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertFalse(captor.getValue().isAdIdPermissionGranted());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().isAdIdPermissionGranted()).isFalse();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
         verify(mock(LogUtil.class)).w(anyString());
     }
 
@@ -642,12 +626,12 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertFalse(captor.getValue().isAdIdPermissionGranted());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().isAdIdPermissionGranted()).isFalse();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
-    private WebTriggerRegistrationRequest buildDefaultWebTriggerRegistrationRequest() {
+    private static WebTriggerRegistrationRequest buildDefaultWebTriggerRegistrationRequest() {
         WebTriggerParams webTriggerParams =
                 new WebTriggerParams.Builder(Uri.parse("https://example.com"))
                         .setDebugKeyAllowed(false)
@@ -678,14 +662,14 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(captor.getValue().getAppPackageName()).isNotNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT
     public void testRegisterWebTrigger_callingSdk_expectedAttributionSource() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
         MeasurementCompatibleManager mm =
                 spy(MeasurementCompatibleManager.get(sSandboxedSdkContext));
         IMeasurementService mockService = mock(IMeasurementService.class);
@@ -705,15 +689,15 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(captor.getValue().getAppPackageName()).isNotNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
     public void testRegisterWebTrigger_executorAndCallbackCalled() throws Exception {
-        final MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
-        final CountDownLatch anyCountDownLatch = new CountDownLatch(1);
+        MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
+        CountDownLatch anyCountDownLatch = new CountDownLatch(1);
 
         mm.registerWebTrigger(
                 buildDefaultWebTriggerRegistrationRequest(),
@@ -730,7 +714,7 @@ public class MeasurementCompatibleManagerTest {
                     }
                 });
 
-        assertTrue(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
+        assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
     @Test
@@ -765,9 +749,9 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertTrue(captor.getValue().isAdIdPermissionGranted());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(captor.getValue().isAdIdPermissionGranted()).isTrue();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
         verify(mock(LogUtil.class), never()).w(anyString());
     }
 
@@ -803,9 +787,9 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertFalse(captor.getValue().isAdIdPermissionGranted());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().isAdIdPermissionGranted()).isFalse();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
@@ -840,9 +824,9 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertFalse(captor.getValue().isAdIdPermissionGranted());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().isAdIdPermissionGranted()).isFalse();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
         verify(mock(LogUtil.class)).w(anyString());
     }
 
@@ -877,9 +861,9 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertFalse(captor.getValue().isAdIdPermissionGranted());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().isAdIdPermissionGranted()).isFalse();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
@@ -900,14 +884,14 @@ public class MeasurementCompatibleManagerTest {
         mm.registerTrigger(
                 Uri.parse("https://example.com"), /* executor = */ null, /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(captor.getValue().getAppPackageName()).isNotNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT
     public void testRegisterTrigger_callingSdk_expectedAttributionSource() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
         MeasurementCompatibleManager mm =
                 spy(MeasurementCompatibleManager.get(sSandboxedSdkContext));
         IMeasurementService mockService = mock(IMeasurementService.class);
@@ -925,15 +909,15 @@ public class MeasurementCompatibleManagerTest {
         mm.registerTrigger(
                 Uri.parse("https://example.com"), /* executor = */ null, /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(captor.getValue().getAppPackageName()).isNotNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
     public void testRegisterTrigger_executorAndCallbackCalled() throws Exception {
-        final MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
-        final CountDownLatch anyCountDownLatch = new CountDownLatch(1);
+        MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
+        CountDownLatch anyCountDownLatch = new CountDownLatch(1);
 
         mm.registerTrigger(
                 Uri.parse("https://registration-trigger"),
@@ -950,7 +934,7 @@ public class MeasurementCompatibleManagerTest {
                     }
                 });
 
-        assertTrue(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
+        assertThat(anyCountDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
     }
 
     @Test
@@ -983,9 +967,9 @@ public class MeasurementCompatibleManagerTest {
         measurementManager.registerTrigger(
                 Uri.parse("https://example.com"), /* executor = */ null, /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertTrue(captor.getValue().isAdIdPermissionGranted());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        assertThat(captor.getValue().isAdIdPermissionGranted()).isTrue();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
         verify(mock(LogUtil.class), never()).w(anyString());
     }
 
@@ -1019,9 +1003,9 @@ public class MeasurementCompatibleManagerTest {
         measurementManager.registerTrigger(
                 Uri.parse("https://example.com"), /* executor = */ null, /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertFalse(captor.getValue().isAdIdPermissionGranted());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().isAdIdPermissionGranted()).isFalse();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
@@ -1054,9 +1038,9 @@ public class MeasurementCompatibleManagerTest {
         measurementManager.registerTrigger(
                 Uri.parse("https://example.com"), /* executor = */ null, /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertFalse(captor.getValue().isAdIdPermissionGranted());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().isAdIdPermissionGranted()).isFalse();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
         verify(mock(LogUtil.class)).w(anyString());
     }
 
@@ -1089,9 +1073,9 @@ public class MeasurementCompatibleManagerTest {
         measurementManager.registerTrigger(
                 Uri.parse("https://example.com"), /* executor = */ null, /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertFalse(captor.getValue().isAdIdPermissionGranted());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().isAdIdPermissionGranted()).isFalse();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
@@ -1107,13 +1091,13 @@ public class MeasurementCompatibleManagerTest {
                 CALLBACK_EXECUTOR,
                 i -> new CompletableFuture<>().complete(i));
 
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(captor.getValue().getAppPackageName()).isNotNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
+    @RequiresSdkLevelAtLeastT
     public void testDeleteRegistrations_callingSdk_expectedAttributionSource() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastT());
         MeasurementCompatibleManager mm =
                 spy(MeasurementCompatibleManager.get(sSandboxedSdkContext));
         IMeasurementService mockService = mock(IMeasurementService.class);
@@ -1126,8 +1110,8 @@ public class MeasurementCompatibleManagerTest {
                 CALLBACK_EXECUTOR,
                 i -> new CompletableFuture<>().complete(i));
 
-        Assert.assertNotNull(captor.getValue().getAppPackageName());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(captor.getValue().getAppPackageName()).isNotNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
@@ -1158,9 +1142,9 @@ public class MeasurementCompatibleManagerTest {
 
     @Test
     public void testGetMeasurementApiStatus() throws Exception {
-        final MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
-        final int response = callMeasurementApiStatus(mm);
-        assertEquals(MeasurementManager.MEASUREMENT_API_STATE_ENABLED, response);
+        MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
+        int response = callMeasurementApiStatus(mm);
+        assertThat(response).isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_ENABLED);
     }
 
     @Test
@@ -1186,16 +1170,16 @@ public class MeasurementCompatibleManagerTest {
     @Test
     public void testGetMeasurementApiStatus_getServiceThrowsIllegalState_returnDisabled()
             throws Exception {
-        final MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
+        MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
         doThrow(new IllegalStateException()).when(mm).getService();
-        final int response = callMeasurementApiStatus(mm);
-        assertEquals(MeasurementManager.MEASUREMENT_API_STATE_DISABLED, response);
+        int response = callMeasurementApiStatus(mm);
+        assertThat(response).isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_DISABLED);
     }
 
     @Test
     public void testGetMeasurementApiStatus_getServiceThrowsRuntimeException_propagateOnError()
             throws Exception {
-        final MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
+        MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
         doThrow(new RuntimeException()).when(mm).getService();
         CompletableFuture<Exception> future = new CompletableFuture<>();
 
@@ -1214,24 +1198,24 @@ public class MeasurementCompatibleManagerTest {
                 });
 
         Exception exception = future.get();
-        Assert.assertTrue(exception instanceof RuntimeException);
+        assertThat(exception).isInstanceOf(RuntimeException.class);
     }
 
     @Test
     public void testGetMeasurementApiStatus_remoteException_returnDisabled() throws Exception {
-        final MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
+        MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
         IMeasurementService mockMeasurementService = mock(IMeasurementService.class);
         doReturn(mockMeasurementService).when(mm).getService();
         doThrow(new RemoteException())
                 .when(mockMeasurementService)
                 .getMeasurementApiStatus(any(), any(), any());
-        final int response = callMeasurementApiStatus(mm);
-        assertEquals(MeasurementManager.MEASUREMENT_API_STATE_DISABLED, response);
+        int response = callMeasurementApiStatus(mm);
+        assertThat(response).isEqualTo(MeasurementManager.MEASUREMENT_API_STATE_DISABLED);
     }
 
     @Test
     public void testGetMeasurementApiStatus_RuntimeException_propagateOnError() throws Exception {
-        final MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
+        MeasurementCompatibleManager mm = getMeasurementCompatibleManager();
         IMeasurementService mockMeasurementService = mock(IMeasurementService.class);
         doReturn(mockMeasurementService).when(mm).getService();
         doThrow(new RuntimeException())
@@ -1254,7 +1238,7 @@ public class MeasurementCompatibleManagerTest {
                 });
 
         Exception exception = future.get();
-        Assert.assertTrue(exception instanceof RuntimeException);
+        assertThat(exception).isInstanceOf(RuntimeException.class);
     }
 
     @Test
@@ -1290,9 +1274,9 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertNull(captor.getValue().getAdIdValue());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().getAdIdValue()).isNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
@@ -1325,9 +1309,9 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertNull(captor.getValue().getAdIdValue());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().getAdIdValue()).isNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
@@ -1361,9 +1345,9 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertEquals(AD_ID, captor.getValue().getAdIdValue());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().getAdIdValue()).isEqualTo(AD_ID);
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
@@ -1397,9 +1381,9 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertNull(captor.getValue().getAdIdValue());
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().getAdIdValue()).isNull();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
@@ -1419,17 +1403,7 @@ public class MeasurementCompatibleManagerTest {
     @Test
     public void
             testRegisterSourceMulti_callbackProvidedWithoutExecutor_throwsIllegalArgException() {
-        MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
-        doThrow(new IllegalStateException()).when(measurementManager).getService();
-        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
-
-        Assert.assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        measurementManager.registerSource(
-                                buildDefaultAppSourcesRegistrationRequest(),
-                                /* executor = */ null,
-                                /* callback = */ callback));
+        RvcGuardUberHackPlusPlus.assertRegisterSourceFromSourceRegistrationRequestThrows();
     }
 
     @Test
@@ -1452,57 +1426,26 @@ public class MeasurementCompatibleManagerTest {
                 /* executor = */ null,
                 /* callback = */ null);
 
-        assertTrue(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS));
-        assertEquals(getPackageName(), captor.getValue().getAppPackageName());
+        assertThat(countDownLatch.await(TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
+        expect.that(captor.getValue().getAppPackageName()).isEqualTo(getPackageName());
     }
 
     @Test
     public void testRegisterSource_callbackProvidedWithoutExecutor_throwsIllegalArgException() {
-        MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
-        doThrow(new IllegalStateException()).when(measurementManager).getService();
-        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
-
-        Assert.assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        measurementManager.registerSource(
-                                Uri.parse("https://example.com"),
-                                /* input event */ null,
-                                /* executor = */ null,
-                                /* callback = */ callback));
+        RvcGuardUberHackPlusPlus.assertRegisterSourceFromUriAndInputEventThrows();
     }
 
     @Test
     public void testRegisterWebSource_callbackProvidedWithoutExecutor_throwsIllegalArgException() {
-        MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
-        doThrow(new IllegalStateException()).when(measurementManager).getService();
-        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
-
-        Assert.assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        measurementManager.registerWebSource(
-                                buildDefaultWebSourceRegistrationRequest(),
-                                /* executor = */ null,
-                                /* callback = */ callback));
+        RvcGuardUberHackPlusPlus.assertRegisterWebSourceThrows();
     }
 
     @Test
     public void testRegisterWebTrigger_callbackProvidedWithoutExecutor_throwsIllegalArgException() {
-        MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
-        doThrow(new IllegalStateException()).when(measurementManager).getService();
-        AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
-
-        Assert.assertThrows(
-                IllegalArgumentException.class,
-                () ->
-                        measurementManager.registerWebTrigger(
-                                buildDefaultWebTriggerRegistrationRequest(),
-                                /* executor = */ null,
-                                /* callback = */ callback));
+        RvcGuardUberHackPlusPlus.assertRegisterWebTriggerThrows();
     }
 
-    private SourceRegistrationRequest buildDefaultAppSourcesRegistrationRequest() {
+    private static SourceRegistrationRequest buildDefaultAppSourcesRegistrationRequest() {
         return new SourceRegistrationRequest.Builder(
                         java.util.Arrays.asList(
                                 Uri.parse("https://example1.com"),
@@ -1533,10 +1476,75 @@ public class MeasurementCompatibleManagerTest {
 
     // Override the Consent Manager behaviour - Consent Given
     private void overrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode true");
+        flags.setDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, true);
     }
 
-    private void resetOverrideConsentManagerDebugMode() {
-        ShellUtils.runShellCommand("setprop debug.adservices.consent_manager_debug_mode null");
+    @SuppressWarnings("VisibleForTests") // TODO(b/343741206): Remove suppress warning once fixed.
+    /**
+     * "Clever" workaround to avoid {@code java.lang.NoClassDefFoundError} failures when running on
+     * Android RVC without using the {@code SafeAndroidJUnitRunner} "cleverer" runner.
+     */
+    private static final class RvcGuardUberHackPlusPlus {
+
+        private static void assertRegisterSourceFromSourceRegistrationRequestThrows() {
+            MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
+            doThrow(new IllegalStateException()).when(measurementManager).getService();
+            AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
+
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            measurementManager.registerSource(
+                                    buildDefaultAppSourcesRegistrationRequest(),
+                                    /* executor= */ null,
+                                    /* callback= */ callback));
+        }
+
+        private static void assertRegisterSourceFromUriAndInputEventThrows() {
+            MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
+            doThrow(new IllegalStateException()).when(measurementManager).getService();
+            AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
+
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            measurementManager.registerSource(
+                                    Uri.parse("https://example.com"),
+                                    /* inputEvent */ null,
+                                    /* executor= */ null,
+                                    /* callback= */ callback));
+        }
+
+        private static void assertRegisterWebSourceThrows() {
+            MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
+            doThrow(new IllegalStateException()).when(measurementManager).getService();
+            AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
+
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            measurementManager.registerWebSource(
+                                    buildDefaultWebSourceRegistrationRequest(),
+                                    /* executor= */ null,
+                                    /* callback= */ callback));
+        }
+
+        private static void assertRegisterWebTriggerThrows() {
+            MeasurementCompatibleManager measurementManager = getMeasurementCompatibleManager();
+            doThrow(new IllegalStateException()).when(measurementManager).getService();
+            AdServicesOutcomeReceiver callback = mock(AdServicesOutcomeReceiver.class);
+
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            measurementManager.registerWebTrigger(
+                                    buildDefaultWebTriggerRegistrationRequest(),
+                                    /* executor= */ null,
+                                    /* callback= */ callback));
+        }
+
+        private RvcGuardUberHackPlusPlus() {
+            throw new UnsupportedOperationException("Contains only static methods");
+        }
     }
 }

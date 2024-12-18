@@ -21,24 +21,21 @@ import static com.google.common.truth.Truth.assertThat;
 import android.adservices.adselection.SetAppInstallAdvertisersRequest;
 import android.adservices.common.AdTechIdentifier;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Ignore;
-import org.junit.Rule;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-public class SetAppInstallAdvertisersRequestTest {
+@RequiresSdkLevelAtLeastS
+public final class SetAppInstallAdvertisersRequestTest extends CtsAdServicesDeviceTestCase {
     private static final Set<AdTechIdentifier> ADVERTISERS =
             new HashSet<>(
                     Arrays.asList(
                             AdTechIdentifier.fromString("example1.com"),
                             AdTechIdentifier.fromString("example2.com")));
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Ignore
     public void testBuildsSetAppInstallAdvertisersRequest() {

@@ -15,35 +15,29 @@
  */
 package com.android.adservices.service.common;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.mockDump;
-import static com.android.adservices.mockito.MockitoExpectations.setApplicationContextSingleton;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
+import static com.android.adservices.shared.testing.common.DumpHelper.mockDump;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.mockito.ArgumentMatchers.any;
 
+import android.app.adservices.AdServicesManager;
 import android.content.Context;
 
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public final class AdServicesInternalProviderTest {
-
-    @Rule
-    public final AdServicesExtendedMockitoRule extendedMockito =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(AppManifestConfigMetricsLogger.class)
-                    .build();
+public final class AdServicesInternalProviderTest extends AdServicesExtendedMockitoTestCase {
 
     private final AdServicesInternalProvider mProvider = new AdServicesInternalProvider();
 
     @Test
     public void testDump_appContextSingletonNotSet() throws Exception {
-        ApplicationContextSingleton.setForTests(/* context=*/ null);
+        ApplicationContextSingleton.setForTests(/* context= */ null);
 
         String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
 
@@ -54,7 +48,7 @@ public final class AdServicesInternalProviderTest {
 
     @Test
     public void testDump_appContextSingletonSet() throws Exception {
-        Context appContext = setApplicationContextSingleton();
+        Context appContext = mocker.setApplicationContextSingleton();
 
         String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
 
@@ -64,8 +58,9 @@ public final class AdServicesInternalProviderTest {
     }
 
     @Test
+    @SpyStatic(AppManifestConfigMetricsLogger.class)
     public void testDump_includesAppManifestConfigMetricsLogger() throws Exception {
-        setApplicationContextSingleton();
+        mocker.setApplicationContextSingleton();
         String amcmDump = "I dump, therefore I am";
         mockDump(
                 () -> AppManifestConfigMetricsLogger.dump(any(), any()),
@@ -75,5 +70,16 @@ public final class AdServicesInternalProviderTest {
         String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
 
         assertWithMessage("content of dump()").that(dump).contains(amcmDump);
+    }
+
+    @Test
+    @SpyStatic(AdServicesManager.class)
+    public void testDump_includesAdservicesManagerDump() throws Exception {
+        String mgrDump = "A Manager dumps no Name";
+        mockDump(() -> AdServicesManager.dump(any()), /* pwArgIndex= */ 0, mgrDump);
+
+        String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
+
+        assertWithMessage("content of dump()").that(dump).contains(mgrDump);
     }
 }

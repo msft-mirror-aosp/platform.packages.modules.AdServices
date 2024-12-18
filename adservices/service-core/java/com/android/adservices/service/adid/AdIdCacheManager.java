@@ -17,10 +17,12 @@
 package com.android.adservices.service.adid;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_PROVIDER_SERVICE_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_REMOTE_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_AD_ID_PROVIDER_NOT_AVAILABLE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID;
 
 import android.adservices.adid.AdId;
@@ -40,6 +42,7 @@ import com.android.adservices.ServiceBinder;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
@@ -55,6 +58,9 @@ public final class AdIdCacheManager {
     @VisibleForTesting static final String SHARED_PREFS_IAPC = "adservices_PPAPI_IAPC";
     private static final String SHARE_PREFS_CACHED_AD_ID_KEY = "cached_ad_id";
     private static final String SHARE_PREFS_CACHED_LAT_KEY = "cached_lat";
+    private static final String SHARE_PREFS_CACHED_AD_ID_TIME = "cached_ad_id_time";
+
+    private static final String UNAUTHORIZED = "Unauthorized caller";
     // A default AdId to indicate the AdId is not set in the cache.
     private static final AdId UNSET_AD_ID =
             new AdId(/* adId */ "", /* limitAdTrackingEnabled */ false);
@@ -175,8 +181,19 @@ public final class AdIdCacheManager {
                         @Override
                         public void onError(String errorMessage) {
                             try {
-                                callback.onError(STATUS_INTERNAL_ERROR);
+                                if (errorMessage.startsWith(UNAUTHORIZED)) {
+                                    setCallbackOnResult(
+                                            callback,
+                                            new AdId(AdId.ZERO_OUT, true),
+                                            /* shouldUnbindFromProvider= */ false);
+                                } else {
+                                    callback.onError(STATUS_PROVIDER_SERVICE_INTERNAL_ERROR);
+                                }
                                 LogUtil.e("Get AdId Error Message from Provider: %s", errorMessage);
+                                ErrorLogUtil.e(
+                                        new RuntimeException(errorMessage),
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_AD_ID_PROVIDER_NOT_AVAILABLE,
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID);
                             } catch (RemoteException e) {
                                 logRemoteException(e);
                             } finally {
@@ -202,11 +219,6 @@ public final class AdIdCacheManager {
 
     @VisibleForTesting
     void setAdIdInStorage(@NonNull AdId adId) {
-        // TODO(b/300147424): Remove the flag once the feature is rolled out.
-        if (!FlagsFactory.getFlags().getAdIdCacheEnabled()) {
-            LogUtil.d("Ad Id Cache is not enabled. Set nothing.");
-            return;
-        }
         Objects.requireNonNull(adId);
 
         mReadWriteLock.writeLock().lock();
@@ -214,7 +226,8 @@ public final class AdIdCacheManager {
             SharedPreferences.Editor editor = getSharedPreferences().edit();
 
             editor.putString(SHARE_PREFS_CACHED_AD_ID_KEY, adId.getAdId())
-                    .putBoolean(SHARE_PREFS_CACHED_LAT_KEY, adId.isLimitAdTrackingEnabled());
+                    .putBoolean(SHARE_PREFS_CACHED_LAT_KEY, adId.isLimitAdTrackingEnabled())
+                    .putLong(SHARE_PREFS_CACHED_AD_ID_TIME, Clock.getInstance().elapsedRealtime());
 
             if (!editor.commit()) {
                 // Since we are sure that the provider service api has returned, we can safely
@@ -228,15 +241,19 @@ public final class AdIdCacheManager {
 
     @VisibleForTesting
     AdId getAdIdInStorage() {
-        // TODO(b/300147424): Remove the flag once the feature is rolled out.
-        if (!FlagsFactory.getFlags().getAdIdCacheEnabled()) {
-            LogUtil.d("Ad Id Cache is not enabled. Return default value.");
-            return UNSET_AD_ID;
-        }
-
         mReadWriteLock.readLock().lock();
         try {
             SharedPreferences sharedPreferences = getSharedPreferences();
+
+            // Check if key in the cache has timed out.
+            long ttl = FlagsFactory.getFlags().getAdIdCacheTtlMs();
+            if (ttl != 0
+                    && isCacheTimeout(
+                            sharedPreferences.getLong(SHARE_PREFS_CACHED_AD_ID_TIME, 0L),
+                            Clock.getInstance().elapsedRealtime(),
+                            ttl)) {
+                return UNSET_AD_ID;
+            }
 
             String adIdString =
                     sharedPreferences.getString(
@@ -303,5 +320,13 @@ public final class AdIdCacheManager {
                 unbindFromService();
             }
         }
+    }
+
+    @VisibleForTesting
+    boolean isCacheTimeout(long formerTime, long currentTime, long ttl) {
+        if (formerTime == 0L) {
+            return true;
+        }
+        return currentTime - formerTime > ttl;
     }
 }

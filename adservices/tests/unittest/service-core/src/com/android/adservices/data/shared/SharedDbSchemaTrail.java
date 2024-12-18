@@ -34,7 +34,7 @@ import java.util.Map;
  * entries will cause creation of method {@code getCreateStatementByTableVx}, where the previous
  * version's (x-1) scripts will be revised to create scripts for version x.
  */
-public class SharedDbSchemaTrail {
+public final class SharedDbSchemaTrail {
     private static final String CREATE_TABLE_ENROLLMENT_V1 =
             "CREATE TABLE "
                     + EnrollmentTables.EnrollmentDataContract.TABLE
@@ -55,6 +55,32 @@ public class SharedDbSchemaTrail {
                             .REMARKETING_RESPONSE_BASED_REGISTRATION_URL
                     + " TEXT, "
                     + EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL
+                    + " TEXT "
+                    + ")";
+
+    public static final String CREATE_TABLE_ENROLLMENT_V2 =
+            "CREATE TABLE "
+                    + EnrollmentDataContract.TABLE
+                    + " ("
+                    + EnrollmentDataContract.ENROLLMENT_ID
+                    + " TEXT PRIMARY KEY NOT NULL, "
+                    + EnrollmentDataContract.COMPANY_ID
+                    + " TEXT, "
+                    + EnrollmentDataContract.SDK_NAMES
+                    + " TEXT, "
+                    + EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.ATTRIBUTION_TRIGGER_REGISTRATION_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.ATTRIBUTION_REPORTING_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.REMARKETING_RESPONSE_BASED_REGISTRATION_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.ENCRYPTION_KEY_URL
+                    + " TEXT, "
+                    + EnrollmentDataContract.ENROLLED_SITE
+                    + " TEXT, "
+                    + EnrollmentDataContract.ENROLLED_APIS
                     + " TEXT "
                     + ")";
 
@@ -124,11 +150,18 @@ public class SharedDbSchemaTrail {
         return createStatements;
     }
 
+    private static Map<String, String> getCreateStatementByTableV4() {
+        Map<String, String> createStatements = new HashMap<>(getCreateStatementByTableV3());
+        createStatements.put(EnrollmentDataContract.TABLE, CREATE_TABLE_ENROLLMENT_V2);
+        return createStatements;
+    }
+
     private static final Map<Integer, Collection<String>> CREATE_TABLES_STATEMENTS_BY_VERSION =
             new ImmutableMap.Builder<Integer, Collection<String>>()
                     .put(1, getCreateStatementByTableV1().values())
                     .put(2, getCreateStatementByTableV2().values())
                     .put(3, getCreateStatementByTableV3().values())
+                    .put(4, getCreateStatementByTableV4().values())
                     .build();
 
     /**

@@ -16,20 +16,18 @@
 
 package android.adservices.cts;
 
-import static org.junit.Assert.assertEquals;
-
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.adselection.AddAdSelectionOverrideRequest;
 import android.adservices.adselection.RemoveAdSelectionOverrideRequest;
 import android.adservices.common.AdSelectionSignals;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public class AdSelectionOverrideRequestTest {
+@RequiresSdkLevelAtLeastS
+public final class AdSelectionOverrideRequestTest extends CtsAdServicesDeviceTestCase {
 
     private static final AdSelectionConfig AD_SELECTION_CONFIG =
             AdSelectionConfigFixture.anAdSelectionConfig();
@@ -43,18 +41,15 @@ public class AdSelectionOverrideRequestTest {
                             + "\t\"render_uri_2\": \"signals_for_2\"\n"
                             + "}");
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Test
     public void testBuildValidAddAdSelectionOverrideRequestSuccess() {
         AddAdSelectionOverrideRequest request =
                 new AddAdSelectionOverrideRequest(
                         AD_SELECTION_CONFIG, DECISION_LOGIC_JS, TRUSTED_SCORING_SIGNALS);
 
-        assertEquals(request.getAdSelectionConfig(), AD_SELECTION_CONFIG);
-        assertEquals(request.getDecisionLogicJs(), DECISION_LOGIC_JS);
-        assertEquals(request.getTrustedScoringSignals(), TRUSTED_SCORING_SIGNALS);
+        expect.that(request.getAdSelectionConfig()).isEqualTo(AD_SELECTION_CONFIG);
+        expect.that(request.getDecisionLogicJs()).isEqualTo(DECISION_LOGIC_JS);
+        expect.that(request.getTrustedScoringSignals()).isEqualTo(TRUSTED_SCORING_SIGNALS);
     }
 
     @Test
@@ -62,6 +57,6 @@ public class AdSelectionOverrideRequestTest {
         RemoveAdSelectionOverrideRequest request =
                 new RemoveAdSelectionOverrideRequest(AD_SELECTION_CONFIG);
 
-        assertEquals(request.getAdSelectionConfig(), AD_SELECTION_CONFIG);
+        expect.that(request.getAdSelectionConfig()).isEqualTo(AD_SELECTION_CONFIG);
     }
 }

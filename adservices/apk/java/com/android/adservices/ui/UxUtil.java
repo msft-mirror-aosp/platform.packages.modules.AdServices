@@ -23,6 +23,7 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 import androidx.fragment.app.FragmentActivity;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.ui.data.UxStatesManager;
@@ -34,16 +35,30 @@ import java.util.stream.Stream;
 @RequiresApi(Build.VERSION_CODES.S)
 public class UxUtil {
 
+    private static final String INTENT_EXTRA_EEA_DEVICE_ARGUMENT = "isEUDevice";
+
     /** Returns whether the device is an EEA device. */
-    public static boolean isEeaDevice(FragmentActivity fragmentActivity, Context context) {
-        return FlagsFactory.getFlags().getConsentNotificationActivityDebugMode()
-                ? fragmentActivity
-                        .getIntent()
-                        .getBooleanExtra(
-                                  "isEUDevice",
-                                  UxStatesManager.getInstance().isEeaDevice())
-                : !ConsentManager.getInstance().isAdIdEnabled()
-                        || UxStatesManager.getInstance().isEeaDevice();
+    public static boolean isEeaDevice(FragmentActivity fragmentActivity) {
+        boolean debugEnabled = FlagsFactory.getFlags().getConsentNotificationActivityDebugMode();
+        boolean stateManagerIsEeaDevice = UxStatesManager.getInstance().isEeaDevice();
+        LoggerFactory.getUILogger()
+                .d("uxutil get notification activity debug mode as %b", debugEnabled);
+        LoggerFactory.getUILogger()
+                .d("state manager get is eea device as %b", stateManagerIsEeaDevice);
+        if (debugEnabled) {
+            boolean intentIsEeaDevice =
+                    fragmentActivity
+                            .getIntent()
+                            .getBooleanExtra(
+                                    INTENT_EXTRA_EEA_DEVICE_ARGUMENT, stateManagerIsEeaDevice);
+            LoggerFactory.getUILogger().d("get intent is eea device as %b", intentIsEeaDevice);
+            return intentIsEeaDevice;
+        } else {
+            boolean deviceIsEeaDevice =
+                    !ConsentManager.getInstance().isAdIdEnabled() || stateManagerIsEeaDevice;
+            LoggerFactory.getUILogger().d("get device is eea device as %b", deviceIsEeaDevice);
+            return deviceIsEeaDevice;
+        }
     }
 
     /** Returns if UXStates should be used. */

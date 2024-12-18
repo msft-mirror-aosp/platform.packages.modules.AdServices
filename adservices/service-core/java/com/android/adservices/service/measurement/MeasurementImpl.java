@@ -60,8 +60,12 @@ import com.android.adservices.service.measurement.rollback.MeasurementRollbackCo
 import com.android.adservices.service.measurement.util.Applications;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.MeasurementWipeoutStats;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
+
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
 
 import java.net.URISyntaxException;
 import java.util.Collections;
@@ -78,13 +82,14 @@ import javax.annotation.concurrent.ThreadSafe;
  *
  * @hide
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 @ThreadSafe
 @WorkerThread
 public final class MeasurementImpl {
     private static final String ANDROID_APP_SCHEME = "android-app";
     private static volatile MeasurementImpl sMeasurementImpl;
+    private static volatile Supplier<MeasurementImpl> sMeasurementImplSupplier =
+            Suppliers.memoize(() -> new MeasurementImpl(ApplicationContextSingleton.get()));
     private final Context mContext;
     private final ReadWriteLock mReadWriteLock = new ReentrantReadWriteLock();
     private final DatastoreManager mDatastoreManager;
@@ -96,7 +101,7 @@ public final class MeasurementImpl {
     @VisibleForTesting
     MeasurementImpl(Context context) {
         mContext = context;
-        mDatastoreManager = DatastoreManagerFactory.getDatastoreManager(context);
+        mDatastoreManager = DatastoreManagerFactory.getDatastoreManager();
         mClickVerifier = new ClickVerifier(context);
         mFlags = FlagsFactory.getFlags();
         mMeasurementDataDeleter = new MeasurementDataDeleter(mDatastoreManager, mFlags);
@@ -107,6 +112,7 @@ public final class MeasurementImpl {
     @VisibleForTesting
     public MeasurementImpl(
             Context context,
+            Flags flags,
             DatastoreManager datastoreManager,
             ClickVerifier clickVerifier,
             MeasurementDataDeleter measurementDataDeleter,
@@ -115,7 +121,7 @@ public final class MeasurementImpl {
         mDatastoreManager = datastoreManager;
         mClickVerifier = clickVerifier;
         mMeasurementDataDeleter = measurementDataDeleter;
-        mFlags = FlagsFactory.getFlagsForTest();
+        mFlags = flags;
         mContentResolver = contentResolver;
     }
 
@@ -126,15 +132,21 @@ public final class MeasurementImpl {
      * existing instance will be returned.
      */
     @NonNull
-    public static MeasurementImpl getInstance(Context context) {
+    public static MeasurementImpl getInstance() {
         if (sMeasurementImpl == null) {
             synchronized (MeasurementImpl.class) {
                 if (sMeasurementImpl == null) {
-                    sMeasurementImpl = new MeasurementImpl(context);
+                    sMeasurementImpl = sMeasurementImplSupplier.get();
                 }
             }
         }
         return sMeasurementImpl;
+    }
+
+    /** Gets an supplier of MeasurementImpl to be used. */
+    @NonNull
+    public static Supplier<MeasurementImpl> getSingletonSupplier() {
+        return sMeasurementImplSupplier;
     }
 
     /**
@@ -363,13 +375,13 @@ public final class MeasurementImpl {
      * Delete all records from a specific package and return a boolean value to indicate whether any
      * data was deleted.
      */
-    public boolean deletePackageRecords(Uri packageUri) {
+    public boolean deletePackageRecords(Uri packageUri, long eventTime) {
         Uri appUri = getAppUri(packageUri);
         LoggerFactory.getMeasurementLogger().d("Deleting records for " + appUri);
         mReadWriteLock.writeLock().lock();
         boolean didDeletionOccur = false;
         try {
-            didDeletionOccur = mMeasurementDataDeleter.deleteAppUninstalledData(appUri);
+            didDeletionOccur = mMeasurementDataDeleter.deleteAppUninstalledData(appUri, eventTime);
             if (didDeletionOccur) {
                 markDeletion();
             }
@@ -413,7 +425,7 @@ public final class MeasurementImpl {
 
         if (uninstalledAppsOpt.isPresent()) {
             for (Uri uninstalledAppName : uninstalledAppsOpt.get()) {
-                deletePackageRecords(uninstalledAppName);
+                deletePackageRecords(uninstalledAppName, System.currentTimeMillis());
             }
         }
     }
@@ -577,7 +589,7 @@ public final class MeasurementImpl {
                     .needsToHandleRollbackReconciliation(AdServicesManager.MEASUREMENT_DELETION);
         }
 
-        // Not on Android T+. Check if flag is enabled if on R/S.
+        // Not on Android T+. Check if flag is enabled if on S.
         if (isMeasurementRollbackCompatDisabled()) {
             LoggerFactory.getMeasurementLogger()
                     .e("Rollback deletion disabled. Not checking compatible store for rollback.");
@@ -608,7 +620,7 @@ public final class MeasurementImpl {
             return;
         }
 
-        // If on Android R/S, check if the appropriate flag is enabled, otherwise do nothing.
+        // If on Android S, check if the appropriate flag is enabled, otherwise do nothing.
         if (isMeasurementRollbackCompatDisabled()) {
             LoggerFactory.getMeasurementLogger()
                     .e("Rollback deletion disabled. Not storing status in compatible store.");
@@ -627,8 +639,6 @@ public final class MeasurementImpl {
         }
 
         Flags flags = FlagsFactory.getFlags();
-        return SdkLevel.isAtLeastS()
-                ? flags.getMeasurementRollbackDeletionAppSearchKillSwitch()
-                : !flags.getMeasurementRollbackDeletionREnabled();
+        return !SdkLevel.isAtLeastS() || flags.getMeasurementRollbackDeletionAppSearchKillSwitch();
     }
 }

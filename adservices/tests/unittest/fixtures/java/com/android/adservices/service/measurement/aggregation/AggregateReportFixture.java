@@ -28,6 +28,7 @@ import org.json.JSONException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 public final class AggregateReportFixture {
@@ -40,6 +41,7 @@ public final class AggregateReportFixture {
     // values in {@link ValidAggregateReportParams}
     public static AggregateReport.Builder getValidAggregateReportBuilder() {
         return new AggregateReport.Builder()
+                .setId(UUID.randomUUID().toString())
                 .setPublisher(ValidAggregateReportParams.PUBLISHER)
                 .setAttributionDestination(ValidAggregateReportParams.ATTRIBUTION_DESTINATION)
                 .setSourceRegistrationTime(ValidAggregateReportParams.SOURCE_REGISTRATION_TIME)
@@ -54,7 +56,9 @@ public final class AggregateReportFixture {
                 .setRegistrationOrigin(ValidAggregateReportParams.REGISTRATION_ORIGIN)
                 .setAggregationCoordinatorOrigin(
                         ValidAggregateReportParams.AGGREGATION_COORDINATOR_ORIGIN)
-                .setIsFakeReport(false);
+                .setIsFakeReport(false)
+                .setTriggerContextId(ValidAggregateReportParams.TRIGGER_CONTEXT_ID)
+                .setApi(ValidAggregateReportParams.API);
     }
 
     public static AggregateReport getValidAggregateReport() {
@@ -75,6 +79,8 @@ public final class AggregateReportFixture {
                 WebUtil.validUri("https://subdomain.example.test");
         public static final Uri AGGREGATION_COORDINATOR_ORIGIN =
                 WebUtil.validUri("https://coordinator.example.test");
+        public static final String TRIGGER_CONTEXT_ID = "trigger_context_id";
+        public static final String API = "attribution-reporting";
 
         public static final String getDebugPayload() {
             List<AggregateHistogramContribution> contributions = new ArrayList<>();

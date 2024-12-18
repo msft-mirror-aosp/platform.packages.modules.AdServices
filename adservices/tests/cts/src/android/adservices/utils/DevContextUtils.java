@@ -20,9 +20,9 @@ import android.content.Context;
 import android.os.Process;
 import android.util.Log;
 
-import com.android.adservices.common.SupportedByConditionRule;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 
 /** Class to manage all utilities required for DevContext in CTS */
 public class DevContextUtils {
@@ -46,6 +46,6 @@ public class DevContextUtils {
                 logTag,
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode));
-        return mDevContext.getDevOptionsEnabled();
+        return mDevContext.getDeviceDevOptionsEnabled();
     }
 }

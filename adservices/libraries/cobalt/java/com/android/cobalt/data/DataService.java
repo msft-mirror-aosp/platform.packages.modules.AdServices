@@ -16,13 +16,13 @@
 
 package com.android.cobalt.data;
 
-import static com.android.cobalt.collect.ImmutableHelpers.toImmutableList;
 import static com.android.cobalt.collect.ImmutableHelpers.toImmutableListMultimap;
 
 import static java.util.stream.Collectors.toMap;
 
-import android.annotation.NonNull;
 import android.util.Log;
+
+import com.android.cobalt.logging.CobaltOperationLogger;
 
 import com.google.cobalt.AggregateValue;
 import com.google.cobalt.SystemProfile;
@@ -55,10 +55,15 @@ public final class DataService {
     private final ExecutorService mExecutorService;
     private final CobaltDatabase mCobaltDatabase;
     private final DaoBuildingBlocks mDaoBuildingBlocks;
+    private final CobaltOperationLogger mOperationLogger;
 
-    public DataService(@NonNull ExecutorService executor, @NonNull CobaltDatabase cobaltDatabase) {
+    public DataService(
+            ExecutorService executor,
+            CobaltDatabase cobaltDatabase,
+            CobaltOperationLogger operationLogger) {
         this.mExecutorService = Objects.requireNonNull(executor);
         this.mCobaltDatabase = Objects.requireNonNull(cobaltDatabase);
+        this.mOperationLogger = Objects.requireNonNull(operationLogger);
 
         this.mDaoBuildingBlocks = mCobaltDatabase.daoBuildingBlocks();
     }
@@ -321,6 +326,8 @@ public final class DataService {
         int index =
                 mDaoBuildingBlocks.queryStringListIndex(reportKey, dayIndex, stringBufferMax, hash);
         if (index == -1) {
+            mOperationLogger.logStringBufferMaxExceeded(
+                    (int) reportKey.metricId(), (int) reportKey.reportId());
             return;
         }
 
@@ -425,6 +432,8 @@ public final class DataService {
             AggregateValue newValue) {
         if (!canAddEventVectorToSystemProfile(
                 reportKey, dayIndex, systemProfileHash, eventVectorBufferMax)) {
+            mOperationLogger.logEventVectorBufferMaxExceeded(
+                    (int) reportKey.metricId(), (int) reportKey.reportId());
             return false;
         }
         mDaoBuildingBlocks.insertAggregateValue(
@@ -475,10 +484,10 @@ public final class DataService {
             ObservationGenerator generator = generatorSupplier.apply(dayIndex);
             ImmutableList<UnencryptedObservationBatch> batches =
                     generator.generateObservations(dayIndex, eventData);
-            int numObservations =
-                    batches.stream()
-                            .mapToInt(UnencryptedObservationBatch::getUnencryptedObservationsCount)
-                            .sum();
+            int numObservations = 0;
+            for (UnencryptedObservationBatch batch : batches) {
+                numObservations += batch.getUnencryptedObservationsCount();
+            }
             logInfo(
                     "Generated %s observations in %s observation batches for day index %s for"
                             + " report %s",
@@ -521,9 +530,13 @@ public final class DataService {
     }
 
     private ImmutableList<ReportKey> irrelevantReports(ImmutableList<ReportKey> registryReports) {
-        return mDaoBuildingBlocks.queryReportKeys().stream()
-                .filter(r -> !registryReports.contains(r))
-                .collect(toImmutableList());
+        ImmutableList.Builder<ReportKey> irrelevantReportsBuilder = ImmutableList.builder();
+        for (ReportKey reportKey : mDaoBuildingBlocks.queryReportKeys()) {
+            if (!registryReports.contains(reportKey)) {
+                irrelevantReportsBuilder.add(reportKey);
+            }
+        }
+        return irrelevantReportsBuilder.build();
     }
 
     private static void logInfo(String format, Object... params) {

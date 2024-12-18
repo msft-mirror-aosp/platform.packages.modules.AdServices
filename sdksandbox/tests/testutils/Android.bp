@@ -17,11 +17,22 @@ package {
     default_applicable_licenses: ["Android-Apache-2.0"],
 }
 
+filegroup {
+    name: "sdksandbox-test-utility-sideless-sources",
+    srcs: [
+        "side-less/**/*.java",
+    ],
+    path: "side-less",
+    visibility: [
+        ":__pkg__",
+    ],
+}
+
 java_library {
     name: "SdkSandboxTestUtils",
     srcs: [
-        "src/**/testutils/*.java",
-        "src/com/android/server/sdksandbox/*.java",
+        "device-side/**/*.java",
+        ":sdksandbox-test-utility-sideless-sources",
     ],
     libs: [
         "framework-sdksandbox.impl",
@@ -33,9 +44,9 @@ java_library {
         "androidx.test.ext.junit",
         "SdkSandbox-java-lib",
         "platform-screenshot-diff-core",
+        "modules-utils-build",
     ],
     visibility: [
-        // TODO(b/222118402): adjust once code is moved
         "//packages/modules/AdServices:__subpackages__",
     ],
 }
@@ -43,10 +54,13 @@ java_library {
 java_library_host {
     name: "SdkSandboxHostTestUtils",
     srcs: [
-        "src/**/hosttestutils/*.java",
+        "host-side/**/*.java",
+        ":sdksandbox-test-utility-sideless-sources",
     ],
     static_libs: [
+        "adservices-shared-hostside-testing",
         "compatibility-host-util",
+        "modules-utils-build-testing",
     ],
     libs: ["tradefed"],
 }

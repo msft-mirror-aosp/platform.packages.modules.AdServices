@@ -40,7 +40,7 @@ java_sdk_library {
         "error_prone_annotations",
         "adservices_flags_lib",
     ],
-    static_libs : [
+    static_libs: [
         "adservices-shared-exceptions",
     ],
     sdk_version: "module_current",
@@ -76,11 +76,15 @@ java_library {
         "error_prone_annotations",
         "adservices_flags_lib",
     ],
-    static_libs : [
+    static_libs: [
         "adservices-shared-exceptions",
     ],
     min_sdk_version: "30",
     defaults: ["framework-module-defaults"],
+    lint: {
+        extra_check_modules: ["AdServicesProdLintChecker"],
+        baseline_filename: "lint-baseline.xml",
+    },
 }
 
 java_library {
@@ -92,6 +96,7 @@ java_library {
     min_sdk_version: "30",
     max_sdk_version: "32",
     visibility: [
+        "//external/chromium-webview:__subpackages__",
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",
         "//vendor:__subpackages__",

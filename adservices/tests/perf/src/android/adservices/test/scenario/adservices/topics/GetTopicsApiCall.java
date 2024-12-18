@@ -16,7 +16,7 @@
 
 package android.adservices.test.scenario.adservices.topics;
 
-import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 
 import android.adservices.clients.topics.AdvertisingTopicsClient;
@@ -59,7 +59,7 @@ public class GetTopicsApiCall {
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     .setTopicsKillSwitch(false)
-                    .setSystemProperty(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                    .setDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, true)
                     .setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
                     .setCompatModeFlags();
 

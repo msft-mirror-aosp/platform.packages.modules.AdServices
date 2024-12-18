@@ -15,6 +15,8 @@
  */
 package com.android.adservices.tests.adid;
 
+import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.adid.AdId;
@@ -24,9 +26,11 @@ import android.os.LimitExceededException;
 
 import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
-import com.android.adservices.common.RequiresLowRamDevice;
-import com.android.adservices.shared.common.ServiceUnavailableException;
+import com.android.adservices.common.annotations.RequiresAndroidServiceAvailable;
+import com.android.adservices.shared.common.exception.ServiceUnavailableException;
+import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -37,8 +41,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public final class AdIdCompatibleManagerTest extends CtsAdIdEndToEndTestCase {
-
+@RequiresAndroidServiceAvailable(intentAction = ACTION_ADID_PROVIDER_SERVICE)
+public final class AdIdCompatibleManagerTest extends AdServicesCtsTestCase
+        implements CtsAdIdEndToEndTestFlags {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
 
     @Before
@@ -110,6 +115,9 @@ public final class AdIdCompatibleManagerTest extends CtsAdIdEndToEndTestCase {
 
         adIdCompatibleManager.getAdId(CALLBACK_EXECUTOR, callback);
 
-        callback.assertFailure(ServiceUnavailableException.class);
+        // TODO(b/345835218): Create an Exception Checker for internal exceptions in tests.
+        Exception e = callback.assertFailure(IllegalStateException.class);
+        assertThat(e.getClass().getSimpleName())
+                .isEqualTo(ServiceUnavailableException.class.getSimpleName());
     }
 }

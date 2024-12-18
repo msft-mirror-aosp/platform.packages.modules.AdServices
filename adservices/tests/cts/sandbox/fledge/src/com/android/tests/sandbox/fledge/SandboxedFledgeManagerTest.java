@@ -16,24 +16,34 @@
 
 package com.android.tests.sandbox.fledge;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.tests.sandbox.fledge.SandboxedFledgeManagerTest.PROPERTY_DISABLE_SDK_SANDBOX;
+
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.Manifest;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
-import android.content.Context;
+import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.os.Bundle;
 import android.os.Process;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.service.PhFlagsFixture;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
@@ -41,30 +51,31 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
-public class SandboxedFledgeManagerTest {
+@SetFlagEnabled(KEY_ADSERVICES_ENABLED)
+@SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
+@SetFlagDisabled(PROPERTY_DISABLE_SDK_SANDBOX)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
+@SetPpapiAppAllowList
+public final class SandboxedFledgeManagerTest extends CtsSandboxedFledgeManagerTestCase {
+    public static final String PROPERTY_DISABLE_SDK_SANDBOX = "disable_sdk_sandbox";
+
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final String SDK_NAME = "com.android.tests.providers.sdkfledge";
-
-    private static final Context sContext =
-            InstrumentationRegistry.getInstrumentation().getContext();
-
-    private DevContext mDevContext;
 
     private boolean mHasAccessToDevOverrides;
 
     private String mAccessStatus;
 
+    @Rule(order = 0)
+    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
+
     @Before
     public void setup() throws TimeoutException {
-        // Skip the test if it runs on unsupported platforms
-        Assume.assumeTrue(AdservicesTestHelper.isDeviceSupported());
-
         DevContextFilter devContextFilter = DevContextFilter.create(sContext);
-        mDevContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
-        boolean isDebuggable =
-                devContextFilter.isDebuggable(mDevContext.getCallingAppPackageName());
+        DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
+        boolean isDebuggable = devContextFilter.isDebuggable(devContext.getCallingAppPackageName());
         boolean isDeveloperMode = devContextFilter.isDeveloperMode();
-        mHasAccessToDevOverrides = mDevContext.getDevOptionsEnabled();
+        mHasAccessToDevOverrides = devContext.getDeviceDevOptionsEnabled();
         mAccessStatus =
                 String.format("Debuggable: %b\n", isDebuggable)
                         + String.format("Developer options on: %b", isDeveloperMode);
@@ -73,12 +84,7 @@ public class SandboxedFledgeManagerTest {
                 .getUiAutomation()
                 .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
 
-        // Enable CTS to be run with versions of WebView < M105
-        PhFlagsFixture.overrideEnforceIsolateMaxHeapSize(false);
-        PhFlagsFixture.overrideIsolateMaxHeapSizeBytes(0);
-
         makeTestProcessForeground();
-        PhFlagsFixture.overrideFledgeEnrollmentCheck(true);
 
         // Kill AdServices process
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -94,10 +100,6 @@ public class SandboxedFledgeManagerTest {
 
     @After
     public void shutDown() {
-        if (!AdservicesTestHelper.isDeviceSupported()) {
-            return;
-        }
-
         SimpleActivity.stopSimpleActivity(sContext);
     }
 
@@ -105,10 +107,12 @@ public class SandboxedFledgeManagerTest {
     public void loadSdkAndRunFledgeFlow() {
         Assume.assumeTrue(mAccessStatus, mHasAccessToDevOverrides);
 
-        final SdkSandboxManager sdkSandboxManager =
-                sContext.getSystemService(SdkSandboxManager.class);
+        SdkSandboxManager sdkSandboxManager = sContext.getSystemService(SdkSandboxManager.class);
+        assertWithMessage("SdkSandboxManager should not be null")
+                .that(sdkSandboxManager)
+                .isNotNull();
 
-        final FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
+        FakeLoadSdkCallback callback = new FakeLoadSdkCallback();
 
         sdkSandboxManager.loadSdk(SDK_NAME, new Bundle(), CALLBACK_EXECUTOR, callback);
 

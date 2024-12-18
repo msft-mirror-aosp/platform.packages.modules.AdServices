@@ -22,17 +22,15 @@ import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.cobalt.ReleaseStage;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public final class CobaltReleaseStagesTest {
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
+@RequiresSdkLevelAtLeastS
+public final class CobaltReleaseStagesTest extends AdServicesUnitTestCase {
 
     @Test
     public void defaultStage_isGa() throws Exception {
@@ -42,11 +40,11 @@ public final class CobaltReleaseStagesTest {
 
     @Test
     public void knownStagesConverted() throws Exception {
-        assertThat(getReleaseStage("DEBUG")).isEqualTo(ReleaseStage.DEBUG);
-        assertThat(getReleaseStage("FISHFOOD")).isEqualTo(ReleaseStage.FISHFOOD);
-        assertThat(getReleaseStage("DOGFOOD")).isEqualTo(ReleaseStage.DOGFOOD);
-        assertThat(getReleaseStage("OPEN_BETA")).isEqualTo(ReleaseStage.OPEN_BETA);
-        assertThat(getReleaseStage("GA")).isEqualTo(ReleaseStage.GA);
+        expect.that(getReleaseStage("DEBUG")).isEqualTo(ReleaseStage.DEBUG);
+        expect.that(getReleaseStage("FISHFOOD")).isEqualTo(ReleaseStage.FISHFOOD);
+        expect.that(getReleaseStage("DOGFOOD")).isEqualTo(ReleaseStage.DOGFOOD);
+        expect.that(getReleaseStage("OPEN_BETA")).isEqualTo(ReleaseStage.OPEN_BETA);
+        expect.that(getReleaseStage("GA")).isEqualTo(ReleaseStage.GA);
     }
 
     @Test

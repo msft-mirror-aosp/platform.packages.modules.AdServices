@@ -19,53 +19,18 @@ package com.android.adservices.service.measurement.noising;
 import com.android.adservices.service.measurement.PrivacyParams;
 
 import com.google.common.math.DoubleMath;
+import com.google.common.math.LongMath;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 /**
  * Combinatorics utilities used for randomization.
  */
 public class Combinatorics {
-
-    /**
-     * Computes the binomial coefficient aka {@code n} choose {@code k}.
-     * https://en.wikipedia.org/wiki/Binomial_coefficient
-     *
-     * @return binomial coefficient for (n choose k)
-     * @throws ArithmeticException if the result overflows an int
-     */
-    static long getBinomialCoefficient(int n, int k) {
-        if (k > n) {
-            return 0L;
-        }
-        if (k == n || n == 0) {
-            return 1L;
-        }
-        // getBinomialCoefficient(n, k) == getBinomialCoefficient(n, n - k).
-        if (k > n - k) {
-            k = n - k;
-        }
-        // (n choose k) = n (n -1) ... (n - (k - 1)) / k!
-        // = mul((n + 1 - i) / i), i from 1 -> k.
-        //
-        // You might be surprised that this algorithm works just fine with integer
-        // division (i.e. division occurs cleanly with no remainder). However, this is
-        // true for a very simple reason. Imagine a value of `i` causes division with
-        // remainder in the below algorithm. This immediately implies that
-        // (n choose i) is fractional, which we know is not the case.
-        long result = 1L;
-        long nLong = (long) n;
-        long kLong = (long) k;
-        for (long i = 1L; i <= kLong; i++) {
-            result = Math.multiplyExact(result, nLong + 1 - i);
-            result = result / i;
-        }
-        return result;
-    }
 
     /**
      * Returns the k-combination associated with the number {@code combinationIndex}. In
@@ -147,7 +112,8 @@ public class Combinatorics {
      * @return number of possible sequences
      */
     public static long getNumberOfStarsAndBarsSequences(int numStars, int numBars) {
-        return getBinomialCoefficient(numStars + numBars, numStars);
+        // Note, LongMath::binomial returns Long.MAX_VALUE rather than overflow.
+        return LongMath.binomial(numStars + numBars, numStars);
     }
 
     /**
@@ -195,108 +161,109 @@ public class Combinatorics {
     }
 
     /**
-     * Using dynamic programming to compute number of states. Assuming the parameter validation has
-     * been checked to avoid overflow or out of memory error
+     * Using dynamic programming to compute number of states. Returns Long.MAX_VALUE if the result
+     * is greater than {@code bound}.
      *
      * @param totalCap total incremental cap
      * @param perTypeNumWindowList reporting window per trigger data
      * @param perTypeCapList cap per trigger data
+     * @param bound the highest state count allowed
      * @return number of states
+     * @throws ArithmeticException in case of long overflow
      */
-    private static long getNumStatesRecursive(
-            int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
-        int index = perTypeNumWindowList.length - 1;
-        return getNumStatesRecursive(
-                totalCap,
-                index,
-                perTypeNumWindowList[index],
-                perTypeCapList[index],
-                perTypeNumWindowList,
-                perTypeCapList,
-                new HashMap<>());
-    }
-
-    private static long getNumStatesRecursive(
-            int totalCap,
-            int index,
-            int winVal,
-            int capVal,
-            int[] perTypeNumWindowList,
-            int[] perTypeCapList,
-            Map<List<Integer>, Long> dp) {
-        List<Integer> key = List.of(totalCap, index, winVal, capVal);
-        if (!dp.containsKey(key)) {
-            if (winVal == 0 && index == 0) {
-                dp.put(key, 1L);
-            } else if (winVal == 0) {
-                dp.put(key, getNumStatesRecursive(
-                        totalCap,
-                        index - 1,
-                        perTypeNumWindowList[index - 1],
-                        perTypeCapList[index - 1],
-                        perTypeNumWindowList,
-                        perTypeCapList,
-                        dp));
-            } else {
-                long result = 0L;
-                for (int i = 0; i <= Math.min(totalCap, capVal); i++) {
-                    result = Math.addExact(result, getNumStatesRecursive(
-                            totalCap - i,
-                            index,
-                            winVal - 1,
-                            capVal - i,
-                            perTypeNumWindowList,
-                            perTypeCapList,
-                            dp));
-                }
-                dp.put(key, result);
-            }
+    private static long getNumStatesIterative(
+            int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList, long bound) {
+        // Assumes perTypeCapList cannot sum to more than int value. Overflowing int here can lead
+        // to an exception when declaring the array size later, based on the min value.
+        int sum = 0;
+        for (int cap : perTypeCapList) {
+            sum += cap;
         }
-        return dp.get(key);
+        int leastTotalCap = Math.min(totalCap, sum);
+        long[][] dp = new long[2][leastTotalCap + 1];
+        int prev = 0;
+        int curr = 1;
+
+        dp[prev][0] = 1L;
+        long result = 0L;
+
+        for (int i = 0; i < perTypeNumWindowList.length && perTypeNumWindowList[i] > 0; i++) {
+            int winCount = perTypeNumWindowList[i];
+            int capCount = perTypeCapList[i];
+            result = 0L;
+
+            for (int cap = 0; cap < leastTotalCap + 1; cap++) {
+                dp[curr][cap] = 0L;
+
+                for (int capVal = 0; capVal < Math.min(cap, capCount) + 1; capVal++) {
+                    dp[curr][cap] = Math.addExact(
+                            dp[curr][cap],
+                            Math.multiplyExact(
+                                    dp[prev][cap - capVal],
+                                    getNumberOfStarsAndBarsSequences(capVal, winCount - 1)));
+                }
+
+                result = Math.addExact(result, dp[curr][cap]);
+
+                if (result > bound) {
+                    return Long.MAX_VALUE;
+                }
+            }
+
+            curr ^= 1;
+            prev ^= 1;
+        }
+
+        return Math.max(result, 1L);
     }
 
     /**
-     * Compute number of states for flexible event report API
+     * Compute number of states for flexible event report API. Returns Long.MAX_VALUE if the result
+     * exceeds {@code bound}.
      *
      * @param totalCap number of total increments
      * @param perTypeNumWindowList reporting window for each trigger data
      * @param perTypeCapList limit of the increment of each trigger data
+     * @param bound the highest state count allowed
      * @return number of states
+     * @throws ArithmeticException in case of long overflow during the iterative procedure
      */
     public static long getNumStatesFlexApi(
-            int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList) {
+            int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList, long bound) {
         if (perTypeNumWindowList.length == 0 || perTypeCapList.length == 0) {
             return 1;
         }
         for (int i = 1; i < perTypeNumWindowList.length; i++) {
             if (perTypeNumWindowList[i] != perTypeNumWindowList[i - 1]) {
-                return getNumStatesRecursive(totalCap, perTypeNumWindowList, perTypeCapList);
+                return getNumStatesIterative(totalCap, perTypeNumWindowList, perTypeCapList, bound);
             }
         }
         for (int n : perTypeCapList) {
             if (n < totalCap) {
-                return getNumStatesRecursive(totalCap, perTypeNumWindowList, perTypeCapList);
+                return getNumStatesIterative(totalCap, perTypeNumWindowList, perTypeCapList, bound);
             }
         }
 
-        return getNumStatesArithmetic(totalCap, perTypeCapList.length, perTypeNumWindowList[0]);
+        long result = getNumStatesArithmetic(
+                totalCap, perTypeCapList.length, perTypeNumWindowList[0]);
+
+        return result > bound ? Long.MAX_VALUE : result;
     }
 
     /**
      * @param numOfStates Number of States
      * @return the probability to use fake reports
      */
-    public static double getFlipProbability(long numOfStates) {
-        double epsilon = (double) PrivacyParams.getPrivacyEpsilon();
-        return numOfStates / (numOfStates + Math.exp(epsilon) - 1D);
+    public static double getFlipProbability(long numOfStates, double privacyEpsilon) {
+        return (numOfStates) / (numOfStates + Math.exp(privacyEpsilon) - 1D);
     }
 
     private static double getBinaryEntropy(double x) {
         if (DoubleMath.fuzzyEquals(x, 0.0d, PrivacyParams.NUMBER_EQUAL_THRESHOLD)
                 || DoubleMath.fuzzyEquals(x, 1.0d, PrivacyParams.NUMBER_EQUAL_THRESHOLD)) {
-            return 0;
+            return 0.0D;
         }
-        return (-1.0) * x * DoubleMath.log2(x) - (1 - x) * DoubleMath.log2(1 - x);
+        return (-1.0D) * x * DoubleMath.log2(x) - (1 - x) * DoubleMath.log2(1 - x);
     }
 
     /**
@@ -316,21 +283,40 @@ public class Combinatorics {
     }
 
     /**
+     * Returns the max information gain given the num of trigger states, attribution scope limit and
+     * max num event states.
+     *
+     * @param numTriggerStates The number of trigger states.
+     * @param attributionScopeLimit The attribution scope limit.
+     * @param maxEventStates The maximum number of event states (expected to be positive).
+     * @return The max information gain.
+     */
+    public static double getMaxInformationGainWithAttributionScope(
+            long numTriggerStates, long attributionScopeLimit, long maxEventStates) {
+        if (numTriggerStates <= 0 || maxEventStates <= 0) {
+            throw new IllegalArgumentException(
+                    "numTriggerStates and maxEventStates must be positive");
+        }
+        BigInteger totalNumStates =
+                BigInteger.valueOf(numTriggerStates)
+                        .add(
+                                BigInteger.valueOf(maxEventStates)
+                                        .multiply(BigInteger.valueOf(attributionScopeLimit - 1)));
+        return DoubleMath.log2(totalNumStates.doubleValue());
+    }
+
+    /**
      * Generate fake report set given a trigger specification and the rank order number
      *
      * @param totalCap total_cap
      * @param perTypeNumWindowList per type number of window list
      * @param perTypeCapList per type cap list
+     * @param rank the rank of the report state within all the report states
      * @return a report set based on the input rank
      */
     public static List<AtomReportState> getReportSetBasedOnRank(
-            int totalCap,
-            int[] perTypeNumWindowList,
-            int[] perTypeCapList,
-            long rank,
-            Map<List<Integer>, Long> dp) {
+            int totalCap, int[] perTypeNumWindowList, int[] perTypeCapList, long rank) {
         int triggerTypeIndex = perTypeNumWindowList.length - 1;
-
         return getReportSetBasedOnRankRecursive(
                 totalCap,
                 triggerTypeIndex,
@@ -338,8 +324,7 @@ public class Combinatorics {
                 perTypeCapList[triggerTypeIndex],
                 rank,
                 perTypeNumWindowList,
-                perTypeCapList,
-                dp);
+                perTypeCapList);
     }
 
     private static List<AtomReportState> getReportSetBasedOnRankRecursive(
@@ -349,8 +334,7 @@ public class Combinatorics {
             int capVal,
             long rank,
             int[] perTypeNumWindowList,
-            int[] perTypeCapList,
-            Map<List<Integer>, Long> numStatesLookupTable) {
+            int[] perTypeCapList) {
 
         if (winVal == 0 && triggerTypeIndex == 0) {
             return new ArrayList<>();
@@ -362,19 +346,21 @@ public class Combinatorics {
                     perTypeCapList[triggerTypeIndex - 1],
                     rank,
                     perTypeNumWindowList,
-                    perTypeCapList,
-                    numStatesLookupTable);
+                    perTypeCapList);
         }
         for (int i = 0; i <= Math.min(totalCap, capVal); i++) {
+            int[] perTypeNumWindowListClone = Arrays.copyOfRange(
+                    perTypeNumWindowList, 0, triggerTypeIndex + 1);
+            perTypeNumWindowListClone[triggerTypeIndex] = winVal - 1;
+            int[] perTypeCapListClone = Arrays.copyOfRange(
+                    perTypeCapList, 0, triggerTypeIndex + 1);
+            perTypeCapListClone[triggerTypeIndex] = capVal - i;
             long currentNumStates =
-                    getNumStatesRecursive(
+                    getNumStatesIterative(
                             totalCap - i,
-                            triggerTypeIndex,
-                            winVal - 1,
-                            capVal - i,
-                            perTypeNumWindowList,
-                            perTypeCapList,
-                            numStatesLookupTable);
+                            perTypeNumWindowListClone,
+                            perTypeCapListClone,
+                            Long.MAX_VALUE);
             if (currentNumStates > rank) {
                 // The triggers to be appended.
                 List<AtomReportState> toAppend = new ArrayList<>();
@@ -389,8 +375,7 @@ public class Combinatorics {
                                 capVal - i,
                                 rank,
                                 perTypeNumWindowList,
-                                perTypeCapList,
-                                numStatesLookupTable);
+                                perTypeCapList);
                 toAppend.addAll(otherReports);
                 return toAppend;
             } else {

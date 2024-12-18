@@ -46,12 +46,11 @@ import android.content.ContentValues;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.enrollment.EnrollmentTables;
 
-import java.util.Arrays;
 import java.util.List;
 
-public class ContentValueFixtures {
+public final class ContentValueFixtures {
 
-    public static class EnrollmentValues {
+    public static final class EnrollmentValues {
 
         // Default Enrollment Example Data
         public static final String ENROLLMENT_ID = "enrollment_id";
@@ -121,6 +120,29 @@ public class ContentValueFixtures {
         return values;
     }
 
+    public static ContentValues generateEnrollmentDefaultExampleContentValuesV2() {
+        ContentValues values = new ContentValues();
+        values.put(EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID, ENROLLMENT_ID);
+        values.put(EnrollmentTables.EnrollmentDataContract.COMPANY_ID, ENROLLED_APIS);
+        values.put(EnrollmentTables.EnrollmentDataContract.SDK_NAMES, SDK_NAMES);
+        values.put(
+                EnrollmentTables.EnrollmentDataContract.ATTRIBUTION_SOURCE_REGISTRATION_URL,
+                ATTRIBUTION_SOURCE_REGISTRATION_URL);
+        values.put(
+                EnrollmentTables.EnrollmentDataContract.ATTRIBUTION_TRIGGER_REGISTRATION_URL,
+                ATTRIBUTION_TRIGGER_REGISTRATION_URL);
+        values.put(
+                EnrollmentTables.EnrollmentDataContract.ATTRIBUTION_REPORTING_URL,
+                ATTRIBUTION_REPORTING_URL);
+        values.put(
+                EnrollmentTables.EnrollmentDataContract.REMARKETING_RESPONSE_BASED_REGISTRATION_URL,
+                REMARKETING_RESPONSE_BASED_REGISTRATION_URL);
+        values.put(EnrollmentTables.EnrollmentDataContract.ENCRYPTION_KEY_URL, ENCRYPTION_KEY_URL);
+        values.put(EnrollmentTables.EnrollmentDataContract.ENROLLED_SITE, ENCRYPTION_KEY_URL);
+        values.put(EnrollmentTables.EnrollmentDataContract.ENROLLED_APIS, ENROLLED_APIS);
+        return values;
+    }
+
     public static ContentValues generateEnrollmentUniqueExampleContentValuesV1() {
         ContentValues values = new ContentValues();
         values.put(EnrollmentTables.EnrollmentDataContract.ENROLLMENT_ID, ENROLLMENT_ID_U);
@@ -169,26 +191,12 @@ public class ContentValueFixtures {
 
     /**
      * @return List of Example EnrollmentV1 contentValues. Contain multiple distinct values that
-     *     differ in URI Origin but share Site.
-     */
-    public static List<ContentValues> generateCrossSiteEnrollmentListV1() {
-        List<ContentValues> list =
-                Arrays.asList(
-                        generateEnrollmentDefaultExampleContentValuesV1(),
-                        generateEnrollmentCrossSiteExampleContentValuesV1());
-        return list;
-    }
-
-    /**
-     * @return List of Example EnrollmentV1 contentValues. Contain multiple distinct values that
      *     differ in URI Origin and Site.
      */
     public static List<ContentValues> generateDistinctSiteEnrollmentListV1() {
-        List<ContentValues> list =
-                Arrays.asList(
-                        generateEnrollmentDefaultExampleContentValuesV1(),
-                        generateEnrollmentUniqueExampleContentValuesV1());
-        return list;
+        return List.of(
+                generateEnrollmentDefaultExampleContentValuesV1(),
+                generateEnrollmentUniqueExampleContentValuesV1());
     }
 
     /**
@@ -196,11 +204,9 @@ public class ContentValueFixtures {
      *     cases that (share/are distinct) in URI Origin/Site.
      */
     public static List<ContentValues> generateFullSiteEnrollmentListV1() {
-        List<ContentValues> list =
-                Arrays.asList(
-                        generateEnrollmentDefaultExampleContentValuesV1(),
-                        generateEnrollmentCrossSiteExampleContentValuesV1(),
-                        generateEnrollmentUniqueExampleContentValuesV1());
-        return list;
+        return List.of(
+                generateEnrollmentDefaultExampleContentValuesV1(),
+                generateEnrollmentCrossSiteExampleContentValuesV1(),
+                generateEnrollmentUniqueExampleContentValuesV1());
     }
 }

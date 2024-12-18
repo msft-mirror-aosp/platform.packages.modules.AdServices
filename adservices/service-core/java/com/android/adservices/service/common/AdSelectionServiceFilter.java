@@ -27,32 +27,31 @@ import android.os.Build;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
+import com.android.adservices.service.profiling.Tracing;
 
 import java.util.Objects;
 
 /** Utility class to filter FLEDGE requests. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
     public AdSelectionServiceFilter(
             @NonNull Context context,
-            @NonNull ConsentManager consentManager,
+            @NonNull FledgeConsentFilter fledgeConsentFilter,
             @NonNull Flags flags,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull FledgeAllowListsFilter fledgeAllowListsFilter,
-            @NonNull Throttler throttler) {
+            @NonNull FledgeApiThrottleFilter fledgeApiThrottleFilter) {
         super(
                 context,
-                consentManager,
+                fledgeConsentFilter,
                 flags,
                 appImportanceFilter,
                 fledgeAuthorizationFilter,
                 fledgeAllowListsFilter,
-                throttler);
+                fledgeApiThrottleFilter);
     }
 
     /**
@@ -64,6 +63,7 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
      * @param enforceConsent whether to enforce a consent check
+     * @param enforceNotificationShown whether to enforce a UX notification check
      * @throws FilterException if any filter assertion fails and wraps the exception thrown by the
      *     failing filter Note: Any consumer of this API should not log the failure. The failing
      *     assertion logs it internally before throwing the corresponding exception.
@@ -74,29 +74,35 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
             @NonNull String callerPackageName,
             boolean enforceForeground,
             boolean enforceConsent,
+            boolean enforceNotificationShown,
             int callerUid,
             int apiName,
             @NonNull Throttler.ApiKey apiKey,
             DevContext devContext) {
+        int traceCookie = Tracing.beginAsyncSection(Tracing.AD_SELECTION_SERVICE_FILTER);
         try {
             Objects.requireNonNull(callerPackageName);
             Objects.requireNonNull(apiKey);
 
             assertCallerPackageName(callerPackageName, callerUid, apiName);
-            assertCallerNotThrottled(callerPackageName, apiKey);
+            assertCallerNotThrottled(callerPackageName, apiKey, apiName);
             if (enforceForeground) {
                 assertForegroundCaller(callerUid, apiName);
             }
+            assertEnrollmentShouldBeScheduled(
+                    enforceConsent, enforceNotificationShown, callerPackageName, apiName);
             if (!Objects.isNull(adTech)) {
                 assertFledgeEnrollment(
                         adTech, callerPackageName, apiName, devContext, API_AD_SELECTION);
             }
             assertAppInAllowList(callerPackageName, apiName, API_AD_SELECTION);
             if (enforceConsent) {
-                assertCallerHasUserConsent();
+                assertCallerHasUserConsent(callerPackageName, apiName);
             }
         } catch (Throwable t) {
             throw new FilterException(t);
+        } finally {
+            Tracing.endAsyncSection(Tracing.AD_SELECTION_SERVICE_FILTER, traceCookie);
         }
     }
 }

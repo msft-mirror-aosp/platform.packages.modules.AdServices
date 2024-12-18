@@ -16,6 +16,13 @@
 
 package android.app.sdksandbox;
 
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_LOAD_SDK_ALREADY_LOADED;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_LOAD_SDK_INTERNAL_ERROR;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_LOAD_SDK_NOT_FOUND;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_LOAD_SDK_SDK_DEFINED_ERROR;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_LOAD_SDK_SDK_SANDBOX_DISABLED;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_UNSPECIFIED;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
 import android.annotation.CallbackExecutor;
@@ -153,6 +160,15 @@ public final class SdkSandboxManager {
      */
     public static final String EXTRA_SANDBOXED_ACTIVITY_HANDLER =
             "android.app.sdksandbox.extra.SANDBOXED_ACTIVITY_HANDLER";
+
+    /**
+     * The key for an element in {@link Activity} intent extra params, the value is set while
+     * calling {@link #startSdkSandboxActivity(Activity, IBinder)}.
+     *
+     * @hide
+     */
+    public static final String EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME =
+            "android.app.sdksandbox.extra.EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME";
 
     private static final String TAG = "SdkSandboxManager";
     private TimeProvider mTimeProvider;
@@ -701,6 +717,7 @@ public final class SdkSandboxManager {
 
         Bundle params = new Bundle();
         params.putBinder(EXTRA_SANDBOXED_ACTIVITY_HANDLER, sdkActivityToken);
+        params.putLong(EXTRA_SANDBOXED_ACTIVITY_INITIATION_TIME, timeEventStarted);
         intent.putExtras(params);
 
         fromActivity.startActivity(intent);
@@ -742,6 +759,25 @@ public final class SdkSandboxManager {
          * Executor, OutcomeReceiver)} to continue using them.
          */
         void onSdkSandboxDied();
+    }
+
+    /** @hide */
+    public static @SandboxLatencyInfo.ResultCode int getResultCodeForLoadSdkException(
+            LoadSdkException exception) {
+        return switch (exception.getLoadSdkErrorCode()) {
+            case LOAD_SDK_NOT_FOUND -> RESULT_CODE_LOAD_SDK_NOT_FOUND;
+            case LOAD_SDK_ALREADY_LOADED -> RESULT_CODE_LOAD_SDK_ALREADY_LOADED;
+            case LOAD_SDK_SDK_DEFINED_ERROR -> RESULT_CODE_LOAD_SDK_SDK_DEFINED_ERROR;
+            case LOAD_SDK_SDK_SANDBOX_DISABLED -> RESULT_CODE_LOAD_SDK_SDK_SANDBOX_DISABLED;
+            case LOAD_SDK_INTERNAL_ERROR -> RESULT_CODE_LOAD_SDK_INTERNAL_ERROR;
+            case SDK_SANDBOX_PROCESS_NOT_AVAILABLE -> RESULT_CODE_SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
+            default -> {
+                Log.e(
+                        TAG,
+                        "Unexpected load SDK exception code: " + exception.getLoadSdkErrorCode());
+                yield RESULT_CODE_UNSPECIFIED;
+            }
+        };
     }
 
     /** @hide */
@@ -840,6 +876,7 @@ public final class SdkSandboxManager {
         @Override
         public void onLoadSdkFailure(
                 LoadSdkException exception, SandboxLatencyInfo sandboxLatencyInfo) {
+            sandboxLatencyInfo.setResultCode(getResultCodeForLoadSdkException(exception));
             logSandboxApiLatency(sandboxLatencyInfo);
             mExecutor.execute(() -> mCallback.onError(exception));
         }

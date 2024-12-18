@@ -16,11 +16,23 @@
 
 package com.android.server.sdksandbox.verifier;
 
-import com.android.server.sdksandbox.verifier.SerialDexLoader.DexLoadResult;
+import com.android.server.sdksandbox.verifier.SerialDexLoader.DexSymbols;
+import com.android.tools.smali.dexlib2.DexFileFactory;
+import com.android.tools.smali.dexlib2.DexFileFactory.DexFileNotFoundException;
+import com.android.tools.smali.dexlib2.Opcodes;
+import com.android.tools.smali.dexlib2.dexbacked.DexBackedDexFile;
+import com.android.tools.smali.dexlib2.dexbacked.reference.DexBackedMethodReference;
+import com.android.tools.smali.dexlib2.iface.MultiDexContainer;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 /**
  * DEX parser for SDK verification
@@ -30,29 +42,67 @@ import java.util.List;
 public class DexParserImpl implements DexParser {
 
     @Override
-    public List<String> getDexList(String apkPath) {
-        File apkPathFile = new File(apkPath);
-
-        ArrayList<String> apkSplits = new ArrayList<>();
+    public Map<File, List<String>> getDexFilePaths(File apkPathFile) throws IOException {
+        ArrayList<File> apkList = new ArrayList<>();
 
         // If multi-apk directory, find a base apk and zero or more split apks
         if (apkPathFile.isDirectory()) {
             for (File apkFile : apkPathFile.listFiles()) {
-                if (apkFile.isFile()) {
-                    apkSplits.add(apkFile.getAbsolutePath());
+                if (apkFile.isFile() && apkFile.getName().endsWith(".apk")) {
+                    apkList.add(apkFile);
                 }
             }
         } else {
-            apkSplits.add(apkPath);
+            apkList.add(apkPathFile);
         }
 
-        // TODO(b/231441674): get dex entries for each apk
+        HashMap<File, List<String>> dexLists = new HashMap<>();
 
-        return apkSplits;
+        for (File apk : apkList) {
+            try (ZipFile apkZipFile = new ZipFile(apk)) {
+                Enumeration<? extends ZipEntry> entriesEnumeration = apkZipFile.entries();
+                ArrayList<String> dexEntries = new ArrayList<>();
+
+                while (entriesEnumeration.hasMoreElements()) {
+                    String entryName = entriesEnumeration.nextElement().getName();
+                    if (entryName.endsWith(".dex")) {
+                        dexEntries.add(entryName);
+                    }
+                }
+                dexLists.put(apk, dexEntries);
+            } catch (IOException ex) {
+                throw new IOException(apk.getName() + " is not a valid DEX container file.", ex);
+            }
+        }
+
+        return (Map<File, List<String>>) dexLists;
     }
 
     @Override
-    public void loadDexSymbols(String dexFile, DexLoadResult dexLoadResult) {
-        // TODO(b/279165123): parse dex file
+    public void loadDexSymbols(File apkFile, String dexName, DexSymbols dexSymbols)
+            throws IOException {
+        MultiDexContainer.DexEntry<? extends DexBackedDexFile> dexEntry;
+        try {
+            dexEntry =
+                    DexFileFactory.loadDexEntry(
+                            apkFile, dexName, /* exactMatch */ true, Opcodes.getDefault());
+        } catch (DexFileNotFoundException e) {
+            throw new IOException(e);
+        }
+        dexSymbols.clearAndSetDexEntry(apkFile + "/" + dexName);
+
+        DexBackedDexFile dexFile = dexEntry.getDexFile();
+
+        for (DexBackedMethodReference method : dexFile.getMethodSection()) {
+            String classname = method.getDefiningClass();
+            String methodString = method.getName() + ";";
+            for (String param : method.getParameterTypes()) {
+                methodString = methodString + param;
+            }
+            methodString = methodString + method.getReturnType();
+            // remove the ; suffix in the classname before adding it
+            dexSymbols.addReferencedMethod(
+                    classname.substring(0, classname.length() - 1), methodString);
+        }
     }
 }

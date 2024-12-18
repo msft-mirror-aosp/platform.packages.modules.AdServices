@@ -17,12 +17,12 @@
  */
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:androidprv="http://schemas.android.com/apk/prv/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="android.ext.services"
-    android:versionCode="309999900"
-    android:versionName="2019-09"
-    coreApp="true">
+          xmlns:androidprv="http://schemas.android.com/apk/prv/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
+          package="android.ext.services"
+          android:versionCode="309999900"
+          android:versionName="2019-09"
+          coreApp="true">
 
     <!-- Declare the broadcast as protected so only the system service can send it.  The AdServices
     System Service will send this broadcast to the AdServices module where there is a package
@@ -53,10 +53,26 @@
                 android:description="@string/permdesc_accessAdServicesAttribution"
                 android:protectionLevel="normal"/>
 
+    <!--
+        Permissions directly related to running ad auctions include those for the Custom Audience,
+        Ad Selection, and Protected Signals APIs.
+    -->
     <!-- Allows an application to access AdServices Custom Audience APIs. -->
     <permission android:name="android.permission.ACCESS_ADSERVICES_CUSTOM_AUDIENCE"
                 android:label="@string/permlab_accessAdServicesCustomAudience"
                 android:description="@string/permdesc_accessAdServicesCustomAudience"
+                android:protectionLevel="normal"/>
+
+    <!-- Allows an application to access AdServices Ad Selection APIs. -->
+    <permission android:name="android.permission.ACCESS_ADSERVICES_AD_SELECTION"
+                android:label="@string/permlab_accessAdServicesAdSelection"
+                android:description="@string/permdesc_accessAdServicesAdSelection"
+                android:protectionLevel="normal"/>
+
+    <!-- Allows an application to access AdServices Protected Signals APIs. -->
+    <permission android:name="android.permission.ACCESS_ADSERVICES_PROTECTED_SIGNALS"
+                android:label="@string/permlab_accessAdServicesProtectedSignals"
+                android:description="@string/permdesc_accessAdServicesProtectedSignals"
                 android:protectionLevel="normal"/>
 
     <!-- Allows an application to access AdServices Ad Id API. -->
@@ -116,6 +132,10 @@
     <!-- Allows JobScheduler to persist jobs across reboot. -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
+    <!-- Required for sending measurement events -->
+    <uses-permission android:name="android.permission.ondevicepersonalization.NOTIFY_MEASUREMENT_EVENT"/>
+
+    <!-- LINT.IfChange(adExtServicesApplication) -->
     <application
         android:name=".ExtServicesApplication"
         android:label="@string/app_name"
@@ -215,12 +235,13 @@
             </intent-filter>
         </activity>
 
-        <!-- Activity for Adservices to run shell command. This is disabled by default.-->
+        <!-- Activity for Adservices to run shell command. -->
+        <!-- Dump permission limits who can call this activity, Shell has DUMP permission -->
         <activity
             android:name="com.android.adservices.shell.ShellCommandActivity"
             android:exported="true"
-            android:enabled="false"
-            android:theme="@style/Theme.SubSettingsBase"
+          android:theme="@style/Theme.SubSettingsBase"
+          android:permission="android.permission.DUMP"
             android:process=".adservices">
             <intent-filter android:priority="1">
                 <action android:name="android.adservices.BACK_COMPACT_SHELL_COMMAND"/>
@@ -229,6 +250,7 @@
         </activity>
 
         <service android:name="com.android.adservices.adselection.AdSelectionService"
+                 android:enabled="@bool/isAtLeastS"
                  android:exported="true"
                  android:visibleToInstantApps="false"
                  android:process=".adservices">
@@ -239,6 +261,7 @@
 
         <service android:name=
                      "com.android.adservices.customaudience.CustomAudienceService"
+                 android:enabled="@bool/isAtLeastS"
                  android:exported="true"
                  android:visibleToInstantApps="false"
                  android:process=".adservices">
@@ -250,6 +273,7 @@
 
         <service android:name=
                      "android.adservices.signals.ProtectedSignalsService"
+                 android:enabled="@bool/isAtLeastS"
                  android:exported="true"
                  android:visibleToInstantApps="false"
                  android:process=".adservices">
@@ -260,6 +284,7 @@
         </service>
 
         <service android:name="com.android.adservices.topics.TopicsService"
+                 android:enabled="@bool/isAtLeastS"
                  android:exported="true"
                  android:visibleToInstantApps="false"
                  android:process=".adservices">
@@ -278,6 +303,7 @@
         </service>
 
         <service android:name="com.android.adservices.appsetid.AppSetIdService"
+                 android:enabled="@bool/isAtLeastS"
                  android:exported="true"
                  android:visibleToInstantApps="false"
                  android:process=".adservices">
@@ -302,6 +328,12 @@
             <intent-filter android:priority="1">
                 <action android:name="android.adservices.AD_SERVICES_COMMON_SERVICE"/>
             </intent-filter>
+        </service>
+
+        <!-- The JobService schedules all jobs for AdServices using SPE framework. -->
+        <service android:name="com.android.adservices.spe.AdServicesJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
         </service>
 
         <!-- Daily maintenance Job. -->
@@ -372,6 +404,20 @@
         <!-- Measurement aggregate fallback report upload job. -->
         <service android:name=
                      "com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
+        </service>
+
+        <!-- Measurement immediate aggregate report upload job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService"
+                 android:permission="android.permission.BIND_JOB_SERVICE"
+                 android:process=".adservices">
+        </service>
+
+        <!-- Measurement regular report upload job. -->
+        <service android:name=
+                     "com.android.adservices.service.measurement.reporting.ReportingJobService"
                  android:permission="android.permission.BIND_JOB_SERVICE"
                  android:process=".adservices">
         </service>
@@ -519,6 +565,7 @@
             <intent-filter>
                 <action android:name="android.intent.action.PACKAGE_FULLY_REMOVED"/>
                 <action android:name="android.intent.action.PACKAGE_DATA_CLEARED"/>
+                <action android:name="android.intent.action.PACKAGE_ADDED"/>
                 <data android:scheme="package"/>
             </intent-filter>
         </receiver>
@@ -526,4 +573,5 @@
         <!-- Used and present only on S- -->
         <uses-library android:name="android.ext.adservices" android:required="false"/>
     </application>
+    <!-- LINT.ThenChange(adservices/service-core/java/com/android/adservices/service/common/compat/PackageManagerCompatUtils.java:activities_and_services) -->
 </manifest>

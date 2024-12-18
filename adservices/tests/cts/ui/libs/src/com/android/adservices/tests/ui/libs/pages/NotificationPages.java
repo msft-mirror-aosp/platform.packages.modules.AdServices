@@ -15,13 +15,14 @@
  */
 package com.android.adservices.tests.ui.libs.pages;
 
-import static com.android.adservices.tests.ui.libs.UiConstants.SYSTEM_UI_RESOURCE_ID;
+import static com.android.adservices.tests.ui.libs.UiConstants.NOTIFICATION_SCROLLER;
 import static com.android.adservices.tests.ui.libs.UiUtils.LAUNCH_TIMEOUT;
 import static com.android.adservices.tests.ui.libs.UiUtils.PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT;
 import static com.android.adservices.tests.ui.libs.UiUtils.SCROLL_WAIT_TIME;
 import static com.android.adservices.tests.ui.libs.UiUtils.getElement;
 import static com.android.adservices.tests.ui.libs.UiUtils.getPageElement;
 import static com.android.adservices.tests.ui.libs.UiUtils.getString;
+import static com.android.adservices.tests.ui.libs.UiUtils.sysuiResSelector;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -45,7 +46,9 @@ public class NotificationPages {
             boolean isDisplayed,
             boolean isEuTest,
             UiConstants.UX ux,
-            boolean isV2)
+            boolean isV2,
+            boolean isPas,
+            boolean isPasRenotify)
             throws Exception {
         device.openNotification();
         Thread.sleep(LAUNCH_TIMEOUT);
@@ -55,16 +58,27 @@ public class NotificationPages {
         switch (ux) {
             case GA_UX:
                 // Should match the contentTitle string in ConsentNotificationTrigger.java.
-                notificationTitle =
-                        isEuTest
-                                ? R.string.notificationUI_notification_ga_title_eu_v2
-                                : R.string.notificationUI_notification_ga_title_v2;
-                // Should match the text in consent_notification_screen_1_ga_v2_eu.xml and
-                // consent_notification_screen_1_ga_v2_row.xml, respectively.
-                notificationHeader =
-                        isEuTest
-                                ? R.string.notificationUI_fledge_measurement_title_v2
-                                : R.string.notificationUI_header_ga_title_v2;
+                if (isPas || isPasRenotify) {
+                    notificationTitle =
+                            isPasRenotify
+                                    ? R.string.notificationUI_pas_re_notification_title
+                                    : R.string.notificationUI_pas_notification_title;
+                    notificationHeader =
+                            isPasRenotify
+                                    ? R.string.notificationUI_pas_renotify_header_title
+                                    : R.string.notificationUI_pas_header_title;
+                } else {
+                    notificationTitle =
+                            isEuTest
+                                    ? R.string.notificationUI_notification_ga_title_eu_v2
+                                    : R.string.notificationUI_notification_ga_title_v2;
+                    // Should match the text in consent_notification_screen_1_ga_v2_eu.xml and
+                    // consent_notification_screen_1_ga_v2_row.xml, respectively.
+                    notificationHeader =
+                            isEuTest
+                                    ? R.string.notificationUI_fledge_measurement_title_v2
+                                    : R.string.notificationUI_header_ga_title_v2;
+                }
                 break;
             case BETA_UX:
                 notificationTitle =
@@ -77,10 +91,6 @@ public class NotificationPages {
                                 : R.string.notificationUI_header_title;
                 break;
             case U18_UX:
-                notificationTitle = R.string.notificationUI_u18_notification_title;
-                notificationHeader = R.string.notificationUI_u18_header_title;
-                break;
-            case RVC_UX:
                 notificationTitle = R.string.notificationUI_u18_notification_title;
                 notificationHeader = R.string.notificationUI_u18_header_title;
                 break;
@@ -97,7 +107,10 @@ public class NotificationPages {
         UiSelector notificationCardSelector =
                 new UiSelector().text(getString(context, notificationTitle));
 
-        UiObject2 scroller = device.findObject(By.res(SYSTEM_UI_RESOURCE_ID));
+        UiObject2 scroller =
+                device.wait(
+                        Until.findObject(sysuiResSelector(NOTIFICATION_SCROLLER)), LAUNCH_TIMEOUT);
+
         UiObject2 notificationCard =
                 scroller.findObject(By.textContains(getString(context, notificationTitle)));
         if (!isDisplayed) {

@@ -20,17 +20,14 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.adselection.GetAdSelectionDataOutcome;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public class GetAdSelectionDataOutcomeTest {
+@RequiresSdkLevelAtLeastS
+public final class GetAdSelectionDataOutcomeTest extends CtsAdServicesDeviceTestCase {
     private static final long AD_SELECTION_ID = 123456789L;
     private static final byte[] AD_SELECTION_RESULT = new byte[] {1, 2, 3, 4};
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testGetAdSelectionDataRequest_validInput_success() {
@@ -40,9 +37,9 @@ public class GetAdSelectionDataOutcomeTest {
                         .setAdSelectionData(AD_SELECTION_RESULT)
                         .build();
 
-        assertThat(request.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
-        assertThat(request.getAdSelectionDataId()).isEqualTo(AD_SELECTION_ID);
-        assertThat(request.getAdSelectionData()).isEqualTo(AD_SELECTION_RESULT);
+        expect.that(request.getAdSelectionId()).isEqualTo(AD_SELECTION_ID);
+        expect.that(request.getAdSelectionDataId()).isEqualTo(AD_SELECTION_ID);
+        expect.that(request.getAdSelectionData()).isEqualTo(AD_SELECTION_RESULT);
     }
 
     @Test
@@ -54,11 +51,12 @@ public class GetAdSelectionDataOutcomeTest {
                         .setAdSelectionId(AD_SELECTION_ID)
                         .setAdSelectionData(adSelectionData)
                         .build();
-        assertThat(getAdSelectionDataOutcome.getAdSelectionData()).isEqualTo(adSelectionData);
+        expect.that(getAdSelectionDataOutcome.getAdSelectionData()).isEqualTo(adSelectionData);
 
         byte newValue = 5;
         adSelectionData[0] = newValue;
         assertThat(getAdSelectionDataOutcome.getAdSelectionData()).isNotNull();
-        assertThat(getAdSelectionDataOutcome.getAdSelectionData()[0]).isEqualTo(originalValue);
+        assertThat(getAdSelectionDataOutcome.getAdSelectionData()).hasLength(1);
+        expect.that(getAdSelectionDataOutcome.getAdSelectionData()[0]).isEqualTo(originalValue);
     }
 }

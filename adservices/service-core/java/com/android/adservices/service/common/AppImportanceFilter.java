@@ -16,8 +16,6 @@
 
 package com.android.adservices.service.common;
 
-import static android.adservices.common.AdServicesStatusUtils.FAILURE_REASON_UNSET;
-
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 
 import android.adservices.common.AdServicesStatusUtils;
@@ -68,15 +66,12 @@ public final class AppImportanceFilter {
     @NonNull private final ActivityManager mActivityManager;
     @NonNull private final PackageManager mPackageManager;
     @NonNull private final AdServicesLogger mAdServicesLogger;
-    private final int mApiClass;
     private final Supplier<Integer> mImportanceThresholdSupplier;
 
     /**
      * Creates an instance of {@link AppImportanceFilter}.
      *
      * @param context the current service context
-     * @param apiClassIdForLogging the id to use to identify the API class in the events generated
-     *     for failed foreground status assertions.
      * @param importanceThresholdSupplier A function to provide the maximum importance value
      *     representing a foreground application, for example {@link
      *     RunningAppProcessInfo#IMPORTANCE_FOREGROUND_SERVICE} or {@link
@@ -86,7 +81,6 @@ public final class AppImportanceFilter {
      */
     public static AppImportanceFilter create(
             @NonNull Context context,
-            int apiClassIdForLogging,
             // Cannot pass directly the value since this is read from pH and this shouldn't happen
             // in binder threads. I'm expecting to build a filter in Services' constructor.
             @NonNull Supplier<Integer> importanceThresholdSupplier) {
@@ -94,7 +88,6 @@ public final class AppImportanceFilter {
                 context.getSystemService(ActivityManager.class),
                 context.getPackageManager(),
                 AdServicesLoggerImpl.getInstance(),
-                apiClassIdForLogging,
                 importanceThresholdSupplier);
     }
 
@@ -104,7 +97,6 @@ public final class AppImportanceFilter {
      * @param activityManager Instance of {@link ActivityManager}
      * @param packageManager Instance of {@link PackageManager}
      * @param adServicesLogger The {@link AdServicesLogger} to use to log validation failed events
-     * @param apiClass The ID to use in the logs to identify the API class
      * @param importanceThresholdSupplier The maximum importance value representing a foreground
      *     application for example {@link RunningAppProcessInfo#IMPORTANCE_FOREGROUND_SERVICE} or
      *     {@link RunningAppProcessInfo#IMPORTANCE_FOREGROUND}
@@ -114,7 +106,6 @@ public final class AppImportanceFilter {
             @NonNull ActivityManager activityManager,
             @NonNull PackageManager packageManager,
             @NonNull AdServicesLogger adServicesLogger,
-            int apiClass,
             @NonNull Supplier<Integer> importanceThresholdSupplier) {
         Objects.requireNonNull(activityManager);
         Objects.requireNonNull(packageManager);
@@ -123,7 +114,6 @@ public final class AppImportanceFilter {
         mActivityManager = activityManager;
         mPackageManager = packageManager;
         mAdServicesLogger = adServicesLogger;
-        mApiClass = apiClass;
         mImportanceThresholdSupplier = importanceThresholdSupplier;
     }
 
@@ -240,9 +230,8 @@ public final class AppImportanceFilter {
         mAdServicesLogger.logApiCallStats(
                 new ApiCallStats.Builder()
                         .setCode(AD_SERVICES_API_CALLED)
-                        .setApiClass(mApiClass)
                         .setApiName(apiNameLoggingId)
-                        .setResult(resultCode, FAILURE_REASON_UNSET)
+                        .setResultCode(resultCode)
                         .setSdkPackageName(sdkName != null ? sdkName : "")
                         .setAppPackageName(appPackageName)
                         .build());

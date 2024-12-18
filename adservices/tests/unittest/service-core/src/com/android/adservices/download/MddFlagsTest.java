@@ -33,9 +33,8 @@ import static com.google.common.truth.Truth.assertThat;
 
 import android.provider.DeviceConfig;
 
-import androidx.test.filters.SmallTest;
-
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
 import com.google.android.libraries.mobiledatadownload.Flags;
@@ -44,12 +43,9 @@ import org.junit.Rule;
 import org.junit.Test;
 
 /** Unit tests for {@link MddFlags} */
-@SmallTest
-public class MddFlagsTest {
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Rule(order = 1)
+@RequiresSdkLevelAtLeastS
+public final class MddFlagsTest extends AdServicesUnitTestCase {
+    @Rule(order = 11)
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
             new TestableDeviceConfig.TestableDeviceConfigRule();
 
@@ -63,7 +59,7 @@ public class MddFlagsTest {
                 .isEqualTo(DEFAULT_MDD_FLAGS.maintenanceGcmTaskPeriod());
 
         // Now overriding with the value from PH.
-        final long phOverridingValue = 123;
+        long phOverridingValue = 123;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MDD_MAINTENANCE_GCM_TASK_PERIOD_SECONDS,
@@ -81,7 +77,7 @@ public class MddFlagsTest {
                 .isEqualTo(DEFAULT_MDD_FLAGS.chargingGcmTaskPeriod());
 
         // Now overriding with the value from PH.
-        final long phOverridingValue = 124;
+        long phOverridingValue = 124;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MDD_CHARGING_GCM_TASK_PERIOD_SECONDS,
@@ -99,7 +95,7 @@ public class MddFlagsTest {
                 .isEqualTo(DEFAULT_MDD_FLAGS.cellularChargingGcmTaskPeriod());
 
         // Now overriding with the value from PH.
-        final long phOverridingValue = 125;
+        long phOverridingValue = 125;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MDD_CELLULAR_CHARGING_GCM_TASK_PERIOD_SECONDS,
@@ -117,7 +113,7 @@ public class MddFlagsTest {
                 .isEqualTo(DEFAULT_MDD_FLAGS.wifiChargingGcmTaskPeriod());
 
         // Now overriding with the value from PH.
-        final long phOverridingValue = 126;
+        long phOverridingValue = 126;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MDD_WIFI_CHARGING_GCM_TASK_PERIOD_SECONDS,
@@ -135,7 +131,7 @@ public class MddFlagsTest {
                 .isEqualTo(DEFAULT_MDD_FLAGS.mddDefaultSampleInterval());
 
         // Now overriding with the value from PH.
-        final long phOverridingValue = 127;
+        long phOverridingValue = 127;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MDD_DEFAULT_SAMPLE_INTERVAL,
@@ -153,7 +149,7 @@ public class MddFlagsTest {
                 .isEqualTo(DEFAULT_MDD_FLAGS.mddDownloadEventsSampleInterval());
 
         // Now overriding with the value from PH.
-        final long phOverridingValue = 128;
+        long phOverridingValue = 128;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MDD_DOWNLOAD_EVENTS_SAMPLE_INTERVAL,
@@ -171,7 +167,7 @@ public class MddFlagsTest {
                 .isEqualTo(DEFAULT_MDD_FLAGS.groupStatsLoggingSampleInterval());
 
         // Now overriding with the value from PH.
-        final long phOverridingValue = 128;
+        long phOverridingValue = 128;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MDD_GROUP_STATS_LOGGING_SAMPLE_INTERVAL,
@@ -189,7 +185,7 @@ public class MddFlagsTest {
                 .isEqualTo(DEFAULT_MDD_FLAGS.apiLoggingSampleInterval());
 
         // Now overriding with the value from PH.
-        final long phOverridingValue = 129;
+        long phOverridingValue = 129;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MDD_API_LOGGING_SAMPLE_INTERVAL,
@@ -207,7 +203,7 @@ public class MddFlagsTest {
                 .isEqualTo(DEFAULT_MDD_FLAGS.storageStatsLoggingSampleInterval());
 
         // Now overriding with the value from PH.
-        final long phOverridingValue = 129;
+        long phOverridingValue = 129;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MDD_STORAGE_STATS_LOGGING_SAMPLE_INTERVAL,
@@ -225,7 +221,7 @@ public class MddFlagsTest {
                 .isEqualTo(DEFAULT_MDD_FLAGS.networkStatsLoggingSampleInterval());
 
         // Now overriding with the value from PH.
-        final long phOverridingValue = 130;
+        long phOverridingValue = 130;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MDD_NETWORK_STATS_LOGGING_SAMPLE_INTERVAL,
@@ -243,7 +239,7 @@ public class MddFlagsTest {
                 .isEqualTo(DEFAULT_MDD_FLAGS.mobstoreFileServiceStatsSampleInterval());
 
         // Now overriding with the value from PH.
-        final long phOverridingValue = 131;
+        long phOverridingValue = 131;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MDD_MOBSTORE_FILE_SERVICE_STATS_SAMPLE_INTERVAL,
@@ -261,7 +257,7 @@ public class MddFlagsTest {
                 .isEqualTo(DEFAULT_MDD_FLAGS.mddAndroidSharingSampleInterval());
 
         // Now overriding with the value from PH.
-        final long phOverridingValue = 132;
+        long phOverridingValue = 132;
         DeviceConfig.setProperty(
                 DeviceConfig.NAMESPACE_ADSERVICES,
                 KEY_MDD_ANDROID_SHARING_SAMPLE_INTERVAL,

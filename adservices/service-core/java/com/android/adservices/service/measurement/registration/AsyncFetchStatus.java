@@ -51,6 +51,10 @@ public class AsyncFetchStatus {
     private boolean mIsRedirectError;
     private int mRetryCount;
     private boolean mIsRedirectOnly;
+    private boolean mIsPARequest;
+    private int mNumDeletedEntities;
+    private boolean mIsEventLevelEpsilonConfigured;
+    private boolean mIsTriggerAggregatableValueFiltersConfigured;
 
     public AsyncFetchStatus() {
         mResponseStatus = ResponseStatus.UNKNOWN;
@@ -58,6 +62,9 @@ public class AsyncFetchStatus {
         mIsRedirectError = false;
         mResponseSize = 0L;
         mRegistrationDelay = 0L;
+        mIsPARequest = false;
+        mIsEventLevelEpsilonConfigured = false;
+        mIsTriggerAggregatableValueFiltersConfigured = false;
     }
 
     /** Get the status of a communication with an Ad Tech server. */
@@ -135,9 +142,50 @@ public class AsyncFetchStatus {
         mIsRedirectOnly = isRedirectOnly;
     }
 
+    /** Get PA request status. */
+    public boolean isPARequest() {
+        return mIsPARequest;
+    }
+
+    /** Set PA request status. */
+    public void setPARequestStatus(boolean isPARequest) {
+        mIsPARequest = isPARequest;
+    }
+
+    /** Set number of entities deleted. */
+    public void incrementNumDeletedEntities(int numDeletedEntities) {
+        mNumDeletedEntities += numDeletedEntities;
+    }
+
+    /** Returns {@code true} if Sources can have epsilon configured. */
+    public boolean isEventLevelEpsilonConfigured() {
+        return mIsEventLevelEpsilonConfigured;
+    }
+
+    /** Sets event level epsilon configure status. */
+    public void setIsEventLevelEpsilonConfigured(boolean isEventLevelEpsilonConfigured) {
+        mIsEventLevelEpsilonConfigured = isEventLevelEpsilonConfigured;
+    }
+
+    /** Returns {@code true} if Triggers can have filters configured in aggregatable_values. */
+    public boolean isTriggerAggregatableValueFiltersConfigured() {
+        return mIsTriggerAggregatableValueFiltersConfigured;
+    }
+
+    /** Sets the aggregatable value filters configure status. */
+    public void setIsTriggerAggregatableValueFiltersConfigured(
+            boolean isTriggerAggregatableValueFiltersConfigured) {
+        mIsTriggerAggregatableValueFiltersConfigured = isTriggerAggregatableValueFiltersConfigured;
+    }
+
     /** Returns true if request is successful. */
     public boolean isRequestSuccess() {
         return mResponseStatus == ResponseStatus.SUCCESS;
+    }
+
+    /** Returns number of existing entities deleted to accommodate the new registration. */
+    public int getNumDeletedEntities() {
+        return mNumDeletedEntities;
     }
 
     /** Returns true if request can be retried. */

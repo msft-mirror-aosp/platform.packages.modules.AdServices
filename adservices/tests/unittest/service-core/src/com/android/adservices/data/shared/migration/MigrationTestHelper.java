@@ -16,9 +16,8 @@
 
 package com.android.adservices.data.shared.migration;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -37,7 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public class MigrationTestHelper {
+public final class MigrationTestHelper {
     private static final float FLOAT_COMPARISON_EPSILON = 0.00005f;
 
     public static SQLiteDatabase createReferenceDbAtVersion(
@@ -55,12 +54,9 @@ public class MigrationTestHelper {
     /** Populate fate into DB. */
     public static void populateDb(SQLiteDatabase db, Map<String, List<ContentValues>> fakeData) {
         fakeData.forEach(
-                (table, rows) -> {
-                    rows.forEach(
-                            (row) -> {
-                                assertNotEquals(-1, db.insert(table, null, row));
-                            });
-                });
+                (table, rows) ->
+                        rows.forEach(
+                                (row) -> assertThat(db.insert(table, null, row)).isNotEqualTo(-1)));
     }
 
     /** Verify data in DB is as expected. */
@@ -90,20 +86,23 @@ public class MigrationTestHelper {
                         }
                     }
 
-                    assertEquals(table + " row count matching failed", rows.size(), newRows.size());
+                    assertWithMessage("%s row count matching failed", table)
+                            .that(rows.size())
+                            .isEqualTo(newRows.size());
 
                     for (int i = 0; i < rows.size(); i++) {
                         ContentValues expected = rows.get(i);
                         ContentValues actual = newRows.get(i);
-                        assertTrue(
-                                String.format(
-                                        "Table: %s, Row: %d, Expected: %s, Actual: %s",
-                                        table, i, expected, actual),
-                                doContentValueMatch(
-                                        expected,
-                                        actual,
-                                        droppedKeys.getOrDefault(table, Set.of()),
-                                        columnsToBeSkipped.getOrDefault(table, Set.of())));
+                        assertWithMessage(
+                                        "Table: %s, Row: %s, Expected: %s, Actual: %s",
+                                        table, i, expected, actual)
+                                .that(
+                                        doContentValueMatch(
+                                                expected,
+                                                actual,
+                                                droppedKeys.getOrDefault(table, Set.of()),
+                                                columnsToBeSkipped.getOrDefault(table, Set.of())))
+                                .isTrue();
                     }
                 });
     }
@@ -159,12 +158,13 @@ public class MigrationTestHelper {
                 continue;
             }
             if (expectedValue instanceof Number
-                    && !nearlyEqual(
+                    && nearlyEqual(
                             ((Number) expectedValue).floatValue(),
                             ((Number) actualValue).floatValue(),
                             FLOAT_COMPARISON_EPSILON)) {
-                return false;
+                continue;
             }
+            return false;
         }
         return true;
     }

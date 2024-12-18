@@ -16,9 +16,14 @@
 
 package android.app.sdksandbox;
 
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_LOAD_SDK_NOT_FOUND;
+import static android.app.sdksandbox.SandboxLatencyInfo.RESULT_CODE_UNSPECIFIED;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.os.Parcel;
+
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -26,7 +31,7 @@ import org.junit.runners.JUnit4;
 
 /** Tests {@link SandboxLatencyInfo} APIs. */
 @RunWith(JUnit4.class)
-public class SandboxLatencyInfoUnitTest {
+public class SandboxLatencyInfoUnitTest extends DeviceSupportedBaseTest {
 
     private static final long TIME_APP_CALLED_SYSTEM_SERVER = 1;
     private static final long TIME_SYSTEM_SERVER_RECEIVED_CALL_FROM_APP = 2;
@@ -438,6 +443,19 @@ public class SandboxLatencyInfoUnitTest {
         SandboxLatencyInfo sandboxLatencyInfo = getSandboxLatencyObjectWithAllFieldsSet();
         assertThat(sandboxLatencyInfo.getTimeSandboxCalledSystemServer())
                 .isEqualTo(TIME_SANDBOX_CALLED_SYSTEM_SERVER);
+    }
+
+    @Test
+    public void testGetResultCode_default_isUnspecified() {
+        SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+        assertThat(sandboxLatencyInfo.getResultCode()).isEqualTo(RESULT_CODE_UNSPECIFIED);
+    }
+
+    @Test
+    public void testGetResultCode_setLoadSdkNotFound_isLoadSdkNotFound() {
+        SandboxLatencyInfo sandboxLatencyInfo = new SandboxLatencyInfo();
+        sandboxLatencyInfo.setResultCode(RESULT_CODE_LOAD_SDK_NOT_FOUND);
+        assertThat(sandboxLatencyInfo.getResultCode()).isEqualTo(RESULT_CODE_LOAD_SDK_NOT_FOUND);
     }
 
     private SandboxLatencyInfo getSandboxLatencyObjectWithAllFieldsSet() {

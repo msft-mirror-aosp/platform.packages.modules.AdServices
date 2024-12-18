@@ -32,7 +32,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Process;
 import android.os.UserHandle;
-import android.view.KeyEvent;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
@@ -67,7 +66,8 @@ public class SdkSandboxStorageTestApp {
     private static final String JAVA_FILE_NOT_FOUND_MSG =
             "open failed: ENOENT (No such file or directory)";
 
-    @Rule public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
+    @Rule(order = 0)
+    public final ActivityScenarioRule mRule = new ActivityScenarioRule<>(EmptyActivity.class);
 
     private final Context mContext = ApplicationProvider.getApplicationContext();
     private final SdkLifecycleHelper mSdkLifecycleHelper = new SdkLifecycleHelper(mContext);
@@ -101,23 +101,6 @@ public class SdkSandboxStorageTestApp {
 
         // Store the returned SDK interface so that we can interact with it later.
         mSdk = IStorageTestSdk1Api.Stub.asInterface(callback.getSandboxedSdk().getInterface());
-    }
-
-    @Test
-    public void unlockDevice() throws Exception {
-        mUiDevice.wakeUp();
-        mUiDevice.waitForIdle();
-        mUiDevice.pressMenu();
-        mUiDevice.waitForIdle();
-        mUiDevice.pressKeyCode(KeyEvent.KEYCODE_1);
-        mUiDevice.pressKeyCode(KeyEvent.KEYCODE_2);
-        mUiDevice.pressKeyCode(KeyEvent.KEYCODE_3);
-        mUiDevice.pressKeyCode(KeyEvent.KEYCODE_4);
-        mUiDevice.waitForIdle();
-        mUiDevice.pressEnter();
-        mUiDevice.waitForIdle();
-        mUiDevice.pressHome();
-        mUiDevice.waitForIdle();
     }
 
     @Test
@@ -166,16 +149,20 @@ public class SdkSandboxStorageTestApp {
         final long appSizeAppStats = finalAppStats.getDataBytes() - initialAppStats.getDataBytes();
         final long appSizeUserStats =
                 finalUserStats.getDataBytes() - initialUserStats.getDataBytes();
-        assertMostlyEquals(deltaAppSize, appSizeAppStats, 5);
-        assertMostlyEquals(deltaAppSize, appSizeUserStats, 10);
+
+        // We can't guarantee that the initial app/user size we captured will not increase/decrease
+        // in between final capture. For exampel, some of use cache can be deleted by system in
+        // need of space. We therefore check for delta with some margin of error.
+        assertMostlyEquals("App size", deltaAppSize, appSizeAppStats, 10);
+        assertMostlyEquals("User size", deltaAppSize, appSizeUserStats, 20);
 
         // Assert cache size is same
         final long cacheSizeAppStats =
                 finalAppStats.getCacheBytes() - initialAppStats.getCacheBytes();
         final long cacheSizeUserStats =
                 finalUserStats.getCacheBytes() - initialUserStats.getCacheBytes();
-        assertMostlyEquals(deltaCacheSize, cacheSizeAppStats, 5);
-        assertMostlyEquals(deltaCacheSize, cacheSizeUserStats, 10);
+        assertMostlyEquals("App cache", deltaCacheSize, cacheSizeAppStats, 10);
+        assertMostlyEquals("User cache", deltaCacheSize, cacheSizeUserStats, 20);
     }
 
     private static void assertDirIsNotAccessible(String path) {
@@ -191,12 +178,13 @@ public class SdkSandboxStorageTestApp {
     }
 
     private static void assertMostlyEquals(
-            long expected, long actual, long errorMarginInPercentage) {
+            String noun, long expected, long actual, long errorMarginInPercentage) {
         final double diffInSize = Math.abs(expected - actual);
         final double diffInPercentage = (diffInSize / expected) * 100;
         if (diffInPercentage > errorMarginInPercentage) {
             throw new AssertionFailedError(
-                    "Expected roughly "
+                    noun
+                            + " was expected to be roughly "
                             + expected
                             + " but was "
                             + actual

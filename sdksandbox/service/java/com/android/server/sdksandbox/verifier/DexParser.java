@@ -16,9 +16,12 @@
 
 package com.android.server.sdksandbox.verifier;
 
-import com.android.server.sdksandbox.verifier.SerialDexLoader.DexLoadResult;
+import com.android.server.sdksandbox.verifier.SerialDexLoader.DexSymbols;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Interface for DEX parsing, needed for SDK verification
@@ -28,17 +31,19 @@ import java.util.List;
 public interface DexParser {
 
     /**
-     * Returns the list of all dex files contained in the file
+     * Returns a multimap of apkFile to a list of dexEntries, for all dex files in apks found in the
+     * package path to verify.
      *
-     * @param apkPath path to an apk containing one or more dex files
+     * @param apkPathFile path to apks containing one or more dex files
      */
-    List<String> getDexList(String apkPath);
+    Map<File, List<String>> getDexFilePaths(File apkPathFile) throws IOException;
 
     /**
      * Parses the dex file and reads the symbols in, populates data in the DexLoadResult.
      *
-     * @param dexFile path to dex file to parse
+     * @param apkFile apk file to parse
+     * @param dexEntry the specific .dex file to load
      * @param dexLoadResult sparse array to insert the methods loaded from the dex file
      */
-    void loadDexSymbols(String dexFile, DexLoadResult dexLoadResult);
+    void loadDexSymbols(File apkFile, String dexEntry, DexSymbols dexSymbols) throws IOException;
 }

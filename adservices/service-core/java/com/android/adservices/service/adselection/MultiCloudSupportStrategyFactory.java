@@ -30,6 +30,7 @@ import com.android.adservices.service.adselection.encryption.ProtectedServersEnc
 import com.android.adservices.service.common.CoordinatorOriginUriValidator;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
 
 /** Factory for {@link MultiCloudSupportStrategy} */
 public class MultiCloudSupportStrategyFactory {
@@ -52,11 +53,11 @@ public class MultiCloudSupportStrategyFactory {
                 @NonNull Flags flags,
                 @NonNull AdServicesHttpsClient adServicesHttpsClient) {
             return new ProtectedServersEncryptionConfigManager(
-                    AdSelectionServerDatabase.getInstance(context)
-                            .protectedServersEncryptionConfigDao(),
+                    AdSelectionServerDatabase.getInstance().protectedServersEncryptionConfigDao(),
                     flags,
                     adServicesHttpsClient,
-                    AdServicesExecutors.getLightWeightExecutor());
+                    AdServicesExecutors.getLightWeightExecutor(),
+                    AdServicesLoggerImpl.getInstance());
         }
 
         @Override
@@ -65,7 +66,7 @@ public class MultiCloudSupportStrategyFactory {
                 @NonNull Context context, @NonNull Flags flags) {
             return new ObliviousHttpEncryptorImpl(
                     getProtectedServersEncryptionConfigManager(context, flags),
-                    AdSelectionServerDatabase.getInstance(context).encryptionContextDao(),
+                    AdSelectionServerDatabase.getInstance().encryptionContextDao(),
                     AdServicesExecutors.getLightWeightExecutor());
         }
 
@@ -77,11 +78,11 @@ public class MultiCloudSupportStrategyFactory {
                             AdServicesExecutors.getBlockingExecutor(),
                             CacheProviderFactory.create(context, flags));
             return new ProtectedServersEncryptionConfigManager(
-                    AdSelectionServerDatabase.getInstance(context)
-                            .protectedServersEncryptionConfigDao(),
+                    AdSelectionServerDatabase.getInstance().protectedServersEncryptionConfigDao(),
                     flags,
                     adServicesHttpsClient,
-                    AdServicesExecutors.getLightWeightExecutor());
+                    AdServicesExecutors.getLightWeightExecutor(),
+                    AdServicesLoggerImpl.getInstance());
         }
     }
 
@@ -98,7 +99,7 @@ public class MultiCloudSupportStrategyFactory {
                 @androidx.annotation.NonNull Flags flags) {
             return new ObliviousHttpEncryptorImpl(
                     getProtectedServersEncryptionConfigManager(context, flags),
-                    AdSelectionServerDatabase.getInstance(context).encryptionContextDao(),
+                    AdSelectionServerDatabase.getInstance().encryptionContextDao(),
                     AdServicesExecutors.getLightWeightExecutor());
         }
 
@@ -108,10 +109,11 @@ public class MultiCloudSupportStrategyFactory {
                 @NonNull Flags flags,
                 @NonNull AdServicesHttpsClient adServicesHttpsClient) {
             return new AdSelectionEncryptionKeyManager(
-                    AdSelectionServerDatabase.getInstance(context).encryptionKeyDao(),
+                    AdSelectionServerDatabase.getInstance().encryptionKeyDao(),
                     flags,
                     adServicesHttpsClient,
-                    AdServicesExecutors.getLightWeightExecutor());
+                    AdServicesExecutors.getLightWeightExecutor(),
+                    AdServicesLoggerImpl.getInstance());
         }
 
         private ProtectedServersEncryptionConfigManagerBase
@@ -122,10 +124,11 @@ public class MultiCloudSupportStrategyFactory {
                             AdServicesExecutors.getBlockingExecutor(),
                             CacheProviderFactory.create(context, flags));
             return new AdSelectionEncryptionKeyManager(
-                    AdSelectionServerDatabase.getInstance(context).encryptionKeyDao(),
+                    AdSelectionServerDatabase.getInstance().encryptionKeyDao(),
                     flags,
                     adServicesHttpsClient,
-                    AdServicesExecutors.getLightWeightExecutor());
+                    AdServicesExecutors.getLightWeightExecutor(),
+                    AdServicesLoggerImpl.getInstance());
         }
     }
 

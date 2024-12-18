@@ -27,19 +27,17 @@ import android.content.res.Resources;
 import android.os.Bundle;
 import android.os.Process;
 import android.os.StrictMode;
-import android.provider.DeviceConfig;
 import android.test.mock.MockContext;
 import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.test.InstrumentationRegistry;
 
-import com.android.compatibility.common.util.DeviceConfigStateManager;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -50,11 +48,9 @@ import org.mockito.quality.Strictness;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-/**
- * Tests {@link SandboxedSdkContext} APIs.
- */
+/** Tests {@link SandboxedSdkContext} APIs. */
 @RunWith(JUnit4.class)
-public class SandboxedSdkContextUnitTest {
+public class SandboxedSdkContextUnitTest extends DeviceSupportedBaseTest {
 
     private SandboxedSdkContext mSandboxedSdkContext;
     private static final String CLIENT_PACKAGE_NAME = "com.android.client";
@@ -69,26 +65,14 @@ public class SandboxedSdkContextUnitTest {
     private static final String SDK_CE_DATA_DIR = "/data/misc_ce/0/sdksandbox/com.foo/sdk@123";
     private static final String SDK_DE_DATA_DIR = "/data/misc_de/0/sdksandbox/com.foo/sdk@123";
 
-    private static boolean sCustomizedSdkContextEnabled = SdkLevel.isAtLeastU();
-
     private MockitoSession mStaticMockSession;
-
-    @BeforeClass
-    public static void setUpClass() {
-        DeviceConfigStateManager stateManager =
-                new DeviceConfigStateManager(
-                        InstrumentationRegistry.getInstrumentation().getContext(),
-                        DeviceConfig.NAMESPACE_ADSERVICES,
-                        "sdksandbox_customized_sdk_context_enabled");
-        sCustomizedSdkContextEnabled &= Boolean.parseBoolean(stateManager.get());
-    }
 
     @Before
     public void setUp() throws Exception {
         mStaticMockSession =
                 ExtendedMockito.mockitoSession()
                         .strictness(Strictness.LENIENT)
-                        .mockStatic(Process.class)
+                        .spyStatic(Process.class)
                         .mockStatic(StrictMode.class)
                         .startMocking();
         ExtendedMockito.doReturn(true).when(() -> Process.isSdkSandbox());
@@ -103,7 +87,8 @@ public class SandboxedSdkContextUnitTest {
 
         Context baseContext = context;
         ClassLoader loader = getClass().getClassLoader();
-        if (sCustomizedSdkContextEnabled) {
+        // Starting from Android U, we customize the base context of SandboxedSdkContext directly.
+        if (SdkLevel.isAtLeastU()) {
             info.dataDir = SDK_CE_DATA_DIR;
             info.credentialProtectedDataDir = SDK_CE_DATA_DIR;
             info.deviceProtectedDataDir = SDK_DE_DATA_DIR;
@@ -120,8 +105,7 @@ public class SandboxedSdkContextUnitTest {
                         info,
                         SDK_NAME,
                         SDK_CE_DATA_DIR,
-                        SDK_DE_DATA_DIR,
-                        sCustomizedSdkContextEnabled);
+                        SDK_DE_DATA_DIR);
     }
 
     @After
@@ -210,7 +194,6 @@ public class SandboxedSdkContextUnitTest {
                         SDK_NAME,
                         SDK_CE_DATA_DIR,
                         SDK_DE_DATA_DIR,
-                        sCustomizedSdkContextEnabled,
                         registry);
         assertThat(sandboxedSdkContext.getSystemService("ignored")).isSameInstanceAs(testService);
     }
@@ -238,7 +221,6 @@ public class SandboxedSdkContextUnitTest {
                         SDK_NAME,
                         SDK_CE_DATA_DIR,
                         SDK_DE_DATA_DIR,
-                        sCustomizedSdkContextEnabled,
                         registry);
         TestService service = (TestService) sandboxedSdkContext.getSystemService("service");
         assertThat(service.mInitialized).isTrue();
@@ -264,8 +246,7 @@ public class SandboxedSdkContextUnitTest {
                         info,
                         SDK_NAME,
                         SDK_CE_DATA_DIR,
-                        SDK_DE_DATA_DIR,
-                        sCustomizedSdkContextEnabled);
+                        SDK_DE_DATA_DIR);
         SandboxedSdkContext ctx2 =
                 new SandboxedSdkContext(
                         InstrumentationRegistry.getContext()
@@ -275,57 +256,11 @@ public class SandboxedSdkContextUnitTest {
                         info,
                         SDK_NAME,
                         SDK_CE_DATA_DIR,
-                        SDK_DE_DATA_DIR,
-                        sCustomizedSdkContextEnabled);
+                        SDK_DE_DATA_DIR);
 
         ActivityManager am1 = ctx1.getSystemService(ActivityManager.class);
         ActivityManager am2 = ctx2.getSystemService(ActivityManager.class);
         assertThat(am1).isNotSameInstanceAs(am2);
-    }
-
-    /**
-     * Test the getter of customizedSdkContextEnabled flag
-     *
-     * @throws Exception for errors to retrieve the ApplicationInfo from PackageManager
-     */
-    @Test
-    public void testisCustomizedSdkContextEnabled() throws Exception {
-        ApplicationInfo info =
-                InstrumentationRegistry.getContext()
-                        .getPackageManager()
-                        .getApplicationInfo(
-                                RESOURCES_PACKAGE,
-                                PackageManager.MATCH_STATIC_SHARED_AND_SDK_LIBRARIES);
-
-        boolean isCustomizedSdkContextEnabled = true;
-        SandboxedSdkContext context =
-                new SandboxedSdkContext(
-                        InstrumentationRegistry.getContext()
-                                .createCredentialProtectedStorageContext(),
-                        getClass().getClassLoader(),
-                        CLIENT_PACKAGE_NAME,
-                        info,
-                        SDK_NAME,
-                        SDK_CE_DATA_DIR,
-                        SDK_DE_DATA_DIR,
-                        isCustomizedSdkContextEnabled);
-        assertThat(context.isCustomizedSdkContextEnabled())
-                .isEqualTo(isCustomizedSdkContextEnabled);
-
-        isCustomizedSdkContextEnabled = false;
-        context =
-                new SandboxedSdkContext(
-                        InstrumentationRegistry.getContext()
-                                .createCredentialProtectedStorageContext(),
-                        getClass().getClassLoader(),
-                        CLIENT_PACKAGE_NAME,
-                        info,
-                        SDK_NAME,
-                        SDK_CE_DATA_DIR,
-                        SDK_DE_DATA_DIR,
-                        isCustomizedSdkContextEnabled);
-        assertThat(context.isCustomizedSdkContextEnabled())
-                .isEqualTo(isCustomizedSdkContextEnabled);
     }
 
     /**
@@ -352,8 +287,7 @@ public class SandboxedSdkContextUnitTest {
                         info,
                         SDK_NAME,
                         SDK_CE_DATA_DIR,
-                        SDK_DE_DATA_DIR,
-                        sCustomizedSdkContextEnabled);
+                        SDK_DE_DATA_DIR);
         assertThat(sdkContext.getBaseContext()).isEqualTo(baseContext);
 
         Context newBaseContext = new TestContext(testService);

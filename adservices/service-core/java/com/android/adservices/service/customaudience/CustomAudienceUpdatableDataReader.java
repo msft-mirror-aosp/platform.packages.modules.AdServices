@@ -17,6 +17,7 @@
 package com.android.adservices.service.customaudience;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+import static android.adservices.customaudience.CustomAudience.PRIORITY_DEFAULT;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
@@ -61,6 +62,7 @@ public class CustomAudienceUpdatableDataReader {
     public static final String AD_RENDER_ID_KEY = "ad_render_id";
     public static final String STRING_ERROR_FORMAT = "Unexpected format parsing %s in %s";
     public static final String AUCTION_SERVER_REQUEST_FLAGS_KEY = "auction_server_request_flags";
+    public static final String PRIORITY_KEY = "priority";
     public static final String OMIT_ADS_VALUE = "omit_ads";
 
     public static final String FIELD_FOUND_LOG_FORMAT = "%s Found %s in JSON response";
@@ -95,7 +97,9 @@ public class CustomAudienceUpdatableDataReader {
      *     bidding data
      * @param maxAdsSizeB the configured maximum size in bytes allocated for ads
      * @param maxNumAds the configured maximum number of ads allowed per update
-     * @param filteringEnabled whether or not ad selection filtering fields should be read
+     * @param frequencyCapFilteringEnabled whether or not frequency cap filtering fields should be
+     *     read
+     * @param appInstallFilteringEnabled whether or not app install filtering fields should be read
      * @param adRenderIdEnabled whether ad render id field should be read
      * @param adRenderIdMaxLength the max length of the ad render id
      */
@@ -107,7 +111,8 @@ public class CustomAudienceUpdatableDataReader {
             int maxTrustedBiddingDataSizeB,
             int maxAdsSizeB,
             int maxNumAds,
-            boolean filteringEnabled,
+            boolean frequencyCapFilteringEnabled,
+            boolean appInstallFilteringEnabled,
             boolean adRenderIdEnabled,
             long adRenderIdMaxLength) {
         Objects.requireNonNull(responseObject);
@@ -122,7 +127,8 @@ public class CustomAudienceUpdatableDataReader {
         mMaxAdsSizeB = maxAdsSizeB;
         mMaxNumAds = maxNumAds;
         mGetFiltersFromJsonObjectStrategy =
-                ReadFiltersFromJsonStrategyFactory.getStrategy(filteringEnabled);
+                ReadFiltersFromJsonStrategyFactory.getStrategy(
+                        frequencyCapFilteringEnabled, appInstallFilteringEnabled);
         mReadAdRenderIdFromJsonStrategy =
                 ReadAdRenderIdFromJsonStrategyFactory.getStrategy(
                         adRenderIdEnabled, adRenderIdMaxLength);
@@ -337,6 +343,27 @@ public class CustomAudienceUpdatableDataReader {
             }
         } else {
             sLogger.v(FIELD_NOT_FOUND_LOG_FORMAT, mResponseHash, AUCTION_SERVER_REQUEST_FLAGS_KEY);
+        }
+        return result;
+    }
+
+    /**
+     * Returns the priority value extracted from the response, if found.
+     *
+     * @throws JSONException if the value found at the key is not a {@link JSONObject}
+     */
+    public double getPriority() throws JSONException {
+        double result = PRIORITY_DEFAULT;
+        if (mResponseObject.has(PRIORITY_KEY)) {
+            sLogger.v(FIELD_FOUND_LOG_FORMAT, mResponseHash, PRIORITY_KEY);
+            JSONObject priorityJsonObject =
+                    Objects.requireNonNull(mResponseObject.getJSONObject(PRIORITY_KEY));
+            double priorityDouble = priorityJsonObject.getDouble(PRIORITY_KEY);
+
+            sLogger.v(VALIDATED_FIELD_LOG_FORMAT, mResponseHash, PRIORITY_KEY);
+            result = priorityDouble;
+        } else {
+            sLogger.v(FIELD_NOT_FOUND_LOG_FORMAT, mResponseHash, PRIORITY_KEY);
         }
         return result;
     }

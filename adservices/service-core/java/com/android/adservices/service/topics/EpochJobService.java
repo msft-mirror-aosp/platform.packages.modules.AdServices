@@ -21,6 +21,11 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_FETCH_JOB_SCHEDULER_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_HANDLE_JOB_SERVICE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_JOB_SCHEDULER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_PENDING_JOB;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_FAILED;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
+import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
 import static com.android.adservices.spe.AdServicesJobInfo.TOPICS_EPOCH_JOB;
 
 import static com.google.common.util.concurrent.MoreExecutors.directExecutor;
@@ -42,6 +47,9 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
+import com.android.adservices.service.stats.TopicsScheduleEpochJobSettingReportedStatsLogger;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
+import com.android.adservices.shared.spe.JobServiceConstants.JobSchedulingResultCode;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -50,7 +58,6 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 /** Epoch computation job. This will be run approximately once per epoch to compute Topics. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public final class EpochJobService extends JobService {
     private static final int TOPICS_EPOCH_JOB_ID = TOPICS_EPOCH_JOB.getJobId();
@@ -61,12 +68,12 @@ public final class EpochJobService extends JobService {
         // cancel itself if it's not supposed to be.
         if (ServiceCompatUtils.shouldDisableExtServicesJobOnTPlus(this)) {
             LogUtil.d("Disabling EpochJobService job because it's running in ExtServices on T+");
-            return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
+            return skipAndCancelBackgroundJob(params, /* skipReason= */ 0, /* doRecord= */ false);
         }
 
         LoggerFactory.getTopicsLogger().d("EpochJobService.onStartJob");
 
-        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(TOPICS_EPOCH_JOB_ID);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(TOPICS_EPOCH_JOB_ID);
 
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
             ErrorLogUtil.e(
@@ -77,7 +84,7 @@ public final class EpochJobService extends JobService {
             return skipAndCancelBackgroundJob(
                     params,
                     AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON,
-                    /* doRecord=*/ true);
+                    /* doRecord= */ true);
         }
 
         // This service executes each incoming job on a Handler running on the application's
@@ -85,20 +92,18 @@ public final class EpochJobService extends JobService {
         // TODO(b/225382268): Handle cancellation.
         ListenableFuture<Void> epochComputationFuture =
                 Futures.submit(
-                        () -> {
-                            TopicsWorker.getInstance(this).computeEpoch();
-                        },
+                        () -> TopicsWorker.getInstance().computeEpoch(),
                         AdServicesExecutors.getBackgroundExecutor());
 
         Futures.addCallback(
                 epochComputationFuture,
-                new FutureCallback<Void>() {
+                new FutureCallback<>() {
                     @Override
                     public void onSuccess(Void result) {
                         LoggerFactory.getTopicsLogger().d("Epoch Computation succeeded!");
 
                         boolean shouldRetry = false;
-                        AdServicesJobServiceLogger.getInstance(EpochJobService.this)
+                        AdServicesJobServiceLogger.getInstance()
                                 .recordJobFinished(
                                         TOPICS_EPOCH_JOB_ID, /* isSuccessful= */ true, shouldRetry);
 
@@ -117,7 +122,7 @@ public final class EpochJobService extends JobService {
                                 .e(t, "Failed to handle JobService: " + params.getJobId());
 
                         boolean shouldRetry = false;
-                        AdServicesJobServiceLogger.getInstance(EpochJobService.this)
+                        AdServicesJobServiceLogger.getInstance()
                                 .recordJobFinished(
                                         TOPICS_EPOCH_JOB_ID,
                                         /* isSuccessful= */ false,
@@ -131,6 +136,23 @@ public final class EpochJobService extends JobService {
                 },
                 directExecutor());
 
+        if (FlagsFactory.getFlags().getTopicsJobSchedulerRescheduleEnabled()) {
+            // Reschedule Topics Epoch job if the charging setting of previous epoch job is changed.
+            rescheduleEpochJob();
+        }
+
+        // Reschedule jobs with SPE if it's enabled. Note scheduled jobs by this EpochJobService
+        // will be cancelled for the same job ID.
+        //
+        // Also for a job with Flex Period, it will NOT execute immediately after rescheduling it.
+        // Reschedule it here to let the execution complete and the next cycle will execute with
+        // the EpochJob.schedule().
+        if (FlagsFactory.getFlags().getSpeOnEpochJobEnabled()) {
+            LoggerFactory.getTopicsLogger()
+                    .d("SPE is enabled. Reschedule EpochJob with SPE framework.");
+            EpochJob.schedule();
+        }
+
         return true;
     }
 
@@ -142,7 +164,7 @@ public final class EpochJobService extends JobService {
         // execution is completed or not to avoid executing the task twice.
         boolean shouldRetry = false;
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, TOPICS_EPOCH_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -152,15 +174,30 @@ public final class EpochJobService extends JobService {
             Context context,
             @NonNull JobScheduler jobScheduler,
             long epochJobPeriodMs,
-            long epochJobFlexMs) {
-        final JobInfo job =
+            long epochJobFlexMs,
+            boolean topicsEpochJobBatteryNotLowInsteadOfCharging) {
+        final JobInfo.Builder jobBuilder =
                 new JobInfo.Builder(
-                                TOPICS_EPOCH_JOB_ID,
-                                new ComponentName(context, EpochJobService.class))
-                        .setRequiresCharging(true)
-                        .setPersisted(true)
-                        .setPeriodic(epochJobPeriodMs, epochJobFlexMs)
-                        .build();
+                        TOPICS_EPOCH_JOB_ID,
+                        new ComponentName(context, EpochJobService.class))
+                            .setPersisted(true)
+                            .setPeriodic(epochJobPeriodMs, epochJobFlexMs);
+
+        if (topicsEpochJobBatteryNotLowInsteadOfCharging) {
+            jobBuilder
+                    .setRequiresCharging(false)
+                    .setRequiresBatteryNotLow(true);
+        } else {
+            jobBuilder
+                    .setRequiresCharging(true)
+                    .setRequiresBatteryNotLow(false);
+        }
+
+        final JobInfo job = jobBuilder.build();
+        LoggerFactory.getTopicsLogger().d(
+                "EpochJobService requires charging: " + job.isRequireCharging());
+        LoggerFactory.getTopicsLogger().d(
+                "EpochJobService requires battery not low: " + job.isRequireBatteryNotLow());
 
         jobScheduler.schedule(job);
         LoggerFactory.getTopicsLogger().d("Scheduling Epoch job ...");
@@ -169,18 +206,38 @@ public final class EpochJobService extends JobService {
     /**
      * Schedule Epoch Job Service if needed: there is no scheduled job with same job parameters.
      *
-     * @param context the context
      * @param forceSchedule a flag to indicate whether to force rescheduling the job.
      * @return a {@code boolean} to indicate if the service job is actually scheduled.
      */
-    public static boolean scheduleIfNeeded(Context context, boolean forceSchedule) {
+    @JobSchedulingResultCode
+    public static int scheduleIfNeeded(boolean forceSchedule) {
+        return scheduleIfNeededCalledFromRescheduleEpochJob(
+                forceSchedule,
+                TopicsScheduleEpochJobSettingReportedStatsLogger.getInstance());
+    }
+
+    /**
+     * Schedule Epoch Job Service if needed: there is no scheduled job with same job parameters.
+     *
+     * @param forceSchedule a flag to indicate whether to force rescheduling the job.
+     * @param topicsScheduleEpochJobSettingReportedStatsLogger a class for Topics schedule epoch job
+     *                                                         setting logger.
+     * @return a {@code boolean} to indicate if the service job is actually scheduled.
+     */
+    @JobSchedulingResultCode
+    public static int scheduleIfNeededCalledFromRescheduleEpochJob(
+            boolean forceSchedule,
+            TopicsScheduleEpochJobSettingReportedStatsLogger
+                    topicsScheduleEpochJobSettingReportedStatsLogger) {
+        Context context = ApplicationContextSingleton.get();
+
         if (FlagsFactory.getFlags().getTopicsKillSwitch()) {
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_API_DISABLED,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             LoggerFactory.getTopicsLogger()
                     .e("Topics API is disabled, skip scheduling the EpochJobService");
-            return false;
+            return SCHEDULING_RESULT_CODE_SKIPPED;
         }
 
         final JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
@@ -189,30 +246,42 @@ public final class EpochJobService extends JobService {
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_FETCH_JOB_SCHEDULER_FAILURE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS);
             LoggerFactory.getTopicsLogger().e("Cannot fetch Job Scheduler!");
-            return false;
+            return SCHEDULING_RESULT_CODE_FAILED;
         }
 
         long flagsEpochJobPeriodMs = FlagsFactory.getFlags().getTopicsEpochJobPeriodMs();
         long flagsEpochJobFlexMs = FlagsFactory.getFlags().getTopicsEpochJobFlexMs();
+        boolean flagsTopicsEpochJobBatteryNotLowInsteadOfCharging =
+                FlagsFactory.getFlags().getTopicsEpochJobBatteryNotLowInsteadOfCharging();
 
         JobInfo job = jobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID);
         // Skip to reschedule the job if there is same scheduled job with same parameters.
         if (job != null && !forceSchedule) {
             long epochJobPeriodMs = job.getIntervalMillis();
             long epochJobFlexMs = job.getFlexMillis();
+            boolean topicsEpochJobRequiresBatteryNotLow = job.isRequireBatteryNotLow();
 
             if (flagsEpochJobPeriodMs == epochJobPeriodMs
-                    && flagsEpochJobFlexMs == epochJobFlexMs) {
+                    && flagsEpochJobFlexMs == epochJobFlexMs
+                    && flagsTopicsEpochJobBatteryNotLowInsteadOfCharging
+                        == topicsEpochJobRequiresBatteryNotLow) {
                 LoggerFactory.getTopicsLogger()
                         .i(
                                 "Epoch Job Service has been scheduled with same parameters, skip"
                                         + " rescheduling!");
-                return false;
+                return SCHEDULING_RESULT_CODE_SKIPPED;
             }
         }
 
-        schedule(context, jobScheduler, flagsEpochJobPeriodMs, flagsEpochJobFlexMs);
-        return true;
+        topicsScheduleEpochJobSettingReportedStatsLogger.logScheduleIfNeeded();
+
+        schedule(
+                context,
+                jobScheduler,
+                flagsEpochJobPeriodMs,
+                flagsEpochJobFlexMs,
+                flagsTopicsEpochJobBatteryNotLowInsteadOfCharging);
+        return SCHEDULING_RESULT_CODE_SUCCESSFUL;
     }
 
     private boolean skipAndCancelBackgroundJob(
@@ -223,7 +292,7 @@ public final class EpochJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(TOPICS_EPOCH_JOB_ID, skipReason);
         }
 
@@ -233,5 +302,54 @@ public final class EpochJobService extends JobService {
 
         // Returning false means that this job has completed its work.
         return false;
+    }
+
+    @VisibleForTesting
+    static void rescheduleEpochJob() {
+        JobScheduler jobScheduler =
+                ApplicationContextSingleton.get().getSystemService(JobScheduler.class);
+        JobInfo previousEpochJobInfo = null;
+        // The default EpochJob doesn't require battery not low, but requires charging.
+        boolean isScheduledEpochJobRequireBatteryNotLow = false;
+
+        TopicsScheduleEpochJobSettingReportedStatsLogger
+                topicsScheduleEpochJobSettingReportedStatsLogger =
+                TopicsScheduleEpochJobSettingReportedStatsLogger.getInstance();
+
+        if (jobScheduler != null) {
+            previousEpochJobInfo = jobScheduler.getPendingJob(TOPICS_EPOCH_JOB_ID);
+        } else {
+            LoggerFactory.getTopicsLogger().d(
+                    "There is no existing JobScheduler, skip rescheduleEpochJob.");
+            topicsScheduleEpochJobSettingReportedStatsLogger
+                    .logSkipRescheduleEpochJob(
+                            TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_JOB_SCHEDULER);
+            return;
+        }
+
+        boolean flagTopicsEpochJobBatteryNotLowInsteadOfCharging =
+                FlagsFactory.getFlags().getTopicsEpochJobBatteryNotLowInsteadOfCharging();
+        if (previousEpochJobInfo != null) {
+            isScheduledEpochJobRequireBatteryNotLow = previousEpochJobInfo.isRequireBatteryNotLow();
+            // If the battery not low setting of an EpochJob is changed,
+            // the EpochJob should be rescheduled.
+            if (isScheduledEpochJobRequireBatteryNotLow
+                    != flagTopicsEpochJobBatteryNotLowInsteadOfCharging) {
+                topicsScheduleEpochJobSettingReportedStatsLogger
+                        .setPreviousEpochJobStatus(isScheduledEpochJobRequireBatteryNotLow);
+                scheduleIfNeededCalledFromRescheduleEpochJob(
+                        true, topicsScheduleEpochJobSettingReportedStatsLogger);
+                LoggerFactory.getTopicsLogger().d(
+                        "Rescheduled EpochJobService because requires "
+                                + "battery not low is changed to: "
+                                + flagTopicsEpochJobBatteryNotLowInsteadOfCharging);
+            }
+        } else {
+            LoggerFactory.getTopicsLogger().d(
+                    "There is no existing pending epoch job, skip rescheduleEpochJob.");
+            topicsScheduleEpochJobSettingReportedStatsLogger
+                    .logSkipRescheduleEpochJob(
+                            TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_SKIP_RESCHEDULE_EMPTY_PENDING_JOB);
+        }
     }
 }

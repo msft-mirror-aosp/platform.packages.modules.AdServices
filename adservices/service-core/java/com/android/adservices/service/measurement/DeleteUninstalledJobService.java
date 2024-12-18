@@ -61,7 +61,7 @@ public final class DeleteUninstalledJobService extends JobService {
             return skipAndCancelBackgroundJob(params, /* skipReason=*/ 0, /* doRecord=*/ false);
         }
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStartJob(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobDeleteUninstalledKillSwitch()) {
@@ -75,10 +75,10 @@ public final class DeleteUninstalledJobService extends JobService {
         LoggerFactory.getMeasurementLogger().d("DeleteUninstalledJobService.onStartJob");
         sBackgroundExecutor.execute(
                 () -> {
-                    MeasurementImpl.getInstance(this).deleteAllUninstalledMeasurementData();
+                    MeasurementImpl.getInstance().deleteAllUninstalledMeasurementData();
 
                     boolean shouldRetry = false;
-                    AdServicesJobServiceLogger.getInstance(DeleteUninstalledJobService.this)
+                    AdServicesJobServiceLogger.getInstance()
                             .recordJobFinished(
                                     MEASUREMENT_DELETE_UNINSTALLED_JOB_ID,
                                     /* isSuccessful */ true,
@@ -93,7 +93,7 @@ public final class DeleteUninstalledJobService extends JobService {
         LoggerFactory.getMeasurementLogger().d("DeleteUninstalledJobService.onStopJob");
         boolean shouldRetry = false;
 
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, MEASUREMENT_DELETE_UNINSTALLED_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -154,7 +154,7 @@ public final class DeleteUninstalledJobService extends JobService {
         }
 
         if (doRecord) {
-            AdServicesJobServiceLogger.getInstance(this)
+            AdServicesJobServiceLogger.getInstance()
                     .recordJobSkipped(MEASUREMENT_DELETE_UNINSTALLED_JOB_ID, skipReason);
         }
 

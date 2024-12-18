@@ -21,29 +21,25 @@ import static android.adservices.exceptions.RetryableAdServicesNetworkException.
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.EMPTY_BODY;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assume.assumeTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import android.adservices.exceptions.AdServicesNetworkException;
 import android.adservices.exceptions.RetryableAdServicesNetworkException;
 import android.adservices.http.MockWebServerRule;
-import android.content.Context;
 import android.net.Uri;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
 
 import com.android.adservices.MockWebServerRuleFactory;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.WebAddresses;
@@ -53,6 +49,12 @@ import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
 import com.android.adservices.service.common.cache.HttpCache;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesApiCalledStats;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
+import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLoggerImpl;
+import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -69,66 +71,64 @@ import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Spy;
+import org.mockito.Mockito;
 import org.mockito.internal.stubbing.answers.AnswersWithDelay;
 import org.mockito.internal.stubbing.answers.Returns;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
 
-@SmallTest
-public class AdServicesHttpsClientTest {
-    @Spy private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
+public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
     private static final String CACHE_HEADER = "Cache-Control: max-age=60";
     private static final String NO_CACHE_HEADER = "Cache-Control: no-cache";
     private static final String RESPONSE_HEADER_KEY = "fake_response_header_key";
-    private static final String RESPONSE_HEADER_VALUE_1 = "fake_response_header_value_1";
-    private static final String RESPONSE_HEADER_VALUE_2 = "fake_response_header_value_2";
     private static final String REQUEST_PROPERTY_KEY = "X_REQUEST_KEY";
     private static final String REQUEST_PROPERTY_VALUE = "Fake_Value";
     private static final long MAX_AGE_SECONDS = 120;
     private static final long MAX_ENTRIES = 20;
     private static final DevContext DEV_CONTEXT_DISABLED = DevContext.createForDevOptionsDisabled();
     private static final DevContext DEV_CONTEXT_ENABLED =
-            DevContext.builder().setDevOptionsEnabled(true).build();
+            DevContext.builder(sPackageName).setDeviceDevOptionsEnabled(true).build();
 
     private final ExecutorService mExecutorService = MoreExecutors.newDirectExecutorService();
     private final String mJsScript = "function test() { return \"hello world\"; }";
     private final String mReportingPath = "/reporting/";
     private final String mFetchPayloadPath = "/fetchPayload/";
     private final String mFakeUrl = "https://fakeprivacysandboxdomain.never/this/is/a/fake";
-    private final int mTimeoutDeltaMs = 1000;
-    private final int mBytesPerPeriod = 1;
+
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-    @Rule public MockitoRule rule = MockitoJUnit.rule();
     private AdServicesHttpsClient mClient;
     @Mock private AdServicesHttpsClient.UriConverter mUriConverterMock;
     @Mock private URL mUrlMock;
     @Mock private HttpsURLConnection mURLConnectionMock;
     @Mock private InputStream mInputStreamMock;
+    @Mock private Clock mMockClock;
     private HttpCache mCache;
-    private CacheEntryDao mCacheEntryDao;
     private String mData;
+    private AdServicesLogger mAdServicesLoggerSpy;
+    private final long mStartDownloadTimestamp = 98L;
+    private final long mEndDownloadTimestamp = 199L;
 
     @Before
     public void setup() throws Exception {
-        mCacheEntryDao =
-                Room.inMemoryDatabaseBuilder(CONTEXT, CacheDatabase.class)
+        CacheEntryDao cacheEntryDao =
+                Room.inMemoryDatabaseBuilder(mContext, CacheDatabase.class)
                         .build()
                         .getCacheEntryDao();
 
-        mCache = new FledgeHttpCache(mCacheEntryDao, MAX_AGE_SECONDS, MAX_ENTRIES);
+        mCache = new FledgeHttpCache(cacheEntryDao, MAX_AGE_SECONDS, MAX_ENTRIES);
         mClient = new AdServicesHttpsClient(mExecutorService, mCache);
         mData = new JSONObject().put("key", "value").toString();
     }
@@ -159,8 +159,8 @@ public class AdServicesHttpsClientTest {
         getAndReadNothing(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED);
 
         RecordedRequest request1 = server.takeRequest();
-        assertEquals(mReportingPath, request1.getPath());
-        assertEquals("GET", request1.getMethod());
+        expect.that(request1.getPath()).isEqualTo(mReportingPath);
+        expect.that(request1.getMethod()).isEqualTo("GET");
     }
 
     @Test
@@ -210,7 +210,7 @@ public class AdServicesHttpsClientTest {
 
         AdServicesHttpClientResponse result =
                 fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED);
-        assertEquals(mJsScript, result.getResponseBody());
+        expect.that(result.getResponseBody()).isEqualTo(mJsScript);
     }
 
     @Test
@@ -222,7 +222,7 @@ public class AdServicesHttpsClientTest {
 
         AdServicesHttpClientResponse result =
                 fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_ENABLED);
-        assertEquals(mJsScript, result.getResponseBody());
+        expect.that(result.getResponseBody()).isEqualTo(mJsScript);
     }
 
     @Test
@@ -234,8 +234,8 @@ public class AdServicesHttpsClientTest {
         fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED);
 
         RecordedRequest request1 = server.takeRequest();
-        assertEquals(mFetchPayloadPath, request1.getPath());
-        assertEquals("GET", request1.getMethod());
+        expect.that(request1.getPath()).isEqualTo(mFetchPayloadPath);
+        expect.that(request1.getMethod()).isEqualTo("GET");
     }
 
     @Test
@@ -265,16 +265,18 @@ public class AdServicesHttpsClientTest {
 
     @Test
     public void testThrowsIOExceptionWhenConnectionTimesOut() throws Exception {
+        int timeoutDeltaMs = 1000;
+        int bytesPerPeriod = 1;
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
                         ImmutableList.of(
                                 new MockResponse()
                                         .setBody(mJsScript)
                                         .throttleBody(
-                                                mBytesPerPeriod,
+                                                bytesPerPeriod,
                                                 mClient.getConnectTimeoutMs()
                                                         + mClient.getReadTimeoutMs()
-                                                        + mTimeoutDeltaMs,
+                                                        + timeoutDeltaMs,
                                                 TimeUnit.MILLISECONDS)));
         URL url = server.getUrl(mFetchPayloadPath);
 
@@ -345,9 +347,9 @@ public class AdServicesHttpsClientTest {
         // There could be some lag between fetch call and connection opening
         verify(mUrlMock, timeout(delayMs)).openConnection();
         // We cancel the future while the request is going on
-        assertTrue(
-                "The request should have been ongoing, until being force-cancelled now",
-                futureResponse.cancel(true));
+        assertWithMessage("The request should have been ongoing, until being force-cancelled now")
+                .that(futureResponse.cancel(true))
+                .isTrue();
         // Given the resources are set to be eventually closed, we add a timeout
         verify(mURLConnectionMock, timeout(waitForEventualCompletionMs).atLeast(1)).disconnect();
         verify(mInputStreamMock, timeout(waitForEventualCompletionMs).atLeast(1)).close();
@@ -382,9 +384,9 @@ public class AdServicesHttpsClientTest {
         // Given the resources are set to be eventually closed, we add a timeout
         verify(mInputStreamMock, timeout(waitForEventualCompletionMs).atLeast(1)).close();
         verify(mURLConnectionMock, timeout(waitForEventualCompletionMs).atLeast(1)).disconnect();
-        assertTrue(
-                "The future response for fetchPayload should have been completed",
-                futureResponse.isDone());
+        assertWithMessage("The future response for fetchPayload should have been completed")
+                .that(futureResponse.isDone())
+                .isTrue();
     }
 
     @Test
@@ -407,9 +409,10 @@ public class AdServicesHttpsClientTest {
                                         .setDevContext(DEV_CONTEXT_DISABLED)
                                         .build())
                         .get();
-        assertEquals(mJsScript, response.getResponseBody());
-        assertEquals(
-                "No header should have been returned", 0, response.getResponseHeaders().size());
+        expect.that(response.getResponseBody()).isEqualTo(mJsScript);
+        expect.withMessage("No header should have been returned")
+                .that(response.getResponseHeaders())
+                .hasSize(0);
     }
 
     @Test
@@ -419,10 +422,9 @@ public class AdServicesHttpsClientTest {
                         new Dispatcher() {
                             @Override
                             public MockResponse dispatch(RecordedRequest request) {
-                                assertEquals(
-                                        "Request header mismatch",
-                                        REQUEST_PROPERTY_VALUE,
-                                        request.getHeader(REQUEST_PROPERTY_KEY));
+                                assertWithMessage("Request header mismatch")
+                                        .that(request.getHeader(REQUEST_PROPERTY_KEY))
+                                        .isEqualTo(REQUEST_PROPERTY_VALUE);
                                 return new MockResponse().setBody(mJsScript);
                             }
                         });
@@ -447,21 +449,21 @@ public class AdServicesHttpsClientTest {
                         .setDevContext(DEV_CONTEXT_DISABLED)
                         .build();
 
-        assertEquals(request.getRequestProperties(), ImmutableMap.of());
-        assertEquals(request.getResponseHeaderKeys(), ImmutableSet.of());
-        assertFalse(request.getUseCache());
+        expect.that(request.getRequestProperties()).isEmpty();
+        expect.that(request.getResponseHeaderKeys()).isEmpty();
+        expect.that(request.getUseCache()).isFalse();
 
         AdServicesHttpClientResponse response =
                 AdServicesHttpClientResponse.builder().setResponseBody("").build();
 
-        assertEquals(response.getResponseHeaders(), ImmutableMap.of());
+        expect.that(response.getResponseHeaders()).isEmpty();
     }
 
     @Test
     public void testCreateAdServicesRequestResponse_Success() {
-        final Uri uri = Uri.parse("www.google.com");
-        final ImmutableMap requestProperties = ImmutableMap.of("key", "value");
-        final ImmutableSet responseHeaderKeys = ImmutableSet.of("entry1", "entry2");
+        Uri uri = Uri.parse("www.google.com");
+        ImmutableMap<String, String> requestProperties = ImmutableMap.of("key", "value");
+        ImmutableSet<String> responseHeaderKeys = ImmutableSet.of("entry1", "entry2");
 
         AdServicesHttpClientRequest request =
                 AdServicesHttpClientRequest.create(
@@ -473,25 +475,26 @@ public class AdServicesHttpsClientTest {
                         AdServicesHttpUtil.HttpMethodType.GET,
                         EMPTY_BODY);
 
-        assertEquals(uri, request.getUri());
-        assertEquals(requestProperties, request.getRequestProperties());
-        assertEquals(responseHeaderKeys, request.getResponseHeaderKeys());
-        assertFalse(request.getUseCache());
+        expect.that(request.getUri()).isEqualTo(uri);
+        expect.that(request.getRequestProperties()).isEqualTo(requestProperties);
+        expect.that(request.getResponseHeaderKeys()).isEqualTo(responseHeaderKeys);
+        expect.that(request.getUseCache()).isFalse();
 
-        final String body = "Fake response body";
-        final ImmutableMap responseHeaders = ImmutableMap.of("key", List.of("value1", "value2"));
+        String body = "Fake response body";
+        ImmutableMap<String, List<String>> responseHeaders =
+                ImmutableMap.of("key", List.of("value1", "value2"));
         AdServicesHttpClientResponse response =
                 AdServicesHttpClientResponse.create(body, responseHeaders);
 
-        assertEquals(body, response.getResponseBody());
-        assertEquals(responseHeaders, response.getResponseHeaders());
+        expect.that(response.getResponseBody()).isEqualTo(body);
+        expect.that(response.getResponseHeaders()).isEqualTo(responseHeaders);
     }
 
     @Test
     public void testCreateAdServicesRequestResponse_Success_DevOptionsEnabled() {
-        final Uri uri = Uri.parse("www.google.com");
-        final ImmutableMap requestProperties = ImmutableMap.of("key", "value");
-        final ImmutableSet responseHeaderKeys = ImmutableSet.of("entry1", "entry2");
+        Uri uri = Uri.parse("www.google.com");
+        ImmutableMap<String, String> requestProperties = ImmutableMap.of("key", "value");
+        ImmutableSet<String> responseHeaderKeys = ImmutableSet.of("entry1", "entry2");
 
         AdServicesHttpClientRequest request =
                 AdServicesHttpClientRequest.create(
@@ -503,72 +506,19 @@ public class AdServicesHttpsClientTest {
                         AdServicesHttpUtil.HttpMethodType.GET,
                         EMPTY_BODY);
 
-        assertEquals(uri, request.getUri());
-        assertEquals(requestProperties, request.getRequestProperties());
-        assertEquals(responseHeaderKeys, request.getResponseHeaderKeys());
-        assertFalse(request.getUseCache());
+        expect.that(request.getUri()).isEqualTo(uri);
+        expect.that(request.getRequestProperties()).isEqualTo(requestProperties);
+        expect.that(request.getResponseHeaderKeys()).isEqualTo(responseHeaderKeys);
+        expect.that(request.getUseCache()).isFalse();
 
-        final String body = "Fake response body";
-        final ImmutableMap responseHeaders = ImmutableMap.of("key", List.of("value1", "value2"));
+        String body = "Fake response body";
+        ImmutableMap<String, List<String>> responseHeaders =
+                ImmutableMap.of("key", List.of("value1", "value2"));
         AdServicesHttpClientResponse response =
                 AdServicesHttpClientResponse.create(body, responseHeaders);
 
-        assertEquals(body, response.getResponseBody());
-        assertEquals(responseHeaders, response.getResponseHeaders());
-    }
-
-    @Test
-    public void testFetchPayloadResponsesUsesCache() throws Exception {
-        MockWebServer server =
-                mMockWebServerRule.startMockWebServer(
-                        new Dispatcher() {
-                            @Override
-                            public MockResponse dispatch(RecordedRequest request) {
-                                return new MockResponse()
-                                        .setBody(mJsScript)
-                                        .addHeader(CACHE_HEADER)
-                                        .addHeader(RESPONSE_HEADER_KEY, RESPONSE_HEADER_VALUE_1)
-                                        .addHeader(RESPONSE_HEADER_KEY, RESPONSE_HEADER_VALUE_2);
-                            }
-                        });
-        URL url = server.getUrl(mFetchPayloadPath);
-        mClient.fetchPayload(
-                        AdServicesHttpClientRequest.builder()
-                                .setUri(Uri.parse(url.toString()))
-                                .setUseCache(true)
-                                .setResponseHeaderKeys(ImmutableSet.of(RESPONSE_HEADER_KEY))
-                                .setDevContext(DEV_CONTEXT_DISABLED)
-                                .build())
-                .get();
-        RecordedRequest request1 = server.takeRequest();
-        assertEquals(mFetchPayloadPath, request1.getPath());
-        assertEquals("GET", request1.getMethod());
-        assertEquals(1, server.getRequestCount());
-        Thread.sleep(500);
-        // Flake proofing : In rare but possible scenario where the cache is not done persisting, we
-        // will get cache miss, no point asserting further
-        assumeTrue(mCache.getCachedEntriesCount() == 1);
-        AdServicesHttpClientResponse response =
-                mClient.fetchPayload(
-                                AdServicesHttpClientRequest.builder()
-                                        .setUri(Uri.parse(url.toString()))
-                                        .setUseCache(true)
-                                        .setResponseHeaderKeys(ImmutableSet.of(RESPONSE_HEADER_KEY))
-                                        .setDevContext(DEV_CONTEXT_DISABLED)
-                                        .build())
-                        .get();
-        assertEquals(mJsScript, response.getResponseBody());
-        assertTrue(
-                response.getResponseHeaders()
-                        .get(RESPONSE_HEADER_KEY)
-                        .contains(RESPONSE_HEADER_VALUE_1));
-        assertTrue(
-                response.getResponseHeaders()
-                        .get(RESPONSE_HEADER_KEY)
-                        .contains(RESPONSE_HEADER_VALUE_2));
-        assertEquals(
-                "Only one header should have been cached", 1, response.getResponseHeaders().size());
-        assertEquals("This call should have been cached", 1, server.getRequestCount());
+        expect.that(response.getResponseBody()).isEqualTo(body);
+        expect.that(response.getResponseHeaders()).isEqualTo(responseHeaders);
     }
 
     @Test
@@ -588,14 +538,16 @@ public class AdServicesHttpsClientTest {
         mClient.fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED);
 
         RecordedRequest request1 = server.takeRequest();
-        assertEquals(mFetchPayloadPath, request1.getPath());
-        assertEquals("GET", request1.getMethod());
-        assertEquals(1, server.getRequestCount());
+        expect.that(request1.getPath()).isEqualTo(mFetchPayloadPath);
+        expect.that(request1.getMethod()).isEqualTo("GET");
+        expect.that(server.getRequestCount()).isEqualTo(1);
 
         AdServicesHttpClientResponse response =
                 fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED);
-        assertEquals(mJsScript, response.getResponseBody());
-        assertEquals("This call should not have been cached", 2, server.getRequestCount());
+        expect.that(response.getResponseBody()).isEqualTo(mJsScript);
+        expect.withMessage("This call should not have been cached")
+                .that(server.getRequestCount())
+                .isEqualTo(2);
     }
 
     @Test
@@ -615,14 +567,16 @@ public class AdServicesHttpsClientTest {
         mClient.fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED);
 
         RecordedRequest request1 = server.takeRequest();
-        assertEquals(mFetchPayloadPath, request1.getPath());
-        assertEquals("GET", request1.getMethod());
-        assertEquals(1, server.getRequestCount());
+        expect.that(request1.getPath()).isEqualTo(mFetchPayloadPath);
+        expect.that(request1.getMethod()).isEqualTo("GET");
+        expect.that(server.getRequestCount()).isEqualTo(1);
 
         AdServicesHttpClientResponse response =
                 fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED);
-        assertEquals(mJsScript, response.getResponseBody());
-        assertEquals("This call should not have been cached", 2, server.getRequestCount());
+        expect.that(response.getResponseBody()).isEqualTo(mJsScript);
+        expect.withMessage("This call should not have been cached")
+                .that(server.getRequestCount())
+                .isEqualTo(2);
     }
 
     @Test
@@ -646,7 +600,7 @@ public class AdServicesHttpsClientTest {
                         return false;
                     }
                 };
-        HttpCache cache = CacheProviderFactory.create(CONTEXT, disableCacheFlags);
+        HttpCache cache = CacheProviderFactory.create(mContext, disableCacheFlags);
         AdServicesHttpsClient client = new AdServicesHttpsClient(mExecutorService, cache);
 
         client.fetchPayload(
@@ -657,9 +611,9 @@ public class AdServicesHttpsClientTest {
                         .build());
 
         RecordedRequest request1 = server.takeRequest();
-        assertEquals(mFetchPayloadPath, request1.getPath());
-        assertEquals("GET", request1.getMethod());
-        assertEquals(1, server.getRequestCount());
+        expect.that(request1.getPath()).isEqualTo(mFetchPayloadPath);
+        expect.that(request1.getMethod()).isEqualTo("GET");
+        expect.that(server.getRequestCount()).isEqualTo(1);
 
         AdServicesHttpClientResponse response =
                 client.fetchPayload(
@@ -669,8 +623,10 @@ public class AdServicesHttpsClientTest {
                                         .setDevContext(DEV_CONTEXT_DISABLED)
                                         .build())
                         .get();
-        assertEquals(mJsScript, response.getResponseBody());
-        assertEquals("This call should not have been cached", 2, server.getRequestCount());
+        expect.that(response.getResponseBody()).isEqualTo(mJsScript);
+        expect.withMessage("This call should not have been cached")
+                .that(server.getRequestCount())
+                .isEqualTo(2);
     }
 
     @Test
@@ -689,8 +645,8 @@ public class AdServicesHttpsClientTest {
         postJson(Uri.parse(url.toString()), mData, DEV_CONTEXT_DISABLED);
 
         RecordedRequest request1 = server.takeRequest();
-        assertEquals(mReportingPath, request1.getPath());
-        assertEquals("POST", request1.getMethod());
+        expect.that(request1.getPath()).isEqualTo(mReportingPath);
+        expect.that(request1.getMethod()).isEqualTo("POST");
     }
 
     @Test
@@ -701,8 +657,8 @@ public class AdServicesHttpsClientTest {
         postJson(Uri.parse(url.toString()), mData, DEV_CONTEXT_ENABLED);
 
         RecordedRequest request1 = server.takeRequest();
-        assertEquals(mReportingPath, request1.getPath());
-        assertEquals("POST", request1.getMethod());
+        expect.that(request1.getPath()).isEqualTo(mReportingPath);
+        expect.that(request1.getMethod()).isEqualTo("POST");
     }
 
     @Test
@@ -713,8 +669,8 @@ public class AdServicesHttpsClientTest {
         postJson(Uri.parse(url.toString()), mData, DEV_CONTEXT_DISABLED);
 
         RecordedRequest request1 = server.takeRequest();
-        assertEquals("POST", request1.getMethod());
-        assertEquals(mData.toString(), request1.getUtf8Body());
+        expect.that(request1.getMethod()).isEqualTo("POST");
+        expect.that(request1.getUtf8Body()).isEqualTo(mData);
     }
 
     @Test
@@ -857,7 +813,7 @@ public class AdServicesHttpsClientTest {
 
         // Verify we are pinging a local domain.
         assertThat(WebAddresses.isLocalhost(Uri.parse(url.toString()))).isTrue();
-        assertEquals(mJsScript, response.getResponseBody());
+        expect.that(response.getResponseBody()).isEqualTo(mJsScript);
     }
 
     @Test
@@ -971,14 +927,14 @@ public class AdServicesHttpsClientTest {
     public void testPerformRequestAndGetResponseInString_shouldReturnResponseString()
             throws Exception {
         String stringResponse = "This is a plain String response which could also be a JSON String";
-        byte[] postedBodyInBytes = "{[1,2,3]}".getBytes("UTF-8");
+        byte[] postedBodyInBytes = "{[1,2,3]}".getBytes(StandardCharsets.UTF_8);
 
         Dispatcher dispatcher =
                 new Dispatcher() {
                     @Override
-                    public MockResponse dispatch(RecordedRequest request)
-                            throws InterruptedException {
-                        assertEquals(new String(postedBodyInBytes), new String(request.getBody()));
+                    public MockResponse dispatch(RecordedRequest request) {
+                        assertThat(new String(postedBodyInBytes))
+                                .isEqualTo(new String(request.getBody()));
                         return new MockResponse().setBody(stringResponse);
                     }
                 };
@@ -1002,8 +958,59 @@ public class AdServicesHttpsClientTest {
         AdServicesHttpClientResponse response =
                 mClient.performRequestGetResponseInPlainString(request).get();
 
-        assertEquals(1, server.getRequestCount());
+        expect.that(server.getRequestCount()).isEqualTo(1);
         assertThat(response.getResponseBody()).isEqualTo(stringResponse);
+    }
+
+    @Test
+    public void testFetchPayloadSuccessfulResponseWithSelectAdsFromOutcomesLogging()
+            throws Exception {
+        SelectAdsFromOutcomesExecutionLogger executionLogger =
+                setupSelectAdsFromOutcomesApiCalledStatsLogging();
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        ImmutableList.of(new MockResponse().setBody(mJsScript)));
+        URL url = server.getUrl(mFetchPayloadPath);
+
+        AdServicesHttpClientResponse result =
+                mClient.fetchPayloadWithLogging(
+                                Uri.parse(url.toString()), DEV_CONTEXT_DISABLED, executionLogger)
+                        .get();
+        expect.that(result.getResponseBody()).isEqualTo(mJsScript);
+
+        // Verify the logging of SelectAdsFromOutcomesApiCalledStats
+        verifySelectAdsFromOutcomesApiCalledStatsLogging(executionLogger, 200);
+    }
+
+    @Test
+    public void testPickRequiredHeaderFields() {
+        ImmutableMap<String, List<String>> allHeaders =
+                ImmutableMap.of(
+                        "key1", ImmutableList.of("value1"), "key2", ImmutableList.of("value2"));
+        ImmutableSet<String> requiredHeaderKeys = ImmutableSet.of("key1");
+
+        Map<String, List<String>> result =
+                mClient.pickRequiredHeaderFields(allHeaders, requiredHeaderKeys);
+        assertThat(result).isEqualTo(ImmutableMap.of("key1", ImmutableList.of("value1")));
+    }
+
+    @Test
+    public void testPickRequiredHeaderFieldsCaseInsensitive() {
+        ImmutableMap<String, List<String>> allHeaders =
+                ImmutableMap.of(
+                        "KEY1", ImmutableList.of("value1"), "KEY2", ImmutableList.of("value2"));
+        ImmutableSet<String> requiredHeaderKeys = ImmutableSet.of("key1", "key2");
+
+        Map<String, List<String>> result =
+                mClient.pickRequiredHeaderFields(allHeaders, requiredHeaderKeys);
+        assertThat(result)
+                .isEqualTo(
+                        ImmutableMap.of(
+                                "key1",
+                                ImmutableList.of("value1"),
+                                "key2",
+                                ImmutableList.of("value2")));
     }
 
     private AdServicesHttpClientResponse fetchPayload(Uri uri, DevContext devContext)
@@ -1017,5 +1024,27 @@ public class AdServicesHttpsClientTest {
 
     private Void postJson(Uri uri, String data, DevContext devContext) throws Exception {
         return mClient.postPlainText(uri, data, devContext).get();
+    }
+
+    private SelectAdsFromOutcomesExecutionLogger setupSelectAdsFromOutcomesApiCalledStatsLogging() {
+        mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
+
+        when(mMockClock.elapsedRealtime())
+                .thenReturn(mStartDownloadTimestamp, mEndDownloadTimestamp);
+        return new SelectAdsFromOutcomesExecutionLoggerImpl(mMockClock, mAdServicesLoggerSpy);
+    }
+
+    private void verifySelectAdsFromOutcomesApiCalledStatsLogging(
+            SelectAdsFromOutcomesExecutionLogger executionLogger, int statusCode) {
+        ArgumentCaptor<SelectAdsFromOutcomesApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(SelectAdsFromOutcomesApiCalledStats.class);
+        executionLogger.logSelectAdsFromOutcomesApiCalledStats();
+        verify(mAdServicesLoggerSpy)
+                .logSelectAdsFromOutcomesApiCalledStats(argumentCaptor.capture());
+        SelectAdsFromOutcomesApiCalledStats stats = argumentCaptor.getValue();
+
+        int downloadLatency = (int) (mEndDownloadTimestamp - mStartDownloadTimestamp);
+        assertThat(stats.getDownloadLatencyMillis()).isEqualTo(downloadLatency);
+        assertThat(stats.getDownloadResultCode()).isEqualTo(statusCode);
     }
 }

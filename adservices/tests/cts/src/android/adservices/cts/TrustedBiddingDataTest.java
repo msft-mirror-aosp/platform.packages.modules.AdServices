@@ -16,7 +16,6 @@
 
 package android.adservices.cts;
 
-import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
@@ -26,24 +25,18 @@ import android.adservices.customaudience.TrustedBiddingDataFixture;
 import android.net.Uri;
 import android.os.Parcel;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import com.android.adservices.common.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
 
 /** Unit tests for {@link android.adservices.customaudience.TrustedBiddingData} */
-@SmallTest
-public final class TrustedBiddingDataTest {
+@RequiresSdkLevelAtLeastS
+public final class TrustedBiddingDataTest extends CtsAdServicesDeviceTestCase {
     private static final Uri VALID_TRUSTED_BIDDING_URL =
             TrustedBiddingDataFixture.getValidTrustedBiddingUriByBuyer(CommonFixture.VALID_BUYER_1);
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
 
     @Test
     public void testBuildValidTrustedBiddingDataSuccess() {
@@ -54,9 +47,9 @@ public final class TrustedBiddingDataTest {
                                 TrustedBiddingDataFixture.getValidTrustedBiddingKeys())
                         .build();
 
-        assertThat(validTrustedBiddingData.getTrustedBiddingUri())
+        expect.that(validTrustedBiddingData.getTrustedBiddingUri())
                 .isEqualTo(VALID_TRUSTED_BIDDING_URL);
-        assertThat(validTrustedBiddingData.getTrustedBiddingKeys())
+        expect.that(validTrustedBiddingData.getTrustedBiddingKeys())
                 .isEqualTo(TrustedBiddingDataFixture.getValidTrustedBiddingKeys());
     }
 
@@ -74,8 +67,8 @@ public final class TrustedBiddingDataTest {
         p.setDataPosition(0);
         TrustedBiddingData fromParcel = TrustedBiddingData.CREATOR.createFromParcel(p);
 
-        assertThat(fromParcel.getTrustedBiddingUri()).isEqualTo(VALID_TRUSTED_BIDDING_URL);
-        assertThat(fromParcel.getTrustedBiddingKeys())
+        expect.that(fromParcel.getTrustedBiddingUri()).isEqualTo(VALID_TRUSTED_BIDDING_URL);
+        expect.that(fromParcel.getTrustedBiddingKeys())
                 .isEqualTo(TrustedBiddingDataFixture.getValidTrustedBiddingKeys());
     }
 
@@ -115,9 +108,9 @@ public final class TrustedBiddingDataTest {
                         .setTrustedBiddingKeys(emptyTrustedBiddingKeys)
                         .build();
 
-        assertThat(emptyKeysTrustedBiddingData.getTrustedBiddingUri())
+        expect.that(emptyKeysTrustedBiddingData.getTrustedBiddingUri())
                 .isEqualTo(VALID_TRUSTED_BIDDING_URL);
-        assertThat(emptyKeysTrustedBiddingData.getTrustedBiddingKeys())
+        expect.that(emptyKeysTrustedBiddingData.getTrustedBiddingKeys())
                 .isEqualTo(emptyTrustedBiddingKeys);
     }
 
@@ -130,6 +123,6 @@ public final class TrustedBiddingDataTest {
                                 TrustedBiddingDataFixture.getValidTrustedBiddingKeys())
                         .build();
 
-        assertThat(validTrustedBiddingData.describeContents()).isEqualTo(0);
+        expect.that(validTrustedBiddingData.describeContents()).isEqualTo(0);
     }
 }

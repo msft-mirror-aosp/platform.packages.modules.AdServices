@@ -20,8 +20,16 @@ import java.util.List;
 
 public interface KAnonCaller {
     /**
+     * An enum class representing the caller source for {@link KAnonCaller#signAndJoinMessages} .
+     */
+    enum KAnonCallerSource {
+        IMMEDIATE_SIGN_JOIN,
+        BACKGROUND_JOB
+    }
+
+    /**
      * This method takes a list of {@link KAnonMessageEntity} as an argument and process them by
      * making sign and join calls.
      */
-    void signAndJoinMessages(List<KAnonMessageEntity> messagesToProcess);
+    void signAndJoinMessages(List<KAnonMessageEntity> messagesToProcess, KAnonCallerSource source);
 }

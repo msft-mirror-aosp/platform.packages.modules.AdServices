@@ -42,7 +42,6 @@ import java.util.concurrent.ArrayBlockingQueue;
  * Sender strategy to persist the debug reports in database to be sent by a background job in a
  * batch.
  */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class DebugReportSenderStrategyBatchImpl implements DebugReportSenderStrategy {
     private static final int MAX_QUEUE_DEPTH = 1000;
@@ -73,7 +72,7 @@ public class DebugReportSenderStrategyBatchImpl implements DebugReportSenderStra
                 DBAdSelectionDebugReport.create(
                         null,
                         uri,
-                        mDevContext.getDevOptionsEnabled(),
+                        mDevContext.getDeviceDevOptionsEnabled(),
                         Instant.now().toEpochMilli());
         mDebugReportQueue.add(dbAdSelectionDebugReport);
     }
@@ -87,7 +86,7 @@ public class DebugReportSenderStrategyBatchImpl implements DebugReportSenderStra
                             DBAdSelectionDebugReport.create(
                                     null,
                                     uri,
-                                    mDevContext.getDevOptionsEnabled(),
+                                    mDevContext.getDeviceDevOptionsEnabled(),
                                     Instant.now().toEpochMilli());
                     mDebugReportQueue.add(dbAdSelectionDebugReport);
                 });

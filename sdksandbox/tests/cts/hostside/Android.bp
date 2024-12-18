@@ -34,12 +34,14 @@ java_test_host {
         "general-tests",
         "mcts-adservices",
     ],
-    data: [
+    device_common_data: [
         ":CtsSdkSandboxHostTestApp",
         ":CtsSdkSandboxHostTestApp2",
         ":SdkSandboxDataIsolationTestProvider",
         ":SdkSandboxStorageTestProvider",
+        ":SdkSandboxManagerCtsProvider",
     ],
+    jarjar_rules: ":test-service-jarjar-rules",
 }
 
 android_test_helper_app {
@@ -55,6 +57,7 @@ android_test_helper_app {
     static_libs: [
         "CtsStorageTestSdkApi",
         "CtsDataIsolationTestSdkApi",
+        "CtsSdkProviderApi",
         "SdkSandboxTestUtils",
         "androidx.core_core",
         "androidx.test.ext.junit",

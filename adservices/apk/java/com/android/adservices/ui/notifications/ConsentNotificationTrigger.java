@@ -19,10 +19,13 @@ package com.android.adservices.ui.notifications;
 import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_RECORD_MANUAL_INTERACTION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_RESOURCES_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_STRINGS_FEATURE_ENABLED;
 import static com.android.adservices.service.consent.ConsentManager.MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.service.consent.ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED;
 import static com.android.adservices.ui.UxUtil.isUxStatesReady;
+import static com.android.adservices.ui.ganotifications.ConsentNotificationPasFragment.IS_RENOTIFY_KEY;
+import static com.android.adservices.ui.ganotifications.ConsentNotificationPasFragment.IS_STRICT_CONSENT_BEHAVIOR;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -37,6 +40,7 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 
+import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
@@ -53,12 +57,20 @@ public class ConsentNotificationTrigger {
     public static final int NOTIFICATION_ID = 67920;
     private static final String CHANNEL_ID = "PRIVACY_SANDBOX_CHANNEL";
     private static final int NOTIFICATION_PRIORITY = NotificationCompat.PRIORITY_MAX;
+    // Request codes should be different for notifications that are not mutually exclusive per user.
+    // When in doubt, always use a different request code.
+    private static final int BETA_REQUEST_CODE = 1;
+    private static final int GA_REQUEST_CODE = 2;
+    private static final int U18_REQUEST_CODE = 3;
+    private static final int GA_WITH_PAS_REQUEST_CODE = 4;
+
     /**
      * Shows consent notification as the highest priority notification to the user.
      *
      * @param context Context which is used to display {@link NotificationCompat}
      */
     public static void showConsentNotification(@NonNull Context context, boolean isEuDevice) {
+        LogUtil.d("Started requesting notification.");
         UiStatsLogger.logRequestedNotification();
 
         boolean gaUxFeatureEnabled =
@@ -67,13 +79,15 @@ public class ConsentNotificationTrigger {
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
         ConsentManager consentManager = ConsentManager.getInstance();
         if (!notificationManager.areNotificationsEnabled()) {
+            LogUtil.d("Notification is disabled.");
             recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
             UiStatsLogger.logNotificationDisabled();
             return;
         }
 
         // Set OTA resources if it exists.
-        if (UxStatesManager.getInstance().getFlag(KEY_UI_OTA_STRINGS_FEATURE_ENABLED)) {
+        if (UxStatesManager.getInstance().getFlag(KEY_UI_OTA_STRINGS_FEATURE_ENABLED)
+                || UxStatesManager.getInstance().getFlag(KEY_UI_OTA_RESOURCES_FEATURE_ENABLED)) {
             OTAResourcesManager.applyOTAResources(context.getApplicationContext(), true);
         }
 
@@ -82,11 +96,13 @@ public class ConsentNotificationTrigger {
                 getNotification(context, isEuDevice, gaUxFeatureEnabled, consentManager);
 
         notificationManager.notify(NOTIFICATION_ID, notification);
-
-        setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
-
-        UiStatsLogger.logNotificationDisplayed();
         recordNotificationDisplayed(context, gaUxFeatureEnabled, consentManager);
+
+        // must setup consents after recording notification displayed data to ensure accurate UX in
+        // logs
+        setupConsents(context, isEuDevice, gaUxFeatureEnabled, consentManager);
+        UiStatsLogger.logNotificationDisplayed();
+        LogUtil.d("Notification was displayed.");
     }
 
     private static void recordNotificationDisplayed(
@@ -106,9 +122,7 @@ public class ConsentNotificationTrigger {
                     }
                     consentManager.recordGaUxNotificationDisplayed(true);
                     break;
-                // Both U18_UX and RVC_UX are showing U18 Notification
                 case U18_UX:
-                case RVC_UX:
                     consentManager.setU18NotificationDisplayed(true);
                     break;
                 case BETA_UX:
@@ -136,14 +150,13 @@ public class ConsentNotificationTrigger {
             switch (UxUtil.getUx(context)) {
                 case GA_UX:
                     if (UxStatesManager.getInstance().getFlag(KEY_PAS_UX_ENABLED)) {
-                        notification = getPasConsentNotification(context, consentManager);
+                        notification =
+                                getPasConsentNotification(context, consentManager, isEuDevice);
                         break;
                     }
                     notification = getGaV2ConsentNotification(context, isEuDevice);
                     break;
-                // Both U18_UX and RVC_UX are showing U18 Notification
                 case U18_UX:
-                case RVC_UX:
                     notification = getU18ConsentNotification(context);
                     break;
                 case BETA_UX:
@@ -177,11 +190,10 @@ public class ConsentNotificationTrigger {
         if (isUxStatesReady(context)) {
             switch (UxUtil.getUx(context)) {
                 case GA_UX:
-                    if (UxStatesManager.getInstance().getFlag(KEY_PAS_UX_ENABLED)
-                            && (isFledgeOrMsmtEnabled(consentManager)
-                                    || consentManager.getUserManualInteractionWithConsent()
-                                            == MANUAL_INTERACTIONS_RECORDED)) {
-                        // Not first time user, respect previous consents
+                    if (isPasRenotifyUser(consentManager)
+                            && !isOtaRvcMsmtEnabledUser(consentManager)) {
+                        // Is PAS renotify user AND Not adult user from Rvc with measurement
+                        // enabled, respect previous consents.
                         break;
                     }
                     setUpGaConsent(context, isEuDevice, consentManager);
@@ -189,15 +201,6 @@ public class ConsentNotificationTrigger {
                 case U18_UX:
                     consentManager.recordMeasurementDefaultConsent(true);
                     consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
-                    break;
-                case RVC_UX:
-                    if (isEuDevice) {
-                        consentManager.recordMeasurementDefaultConsent(false);
-                        consentManager.disable(context, AdServicesApiType.MEASUREMENTS);
-                    } else {
-                        consentManager.recordMeasurementDefaultConsent(true);
-                        consentManager.enable(context, AdServicesApiType.MEASUREMENTS);
-                    }
                     break;
                 case BETA_UX:
                     if (!isEuDevice) {
@@ -228,12 +231,25 @@ public class ConsentNotificationTrigger {
         }
     }
 
+    private static boolean isPasRenotifyUser(ConsentManager consentManager) {
+        return UxStatesManager.getInstance().getFlag(KEY_PAS_UX_ENABLED)
+                && (isFledgeOrMsmtEnabled(consentManager)
+                        || consentManager.getUserManualInteractionWithConsent()
+                                == MANUAL_INTERACTIONS_RECORDED);
+    }
+
+    private static boolean isOtaRvcMsmtEnabledUser(ConsentManager consentManager) {
+        return consentManager.isOtaAdultUserFromRvc()
+                && consentManager.getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+    }
+
     private static Notification getGaV2ConsentNotification(
             @NonNull Context context, boolean isEuDevice) {
         Intent intent = new Intent(context, ConsentNotificationActivity.class);
 
         PendingIntent pendingIntent =
-                PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
+                PendingIntent.getActivity(
+                        context, GA_REQUEST_CODE, intent, PendingIntent.FLAG_IMMUTABLE);
 
         String bigText =
                 isEuDevice
@@ -278,7 +294,7 @@ public class ConsentNotificationTrigger {
 
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(
-                        context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
+                        context, BETA_REQUEST_CODE, intent, PendingIntent.FLAG_IMMUTABLE);
         NotificationCompat.BigTextStyle textStyle =
                 new NotificationCompat.BigTextStyle()
                         .bigText(
@@ -317,7 +333,7 @@ public class ConsentNotificationTrigger {
 
         PendingIntent pendingIntent =
                 PendingIntent.getActivity(
-                        context, /* requestCode= */ 1, intent, PendingIntent.FLAG_IMMUTABLE);
+                        context, U18_REQUEST_CODE, intent, PendingIntent.FLAG_IMMUTABLE);
         NotificationCompat.BigTextStyle textStyle =
                 new NotificationCompat.BigTextStyle()
                         .bigText(
@@ -335,12 +351,17 @@ public class ConsentNotificationTrigger {
     }
 
     private static Notification getPasConsentNotification(
-            @NonNull Context context, ConsentManager consentManager) {
+            @NonNull Context context, ConsentManager consentManager, boolean isEuDevice) {
         boolean isRenotify = isFledgeOrMsmtEnabled(consentManager);
         Intent intent = new Intent(context, ConsentNotificationActivity.class);
+        intent.putExtra(IS_RENOTIFY_KEY, isRenotify);
+        // isEuDevice argument here includes AdId disabled ROW users, which cannot be obtained
+        // within the notification activity from DeviceRegionProvider.
+        intent.putExtra(IS_STRICT_CONSENT_BEHAVIOR, isEuDevice);
 
         PendingIntent pendingIntent =
-                PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_IMMUTABLE);
+                PendingIntent.getActivity(
+                        context, GA_WITH_PAS_REQUEST_CODE, intent, PendingIntent.FLAG_IMMUTABLE);
 
         String bigText =
                 isRenotify

@@ -32,6 +32,16 @@
     <!-- Description of an application permission that lets it access AdServices Custom Audience API. [CHAR LIMIT=NONE] -->
     <string name="permdesc_accessAdServicesCustomAudience">Allows an application to access AdServices Custom Audience API.</string>
 
+    <!-- Title of an application permission that lets it access AdServices Ad Selection API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesAdSelection">access AdServices Ad Selection API</string>
+    <!-- Description of an application permission that lets it access AdServices Ad Selection API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_accessAdServicesAdSelection">Allows an application to access AdServices Ad Selection API.</string>
+
+    <!-- Title of an application permission that lets it access AdServices Protected Signals API. [CHAR LIMIT=NONE] -->
+    <string name="permlab_accessAdServicesProtectedSignals">access AdServices Protected Signals API</string>
+    <!-- Description of an application permission that lets it access AdServices Protected Signals API. [CHAR LIMIT=NONE] -->
+    <string name="permdesc_accessAdServicesProtectedSignals">Allows an application to access AdServices Protected Signals API.</string>
+
     <!-- Title of an application permission that lets it access Advertising ID API. [CHAR LIMIT=NONE] -->
     <string name="permlab_accessAdServicesAdId">Access to AdId API</string>
     <!-- Description of an application permission that lets it access AdId API. [CHAR LIMIT=NONE] -->
@@ -133,7 +143,7 @@
     <!-- Text for button to open Privacy Sandbox Settings from confirmation activity. [CHAR LIMIT=NONE] -->
     <string name="notificationUI_confirmation_left_control_button_text">Privacy settings</string>
     <!-- Text for button to acknowledge and dismiss confirmation activity.  [CHAR LIMIT=NONE] -->
-    <string name="notificationUI_confirmation_right_control_button_text">Got it</string>
+    <string name="notificationUI_confirmation_right_control_button_text" translatable="false">@string/notificationUI_right_control_button_text</string>
 
     <!-- ROW Notification UI strings ************************************************************-->
     <!-- Text for the main title of the ROW notification. [CHAR LIMIT=NONE] -->
@@ -802,13 +812,13 @@
 
     <!-- PAS Settings Activity ******************************************************************-->
     <!-- Title for the PAS apps view. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_pas_apps_view_body_text">Apps and their advertising partners can use your activity across other apps on this device to personalize ads while still keeping information about you private and secure.\n\nFor example, if you regularly use cooking apps, you may see ads for grocery delivery services or related content in other apps.\n\nAndroid auto-deletes your activity regularly, but you can also block apps from sharing this information with their advertising partners.</string>
+    <string name="settingsUI_pas_apps_view_body_text">Apps and their advertising partners can use your activity across other apps on this device to personalize ads while still keeping information about you private and secure.\n\nFor example, if you regularly use cooking apps, you may see ads for grocery delivery services or related content in other apps.\n\nAndroid auto-deletes your activity regularly, but you can also block apps from sharing this information with their advertising partners.\n\nWhile this feature can be turned on, you may not see a list of apps until this feature is fully available and apps start using it.</string>
     <!-- Text for the PAS footer explanation of apps/PAS API controls for ad privacy. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_pas_apps_view_footer">It’s common for apps and their advertising partners to remember things you’re interested in to personalize your experience. Apps can securely store this information so that it can only be used by their advertising partners to show ads on other apps.\n\nYou can block an app from sharing your activity data with advertising partners. Android also auto-deletes shared activity data regularly, so an app you use again might reappear on this list.\n\nWhether an ad you see is personalized can depend on many factors like this setting, the ad topics setting, your advertising ID settings, and whether the app you’re using personalized ads.\n\n<a href="https://support.google.com/android?p=ad_privacy">Learn more about app-suggested ads</a></string>
+    <string name="settingsUI_pas_apps_view_footer">It’s common for apps and their advertising partners to remember things you’re interested in to personalize your experience. Apps can securely store this information so that it can only be used by their advertising partners to show ads on other apps.\n\nYou can block an app from sharing your activity data with advertising partners. Android also auto-deletes shared activity data regularly, so an app you use again might reappear on this list.\n\nWhether an ad you see is personalized can depend on many factors like this setting, the ad topics setting, your advertising ID settings, and whether the app you’re using personalizes ads.\n\n<a href="https://support.google.com/android?p=ad_privacy">Learn more about app-suggested ads</a></string>
     <!-- Text for the PAS footer explanation of measurement API controls for ad privacy. [CHAR LIMIT=NONE] -->
     <string name="settingsUI_pas_msmt_view_footer">Android uses multiple privacy measures such as aggregation and noising data to limit the information apps can share with one another and help protect your identity.\n\nYour browser may have a similar setting. If ad measurement is on for both Android and your browser, a company may be able to measure the effectiveness of an ad between apps you use and sites you visit. Your browsing history is kept private on your device.\n\n<a href="https://support.google.com/android?p=ad_privacy">Learn more about ad measurement</a></string>
     <!-- Text for the PAS footer explanation of measurement API controls for ad privacy. [CHAR LIMIT=NONE] -->
-    <string name="settingsUI_pas_topics_view_footer">Android notes topics of interest based on the apps you’ve used in the last few weeks.\n\nLater, an app you use can ask Android for your topics to personalize the ads you see. Android shares up to 3 topics while protecting your identity and information about your app usage.\n\nAndroid auto-deletes topics regularly. As you continue using apps, a topic might reappear on the list. Or you can block topics you don’t want Android to share with apps.\n\nWhether an ad you see is personalized can depend on many factors like this setting, the app-suggested ads setting, your advertising ID settings, and whether the app you’re using personalized ads.\n\n<a href="https://support.google.com/android?p=ad_privacy">Learn more about ad topics</a></string>
+    <string name="settingsUI_pas_topics_view_footer">Android notes topics of interest based on the apps you’ve used in the last few weeks.\n\nLater, an app you use can ask Android for your topics to personalize the ads you see. Android shares up to 3 topics while protecting your identity and information about your app usage.\n\nAndroid auto-deletes topics regularly. As you continue using apps, a topic might reappear on the list. Or you can block topics you don’t want Android to share with apps.\n\nWhether an ad you see is personalized can depend on many factors like this setting, the app-suggested ads setting, your advertising ID settings, and whether the app you’re using personalizes ads.\n\n<a href="https://support.google.com/android?p=ad_privacy">Learn more about ad topics</a></string>
 
     <!--*****************************************************************************************-->
     <!-- Other Strings **************************************************************************-->

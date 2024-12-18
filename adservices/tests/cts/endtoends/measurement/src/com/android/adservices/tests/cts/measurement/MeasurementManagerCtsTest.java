@@ -16,11 +16,11 @@
 
 package com.android.adservices.tests.cts.measurement;
 
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import android.adservices.common.AdServicesOutcomeReceiver;
@@ -41,13 +41,14 @@ import android.view.KeyEvent;
 
 import androidx.annotation.NonNull;
 
-import com.android.adservices.common.RequiresLowRamDevice;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.WebUtil;
+import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.compatibility.common.util.ShellUtils;
 import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -64,6 +65,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@RequiresSdkLevelAtLeastS(reason = "Cannot run on R with Consent Source of truth removed")
 public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestCase {
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
@@ -100,8 +102,10 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
 
     @Before
     public void setup() throws Exception {
-        mMeasurementManager = MeasurementManager.get(sContext);
-        assertWithMessage("MeasurementManager.get(%s)", sContext)
+        // Kill adservices process to avoid interfering from other tests.
+        AdservicesTestHelper.killAdservicesProcess(mContext);
+        mMeasurementManager = MeasurementManager.get(mContext);
+        assertWithMessage("MeasurementManager.get(%s)", mContext)
                 .that(mMeasurementManager)
                 .isNotNull();
 
@@ -112,7 +116,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     @Test
     @RequiresLowRamDevice
     public void testMeasurementApiDisabled_lowRamDevice() throws Exception {
-        MeasurementManager manager = MeasurementManager.get(sContext);
+        MeasurementManager manager = MeasurementManager.get(mContext);
         assertWithMessage("manager").that(manager).isNotNull();
 
         boolean result = callMeasurementApiStatus(false);
@@ -121,10 +125,10 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_withNoServerSetupWithCallbackOsReceiver_noErrors()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.registerSource(
                 SOURCE_REGISTRATION_URI,
                 /* inputEvent= */ null,
@@ -136,7 +140,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     @Test
     public void testRegisterSource_withNoServerSetupWithCallbackCustomReceiver_noErrors()
             throws Exception {
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.registerSource(
                 SOURCE_REGISTRATION_URI,
                 /* inputEvent= */ null,
@@ -147,12 +151,12 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_withLocalhostUriNonDebuggableCallerWithOsReceiver_fails()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
         CompletableFuture<Void> future = new CompletableFuture<>();
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        final OutcomeReceiver<Object, Exception> osCallback =
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        OutcomeReceiver<Object, Exception> osCallback =
                 new OutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Object ignoredResult) {
@@ -163,21 +167,21 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                     public void onError(Exception error) {
                         countDownLatch.countDown();
                         future.complete(null);
-                        assertTrue(error instanceof SecurityException);
+                        assertThat(error).isInstanceOf(SecurityException.class);
                     }
                 };
         mMeasurementManager.registerSource(
                 LOCALHOST, /* inputEvent= */ null, CALLBACK_EXECUTOR, osCallback);
         assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        Assert.assertNull(future.get());
+        assertThat(future.get()).isNull();
     }
 
     @Test
     public void testRegisterSource_withLocalhostUriNonDebuggableCallerWithCustomReceiver_fails()
             throws Exception {
         CompletableFuture<Void> future = new CompletableFuture<>();
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
-        final AdServicesOutcomeReceiver<Object, Exception> osCallback =
+        CountDownLatch countDownLatch = new CountDownLatch(1);
+        AdServicesOutcomeReceiver<Object, Exception> osCallback =
                 new AdServicesOutcomeReceiver<>() {
                     @Override
                     public void onResult(@NonNull Object ignoredResult) {
@@ -188,27 +192,27 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                     public void onError(Exception error) {
                         countDownLatch.countDown();
                         future.complete(null);
-                        assertTrue(error instanceof SecurityException);
+                        assertThat(error).isInstanceOf(SecurityException.class);
                     }
                 };
         mMeasurementManager.registerSource(
                 LOCALHOST, /* inputEvent= */ null, CALLBACK_EXECUTOR, osCallback);
         assertThat(countDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
-        Assert.assertNull(future.get());
+        assertThat(future.get()).isNull();
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterSource_withCallbackOsReceiver_verifyRateLimitReached()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
-
         // Rate limit hasn't reached yet
-        final long nowInMillis = System.currentTimeMillis();
-        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCE);
+        long nowInMillis = System.currentTimeMillis();
+        float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCE);
         for (int i = 0; i < requestPerSecond; i++) {
-            assertFalse(
-                    registerSourceAndVerifyRateLimitReached(
-                            mMeasurementManager, /* useCustomReceiver= */ false));
+            assertThat(
+                            registerSourceAndVerifyRateLimitReached(
+                                    mMeasurementManager, /* useCustomReceiver= */ false))
+                    .isFalse();
         }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
@@ -219,13 +223,13 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
         // Verify limit reached
         // If the test takes less than 1 second / permits per second, this test is reliable due to
         // the rate limiter limits queries per second. If duration is longer than a second, skip it.
-        final boolean reachedLimit =
+        boolean reachedLimit =
                 registerSourceAndVerifyRateLimitReached(
                         mMeasurementManager, /* useCustomReceiver= */ false);
-        final boolean executedInLessThanOneSec =
+        boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
-            assertTrue(reachedLimit);
+            assertThat(reachedLimit).isTrue();
         }
     }
 
@@ -233,12 +237,13 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     public void testRegisterSource_withCallbackCustomReceiver_verifyRateLimitReached()
             throws Exception {
         // Rate limit hasn't reached yet
-        final long nowInMillis = System.currentTimeMillis();
-        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCE);
+        long nowInMillis = System.currentTimeMillis();
+        float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCE);
         for (int i = 0; i < requestPerSecond; i++) {
-            assertFalse(
-                    registerSourceAndVerifyRateLimitReached(
-                            mMeasurementManager, /* useCustomReceiver= */ true));
+            assertThat(
+                            registerSourceAndVerifyRateLimitReached(
+                                    mMeasurementManager, /* useCustomReceiver= */ true))
+                    .isFalse();
         }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
@@ -248,21 +253,21 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
         // Verify limit reached
         // If the test takes less than 1 second / permits per second, this test is reliable due to
         // the rate limiter limits queries per second. If duration is longer than a second, skip it.
-        final boolean reachedLimit =
+        boolean reachedLimit =
                 registerSourceAndVerifyRateLimitReached(
                         mMeasurementManager, /* useCustomReceiver= */ true);
-        final boolean executedInLessThanOneSec =
+        boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
-            assertTrue(reachedLimit);
+            assertThat(reachedLimit).isTrue();
         }
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterSourceMultiple_withNoServerSetupWithCallbackOsReceiver_noErrors()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         OutcomeReceiver<Object, Exception> callback = result -> countDownLatch.countDown();
         mMeasurementManager.registerSource(
                 createSourceRegistrationRequest(), CALLBACK_EXECUTOR, callback);
@@ -272,7 +277,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     @Test
     public void testRegisterSourceMultiple_withNoServerSetupWithCallbackCustomReceiver_noErrors()
             throws Exception {
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.registerSource(
                 createSourceRegistrationRequest(),
                 CALLBACK_EXECUTOR,
@@ -282,17 +287,17 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterSourceMultiple_withCallbackOsReceiver_verifyRateLimitReached()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
-
         // Rate limit hasn't reached yet
-        final long nowInMillis = System.currentTimeMillis();
-        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCES);
+        long nowInMillis = System.currentTimeMillis();
+        float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCES);
         for (int i = 0; i < requestPerSecond; i++) {
-            assertFalse(
-                    registerSourceMultipleAndVerifyRateLimitReached(
-                            mMeasurementManager, /* useCustomReceiver= */ false));
+            assertThat(
+                            registerSourceMultipleAndVerifyRateLimitReached(
+                                    mMeasurementManager, /* useCustomReceiver= */ false))
+                    .isFalse();
         }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
@@ -303,13 +308,13 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
         // Verify limit reached
         // If the test takes less than 1 second / permits per second, this test is reliable due to
         // the rate limiter limits queries per second. If duration is longer than a second, skip it.
-        final boolean reachedLimit =
+        boolean reachedLimit =
                 registerSourceMultipleAndVerifyRateLimitReached(
                         mMeasurementManager, /* useCustomReceiver= */ false);
-        final boolean executedInLessThanOneSec =
+        boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
-            assertTrue(reachedLimit);
+            assertThat(reachedLimit).isTrue();
         }
     }
 
@@ -317,13 +322,14 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     public void testRegisterSourceMultiple_withCallbackCustomReceiver_verifyRateLimitReached()
             throws Exception {
         // Rate limit hasn't reached yet
-        final long nowInMillis = System.currentTimeMillis();
-        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCES);
+        long nowInMillis = System.currentTimeMillis();
+        float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_SOURCES);
         for (int i = 0; i < requestPerSecond; i++) {
-            assertFalse(
-                    i + "th iteration; requestPerSecond" + requestPerSecond,
-                    registerSourceMultipleAndVerifyRateLimitReached(
-                            mMeasurementManager, /* useCustomReceiver= */ true));
+            assertWithMessage("%sth iteration; requestPerSecond %s", i, requestPerSecond)
+                    .that(
+                            registerSourceMultipleAndVerifyRateLimitReached(
+                                    mMeasurementManager, /* useCustomReceiver= */ true))
+                    .isFalse();
         }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
@@ -334,21 +340,21 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
         // Verify limit reached
         // If the test takes less than 1 second / permits per second, this test is reliable due to
         // the rate limiter limits queries per second. If duration is longer than a second, skip it.
-        final boolean reachedLimit =
+        boolean reachedLimit =
                 registerSourceMultipleAndVerifyRateLimitReached(
                         mMeasurementManager, /* useCustomReceiver= */ true);
-        final boolean executedInLessThanOneSec =
+        boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
-            assertTrue(reachedLimit);
+            assertThat(reachedLimit).isTrue();
         }
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterTrigger_withNoServerSetupWithCallbackOsReceiver_noErrors()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.registerTrigger(
                 TRIGGER_REGISTRATION_URI,
                 CALLBACK_EXECUTOR,
@@ -359,7 +365,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     @Test
     public void testRegisterTrigger_withNoServerSetupWithCallbackCustomReceiver_noErrors()
             throws Exception {
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.registerTrigger(
                 TRIGGER_REGISTRATION_URI,
                 CALLBACK_EXECUTOR,
@@ -369,16 +375,17 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterTrigger_withCallbackOsReceiver_verifyRateLimitReached()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
         // Rate limit hasn't reached yet
-        final long nowInMillis = System.currentTimeMillis();
-        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_TRIGGER);
+        long nowInMillis = System.currentTimeMillis();
+        float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_TRIGGER);
         for (int i = 0; i < requestPerSecond; i++) {
-            assertFalse(
-                    registerTriggerAndVerifyRateLimitReached(
-                            mMeasurementManager, /* useCustomReceiver= */ false));
+            assertThat(
+                            registerTriggerAndVerifyRateLimitReached(
+                                    mMeasurementManager, /* useCustomReceiver= */ false))
+                    .isFalse();
         }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
@@ -389,13 +396,13 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
         // Verify limit reached
         // If the test takes less than 1 second / permits per second, this test is reliable due to
         // the rate limiter limits queries per second. If duration is longer than a second, skip it.
-        final boolean reachedLimit =
+        boolean reachedLimit =
                 registerTriggerAndVerifyRateLimitReached(
                         mMeasurementManager, /* useCustomReceiver= */ false);
-        final boolean executedInLessThanOneSec =
+        boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
-            assertTrue(reachedLimit);
+            assertThat(reachedLimit).isTrue();
         }
     }
 
@@ -403,12 +410,13 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     public void testRegisterTrigger_withCallbackCustomReceiver_verifyRateLimitReached()
             throws Exception {
         // Rate limit hasn't reached yet
-        final long nowInMillis = System.currentTimeMillis();
-        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_TRIGGER);
+        long nowInMillis = System.currentTimeMillis();
+        float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_TRIGGER);
         for (int i = 0; i < requestPerSecond; i++) {
-            assertFalse(
-                    registerTriggerAndVerifyRateLimitReached(
-                            mMeasurementManager, /* useCustomReceiver= */ true));
+            assertThat(
+                            registerTriggerAndVerifyRateLimitReached(
+                                    mMeasurementManager, /* useCustomReceiver= */ true))
+                    .isFalse();
         }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
@@ -419,19 +427,19 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
         // Verify limit reached
         // If the test takes less than 1 second / permits per second, this test is reliable due to
         // the rate limiter limits queries per second. If duration is longer than a second, skip it.
-        final boolean reachedLimit =
+        boolean reachedLimit =
                 registerTriggerAndVerifyRateLimitReached(
                         mMeasurementManager, /* useCustomReceiver= */ true);
-        final boolean executedInLessThanOneSec =
+        boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
-            assertTrue(reachedLimit);
+            assertThat(reachedLimit).isTrue();
         }
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterWebSource_withCallbackOsReceiver_noErrors() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
         WebSourceParams webSourceParams =
                 new WebSourceParams.Builder(SOURCE_REGISTRATION_URI)
                         .setDebugKeyAllowed(false)
@@ -446,7 +454,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                         .setVerifiedDestination(null)
                         .build();
 
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.registerWebSource(
                 webSourceRegistrationRequest,
                 CALLBACK_EXECUTOR,
@@ -470,7 +478,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                         .setVerifiedDestination(null)
                         .build();
 
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.registerWebSource(
                 webSourceRegistrationRequest,
                 CALLBACK_EXECUTOR,
@@ -480,17 +488,17 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterWebSource_withCallbackOsReceiver_verifyRateLimitReached()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
-
         // Rate limit hasn't reached yet
-        final long nowInMillis = System.currentTimeMillis();
-        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_SOURCE);
+        long nowInMillis = System.currentTimeMillis();
+        float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_SOURCE);
         for (int i = 0; i < requestPerSecond; i++) {
-            assertFalse(
-                    registerWebSourceAndVerifyRateLimitReached(
-                            mMeasurementManager, /* useCustomReceiver= */ false));
+            assertThat(
+                            registerWebSourceAndVerifyRateLimitReached(
+                                    mMeasurementManager, /* useCustomReceiver= */ false))
+                    .isFalse();
         }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
@@ -501,13 +509,13 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
         // Verify limit reached
         // If the test takes less than 1 second / permits per second, this test is reliable due to
         // the rate limiter limits queries per second. If duration is longer than a second, skip it.
-        final boolean reachedLimit =
+        boolean reachedLimit =
                 registerWebSourceAndVerifyRateLimitReached(
                         mMeasurementManager, /* useCustomReceiver= */ false);
-        final boolean executedInLessThanOneSec =
+        boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
-            assertTrue(reachedLimit);
+            assertThat(reachedLimit).isTrue();
         }
     }
 
@@ -515,12 +523,13 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     public void testRegisterWebSource_withCallbackCustomReceiver_verifyRateLimitReached()
             throws Exception {
         // Rate limit hasn't reached yet
-        final long nowInMillis = System.currentTimeMillis();
-        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_SOURCE);
+        long nowInMillis = System.currentTimeMillis();
+        float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_SOURCE);
         for (int i = 0; i < requestPerSecond; i++) {
-            assertFalse(
-                    registerWebSourceAndVerifyRateLimitReached(
-                            mMeasurementManager, /* useCustomReceiver= */ true));
+            assertThat(
+                            registerWebSourceAndVerifyRateLimitReached(
+                                    mMeasurementManager, /* useCustomReceiver= */ true))
+                    .isFalse();
         }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
@@ -531,19 +540,19 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
         // Verify limit reached
         // If the test takes less than 1 second / permits per second, this test is reliable due to
         // the rate limiter limits queries per second. If duration is longer than a second, skip it.
-        final boolean reachedLimit =
+        boolean reachedLimit =
                 registerWebSourceAndVerifyRateLimitReached(
                         mMeasurementManager, /* useCustomReceiver= */ true);
-        final boolean executedInLessThanOneSec =
+        boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
-            assertTrue(reachedLimit);
+            assertThat(reachedLimit).isTrue();
         }
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterWebTrigger_withCallbackOsReceiver_noErrors() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
         WebTriggerParams webTriggerParams =
                 new WebTriggerParams.Builder(TRIGGER_REGISTRATION_URI).build();
         WebTriggerRegistrationRequest webTriggerRegistrationRequest =
@@ -551,7 +560,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                                 Collections.singletonList(webTriggerParams), DESTINATION)
                         .build();
 
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.registerWebTrigger(
                 webTriggerRegistrationRequest,
                 CALLBACK_EXECUTOR,
@@ -568,7 +577,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                                 Collections.singletonList(webTriggerParams), DESTINATION)
                         .build();
 
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.registerWebTrigger(
                 webTriggerRegistrationRequest,
                 CALLBACK_EXECUTOR,
@@ -578,15 +587,16 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testRegisterWebTrigger_withOsReceiver_verifyRateLimitReached() throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
         // Rate limit hasn't reached yet
-        final long nowInMillis = System.currentTimeMillis();
-        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_TRIGGER);
+        long nowInMillis = System.currentTimeMillis();
+        float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_TRIGGER);
         for (int i = 0; i < requestPerSecond; i++) {
-            assertFalse(
-                    registerWebTriggerAndVerifyRateLimitReached(
-                            mMeasurementManager, /* useCustomReceiver= */ false));
+            assertThat(
+                            registerWebTriggerAndVerifyRateLimitReached(
+                                    mMeasurementManager, /* useCustomReceiver= */ false))
+                    .isFalse();
         }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
@@ -597,13 +607,13 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
         // Verify limit reached
         // If the test takes less than 1 second / permits per second, this test is reliable due to
         // the rate limiter limits queries per second. If duration is longer than a second, skip it.
-        final boolean reachedLimit =
+        boolean reachedLimit =
                 registerWebTriggerAndVerifyRateLimitReached(
                         mMeasurementManager, /* useCustomReceiver= */ false);
-        final boolean executedInLessThanOneSec =
+        boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
-            assertTrue(reachedLimit);
+            assertThat(reachedLimit).isTrue();
         }
     }
 
@@ -611,12 +621,13 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     public void testRegisterWebTrigger_withCustomReceiver_verifyRateLimitReached()
             throws Exception {
         // Rate limit hasn't reached yet
-        final long nowInMillis = System.currentTimeMillis();
-        final float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_TRIGGER);
+        long nowInMillis = System.currentTimeMillis();
+        float requestPerSecond = getRequestPerSecond(FLAG_REGISTER_WEB_TRIGGER);
         for (int i = 0; i < requestPerSecond; i++) {
-            assertFalse(
-                    registerWebTriggerAndVerifyRateLimitReached(
-                            mMeasurementManager, /* useCustomReceiver= */ true));
+            assertThat(
+                            registerWebTriggerAndVerifyRateLimitReached(
+                                    mMeasurementManager, /* useCustomReceiver= */ true))
+                    .isFalse();
         }
 
         // Due to bursting, we could reach the limit at the exact limit or limit + 1. Therefore,
@@ -627,23 +638,23 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
         // Verify limit reached
         // If the test takes less than 1 second / permits per second, this test is reliable due to
         // the rate limiter limits queries per second. If duration is longer than a second, skip it.
-        final boolean reachedLimit =
+        boolean reachedLimit =
                 registerWebTriggerAndVerifyRateLimitReached(
                         mMeasurementManager, /* useCustomReceiver= */ true);
-        final boolean executedInLessThanOneSec =
+        boolean executedInLessThanOneSec =
                 (System.currentTimeMillis() - nowInMillis) < (1_000 / requestPerSecond);
         if (executedInLessThanOneSec) {
-            assertTrue(reachedLimit);
+            assertThat(reachedLimit).isTrue();
         }
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_withNoOriginNoRangeWithCallbackOsReceiver_noErrors()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
 
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
                 deletionRequest,
                 CALLBACK_EXECUTOR,
@@ -656,7 +667,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
             throws Exception {
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
 
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
                 deletionRequest,
                 CALLBACK_EXECUTOR,
@@ -666,11 +677,11 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_withMultipleNoOriginNoRangeWithCallbackOsReceiver_noErrors()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
-        final CountDownLatch firstCountDownLatch = new CountDownLatch(1);
+        CountDownLatch firstCountDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
                 deletionRequest,
                 CALLBACK_EXECUTOR,
@@ -678,7 +689,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
         assertThat(firstCountDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         // Call it once more to ensure that there is no error when recording deletions back-to-back
         TimeUnit.SECONDS.sleep(1); // Sleep to ensure rate-limiter doesn't get tripped.
-        final CountDownLatch secondCountDownLatch = new CountDownLatch(1);
+        CountDownLatch secondCountDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
                 deletionRequest,
                 CALLBACK_EXECUTOR,
@@ -691,7 +702,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
             testDeleteRegistrations_withMultipleNoOriginNoRangeWithCallbackCustomReceiver_noErrors()
                     throws Exception {
         DeletionRequest deletionRequest = new DeletionRequest.Builder().build();
-        final CountDownLatch firstCountDownLatch = new CountDownLatch(1);
+        CountDownLatch firstCountDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
                 deletionRequest,
                 CALLBACK_EXECUTOR,
@@ -700,7 +711,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
         assertThat(firstCountDownLatch.await(CALLBACK_TIMEOUT, TimeUnit.MILLISECONDS)).isTrue();
         // Call it once more to ensure that there is no error when recording deletions back-to-back
         TimeUnit.SECONDS.sleep(1); // Sleep to ensure rate-limiter doesn't get tripped.
-        final CountDownLatch secondCountDownLatch = new CountDownLatch(1);
+        CountDownLatch secondCountDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
                 deletionRequest,
                 CALLBACK_EXECUTOR,
@@ -710,15 +721,15 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_WithNoRangeWithCallbackOsReceiver_noErrors()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
                         .setOriginUris(Collections.singletonList(ORIGIN_URI))
                         .setDomainUris(Collections.singletonList(DOMAIN_URI))
                         .build();
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
                 deletionRequest,
                 CALLBACK_EXECUTOR,
@@ -734,7 +745,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                         .setOriginUris(Collections.singletonList(ORIGIN_URI))
                         .setDomainUris(Collections.singletonList(DOMAIN_URI))
                         .build();
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
                 deletionRequest,
                 CALLBACK_EXECUTOR,
@@ -744,9 +755,9 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_withEmptyListsWithRangeWithCallbackOsReceiver_noErrors()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
                         .setOriginUris(Collections.emptyList())
@@ -754,7 +765,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                         .setStart(Instant.ofEpochMilli(0))
                         .setEnd(Instant.now())
                         .build();
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
                 deletionRequest,
                 CALLBACK_EXECUTOR,
@@ -772,7 +783,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                         .setStart(Instant.ofEpochMilli(0))
                         .setEnd(Instant.now())
                         .build();
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
                 deletionRequest,
                 CALLBACK_EXECUTOR,
@@ -782,9 +793,9 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_withUrisWithRangeWithCallbackOsReceiver_noErrors()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
         DeletionRequest deletionRequest =
                 new DeletionRequest.Builder()
                         .setOriginUris(Collections.singletonList(ORIGIN_URI))
@@ -792,7 +803,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                         .setStart(Instant.ofEpochMilli(0))
                         .setEnd(Instant.now())
                         .build();
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
                 deletionRequest,
                 CALLBACK_EXECUTOR,
@@ -810,7 +821,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                         .setStart(Instant.ofEpochMilli(0))
                         .setEnd(Instant.now())
                         .build();
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
         mMeasurementManager.deleteRegistrations(
                 deletionRequest,
                 CALLBACK_EXECUTOR,
@@ -820,10 +831,10 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_withInvalidArgumentsWithCallbackOsReceiver_hasError()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
-        final MeasurementManager manager = MeasurementManager.get(sContext);
+        MeasurementManager manager = MeasurementManager.get(mContext);
         Objects.requireNonNull(manager);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
@@ -837,7 +848,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                     @Override
                     public void onError(Exception error) {
                         future.complete(null);
-                        assertTrue(error instanceof IllegalArgumentException);
+                        assertThat(error).isInstanceOf(IllegalArgumentException.class);
                     }
                 };
         DeletionRequest request =
@@ -849,14 +860,13 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                         .build();
 
         manager.deleteRegistrations(request, mExecutorService, callback);
-
-        Assert.assertNull(future.get());
+        assertThat(future.get()).isNull();
     }
 
     @Test
     public void testDeleteRegistrations_withInvalidArgumentsWithCallbackCustomReceiver_hasError()
             throws Exception {
-        final MeasurementManager manager = MeasurementManager.get(sContext);
+        MeasurementManager manager = MeasurementManager.get(mContext);
         Objects.requireNonNull(manager);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
@@ -870,7 +880,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                     @Override
                     public void onError(Exception error) {
                         future.complete(null);
-                        assertTrue(error instanceof IllegalArgumentException);
+                        assertThat(error).isInstanceOf(IllegalArgumentException.class);
                     }
                 };
         DeletionRequest request =
@@ -883,18 +893,18 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
 
         manager.deleteRegistrations(request, mExecutorService, callback);
 
-        Assert.assertNull(future.get());
+        assertThat(future.get()).isNull();
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testMeasurementApiStatus_killSwitchGlobalOffWithOsReceiver_returnEnabled()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
         enableGlobalKillSwitch(/* enabled= */ false);
         enableMeasurementKillSwitch(/* enabled= */ false);
         allowAllPackageNamesAccessToMeasurementApis();
         boolean result = callMeasurementApiStatus(/* useCustomReceiver= */ false);
-        Assert.assertTrue(result);
+        assertThat(result).isTrue();
     }
 
     @Test
@@ -904,16 +914,16 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
         enableMeasurementKillSwitch(/* enabled= */ false);
         allowAllPackageNamesAccessToMeasurementApis();
         boolean result = callMeasurementApiStatus(/* useCustomReceiver= */ true);
-        Assert.assertTrue(result);
+        assertThat(result).isTrue();
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testMeasurementApiStatus_killSwitchGlobalOnWithOsReceiver_returnDisabled()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
         enableGlobalKillSwitch(/* enabled= */ true);
         boolean result = callMeasurementApiStatus(/* useCustomReceiver= */ false);
-        Assert.assertFalse(result);
+        assertThat(result).isFalse();
     }
 
     @Test
@@ -921,16 +931,16 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
             throws Exception {
         enableGlobalKillSwitch(/* enabled= */ true);
         boolean result = callMeasurementApiStatus(/* useCustomReceiver= */ true);
-        Assert.assertFalse(result);
+        assertThat(result).isFalse();
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testMeasurementApiStatus_killSwitchMeasurementOnWithOsReceiver_returnDisabled()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
         enableMeasurementKillSwitch(/* enabled= */ true);
         boolean result = callMeasurementApiStatus(/* useCustomReceiver= */ false);
-        Assert.assertFalse(result);
+        assertThat(result).isFalse();
     }
 
     @Test
@@ -938,17 +948,17 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
             throws Exception {
         enableMeasurementKillSwitch(/* enabled= */ true);
         boolean result = callMeasurementApiStatus(/* useCustomReceiver= */ true);
-        Assert.assertFalse(result);
+        assertThat(result).isFalse();
     }
 
     @Test
+    @RequiresSdkLevelAtLeastS
     public void testMeasurementApiStatus_notInAllowListWithOsReceiver_returnDisabled()
             throws Exception {
-        Assume.assumeTrue(SdkLevel.isAtLeastS()); // Can't use OutcomeReceiver on R
         enableGlobalKillSwitch(/* enabled= */ true);
         blockAllPackageNamesAccessToMeasurementApis();
         boolean result = callMeasurementApiStatus(/* useCustomReceiver= */ false);
-        Assert.assertFalse(result);
+        assertThat(result).isFalse();
     }
 
     @Test
@@ -957,7 +967,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
         enableGlobalKillSwitch(/* enabled= */ true);
         blockAllPackageNamesAccessToMeasurementApis();
         boolean result = callMeasurementApiStatus(/* useCustomReceiver= */ true);
-        Assert.assertFalse(result);
+        assertThat(result).isFalse();
     }
 
     /**
@@ -968,7 +978,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
      */
     private boolean callMeasurementApiStatus(boolean useCustomReceiver) throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(1);
-        final MeasurementManager manager = MeasurementManager.get(sContext);
+        MeasurementManager manager = MeasurementManager.get(mContext);
         List<Integer> resultCodes = new ArrayList<>();
 
         if (useCustomReceiver) {
@@ -990,40 +1000,38 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
         }
 
         assertThat(countDownLatch.await(500, TimeUnit.MILLISECONDS)).isTrue();
-        Assert.assertNotNull(resultCodes);
-        Assert.assertEquals(1, resultCodes.size());
+        assertThat(resultCodes).isNotNull();
+        assertThat(resultCodes).hasSize(1);
         return resultCodes.get(0) == MeasurementManager.MEASUREMENT_API_STATE_ENABLED;
     }
 
     private void allowAllPackageNamesAccessToMeasurementApis() {
-        final String packageName = "*";
+        String packageName = FlagsConstants.ALLOWLIST_ALL;
         flags.setMsmtApiAppAllowList(packageName).setMsmtWebContextClientAllowList(packageName);
     }
 
     private void blockAllPackageNamesAccessToMeasurementApis() {
-        final String packageName = "";
+        String packageName = FlagsConstants.ALLOWLIST_NONE;
         flags.setMsmtApiAppAllowList(packageName).setMsmtWebContextClientAllowList(packageName);
     }
 
+    // TODO(b/346825347) Inline this method when the bug is fixed
     private void enableGlobalKillSwitch(boolean enabled) {
         if (SdkLevel.isAtLeastT()) {
-            ShellUtils.runShellCommand(
-                    "device_config put adservices global_kill_switch " + enabled);
+            flags.setGlobalKillSwitch(enabled);
         } else {
-            ShellUtils.runShellCommand(
-                    "device_config put adservices enable_back_compat " + !enabled);
+            flags.setEnableBackCompat(!enabled);
         }
     }
 
     private void enableMeasurementKillSwitch(boolean enabled) {
-        ShellUtils.runShellCommand(
-                "device_config put adservices measurement_kill_switch " + enabled);
+        flags.setFlag(KEY_MEASUREMENT_KILL_SWITCH, enabled);
     }
 
     private boolean registerSourceAndVerifyRateLimitReached(
             MeasurementManager manager, boolean useCustomReceiver) throws InterruptedException {
-        final AtomicBoolean reachedLimit = new AtomicBoolean(false);
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        AtomicBoolean reachedLimit = new AtomicBoolean(false);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
 
         if (useCustomReceiver) {
             manager.registerSource(
@@ -1032,7 +1040,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                     CALLBACK_EXECUTOR,
                     createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
         } else {
-            final OutcomeReceiver<Object, Exception> osCallback =
+            OutcomeReceiver<Object, Exception> osCallback =
                     new OutcomeReceiver<>() {
                         @Override
                         public void onResult(@NonNull Object result) {
@@ -1056,8 +1064,8 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
 
     private boolean registerWebSourceAndVerifyRateLimitReached(
             MeasurementManager manager, boolean useCustomReceiver) throws InterruptedException {
-        final AtomicBoolean reachedLimit = new AtomicBoolean(false);
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        AtomicBoolean reachedLimit = new AtomicBoolean(false);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
 
         WebSourceParams webSourceParams =
                 new WebSourceParams.Builder(SOURCE_REGISTRATION_URI)
@@ -1079,7 +1087,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                     CALLBACK_EXECUTOR,
                     createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
         } else {
-            final OutcomeReceiver<Object, Exception> osCallback =
+            OutcomeReceiver<Object, Exception> osCallback =
                     new OutcomeReceiver<>() {
                         @Override
                         public void onResult(@NonNull Object result) {
@@ -1103,8 +1111,8 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
 
     private boolean registerTriggerAndVerifyRateLimitReached(
             MeasurementManager manager, boolean useCustomReceiver) throws InterruptedException {
-        final AtomicBoolean reachedLimit = new AtomicBoolean(false);
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        AtomicBoolean reachedLimit = new AtomicBoolean(false);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
 
         if (useCustomReceiver) {
             manager.registerTrigger(
@@ -1112,7 +1120,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                     CALLBACK_EXECUTOR,
                     createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
         } else {
-            final OutcomeReceiver<Object, Exception> osCallback =
+            OutcomeReceiver<Object, Exception> osCallback =
                     new OutcomeReceiver<>() {
                         @Override
                         public void onResult(@NonNull Object result) {
@@ -1136,8 +1144,8 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
 
     private boolean registerWebTriggerAndVerifyRateLimitReached(
             MeasurementManager manager, boolean useCustomReceiver) throws InterruptedException {
-        final AtomicBoolean reachedLimit = new AtomicBoolean(false);
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        AtomicBoolean reachedLimit = new AtomicBoolean(false);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
 
         WebTriggerParams webTriggerParams =
                 new WebTriggerParams.Builder(TRIGGER_REGISTRATION_URI).build();
@@ -1152,7 +1160,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                     CALLBACK_EXECUTOR,
                     createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
         } else {
-            final OutcomeReceiver<Object, Exception> osCallback =
+            OutcomeReceiver<Object, Exception> osCallback =
                     new OutcomeReceiver<>() {
                         @Override
                         public void onResult(@NonNull Object result) {
@@ -1177,8 +1185,8 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
 
     private boolean registerSourceMultipleAndVerifyRateLimitReached(
             MeasurementManager manager, boolean useCustomReceiver) throws InterruptedException {
-        final AtomicBoolean reachedLimit = new AtomicBoolean(false);
-        final CountDownLatch countDownLatch = new CountDownLatch(1);
+        AtomicBoolean reachedLimit = new AtomicBoolean(false);
+        CountDownLatch countDownLatch = new CountDownLatch(1);
 
         if (useCustomReceiver) {
             manager.registerSource(
@@ -1186,7 +1194,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
                     CALLBACK_EXECUTOR,
                     createCallbackWithCountdownOnLimitExceeded(countDownLatch, reachedLimit));
         } else {
-            final OutcomeReceiver<Object, Exception> osCallback =
+            OutcomeReceiver<Object, Exception> osCallback =
                     new OutcomeReceiver<>() {
                         @Override
                         public void onResult(@NonNull Object result) {

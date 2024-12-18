@@ -46,6 +46,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.consent.ConsentConstants;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -55,7 +56,6 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /** Class to manage blocked {@link Topic}s. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class BlockedTopicsManager {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getTopicsLogger();
@@ -108,9 +108,10 @@ public class BlockedTopicsManager {
 
     /** Returns an instance of the {@link BlockedTopicsManager} given a context. */
     @NonNull
-    public static BlockedTopicsManager getInstance(Context context) {
+    public static BlockedTopicsManager getInstance() {
         synchronized (LOCK) {
             if (sSingleton == null) {
+                Context context = ApplicationContextSingleton.get();
                 // Execute one-time migration of blocked topics if needed.
                 int blockedTopicsSourceOfTruth =
                         FlagsFactory.getFlags().getBlockedTopicsSourceOfTruth();
@@ -121,7 +122,7 @@ public class BlockedTopicsManager {
                     blockedTopicsSourceOfTruth = Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
                 }
                 AdServicesManager adServicesManager = AdServicesManager.getInstance(context);
-                TopicsDao topicsDao = TopicsDao.getInstance(context);
+                TopicsDao topicsDao = TopicsDao.getInstance();
                 handleBlockedTopicsMigrationIfNeeded(
                         context, topicsDao, adServicesManager, blockedTopicsSourceOfTruth);
                 boolean enableAppSearchConsent =
@@ -170,12 +171,6 @@ public class BlockedTopicsManager {
                             mAppSearchConsentManager.blockTopic(topic);
                         }
                         break;
-                    case Flags.PPAPI_AND_ADEXT_SERVICE:
-                        // Topics not supported on Android R.
-                        throw new IllegalStateException(
-                                "Invalid state: Attempting to block topic using "
-                                        + "PPAPI_AND_ADEXT_SERVICE consent source of "
-                                        + "truth!");
                     default:
                         ErrorLogUtil.e(
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
@@ -221,12 +216,6 @@ public class BlockedTopicsManager {
                             mAppSearchConsentManager.unblockTopic(topic);
                         }
                         break;
-                    case Flags.PPAPI_AND_ADEXT_SERVICE:
-                        // Topics not supported on Android R.
-                        throw new IllegalStateException(
-                                "Invalid state: Attempting to unblock topic using "
-                                        + "PPAPI_AND_ADEXT_SERVICE consent source of "
-                                        + "truth!");
                     default:
                         ErrorLogUtil.e(
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
@@ -269,12 +258,6 @@ public class BlockedTopicsManager {
                             return mAppSearchConsentManager.retrieveAllBlockedTopics();
                         }
                         return List.of();
-                    case Flags.PPAPI_AND_ADEXT_SERVICE:
-                        // Topics not supported on Android R.
-                        throw new IllegalStateException(
-                                "Invalid state: Attempting to retrieve blocked topics using "
-                                        + "PPAPI_AND_ADEXT_SERVICE consent source of "
-                                        + "truth!");
                     default:
                         ErrorLogUtil.e(
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH,
@@ -316,12 +299,6 @@ public class BlockedTopicsManager {
                             mAppSearchConsentManager.clearAllBlockedTopics();
                         }
                         break;
-                    case Flags.PPAPI_AND_ADEXT_SERVICE:
-                        // Topics not supported on Android R.
-                        throw new IllegalStateException(
-                                "Invalid state: Attempting to clear blocked topics using "
-                                        + "PPAPI_AND_ADEXT_SERVICE consent source of "
-                                        + "truth!");
                     default:
                         ErrorLogUtil.e(
                                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_INVALID_BLOCKED_TOPICS_SOURCE_OF_TRUTH,

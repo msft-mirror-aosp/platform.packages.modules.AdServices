@@ -16,38 +16,35 @@
 
 package android.adservices.cts;
 
-import static org.junit.Assert.assertEquals;
-
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.AddCustomAudienceOverrideRequest;
 import android.adservices.customaudience.RemoveCustomAudienceOverrideRequest;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Rule;
 import org.junit.Test;
 
-public class CustomAudienceOverrideRequestTest {
+@RequiresSdkLevelAtLeastS
+public final class CustomAudienceOverrideRequestTest extends CtsAdServicesDeviceTestCase {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("buyer");
     private static final String NAME = "name";
     private static final String BIDDING_LOGIC_JS = "function test() { return \"hello world\"; }";
+    private static final long BIDDING_LOGIC_JS_VERSION = 2L;
     private static final AdSelectionSignals TRUSTED_BIDDING_DATA =
             AdSelectionSignals.fromString("{\"trusted_bidding_data\":1}");
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Test
-    public void testCreateAddCustomAudienceOverrideRequestSuccess() {
+    public void testCreateAddCustomAudienceOverrideRequest_withoutBiddingLogicVersion_Success() {
         AddCustomAudienceOverrideRequest request =
                 new AddCustomAudienceOverrideRequest(
                         BUYER, NAME, BIDDING_LOGIC_JS, TRUSTED_BIDDING_DATA);
 
-        assertEquals(request.getBuyer(), BUYER);
-        assertEquals(request.getName(), NAME);
-        assertEquals(request.getBiddingLogicJs(), BIDDING_LOGIC_JS);
-        assertEquals(request.getTrustedBiddingSignals(), TRUSTED_BIDDING_DATA);
+        expect.that(request.getBuyer()).isEqualTo(BUYER);
+        expect.that(request.getName()).isEqualTo(NAME);
+        expect.that(request.getBiddingLogicJs()).isEqualTo(BIDDING_LOGIC_JS);
+        expect.that(request.getBiddingLogicJsVersion()).isEqualTo(0L);
+        expect.that(request.getTrustedBiddingSignals()).isEqualTo(TRUSTED_BIDDING_DATA);
     }
 
     @Test
@@ -60,10 +57,29 @@ public class CustomAudienceOverrideRequestTest {
                         .setTrustedBiddingSignals(TRUSTED_BIDDING_DATA)
                         .build();
 
-        assertEquals(request.getBuyer(), BUYER);
-        assertEquals(request.getName(), NAME);
-        assertEquals(request.getBiddingLogicJs(), BIDDING_LOGIC_JS);
-        assertEquals(request.getTrustedBiddingSignals(), TRUSTED_BIDDING_DATA);
+        expect.that(request.getBuyer()).isEqualTo(BUYER);
+        expect.that(request.getName()).isEqualTo(NAME);
+        expect.that(request.getBiddingLogicJs()).isEqualTo(BIDDING_LOGIC_JS);
+        expect.that(request.getBiddingLogicJsVersion()).isEqualTo(0L);
+        expect.that(request.getTrustedBiddingSignals()).isEqualTo(TRUSTED_BIDDING_DATA);
+    }
+
+    @Test
+    public void testBuildAddCustomAudienceOverrideRequest_Success() {
+        AddCustomAudienceOverrideRequest request =
+                new AddCustomAudienceOverrideRequest.Builder()
+                        .setBuyer(BUYER)
+                        .setName(NAME)
+                        .setBiddingLogicJs(BIDDING_LOGIC_JS)
+                        .setBiddingLogicJsVersion(BIDDING_LOGIC_JS_VERSION)
+                        .setTrustedBiddingSignals(TRUSTED_BIDDING_DATA)
+                        .build();
+
+        expect.that(request.getBuyer()).isEqualTo(BUYER);
+        expect.that(request.getName()).isEqualTo(NAME);
+        expect.that(request.getBiddingLogicJs()).isEqualTo(BIDDING_LOGIC_JS);
+        expect.that(request.getBiddingLogicJsVersion()).isEqualTo(BIDDING_LOGIC_JS_VERSION);
+        expect.that(request.getTrustedBiddingSignals()).isEqualTo(TRUSTED_BIDDING_DATA);
     }
 
     @Test
@@ -71,8 +87,8 @@ public class CustomAudienceOverrideRequestTest {
         RemoveCustomAudienceOverrideRequest request =
                 new RemoveCustomAudienceOverrideRequest(BUYER, NAME);
 
-        assertEquals(request.getBuyer(), BUYER);
-        assertEquals(request.getName(), NAME);
+        expect.that(request.getBuyer()).isEqualTo(BUYER);
+        expect.that(request.getName()).isEqualTo(NAME);
     }
 
     @Test
@@ -83,7 +99,7 @@ public class CustomAudienceOverrideRequestTest {
                         .setName(NAME)
                         .build();
 
-        assertEquals(request.getBuyer(), BUYER);
-        assertEquals(request.getName(), NAME);
+        expect.that(request.getBuyer()).isEqualTo(BUYER);
+        expect.that(request.getName()).isEqualTo(NAME);
     }
 }

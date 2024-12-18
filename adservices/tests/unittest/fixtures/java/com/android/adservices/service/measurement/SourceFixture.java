@@ -20,8 +20,9 @@ import android.net.Uri;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
+import com.android.adservices.service.measurement.noising.Combinatorics;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 
 import org.json.JSONArray;
@@ -52,6 +53,16 @@ public final class SourceFixture {
                 .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN);
     }
 
+    /**
+     * @return The minimum valid source with attribiton scopes.
+     */
+    public static Source.Builder getMinimalValidSourceWithAttributionScope() {
+        return getMinimalValidSourceBuilder()
+                .setAttributionScopes(ValidSourceParams.ATTRIBUTION_SCOPES)
+                .setAttributionScopeLimit(ValidSourceParams.ATTRIBUTION_SCOPE_LIMIT)
+                .setMaxEventStates(ValidSourceParams.MAX_NUM_VIEW_STATES);
+    }
+
     // Assume the field values in this Source have no relation to the field values in
     // {@link ValidSourceParams}
     public static Source getValidSource() {
@@ -75,6 +86,7 @@ public final class SourceFixture {
                 .setSourceType(ValidSourceParams.SOURCE_TYPE)
                 .setInstallAttributionWindow(ValidSourceParams.INSTALL_ATTRIBUTION_WINDOW)
                 .setInstallCooldownWindow(ValidSourceParams.INSTALL_COOLDOWN_WINDOW)
+                .setReinstallReattributionWindow(ValidSourceParams.REINSTALL_REATTRIBUTION_WINDOW)
                 .setAttributionMode(ValidSourceParams.ATTRIBUTION_MODE)
                 .setAggregateSource(ValidSourceParams.buildAggregateSource())
                 .setFilterDataString(ValidSourceParams.buildFilterDataString())
@@ -88,10 +100,20 @@ public final class SourceFixture {
                 .setRegistrationOrigin(ValidSourceParams.REGISTRATION_ORIGIN)
                 .setCoarseEventReportDestinations(true)
                 .setSharedDebugKey(ValidSourceParams.SHARED_DEBUG_KEY)
-                .setAttributedTriggers(new ArrayList<>());
+                .setAttributionScopes(ValidSourceParams.ATTRIBUTION_SCOPES)
+                .setAttributionScopeLimit(ValidSourceParams.ATTRIBUTION_SCOPE_LIMIT)
+                .setMaxEventStates(ValidSourceParams.MAX_NUM_VIEW_STATES)
+                .setDestinationLimitPriority(ValidSourceParams.DESTINATION_LIMIT_PRIORITY)
+                .setDestinationLimitAlgorithm(ValidSourceParams.DESTINATION_LIMIT_ALGORITHM)
+                .setAttributedTriggers(new ArrayList<>())
+                .setEventLevelEpsilon(ValidSourceParams.EVENT_LEVEL_EPSILON)
+                .setAggregateDebugReportingString(ValidSourceParams.AGGREGATE_DEBUG_REPORT)
+                .setAggregateDebugReportContributions(
+                        ValidSourceParams.AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS);
     }
 
     public static class ValidSourceParams {
+
         public static final Long EXPIRY_TIME = 8640000010L;
         public static final Long PRIORITY = 100L;
         public static final UnsignedLong SOURCE_EVENT_ID = new UnsignedLong(1L);
@@ -107,8 +129,10 @@ public final class SourceFixture {
         public static final Long INSTALL_ATTRIBUTION_WINDOW = 841839879274L;
         public static final Long INSTALL_COOLDOWN_WINDOW = 8418398274L;
         public static final UnsignedLong DEBUG_KEY = new UnsignedLong(7834690L);
-        public static final @Source.AttributionMode int ATTRIBUTION_MODE =
-                Source.AttributionMode.TRUTHFULLY;
+
+        @Source.AttributionMode
+        public static final int ATTRIBUTION_MODE = Source.AttributionMode.TRUTHFULLY;
+
         public static final int AGGREGATE_CONTRIBUTIONS = 0;
         public static final String REGISTRATION_ID = "R1";
         public static final String SHARED_AGGREGATE_KEYS = "[\"key1\"]";
@@ -120,6 +144,30 @@ public final class SourceFixture {
         public static final Uri REGISTRATION_ORIGIN =
                 WebUtil.validUri("https://subdomain.example.test");
         public static final UnsignedLong SHARED_DEBUG_KEY = new UnsignedLong(834690L);
+        public static final List<String> ATTRIBUTION_SCOPES = List.of("1", "2", "3");
+        public static final Long ATTRIBUTION_SCOPE_LIMIT = 5L;
+        public static final Long MAX_NUM_VIEW_STATES = 10L;
+        public static final Long REINSTALL_REATTRIBUTION_WINDOW = 841839879274L;
+        public static final long DESTINATION_LIMIT_PRIORITY = 841849879274L;
+        public static final Source.DestinationLimitAlgorithm DESTINATION_LIMIT_ALGORITHM =
+                Source.DestinationLimitAlgorithm.FIFO;
+        public static final Double EVENT_LEVEL_EPSILON = 12D;
+        public static final String AGGREGATE_DEBUG_REPORT =
+                "{\"budget\":1024,"
+                        + "\"key_piece\":\"0x100\","
+                        + "\"debug_data\":["
+                        + "{"
+                        + "\"types\": [\"source-destination-limit\"],"
+                        + "\"key_piece\": \"0x111\","
+                        + "\"value\": 111"
+                        + "},"
+                        + "{"
+                        + "\"types\": [\"unspecified\"],"
+                        + "\"key_piece\": \"0x222\","
+                        + "\"value\": 222"
+                        + "}"
+                        + "]}";
+        public static final int AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS = 100;
 
         public static final String buildAggregateSource() {
             try {
@@ -137,7 +185,8 @@ public final class SourceFixture {
         public static final String buildFilterDataString() {
             try {
                 JSONObject filterMap = new JSONObject();
-                filterMap.put("conversion_subdomain",
+                filterMap.put(
+                        "conversion_subdomain",
                         new JSONArray(Collections.singletonList("electronics.megastore")));
                 filterMap.put("product", new JSONArray(Arrays.asList("1234", "2345")));
                 return filterMap.toString();
@@ -156,9 +205,10 @@ public final class SourceFixture {
                             new FilterMap.Builder()
                                     .setAttributionFilterMap(
                                             Map.of(
-                                                    "product", List.of("1234", "4321"),
+                                                    "product",
+                                                    List.of("1234", "4321"),
                                                     "conversion_subdomain",
-                                                            List.of("electronics.megastore")))
+                                                    List.of("electronics.megastore")))
                                     .build())
                     .build();
         }
@@ -173,7 +223,7 @@ public final class SourceFixture {
                         + String.format(
                                 "\"end_times\": [%s, %s]}, ",
                                 TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2]}]";
         Source source =
                 getMinimalValidSourceBuilder()
@@ -182,7 +232,7 @@ public final class SourceFixture {
         TriggerSpecs triggerSpecs = new TriggerSpecs(
                 triggerSpecArrayFrom(triggerSpecsString), 3, source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         return triggerSpecs;
     }
 
@@ -193,13 +243,29 @@ public final class SourceFixture {
                         + "\"event_report_windows\": { "
                         + "\"start_time\": 0, "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(2))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1]}]";
         Source source = getMinimalValidSourceBuilder().build();
         TriggerSpecs triggerSpecs = new TriggerSpecs(
                 triggerSpecArrayFrom(triggerSpecsString), 1, source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
+        return triggerSpecs;
+    }
+
+    /** Provides a valid TriggerSpecs with hardcoded epsilon. */
+    public static TriggerSpecs getValidTriggerSpecsWithNonDefaultEpsilon() throws JSONException {
+        String triggerSpecsString =
+                "[{\"trigger_data\": [1],"
+                        + "\"event_report_windows\": { "
+                        + "\"start_time\": 0, "
+                        + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(2))
+                        + "\"summary_operator\": \"count\", "
+                        + "\"summary_buckets\": [1]}]";
+        Source source = getMinimalValidSourceBuilder().build();
+        double mockFlipProbability = Combinatorics.getFlipProbability(5, 3);
+        String jsonString = String.format("{\"flip_probability\": %f}", mockFlipProbability);
+        TriggerSpecs triggerSpecs = new TriggerSpecs(triggerSpecsString, "1", source, jsonString);
         return triggerSpecs;
     }
 
@@ -219,7 +285,7 @@ public final class SourceFixture {
                 maxReports,
                 source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         return triggerSpecs;
     }
 
@@ -235,7 +301,7 @@ public final class SourceFixture {
                 /* maxReports */ 3,
                 source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
         return triggerSpecs;
     }
 
@@ -256,6 +322,20 @@ public final class SourceFixture {
             return getMinimalValidSourceBuilder()
                     .setAttributedTriggers(new ArrayList<>())
                     .setTriggerSpecs(getValidTriggerSpecsCountBasedWithFewerState())
+                    .setMaxEventLevelReports(
+                            getValidTriggerSpecsCountBasedWithFewerState().getMaxReports())
+                    .build();
+        } catch (JSONException e) {
+            return null;
+        }
+    }
+
+    /** Provide a Source with hardcoded epsilon in TriggerSpecs. */
+    public static Source getValidFullFlexSourceWithNonDefaultEpsilon() {
+        try {
+            return getMinimalValidSourceBuilder()
+                    .setAttributedTriggers(new ArrayList<>())
+                    .setTriggerSpecs(getValidTriggerSpecsWithNonDefaultEpsilon())
                     .setMaxEventLevelReports(
                             getValidTriggerSpecsCountBasedWithFewerState().getMaxReports())
                     .build();
@@ -304,7 +384,7 @@ public final class SourceFixture {
                         TimeUnit.DAYS.toMillis(2),
                         TimeUnit.DAYS.toMillis(7),
                         TimeUnit.DAYS.toMillis(30))
-                + "\"summary_window_operator\": \"count\", "
+                + "\"summary_operator\": \"count\", "
                 + "\"summary_buckets\": [1, 2, 3, 4]}]";
     }
 
@@ -324,7 +404,7 @@ public final class SourceFixture {
                 + String.format(
                         "\"end_times\": [%s, %s]}, ",
                         TimeUnit.DAYS.toMillis(2), TimeUnit.DAYS.toMillis(7))
-                + "\"summary_window_operator\": \"value_sum\", "
+                + "\"summary_operator\": \"value_sum\", "
                 + "\"summary_buckets\": [10, 100]}]";
     }
 
@@ -347,13 +427,13 @@ public final class SourceFixture {
                                 TimeUnit.DAYS.toMillis(2),
                                 TimeUnit.DAYS.toMillis(7),
                                 TimeUnit.DAYS.toMillis(30))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1, 2, 3, 4]}, "
                         + "{\"trigger_data\": [4, 5, 6, 7],"
                         + "\"event_report_windows\": { "
                         + "\"start_time\": 0, "
                         + String.format("\"end_times\": [%s]}, ", TimeUnit.DAYS.toMillis(3))
-                        + "\"summary_window_operator\": \"count\", "
+                        + "\"summary_operator\": \"count\", "
                         + "\"summary_buckets\": [1,5,7]} "
                         + "]");
     }

@@ -30,33 +30,31 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 
 import java.util.Objects;
 
 /** Composite filter for protected signals requests. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class ProtectedSignalsServiceFilter extends AbstractFledgeServiceFilter {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     public ProtectedSignalsServiceFilter(
             @NonNull Context context,
-            @NonNull ConsentManager consentManager,
+            @NonNull FledgeConsentFilter fledgeConsentFilter,
             @NonNull Flags flags,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull FledgeAllowListsFilter fledgeAllowListsFilter,
-            @NonNull Throttler throttler) {
+            @NonNull FledgeApiThrottleFilter fledgeApiThrottleFilter) {
         super(
                 context,
-                consentManager,
+                fledgeConsentFilter,
                 flags,
                 appImportanceFilter,
                 fledgeAuthorizationFilter,
                 fledgeAllowListsFilter,
-                throttler);
+                fledgeApiThrottleFilter);
     }
 
     /** Not used or implemented */
@@ -66,6 +64,7 @@ public class ProtectedSignalsServiceFilter extends AbstractFledgeServiceFilter {
             @NonNull String callerPackageName,
             boolean enforceForeground,
             boolean enforceConsent,
+            boolean enforceNotificationShown,
             int callerUid,
             int apiName,
             @NonNull Throttler.ApiKey apiKey,
@@ -80,6 +79,7 @@ public class ProtectedSignalsServiceFilter extends AbstractFledgeServiceFilter {
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
      * @param enforceConsent whether to enforce per-app consent
+     * @param enforceNotificationShown whether to enforce a UX notification check
      * @param callerUid caller's uid from the Binder thread
      * @param apiName the id of the api being called
      * @param apiKey api-specific throttler key
@@ -99,6 +99,7 @@ public class ProtectedSignalsServiceFilter extends AbstractFledgeServiceFilter {
             boolean disableEnrollmentCheck,
             boolean enforceForeground,
             boolean enforceConsent,
+            boolean enforceNotificationShown,
             int callerUid,
             int apiName,
             @NonNull Throttler.ApiKey apiKey,
@@ -111,12 +112,15 @@ public class ProtectedSignalsServiceFilter extends AbstractFledgeServiceFilter {
         assertCallerPackageName(callerPackageName, callerUid, apiName);
 
         sLogger.v("Validating API is not throttled.");
-        assertCallerNotThrottled(callerPackageName, apiKey);
+        assertCallerNotThrottled(callerPackageName, apiKey, apiName);
 
         if (enforceForeground) {
             sLogger.v("Checking caller is in foreground.");
             assertForegroundCaller(callerUid, apiName);
         }
+
+        assertEnrollmentShouldBeScheduled(
+                enforceConsent, enforceNotificationShown, callerPackageName, apiName);
 
         AdTechIdentifier adTech;
         if (disableEnrollmentCheck) {
@@ -134,7 +138,7 @@ public class ProtectedSignalsServiceFilter extends AbstractFledgeServiceFilter {
 
         if (enforceConsent) {
             sLogger.v("Validating per-app user consent.");
-            assertAndPersistCallerHasUserConsentForApp(callerPackageName);
+            assertAndPersistCallerHasUserConsentForApp(callerPackageName, apiName);
         }
 
         return adTech;

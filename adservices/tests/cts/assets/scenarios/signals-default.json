@@ -2,7 +2,7 @@
   "mocks": [
     {
       "request": {
-        "path": "signalsFirst"
+        "path": "/signalsFirst"
       },
       "response": {
         "body": "ProtectedSignalsFirst.json"
@@ -11,12 +11,20 @@
     },
     {
       "request": {
-        "path": "signalsSecond"
+        "path": "/signalsSecond"
       },
       "response": {
         "body": "ProtectedSignalsSecond.json"
       },
       "verify_called": true
+    },
+    {
+      "request": {
+        "path": "/signalsLeave"
+      },
+      "response": {
+        "body": "ProtectedSignalsLeave.json"
+      }
     }
   ]
 }

@@ -75,14 +75,19 @@ java_defaults {
         "framework-sdksandbox.impl",
         "adservices-test-fixtures",
         "adservices-test-utility",
+        "adservices-cts-test-utility",
     ],
     libs: [
-        "android.test.base",
-        "framework-sdkextensions",
+        "android.test.base.stubs.system",
+        "framework-sdkextensions.stubs.module_lib",
     ],
     test_suites: [
         "general-tests",
     ],
+    lint: {
+        extra_check_modules: ["AdServicesTestLintChecker"],
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
+    },
 }
 
 android_library_import {

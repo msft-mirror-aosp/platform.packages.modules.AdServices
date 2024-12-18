@@ -31,25 +31,6 @@
         <option name="test-file-name" value="CtsAppSetIdEndToEndTest.apk"/>
     </target_preparer>
 
-    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <!-- Disable global_kill_switch to ignore the effect of actual PH values. -->
-        <option name="run-command" value="device_config put adservices global_kill_switch false" />
-
-        <!-- Defaulting the API rate limit -->
-        <option name="run-command"
-                value="device_config put adservices appsetid_request_permits_per_second 5.0" />
-
-        <!-- Enable API access without ad_services_config -->
-        <option name="run-command"
-                value="device_config put adservices app_config_returns_enabled_by_detault true" />
-        <option name="teardown-command"
-                value="device_config put adservices app_config_returns_enabled_by_detault false" />
-
-        <!-- Temporarily disable Device Config sync -->
-        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
-        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
-    </target_preparer>
-
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="package" value="com.android.adservices.tests.appsetid"/>
     </test>
@@ -58,4 +39,6 @@
             class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">
         <option name="mainline-module-package-name" value="com.google.android.adservices"/>
     </object>
+
+    <!-- NOTE: DeviceConfig and SystemProperties are handled by AdServicesFlagsSetterRule -->
 </configuration>

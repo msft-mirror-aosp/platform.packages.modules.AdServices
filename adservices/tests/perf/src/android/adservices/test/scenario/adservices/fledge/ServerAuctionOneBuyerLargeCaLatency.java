@@ -29,6 +29,7 @@ import android.adservices.test.scenario.adservices.fledge.utils.FakeAdExchangeSe
 import android.adservices.test.scenario.adservices.fledge.utils.SelectAdResponse;
 import android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule;
 import android.content.Context;
+import android.platform.test.option.StringOption;
 import android.platform.test.rule.CleanPackageRule;
 import android.platform.test.rule.KillAppsRule;
 import android.platform.test.scenario.annotation.Scenario;
@@ -37,14 +38,16 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.service.FlagsConstants;
 
-import com.google.common.base.Ticker;
 import com.google.common.io.BaseEncoding;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.RuleChain;
@@ -64,10 +67,7 @@ public class ServerAuctionOneBuyerLargeCaLatency {
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
     private static final Context CONTEXT = ApplicationProvider.getApplicationContext();
 
-    private static final String AD_WINNER_DOMAIN = "https://ba-buyer-5jyy5ulagq-uc.a.run.app/";
     private static final String SELLER = "ba-seller-5jyy5ulagq-uc.a.run.app";
-    private static final String SFE_ADDRESS =
-            "https://seller1-paprod.sfe.ppapi.gcp.pstest.dev/v1/selectAd";
 
     private static final String CUSTOM_AUDIENCE_SERVER_AUCTION_ONE_BUYER_LARGE_CA =
             "ServerPerformanceCustomAudiencesOneBuyerLargeCa.json";
@@ -87,12 +87,13 @@ public class ServerAuctionOneBuyerLargeCaLatency {
                     .setExecutor(CALLBACK_EXECUTOR)
                     .build();
 
-    protected final Ticker mTicker =
-            new Ticker() {
-                public long read() {
-                    return android.os.SystemClock.elapsedRealtimeNanos();
-                }
-            };
+    @ClassRule
+    public static StringOption serverUrlOption =
+            new StringOption("server-url").setRequired(true).setDefault("");
+
+    @ClassRule
+    public static StringOption coordinatorUrlOption =
+            new StringOption("coordinator-url").setRequired(true).setDefault("");
 
     @Rule
     public RuleChain rules =
@@ -106,9 +107,24 @@ public class ServerAuctionOneBuyerLargeCaLatency {
                             // AdServices process.
                             new CleanPackageRule(
                                     AdservicesTestHelper.getAdServicesPackageName(CONTEXT),
-                                    /* clearOnStarting = */ true,
-                                    /* clearOnFinished = */ false))
-                    .around(new SelectAdsFlagRule(/* useServerAuctionPublicCoordinator = */ true));
+                                    /* clearOnStarting= */ true,
+                                    /* clearOnFinished= */ false))
+                    .around(new SelectAdsFlagRule());
+
+    private String getCoordinator() {
+        return coordinatorUrlOption.get();
+    }
+
+    private String getServer() {
+        return serverUrlOption.get();
+    }
+
+    @Rule
+    public final AdServicesFlagsSetterRule flags =
+            AdServicesFlagsSetterRule.newInstance()
+                    .setFlag(
+                            FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI,
+                            getCoordinator());
 
     /** Give the required permissions to the APK */
     @BeforeClass
@@ -140,7 +156,7 @@ public class ServerAuctionOneBuyerLargeCaLatency {
                         FakeAdExchangeServer.runServerAuction(
                                 CONTEXTUAL_SIGNALS_PERFORMANCE,
                                 outcome.getAdSelectionData(),
-                                SFE_ADDRESS,
+                                getServer(),
                                 SERVER_RESPONSE_LOGGING_ENABLED);
 
                 PersistAdSelectionResultRequest persistAdSelectionResultRequest =
@@ -201,7 +217,7 @@ public class ServerAuctionOneBuyerLargeCaLatency {
                 FakeAdExchangeServer.runServerAuction(
                         CONTEXTUAL_SIGNALS_PERFORMANCE,
                         outcome.getAdSelectionData(),
-                        SFE_ADDRESS,
+                        getServer(),
                         SERVER_RESPONSE_LOGGING_ENABLED);
 
         long serverCallEndTime = System.nanoTime();

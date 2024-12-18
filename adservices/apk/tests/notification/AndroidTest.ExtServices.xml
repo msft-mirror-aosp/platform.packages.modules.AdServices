@@ -17,10 +17,6 @@
 <configuration description="Config for Ad Services Settings App test cases in ExtServices">
     <option name="test-tag" value="AdExtServicesApkUINotificationTests"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_secondary_user"/>
-    <!-- disable device config sync during test -->
-    <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>
-    <option name="run-command" value="device_config put adservices enable_back_compat true"/>
-    <option name="teardown-command" value="device_config set_sync_disabled_for_tests none"/>
 
     <!-- Prevent test from running on Android T+ -->
     <object type="module_controller"
@@ -28,9 +24,9 @@
         <option name="max-sdk-level" value="32"/>
     </object>
 
-    <!-- Prevent tests from running on Android Q- -->
+    <!-- Prevent tests from running on Android R- -->
     <object type="module_controller"
-            class="com.android.tradefed.testtype.suite.module.Sdk30ModuleController"/>
+            class="com.android.tradefed.testtype.suite.module.Sdk31ModuleController"/>
 
     <metrics_collector class="com.android.tradefed.device.metric.FilePullerLogCollector">
         <option name="directory-keys" value="/sdcard/Documents/adservices-tests" />
@@ -47,9 +43,17 @@
     <!-- Create place to store tests apks that will be installed/uninstalled in the test. -->
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="run-command" value="mkdir -p /data/local/tmp/cts/install"/>
-        <option name="run-command" value="device_config put adservices global_kill_switch false"/>
-        <option name="run-command" value="device_config put adservices adservice_enabled true"/>
         <option name="teardown-command" value="rm -rf /data/local/tmp/cts"/>
+
+        <!-- Some tests in the module require the AdServices components to be enabled.
+        On R/S, these components are disabled by default, and are enabled after a reboot, by
+        AdExtBootCompletedReceiver, if the appropriate flags are set. Setting these flags and then
+        triggering a reboot in order to enable the required components.
+        -->
+        <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>
+        <option name="teardown-command" value="device_config set_sync_disabled_for_tests none"/>
+        <option name="run-command" value="device_config put adservices enable_back_compat true"/>
+        <option name="run-command" value="device_config put adservices adservice_enabled true"/>
     </target_preparer>
     <target_preparer class="com.android.tradefed.targetprep.RebootTargetPreparer">
         <option name="pre-reboot" value="true"/>
@@ -60,7 +64,6 @@
     <target_preparer class="com.android.tradefed.targetprep.DeviceSetup">
         <option name="force-skip-system-props" value="true"/>
     </target_preparer>
-
 
     <test class="com.android.tradefed.testtype.AndroidJUnitTest">
         <option name="hidden-api-checks" value="false"/> <!-- Allow hidden API uses -->

@@ -33,10 +33,11 @@ java_test_host {
         "SdkSandboxHostTestUtils",
     ],
     test_suites: ["general-tests"],
-    data: [
+    device_common_data: [
         ":StorageTestCodeProvider",
         ":SdkSandboxStorageTestApp",
         ":SdkSandboxStorageTestAppV2_DoesNotConsumeSdk",
+        ":SdkSandboxStorageTestUnlockApp",
     ],
 }
 
@@ -56,6 +57,24 @@ java_defaults {
         "compatibility-device-util-axt",
         "SdkSandboxTestUtils",
         "StorageTestSdk1Api",
+    ],
+    min_sdk_version: "Tiramisu",
+    target_sdk_version: "Tiramisu",
+    test_suites: ["general-tests"],
+}
+
+android_test_helper_app {
+    name: "SdkSandboxStorageTestUnlockApp",
+    manifest: "unlockapp/SdkSandboxStorageTestUnlockAppManifest.xml",
+    srcs: [
+        "unlockapp/src/**/*.java",
+    ],
+    static_libs: [
+        "androidx.core_core",
+        "androidx.test.ext.junit",
+        "androidx.test.runner",
+        "androidx.test.uiautomator_uiautomator",
+        "truth",
     ],
     min_sdk_version: "Tiramisu",
     target_sdk_version: "Tiramisu",

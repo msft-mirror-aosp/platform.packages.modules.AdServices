@@ -22,7 +22,6 @@ import android.net.Uri;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoConverter;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.util.UnsignedLong;
@@ -36,12 +35,11 @@ import org.json.JSONObject;
  * Class for constructing the report body of an aggregate report.
  */
 public class AggregateReportBody {
-    // "0" is the convention for indicating an excluded source registration time.
-    public static final String EXCLUDED_SOURCE_REGISTRATION_TIME = "0";
     private String mAttributionDestination;
     private String mSourceRegistrationTime;
     private String mScheduledReportTime;
     private String mApiVersion;
+    private String mApi;
     private String mReportId;
     private String mReportingOrigin;
     private String mDebugCleartextPayload;
@@ -50,8 +48,7 @@ public class AggregateReportBody {
     private String mDebugMode;
 
     private Uri mAggregationCoordinatorOrigin;
-
-    private static final String API_NAME = "attribution-reporting";
+    @Nullable private String mTriggerContextId;
 
     @VisibleForTesting
     interface PayloadBodyKeys {
@@ -60,6 +57,7 @@ public class AggregateReportBody {
         String SOURCE_DEBUG_KEY = "source_debug_key";
         String TRIGGER_DEBUG_KEY = "trigger_debug_key";
         String AGGREGATION_COORDINATOR_ORIGIN = "aggregation_coordinator_origin";
+        String TRIGGER_CONTEXT_ID = "trigger_context_id";
     }
 
     private interface AggregationServicePayloadKeys {
@@ -87,6 +85,7 @@ public class AggregateReportBody {
         mSourceRegistrationTime = other.mSourceRegistrationTime;
         mScheduledReportTime = other.mScheduledReportTime;
         mApiVersion = other.mApiVersion;
+        mApi = other.mApi;
         mReportId = other.mReportId;
         mReportingOrigin = other.mReportingOrigin;
         mDebugCleartextPayload = other.mDebugCleartextPayload;
@@ -94,13 +93,14 @@ public class AggregateReportBody {
         mTriggerDebugKey = other.mTriggerDebugKey;
         mDebugMode = other.mDebugMode;
         mAggregationCoordinatorOrigin = other.mAggregationCoordinatorOrigin;
+        mTriggerContextId = other.mTriggerContextId;
     }
 
     /** Generate the JSON serialization of the aggregate report. */
     public JSONObject toJson(AggregateEncryptionKey key, Flags flags) throws JSONException {
         JSONObject aggregateBodyJson = new JSONObject();
 
-        final String sharedInfo = sharedInfoToJson(flags).toString();
+        final String sharedInfo = sharedInfoToJson().toString();
         aggregateBodyJson.put(PayloadBodyKeys.SHARED_INFO, sharedInfo);
         aggregateBodyJson.put(
                 PayloadBodyKeys.AGGREGATION_SERVICE_PAYLOADS,
@@ -112,10 +112,13 @@ public class AggregateReportBody {
         if (mTriggerDebugKey != null) {
             aggregateBodyJson.put(PayloadBodyKeys.TRIGGER_DEBUG_KEY, mTriggerDebugKey.toString());
         }
-        if (FlagsFactory.getFlags().getMeasurementAggregationCoordinatorOriginEnabled()) {
+        if (flags.getMeasurementAggregationCoordinatorOriginEnabled()) {
             aggregateBodyJson.put(
                     PayloadBodyKeys.AGGREGATION_COORDINATOR_ORIGIN,
                     mAggregationCoordinatorOrigin.toString());
+        }
+        if (flags.getMeasurementEnableTriggerContextId() && mTriggerContextId != null) {
+            aggregateBodyJson.put(PayloadBodyKeys.TRIGGER_CONTEXT_ID, mTriggerContextId);
         }
 
         return aggregateBodyJson;
@@ -123,24 +126,16 @@ public class AggregateReportBody {
 
     /** Generate the JSON serialization of the shared_info field of the aggregate report. */
     @VisibleForTesting
-    JSONObject sharedInfoToJson(Flags flags) throws JSONException {
+    JSONObject sharedInfoToJson() throws JSONException {
         JSONObject sharedInfoJson = new JSONObject();
 
-        sharedInfoJson.put(SharedInfoKeys.API_NAME, API_NAME);
+        sharedInfoJson.put(SharedInfoKeys.API_NAME, mApi);
         sharedInfoJson.put(SharedInfoKeys.ATTRIBUTION_DESTINATION, mAttributionDestination);
         sharedInfoJson.put(SharedInfoKeys.REPORT_ID, mReportId);
         sharedInfoJson.put(SharedInfoKeys.REPORTING_ORIGIN, mReportingOrigin);
         sharedInfoJson.put(SharedInfoKeys.SCHEDULED_REPORT_TIME, mScheduledReportTime);
 
         String sourceRegistrationTime = mSourceRegistrationTime;
-        // A null source registration time implies the source registration time was not set. We
-        // normally include this in the JSON serialization anyway, but when the feature flag for
-        // making source registration time optional is enabled, send a value indicating exclusion.
-        if (flags.getMeasurementSourceRegistrationTimeOptionalForAggReportsEnabled()
-                && mSourceRegistrationTime == null) {
-            sourceRegistrationTime = EXCLUDED_SOURCE_REGISTRATION_TIME;
-        }
-
         sharedInfoJson.put(SharedInfoKeys.SOURCE_REGISTRATION_TIME, sourceRegistrationTime);
         sharedInfoJson.put(SharedInfoKeys.API_VERSION, mApiVersion);
 
@@ -218,6 +213,15 @@ public class AggregateReportBody {
         }
 
         /**
+         * The API name, e.g. "attribution-reporting", "attribution-reporting-debug", used to
+         * generate the aggregate report.
+         */
+        public @NonNull Builder setApi(@NonNull String api) {
+            mBuilding.mApi = api;
+            return this;
+        }
+
+        /**
          * The ad tech domain for the report.
          */
         public @NonNull Builder setReportingOrigin(@NonNull String reportingOrigin) {
@@ -262,6 +266,12 @@ public class AggregateReportBody {
         /** Origin of aggregation coordinator used for this report. */
         public Builder setAggregationCoordinatorOrigin(Uri aggregationCoordinatorOrigin) {
             mBuilding.mAggregationCoordinatorOrigin = aggregationCoordinatorOrigin;
+            return this;
+        }
+
+        /** Trigger context id */
+        public Builder setTriggerContextId(@Nullable String triggerContextId) {
+            mBuilding.mTriggerContextId = triggerContextId;
             return this;
         }
 

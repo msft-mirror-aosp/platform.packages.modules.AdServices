@@ -93,17 +93,15 @@ public class FledgeMaintenanceTasksWorker {
     private FledgeMaintenanceTasksWorker(@NonNull Context context) {
         Objects.requireNonNull(context);
         mFlags = FlagsFactory.getFlags();
-        mAdSelectionEntryDao = AdSelectionDatabase.getInstance(context).adSelectionEntryDao();
-        mFrequencyCapDao = SharedStorageDatabase.getInstance(context).frequencyCapDao();
-        mEnrollmentDao = EnrollmentDao.getInstance(context);
-        mEncryptionContextDao =
-                AdSelectionServerDatabase.getInstance(context).encryptionContextDao();
+        mAdSelectionEntryDao = AdSelectionDatabase.getInstance().adSelectionEntryDao();
+        mFrequencyCapDao = SharedStorageDatabase.getInstance().frequencyCapDao();
+        mEnrollmentDao = EnrollmentDao.getInstance();
+        mEncryptionContextDao = AdSelectionServerDatabase.getInstance().encryptionContextDao();
         mClock = Clock.systemUTC();
         mAdSelectionDebugReportDao =
-                AdSelectionDebugReportingDatabase.getInstance(context)
-                        .getAdSelectionDebugReportDao();
+                AdSelectionDebugReportingDatabase.getInstance().getAdSelectionDebugReportDao();
         mAdServicesLogger = StatsdAdServicesLogger.getInstance();
-        mKAnonMessageDao = KAnonDatabase.getInstance(context).kAnonMessageDao();
+        mKAnonMessageDao = KAnonDatabase.getInstance().kAnonMessageDao();
     }
 
     /** Creates a new instance of {@link FledgeMaintenanceTasksWorker}. */
@@ -186,9 +184,9 @@ public class FledgeMaintenanceTasksWorker {
 
         // Read from flags directly, since this maintenance task worker is attached to a background
         //  job with unknown lifetime
-        if (!mFlags.getFledgeAdSelectionFilteringEnabled()) {
+        if (!mFlags.getFledgeFrequencyCapFilteringEnabled()) {
             sLogger.v(
-                    "Ad selection filtering disabled; skipping Frequency Cap histogram"
+                    "Frequency cap filtering disabled; skipping Frequency Cap histogram"
                             + " maintenance");
             return;
         }

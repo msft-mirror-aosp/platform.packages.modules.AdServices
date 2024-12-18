@@ -15,7 +15,6 @@
  */
 package com.android.adservices.measurement;
 
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__MEASUREMENT;
 
 import android.app.Service;
 import android.content.Intent;
@@ -25,29 +24,16 @@ import android.os.IBinder;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
-import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
-import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.measurement.CachedFlags;
-import com.android.adservices.service.measurement.DeleteExpiredJobService;
-import com.android.adservices.service.measurement.DeleteUninstalledJobService;
 import com.android.adservices.service.measurement.MeasurementServiceImpl;
-import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
-import com.android.adservices.service.measurement.attribution.AttributionJobService;
-import com.android.adservices.service.measurement.registration.AsyncRegistrationFallbackJobService;
-import com.android.adservices.service.measurement.registration.AsyncRegistrationQueueJobService;
-import com.android.adservices.service.measurement.reporting.AggregateFallbackReportingJobService;
-import com.android.adservices.service.measurement.reporting.AggregateReportingJobService;
-import com.android.adservices.service.measurement.reporting.DebugReportingFallbackJobService;
-import com.android.adservices.service.measurement.reporting.EventFallbackReportingJobService;
-import com.android.adservices.service.measurement.reporting.EventReportingJobService;
-import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
 import com.android.adservices.shared.util.Clock;
+import com.android.internal.annotations.VisibleForTesting;
 
 /** Measurement Service */
 // TODO(b/269798827): Enable for R.
@@ -56,6 +42,19 @@ public class MeasurementService extends Service {
 
     /** The binder service. This field must only be accessed on the main thread. */
     private MeasurementServiceImpl mMeasurementService;
+
+    /**
+     * Constructor for MeasurementService. Although not explicitly referenced, still necessary
+     * because the other constructor that's meant only for testing becomes the default constructor
+     * without this one, making the class uninstantiable. See: <a
+     * href="https://docs.oracle.com/javase/specs/jls/se22/html/jls-8.html#jls-8.8.10">...</a>
+     */
+    public MeasurementService() {}
+
+    @VisibleForTesting
+    MeasurementService(MeasurementServiceImpl measurementService) {
+        mMeasurementService = measurementService;
+    }
 
     @Override
     public void onCreate() {
@@ -70,7 +69,6 @@ public class MeasurementService extends Service {
             final AppImportanceFilter appImportanceFilter =
                     AppImportanceFilter.create(
                             this,
-                            AD_SERVICES_API_CALLED__API_CLASS__MEASUREMENT,
                             () -> FlagsFactory.getFlags().getForegroundStatuslLevelForValidation());
 
             mMeasurementService =
@@ -84,7 +82,7 @@ public class MeasurementService extends Service {
 
         if (hasUserConsent()) {
             PackageChangedReceiver.enableReceiver(this, flags);
-            schedulePeriodicJobsIfNeeded();
+            mMeasurementService.schedulePeriodicJobs(/* callback= */ null);
         }
     }
 
@@ -100,22 +98,5 @@ public class MeasurementService extends Service {
 
     private boolean hasUserConsent() {
         return ConsentManager.getInstance().getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
-    }
-
-    private void schedulePeriodicJobsIfNeeded() {
-        AggregateReportingJobService.scheduleIfNeeded(this, false);
-        AggregateFallbackReportingJobService.scheduleIfNeeded(this, false);
-        AttributionJobService.scheduleIfNeeded(this, false);
-        AttributionFallbackJobService.scheduleIfNeeded(this, false);
-        EventReportingJobService.scheduleIfNeeded(this, false);
-        EventFallbackReportingJobService.scheduleIfNeeded(this, false);
-        DeleteExpiredJobService.scheduleIfNeeded(this, false);
-        DeleteUninstalledJobService.scheduleIfNeeded(this, false);
-        MddJobService.scheduleIfNeeded(this, false);
-        AsyncRegistrationQueueJobService.scheduleIfNeeded(this, false);
-        AsyncRegistrationFallbackJobService.scheduleIfNeeded(this, false);
-        DebugReportingFallbackJobService.scheduleIfNeeded(this, false);
-        VerboseDebugReportingFallbackJobService.scheduleIfNeeded(this, false);
-        EncryptionKeyJobService.scheduleIfNeeded(this, false);
     }
 }

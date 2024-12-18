@@ -19,7 +19,8 @@ package com.android.cobalt.observations;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.cobalt.data.EventVector;
-import com.android.cobalt.observations.testing.FakeSecureRandom;
+import com.android.cobalt.testing.logging.FakeCobaltOperationLogger;
+import com.android.cobalt.testing.observations.FakeSecureRandom;
 
 import com.google.cobalt.AggregateValue;
 import com.google.cobalt.MetricDefinition;
@@ -27,6 +28,7 @@ import com.google.cobalt.MetricDefinition.MetricDimension;
 import com.google.cobalt.PrivateIndexObservation;
 import com.google.cobalt.ReportDefinition;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -36,6 +38,12 @@ import java.security.SecureRandom;
 @RunWith(JUnit4.class)
 public final class PrivateIntegerEncoderTest {
     private static final SecureRandom SECURE_RANDOM = new FakeSecureRandom();
+    private FakeCobaltOperationLogger mOperationLogger;
+
+    @Before
+    public void setUp() {
+        mOperationLogger = new FakeCobaltOperationLogger();
+    }
 
     @Test
     public void encodesAsPrivateIndex() throws Exception {
@@ -58,7 +66,8 @@ public final class PrivateIntegerEncoderTest {
                         .setMinValue(0)
                         .setMaxValue(20)
                         .build();
-        PrivateIntegerEncoder encoder = new PrivateIntegerEncoder(SECURE_RANDOM, metric, report);
+        PrivateIntegerEncoder encoder =
+                new PrivateIntegerEncoder(SECURE_RANDOM, metric, report, mOperationLogger);
         assertThat(
                         encoder.encode(
                                 EventVector.create(1, 5),
@@ -92,7 +101,8 @@ public final class PrivateIntegerEncoderTest {
                         .setMinValue(0)
                         .setMaxValue(20)
                         .build();
-        PrivateIntegerEncoder encoder = new PrivateIntegerEncoder(SECURE_RANDOM, metric, report);
+        PrivateIntegerEncoder encoder =
+                new PrivateIntegerEncoder(SECURE_RANDOM, metric, report, mOperationLogger);
         assertThat(
                         encoder.encode(
                                 EventVector.create(1, 5),
@@ -124,7 +134,8 @@ public final class PrivateIntegerEncoderTest {
                         .setMinValue(0)
                         .setMaxValue(20)
                         .build();
-        PrivateIntegerEncoder encoder = new PrivateIntegerEncoder(SECURE_RANDOM, metric, report);
+        PrivateIntegerEncoder encoder =
+                new PrivateIntegerEncoder(SECURE_RANDOM, metric, report, mOperationLogger);
         assertThat(
                         encoder.encode(
                                 EventVector.create(1, 5),
@@ -133,5 +144,73 @@ public final class PrivateIntegerEncoderTest {
                         encoder.encode(
                                 EventVector.create(1, 5),
                                 AggregateValue.newBuilder().setIntegerValue(20).build()));
+    }
+
+    @Test
+    public void valueAboveMaximum_maxValueExceededLogged() throws Exception {
+        // Use a metric with 6 possible event vectors: [(0,5), (1,5), (2,5), (0,6), (1,6), (2,6)].
+        MetricDefinition metric =
+                MetricDefinition.newBuilder()
+                        .setId(1)
+                        .addMetricDimensions(MetricDimension.newBuilder().setMaxEventCode(2))
+                        .addMetricDimensions(
+                                MetricDimension.newBuilder()
+                                        .putEventCodes(5, "5")
+                                        .putEventCodes(6, "6"))
+                        .build();
+
+        // Use a report with 21 possible values and 11 index points so private index encoding of a
+        // value `v` is always `6 * floor(v/2) + eventIndex` where `eventIndex` is the index of the
+        // event vector in the above list.
+        ReportDefinition report =
+                ReportDefinition.newBuilder()
+                        .setId(1)
+                        .setNumIndexPoints(11)
+                        .setMinValue(0)
+                        .setMaxValue(20)
+                        .build();
+        PrivateIntegerEncoder encoder =
+                new PrivateIntegerEncoder(SECURE_RANDOM, metric, report, mOperationLogger);
+
+        encoder.encode(
+                EventVector.create(1, 5), AggregateValue.newBuilder().setIntegerValue(21).build());
+        assertThat(
+                        mOperationLogger.getNumMaxValueExceededOccurrences(
+                                /* metricId= */ 1, /* reportId= */ 1))
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void valueBelowMaximum_noMaxValueExceededLogged() throws Exception {
+        // Use a metric with 6 possible event vectors: [(0,5), (1,5), (2,5), (0,6), (1,6), (2,6)].
+        MetricDefinition metric =
+                MetricDefinition.newBuilder()
+                        .setId(1)
+                        .addMetricDimensions(MetricDimension.newBuilder().setMaxEventCode(2))
+                        .addMetricDimensions(
+                                MetricDimension.newBuilder()
+                                        .putEventCodes(5, "5")
+                                        .putEventCodes(6, "6"))
+                        .build();
+
+        // Use a report with 21 possible values and 11 index points so private index encoding of a
+        // value `v` is always `6 * floor(v/2) + eventIndex` where `eventIndex` is the index of the
+        // event vector in the above list.
+        ReportDefinition report =
+                ReportDefinition.newBuilder()
+                        .setId(1)
+                        .setNumIndexPoints(11)
+                        .setMinValue(0)
+                        .setMaxValue(20)
+                        .build();
+        PrivateIntegerEncoder encoder =
+                new PrivateIntegerEncoder(SECURE_RANDOM, metric, report, mOperationLogger);
+
+        encoder.encode(
+                EventVector.create(1, 5), AggregateValue.newBuilder().setIntegerValue(3).build());
+        assertThat(
+                        mOperationLogger.getNumMaxValueExceededOccurrences(
+                                /* metricId= */ 1, /* reportId= */ 1))
+                .isEqualTo(0);
     }
 }

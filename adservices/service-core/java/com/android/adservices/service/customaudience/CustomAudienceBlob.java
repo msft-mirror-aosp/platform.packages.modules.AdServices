@@ -17,7 +17,9 @@
 package com.android.adservices.service.customaudience;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+import static android.adservices.customaudience.CustomAudience.PRIORITY_DEFAULT;
 
+import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_COUNTERS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_FILTERS_KEY;
@@ -132,6 +134,7 @@ public class CustomAudienceBlob {
     public static final String OWNER_KEY = "owner";
     public static final String BUYER_KEY = "buyer";
     public static final String AUCTION_SERVER_REQUEST_FLAGS_KEY = "auction_server_request_flags";
+    public static final String PRIORITY_KEY = "priority";
     public static final String OMIT_ADS_VALUE = "omit_ads";
     static final LinkedHashSet<String> mKeysSet =
             new LinkedHashSet<>(
@@ -150,24 +153,30 @@ public class CustomAudienceBlob {
     private final ReadFiltersFromJsonStrategy mReadFiltersFromJsonStrategy;
     private final ReadAdRenderIdFromJsonStrategy mReadAdRenderIdFromJsonStrategy;
     private final boolean mAuctionServerRequestFlagsEnabled;
+    private final boolean mSellerConfigurationEnabled;
 
     public CustomAudienceBlob(
-            boolean filteringEnabled,
+            boolean frequencyCapFilteringEnabled,
+            boolean appInstallFilteringEnabled,
             boolean adRenderIdEnabled,
             long adRenderIdMaxLength,
-            boolean auctionServerRequestFlagsEnabled) {
+            boolean auctionServerRequestFlagsEnabled,
+            boolean sellerConfigurationEnabled) {
         mReadFiltersFromJsonStrategy =
-                ReadFiltersFromJsonStrategyFactory.getStrategy(filteringEnabled);
+                ReadFiltersFromJsonStrategyFactory.getStrategy(
+                        frequencyCapFilteringEnabled, appInstallFilteringEnabled);
         mReadAdRenderIdFromJsonStrategy =
                 ReadAdRenderIdFromJsonStrategyFactory.getStrategy(
                         adRenderIdEnabled, adRenderIdMaxLength);
         mAuctionServerRequestFlagsEnabled = auctionServerRequestFlagsEnabled;
+        mSellerConfigurationEnabled = sellerConfigurationEnabled;
     }
 
     @VisibleForTesting
     public CustomAudienceBlob() {
+        // TODO (b/356394210) Move this convenience method into a test fixture (or remove entirely)
         // Filtering enabled by default.
-        this(true, true, 12L, false);
+        this(true, true, true, FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH, false, false);
     }
 
     /** Update fields of the {@link CustomAudienceBlob} from a {@link JSONObject}. */
@@ -227,6 +236,11 @@ public class CustomAudienceBlob {
             this.setAuctionServerRequestFlags(
                     this.getAuctionServerRequestFlagsFromJSONObject(
                             json, AUCTION_SERVER_REQUEST_FLAGS_KEY));
+        }
+
+        // Set priority if seller configuration flag is enabled
+        if (mSellerConfigurationEnabled && jsonKeySet.contains(PRIORITY_KEY)) {
+            this.setPriority(this.getDoubleFromJSONObject(json, PRIORITY_KEY));
         }
     }
 
@@ -723,6 +737,32 @@ public class CustomAudienceBlob {
         }
     }
 
+    /**
+     * @return the {@code priority} {@link Field}
+     */
+    public double getPriority() {
+        double result = PRIORITY_DEFAULT;
+        if (mFieldsMap.containsKey(PRIORITY_KEY)) {
+            result = (double) mFieldsMap.get(PRIORITY_KEY).mValue;
+        }
+        return result;
+    }
+
+    /** set the {@code priority} {@link Field} */
+    public void setPriority(double value) {
+        if (mFieldsMap.containsKey(PRIORITY_KEY)) {
+            Field<Double> field = (Field<Double>) mFieldsMap.get(PRIORITY_KEY);
+            field.mValue = value;
+        } else {
+            Field<Double> field = new Field<>((dbl) -> dbl, this::getDoubleFromJSONObject);
+
+            field.mName = PRIORITY_KEY;
+            field.mValue = value;
+
+            mFieldsMap.put(PRIORITY_KEY, field);
+        }
+    }
+
     private JSONArray getAdsAsJSONObject(List<AdData> value) {
         try {
             JSONArray adsJson = new JSONArray();
@@ -807,59 +847,43 @@ public class CustomAudienceBlob {
                         int adsListLength = adsJsonArray.length();
                         List<AdData> adsList = new ArrayList<>();
                         for (int i = 0; i < adsListLength; i++) {
-                            try {
-                                JSONObject adDataJsonObj = adsJsonArray.getJSONObject(i);
+                            JSONObject adDataJsonObj = adsJsonArray.getJSONObject(i);
 
-                                // Note: getString() coerces values to be strings; use get() instead
-                                Object uri = adDataJsonObj.get(RENDER_URI_KEY);
-                                if (!(uri instanceof String)) {
-                                    throw new JSONException(
-                                            "Unexpected format parsing "
-                                                    + RENDER_URI_KEY
-                                                    + " in "
-                                                    + key);
-                                }
-                                Uri parsedUri = Uri.parse(Objects.requireNonNull((String) uri));
-
-                                String metadata =
-                                        Objects.requireNonNull(
-                                                        adDataJsonObj.getJSONObject(METADATA_KEY))
-                                                .toString();
-
-                                DBAdData.Builder adDataBuilder =
-                                        new DBAdData.Builder()
-                                                .setRenderUri(parsedUri)
-                                                .setMetadata(metadata);
-
-                                mReadFiltersFromJsonStrategy.readFilters(
-                                        adDataBuilder, adDataJsonObj);
-                                mReadAdRenderIdFromJsonStrategy.readId(
-                                        adDataBuilder, adDataJsonObj);
-
-                                DBAdData dbAdData = adDataBuilder.build();
-                                AdData adData =
-                                        new AdData.Builder()
-                                                .setMetadata(dbAdData.getMetadata())
-                                                .setRenderUri(dbAdData.getRenderUri())
-                                                .setAdCounterKeys(dbAdData.getAdCounterKeys())
-                                                .setAdFilters(dbAdData.getAdFilters())
-                                                .setAdRenderId(dbAdData.getAdRenderId())
-                                                .build();
-
-                                adsList.add(adData);
-                            } catch (JSONException
-                                    | NullPointerException
-                                    | IllegalArgumentException exception) {
-                                // Skip any ads that are malformed and continue to the next in the
-                                // list; note that if the entire given list of ads is junk, then any
-                                // existing ads are cleared from the custom audience
-                                sLogger.v(
-                                        SKIP_INVALID_JSON_TYPE_LOG_FORMAT,
-                                        jsonObject.hashCode(),
-                                        key,
-                                        Optional.ofNullable(exception.getMessage())
-                                                .orElse("<null>"));
+                            // Note: getString() coerces values to be strings; use get() instead
+                            Object uri = adDataJsonObj.get(RENDER_URI_KEY);
+                            if (!(uri instanceof String)) {
+                                throw new JSONException(
+                                        "Unexpected format parsing "
+                                                + RENDER_URI_KEY
+                                                + " in "
+                                                + key);
                             }
+                            Uri parsedUri = Uri.parse(Objects.requireNonNull((String) uri));
+
+                            String metadata =
+                                    Objects.requireNonNull(
+                                                    adDataJsonObj.getJSONObject(METADATA_KEY))
+                                            .toString();
+
+                            DBAdData.Builder adDataBuilder =
+                                    new DBAdData.Builder()
+                                            .setRenderUri(parsedUri)
+                                            .setMetadata(metadata);
+
+                            mReadFiltersFromJsonStrategy.readFilters(adDataBuilder, adDataJsonObj);
+                            mReadAdRenderIdFromJsonStrategy.readId(adDataBuilder, adDataJsonObj);
+
+                            DBAdData dbAdData = adDataBuilder.build();
+                            AdData adData =
+                                    new AdData.Builder()
+                                            .setMetadata(dbAdData.getMetadata())
+                                            .setRenderUri(dbAdData.getRenderUri())
+                                            .setAdCounterKeys(dbAdData.getAdCounterKeys())
+                                            .setAdFilters(dbAdData.getAdFilters())
+                                            .setAdRenderId(dbAdData.getAdRenderId())
+                                            .build();
+
+                            adsList.add(adData);
                         }
                         return adsList;
                     } catch (JSONException e) {
@@ -881,6 +905,23 @@ public class CustomAudienceBlob {
                     } catch (JSONException e) {
                         throw new RuntimeException(e);
                     }
+                });
+    }
+
+    private Double getDoubleFromJSONObject(JSONObject json, String key) {
+        return getValueFromJSONObject(
+                json,
+                key,
+                (jsonObject, jsonKey) -> {
+                    double priority = PRIORITY_DEFAULT;
+                    try {
+                        priority = jsonObject.getDouble(jsonKey);
+                    } catch (JSONException e) {
+                        // Ignore since we don't want to fail if there is an issue with this
+                        // optional field
+                        sLogger.d(String.valueOf(e));
+                    }
+                    return priority;
                 });
     }
 

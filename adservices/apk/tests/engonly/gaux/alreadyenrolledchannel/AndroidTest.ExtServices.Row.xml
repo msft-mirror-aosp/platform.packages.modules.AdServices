@@ -32,63 +32,23 @@
 
     <target_preparer class="com.android.tradefed.targetprep.RootTargetPreparer"/>
 
+    <!-- Some tests in the module require the AdServices components to be enabled.
+    On R/S, these components are disabled by default, and are enabled after a reboot, by
+    AdExtBootCompletedReceiver, if the appropriate flags are set. Setting these flags and then
+    triggering a reboot in order to enable the required components.
+    -->
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
         <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>
         <option name="teardown-command" value="device_config set_sync_disabled_for_tests none"/>
-
-        <option name="run-command" value="setprop log.tag.adservices VERBOSE" />
-        <option
-            name="run-command"
-            value="device_config put adservices consent_notification_activity_debug_mode false"/>
-        <option
-            name="run-command"
-            value="device_config put adservices ui_ota_strings_feature_enabled false"/>
-        <option name="run-command" value="device_config put adservices global_kill_switch false"/>
-        <option
-            name="run-command"
-            value="device_config put adservices adservice_enable_status true"/>
-        <option
-            name="run-command"
-            value="device_config put adservices adservice_enabled true"/>
-        <option
-            name="run-command"
-            value="device_config put ui_ota_strings_feature_enabled false"/>
-        <option
-            name="run-command"
-            value="device_config put adservices enable_ad_services_system_api true"/>
-        <option
-            name="run-command"
-            value="device_config put adservices eu_notif_flow_change_enabled false"/>
-        <option
-            name="run-command"
-            value="device_config put adservices consent_notification_debug_mode false"/>
-        <option
-            name="run-command"
-            value="device_config put adservices is_eea_device_feature_enabled true"/>
-        <option
-            name="run-command"
-            value="device_config put adservices is_eea_device false"/>
-        <option
-            name="run-command"
-            value="device_config put adservices consent_already_interacted_fix_enable false"/>
-        <option
-            name="run-command"
-            value="device_config put adservices ga_ux_enabled true"/>
         <option name="run-command" value="device_config put adservices enable_back_compat true"/>
-        <option
-            name="run-command"
-            value="device_config put adservices consent_notification_activity_debug_mode false"/>
-        <!-- override scheduling params so the test is unaffected by time of the day -->
-        <option
-            name="run-command"
-            value="device_config put adservices consent_notification_interval_begin_ms 0"/>
-        <!-- end of day (24 hours) -->
-        <option
-            name="run-command"
-            value="device_config put adservices consent_notification_interval_end_ms 86400000"/>
-        <option
-            name="run-command"
-            value="device_config put adservices consent_notification_minimal_delay_before_interval_ends 0"/>
+        <option name="run-command" value="device_config put adservices adservice_enabled true"/>
+    </target_preparer>
+
+    <target_preparer class="com.android.tradefed.targetprep.RebootTargetPreparer">
+        <option name="pre-reboot" value="true"/>
+    </target_preparer>
+    <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
+        <option name="run-command" value="am wait-for-broadcast-idle"/>
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">
@@ -116,4 +76,6 @@
             class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">
         <option name="mainline-module-package-name" value="com.google.android.extservices"/>
     </object>
+
+    <!-- NOTE: DeviceConfig and SystemProperties are handled by AdServicesFlagsSetterRule -->
 </configuration>

@@ -18,44 +18,36 @@ package android.adservices.cts;
 
 import static android.adservices.adselection.AdSelectionConfigFixture.anAdSelectionConfig;
 
-import static com.google.common.truth.Truth.assertThat;
-
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.ReportImpressionRequest;
 
-import androidx.test.filters.SmallTest;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import com.android.adservices.common.SdkLevelSupportRule;
-
-import org.junit.Rule;
 import org.junit.Test;
 
-@SmallTest
-public class ReportImpressionRequestTest {
+@RequiresSdkLevelAtLeastS
+public final class ReportImpressionRequestTest extends CtsAdServicesDeviceTestCase {
     private static final long AUCTION_ID = 123;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Test
-    public void testBuildsReportImpressionInput() throws Exception {
+    public void testBuildsReportImpressionInput() {
         AdSelectionConfig testAdSelectionConfig = anAdSelectionConfig();
 
         ReportImpressionRequest request =
                 new ReportImpressionRequest(AUCTION_ID, testAdSelectionConfig);
 
-        assertThat(request.getAdSelectionId()).isEqualTo(AUCTION_ID);
-        assertThat(request.getAdSelectionConfig()).isEqualTo(testAdSelectionConfig);
+        expect.that(request.getAdSelectionId()).isEqualTo(AUCTION_ID);
+        expect.that(request.getAdSelectionConfig()).isEqualTo(testAdSelectionConfig);
     }
 
     @Test
     public void testBuildsReportImpressionInputWithOnlyAdSelectionId() {
         ReportImpressionRequest request = new ReportImpressionRequest(AUCTION_ID);
 
-        assertThat(request.getAdSelectionId()).isEqualTo(AUCTION_ID);
-        assertThat(request.getAdSelectionConfig()).isEqualTo(AdSelectionConfig.EMPTY);
+        expect.that(request.getAdSelectionId()).isEqualTo(AUCTION_ID);
+        expect.that(request.getAdSelectionConfig()).isEqualTo(AdSelectionConfig.EMPTY);
     }
 
     @Test

@@ -16,43 +16,82 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.common.DeviceConfigUtil.setAdservicesFlag;
+import static com.android.adservices.service.DeviceConfigAndSystemPropertiesExpectations.mockGetAdServicesFlag;
+import static com.android.adservices.service.Flags.DEFAULT_CLASSIFIER_TYPE;
+import static com.android.adservices.service.Flags.MAINTENANCE_JOB_FLEX_MS;
+import static com.android.adservices.service.Flags.MAINTENANCE_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_FLEX_MS;
+import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_APPSETID_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_CLASSIFIER_TYPE;
 import static com.android.adservices.service.FlagsConstants.KEY_COBALT_LOGGING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MAINTENANCE_JOB_FLEX_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MAINTENANCE_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MDD_LOGGER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_STATUS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_FLEX_MS;
-import static com.android.adservices.service.FlagsConstants.NAMESPACE_ADSERVICES;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
+import static com.android.adservices.service.FlagsConstants.KEY_UI_OTA_RESOURCES_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsTest.getConstantValue;
-
-import android.os.SystemProperties;
-import android.util.Log;
-
-import androidx.annotation.Nullable;
-import androidx.test.filters.FlakyTest;
+import static com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesSystemPropertiesDumperRule;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.mockito.ExtendedMockitoExpectations;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
+import com.android.adservices.service.fixture.TestableSystemProperties;
+import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.TestableDeviceConfig;
 
+import org.junit.Rule;
 import org.junit.Test;
 
-/* TODO(b/326254556): test fail if properties are already set. Example:
- *
- * adb shell setprop debug.adservices.topics_epoch_job_flex_ms 42
- * adb shell setprop debug.adservices.test.measurement_kill_switch true
- */
-
-@SpyStatic(SystemProperties.class)
-public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockitoTestCase {
+@SpyStatic(SdkLevel.class)
+public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockitoTestCase {
 
     private final Flags mPhFlags = PhFlags.getInstance();
 
-    private final FlagGuard mGlobalKillSwitchGuard = value -> setGlobalKillSwitch(!value);
-    private final FlagGuard mMsmtKillSwitchesGuard = value -> setMsmmtKillSwitch(!value);
+    private final PhFlagsTestHelper mFlagsTestHelper = new PhFlagsTestHelper(mPhFlags, expect);
+
+    private final FlagGuard mMsmtKillSwitchGuard =
+            value -> mFlagsTestHelper.setMsmtKillSwitch(!value);
+
+    @Rule
+    public final AdServicesSystemPropertiesDumperRule sysPropDumper =
+            new AdServicesSystemPropertiesDumperRule();
 
     // Overriding DeviceConfig stub to avoid Read device config permission errors and to also
     // test the behavior of flags, when both device config and system properties are set.
@@ -60,328 +99,609 @@ public class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedMockito
     protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
         return newDefaultAdServicesExtendedMockitoRuleBuilder()
                 .addStaticMockFixtures(TestableDeviceConfig::new)
+                .addStaticMockFixtures(TestableSystemProperties::new)
                 .build();
     }
 
-    // TODO(b/326254556): add 2 tests (T and pre-T) for getGlobalKillSwitch() itself
-
-    @FlakyTest(bugId = 326254556)
     @Test
-    public void testGetTopicsEpochJobFlexMs() {
-        testUnguardedFlag(
-                KEY_TOPICS_EPOCH_JOB_FLEX_MS,
-                TOPICS_EPOCH_JOB_FLEX_MS,
-                flags -> flags.getTopicsEpochJobFlexMs());
-    }
-
-    @FlakyTest(bugId = 326254556)
-    @Test
-    public void testGetAdIdKillSwitch() {
-        testUnguardedLegacyKillSwitch(
-                KEY_ADID_KILL_SWITCH, "ADID_KILL_SWITCH", flags -> flags.getAdIdKillSwitch());
-    }
-
-    @FlakyTest(bugId = 326254556)
-    @Test
-    public void testGetLegacyMeasurementKillSwitch() {
-        testLegacyKillSwitch(
-                KEY_MEASUREMENT_KILL_SWITCH,
-                "MEASUREMENT_KILL_SWITCH",
-                flags -> flags.getLegacyMeasurementKillSwitch());
-    }
-
-    @FlakyTest(bugId = 326254556)
-    @Test
-    public void testGetMeasurementEnabled() {
-        testFeatureFlagBackedByLegacyKillSwitch(
-                KEY_MEASUREMENT_KILL_SWITCH,
-                "MEASUREMENT_KILL_SWITCH",
-                flags -> flags.getMeasurementEnabled());
-    }
-
-    @FlakyTest(bugId = 326254556)
-    @Test
-    public void testGetMeasurementAttributionFallbackJobEnabled() {
-        testFeatureFlagBackedByLegacyKillSwitch(
-                KEY_MEASUREMENT_KILL_SWITCH,
-                "MEASUREMENT_KILL_SWITCH",
-                mMsmtKillSwitchesGuard,
-                flags -> flags.getMeasurementAttributionFallbackJobEnabled());
-    }
-
-    @FlakyTest(bugId = 326254556)
-    @Test
-    public void testGetCobaltLoggingEnabled() {
-        testFeatureFlag(
-                KEY_COBALT_LOGGING_ENABLED,
-                "COBALT_LOGGING_ENABLED",
-                flags -> flags.getCobaltLoggingEnabled());
-    }
-
-    /**
-     * Tests the behavior of a flag that is not guarded by any other flag.
-     *
-     * @param name name of the flag
-     * @param defaultValue Java constant (like {@code TOPICS_EPOCH_JOB_FLEX_MS"} defining the
-     *     default value of the flag
-     * @param flaginator helper object used to get the value of the flag
-     */
-    private void testUnguardedFlag(String name, long defaultValue, Flaginator<Long> flaginator) {
-        // Without any overriding, the value is the hard coded constant.
-        expect.withMessage("getter for %s by default", name)
-                .that(flaginator.getFlagValue(mPhFlags))
-                .isEqualTo(defaultValue);
-
-        // Now overriding with the value in both system properties and device config.
-        long systemPropertyValue = defaultValue + 1;
-        long deviceConfigValue = defaultValue + 2;
-        mockGetSystemProperty(name, systemPropertyValue);
-
-        setAdservicesFlag(name, deviceConfigValue);
-
-        expect.withMessage("getter for %s prefers system property value", name)
-                .that(flaginator.getFlagValue(mPhFlags))
-                .isEqualTo(systemPropertyValue);
-    }
-
-    /**
-     * Tests the behavior of a boolean flag that is guarded by the global kill switch.
-     *
-     * @param flagName name of the flag
-     * @param defaultValueConstant name of the Java constant (on Flags.java) (like {@code
-     *     "COBALT_LOGGING_ENABLED"} defining the default value of the flag
-     * @param flaginator helper object used to get the value of the flag being tested
-     */
-    private void testFeatureFlag(
-            String flagName, String defaultValueConstant, Flaginator<Boolean> flaginator) {
-        testFeatureFlag(flagName, defaultValueConstant, mGlobalKillSwitchGuard, flaginator);
-    }
-
-    // TODO(b/326254556): remove if not used (other than by testFeatureFlag() above, which passes
-    // mGlobalKillSwitchGuard
-    /**
-     * Tests the behavior of a feature flag that is guarded by a "generic" guard (typically the
-     * global kill switch and a per-API kill switch).
-     *
-     * @param flagName name of the legacy kill switch flag
-     * @param defaultValueConstant name of the Java constant (on Flags.java) (like {@code
-     *     "MDD_LOGGER_KILL_SWITCH"} defining the default value of the flag
-     * @param guard helper object used enable / disable the guarding flags
-     * @param flaginator helper object used to get the value of the flag being tested
-     */
-    private void testFeatureFlag(
-            String flagName,
-            String defaultValueConstant,
-            FlagGuard guard,
-            Flaginator<Boolean> flaginator) {
-        internalTestForFeatureFlag(
-                flagName, defaultValueConstant, FeatureFlagType.FEATURE_FLAG, guard, flaginator);
-    }
-
-    /**
-     * Tests the behavior of a feature flag that is guarded by the global kill switch but whose
-     * {@code DeviceConfig} flag is a legacy kill switch flag (i.e., when the kill switch is
-     * enabled, the feature flag is disabled and viceversa)
-     *
-     * @param flagName name of the flag
-     * @param defaultValueConstant name of the Java constant (on Flags.java) (like {@code
-     *     "MEASUREMENT_KILL_SWITCH"} defining the default value of the flag
-     * @param flaginator helper object used to get the value of the flag being tested
-     */
-    private void testFeatureFlagBackedByLegacyKillSwitch(
-            String flagName, String defaultValueConstant, Flaginator<Boolean> flaginator) {
-        testFeatureFlagBackedByLegacyKillSwitch(
-                flagName, defaultValueConstant, mGlobalKillSwitchGuard, flaginator);
-    }
-
-    /**
-     * Tests the behavior of a feature flag that is guarded by a "generic" guard (typically the
-     * global kill switch and a per-API kill switch) but whose {@code DeviceConfig} flag is a legacy
-     * kill switch flag (i.e., when the kill switch is enabled, the feature flag is disabled and
-     * viceversa)
-     *
-     * @param flagName name of the flag
-     * @param defaultValueConstant name of the Java constant (on Flags.java) (like {@code
-     *     "MEASUREMENT_KILL_SWITCH"} defining the default value of the flag
-     * @param flaginator helper object used to get the value of the flag being tested
-     */
-    private void testFeatureFlagBackedByLegacyKillSwitch(
-            String flagName,
-            String defaultValueConstant,
-            FlagGuard guard,
-            Flaginator<Boolean> flaginator) {
-        internalTestForFeatureFlag(
-                flagName,
-                defaultValueConstant,
-                FeatureFlagType.FEATURE_FLAG_BACKED_BY_LEGACY_KILL_SWITCH,
-                guard,
-                flaginator);
-    }
-
-    /**
-     * Tests the behavior of a feature flag that is not guarded by any other flag but whose {@code
-     * DeviceConfig} flag is a legacy kill switch flag (i.e., when the kill switch is enabled, the
-     * feature flag is disabled and viceversa)
-     *
-     * @param flagName name of the flag
-     * @param defaultValueConstant name of the Java constant (on Flags.java) (like {@code
-     *     "ADID_KILL_SWITCH"} defining the default value of the flag
-     * @param flaginator helper object used to get the value of the flag being tested
-     */
-    private void testUnguardedLegacyKillSwitch(
-            String flagName, String defaultValueConstant, Flaginator<Boolean> flaginator) {
-        internalTestForFeatureFlag(
-                flagName,
-                defaultValueConstant,
-                FeatureFlagType.LEGACY_KILL_SWITCH,
-                /* guard= */ null,
-                flaginator);
-    }
-
-    /**
-     * Tests the behavior of a boolean flag that is guarded by the global kill switch.
-     *
-     * @param flagName name of the flag
-     * @param defaultValue default value of the flag
-     * @param flaginator helper object used to get the value of the flag being tested
-     */
-    private void testLegacyKillSwitch(
-            String flagName, String defaultValueConstant, Flaginator<Boolean> flaginator) {
-        internalTestForFeatureFlag(
-                flagName,
-                defaultValueConstant,
-                FeatureFlagType.LEGACY_KILL_SWITCH,
-                mGlobalKillSwitchGuard,
-                flaginator);
-    }
-
-    // Should not be called by tests directly
-    private void internalTestForFeatureFlag(
-            String flagName,
-            String defaultValueConstant,
-            FeatureFlagType type,
-            @Nullable FlagGuard guard,
-            Flaginator<Boolean> flaginator) {
+    @SpyStatic(SdkLevel.class)
+    public void testGetGlobalKillSwitch_TPlus() {
+        mocker.mockIsAtLeastT(true);
 
         // This is the value hardcoded by a constant on Flags.java
-        boolean constantValue = getConstantValue(defaultValueConstant);
-        // This is the default value for the flag's getter - ideally it should be the same as the
-        // constant value, but it's the opposite when it's backed by a "legacy" kill switch.
-        boolean defaultValue =
-                type.equals(FeatureFlagType.FEATURE_FLAG_BACKED_BY_LEGACY_KILL_SWITCH)
-                        ? !constantValue
-                        : constantValue;
+        boolean constantValue = getConstantValue("GLOBAL_KILL_SWITCH");
+        expect.withMessage("GlobalKillSwitch default value")
+                .that(mPhFlags.getGlobalKillSwitch())
+                .isEqualTo(constantValue);
 
-        // This is the value of the getter when it's "disabled"
-        boolean disabledValue = type.equals(FeatureFlagType.LEGACY_KILL_SWITCH);
+        // Only set global kill switch system property.
+        mFlagsTestHelper.setSystemProperty(KEY_GLOBAL_KILL_SWITCH, !constantValue);
+        expect.withMessage("GlobalKillSwitch overridden value")
+                .that(mPhFlags.getGlobalKillSwitch())
+                .isEqualTo(!constantValue);
 
-        Log.d(
-                mTag,
-                "internalTestFlag("
-                        + defaultValueConstant
-                        + ") part 1: flagName="
-                        + flagName
-                        + ", constantValue="
-                        + constantValue
-                        + ", type="
-                        + type
-                        + ", defaultValue="
-                        + defaultValue
-                        + ", disabledValue="
-                        + disabledValue);
-
-        if (guard != null) {
-            // First check the behavior when the guarding flags are in place(like kill switches on)
-            guard.setEnabled(false);
-            expect.withMessage(
-                            "getter of %s by default when guarding kill switches are on",
-                            defaultValueConstant)
-                    .that(flaginator.getFlagValue(mPhFlags))
-                    .isEqualTo(disabledValue);
-
-            // Make sure neither DeviceConfig or SystemProperty was called
-            verifyGetBooleanSystemPropertyNotCalled(flagName);
-            verifyGetBooleanDeviceConfigFlagNotCalled(flagName);
-
-            // Then enable the guarding flags
-            guard.setEnabled(true);
-        }
-
-        // Without any overriding, the value is the hard coded constant.
-        expect.withMessage(
-                        "getter of %s by default when guarding kill switches are off",
-                        defaultValueConstant)
-                .that(flaginator.getFlagValue(mPhFlags))
-                .isEqualTo(defaultValue);
-
-        // Now overriding the device config flag and system properties, so the expected value
-        // is driven by the system properties one (and the feature flag type)
-        boolean systemPropertyValue = !constantValue;
-        boolean deviceConfigValue = !systemPropertyValue;
-        boolean expectedFlagValue =
-                type.equals(FeatureFlagType.FEATURE_FLAG_BACKED_BY_LEGACY_KILL_SWITCH)
-                        ? !systemPropertyValue
-                        : systemPropertyValue;
-        Log.d(
-                mTag,
-                "internalTestFlag("
-                        + defaultValueConstant
-                        + ") part 2: systemPropertyValue="
-                        + systemPropertyValue
-                        + ", deviceConfigValue="
-                        + deviceConfigValue
-                        + ", expectedFlagValue="
-                        + expectedFlagValue);
-
-        mockGetSystemProperty(flagName, systemPropertyValue);
-        setAdservicesFlag(flagName, deviceConfigValue);
-
-        expect.withMessage(
-                        "getter of %s when overridden by system property value",
-                        defaultValueConstant)
-                .that(flaginator.getFlagValue(mPhFlags))
-                .isEqualTo(expectedFlagValue);
+        // Now set the device config value as well, system property should still take precedence.
+        mockGetAdServicesFlag(KEY_GLOBAL_KILL_SWITCH, constantValue);
+        expect.withMessage("Overridden global_kill_switch system property value")
+                .that(mPhFlags.getGlobalKillSwitch())
+                .isEqualTo(!constantValue);
     }
 
-    private void setGlobalKillSwitch(boolean value) {
-        ExtendedMockitoExpectations.mockGetAdServicesFlag(KEY_GLOBAL_KILL_SWITCH, value);
+    @Test
+    @SpyStatic(SdkLevel.class)
+    public void testGetGlobalKillSwitch_TMinus() {
+        mocker.mockIsAtLeastT(false);
+
+        // This is the value hardcoded by a constant on Flags.java
+        boolean constantValue = getConstantValue("GLOBAL_KILL_SWITCH");
+        expect.withMessage("GlobalKillSwitch default value")
+                .that(mPhFlags.getGlobalKillSwitch())
+                .isEqualTo(constantValue);
+
+        // Set back-compat flag..
+        mFlagsTestHelper.setGlobalKillSwitch(!constantValue);
+        expect.withMessage("GlobalKillSwitch overridden value")
+                .that(mPhFlags.getGlobalKillSwitch())
+                .isEqualTo(!constantValue);
     }
 
-    private void setMsmmtKillSwitch(boolean value) {
-        setGlobalKillSwitch(value);
-        ExtendedMockitoExpectations.mockGetAdServicesFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
+    @Test
+    public void testGetTopicsEpochJobFlexMs() {
+        mFlagsTestHelper.testPositiveConfigFlagBackedBySystemProperty(
+                KEY_TOPICS_EPOCH_JOB_FLEX_MS,
+                TOPICS_EPOCH_JOB_FLEX_MS,
+                Flags::getTopicsEpochJobFlexMs);
     }
 
-    private void mockGetSystemProperty(String name, long value) {
-        ExtendedMockitoExpectations.mockGetSystemProperty(
-                PhFlags.getSystemPropertyName(name), value);
+    @Test
+    public void testGetTopicsPercentageForRandomTopic() {
+        mFlagsTestHelper.testPositiveConfigFlagBackedBySystemProperty(
+                KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
+                TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
+                Flags::getTopicsPercentageForRandomTopic);
     }
 
-    private void mockGetSystemProperty(String name, boolean value) {
-        Log.v(mTag, "Setting system property: " + name + "=" + value);
-        ExtendedMockitoExpectations.mockGetSystemProperty(
-                PhFlags.getSystemPropertyName(name), value);
+    @Test
+    public void testGetAdIdKillSwitch() {
+        // Values of globalKS should be ignored.
+        mFlagsTestHelper.setGlobalKillSwitch(true);
+
+        mFlagsTestHelper.testUnguardedLegacyKillSwitchBackedBySystemProperty(
+                KEY_ADID_KILL_SWITCH, "ADID_KILL_SWITCH", Flags::getAdIdKillSwitch);
     }
 
-    private void verifyGetBooleanSystemPropertyNotCalled(String name) {
-        ExtendedMockitoExpectations.verifyGetBooleanSystemPropertyNotCalled(
-                PhFlags.getSystemPropertyName(name));
+    @Test
+    public void testGetLegacyMeasurementKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_KILL_SWITCH,
+                "MEASUREMENT_KILL_SWITCH",
+                Flags::getLegacyMeasurementKillSwitch);
     }
 
-    private void verifyGetBooleanDeviceConfigFlagNotCalled(String name) {
-        ExtendedMockitoExpectations.verifyGetBooleanDeviceConfigFlagNotCalled(
-                NAMESPACE_ADSERVICES, name);
+    @Test
+    public void testGetMeasurementApiDeleteRegistrationsKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH,
+                "MEASUREMENT_KILL_SWITCH",
+                Flags::getMeasurementApiDeleteRegistrationsKillSwitch);
     }
 
-    /** Interface used to abstract the feature flags / kill switches guarding a flag. */
-    private interface FlagGuard {
-        void setEnabled(boolean value);
+    @Test
+    public void testGetMeasurementApiDeleteRegistrationsKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH,
+                "MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH",
+                value -> mFlagsTestHelper.setMsmtKillSwitch(!value),
+                Flags::getMeasurementApiDeleteRegistrationsKillSwitch);
     }
 
-    // TODO(b/325135083): ideally it should fetch the FeatureFlag.Type from the constant annotation
-    private enum FeatureFlagType {
-        FEATURE_FLAG,
-        FEATURE_FLAG_BACKED_BY_LEGACY_KILL_SWITCH,
-        LEGACY_KILL_SWITCH
+    @Test
+    public void testUiOtaResourcesFeatureEnabled() {
+        mFlagsTestHelper.testFeatureFlagBackedBySystemPropertyGuardedByGlobalKs(
+                KEY_UI_OTA_RESOURCES_FEATURE_ENABLED,
+                "UI_OTA_RESOURCES_FEATURE_ENABLED",
+                Flags::getUiOtaResourcesFeatureEnabled);
+    }
+
+    @Test
+    public void testGetMeasurementRollbackDeletionAppSearchKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
+                "MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH",
+                Flags::getMeasurementRollbackDeletionAppSearchKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementRollbackDeletionAppSearchKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
+                "MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH",
+                value -> mFlagsTestHelper.setMsmtKillSwitch(!value),
+                Flags::getMeasurementRollbackDeletionAppSearchKillSwitch);
+    }
+
+    @Test
+    public void testGetFledgeCustomAudienceServiceKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH,
+                "FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH",
+                Flags::getFledgeCustomAudienceServiceKillSwitch);
+    }
+
+    @Test
+    public void testGetFledgeSelectAdsKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_FLEDGE_SELECT_ADS_KILL_SWITCH,
+                "FLEDGE_SELECT_ADS_KILL_SWITCH",
+                Flags::getFledgeSelectAdsKillSwitch);
+    }
+
+    @Test
+    public void testGetAppSetIdKillSwitch() {
+        // Values of globalKS should be ignored.
+        mFlagsTestHelper.setGlobalKillSwitch(true);
+
+        mFlagsTestHelper.testUnguardedLegacyKillSwitchBackedBySystemProperty(
+                KEY_APPSETID_KILL_SWITCH, "APPSETID_KILL_SWITCH", Flags::getAppSetIdKillSwitch);
+    }
+
+    @Test
+    public void testGetMddBackgroundTaskKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MDD_BACKGROUND_TASK_KILL_SWITCH,
+                "MDD_BACKGROUND_TASK_KILL_SWITCH",
+                Flags::getMddBackgroundTaskKillSwitch);
+    }
+
+    @Test
+    public void testGetEncryptionKeyPeriodicFetchKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH,
+                "ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH",
+                Flags::getEncryptionKeyPeriodicFetchKillSwitch);
+    }
+
+    @Test
+    public void testGetEncryptionKeyNewEnrollmentFetchKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH,
+                "ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH",
+                Flags::getEncryptionKeyNewEnrollmentFetchKillSwitch);
+    }
+
+    @Test
+    public void testGetTopicsKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_TOPICS_KILL_SWITCH, "TOPICS_KILL_SWITCH", Flags::getTopicsKillSwitch);
+    }
+
+    @Test
+    public void testGetOnDeviceClassifierKillSwitch() {
+        // Values of globalKS should be ignored.
+        mFlagsTestHelper.setGlobalKillSwitch(true);
+
+        mFlagsTestHelper.testUnguardedLegacyKillSwitchBackedBySystemProperty(
+                KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH,
+                "TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH",
+                Flags::getTopicsOnDeviceClassifierKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiStatusKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_API_STATUS_KILL_SWITCH,
+                "MEASUREMENT_API_STATUS_KILL_SWITCH",
+                Flags::getMeasurementApiStatusKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiStatusKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_API_STATUS_KILL_SWITCH,
+                "MEASUREMENT_API_STATUS_KILL_SWITCH",
+                value -> mFlagsTestHelper.setMsmtKillSwitch(!value),
+                Flags::getMeasurementApiStatusKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterSourceKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH",
+                Flags::getMeasurementApiRegisterSourceKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterSourceKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH",
+                value -> mFlagsTestHelper.setMsmtKillSwitch(!value),
+                Flags::getMeasurementApiRegisterSourceKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementAttributionFallbackJobEnabled() {
+        mFlagsTestHelper.testFeatureFlagBackedBySystemPropertyGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH,
+                "MEASUREMENT_ATTRIBUTION_FALLBACK_JOB_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementAttributionFallbackJobEnabled);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterTriggerKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH",
+                Flags::getMeasurementApiRegisterTriggerKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterTriggerKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementApiRegisterTriggerKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterWebSourceKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH",
+                Flags::getMeasurementApiRegisterWebSourceKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterWebSourceKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementApiRegisterWebSourceKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterSourcesKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH",
+                Flags::getMeasurementApiRegisterSourcesKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterSourcesKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementApiRegisterSourcesKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterWebTriggerKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH",
+                Flags::getMeasurementApiRegisterWebTriggerKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementApiRegisterWebTriggerKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH,
+                "MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementApiRegisterWebTriggerKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobAggregateFallbackReportingKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH",
+                Flags::getMeasurementJobAggregateFallbackReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobAggregateFallbackReportingKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobAggregateFallbackReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobAggregateReportingKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH",
+                Flags::getMeasurementJobAggregateReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobAggregateReportingKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobAggregateReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobAttributionKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH,
+                "MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH",
+                Flags::getMeasurementJobAttributionKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobAttributionKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH,
+                "MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobAttributionKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementVerboseDebugReportingFallbackJobKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
+                "MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH",
+                Flags::getMeasurementVerboseDebugReportingFallbackJobKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementVerboseDebugReportingFallbackJobKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
+                "MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementVerboseDebugReportingFallbackJobKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobVerboseDebugReportingKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH",
+                Flags::getMeasurementJobVerboseDebugReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobVerboseDebugReportingKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobVerboseDebugReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobDebugReportingKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH",
+                Flags::getMeasurementJobDebugReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobDebugReportingKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobDebugReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementDebugReportingFallbackJobKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
+                "MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH",
+                Flags::getMeasurementDebugReportingFallbackJobKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementDebugReportingFallbackJobKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
+                "MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementDebugReportingFallbackJobKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobDeleteExpiredKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH,
+                "MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH",
+                Flags::getMeasurementJobDeleteExpiredKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobDeleteExpiredKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH,
+                "MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobDeleteExpiredKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobDeleteUninstalledKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH,
+                "MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH",
+                Flags::getMeasurementJobDeleteUninstalledKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobDeleteUninstalledKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH,
+                "MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobDeleteUninstalledKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobEventFallbackReportingKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH",
+                Flags::getMeasurementJobEventFallbackReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobEventFallbackReportingKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobEventFallbackReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobEventReportingKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH",
+                Flags::getMeasurementJobEventReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementJobEventReportingKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH,
+                "MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementJobEventReportingKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementReceiverInstallAttributionKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH,
+                "MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH",
+                Flags::getMeasurementReceiverInstallAttributionKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementReceiverInstallAttributionKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH,
+                "MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementReceiverInstallAttributionKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementReceiverDeletePackagesKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH,
+                "MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH",
+                Flags::getMeasurementReceiverDeletePackagesKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementReceiverDeletePackagesKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH,
+                "MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementReceiverDeletePackagesKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementRollbackDeletionKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH,
+                "MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH",
+                Flags::getMeasurementRollbackDeletionKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementRollbackDeletionKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH,
+                "MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getMeasurementRollbackDeletionKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementRegistrationJobQueueKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH,
+                "MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH",
+                Flags::getAsyncRegistrationJobQueueKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementRegistrationJobQueueKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH,
+                "MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getAsyncRegistrationJobQueueKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementRegistrationFallbackJobKillSwitch() {
+        mFlagsTestHelper.testLegacyKillSwitchBackedBySystemProperty(
+                KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH,
+                "MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH",
+                Flags::getAsyncRegistrationFallbackJobKillSwitch);
+    }
+
+    @Test
+    public void testGetMeasurementRegistrationFallbackJobKillSwitch_measurementOverride() {
+        mFlagsTestHelper.testLegacyKillSwitchGuardedByLegacyKillSwitch(
+                KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH,
+                "MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH",
+                mMsmtKillSwitchGuard,
+                Flags::getAsyncRegistrationFallbackJobKillSwitch);
+    }
+
+    @Test
+    public void testGetCobaltLoggingEnabled() {
+        mFlagsTestHelper.testFeatureFlagBackedBySystemPropertyGuardedByGlobalKs(
+                KEY_COBALT_LOGGING_ENABLED,
+                "COBALT_LOGGING_ENABLED",
+                Flags::getCobaltLoggingEnabled);
+    }
+
+    @Test
+    public void testGetMddLoggerEnabled() {
+        mFlagsTestHelper.testFeatureFlagBackedBySystemPropertyGuardedByLegacyKillSwitch(
+                KEY_MDD_LOGGER_KILL_SWITCH, "MDD_LOGGER_KILL_SWITCH", Flags::getMddLoggerEnabled);
+    }
+
+    @Test
+    public void testClassifierType() {
+        mFlagsTestHelper.testConfigFlagBackedBySystemProperty(
+                KEY_CLASSIFIER_TYPE, DEFAULT_CLASSIFIER_TYPE, Flags::getClassifierType);
+    }
+
+    @Test
+    public void testGetMaintenanceJobPeriodMs() {
+        mFlagsTestHelper.testPositiveConfigFlagBackedBySystemProperty(
+                KEY_MAINTENANCE_JOB_PERIOD_MS,
+                MAINTENANCE_JOB_PERIOD_MS,
+                Flags::getMaintenanceJobPeriodMs);
+    }
+
+    @Test
+    public void testGetMaintenanceJobFlexMs() {
+        mFlagsTestHelper.testPositiveConfigFlagBackedBySystemProperty(
+                KEY_MAINTENANCE_JOB_FLEX_MS,
+                MAINTENANCE_JOB_FLEX_MS,
+                Flags::getMaintenanceJobFlexMs);
     }
 }

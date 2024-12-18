@@ -29,7 +29,7 @@ import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.server.sdksandbox.proto.Verifier.AllowedApi;
 import com.android.server.sdksandbox.proto.Verifier.AllowedApisList;
-import com.android.server.sdksandbox.verifier.SerialDexLoader.DexLoadResult;
+import com.android.server.sdksandbox.verifier.SerialDexLoader.DexSymbols;
 import com.android.server.sdksandbox.verifier.SerialDexLoader.VerificationHandler;
 
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -39,6 +39,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,10 +111,10 @@ public class SdkDexVerifier {
             String sdkPath,
             String packagename,
             long targetSdkVersion,
-            OutcomeReceiver<Void, Exception> callback) {
+            OutcomeReceiver<VerificationResult, Exception> callback) {
         long startTime = SystemClock.elapsedRealtime();
         synchronized (mVerificationLock) {
-            mVerificationTimes.put(packagename, startTime);
+            mVerificationTimes.put(sdkPath, startTime);
         }
 
         try {
@@ -123,40 +124,101 @@ public class SdkDexVerifier {
             return;
         }
 
-        File sdkPathFile = new File(sdkPath);
+        File sdkFile = new File(sdkPath);
 
-        if (!sdkPathFile.exists()) {
+        if (!sdkFile.exists()) {
             callback.onError(new FileNotFoundException("Apk to verify not found: " + sdkPath));
             return;
         }
 
         mDexLoader.queueApkToLoad(
-                sdkPath,
+                sdkFile,
                 packagename,
                 new VerificationHandler() {
+                    private VerificationResult mLastDexResult;
+
                     @Override
-                    public boolean verify(DexLoadResult result) {
-                        // TODO(b/231441674): verify against allowtrie.
-                        return true;
+                    public boolean verify(DexSymbols dexSymbols) {
+
+                        StringTrie<AllowedApi> verificationTrie;
+
+                        synchronized (mPlatformApiAllowlistsLock) {
+                            verificationTrie = mPlatformApiAllowTries.get(targetSdkVersion);
+                        }
+
+                        try {
+                            VerificationResult verificationResult =
+                                    verifyDexSymbols(dexSymbols, verificationTrie);
+                            Log.d(
+                                    TAG,
+                                    "Verification result for "
+                                            + dexSymbols.toString()
+                                            + ": "
+                                            + verificationResult.hasPassed());
+                            mLastDexResult = verificationResult;
+                            return verificationResult.hasPassed();
+                        } catch (Exception e) {
+                            callback.onError(e);
+                            return false;
+                        }
                     }
 
                     @Override
-                    public void verificationFinishedForPackage(boolean passed) {
+                    public void onVerificationCompleteForPackage(boolean passed) {
                         if (passed) {
                             Log.d(TAG, packagename + " verified.");
                         } else {
                             Log.d(TAG, packagename + " rejected");
                         }
-                        synchronized (mVerificationLock) {
-                            long verificationTime =
-                                    SystemClock.elapsedRealtime()
-                                            - mVerificationTimes.remove(packagename);
-                            Log.d(TAG, "Verification time (ms): " + verificationTime);
-                        }
+                        logVerificationTime(packagename, sdkPath);
+                        callback.onResult(mLastDexResult);
 
                         // TODO(b/231441674): cache and log verification result
                     }
+
+                    @Override
+                    public void onVerificationErrorForPackage(Exception e) {
+                        logVerificationTime(packagename, sdkPath);
+                        callback.onError(e);
+                    }
                 });
+    }
+
+    private void logVerificationTime(String packagename, String sdkPath) {
+        synchronized (mVerificationLock) {
+            if (!mVerificationTimes.containsKey(sdkPath)) {
+                return;
+            }
+            long verificationTime =
+                    SystemClock.elapsedRealtime() - mVerificationTimes.remove(sdkPath);
+            Log.d(
+                    TAG,
+                    "Verification time (ms) for package " + packagename + ": " + verificationTime);
+        }
+    }
+
+    VerificationResult verifyDexSymbols(
+            DexSymbols dexSymbols, StringTrie<AllowedApi> verificationTrie) {
+        // Initial capacity for instructions that can reference up to 256 registers for arguments.
+        // Most methods will have rather < 16 params plus a few tokens for the full class name.
+        ArrayList<String> tokens = new ArrayList<>(256);
+        ArrayList<String> restrictedUsages = new ArrayList<>();
+        for (int i = 0; i < dexSymbols.getReferencedMethodCount(); i++) {
+            tokens.clear();
+            tokens.addAll(Arrays.asList(dexSymbols.getClassForMethodAtIndex(i).split("/")));
+            tokens.addAll(Arrays.asList(dexSymbols.getReferencedMethodAtIndex(i).split(";")));
+
+            AllowedApi rule = verificationTrie.retrieve(tokens.toArray(new String[tokens.size()]));
+            if (rule != null && !rule.getAllow()) {
+                restrictedUsages.add(
+                        dexSymbols.getClassForMethodAtIndex(i)
+                                + "->"
+                                + dexSymbols.getReferencedMethodAtIndex(i));
+            }
+            // methods that don't match any rule are considered to be symbols defined in the
+            // package itself.
+        }
+        return new VerificationResult(restrictedUsages);
     }
 
     /*
@@ -295,6 +357,27 @@ public class SdkDexVerifier {
             allowTrie.put(DEFAULT_RULES[i], getApiTokens(DEFAULT_RULES[i]));
         }
         return allowTrie;
+    }
+
+    public static class VerificationResult {
+        private boolean mPassed;
+        private List<String> mRestrictedUsages;
+
+        public VerificationResult(List<String> restrictedUsages) {
+            mRestrictedUsages =
+                    restrictedUsages == null ? Collections.emptyList() : restrictedUsages;
+            mPassed = (mRestrictedUsages.size() == 0);
+        }
+
+        /** Returns true if the restriction verification passes, false otherwise */
+        public boolean hasPassed() {
+            return mPassed;
+        }
+
+        @VisibleForTesting
+        List<String> getRestrictedUsages() {
+            return mRestrictedUsages;
+        }
     }
 
     static class Injector {

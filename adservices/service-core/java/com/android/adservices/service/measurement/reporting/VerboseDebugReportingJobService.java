@@ -65,7 +65,7 @@ public final class VerboseDebugReportingJobService extends JobService {
             return skipAndCancelBackgroundJob(params);
         }
 
-        AdServicesJobServiceLogger.getInstance(this).recordOnStartJob(VERBOSE_DEBUG_REPORT_JOB_ID);
+        AdServicesJobServiceLogger.getInstance().recordOnStartJob(VERBOSE_DEBUG_REPORT_JOB_ID);
 
         if (FlagsFactory.getFlags().getMeasurementJobVerboseDebugReportingKillSwitch()) {
             LoggerFactory.getMeasurementLogger().e("VerboseDebugReportingJobService is disabled");
@@ -77,8 +77,7 @@ public final class VerboseDebugReportingJobService extends JobService {
                 sBlockingExecutor.submit(
                         () -> {
                             sendReports();
-                            AdServicesJobServiceLogger.getInstance(
-                                            VerboseDebugReportingJobService.this)
+                            AdServicesJobServiceLogger.getInstance()
                                     .recordJobFinished(
                                             VERBOSE_DEBUG_REPORT_JOB_ID,
                                             /* isSuccessful */ true,
@@ -95,7 +94,7 @@ public final class VerboseDebugReportingJobService extends JobService {
         if (mExecutorFuture != null) {
             shouldRetry = mExecutorFuture.cancel(/* mayInterruptIfRunning */ true);
         }
-        AdServicesJobServiceLogger.getInstance(this)
+        AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, VERBOSE_DEBUG_REPORT_JOB_ID, shouldRetry);
         return shouldRetry;
     }
@@ -162,26 +161,21 @@ public final class VerboseDebugReportingJobService extends JobService {
 
     @VisibleForTesting
     void sendReports() {
-        final JobLockHolder lock = JobLockHolder.getInstance(VERBOSE_DEBUG_REPORTING);
-        if (lock.tryLock()) {
-            try {
-                DatastoreManager datastoreManager =
-                        DatastoreManagerFactory.getDatastoreManager(getApplicationContext());
-                new DebugReportingJobHandler(
-                                datastoreManager,
-                                FlagsFactory.getFlags(),
-                                AdServicesLoggerImpl.getInstance(),
-                                ReportingStatus.UploadMethod.REGULAR,
-                                getApplicationContext())
-                        .performScheduledPendingReports();
-                return;
-            } finally {
-                lock.unlock();
-            }
+        JobLockHolder.getInstance(VERBOSE_DEBUG_REPORTING)
+                .runWithLock(
+                        "VerboseDebugReportingJobService",
+                        () -> {
+                            DatastoreManager datastoreManager =
+                                    DatastoreManagerFactory.getDatastoreManager();
+                            new DebugReportingJobHandler(
+                                            datastoreManager,
+                                            FlagsFactory.getFlags(),
+                                            AdServicesLoggerImpl.getInstance(),
+                                            ReportingStatus.UploadMethod.REGULAR,
+                                            getApplicationContext())
+                                    .performScheduledPendingReports();
+                        });
         }
-        LoggerFactory.getMeasurementLogger()
-                .d("VerboseDebugReportingJobService did not acquire the lock");
-    }
 
     @VisibleForTesting
     Future getFutureForTesting() {

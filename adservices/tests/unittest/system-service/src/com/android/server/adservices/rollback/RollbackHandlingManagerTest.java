@@ -33,35 +33,40 @@ import android.content.Context;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.android.adservices.shared.storage.BooleanFileDatastore;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.storage.AtomicFileDatastore;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.MockitoSession;
-import org.mockito.quality.Strictness;
+import org.mockito.Mock;
 
 import java.io.IOException;
 import java.nio.file.Files;
 
-public class RollbackHandlingManagerTest {
+public final class RollbackHandlingManagerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final Context PPAPI_CONTEXT = ApplicationProvider.getApplicationContext();
     private static final String BASE_DIR = PPAPI_CONTEXT.getFilesDir().getAbsolutePath();
 
     private static final int DATASTORE_VERSION = 339900900;
 
-    private BooleanFileDatastore mDatastore;
+    @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;
+
+    private AtomicFileDatastore mDatastore;
 
     @Before
     public void setup() {
         mDatastore =
-                new BooleanFileDatastore(
+                new AtomicFileDatastore(
                         PPAPI_CONTEXT.getFilesDir().getAbsolutePath(),
                         STORAGE_XML_IDENTIFIER,
                         DATASTORE_VERSION,
-                        VERSION_KEY);
+                        VERSION_KEY,
+                        mMockAdServicesErrorLogger);
     }
 
     @After
@@ -70,16 +75,10 @@ public class RollbackHandlingManagerTest {
     }
 
     @Test
+    @SpyStatic(Files.class)
     public void testGetRollbackHandlingDataStoreDir() throws IOException {
         // The Datastore is in the directory with the following format.
         // /data/system/adservices/user_id/rollback/
-
-        MockitoSession staticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(Files.class)
-                        .strictness(Strictness.LENIENT)
-                        .startMocking();
-
         ExtendedMockito.doReturn(true).when(() -> Files.exists(any()));
 
         assertThat(
@@ -101,17 +100,15 @@ public class RollbackHandlingManagerTest {
                 () ->
                         RollbackHandlingDatastoreLocationHelper
                                 .getRollbackHandlingDataStoreDirAndCreateDir(null, 0));
-
-        staticMockSession.finishMocking();
     }
 
     @Test
-    public void testGetOrCreateBooleanFileDatastore() throws IOException {
+    public void testGetOrCreateAtomicFileDatastore() throws IOException {
         RollbackHandlingManager rollbackHandlingManager =
                 RollbackHandlingManager.createRollbackHandlingManager(
                         BASE_DIR, /* userIdentifier */ 0, DATASTORE_VERSION);
-        BooleanFileDatastore datastore =
-                rollbackHandlingManager.getOrCreateBooleanFileDatastore(
+        AtomicFileDatastore datastore =
+                rollbackHandlingManager.getOrCreateAtomicFileDatastore(
                         AdServicesManager.MEASUREMENT_DELETION);
 
         // Assert that the DataStore is created.
@@ -151,8 +148,8 @@ public class RollbackHandlingManagerTest {
         RollbackHandlingManager rollbackHandlingManager =
                 RollbackHandlingManager.createRollbackHandlingManager(
                         BASE_DIR, /* userIdentifier= */ 0, DATASTORE_VERSION);
-        BooleanFileDatastore datastore =
-                rollbackHandlingManager.getOrCreateBooleanFileDatastore(
+        AtomicFileDatastore datastore =
+                rollbackHandlingManager.getOrCreateAtomicFileDatastore(
                         AdServicesManager.MEASUREMENT_DELETION);
         String prefix = "_";
 

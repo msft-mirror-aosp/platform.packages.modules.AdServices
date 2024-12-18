@@ -67,9 +67,34 @@ public class FetchCustomAudienceFixture {
                 DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(buyer));
     }
 
-    /** Returns a successful full JSON response. Optionally adds auction server request flags. */
+    /**
+     * Returns a valid Json string representation of a Custom Audience DB with invalid Ad Render
+     * Ids.
+     */
+    public static String getFullJsonResponseStringWithInvalidAdRenderId(AdTechIdentifier buyer)
+            throws JSONException {
+        return CustomAudienceBlobFixture.asJSONObjectString(
+                CustomAudienceFixture.VALID_OWNER,
+                buyer,
+                CustomAudienceFixture.VALID_NAME,
+                CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                CustomAudienceFixture.VALID_EXPIRATION_TIME,
+                CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer),
+                CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer),
+                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString(),
+                DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build(),
+                DBAdDataFixture.getValidDbAdDataListByBuyerWithInvalidAdRenderId(buyer));
+    }
+
+    /**
+     * Returns a successful full JSON response. Optionally adds auction server request flags and
+     * priority field.
+     */
     public static JSONObject getFullSuccessfulJsonResponse(
-            AdTechIdentifier buyer, boolean auctionServerRequestFlagsEnabled) throws JSONException {
+            AdTechIdentifier buyer,
+            boolean auctionServerRequestFlagsEnabled,
+            boolean sellerConfigurationEnabled)
+            throws JSONException {
         JSONObject result =
                 CustomAudienceBlobFixture.asJSONObject(
                         CustomAudienceFixture.VALID_OWNER,
@@ -87,6 +112,11 @@ public class FetchCustomAudienceFixture {
             result =
                     CustomAudienceBlobFixture.addAuctionServerRequestFlags(
                             result, ImmutableList.of(OMIT_ADS_VALUE), false);
+        }
+        if (sellerConfigurationEnabled) {
+            result =
+                    CustomAudienceBlobFixture.addPriority(
+                            result, CustomAudienceFixture.VALID_PRIORITY_1, false);
         }
         return result;
     }
@@ -164,6 +194,32 @@ public class FetchCustomAudienceFixture {
                         DBAdDataFixture.getValidDbAdDataListByBuyer(
                                 AdTechIdentifier.fromString("localhost")))
                 .setAuctionServerRequestFlags(auctionServerRequestFlags)
+                .build();
+    }
+
+    /** Creates a full successful {@link DBCustomAudience} with priority. */
+    public static DBCustomAudience getFullSuccessfulDBCustomAudienceWithPriority(double priority)
+            throws JSONException {
+        return new DBCustomAudience.Builder()
+                .setBuyer(AdTechIdentifier.fromString("localhost"))
+                .setOwner(CustomAudienceFixture.VALID_OWNER)
+                .setName(CustomAudienceFixture.VALID_NAME)
+                .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setLastAdsAndBiddingDataUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setBiddingLogicUri(
+                        CustomAudienceFixture.getValidBiddingLogicUriByBuyer(
+                                AdTechIdentifier.fromString("localhost")))
+                .setTrustedBiddingData(
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
+                                        AdTechIdentifier.fromString("localhost"))
+                                .build())
+                .setAds(
+                        DBAdDataFixture.getValidDbAdDataListByBuyer(
+                                AdTechIdentifier.fromString("localhost")))
+                .setPriority(priority)
                 .build();
     }
 }

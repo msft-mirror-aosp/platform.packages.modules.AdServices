@@ -19,7 +19,6 @@ package android.adservices.test.scenario.adservices.ui;
 import android.content.Context;
 import android.os.Trace;
 import android.platform.test.scenario.annotation.Scenario;
-import android.os.Trace;
 
 import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -27,11 +26,9 @@ import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
-import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
@@ -52,15 +49,13 @@ public class UiSettingsMainPage {
     @Rule
     public final AdServicesFlagsSetterRule flags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setCompatModeFlags()
-                    .setDebugUxFlagsForRvcUx()
-                    .setFlag(FlagsConstants.KEY_ENABLE_ADEXT_DATA_SERVICE_DEBUG_PROXY, "false");
+                    .setCompatModeFlags();
 
     @Before
     public void setup() throws Exception {
-        UiUtils.setFlipFlow(false);
-        UiUtils.setAsEuDevice();
-        UiUtils.enableGa();
+        UiUtils.setFlipFlow(flags, false);
+        UiUtils.setAsEuDevice(flags);
+        UiUtils.enableGa(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
         // Initialize UiDevice instance
@@ -75,14 +70,12 @@ public class UiSettingsMainPage {
     @Test
     public void testSettingsPage() throws Exception {
         UiConstants.UX ux = UiConstants.UX.GA_UX;
-        if( SdkLevel.isAtLeastR() && !SdkLevel.isAtLeastS() ) {
-            ux = UiConstants.UX.RVC_UX;
-        }
 
         Trace.beginSection("NotificationTriggerEvent");
         AdservicesWorkflows.testSettingsPageFlow(
                 sContext,
                 sDevice,
+                flags,
                 ux,
                 /* isOptIn= */ true,
                 /* isFlipConsent= */ true,

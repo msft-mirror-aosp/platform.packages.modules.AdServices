@@ -36,17 +36,18 @@ java_defaults {
         "SdkSandboxTestUtils",
         "SdkSandbox-java-lib",
     ],
+    jarjar_rules: ":test-service-jarjar-rules",
     jni_libs: [
         // Required for ExtendedMockito
         "libdexmakerjvmtiagent",
         "libstaticjvmtiagent",
     ],
     libs: [
-        "android.test.base",
-        "android.test.mock",
-        "android.test.runner",
+        "android.test.base.stubs.system",
+        "android.test.mock.stubs.system",
+        "android.test.runner.stubs.system",
         "framework-sdksandbox.impl",
-        "framework-configinfrastructure",
+        "framework-configinfrastructure.stubs.module_lib",
     ],
     // Test coverage system runs on different devices. Need to
     // compile for all architecture.
@@ -88,6 +89,7 @@ android_test {
         "services.core",
         "modules-utils-build",
         "sdk_sandbox_flags_lib",
+        "adservices_flags_lib",
     ],
     data: [
         ":SampleCodeProviderApp",

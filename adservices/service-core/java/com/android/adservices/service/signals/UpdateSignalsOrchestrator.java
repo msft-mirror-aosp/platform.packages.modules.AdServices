@@ -22,6 +22,8 @@ import android.net.Uri;
 
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 
 import com.google.common.util.concurrent.FluentFuture;
 
@@ -67,14 +69,25 @@ public class UpdateSignalsOrchestrator {
      * @return A future for running the orchestration, with no return value
      */
     public FluentFuture<Object> orchestrateUpdate(
-            Uri uri, AdTechIdentifier adtech, String packageName, DevContext devContext) {
+            Uri uri,
+            AdTechIdentifier adtech,
+            String packageName,
+            DevContext devContext,
+            UpdateSignalsApiCalledStats.Builder jsonProcessingStatsBuilder,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
         mAdTechUriValidator.validate(uri);
         FluentFuture<JSONObject> jsonFuture =
                 mUpdatesDownloader.getUpdateJson(uri, packageName, devContext);
         return jsonFuture.transform(
                 x -> {
                     mUpdateProcessingOrchestrator.processUpdates(
-                            adtech, packageName, mClock.instant(), x, devContext);
+                            adtech,
+                            packageName,
+                            mClock.instant(),
+                            x,
+                            devContext,
+                            jsonProcessingStatsBuilder,
+                            updateSignalsProcessReportedLogger);
                     return null;
                 },
                 mBackgroundExecutor);

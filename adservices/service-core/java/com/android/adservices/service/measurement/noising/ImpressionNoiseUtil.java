@@ -20,7 +20,6 @@ import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -29,7 +28,7 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class ImpressionNoiseUtil {
 
-    private ImpressionNoiseUtil() {}
+    public ImpressionNoiseUtil() {}
 
     /**
      * Randomly generate report configs based on noise params
@@ -38,7 +37,7 @@ public final class ImpressionNoiseUtil {
      * @param rand random number generator
      * @return list of reporting configs
      */
-    public static List<int[]> selectRandomStateAndGenerateReportConfigs(
+    public List<int[]> selectRandomStateAndGenerateReportConfigs(
             ImpressionNoiseParams noiseParams, ThreadLocalRandom rand) {
         // Get total possible combinations
         long numCombinations =
@@ -53,7 +52,7 @@ public final class ImpressionNoiseUtil {
     }
 
     @VisibleForTesting
-    static List<int[]> getReportConfigsForSequenceIndex(
+    public List<int[]> getReportConfigsForSequenceIndex(
             ImpressionNoiseParams noiseParams, long sequenceIndex) {
         List<int[]> reportConfigs = new ArrayList<>();
         // Get the configuration for the sequenceIndex
@@ -100,7 +99,7 @@ public final class ImpressionNoiseUtil {
      * @param rand random number generator
      * @return list of reporting configs
      */
-    public static List<int[]> selectFlexEventReportRandomStateAndGenerateReportConfigs(
+    public List<int[]> selectFlexEventReportRandomStateAndGenerateReportConfigs(
             TriggerSpecs triggerSpecs, int destinationMultiplier, ThreadLocalRandom rand) {
 
         // Assumes trigger specs already built privacy parameters.
@@ -113,15 +112,14 @@ public final class ImpressionNoiseUtil {
         }
         long numStates =
                 Combinatorics.getNumStatesFlexApi(
-                        params[0][0], updatedPerTypeNumWindowList, params[2]);
+                        params[0][0], updatedPerTypeNumWindowList, params[2], Long.MAX_VALUE);
         long sequenceIndex = nextLong(rand, numStates);
         List<Combinatorics.AtomReportState> rawFakeReports =
                 Combinatorics.getReportSetBasedOnRank(
                         params[0][0],
                         updatedPerTypeNumWindowList,
                         params[2],
-                        sequenceIndex,
-                        new HashMap<>());
+                        sequenceIndex);
         List<int[]> fakeReportConfigs = new ArrayList<>();
         for (Combinatorics.AtomReportState rawFakeReport : rawFakeReports) {
             int[] fakeReportConfig = new int[3];
@@ -133,7 +131,7 @@ public final class ImpressionNoiseUtil {
         return fakeReportConfigs;
     }
 
-    /** Wrapper for calls to ThreadLocalRandom visible for testing */
+    /** Wrapper for calls to ThreadLocalRandom. Bound must be positive. */
     @VisibleForTesting
     public static long nextLong(ThreadLocalRandom rand, long bound) {
         return rand.nextLong(bound);

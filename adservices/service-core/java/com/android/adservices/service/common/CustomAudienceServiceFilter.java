@@ -30,33 +30,31 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 
 import java.util.Objects;
 
 /** Composite filter for CustomAudienceService request. */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     public CustomAudienceServiceFilter(
             @NonNull Context context,
-            @NonNull ConsentManager consentManager,
+            @NonNull FledgeConsentFilter fledgeConsentFilter,
             @NonNull Flags flags,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull FledgeAuthorizationFilter fledgeAuthorizationFilter,
             @NonNull FledgeAllowListsFilter fledgeAllowListsFilter,
-            @NonNull Throttler throttler) {
+            @NonNull FledgeApiThrottleFilter fledgeApiThrottleFilter) {
         super(
                 context,
-                consentManager,
+                fledgeConsentFilter,
                 flags,
                 appImportanceFilter,
                 fledgeAuthorizationFilter,
                 fledgeAllowListsFilter,
-                throttler);
+                fledgeApiThrottleFilter);
     }
 
     /**
@@ -67,6 +65,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
      * @param enforceConsent whether to enforce per-app consent
+     * @param enforceNotificationShown whether to enforce a UX notification check
      * @param callerUid caller's uid from the Binder thread
      * @param apiName the id of the api being called
      * @param apiKey api-specific throttler key
@@ -86,6 +85,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
             @NonNull String callerPackageName,
             boolean enforceForeground,
             boolean enforceConsent,
+            boolean enforceNotificationShown,
             int callerUid,
             int apiName,
             @NonNull Throttler.ApiKey apiKey,
@@ -98,12 +98,14 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
         assertCallerPackageName(callerPackageName, callerUid, apiName);
 
         sLogger.v("Validating API is not throttled.");
-        assertCallerNotThrottled(callerPackageName, apiKey);
+        assertCallerNotThrottled(callerPackageName, apiKey, apiName);
 
         if (enforceForeground) {
             sLogger.v("Checking caller is in foreground.");
             assertForegroundCaller(callerUid, apiName);
         }
+        assertEnrollmentShouldBeScheduled(
+                enforceConsent, enforceNotificationShown, callerPackageName, apiName);
         if (!Objects.isNull(adTech)) {
             sLogger.v("Checking ad tech is allowed to use FLEDGE.");
             assertFledgeEnrollment(
@@ -115,7 +117,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
 
         if (enforceConsent) {
             sLogger.v("Validating per-app user consent.");
-            assertAndPersistCallerHasUserConsentForApp(callerPackageName);
+            assertAndPersistCallerHasUserConsentForApp(callerPackageName, apiName);
         }
     }
 
@@ -126,6 +128,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
      * @param callerPackageName caller package name to be validated
      * @param enforceForeground whether to enforce a foreground check
      * @param enforceConsent whether to enforce per-app consent
+     * @param enforceNotificationShown whether to enforce a UX notification check
      * @param callerUid caller's uid from the Binder thread
      * @param apiName the id of the api being called
      * @param apiKey api-specific throttler key
@@ -145,6 +148,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
             boolean disableEnrollmentCheck,
             boolean enforceForeground,
             boolean enforceConsent,
+            boolean enforceNotificationShown,
             int callerUid,
             int apiName,
             @NonNull Throttler.ApiKey apiKey,
@@ -157,12 +161,15 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
         assertCallerPackageName(callerPackageName, callerUid, apiName);
 
         sLogger.v("Validating API is not throttled.");
-        assertCallerNotThrottled(callerPackageName, apiKey);
+        assertCallerNotThrottled(callerPackageName, apiKey, apiName);
 
         if (enforceForeground) {
             sLogger.v("Checking caller is in foreground.");
             assertForegroundCaller(callerUid, apiName);
         }
+
+        assertEnrollmentShouldBeScheduled(
+                enforceConsent, enforceNotificationShown, callerPackageName, apiName);
 
         AdTechIdentifier adTech;
         if (disableEnrollmentCheck) {
@@ -180,7 +187,7 @@ public class CustomAudienceServiceFilter extends AbstractFledgeServiceFilter {
 
         if (enforceConsent) {
             sLogger.v("Validating per-app user consent.");
-            assertAndPersistCallerHasUserConsentForApp(callerPackageName);
+            assertAndPersistCallerHasUserConsentForApp(callerPackageName, apiName);
         }
 
         return adTech;

@@ -25,19 +25,17 @@ import static org.junit.Assume.assumeTrue;
 import android.app.sdksandbox.SdkSandboxManager;
 import android.app.sdksandbox.testutils.FakeLoadSdkCallback;
 import android.app.sdksandbox.testutils.SdkLifecycleHelper;
-import android.app.sdksandbox.testutils.SdkSandboxDeviceSupportedRule;
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.provider.DeviceConfig;
 
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.compatibility.common.util.DeviceConfigStateChangerRule;
 import com.android.ctssdkprovider.ICtsSdkProviderApi;
 import com.android.modules.utils.build.SdkLevel;
+import com.android.server.sdksandbox.SandboxKillerBeforeTest;
 
 import org.junit.After;
 import org.junit.Before;
@@ -52,20 +50,8 @@ public class CustomizedSdkContextTest extends SandboxKillerBeforeTest {
     private static final String SDK_NAME_2 = "com.android.emptysdkprovider";
 
     @Rule(order = 0)
-    public final SdkSandboxDeviceSupportedRule supportedRule = new SdkSandboxDeviceSupportedRule();
-
-    @Rule(order = 1)
     public final ActivityScenarioRule<TestActivity> activityScenarioRule =
             new ActivityScenarioRule<>(TestActivity.class);
-
-    @Rule(order = 2)
-    public final DeviceConfigStateChangerRule customizedSdkContextEnabledRule =
-            new DeviceConfigStateChangerRule(
-                    androidx.test.platform.app.InstrumentationRegistry.getInstrumentation()
-                            .getTargetContext(),
-                    DeviceConfig.NAMESPACE_ADSERVICES,
-                    "sdksandbox_customized_sdk_context_enabled",
-                    "true");
 
     private final Context mContext = InstrumentationRegistry.getInstrumentation().getContext();
     private final SdkLifecycleHelper mSdkLifecycleHelper = new SdkLifecycleHelper(mContext);
@@ -75,6 +61,8 @@ public class CustomizedSdkContextTest extends SandboxKillerBeforeTest {
 
     @Before
     public void setup() {
+        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
+
         mSdkSandboxManager = mContext.getSystemService(SdkSandboxManager.class);
         activityScenarioRule.getScenario();
     }
@@ -87,16 +75,12 @@ public class CustomizedSdkContextTest extends SandboxKillerBeforeTest {
 
     @Test
     public void testStoragePaths() throws Exception {
-        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
-
         loadSdk();
         mSdk.testStoragePaths();
     }
 
     @Test
     public void testSdkPermissions() throws Exception {
-        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
-
         // Collect list of permissions requested by sdk sandbox
         final PackageManager pm =
                 InstrumentationRegistry.getInstrumentation().getContext().getPackageManager();
@@ -127,8 +111,6 @@ public class CustomizedSdkContextTest extends SandboxKillerBeforeTest {
     /** Test that sdk context instances are different while application context is same */
     @Test
     public void testSdkContextInstances() throws Exception {
-        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
-
         loadEmptySdk(); // So that sandbox does not die in the middle of test
 
         loadSdk();
@@ -150,8 +132,6 @@ public class CustomizedSdkContextTest extends SandboxKillerBeforeTest {
     /** Test that sdk context uses same userId as application context */
     @Test
     public void testSdkContextUserId() throws Exception {
-        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
-
         loadSdk();
         int contextUserId = mSdk.getContextUserId();
 
@@ -160,24 +140,18 @@ public class CustomizedSdkContextTest extends SandboxKillerBeforeTest {
 
     @Test
     public void testClassloader() throws Exception {
-        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
-
         loadSdk();
         mSdk.checkClassloaders();
     }
 
     @Test
     public void testResourcesAndAssets() throws Exception {
-        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
-
         loadSdk();
         mSdk.checkResourcesAndAssets();
     }
 
     @Test
     public void testGetPackageName() throws Exception {
-        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
-
         loadSdk();
         final PackageManager pm =
                 InstrumentationRegistry.getInstrumentation().getContext().getPackageManager();
@@ -186,8 +160,6 @@ public class CustomizedSdkContextTest extends SandboxKillerBeforeTest {
 
     @Test
     public void testGetOpPackageName() throws Exception {
-        assumeTrue("Test is meant for U+ devices only", SdkLevel.isAtLeastU());
-
         loadSdk();
         final PackageManager pm =
                 InstrumentationRegistry.getInstrumentation().getContext().getPackageManager();

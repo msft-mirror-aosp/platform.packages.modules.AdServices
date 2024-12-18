@@ -15,11 +15,28 @@
 import xml.etree.ElementTree as ET
 import datetime
 import os
+from os import listdir
+from os.path import isfile, join
+from enum import Enum
+import argparse
+import re
+
+
+class ResourceCategory(Enum):
+    Value = 1
+    File = 2
+    Id = 3
 
 
 class AdServicesUiUtil:
     PUBLIC_XML_DIR = '../apk/publicres/values/public.xml'
     STRINGS_XML_DIR = '../apk/res/values/strings.xml'
+    COLORS_XML_DIR = '../apk/res/values/colors.xml'
+    DIMENS_XML_DIR = '../apk/res/values/dimens.xml'
+    INTEGERS_XML_DIR = '../apk/res/values/integers.xml'
+    STYLES_XML_DIR = '../apk/res/values/styles.xml'
+    DRAWABLE_XML_DIR = '../apk/res/drawable/'
+    LAYOUT_XML_DIR = '../apk/res/layout/'
     COPYRIGHT_TEXT = f'''<?xml version="1.0" encoding="utf-8"?>
 <!-- Copyright (C) {datetime.date.today().year} The Android Open Source Project
 
@@ -40,18 +57,37 @@ class AdServicesUiUtil:
     def __init__(self):
         pass
 
-    def _get_min_id(self, existing_mapping):
-        return int(min(existing_mapping.values()), 0)
+    def _get_next_id(self, existing_mapping, map_start):
+        if existing_mapping:
+            return int(min(existing_mapping.values()), 0) - 1
+        else:
+            return int(map_start, 0)
 
-    def _get_existing_tree(self, dir):
+    def _get_existing_tree(self, dir, node_type):
         if not os.path.exists(dir):
             return None, {}
         else:
             root = ET.parse(dir).getroot()
             return root, {
                 node.attrib['name']: node.attrib['id']
-                for node in root
+                for node in root if node.attrib['type'] == node_type
             }
+
+    def _get_updated_resources(self, res_category, res_xml_dir):
+        match res_category:
+            case ResourceCategory.Value:
+                return [node.attrib['name'] for node in ET.parse(res_xml_dir).getroot()]
+            case ResourceCategory.File:
+                return [file.split('.')[0] for file in listdir(res_xml_dir) if
+                        isfile(join(res_xml_dir, file))]
+            case ResourceCategory.Id:
+                new_strings = set()
+                for file in os.scandir(res_xml_dir):
+                    for child in ET.parse(file.path).getroot().iter():
+                        id_key = [key for key in child.attrib if re.match(r'\{.*\}id', key)]
+                        if len(id_key) > 0:
+                            new_strings.add(child.attrib[id_key[0]].split('/')[1])
+                return new_strings
 
     def _overwrite_public_xml(self, root, public_xml_dir):
         if os.path.exists(public_xml_dir):
@@ -62,32 +98,70 @@ class AdServicesUiUtil:
             file.write(self.COPYRIGHT_TEXT)
             file.write(ET.tostring(root, encoding="unicode"))
 
-    def update_public_xml(self, strings_xml_dir=STRINGS_XML_DIR, public_xml_dir=PUBLIC_XML_DIR):
-        if not os.path.exists(strings_xml_dir):
+    def update_public_xml(self, res_xml_dir, res_type, res_category, map_start,
+                          public_xml_dir=PUBLIC_XML_DIR):
+        if not os.path.exists(res_xml_dir):
             return
 
-        new_strings = [node.attrib['name'] for node in ET.parse(strings_xml_dir).getroot()]
-        root, mapping = self._get_existing_tree(public_xml_dir)
+        res_all = self._get_updated_resources(res_category, res_xml_dir)
+        root, mapping = self._get_existing_tree(public_xml_dir, res_type)
 
-        added_strings = [string for string in new_strings if string not in mapping]
-        # TO-DO: add code to remove exsting elements when needed.
-        new_strings = set(new_strings)
-        deleted_strings = set(string for string in mapping if string not in new_strings)
+        # resources of this type already exist in public.xml
+        if mapping:
+            res_new = [res for res in res_all if res not in mapping]
+            # TO-DO: add code to remove exsting elements when needed.
+            res_all = set(res_all)
+            deleted_res = set(res for res in mapping if res not in res_all)
+        # new type of resources are being added in public.xml
+        else:
+            res_new = res_all
 
-        if not added_strings:
+        if not res_new:
             return
 
-        i_min = self._get_min_id(mapping)
-        for string in added_strings:
-            i_min -= 1
+        i_min = self._get_next_id(mapping, map_start)
+        for res in res_new:
             added_element = ET.SubElement(root, 'public')
-            added_element.set('type', 'string')
-            added_element.set('name', string)
+            added_element.set('type', res_type)
+            added_element.set('name', res)
             added_element.set('id', hex(i_min))
+            i_min -= 1
 
         self._overwrite_public_xml(root, public_xml_dir)
+
+    def update_adservices_public_xml(self):
+        parser = argparse.ArgumentParser()
+        parser.add_argument("--enable_ota_layout",
+                            help="Enable adding all resource types to public.xml for OTA layout updates",
+                            action='store_true', default=False)
+        args = parser.parse_args()
+        util.update_public_xml(res_xml_dir=self.STRINGS_XML_DIR,
+                               res_type='string', res_category=ResourceCategory.Value,
+                               map_start=hex(0x7f017fff))
+        if args.enable_ota_layout:
+            util.update_public_xml(res_xml_dir=self.DIMENS_XML_DIR,
+                                   res_type='dimen', res_category=ResourceCategory.Value,
+                                   map_start=hex(0x7f027fff))
+            util.update_public_xml(res_xml_dir=self.COLORS_XML_DIR,
+                                   res_type='color', res_category=ResourceCategory.Value,
+                                   map_start=hex(0x7f037fff))
+            util.update_public_xml(res_xml_dir=self.INTEGERS_XML_DIR,
+                                   res_type='integer', res_category=ResourceCategory.Value,
+                                   map_start=hex(0x7f047fff))
+            util.update_public_xml(res_xml_dir=self.STYLES_XML_DIR,
+                                   res_type='style', res_category=ResourceCategory.Value,
+                                   map_start=hex(0x7f057fff))
+            util.update_public_xml(res_xml_dir=self.DRAWABLE_XML_DIR,
+                                   res_type='drawable', res_category=ResourceCategory.File,
+                                   map_start=hex(0x7f067fff))
+            util.update_public_xml(res_xml_dir=self.LAYOUT_XML_DIR,
+                                   res_type='layout', res_category=ResourceCategory.File,
+                                   map_start=hex(0x7f077fff))
+            util.update_public_xml(res_xml_dir=self.LAYOUT_XML_DIR, res_type='id',
+                                   res_category=ResourceCategory.Id,
+                                   map_start=hex(0x7f087fff))
 
 
 if __name__ == '__main__':
     util = AdServicesUiUtil()
-    util.update_public_xml()
+    util.update_adservices_public_xml()

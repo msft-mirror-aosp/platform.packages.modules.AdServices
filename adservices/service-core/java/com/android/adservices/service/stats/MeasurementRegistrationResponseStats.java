@@ -35,6 +35,10 @@ public class MeasurementRegistrationResponseStats {
     private final String mSourceRegistrant;
     private final int mRetryCount;
     private final boolean mIsRedirectOnly;
+    private final boolean mIsPARequest;
+    private final int mNumDeletedEntities;
+    private final boolean mIsEventLevelEpsilonEnabled;
+    private final boolean mIsTriggerAggregatableValueFiltersConfigured;
 
     private MeasurementRegistrationResponseStats(Builder builder) {
         mCode = builder.mCode;
@@ -49,6 +53,11 @@ public class MeasurementRegistrationResponseStats {
         mSourceRegistrant = builder.mSourceRegistrant;
         mRetryCount = builder.mRetryCount;
         mIsRedirectOnly = builder.mIsRedirectOnly;
+        mIsPARequest = builder.mIsPARequest;
+        mNumDeletedEntities = builder.mNumDeletedEntities;
+        mIsEventLevelEpsilonEnabled = builder.mIsEventLevelEpsilonEnabled;
+        mIsTriggerAggregatableValueFiltersConfigured =
+                builder.mIsTriggerAggregatableValueFiltersConfigured;
     }
 
     @Override
@@ -67,7 +76,12 @@ public class MeasurementRegistrationResponseStats {
                 && mRegistrationDelay == that.mRegistrationDelay
                 && Objects.equals(mSourceRegistrant, that.mSourceRegistrant)
                 && mRetryCount == that.mRetryCount
-                && mIsRedirectOnly == that.mIsRedirectOnly;
+                && mIsRedirectOnly == that.mIsRedirectOnly
+                && mIsPARequest == that.mIsPARequest
+                && mNumDeletedEntities == that.mNumDeletedEntities
+                && mIsEventLevelEpsilonEnabled == that.mIsEventLevelEpsilonEnabled
+                && mIsTriggerAggregatableValueFiltersConfigured
+                        == that.mIsTriggerAggregatableValueFiltersConfigured;
     }
 
     @Override
@@ -84,7 +98,11 @@ public class MeasurementRegistrationResponseStats {
                 mRegistrationDelay,
                 mSourceRegistrant,
                 mRetryCount,
-                mIsRedirectOnly);
+                mIsRedirectOnly,
+                mIsPARequest,
+                mNumDeletedEntities,
+                mIsEventLevelEpsilonEnabled,
+                mIsTriggerAggregatableValueFiltersConfigured);
     }
 
     @Override
@@ -114,6 +132,14 @@ public class MeasurementRegistrationResponseStats {
                 + mRetryCount
                 + ", mIsRedirectOnly="
                 + mIsRedirectOnly
+                + ", mIsPARequest="
+                + mIsPARequest
+                + ", mNumDeletedEntities="
+                + mNumDeletedEntities
+                + ", mIsEventLevelEpsilonEnabled="
+                + mIsEventLevelEpsilonEnabled
+                + ", mIsTriggerAggregatableValueFiltersConfigured="
+                + mIsTriggerAggregatableValueFiltersConfigured
                 + '}';
     }
 
@@ -166,6 +192,22 @@ public class MeasurementRegistrationResponseStats {
         return mIsRedirectOnly;
     }
 
+    public boolean isPARequest() {
+        return mIsPARequest;
+    }
+
+    public int getNumDeletedEntities() {
+        return mNumDeletedEntities;
+    }
+
+    public boolean isEventLevelEpsilonEnabled() {
+        return mIsEventLevelEpsilonEnabled;
+    }
+
+    public boolean isTriggerAggregatableValueFiltersConfigured() {
+        return mIsTriggerAggregatableValueFiltersConfigured;
+    }
+
     /** Builder for {@link MeasurementRegistrationResponseStats}. */
     public static final class Builder {
         private final int mCode;
@@ -180,6 +222,10 @@ public class MeasurementRegistrationResponseStats {
         private final String mSourceRegistrant;
         private final int mRetryCount;
         private final boolean mIsRedirectOnly;
+        private final boolean mIsPARequest;
+        private final int mNumDeletedEntities;
+        private final boolean mIsEventLevelEpsilonEnabled;
+        private final boolean mIsTriggerAggregatableValueFiltersConfigured;
 
         public Builder(
                 int code,
@@ -192,7 +238,11 @@ public class MeasurementRegistrationResponseStats {
                 long registrationDelay,
                 String sourceRegistrant,
                 int retryCount,
-                boolean isRedirectOnly) {
+                boolean isRedirectOnly,
+                boolean isPARequest,
+                int numDeletedEntities,
+                boolean isEventLevelEpsilonEnabled,
+                boolean isTriggerAggregatableValueFiltersConfigured) {
             mCode = code;
             mRegistrationType = registrationType;
             mResponseSize = responseSize;
@@ -204,6 +254,11 @@ public class MeasurementRegistrationResponseStats {
             mSourceRegistrant = sourceRegistrant;
             mRetryCount = retryCount;
             mIsRedirectOnly = isRedirectOnly;
+            mIsPARequest = isPARequest;
+            mNumDeletedEntities = numDeletedEntities;
+            mIsEventLevelEpsilonEnabled = isEventLevelEpsilonEnabled;
+            mIsTriggerAggregatableValueFiltersConfigured =
+                    isTriggerAggregatableValueFiltersConfigured;
         }
 
         /** See {@link MeasurementRegistrationResponseStats#getAdTechDomain()} . */

@@ -20,6 +20,7 @@ import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_D
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 import static android.adservices.adselection.ReportEventRequest.REPORT_EVENT_MAX_INTERACTION_DATA_SIZE_B;
 
+import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.common.FledgeAuthorizationFilter.AdTechNotAllowedException;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 
@@ -29,7 +30,6 @@ import android.adservices.adselection.ReportEventRequest;
 import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
 import android.adservices.common.AdServicesStatusUtils;
-import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
 import android.annotation.NonNull;
 import android.net.Uri;
@@ -65,7 +65,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /** Encapsulates the Event Reporting logic */
-// TODO(b/269798827): Enable for R.
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class EventReporter {
     public static final String NO_MATCH_FOUND_IN_AD_SELECTION_DB =
@@ -152,6 +151,7 @@ public abstract class EventReporter {
                     input.getCallerPackageName(),
                     mFlags.getEnforceForegroundStatusForFledgeReportInteraction(),
                     true,
+                    !mFlags.getConsentNotificationDebugMode(),
                     mCallerUid,
                     LOGGING_API_NAME,
                     Throttler.ApiKey.FLEDGE_API_REPORT_INTERACTION,
@@ -191,12 +191,21 @@ public abstract class EventReporter {
                                                             adSelectionId,
                                                             interactionKey,
                                                             destination)) {
+                                                sLogger.v(
+                                                        "Found registered ad beacons for"
+                                                                + " id:%s, key:%s and dest:%s",
+                                                        adSelectionId, interactionKey, destination);
                                                 resultingReportingUris.add(
                                                         mAdSelectionEntryDao
                                                                 .getRegisteredAdInteractionUri(
                                                                         adSelectionId,
                                                                         interactionKey,
                                                                         destination));
+                                            } else {
+                                                sLogger.w(
+                                                        "Registered ad beacon URIs not found for"
+                                                                + " id:%s, key:%s and dest:%s",
+                                                        adSelectionId, interactionKey, destination);
                                             }
                                         }
                                     }
@@ -217,9 +226,8 @@ public abstract class EventReporter {
 
                                 for (Uri uri : reportingUris) {
                                     try {
-                                        mFledgeAuthorizationFilter.assertAdTechEnrolled(
-                                                AdTechIdentifier.fromString(uri.getHost()),
-                                                LOGGING_API_NAME);
+                                        mFledgeAuthorizationFilter.assertAdTechFromUriEnrolled(
+                                                uri, LOGGING_API_NAME, API_AD_SELECTION);
                                         validatedUris.add(uri);
                                     } catch (AdTechNotAllowedException exception) {
                                         sLogger.d(
@@ -230,6 +238,7 @@ public abstract class EventReporter {
                                                         uri));
                                     }
                                 }
+                                sLogger.v("Validated uris: %s", validatedUris);
                                 return validatedUris;
                             }
                         }));

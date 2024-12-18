@@ -23,8 +23,8 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.ValidatorUtil;
 import com.android.modules.utils.build.SdkLevel;
 
@@ -34,8 +34,11 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 public class CommonFixture {
@@ -47,7 +50,7 @@ public class CommonFixture {
     public static final Set<String> PACKAGE_SET =
             new HashSet<>(Arrays.asList(TEST_PACKAGE_NAME_1, TEST_PACKAGE_NAME_2));
 
-    public static final Flags FLAGS_FOR_TEST = FlagsFactory.getFlagsForTest();
+    public static final Flags FLAGS_FOR_TEST = FakeFlagsFactory.getFlagsForTest();
 
     public static final Instant FIXED_NOW = Instant.now();
     public static final Instant FIXED_NOW_TRUNCATED_TO_MILLI =
@@ -101,7 +104,8 @@ public class CommonFixture {
             try {
                 Thread.sleep(wakeupTime - currentTime);
             } catch (InterruptedException ignored) {
-
+                Log.w(LOG_TAG, "Interrupted while sleeping");
+                Thread.currentThread().interrupt();
             }
             currentTime = System.currentTimeMillis();
         }
@@ -121,5 +125,31 @@ public class CommonFixture {
                 return "android.adservices.tests";
             }
         }
+    }
+
+    /** Returns a random alphanumeric string of length n. */
+    public static String getAlphaNumericString(int n) {
+        String AlphaNumericString =
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "abcdefghijklmnopqrstuvxyz";
+
+        StringBuilder sb = new StringBuilder(n);
+
+        for (int i = 0; i < n; i++) {
+            int index = (int) (AlphaNumericString.length() * Math.random());
+
+            // add Character one by one in end of sb
+            sb.append(AlphaNumericString.charAt(index));
+        }
+        return sb.toString();
+    }
+
+    /** Creates a list of {@code AdTechIdentifier} with N amountOfBuyers */
+    public static List<AdTechIdentifier> createNAmountOfBuyers(int amountOfBuyers) {
+        List<AdTechIdentifier> buyers = new ArrayList<>();
+        for (int b = 1; b <= amountOfBuyers; b++) {
+            String buyerName = String.format(Locale.ENGLISH, "test%d.com", b);
+            buyers.add(AdTechIdentifier.fromString(buyerName));
+        }
+        return buyers;
     }
 }

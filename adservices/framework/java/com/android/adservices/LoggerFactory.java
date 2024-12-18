@@ -28,11 +28,13 @@ import java.util.Locale;
  *
  * @hide
  */
-public class LoggerFactory {
-
+public final class LoggerFactory {
+    // NOTE: new log tags here also need to add to setAllLogcatTags() in
+    // AbstractAdServicesFlagsSetterRule class
     public static final String TAG = "adservices";
     public static final String TOPICS_TAG = "adservices.topics";
     public static final String FLEDGE_TAG = "adservices.fledge";
+    public static final String KANON_TAG = "adservices.kanon";
     public static final String MEASUREMENT_TAG = "adservices.measurement";
     public static final String UI_TAG = "adservices.ui";
     public static final String ADID_TAG = "adservices.adid";
@@ -41,6 +43,7 @@ public class LoggerFactory {
     private static final Logger sLogger = new Logger(TAG);
     private static final Logger sTopicsLogger = new Logger(TOPICS_TAG);
     private static final Logger sFledgeLogger = new Logger(FLEDGE_TAG);
+    private static final Logger sKAnonLogger = new Logger(KANON_TAG);
     private static final Logger sMeasurementLogger = new Logger(MEASUREMENT_TAG);
     private static final Logger sUILogger = new Logger(UI_TAG);
     private static final Logger sAdIDLogger = new Logger(ADID_TAG);
@@ -56,6 +59,10 @@ public class LoggerFactory {
 
     public static Logger getFledgeLogger() {
         return sFledgeLogger;
+    }
+
+    public static Logger getKAnonLogger() {
+        return sKAnonLogger;
     }
 
     public static Logger getMeasurementLogger() {
@@ -79,11 +86,11 @@ public class LoggerFactory {
      *
      * @hide
      */
-    public static class Logger {
+    public static final class Logger {
         private final String mTag;
 
-        private Logger(String mTag) {
-            this.mTag = mTag;
+        private Logger(String tag) {
+            mTag = tag;
         }
 
         /** Log the message as VERBOSE. Return The number of bytes written. */
@@ -150,7 +157,7 @@ public class LoggerFactory {
             return 0;
         }
 
-        /** Log the message as ERROR. Return The number of bytes written */
+        /** Log the message as WARNING. Return The number of bytes written */
         public int w(String msg) {
             if (Log.isLoggable(mTag, Log.WARN)) {
                 return Log.w(mTag, msg);
@@ -259,6 +266,11 @@ public class LoggerFactory {
             @SuppressWarnings("FormatStringAnnotation")
             int result = e(tr, msg);
             return result;
+        }
+
+        @Override
+        public String toString() {
+            return "Logger[tag=" + mTag + "]";
         }
 
         private static String format(String format, Object... args) {

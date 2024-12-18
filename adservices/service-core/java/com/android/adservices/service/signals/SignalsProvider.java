@@ -21,7 +21,8 @@ import android.adservices.common.AdTechIdentifier;
 import java.util.List;
 import java.util.Map;
 
-interface SignalsProvider {
+/** Provides signals for a given buyer. */
+public interface SignalsProvider {
     /**
      * Retrieves signals for a given buyer.
      *

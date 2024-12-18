@@ -18,31 +18,58 @@ package com.android.adservices.service.shell;
 
 import static com.android.adservices.service.shell.AbstractShellCommand.ERROR_TEMPLATE_INVALID_ARGS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_HELP;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_AD_SELECTION_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_ATTRIBUTION_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_IS_ALLOWED_TOPICS_ACCESS;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.CMD_SHORT_HELP;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.ERROR_EMPTY_COMMAND;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_AD_SELECTION_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_ATTRIBUTION_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
-import static com.android.adservices.service.shell.AdServicesShellCommandHandler.HELP_IS_ALLOWED_TOPICS_ACCESS;
-import static com.android.adservices.service.shell.EchoCommand.CMD_ECHO;
-import static com.android.adservices.service.shell.EchoCommand.HELP_ECHO;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
+import static com.android.adservices.service.shell.common.EchoCommand.CMD_ECHO;
+import static com.android.adservices.service.shell.common.EchoCommand.HELP_ECHO;
+import static com.android.adservices.service.shell.common.IsAllowedAdSelectionAccessCommand.HELP_IS_ALLOWED_AD_SELECTION_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedAttributionAccessCommand.HELP_IS_ALLOWED_ATTRIBUTION_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedCustomAudiencesAccessCommand.HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedProtectedSignalsAccessCommand.HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS;
+import static com.android.adservices.service.shell.common.IsAllowedTopicsAccessCommand.HELP_IS_ALLOWED_TOPICS_ACCESS;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import androidx.annotation.Nullable;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
-import com.android.adservices.service.Flags;
+import com.android.adservices.data.signals.EncoderLogicHandler;
+import com.android.adservices.data.signals.EncoderLogicMetadataDao;
+import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.service.adselection.AuctionServerDataCompressor;
+import com.android.adservices.service.adselection.BuyerInputGenerator;
+import com.android.adservices.service.adselection.CompressedBuyerInputCreatorFactory;
+import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.common.AppManifestConfigHelper;
 import com.android.adservices.service.customaudience.BackgroundFetchRunner;
+import com.android.adservices.service.shell.adselection.ConsentedDebugShellCommand;
+import com.android.adservices.service.shell.adselection.GetAdSelectionDataCommand;
+import com.android.adservices.service.shell.adselection.ViewAuctionResultCommand;
+import com.android.adservices.service.shell.customaudience.CustomAudienceListCommand;
+import com.android.adservices.service.shell.customaudience.CustomAudienceRefreshCommand;
+import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
+import com.android.adservices.service.shell.customaudience.CustomAudienceViewCommand;
+import com.android.adservices.service.shell.signals.GenerateInputForEncodingCommand;
+import com.android.adservices.service.shell.signals.TriggerEncodingCommand;
+import com.android.adservices.service.signals.PeriodicEncodingJobRunner;
+import com.android.adservices.service.signals.ProtectedSignalsArgument;
+import com.android.adservices.service.signals.SignalsProviderAndArgumentFactory;
+import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.ShellCommandStats;
+import com.android.adservices.service.stats.pas.EncodingExecutionLogHelper;
+import com.android.adservices.service.stats.pas.EncodingJobRunStatsLogger;
+import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Sets;
 import com.google.common.truth.Expect;
 
 import org.junit.Before;
@@ -55,38 +82,77 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 @SpyStatic(AppManifestConfigHelper.class)
 public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedMockitoTestCase {
-    private static final String PKG_NAME = "d.h.a.r.m.a";
-    private static final String ENROLLMENT_ID = "42";
-    private static final String USES_SDK = "true";
-    private final Flags mFlags = new ShellCommandFlags();
+    private static final boolean CUSTOM_AUDIENCE_CLI_ENABLED = true;
+    private static final boolean CONSENTED_DEBUG_CLI_ENABLED = true;
+    private static final boolean SIGNALS_CLI_ENABLED = true;
 
     // mCmd is used on most tests methods, excepted those that runs more than one command
     private OneTimeCommand mCmd;
     @Mock private CustomAudienceDao mCustomAudienceDao;
     @Mock private BackgroundFetchRunner mBackgroundFetchRunner;
+    @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
+    @Mock private ProtectedSignalsDao mProtectedSignalsDao;
+    @Mock private AdServicesLogger mAdServicesLogger;
+    @Mock private Clock mClock;
+    @Mock private BuyerInputGenerator mBuyerInputGenerator;
+    @Mock private AuctionServerDataCompressor mAuctionServerDataCompressor;
+    @Mock private CompressedBuyerInputCreatorFactory mMockCompressedBuyerInputCreatorFactory;
+    @Mock private PeriodicEncodingJobRunner mEncodingJobRunner;
+    @Mock private EncoderLogicHandler mEncoderLogicHandler;
+    @Mock private EncodingExecutionLogHelper mEncodingExecutionLogHelper;
+    @Mock private EncodingJobRunStatsLogger mEncodingJobRunStatsLogger;
+    @Mock private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
+    @Mock private ConsentedDebugConfigurationGenerator mConsentedDebugConfigurationGenerator;
+    @Mock private ProtectedSignalsArgument mProtectedSignalsArgument;
+    @Mock private SignalsProviderAndArgumentFactory mSignalsProviderAndArgumentFactory;
+    @Mock private AdSelectionEntryDao mAdSelectionEntryDao;
+
     private ShellCommandFactorySupplier mShellCommandFactorySupplier;
 
     @Before
     public void setup() {
+        doNothing().when(mAdServicesLogger).logShellCommandStats(any());
+        when(mSignalsProviderAndArgumentFactory.getProtectedSignalsArgument())
+                .thenReturn(mProtectedSignalsArgument);
         mShellCommandFactorySupplier =
                 new TestShellCommandFactorySupplier(
-                        mFlags, mBackgroundFetchRunner, mCustomAudienceDao);
-        mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier);
+                        CUSTOM_AUDIENCE_CLI_ENABLED,
+                        CONSENTED_DEBUG_CLI_ENABLED,
+                        SIGNALS_CLI_ENABLED,
+                        mBackgroundFetchRunner,
+                        mCustomAudienceDao,
+                        mConsentedDebugConfigurationDao,
+                        mSignalsProviderAndArgumentFactory,
+                        mBuyerInputGenerator,
+                        mAuctionServerDataCompressor,
+                        mEncodingJobRunner,
+                        mEncoderLogicHandler,
+                        mEncodingExecutionLogHelper,
+                        mEncodingJobRunStatsLogger,
+                        mEncoderLogicMetadataDao,
+                        mConsentedDebugConfigurationGenerator,
+                        mAdSelectionEntryDao);
+        mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier, mAdServicesLogger, mClock);
     }
 
     @Test
     public void testInvalidConstructor() {
         assertThrows(
                 NullPointerException.class,
-                () -> new AdServicesShellCommandHandler(null, mShellCommandFactorySupplier));
+                () ->
+                        new AdServicesShellCommandHandler(
+                                null, mShellCommandFactorySupplier, mAdServicesLogger));
         assertThrows(
                 NullPointerException.class,
-                () -> new AdServicesShellCommandHandler(new PrintWriter(new StringWriter()), null));
+                () ->
+                        new AdServicesShellCommandHandler(
+                                new PrintWriter(new StringWriter()), null, mAdServicesLogger));
     }
 
     @Test
@@ -136,225 +202,15 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
 
     @Test
     public void testRunEcho_valid() throws Exception {
+        when(mClock.currentTimeMillis()).thenReturn(0L, 2000L);
+
         String result = mCmd.runValid(CMD_ECHO, "108");
 
         expect.withMessage("result of '%s 108'", CMD_ECHO).that(result).isEqualTo("108\n");
-    }
-
-    @Test
-    public void testRunIsAllowedAttributionAccess_invalid() throws Exception {
-        // no args
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_ATTRIBUTION_ACCESS, CMD_IS_ALLOWED_ATTRIBUTION_ACCESS);
-        // missing id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_ATTRIBUTION_ACCESS, CMD_IS_ALLOWED_ATTRIBUTION_ACCESS, PKG_NAME);
-        // empty pkg
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_ATTRIBUTION_ACCESS,
-                CMD_IS_ALLOWED_ATTRIBUTION_ACCESS,
-                "",
-                ENROLLMENT_ID);
-        // empty id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_ATTRIBUTION_ACCESS,
-                CMD_IS_ALLOWED_ATTRIBUTION_ACCESS,
-                PKG_NAME,
-                "");
-    }
-
-    @Test
-    public void testRunIsAllowedAttributionAccess_valid() throws Exception {
-        doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedAttributionAccess(
-                                        PKG_NAME, ENROLLMENT_ID));
-
-        expect.withMessage(
-                        "result of %s %s %s",
-                        CMD_IS_ALLOWED_ATTRIBUTION_ACCESS, PKG_NAME, ENROLLMENT_ID)
-                .that(mCmd.runValid(CMD_IS_ALLOWED_ATTRIBUTION_ACCESS, PKG_NAME, ENROLLMENT_ID))
-                .isEqualTo("true\n");
-    }
-
-    @Test
-    public void testRunIsAllowedCustomAudiencesAccess_invalid() throws Exception {
-        // no args
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS, CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS);
-        // missing id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
-                CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
-                PKG_NAME);
-        // empty pkg
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
-                CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
-                "",
-                ENROLLMENT_ID);
-        // empty id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
-                CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
-                PKG_NAME,
-                "");
-    }
-
-    @Test
-    public void testRunIsAllowedCustomAudiencesAccess_valid() throws Exception {
-        doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedCustomAudiencesAccess(
-                                        PKG_NAME, ENROLLMENT_ID));
-
-        expect.withMessage(
-                        "result of %s %s %s",
-                        CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS, PKG_NAME, ENROLLMENT_ID)
-                .that(
-                        mCmd.runValid(
-                                CMD_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS, PKG_NAME, ENROLLMENT_ID))
-                .isEqualTo("true\n");
-    }
-
-    @Test
-    public void testRunIsAllowedProtectedSignalsAccess_invalid() throws Exception {
-        // no args
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS, CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS);
-        // missing id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
-                CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
-                PKG_NAME);
-        // empty pkg
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
-                CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
-                "",
-                ENROLLMENT_ID);
-        // empty id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
-                CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
-                PKG_NAME,
-                "");
-    }
-
-    @Test
-    public void testRunIsAllowedProtectedSignalsAccess_valid() throws Exception {
-        doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedProtectedSignalsAccess(
-                                        PKG_NAME, ENROLLMENT_ID));
-
-        expect.withMessage(
-                        "result of %s %s %s",
-                        CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS, PKG_NAME, ENROLLMENT_ID)
-                .that(
-                        mCmd.runValid(
-                                CMD_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS, PKG_NAME, ENROLLMENT_ID))
-                .isEqualTo("true\n");
-    }
-
-    @Test
-    public void testRunIsAllowedAdSelectionAccess_invalid() throws Exception {
-        // no args
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_AD_SELECTION_ACCESS, CMD_IS_ALLOWED_AD_SELECTION_ACCESS);
-        // missing id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_AD_SELECTION_ACCESS, CMD_IS_ALLOWED_AD_SELECTION_ACCESS, PKG_NAME);
-        // empty pkg
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_AD_SELECTION_ACCESS,
-                CMD_IS_ALLOWED_AD_SELECTION_ACCESS,
-                "",
-                ENROLLMENT_ID);
-        // empty id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_AD_SELECTION_ACCESS,
-                CMD_IS_ALLOWED_AD_SELECTION_ACCESS,
-                PKG_NAME,
-                "");
-    }
-
-    @Test
-    public void testRunIsAllowedAdSelectionAccess_valid() throws Exception {
-        doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedAdSelectionAccess(
-                                        PKG_NAME, ENROLLMENT_ID));
-
-        expect.withMessage(
-                        "result of %s %s %s",
-                        CMD_IS_ALLOWED_AD_SELECTION_ACCESS, PKG_NAME, ENROLLMENT_ID)
-                .that(mCmd.runValid(CMD_IS_ALLOWED_AD_SELECTION_ACCESS, PKG_NAME, ENROLLMENT_ID))
-                .isEqualTo("true\n");
-    }
-
-    @Test
-    public void testRunIsAllowedTopicsAccess_invalid() throws Exception {
-        // no args
-        expectInvalidArgument(HELP_IS_ALLOWED_TOPICS_ACCESS, CMD_IS_ALLOWED_TOPICS_ACCESS);
-        // missing id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS, CMD_IS_ALLOWED_TOPICS_ACCESS, PKG_NAME);
-        // missing sdk
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS,
-                CMD_IS_ALLOWED_TOPICS_ACCESS,
-                PKG_NAME,
-                ENROLLMENT_ID);
-        // empty pkg
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS,
-                CMD_IS_ALLOWED_TOPICS_ACCESS,
-                "",
-                ENROLLMENT_ID,
-                USES_SDK);
-        // empty id
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS,
-                CMD_IS_ALLOWED_TOPICS_ACCESS,
-                PKG_NAME,
-                "",
-                USES_SDK);
-        // empty sdk
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS,
-                CMD_IS_ALLOWED_TOPICS_ACCESS,
-                PKG_NAME,
-                ENROLLMENT_ID,
-                "");
-        // non-boolean sdk
-        expectInvalidArgument(
-                HELP_IS_ALLOWED_TOPICS_ACCESS,
-                CMD_IS_ALLOWED_TOPICS_ACCESS,
-                PKG_NAME,
-                ENROLLMENT_ID,
-                "D'OH!");
-    }
-
-    @Test
-    public void testRunIsAllowedTopicsAudiencesAccess_valid() throws Exception {
-        doReturn(true)
-                .when(
-                        () ->
-                                AppManifestConfigHelper.isAllowedTopicsAccess(
-                                        /* useSandboxCheck= */ true, PKG_NAME, ENROLLMENT_ID));
-
-        expect.withMessage(
-                        "result of %s %s %s %s",
-                        CMD_IS_ALLOWED_TOPICS_ACCESS, PKG_NAME, ENROLLMENT_ID, USES_SDK)
-                .that(
-                        mCmd.runValid(
-                                CMD_IS_ALLOWED_TOPICS_ACCESS, PKG_NAME, ENROLLMENT_ID, USES_SDK))
-                .isEqualTo("true\n");
+        ShellCommandStats stats =
+                new ShellCommandStats(
+                        ShellCommandStats.COMMAND_ECHO, ShellCommandStats.RESULT_SUCCESS, 2000);
+        verify(mAdServicesLogger).logShellCommandStats(stats);
     }
 
     @Test
@@ -374,24 +230,68 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
                     .hasSize(1);
         }
     }
+
+    @Test
+    public void testRun_catchesExceptionAndReturnsError() throws Exception {
+        Exception exception = new RuntimeException("something went wrong");
+        ShellCommandFactory factory =
+                new ShellCommandFactory() {
+                    @Nullable
+                    @Override
+                    public ShellCommand getShellCommand(String cmd) {
+                        throw new RuntimeException(exception);
+                    }
+
+                    @Override
+                    public String getCommandPrefix() {
+                        return CustomAudienceShellCommandFactory.COMMAND_PREFIX;
+                    }
+
+                    @Override
+                    public List<String> getAllCommandsHelp() {
+                        return null;
+                    }
+                };
+
+        mShellCommandFactorySupplier =
+                new ShellCommandFactorySupplier() {
+                    @Override
+                    public ImmutableList<ShellCommandFactory> getAllShellCommandFactories() {
+                        return ImmutableList.of(factory);
+                    }
+                };
+
+        mCmd = new OneTimeCommand(expect, mShellCommandFactorySupplier, mAdServicesLogger, mClock);
+        String result = mCmd.runInvalid(CustomAudienceShellCommandFactory.COMMAND_PREFIX);
+
+        expect.withMessage("err").that(result).contains(exception.getMessage());
+    }
+
     private void assertHelpContents(String help) {
+        HashSet<String> actualHelp = Sets.newHashSet(help.split("\n\n"));
         expect.withMessage("help")
-                .that(help.split("\n\n"))
-                .asList()
-                .containsExactly(
-                        HELP_ECHO,
-                        HELP_IS_ALLOWED_ATTRIBUTION_ACCESS,
-                        HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
-                        HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
-                        HELP_IS_ALLOWED_AD_SELECTION_ACCESS,
-                        HELP_IS_ALLOWED_TOPICS_ACCESS,
-                        CustomAudienceListCommand.HELP,
-                        CustomAudienceViewCommand.HELP,
-                        CustomAudienceRefreshCommand.HELP);
+                .that(actualHelp)
+                .containsExactlyElementsIn(
+                        Sets.newHashSet(
+                                HELP_ECHO,
+                                HELP_IS_ALLOWED_ATTRIBUTION_ACCESS,
+                                HELP_IS_ALLOWED_CUSTOM_AUDIENCES_ACCESS,
+                                HELP_IS_ALLOWED_PROTECTED_SIGNALS_ACCESS,
+                                HELP_IS_ALLOWED_AD_SELECTION_ACCESS,
+                                HELP_IS_ALLOWED_TOPICS_ACCESS,
+                                CustomAudienceListCommand.HELP,
+                                CustomAudienceViewCommand.HELP,
+                                CustomAudienceRefreshCommand.HELP,
+                                ConsentedDebugShellCommand.HELP,
+                                GenerateInputForEncodingCommand.HELP,
+                                TriggerEncodingCommand.HELP,
+                                GetAdSelectionDataCommand.HELP,
+                                ViewAuctionResultCommand.HELP));
     }
 
     private void expectInvalidArgument(String syntax, String... args) throws IOException {
-        OneTimeCommand cmd = new OneTimeCommand(expect, mShellCommandFactorySupplier);
+        OneTimeCommand cmd =
+                new OneTimeCommand(expect, mShellCommandFactorySupplier, mAdServicesLogger, mClock);
 
         String expectedResult =
                 String.format(ERROR_TEMPLATE_INVALID_ARGS, Arrays.toString(args), syntax);
@@ -415,9 +315,14 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
         private boolean mOutCalled;
 
         private OneTimeCommand(
-                Expect expect, ShellCommandFactorySupplier shellCommandFactorySupplier) {
+                Expect expect,
+                ShellCommandFactorySupplier shellCommandFactorySupplier,
+                AdServicesLogger adservicesLogger,
+                Clock clock) {
             this.expect = expect;
-            cmd = new AdServicesShellCommandHandler(mOut, mErr, shellCommandFactorySupplier);
+            cmd =
+                    new AdServicesShellCommandHandler(
+                            mOut, mErr, shellCommandFactorySupplier, adservicesLogger, clock);
         }
 
         /**
@@ -472,13 +377,6 @@ public final class AdServicesShellCommandHandlerTest extends AdServicesExtendedM
             pw.close();
             mOutCalled = true;
             return out;
-        }
-    }
-
-    private static final class ShellCommandFlags implements Flags {
-        @Override
-        public boolean getFledgeCustomAudienceCLIEnabledStatus() {
-            return true;
         }
     }
 }

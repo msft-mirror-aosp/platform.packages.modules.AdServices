@@ -20,6 +20,7 @@ import android.adservices.common.AdTechIdentifier;
 
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 
@@ -29,6 +30,37 @@ public class AuctionServerPayloadMetricsStrategyDisabled
         implements AuctionServerPayloadMetricsStrategy {
     @Override
     public void setNumBuyers(GetAdSelectionDataApiCalledStats.Builder builder, int numBuyers) {
+        // do nothing
+    }
+
+    @Override
+    public void setSellerConfigurationMetrics(
+            GetAdSelectionDataApiCalledStats.Builder builder,
+            GetAdSelectionDataApiCalledStats.PayloadOptimizationResult payloadOptimizationResult,
+            int inputGenerationLatencyMs,
+            int compressedBuyerInputCreatorVersion,
+            int numReEstimations) {
+        // do nothing
+    }
+
+    @Override
+    public void setSellerMaxPayloadSizeKb(
+            GetAdSelectionDataApiCalledStats.Builder builder, int sellerMaxPayloadSizeKb) {
+        // do nothing
+    }
+
+    @Override
+    public void setInputGenerationLatencyMsAndBuyerCreatorVersion(
+            GetAdSelectionDataApiCalledStats.Builder builder,
+            int inputGenerationLatencyMs,
+            int compressedBuyerInputCreatorVersion) {
+        // do nothing
+    }
+
+    @Override
+    public void setServerAuctionCoordinatorSource(
+            GetAdSelectionDataApiCalledStats.Builder builder,
+            @AdsRelevanceStatusUtils.ServerAuctionCoordinatorSource int coordinatorSource) {
         // do nothing
     }
 
@@ -49,6 +81,16 @@ public class AuctionServerPayloadMetricsStrategyDisabled
             Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> perBuyerStats,
             DBCustomAudience dbCustomAudience,
             BiddingAuctionServers.BuyerInput.CustomAudience customAudience) {
+        // do nothing
+    }
+
+    @Override
+    public void logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
+            Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> statsMap,
+            int encodedSignalsCount,
+            int encodedSignalsTotalSizeInBytes,
+            int encodedSignalsMaxSizeInBytes,
+            int encodedSignalsMinSizeInBytes) {
         // do nothing
     }
 }

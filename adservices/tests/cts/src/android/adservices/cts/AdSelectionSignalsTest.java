@@ -16,32 +16,30 @@
 
 package android.adservices.cts;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-
 import android.adservices.common.AdSelectionSignals;
 import android.os.Parcel;
 
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.junit.Assert;
-import org.junit.Rule;
 import org.junit.Test;
 
-public class AdSelectionSignalsTest {
+import java.nio.charset.StandardCharsets;
+
+@RequiresSdkLevelAtLeastS
+public final class AdSelectionSignalsTest extends CtsAdServicesDeviceTestCase {
 
     private static final String SIGNALS_STRING = "{\"a\":\"b\"}";
     private static final String DIFFERENT_SIGNALS_STRING = "{\"a\":\"c\"}";
     private static final int ARRAY_SIZE = 10;
     private static final int DESCRIBE_CONTENTS_EXPECTATION = 0;
 
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
     @Test
     public void testAdSelectionSignalsGetSizeInBytes() {
         AdSelectionSignals identicalId = AdSelectionSignals.fromString(SIGNALS_STRING);
-        assertEquals(identicalId.toString().getBytes().length, SIGNALS_STRING.getBytes().length);
+        expect.that(identicalId.toString().getBytes(StandardCharsets.UTF_8).length)
+                .isEqualTo(SIGNALS_STRING.getBytes(StandardCharsets.UTF_8).length);
     }
 
     @Test
@@ -58,26 +56,25 @@ public class AdSelectionSignalsTest {
         preParcel.writeToParcel(parcel, 0);
         parcel.setDataPosition(0);
         AdSelectionSignals postParcel = AdSelectionSignals.CREATOR.createFromParcel(parcel);
-        assertEquals(preParcel, postParcel);
+        expect.that(preParcel).isEqualTo(postParcel);
     }
 
     @Test
     public void testAdSelectionSignalsDescribeContents() {
-        assertEquals(
-                DESCRIBE_CONTENTS_EXPECTATION,
-                AdSelectionSignals.fromString(SIGNALS_STRING).describeContents());
+        expect.that(AdSelectionSignals.fromString(SIGNALS_STRING).describeContents())
+                .isEqualTo(DESCRIBE_CONTENTS_EXPECTATION);
     }
 
     @Test
     public void testBuildValidAdSelectionSignalsSuccess() {
         AdSelectionSignals validSignals = AdSelectionSignals.fromString(SIGNALS_STRING);
-        assertEquals(SIGNALS_STRING, validSignals.toString());
+        expect.that(validSignals.toString()).isEqualTo(SIGNALS_STRING);
     }
 
     @Test
     public void testBuildValidAdSelectionSignalsSuccessNoValidation() {
         AdSelectionSignals validSignals = AdSelectionSignals.fromString(SIGNALS_STRING, false);
-        assertEquals(SIGNALS_STRING, validSignals.toString());
+        expect.that(validSignals.toString()).isEqualTo(SIGNALS_STRING);
     }
 
     @Test(expected = NullPointerException.class)
@@ -90,24 +87,16 @@ public class AdSelectionSignalsTest {
         AdSelectionSignals identicalId1 = AdSelectionSignals.fromString(SIGNALS_STRING);
         AdSelectionSignals identicalId2 = AdSelectionSignals.fromString(SIGNALS_STRING);
         AdSelectionSignals differentId = AdSelectionSignals.fromString(DIFFERENT_SIGNALS_STRING);
-        assertEquals(identicalId1, identicalId2);
-        assertNotEquals(identicalId1, differentId);
-        assertNotEquals(identicalId2, differentId);
-    }
 
-    @Test
-    public void testAdSelectionSignalsHashCode() {
-        AdSelectionSignals identicalId1 = AdSelectionSignals.fromString(SIGNALS_STRING);
-        AdSelectionSignals identicalId2 = AdSelectionSignals.fromString(SIGNALS_STRING);
-        AdSelectionSignals differentId = AdSelectionSignals.fromString(DIFFERENT_SIGNALS_STRING);
-        assertEquals(identicalId1.hashCode(), identicalId2.hashCode());
-        assertNotEquals(identicalId1.hashCode(), differentId.hashCode());
-        assertNotEquals(identicalId2.hashCode(), differentId.hashCode());
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(identicalId1, identicalId2);
+        et.expectObjectsAreNotEqual(identicalId1, differentId);
+        et.expectObjectsAreNotEqual(identicalId2, differentId);
     }
 
     @Test
     public void testAdSelectionSignalsToString() {
         AdSelectionSignals validSignals = AdSelectionSignals.fromString(SIGNALS_STRING);
-        assertEquals(SIGNALS_STRING, validSignals.toString());
+        expect.that(validSignals.toString()).isEqualTo(SIGNALS_STRING);
     }
 }

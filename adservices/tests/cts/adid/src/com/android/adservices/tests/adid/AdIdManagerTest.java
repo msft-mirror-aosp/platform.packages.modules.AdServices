@@ -15,6 +15,8 @@
  */
 package com.android.adservices.tests.adid;
 
+import static com.android.adservices.AdServicesCommon.ACTION_ADID_PROVIDER_SERVICE;
+
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.adservices.adid.AdId;
@@ -24,14 +26,15 @@ import android.util.Log;
 
 import androidx.test.filters.FlakyTest;
 
+import com.android.adservices.common.AdServicesCtsTestCase;
 import com.android.adservices.common.AdServicesOutcomeReceiverForTests;
-import com.android.adservices.common.ExceptionFailureSyncCallback;
-import com.android.adservices.common.OutcomeReceiverForTests;
-import com.android.adservices.common.RequiresLowRamDevice;
-import com.android.adservices.common.RequiresSdkLevelAtLeastS;
+import com.android.adservices.common.annotations.RequiresAndroidServiceAvailable;
+import com.android.adservices.shared.testing.OutcomeReceiverForTests;
+import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
 import com.android.modules.utils.build.SdkLevel;
 
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,7 +42,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-public final class AdIdManagerTest extends CtsAdIdEndToEndTestCase {
+@RequiresAndroidServiceAvailable(intentAction = ACTION_ADID_PROVIDER_SERVICE)
+public final class AdIdManagerTest extends AdServicesCtsTestCase
+        implements CtsAdIdEndToEndTestFlags {
 
     private static final Executor sCallbackExecutor = Executors.newCachedThreadPool();
 
@@ -70,15 +75,12 @@ public final class AdIdManagerTest extends CtsAdIdEndToEndTestCase {
         validateAdIdManagerTestResults(callback);
     }
 
-    private void validateAdIdManagerTestResults(ExceptionFailureSyncCallback<AdId> callback)
-            throws Exception {
-        AdId resultAdId = callback.assertSuccess();
+    private void validateAdIdManagerTestResults(
+            FailableResultSyncCallback<AdId, Exception> callback) throws Exception {
+        AdId resultAdId = callback.assertResultReceived();
         Log.v(mTag, "AdId: " + toString(resultAdId));
 
         assertWithMessage("getAdId()").that(resultAdId.getAdId()).isNotNull();
-        assertWithMessage("isLimitAdTrackingEnabled()")
-                .that(resultAdId.isLimitAdTrackingEnabled())
-                .isNotNull();
     }
 
     @Test
@@ -135,11 +137,11 @@ public final class AdIdManagerTest extends CtsAdIdEndToEndTestCase {
         }
     }
 
-    private boolean verifyAdIdRateLimitReached(ExceptionFailureSyncCallback<AdId> callback)
+    private boolean verifyAdIdRateLimitReached(FailableResultSyncCallback<AdId, Exception> callback)
             throws InterruptedException {
         callback.assertCalled();
         AdId result = callback.getResult();
-        Exception error = callback.getError();
+        Exception error = callback.getFailure();
         Log.v(
                 mTag,
                 "getAdIdAndVerifyRateLimitReached(): result="

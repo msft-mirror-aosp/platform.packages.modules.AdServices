@@ -51,6 +51,8 @@ import java.util.concurrent.ScheduledExecutorService;
 public final class CobaltFactory {
     private static final Object SINGLETON_LOCK = new Object();
 
+    private static final long APEX_VERSION_WHEN_NOT_FOUND = -1L;
+
     /*
      * Uses the prod pipeline because AdServices' reports are for either the DEBUG or GA release
      * stage and DEBUG is sufficient for local testing.
@@ -86,10 +88,12 @@ public final class CobaltFactory {
                                 getRegistry(context),
                                 CobaltReleaseStages.getReleaseStage(
                                         flags.getAdservicesReleaseStageForCobalt()),
-                                getDataService(context),
+                                getDataService(context, flags),
                                 getSystemData(context),
                                 getExecutor(),
                                 new SystemClockImpl(),
+                                // TODO(b/343722587): Parse reportsToIgnore from flags.
+                                List.of(),
                                 flags.getCobaltLoggingEnabled());
             }
             return sSingletonCobaltLogger;
@@ -115,7 +119,7 @@ public final class CobaltFactory {
                                 getRegistry(context),
                                 CobaltReleaseStages.getReleaseStage(
                                         flags.getAdservicesReleaseStageForCobalt()),
-                                getDataService(context),
+                                getDataService(context, flags),
                                 getExecutor(),
                                 getScheduledExecutor(),
                                 new SystemClockImpl(),
@@ -128,6 +132,10 @@ public final class CobaltFactory {
                                 CobaltApiKeys.copyFromHexApiKey(
                                         flags.getCobaltAdservicesApiKeyHex()),
                                 Duration.ofMillis(flags.getCobaltUploadServiceUnbindDelayMs()),
+                                new CobaltOperationLoggerImpl(
+                                        flags.getCobaltOperationalLoggingEnabled()),
+                                // TODO(b/343722587): Parse reportsToIgnore from flags.
+                                List.of(),
                                 flags.getCobaltLoggingEnabled());
             }
             return sSingletonCobaltPeriodicJob;
@@ -151,11 +159,15 @@ public final class CobaltFactory {
         return sSingletonCobaltRegistryProject;
     }
 
-    private static DataService getDataService(Context context) {
+    private static DataService getDataService(Context context, Flags flags) {
         Objects.requireNonNull(context);
         if (sSingletonDataService == null) {
             sSingletonDataService =
-                    CobaltDataServiceFactory.createDataService(context, getExecutor());
+                    CobaltDataServiceFactory.createDataService(
+                            context,
+                            getExecutor(),
+                            new CobaltOperationLoggerImpl(
+                                    flags.getCobaltOperationalLoggingEnabled()));
         }
 
         return sSingletonDataService;
@@ -188,26 +200,19 @@ public final class CobaltFactory {
         PackageManager packageManager = context.getPackageManager();
         List<PackageInfo> installedPackages =
                 packageManager.getInstalledPackages(PackageManager.MATCH_APEX);
-        long adservicesVersion =
-                installedPackages.stream()
-                        .filter(
-                                s ->
-                                        s.isApex
-                                                && s.packageName.endsWith(
-                                                        ADSERVICES_APEX_NAME_SUFFIX))
-                        .findFirst()
-                        .map(PackageInfo::getLongVersionCode)
-                        .orElse(APEX_VERSION_WHEN_NOT_FOUND);
+        long adservicesVersion = APEX_VERSION_WHEN_NOT_FOUND;
+        long extservicesVersion = APEX_VERSION_WHEN_NOT_FOUND;
 
-        if (adservicesVersion != APEX_VERSION_WHEN_NOT_FOUND) {
-            return String.valueOf(adservicesVersion);
+        for (PackageInfo packageInfo : installedPackages) {
+            if (packageInfo.isApex
+                    && packageInfo.packageName.endsWith(ADSERVICES_APEX_NAME_SUFFIX)) {
+                adservicesVersion = packageInfo.getLongVersionCode();
+                return String.valueOf(adservicesVersion);
+            } else if (packageInfo.isApex
+                    && packageInfo.packageName.endsWith(EXTSERVICES_APEX_NAME_SUFFIX)) {
+                extservicesVersion = packageInfo.getLongVersionCode();
+            }
         }
-
-        return installedPackages.stream()
-                .filter(s -> s.isApex && s.packageName.endsWith(EXTSERVICES_APEX_NAME_SUFFIX))
-                .findFirst()
-                .map(PackageInfo::getLongVersionCode)
-                .orElse(APEX_VERSION_WHEN_NOT_FOUND)
-                .toString();
+        return String.valueOf(extservicesVersion);
     }
 }

@@ -41,6 +41,7 @@ import com.android.adservices.ui.settings.viewmodels.MainViewModel;
 public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     public static final String FROM_NOTIFICATION_KEY = "FROM_NOTIFICATION";
     private MainActionDelegate mActionDelegate;
+    private MainActivityActionDelegate mActivityActionDelegate;
 
     /** @return the action delegate for the activity. */
     public MainActionDelegate getActionDelegate() {
@@ -62,7 +63,8 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
         Trace.beginSection("AdServicesSettingsMainActivity#OnCreate");
         // Only for main view, we want to use the most up to date OTA strings on the device to
         // create the ResourcesLoader.
-        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()) {
+        if (FlagsFactory.getFlags().getUiOtaStringsFeatureEnabled()
+                || FlagsFactory.getFlags().getUiOtaResourcesFeatureEnabled()) {
             OTAResourcesManager.applyOTAResources(getApplicationContext(), true);
             // apply to activity context as well since activity context has been created already.
             OTAResourcesManager.applyOTAResources(this, false);
@@ -89,14 +91,9 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (isUxStatesReady(this)) {
-            initWithUx(this, getApplicationContext());
+        if (isUxStatesReady(this) && mActivityActionDelegate != null) {
+            mActivityActionDelegate.refreshState();
         }
-    }
-
-    @Override
-    public void initBeta() {
-        initMainActivity(R.layout.main_activity);
     }
 
     @Override
@@ -110,18 +107,14 @@ public class AdServicesSettingsMainActivity extends AdServicesBaseActivity {
     }
 
     @Override
-    public void initRvc() {
-        initU18();
-    }
-
-    @Override
     public void initGaUxWithPas() {
         initGA();
     }
 
     private void initMainActivity(int layoutResID) {
         setContentView(layoutResID);
-        // no need to store since not using
-        new MainActivityActionDelegate(this, new ViewModelProvider(this).get(MainViewModel.class));
+        mActivityActionDelegate =
+                new MainActivityActionDelegate(
+                        this, new ViewModelProvider(this).get(MainViewModel.class));
     }
 }

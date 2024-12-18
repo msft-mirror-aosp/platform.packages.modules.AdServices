@@ -16,15 +16,20 @@
 
 package android.adservices.test.scenario.adservices.fledge;
 
+import static android.adservices.customaudience.TrustedBiddingDataFixture.getValidTrustedBiddingUriByBuyer;
+
+import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.ReportImpressionRequest;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 import android.platform.test.scenario.annotation.Scenario;
+import android.util.Log;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -40,10 +45,11 @@ import java.util.concurrent.TimeUnit;
 
 @Scenario
 @RunWith(JUnit4.class)
-public class LimitPerfTests extends AbstractPerfTest {
-
+public class LimitPerfTests extends AbstractSelectAdsLatencyTest {
     private static final String URL_PREFIX = "https://";
-    private static final String BUYER = "localhost";
+    private static final String BUYER = "performance-fledge-static-5jyy5ulagq-uc.a.run.app";
+    public static final String BUYER_BIDDING_LOGIC_URI_PATH = "/buyer/bidding/simple_logic";
+    public static final String BUYER_BIDDING_SIGNALS_URI_PATH = "/rb/bts";
 
     @Test
     public void test_joinBigCustomAudience() throws Exception {
@@ -84,26 +90,33 @@ public class LimitPerfTests extends AbstractPerfTest {
     }
 
     private void nAuctionsMBigCas(int n, int m) throws Exception {
+        warmupSingleBuyerProcess();
+        AdSelectionConfig adSelectionConfig =
+                readAdSelectionConfig("AdSelectionConfigOneBuyerOneCAOneAd.json");
         List<CustomAudience> caList = createNBigCas(m);
-        mMockWebServerRule.startMockWebServer(mDefaultDispatcher);
         joinAll(caList);
 
         for (int i = 0; i < n; i++) {
             AdSelectionOutcome outcome =
-                    mAdSelectionClient
-                            .selectAds(createAdSelectionConfig())
+                    AD_SELECTION_CLIENT
+                            .selectAds(adSelectionConfig)
                             .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
 
             // Check that a valid URL won
-            Assert.assertEquals(BUYER, outcome.getRenderUri().getHost());
+            Assert.assertEquals(
+                    adSelectionConfig.getCustomAudienceBuyers().get(0).toString(),
+                    outcome.getRenderUri().getHost());
 
             ReportImpressionRequest reportImpressionRequest =
-                    new ReportImpressionRequest(
-                            outcome.getAdSelectionId(), createAdSelectionConfig());
+                    new ReportImpressionRequest(outcome.getAdSelectionId(), adSelectionConfig);
             // Performing reporting, and asserting that no exception is thrown
-            mAdSelectionClient
+            AD_SELECTION_CLIENT
                     .reportImpression(reportImpressionRequest)
                     .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+
+            if ((i + 1) % 10 == 0) {
+                Log.i(TAG, "Completed " + (i + 1) + " auctions");
+            }
         }
 
         leaveAll(caList);
@@ -117,7 +130,7 @@ public class LimitPerfTests extends AbstractPerfTest {
 
     private void joinAll(List<CustomAudience> caList) throws Exception {
         for (CustomAudience ca : caList) {
-            mCustomAudienceClient
+            CUSTOM_AUDIENCE_CLIENT
                     .joinCustomAudience(ca)
                     .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         }
@@ -125,7 +138,7 @@ public class LimitPerfTests extends AbstractPerfTest {
 
     private void leaveAll(List<CustomAudience> caList) throws Exception {
         for (CustomAudience ca : caList) {
-            mCustomAudienceClient
+            CUSTOM_AUDIENCE_CLIENT
                     .leaveCustomAudience(ca.getBuyer(), ca.getName())
                     .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         }
@@ -147,7 +160,7 @@ public class LimitPerfTests extends AbstractPerfTest {
      */
     private CustomAudience createBigCustomAudience(String nameStart, int bid) {
         int minUrlSize = URL_PREFIX.length() + BUYER.length();
-        Uri trustedBiddingUri =
+        Uri trustedBiddingUri = CommonFixture.getUri(BUYER, BUYER_BIDDING_SIGNALS_URI_PATH);
                 getValidTrustedBiddingUriByBuyer(AdTechIdentifier.fromString(BUYER));
         return new CustomAudience.Builder()
                 // CA names are limited to 200 bytes
@@ -156,9 +169,7 @@ public class LimitPerfTests extends AbstractPerfTest {
                 .setExpirationTime(Instant.now().plus(Duration.ofDays(1)))
                 // Daily update and bidding URLS are limited to 400 bytes
                 .setDailyUpdateUri(nBitUriFromAdtech(BUYER, 400))
-                .setBiddingLogicUri(
-                        nBitUriFromUri(
-                                mMockWebServerRule.uriForPath(BUYER_BIDDING_LOGIC_URI_PATH), 400))
+                .setBiddingLogicUri(CommonFixture.getUri(BUYER, BUYER_BIDDING_LOGIC_URI_PATH))
                 // User bidding signals are limited to 10,000 bytes
                 .setUserBiddingSignals(nBitAdSelectionSignals(10000))
                 /* TrustedBidding signals are limited to 10 KiB. We're adding as many keys objects
@@ -180,7 +191,7 @@ public class LimitPerfTests extends AbstractPerfTest {
                                         .setRenderUri(nBitUriFromAdtech(BUYER, minUrlSize))
                                         .setMetadata(
                                                 nBitJsonWithFields(
-                                                        100 - minUrlSize, "\"result\": " + bid))
+                                                        100 - minUrlSize, "\"bid\": " + bid))
                                         .build()))
                 .build();
     }

@@ -18,6 +18,11 @@ package com.android.adservices.service.common.httpclient;
 
 import static android.adservices.exceptions.RetryableAdServicesNetworkException.DEFAULT_RETRY_AFTER_VALUE;
 
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_NETWORK_FAILURE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_TIMEOUT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_UNSET;
+
 import android.adservices.exceptions.AdServicesNetworkException;
 import android.adservices.exceptions.RetryableAdServicesNetworkException;
 import android.annotation.NonNull;
@@ -33,6 +38,8 @@ import com.android.adservices.service.common.cache.DBCacheEntry;
 import com.android.adservices.service.common.cache.HttpCache;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.profiling.Tracing;
+import com.android.adservices.service.stats.FetchProcessLogger;
+import com.android.adservices.service.stats.FetchProcessLoggerNoLoggingImpl;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.base.Charsets;
@@ -176,7 +183,7 @@ public class AdServicesHttpsClient {
         urlConnection.setReadTimeout(mReadTimeoutMs);
         // Setting true explicitly to follow redirects
         Uri uri = Uri.parse(url.toString());
-        if (WebAddresses.isLocalhost(uri) && devContext.getDevOptionsEnabled()) {
+        if (WebAddresses.isLocalhost(uri) && devContext.getDeviceDevOptionsEnabled()) {
             LogUtil.v("Using unsafe HTTPS for url %s", url.toString());
             urlConnection.setSSLSocketFactory(getUnsafeSslSocketFactory());
         } else if (WebAddresses.isLocalhost(uri)) {
@@ -184,7 +191,7 @@ public class AdServicesHttpsClient {
                     String.format(
                             "Using normal HTTPS without unsafe SSL socket factory for a localhost"
                                     + " address, DevOptionsEnabled: %s, CallingPackageName: %s",
-                            devContext.getDevOptionsEnabled(),
+                            devContext.getDeviceDevOptionsEnabled(),
                             devContext.getCallingAppPackageName()));
         }
         urlConnection.setInstanceFollowRedirects(true);
@@ -247,6 +254,23 @@ public class AdServicesHttpsClient {
     }
 
     /**
+     * Performs a GET request on the given URI in order to fetch a payload. with FetchProcessLogger
+     * logging.
+     *
+     * @param uri a {@link Uri} pointing to a target server, converted to a URL for fetching
+     * @return a string containing the fetched payload
+     */
+    @NonNull
+    public ListenableFuture<AdServicesHttpClientResponse> fetchPayloadWithLogging(
+            @NonNull Uri uri,
+            @NonNull DevContext devContext,
+            @NonNull FetchProcessLogger fetchProcessLogger) {
+        return fetchPayloadWithLogging(
+                AdServicesHttpClientRequest.builder().setUri(uri).setDevContext(devContext).build(),
+                fetchProcessLogger);
+    }
+
+    /**
      * Performs a GET request on the given URI in order to fetch a payload.
      *
      * @param uri a {@link Uri} pointing to a target server, converted to a URL for fetching
@@ -276,6 +300,21 @@ public class AdServicesHttpsClient {
     @NonNull
     public ListenableFuture<AdServicesHttpClientResponse> fetchPayload(
             @NonNull AdServicesHttpClientRequest request) {
+        return fetchPayloadWithLogging(request, new FetchProcessLoggerNoLoggingImpl());
+    }
+
+    /**
+     * Performs a GET request on the given URI in order to fetch a payload with EncodingFetchStats
+     * logging.
+     *
+     * @param request of type {@link AdServicesHttpClientRequest}
+     * @param fetchProcessLogger of {@link FetchProcessLogger}
+     * @return a string containing the fetched payload
+     */
+    @NonNull
+    public ListenableFuture<AdServicesHttpClientResponse> fetchPayloadWithLogging(
+            @NonNull AdServicesHttpClientRequest request,
+            @NonNull FetchProcessLogger fetchProcessLogger) {
         Objects.requireNonNull(request.getUri());
 
         StringBuilder logBuilder =
@@ -285,7 +324,7 @@ public class AdServicesHttpsClient {
                                 + " use cache: "
                                 + request.getUseCache()
                                 + " dev context: "
-                                + request.getDevContext().getDevOptionsEnabled());
+                                + request.getDevContext().getDeviceDevOptionsEnabled());
         if (request.getRequestProperties() != null) {
             logBuilder
                     .append(" request properties: ")
@@ -304,7 +343,12 @@ public class AdServicesHttpsClient {
                         (closer, url) ->
                                 ClosingFuture.from(
                                         mExecutorService.submit(
-                                                () -> doFetchPayload(url, closer, request))),
+                                                () ->
+                                                        doFetchPayload(
+                                                                url,
+                                                                closer,
+                                                                request,
+                                                                fetchProcessLogger))),
                         mExecutorService)
                 .finishToFuture();
     }
@@ -312,13 +356,17 @@ public class AdServicesHttpsClient {
     private AdServicesHttpClientResponse doFetchPayload(
             @NonNull URL url,
             @NonNull ClosingFuture.DeferredCloser closer,
-            AdServicesHttpClientRequest request)
+            AdServicesHttpClientRequest request,
+            FetchProcessLogger fetchProcessLogger)
             throws IOException, AdServicesNetworkException {
+        int jsFetchStatusCode = ENCODING_FETCH_STATUS_UNSET;
         int traceCookie = Tracing.beginAsyncSection(Tracing.FETCH_PAYLOAD);
         LogUtil.v("Downloading payload from: \"%s\"", url.toString());
         if (request.getUseCache()) {
             AdServicesHttpClientResponse cachedResponse = getResultsFromCache(url);
             if (cachedResponse != null) {
+                jsFetchStatusCode = ENCODING_FETCH_STATUS_SUCCESS;
+                fetchProcessLogger.logEncodingJsFetchStats(jsFetchStatusCode);
                 return cachedResponse;
             }
             LogUtil.v("Cache miss for url: %s", url.toString());
@@ -329,6 +377,8 @@ public class AdServicesHttpsClient {
             urlConnection = setupConnection(url, request.getDevContext());
         } catch (IOException e) {
             LogUtil.d(e, "Failed to open URL");
+            jsFetchStatusCode = ENCODING_FETCH_STATUS_NETWORK_FAILURE;
+            fetchProcessLogger.logEncodingJsFetchStats(jsFetchStatusCode);
             throw new IllegalArgumentException("Failed to open URL!");
         }
 
@@ -341,7 +391,11 @@ public class AdServicesHttpsClient {
             }
             closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
             Map<String, List<String>> requestPropertiesMap = urlConnection.getRequestProperties();
+            fetchProcessLogger.startDownloadScriptTimestamp();
+            fetchProcessLogger.startNetworkCallTimestamp();
             int responseCode = urlConnection.getResponseCode();
+            fetchProcessLogger.logServerAuctionKeyFetchCalledStatsFromNetwork(responseCode);
+            fetchProcessLogger.endDownloadScriptTimestamp(responseCode);
             LogUtil.v("Received %s response status code.", responseCode);
             if (isSuccessfulResponse(responseCode)) {
                 inputStream = new BufferedInputStream(urlConnection.getInputStream());
@@ -362,14 +416,18 @@ public class AdServicesHttpsClient {
                                                 .putAll(responseHeadersMap.entrySet())
                                                 .build())
                                 .build();
+                jsFetchStatusCode = ENCODING_FETCH_STATUS_SUCCESS;
                 return response;
             } else {
+                jsFetchStatusCode = ENCODING_FETCH_STATUS_NETWORK_FAILURE;
                 throwError(urlConnection, responseCode);
                 return null;
             }
         } catch (SocketTimeoutException e) {
+            jsFetchStatusCode = ENCODING_FETCH_STATUS_TIMEOUT;
             throw new IOException("Connection timed out while reading response!", e);
         } finally {
+            fetchProcessLogger.logEncodingJsFetchStats(jsFetchStatusCode);
             maybeDisconnect(urlConnection);
             maybeClose(inputStream);
             Tracing.endAsyncSection(Tracing.HTTP_REQUEST, httpTraceCookie);
@@ -377,12 +435,17 @@ public class AdServicesHttpsClient {
         }
     }
 
-    private Map<String, List<String>> pickRequiredHeaderFields(
+    @VisibleForTesting
+    Map<String, List<String>> pickRequiredHeaderFields(
             Map<String, List<String>> allHeaderFields, ImmutableSet<String> requiredHeaderKeys) {
         HashMap<String, List<String>> result = new HashMap<>();
+        // Using lower case matching as headers are case-insensitive per
+        // https://datatracker.ietf.org/doc/html/rfc2616#section-4.2
+        Map<String, List<String>> lowerCaseHeaders = convertKeysToLowerCase(allHeaderFields);
         for (String headerKey : requiredHeaderKeys) {
-            if (allHeaderFields.containsKey(headerKey)) {
-                List<String> headerValues = new ArrayList<>(allHeaderFields.get(headerKey));
+            List<String> headerValues =
+                    new ArrayList<>(getHeaderValues(lowerCaseHeaders, headerKey));
+            if (!headerValues.isEmpty()) {
                 LogUtil.v(
                         String.format(
                                 "Found header: %s in response headers with value as %s",
@@ -392,6 +455,28 @@ public class AdServicesHttpsClient {
         }
         LogUtil.v("requiredHeaderFields: " + result);
         return result;
+    }
+
+    private List<String> getHeaderValues(
+            Map<String, List<String>> allHeaderFields, String requiredField) {
+        if (Objects.isNull(requiredField)) {
+            return List.of();
+        }
+        List<String> result = allHeaderFields.get(requiredField.toLowerCase());
+        return Objects.nonNull(result) ? result : List.of();
+    }
+
+    public static Map<String, List<String>> convertKeysToLowerCase(
+            Map<String, List<String>> inputMap) {
+        if (inputMap == null) {
+            return null;
+        }
+        Map<String, List<String>> resultMap = new HashMap<>();
+        inputMap.forEach(
+                (key, value) ->
+                        resultMap.put(Objects.nonNull(key) ? key.toLowerCase() : null, value));
+
+        return resultMap;
     }
 
     private AdServicesHttpClientResponse getResultsFromCache(URL url) {
@@ -437,7 +522,7 @@ public class AdServicesHttpsClient {
             throws IOException, AdServicesNetworkException {
         LogUtil.v(
                 "doGetAndReadNothing to: \"%s\", dev context: %s",
-                url.toString(), devContext.getDevOptionsEnabled());
+                url.toString(), devContext.getDeviceDevOptionsEnabled());
         HttpsURLConnection urlConnection;
 
         try {
@@ -538,6 +623,18 @@ public class AdServicesHttpsClient {
      */
     public ListenableFuture<AdServicesHttpClientResponse> performRequestGetResponseInBase64String(
             @NonNull AdServicesHttpClientRequest request) {
+        return performRequestGetResponseInBase64StringWithLogging(
+                request, new FetchProcessLoggerNoLoggingImpl());
+    }
+
+    /**
+     * Performs an HTTP request according to the request object and returns the response in byte
+     * array.
+     */
+    public ListenableFuture<AdServicesHttpClientResponse>
+            performRequestGetResponseInBase64StringWithLogging(
+                    @NonNull AdServicesHttpClientRequest request,
+                    @NonNull FetchProcessLogger fetchProcessLogger) {
         Objects.requireNonNull(request.getUri());
         return ClosingFuture.from(
                         mExecutorService.submit(() -> mUriConverter.toUrl(request.getUri())))
@@ -551,7 +648,8 @@ public class AdServicesHttpsClient {
                                                                 closer,
                                                                 request,
                                                                 ResponseBodyType
-                                                                        .BASE64_ENCODED_STRING))),
+                                                                        .BASE64_ENCODED_STRING,
+                                                                fetchProcessLogger))),
                         mExecutorService)
                 .finishToFuture();
     }
@@ -564,6 +662,7 @@ public class AdServicesHttpsClient {
             @NonNull AdServicesHttpClientRequest request) {
         Objects.requireNonNull(request.getUri());
         LogUtil.d("Making request expecting a response in plain string");
+        FetchProcessLogger fetchProcessLogger = new FetchProcessLoggerNoLoggingImpl();
         return ClosingFuture.from(
                         mExecutorService.submit(() -> mUriConverter.toUrl(request.getUri())))
                 .transformAsync(
@@ -575,8 +674,8 @@ public class AdServicesHttpsClient {
                                                                 url,
                                                                 closer,
                                                                 request,
-                                                                ResponseBodyType
-                                                                        .PLAIN_TEXT_STRING))),
+                                                                ResponseBodyType.PLAIN_TEXT_STRING,
+                                                                fetchProcessLogger))),
                         mExecutorService)
                 .finishToFuture();
     }
@@ -585,7 +684,8 @@ public class AdServicesHttpsClient {
             @NonNull URL url,
             @NonNull ClosingFuture.DeferredCloser closer,
             AdServicesHttpClientRequest request,
-            ResponseBodyType responseType)
+            ResponseBodyType responseType,
+            @NonNull FetchProcessLogger fetchProcessLogger)
             throws IOException, AdServicesNetworkException {
         HttpsURLConnection urlConnection;
         try {
@@ -615,7 +715,9 @@ public class AdServicesHttpsClient {
             }
 
             closer.eventuallyClose(new CloseableConnectionWrapper(urlConnection), mExecutorService);
+            fetchProcessLogger.startNetworkCallTimestamp();
             int responseCode = urlConnection.getResponseCode();
+            fetchProcessLogger.logServerAuctionKeyFetchCalledStatsFromNetwork(responseCode);
             LogUtil.v("Received %s response status code.", responseCode);
 
             if (isSuccessfulResponse(responseCode)) {

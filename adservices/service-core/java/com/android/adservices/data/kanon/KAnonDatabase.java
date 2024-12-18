@@ -16,7 +16,6 @@
 
 package com.android.adservices.data.kanon;
 
-import android.annotation.NonNull;
 import android.content.Context;
 
 import androidx.room.Database;
@@ -25,8 +24,9 @@ import androidx.room.TypeConverters;
 
 import com.android.adservices.data.common.FledgeRoomConverters;
 import com.android.adservices.service.common.compat.FileCompatUtils;
+import com.android.adservices.shared.common.ApplicationContextSingleton;
 
-import java.util.Objects;
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 
 @Database(
         entities = {DBServerParameters.class, DBClientParameters.class, DBKAnonMessage.class},
@@ -37,11 +37,11 @@ public abstract class KAnonDatabase extends RoomDatabase {
     public static final int DATABASE_VERSION = 1;
     public static final String DATABASE_NAME = FileCompatUtils.getAdservicesFilename("kanon.db");
 
-    public static volatile KAnonDatabase sSingleton = null;
+    @GuardedBy("SINGLETON_LOCK")
+    public static volatile KAnonDatabase sSingleton;
 
     /** Returns an instance of the KAnonDatabase given a context. */
-    public static KAnonDatabase getInstance(@NonNull Context context) {
-        Objects.requireNonNull(context, "Context must be provided.");
+    public static KAnonDatabase getInstance() {
         KAnonDatabase singleReadResult = sSingleton;
         if (singleReadResult != null) {
             return singleReadResult;
@@ -49,6 +49,7 @@ public abstract class KAnonDatabase extends RoomDatabase {
 
         synchronized (SINGLETON_LOCK) {
             if (sSingleton == null) {
+                Context context = ApplicationContextSingleton.get();
                 sSingleton =
                         FileCompatUtils.roomDatabaseBuilderHelper(
                                         context, KAnonDatabase.class, DATABASE_NAME)

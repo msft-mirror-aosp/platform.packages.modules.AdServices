@@ -19,8 +19,6 @@ package com.android.adservices.cobalt;
 import static android.adservices.cobalt.EncryptedCobaltEnvelopeParams.ENVIRONMENT_DEV;
 import static android.adservices.cobalt.EncryptedCobaltEnvelopeParams.ENVIRONMENT_PROD;
 
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.doNothingOnErrorLogUtilError;
-import static com.android.adservices.mockito.ExtendedMockitoExpectations.verifyErrorLogUtilError;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__COBALT_UPLOAD_API_REMOTE_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
@@ -34,50 +32,30 @@ import android.adservices.cobalt.EncryptedCobaltEnvelopeParams;
 import android.adservices.cobalt.IAdServicesCobaltUploadService;
 import android.os.RemoteException;
 
-import androidx.test.core.app.ApplicationProvider;
-
-import com.android.adservices.common.SdkLevelSupportRule;
-import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.cobalt.CobaltPipelineType;
 
 import com.google.cobalt.EncryptedMessage;
-import com.google.common.truth.Expect;
 import com.google.protobuf.ByteString;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@RunWith(JUnit4.class)
-public final class CobaltUploaderTest {
+@RequiresSdkLevelAtLeastS
+public final class CobaltUploaderTest extends AdServicesExtendedMockitoTestCase {
     private static final int KEY_INDEX = 5;
     private static final byte[] BYTES = {0x0a, 0x0b, 0x0c};
 
-    public @Rule final Expect expect = Expect.create();
-
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    @Rule(order = 1)
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this).spyStatic(ErrorLogUtil.class).build();
-
     static class AdServicesCobaltUploadServiceStub extends IAdServicesCobaltUploadService.Stub {
-        private final List<EncryptedCobaltEnvelopeParams> mParams;
-
-        AdServicesCobaltUploadServiceStub() {
-            mParams = new ArrayList<EncryptedCobaltEnvelopeParams>();
-        }
+        private final List<EncryptedCobaltEnvelopeParams> mParams = new ArrayList<>();
 
         @Override
         public void uploadEncryptedCobaltEnvelope(EncryptedCobaltEnvelopeParams params) {
             mParams.add(params);
-            return;
         }
 
         List<EncryptedCobaltEnvelopeParams> getParams() {
@@ -88,9 +66,7 @@ public final class CobaltUploaderTest {
     @Test
     public void environmentSet_devEnvironment() throws Exception {
         AdServicesCobaltUploadServiceStub interfaceStub = new AdServicesCobaltUploadServiceStub();
-        CobaltUploader uploader =
-                new CobaltUploader(
-                        ApplicationProvider.getApplicationContext(), CobaltPipelineType.DEV);
+        CobaltUploader uploader = new CobaltUploader(sContext, CobaltPipelineType.DEV);
         CobaltUploader spyUploader = spy(uploader);
         doReturn(interfaceStub).when(spyUploader).getService();
 
@@ -111,9 +87,7 @@ public final class CobaltUploaderTest {
     @Test
     public void environmentSet_prodEnvironment() throws Exception {
         AdServicesCobaltUploadServiceStub interfaceStub = new AdServicesCobaltUploadServiceStub();
-        CobaltUploader uploader =
-                new CobaltUploader(
-                        ApplicationProvider.getApplicationContext(), CobaltPipelineType.PROD);
+        CobaltUploader uploader = new CobaltUploader(sContext, CobaltPipelineType.PROD);
         CobaltUploader spyUploader = spy(uploader);
         doReturn(interfaceStub).when(spyUploader).getService();
 
@@ -133,9 +107,7 @@ public final class CobaltUploaderTest {
 
     @Test
     public void nullService_doesThrow() throws Exception {
-        CobaltUploader uploader =
-                new CobaltUploader(
-                        ApplicationProvider.getApplicationContext(), CobaltPipelineType.PROD);
+        CobaltUploader uploader = new CobaltUploader(sContext, CobaltPipelineType.PROD);
         CobaltUploader spyUploader = spy(uploader);
         when(spyUploader.getService()).thenReturn(null);
 
@@ -147,11 +119,13 @@ public final class CobaltUploaderTest {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__COBALT_UPLOAD_API_REMOTE_EXCEPTION,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON,
+            throwable = RemoteException.class)
     public void uploadThrowsRemoteException_logsError() throws Exception {
         RemoteException exception = new RemoteException("D'OH!");
-        CobaltUploader uploader =
-                new CobaltUploader(
-                        ApplicationProvider.getApplicationContext(), CobaltPipelineType.PROD);
+        CobaltUploader uploader = new CobaltUploader(sContext, CobaltPipelineType.PROD);
         CobaltUploader spyUploader = spy(uploader);
         IAdServicesCobaltUploadService interfaceStub =
                 new IAdServicesCobaltUploadService.Stub() {
@@ -162,16 +136,11 @@ public final class CobaltUploaderTest {
                     }
                 };
         doReturn(interfaceStub).when(spyUploader).getService();
-        doNothingOnErrorLogUtilError();
 
         spyUploader.upload(
                 EncryptedMessage.newBuilder()
                         .setKeyIndex(KEY_INDEX)
                         .setCiphertext(ByteString.copyFrom(BYTES))
                         .build());
-        verifyErrorLogUtilError(
-                exception,
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__COBALT_UPLOAD_API_REMOTE_EXCEPTION,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
     }
 }

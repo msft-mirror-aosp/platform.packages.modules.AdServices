@@ -1,0 +1,44 @@
+/*
+ * Copyright (C) 2024 The Android Open Source Project
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package android.adservices.cts;
+
+import static com.google.common.truth.Truth.assertThat;
+
+import android.adservices.adselection.AdSelectionFromOutcomesConfig;
+import android.adservices.adselection.AdSelectionFromOutcomesConfigFixture;
+import android.adservices.adselection.RemoveAdSelectionFromOutcomesOverrideRequest;
+
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
+
+import org.junit.Test;
+
+/** Adds tests for {@link RemoveAdSelectionFromOutcomesOverrideRequest} */
+@RequiresSdkLevelAtLeastS
+public final class RemoveAdSelectionFromOutcomesOverrideRequestTest
+        extends CtsAdServicesDeviceTestCase {
+    private static final AdSelectionFromOutcomesConfig AD_SELECTION_FROM_OUTCOMES_CONFIG =
+            AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
+
+    @Test
+    public void testBuildsAddAdSelectionOverrideRequest() {
+        RemoveAdSelectionFromOutcomesOverrideRequest request =
+                new RemoveAdSelectionFromOutcomesOverrideRequest(AD_SELECTION_FROM_OUTCOMES_CONFIG);
+
+        assertThat(request.getAdSelectionFromOutcomesConfig())
+                .isEqualTo(AD_SELECTION_FROM_OUTCOMES_CONFIG);
+    }
+}

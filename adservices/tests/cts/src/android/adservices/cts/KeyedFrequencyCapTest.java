@@ -17,48 +17,43 @@
 package android.adservices.cts;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.KeyedFrequencyCap;
 import android.adservices.common.KeyedFrequencyCapFixture;
 import android.os.Parcel;
 
-import androidx.test.filters.SmallTest;
-
-import com.android.adservices.common.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.EqualsTester;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.time.Duration;
 
 /** Unit tests for {@link KeyedFrequencyCap}. */
-@SmallTest
-public class KeyedFrequencyCapTest {
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
+@RequiresSdkLevelAtLeastS
+public final class KeyedFrequencyCapTest extends CtsAdServicesDeviceTestCase {
     @Test
     public void testBuildValidKeyedFrequencyCap_success() {
-        final KeyedFrequencyCap originalCap =
+        KeyedFrequencyCap originalCap =
                 new KeyedFrequencyCap.Builder(
                                 KeyedFrequencyCapFixture.KEY1,
                                 KeyedFrequencyCapFixture.VALID_COUNT,
                                 KeyedFrequencyCapFixture.ONE_DAY_DURATION)
                         .build();
 
-        assertThat(originalCap.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
-        assertThat(originalCap.getMaxCount()).isEqualTo(KeyedFrequencyCapFixture.VALID_COUNT);
-        assertThat(originalCap.getInterval()).isEqualTo(KeyedFrequencyCapFixture.ONE_DAY_DURATION);
+        expect.that(originalCap.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
+        expect.that(originalCap.getMaxCount()).isEqualTo(KeyedFrequencyCapFixture.VALID_COUNT);
+        expect.that(originalCap.getInterval()).isEqualTo(KeyedFrequencyCapFixture.ONE_DAY_DURATION);
     }
 
     @Test
     public void testParcelKeyedFrequencyCap_success() {
-        final KeyedFrequencyCap originalCap =
+        KeyedFrequencyCap originalCap =
                 new KeyedFrequencyCap.Builder(
                                 KeyedFrequencyCapFixture.KEY1,
                                 KeyedFrequencyCapFixture.VALID_COUNT,
@@ -68,105 +63,57 @@ public class KeyedFrequencyCapTest {
         Parcel targetParcel = Parcel.obtain();
         originalCap.writeToParcel(targetParcel, 0);
         targetParcel.setDataPosition(0);
-        final KeyedFrequencyCap capFromParcel =
-                KeyedFrequencyCap.CREATOR.createFromParcel(targetParcel);
+        KeyedFrequencyCap capFromParcel = KeyedFrequencyCap.CREATOR.createFromParcel(targetParcel);
 
-        assertThat(capFromParcel.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
-        assertThat(capFromParcel.getMaxCount()).isEqualTo(KeyedFrequencyCapFixture.VALID_COUNT);
-        assertThat(capFromParcel.getInterval())
+        expect.that(capFromParcel.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY1);
+        expect.that(capFromParcel.getMaxCount()).isEqualTo(KeyedFrequencyCapFixture.VALID_COUNT);
+        expect.that(capFromParcel.getInterval())
                 .isEqualTo(KeyedFrequencyCapFixture.ONE_DAY_DURATION);
     }
 
     @Test
     public void testEqualsIdentical_success() {
-        final KeyedFrequencyCap originalCap =
+        KeyedFrequencyCap originalCap =
                 KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
                                 KeyedFrequencyCapFixture.KEY1)
                         .build();
-        final KeyedFrequencyCap identicalCap =
+        KeyedFrequencyCap identicalCap =
                 KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
                                 KeyedFrequencyCapFixture.KEY1)
                         .build();
-
-        assertThat(originalCap.equals(identicalCap)).isTrue();
-    }
-
-    @Test
-    public void testEqualsDifferent_success() {
-        final KeyedFrequencyCap originalCap =
-                KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
-                                KeyedFrequencyCapFixture.KEY1)
-                        .build();
-        final KeyedFrequencyCap differentCap =
+        KeyedFrequencyCap differentCap =
                 KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
                                 KeyedFrequencyCapFixture.KEY2)
                         .build();
-
-        assertThat(originalCap.equals(differentCap)).isFalse();
-    }
-
-    @Test
-    public void testEqualsNull_success() {
-        final KeyedFrequencyCap originalCap =
-                KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
-                                KeyedFrequencyCapFixture.KEY1)
-                        .build();
-        final KeyedFrequencyCap nullCap = null;
-
-        assertThat(originalCap.equals(nullCap)).isFalse();
-    }
-
-    @Test
-    public void testHashCodeIdentical_success() {
-        final KeyedFrequencyCap originalCap =
-                KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
-                                KeyedFrequencyCapFixture.KEY1)
-                        .build();
-        final KeyedFrequencyCap identicalCap =
-                KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
-                                KeyedFrequencyCapFixture.KEY1)
-                        .build();
-
-        assertThat(originalCap.hashCode()).isEqualTo(identicalCap.hashCode());
-    }
-
-    @Test
-    public void testHashCodeDifferent_success() {
-        final KeyedFrequencyCap originalCap =
-                KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
-                                KeyedFrequencyCapFixture.KEY1)
-                        .build();
-        final KeyedFrequencyCap differentCap =
-                KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
-                                KeyedFrequencyCapFixture.KEY2)
-                        .build();
-
-        assertThat(originalCap.hashCode()).isNotEqualTo(differentCap.hashCode());
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(originalCap, identicalCap);
+        et.expectObjectsAreNotEqual(originalCap, differentCap);
+        et.expectObjectsAreNotEqual(originalCap, null);
     }
 
     @Test
     public void testToString() {
-        final KeyedFrequencyCap originalCap =
+        KeyedFrequencyCap originalCap =
                 new KeyedFrequencyCap.Builder(
                                 KeyedFrequencyCapFixture.KEY1,
                                 KeyedFrequencyCapFixture.VALID_COUNT,
                                 KeyedFrequencyCapFixture.ONE_DAY_DURATION)
                         .build();
 
-        final String expectedString =
+        String expectedString =
                 String.format(
                         "KeyedFrequencyCap{mAdCounterKey=%d, mMaxCount=%d, mInterval=%s}",
                         KeyedFrequencyCapFixture.KEY1,
                         KeyedFrequencyCapFixture.VALID_COUNT,
                         KeyedFrequencyCapFixture.ONE_DAY_DURATION);
-        assertThat(originalCap.toString()).isEqualTo(expectedString);
+        expect.that(originalCap.toString()).isEqualTo(expectedString);
     }
 
     @Test
     public void testBuildValidKeyedFrequencyCap_allSettersOverwriteSuccess() {
-        final Duration twoDays = KeyedFrequencyCapFixture.ONE_DAY_DURATION.plusDays(1);
+        Duration twoDays = KeyedFrequencyCapFixture.ONE_DAY_DURATION.plusDays(1);
 
-        final KeyedFrequencyCap originalCap =
+        KeyedFrequencyCap originalCap =
                 new KeyedFrequencyCap.Builder(
                                 KeyedFrequencyCapFixture.KEY1,
                                 KeyedFrequencyCapFixture.VALID_COUNT,
@@ -176,10 +123,10 @@ public class KeyedFrequencyCapTest {
                         .setInterval(twoDays)
                         .build();
 
-        assertThat(originalCap.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY2);
-        assertThat(originalCap.getMaxCount())
+        expect.that(originalCap.getAdCounterKey()).isEqualTo(KeyedFrequencyCapFixture.KEY2);
+        expect.that(originalCap.getMaxCount())
                 .isEqualTo(KeyedFrequencyCapFixture.FILTER_EXCEED_COUNT);
-        assertThat(originalCap.getInterval()).isEqualTo(twoDays);
+        expect.that(originalCap.getInterval()).isEqualTo(twoDays);
     }
 
     @Test
@@ -322,12 +269,12 @@ public class KeyedFrequencyCapTest {
 
     @Test
     public void testGetSizeInBytes() {
-        assertEquals(
-                20,
-                KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
-                                KeyedFrequencyCapFixture.KEY1)
-                        .build()
-                        .getSizeInBytes());
+        assertThat(
+                        KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
+                                        KeyedFrequencyCapFixture.KEY1)
+                                .build()
+                                .getSizeInBytes())
+                .isEqualTo(20);
     }
 
     @Test
@@ -336,7 +283,7 @@ public class KeyedFrequencyCapTest {
                 KeyedFrequencyCapFixture.getValidKeyedFrequencyCapBuilderOncePerDay(
                                 KeyedFrequencyCapFixture.KEY1)
                         .build();
-        assertEquals(toSerialize, KeyedFrequencyCap.fromJson(toSerialize.toJson()));
+        assertThat(KeyedFrequencyCap.fromJson(toSerialize.toJson())).isEqualTo(toSerialize);
     }
 
     @Test
@@ -383,5 +330,16 @@ public class KeyedFrequencyCapTest {
         JSONObject json = toSerialize.toJson();
         json.remove(KeyedFrequencyCap.INTERVAL_FIELD_NAME);
         assertThrows(JSONException.class, () -> KeyedFrequencyCap.fromJson(json));
+    }
+
+    @Test
+    public void testKeyedFrequencyCapDescribeContents() {
+        KeyedFrequencyCap originalCap =
+                new KeyedFrequencyCap.Builder(
+                                KeyedFrequencyCapFixture.KEY1,
+                                KeyedFrequencyCapFixture.VALID_COUNT,
+                                KeyedFrequencyCapFixture.ONE_DAY_DURATION)
+                        .build();
+        assertWithMessage("describeContents").that(originalCap.describeContents()).isEqualTo(0);
     }
 }

@@ -16,20 +16,31 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_COLLISION_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_JSON_PROCESSING_STATUS_SEMANTIC_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_UNPACK_SIGNAL_UPDATES_JSON_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_SEMANTIC_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_SYNTACTIC_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_SIZE_BUCKETS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.computeSize;
+
 import android.adservices.common.AdTechIdentifier;
 import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.signals.evict.SignalEvictionController;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEvent;
 import com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler;
 import com.android.adservices.service.signals.updateprocessors.UpdateOutput;
 import com.android.adservices.service.signals.updateprocessors.UpdateProcessorSelector;
+import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
+import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogger;
 import com.android.internal.annotations.VisibleForTesting;
-
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -81,7 +92,9 @@ public class UpdateProcessingOrchestrator {
             String packageName,
             Instant creationTime,
             JSONObject json,
-            DevContext devContext) {
+            DevContext devContext,
+            UpdateSignalsApiCalledStats.Builder jsonProcessingStatsBuilder,
+            UpdateSignalsProcessReportedLogger updateSignalsProcessReportedLogger) {
         sLogger.v("Processing signal updates for " + adtech);
         try {
             // Load the current signals, organizing them into a map for quick access
@@ -103,7 +116,31 @@ public class UpdateProcessingOrchestrator {
              * An update encoder event, in case the update processors reported an update in encoder
              * endpoint.
              */
-            UpdateOutput combinedUpdates = runProcessors(json, currentSignalsMap);
+            UpdateOutput combinedUpdates;
+            if (jsonProcessingStatsBuilder == null) {
+                combinedUpdates =
+                        runProcessors(json, currentSignalsMap, jsonProcessingStatsBuilder);
+            } else {
+                jsonProcessingStatsBuilder.setJsonSize(
+                        computeSize(json.toString().getBytes().length, JSON_SIZE_BUCKETS));
+                try {
+                    combinedUpdates =
+                            runProcessors(json, currentSignalsMap, jsonProcessingStatsBuilder);
+                } catch (IllegalArgumentException e) {
+                    jsonProcessingStatsBuilder.setJsonProcessingStatus(
+                            JSON_PROCESSING_STATUS_SEMANTIC_ERROR);
+                    ErrorLogUtil.e(
+                            e,
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_JSON_PROCESSING_STATUS_SEMANTIC_ERROR,
+                            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
+                    throw e;
+                }
+            }
+
+            updateSignalsProcessReportedLogger.setSignalsWrittenAndValuesCount(
+                    combinedUpdates.getToAddSize() + combinedUpdates.getToRemoveSize());
+            updateSignalsProcessReportedLogger.setKeysStoredCount(
+                    combinedUpdates.getKeysTouchedSize());
 
             List<DBProtectedSignal> updatedSignals =
                     updateProtectedSignalInMemory(
@@ -111,12 +148,21 @@ public class UpdateProcessingOrchestrator {
 
             sLogger.v(
                     "Finished parsing JSON %d signals to add, and %d signals to remove",
-                    combinedUpdates.getToAdd().size(), combinedUpdates.getToRemove().size());
+                    combinedUpdates.getToAddSize(), combinedUpdates.getToRemoveSize());
 
-            mSignalEvictionController.evict(adtech, updatedSignals, combinedUpdates);
+            mSignalEvictionController.evict(
+                    adtech, updatedSignals, combinedUpdates, updateSignalsProcessReportedLogger);
 
             writeChanges(adtech, creationTime, combinedUpdates, devContext);
         } catch (JSONException e) {
+            if (jsonProcessingStatsBuilder != null) {
+                jsonProcessingStatsBuilder.setJsonProcessingStatus(
+                        JSON_PROCESSING_STATUS_SYNTACTIC_ERROR);
+            }
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_UNPACK_SIGNAL_UPDATES_JSON_FAILURE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
             throw new IllegalArgumentException("Couldn't unpack signal updates JSON", e);
         }
     }
@@ -166,7 +212,9 @@ public class UpdateProcessingOrchestrator {
     }
 
     private UpdateOutput runProcessors(
-            JSONObject json, Map<ByteBuffer, Set<DBProtectedSignal>> currentSignalsMap)
+            JSONObject json,
+            Map<ByteBuffer, Set<DBProtectedSignal>> currentSignalsMap,
+            UpdateSignalsApiCalledStats.Builder jsonProcessingStatsBuilder)
             throws JSONException {
 
         UpdateOutput combinedUpdates = new UpdateOutput();
@@ -182,6 +230,13 @@ public class UpdateProcessingOrchestrator {
             combinedUpdates.getToAdd().addAll(output.getToAdd());
             combinedUpdates.getToRemove().addAll(output.getToRemove());
             if (!Collections.disjoint(combinedUpdates.getKeysTouched(), output.getKeysTouched())) {
+                if (jsonProcessingStatsBuilder != null) {
+                    jsonProcessingStatsBuilder.setJsonProcessingStatus(
+                            JSON_PROCESSING_STATUS_SEMANTIC_ERROR);
+                }
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_COLLISION_ERROR,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
                 throw new IllegalArgumentException(COLLISION_ERROR);
             }
             combinedUpdates.getKeysTouched().addAll(output.getKeysTouched());
@@ -209,11 +264,15 @@ public class UpdateProcessingOrchestrator {
                         .map(DBProtectedSignal.Builder::build)
                         .collect(Collectors.toList()),
                 combinedUpdates.getToRemove());
+        sLogger.v("Completed write to PAS DB");
 
         // There is a valid possibility where there is no update for encoder
         if (combinedUpdates.getUpdateEncoderEvent() != null) {
             mUpdateEncoderEventHandler.handle(
                     adTech, combinedUpdates.getUpdateEncoderEvent(), devContext);
+            sLogger.v("Completed encoding update handler for buyer: " + adTech);
+        } else {
+            sLogger.v("No encoding update is present in CombinedUpdates");
         }
     }
 }

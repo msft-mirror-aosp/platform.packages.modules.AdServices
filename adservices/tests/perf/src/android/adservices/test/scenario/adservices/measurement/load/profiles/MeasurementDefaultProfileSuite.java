@@ -35,6 +35,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.service.DebugFlagsConstants;
 import com.android.adservices.service.FlagsConstants;
 
 import com.google.mockwebserver.MockWebServer;
@@ -67,13 +68,13 @@ public class MeasurementDefaultProfileSuite {
     public static final AdServicesFlagsSetterRule sFlags =
             AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
                     // Override consent manager behavior to give user consent.
-                    .setSystemProperty(FlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
+                    .setDebugFlag(DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE, true)
                     // Override adid kill switch.
                     .setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false)
                     // Override the flag to allow current package to call APIs.
-                    .setPpapiAppAllowList("*")
+                    .setPpapiAppAllowList(FlagsConstants.ALLOWLIST_ALL)
                     // Override the flag to allow current package to call delete API.
-                    .setMsmtWebContextClientAllowList("*")
+                    .setMsmtWebContextClientAllowList(FlagsConstants.ALLOWLIST_ALL)
                     // Override the flag for the global kill switch.
                     .setFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, false)
                     // Override measurement kill switch.
@@ -95,8 +96,6 @@ public class MeasurementDefaultProfileSuite {
                             true)
                     // Set flag to pre seed enrollment.
                     .setFlag(FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED, true)
-                    // Set flag not match origin.
-                    .setFlag(FlagsConstants.KEY_MEASUREMENT_ENFORCE_ENROLLMENT_ORIGIN_MATCH, false)
                     .setMeasurementTags()
                     .setCompatModeFlags();
 
