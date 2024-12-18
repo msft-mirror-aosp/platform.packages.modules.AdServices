@@ -16,6 +16,11 @@
 
 package com.android.adservices.common;
 
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 
 import static org.mockito.Mockito.when;
@@ -70,6 +75,27 @@ public final class AdServicesMockFlagsSetterRule
         switch (flag.name) {
             case KEY_GLOBAL_KILL_SWITCH:
                 when(mockFlags.getGlobalKillSwitch()).then(answerBoolean(flag));
+                return;
+            case KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK:
+                when(mockFlags.getDisableFledgeEnrollmentCheck())
+                        .thenReturn(Boolean.valueOf(flag.value));
+                return;
+            case KEY_ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE:
+                when(mockFlags.getEnforceForegroundStatusForScheduleCustomAudience())
+                        .thenReturn(Boolean.valueOf(flag.value));
+                return;
+            case KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS:
+                when(mockFlags.getEnforceForegroundStatusForSignals())
+                        .thenReturn(Boolean.valueOf(flag.value));
+                return;
+            case KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS:
+                when(mockFlags
+                                .getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests())
+                        .thenReturn(Boolean.valueOf(flag.value));
+                return;
+            case KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED:
+                when(mockFlags.getFledgeScheduleCustomAudienceUpdateEnabled())
+                        .thenReturn(Boolean.valueOf(flag.value));
                 return;
             default:
                 throw new UnsupportedOperationException("Don't know how to mock " + flag);
