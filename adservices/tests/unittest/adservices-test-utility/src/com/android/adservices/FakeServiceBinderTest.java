@@ -19,24 +19,29 @@ package com.android.adservices;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 
 import org.junit.Test;
 
+@RequiresSdkLevelAtLeastT(reason = "ServiceBinder is not available on S")
 public final class FakeServiceBinderTest extends AdServicesUnitTestCase {
 
     private final Object mService = new Object();
-    private final FakeServiceBinder<Object> mServiceBinder = new FakeServiceBinder<>(mService);
+
+    // NOTE: cannot use a mServiceBinder as class would not initialize on S
 
     @Test
     public void testGetService() {
+        var serviceBinder = new FakeServiceBinder<>(mService);
         assertWithMessage("getService()")
-                .that(mServiceBinder.getService())
+                .that(serviceBinder.getService())
                 .isSameInstanceAs(mService);
     }
 
     @Test
     public void testUnbindFromService() {
+        var serviceBinder = new FakeServiceBinder<>(mService);
         // TODO(b/336558146): add logic here (for example, add method to assert it's unbound)
-        mServiceBinder.unbindFromService();
+        serviceBinder.unbindFromService();
     }
 }

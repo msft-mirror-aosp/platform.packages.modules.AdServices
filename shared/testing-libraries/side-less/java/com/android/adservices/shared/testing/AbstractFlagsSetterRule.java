@@ -233,6 +233,13 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
             Description description,
             List<Throwable> cleanUpErrors,
             Throwable testFailure) {
+        if (mSkipStuffWhenObjectsAreNullOnUnitTests) {
+            mLog.w(
+                    "onTestFailure(%s): skipping (should only happen on rule test itself)",
+                    TestHelper.getTestName(description));
+            return;
+        }
+
         runSafely(cleanUpErrors, () -> mOnTestFailureFlags.addAll(mDeviceConfig.getAll()));
         runSafely(
                 cleanUpErrors,
@@ -617,8 +624,11 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         return false;
     }
 
-    private T setFlag(NameValuePair flag) {
+    // TODO(b/384798806): add unit test and/or javadoc
+    protected final T setFlag(NameValuePair flag) {
+        // TODO(b/384798806): log as well? Or would it be too verbose?
         mFlagsSetter.accept(flag);
+        mChangedFlags.add(flag.name);
         return getThis();
     }
 
@@ -630,7 +640,6 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         } else {
             mDeviceConfig.setWithSeparator(flag.name, flag.value, flag.separator);
         }
-        mChangedFlags.add(flag.name);
     }
 
     private void resetFlags(String testName) {

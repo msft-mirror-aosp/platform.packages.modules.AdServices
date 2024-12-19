@@ -1931,8 +1931,8 @@ public final class EventReportWindowCalcDelegateTest extends AdServicesMockitoTe
 
     @Test
     public void fallsWithinWindow_windowNotStarted() {
-        long sourceTime = System.currentTimeMillis();
-        long triggerTime = System.currentTimeMillis() + TimeUnit.HOURS.toMillis(1) - 1;
+        long sourceTime = 1734458442000L;
+        long triggerTime = sourceTime + TimeUnit.HOURS.toMillis(1) - 1;
         Trigger trigger = TriggerFixture.getValidTriggerBuilder()
                 .setTriggerTime(triggerTime)
                 .build();
