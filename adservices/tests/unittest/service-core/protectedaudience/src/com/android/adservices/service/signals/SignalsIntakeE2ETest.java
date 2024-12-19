@@ -17,7 +17,6 @@
 package com.android.adservices.service.signals;
 
 import static com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
-import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
 import static com.android.adservices.service.signals.SignalsFixture.ADTECH;
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_KEY_1;
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_VALUE_1;
@@ -64,6 +63,7 @@ import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.common.DbTestUtil;
+import com.android.adservices.common.annotations.SetPasAppAllowList;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -135,6 +135,7 @@ import java.util.concurrent.TimeUnit;
 @MockStatic(FlagsFactory.class)
 @MockStatic(DebugFlags.class)
 @SetDefaultFledgeFlags
+@SetPasAppAllowList
 public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
     private static final Uri URI = Uri.parse("https://localhost");
@@ -190,9 +191,6 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
 
     @Before
     public void setup() {
-        // TODO(b/384981487): use @SetPasAppAllowList insteads
-        flags.setFlag(KEY_PAS_APP_ALLOW_LIST, CommonFixture.TEST_PACKAGE_NAME);
-
         mocker.mockGetFlags(mFakeFlags);
         mSignalsDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)

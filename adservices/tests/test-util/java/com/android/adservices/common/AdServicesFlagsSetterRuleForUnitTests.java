@@ -35,6 +35,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_MET
 
 import android.os.Build;
 
+import androidx.test.platform.app.InstrumentationRegistry;
+
 import com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.AndroidLogger;
@@ -118,6 +120,11 @@ abstract class AdServicesFlagsSetterRuleForUnitTests<
         } else {
             super.processAnnotation(description, annotation);
         }
+    }
+
+    @Override
+    protected final String getTestPackageName() {
+        return InstrumentationRegistry.getInstrumentation().getContext().getPackageName();
     }
 
     @Override
