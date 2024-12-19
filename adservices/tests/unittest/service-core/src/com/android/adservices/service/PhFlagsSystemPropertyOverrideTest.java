@@ -84,7 +84,8 @@ public final class PhFlagsSystemPropertyOverrideTest extends AdServicesExtendedM
 
     private final Flags mPhFlags = PhFlags.getInstance();
 
-    private final PhFlagsTestHelper mFlagsTestHelper = new PhFlagsTestHelper(mPhFlags, expect);
+    private final PhFlagsTestHelper mFlagsTestHelper =
+            new PhFlagsTestHelper(mPhFlags, /* isRaw= */ true, expect);
 
     private final FlagGuard mMsmtKillSwitchGuard =
             value -> mFlagsTestHelper.setMsmtKillSwitch(!value);
