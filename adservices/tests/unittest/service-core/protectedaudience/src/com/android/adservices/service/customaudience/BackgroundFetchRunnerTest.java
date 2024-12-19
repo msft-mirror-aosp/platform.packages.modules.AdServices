@@ -18,6 +18,8 @@ package com.android.adservices.service.customaudience;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.OMIT_ADS_VALUE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -39,9 +41,9 @@ import android.adservices.http.MockWebServerRule;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 
-import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
@@ -56,6 +58,7 @@ import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -79,20 +82,16 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @SpyStatic(FlagsFactory.class)
+@SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
+@SetFlagEnabled(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
 public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTestCase {
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
-    private final Flags mFakeFlags =
-            new FakeFlagsFactory.TestFlags() {
-                @Override
-                public boolean getFledgeFrequencyCapFilteringEnabled() {
-                    return true;
-                }
 
-                @Override
-                public boolean getFledgeAppInstallFilteringEnabled() {
-                    return true;
-                }
-            };
+    // TODO(b/384798806): move to superclass (but first must fix rule so it doesn't throw a
+    // TestFailure when test fail without setting any flag, as it would be misleading
+    @Rule public final AdServicesFakeFlagsSetterRule flags = new AdServicesFakeFlagsSetterRule();
+
+    // TODO(b/384949821): move to superclass
+    private final Flags mFakeFlags = flags.getFlags();
 
     private final String mFetchPath = "/fetch";
 
@@ -527,7 +526,7 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                                     CustomAudienceUpdatableDataFixture
                                                             .getFullSuccessfulJsonResponseString());
                                 } catch (JSONException exception) {
-                                    sLogger.e(exception, "Failed to create JSON full response");
+                                    mLog.e(exception, "Failed to create JSON full response");
                                     return null;
                                 } finally {
                                     responseLatch.countDown();

@@ -72,5 +72,15 @@ public final class AdServicesFakeFlagsSetterRule
         public boolean getGlobalKillSwitch() {
             return getBoolean(FlagsConstants.KEY_GLOBAL_KILL_SWITCH);
         }
+
+        @Override
+        public boolean getFledgeFrequencyCapFilteringEnabled() {
+            return getBoolean(FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED);
+        }
+
+        @Override
+        public boolean getFledgeAppInstallFilteringEnabled() {
+            return getBoolean(FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED);
+        }
     }
 }
