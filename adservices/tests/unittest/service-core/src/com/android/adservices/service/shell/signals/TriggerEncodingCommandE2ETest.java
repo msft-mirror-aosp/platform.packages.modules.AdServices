@@ -24,8 +24,6 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_A
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS;
-import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
-import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
@@ -51,6 +49,8 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.WebViewSupportUtil;
+import com.android.adservices.common.annotations.SetPasAppAllowList;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.DBEncodedPayload;
@@ -103,7 +103,6 @@ import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
-import com.android.adservices.shared.testing.annotations.SetStringFlag;
 import com.android.adservices.shared.testing.concurrency.SimpleSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -127,8 +126,8 @@ import java.io.PrintWriter;
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED)
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_ENABLED)
 @SetFlagEnabled(KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS)
-@SetStringFlag(name = KEY_PPAPI_APP_ALLOW_LIST, value = "*")
-@SetStringFlag(name = KEY_PAS_APP_ALLOW_LIST, value = "*")
+@SetPpapiAppAllowList
+@SetPasAppAllowList
 @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = PPAPI_AND_SYSTEM_SERVER)
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)

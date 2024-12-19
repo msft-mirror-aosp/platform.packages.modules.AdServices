@@ -21,7 +21,6 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_PERIODIC_EN
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
-import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
 import static com.android.adservices.spe.AdServicesJobInfo.PERIODIC_SIGNALS_ENCODING_JOB;
@@ -36,11 +35,11 @@ import android.content.Intent;
 import android.net.Uri;
 
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.annotations.SetPasAppAllowList;
 import com.android.adservices.shared.testing.BroadcastReceiverSyncCallback;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
-import com.android.adservices.shared.testing.annotations.SetStringFlag;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -51,7 +50,7 @@ import java.util.concurrent.Executors;
 @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_ENABLED)
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED)
-@SetStringFlag(name = KEY_PAS_APP_ALLOW_LIST, value = "*")
+@SetPasAppAllowList
 @SetFlagEnabled(KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED) // Enabled retry for java script engine
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @EnableDebugFlag(KEY_PERIODIC_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED)
