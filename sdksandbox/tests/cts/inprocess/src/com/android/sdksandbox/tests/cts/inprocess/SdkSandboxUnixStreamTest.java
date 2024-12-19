@@ -20,6 +20,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assume.assumeTrue;
 
 import android.app.ActivityManager;
 import android.net.LocalServerSocket;
@@ -47,6 +48,8 @@ public class SdkSandboxUnixStreamTest extends DeviceSupportedBaseTest {
 
     @Before
     public void setUp() {
+        assumeTrue(SdkLevel.isAtLeastV());
+
         SystemUtil.runShellCommandOrThrow(
                 "am start --user current -W -S --activity-reorder-to-front "
                         + "com.android.socketapp/.SocketApp");
