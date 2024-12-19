@@ -68,11 +68,33 @@ public final class AdServicesFakeFlagsSetterRule
         }
 
         // TODO(b/384798806): remove methods below once it extends AbstractFlags
+        private String getString(String name) {
+            NameValuePair nvp = mFlags.get(name);
+            String value = nvp.value;
+            mLog.v("getString(%s): mapping=%s, returning %s", name, nvp, value);
+            return value;
+        }
+
+        private long getLong(String name) {
+            NameValuePair nvp = mFlags.get(name);
+            long value = nvp == null ? -1 : Long.valueOf(nvp.value);
+            mLog.v("getLong(%s): mapping=%s, returning %d", name, nvp, value);
+            return value;
+        }
+
+        private int getInt(String name) {
+            NameValuePair nvp = mFlags.get(name);
+            int value = nvp == null ? -1 : Integer.valueOf(nvp.value);
+            mLog.v("getInt(%s): mapping=%s, returning %d", name, nvp, value);
+            return value;
+        }
+
         @Override
         public boolean getGlobalKillSwitch() {
             return getBoolean(FlagsConstants.KEY_GLOBAL_KILL_SWITCH);
         }
 
+        // Used by ScheduleCustomAudienceUpdateImplTest
         @Override
         public boolean getFledgeFrequencyCapFilteringEnabled() {
             return getBoolean(FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED);
@@ -81,6 +103,95 @@ public final class AdServicesFakeFlagsSetterRule
         @Override
         public boolean getFledgeAppInstallFilteringEnabled() {
             return getBoolean(FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED);
+        }
+
+        // Used by SignalsIntakeE2ETest
+        @Override
+        public String getPasAppAllowList() {
+            return getString(FlagsConstants.KEY_PAS_APP_ALLOW_LIST);
+        }
+
+        // Used by setDefaultFledgeFlags()
+        @Override
+        public long getAdSelectionBiddingTimeoutPerCaMs() {
+            return getLong(FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS);
+        }
+
+        @Override
+        public long getAdSelectionScoringTimeoutMs() {
+            return getLong(FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS);
+        }
+
+        @Override
+        public long getAdSelectionOverallTimeoutMs() {
+            return getLong(FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS);
+        }
+
+        @Override
+        public boolean getDisableFledgeEnrollmentCheck() {
+            return getBoolean(FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK);
+        }
+
+        @Override
+        public boolean getFledgeRegisterAdBeaconEnabled() {
+            return getBoolean(FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED);
+        }
+
+        @Override
+        public boolean getFledgeFetchCustomAudienceEnabled() {
+            return getBoolean(FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED);
+        }
+
+        @Override
+        public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
+            return getBoolean(FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED);
+        }
+
+        @Override
+        public int getFledgeScheduleCustomAudienceMinDelayMinsOverride() {
+            return getInt(
+                    FlagsConstants
+                            .KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE);
+        }
+
+        @Override
+        public boolean getEnableLoggedTopic() {
+            return getBoolean(FlagsConstants.KEY_ENABLE_LOGGED_TOPIC);
+        }
+
+        @Override
+        public boolean getEnableDatabaseSchemaVersion8() {
+            return getBoolean(FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_8);
+        }
+
+        @Override
+        public boolean getFledgeAuctionServerEnabled() {
+            return getBoolean(FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED);
+        }
+
+        @Override
+        public boolean getFledgeEventLevelDebugReportingEnabled() {
+            return getBoolean(FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED);
+        }
+
+        @Override
+        public boolean getFledgeBeaconReportingMetricsEnabled() {
+            return getBoolean(FlagsConstants.KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED);
+        }
+
+        @Override
+        public boolean getFledgeAppPackageNameLoggingEnabled() {
+            return getBoolean(FlagsConstants.KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED);
+        }
+
+        @Override
+        public boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
+            return getBoolean(FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED);
+        }
+
+        @Override
+        public boolean getPasExtendedMetricsEnabled() {
+            return getBoolean(FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED);
         }
     }
 }

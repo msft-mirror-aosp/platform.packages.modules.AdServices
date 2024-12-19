@@ -16,9 +16,11 @@
 
 package com.android.adservices.common;
 
+import static com.android.adservices.service.FlagsConstants.*;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
@@ -73,9 +75,68 @@ public final class AdServicesMockFlagsSetterRule
         Objects.requireNonNull(flag, "internal error: NameValuePair cannot be null");
 
         switch (flag.name) {
+                // Main kill switches
             case KEY_GLOBAL_KILL_SWITCH:
                 when(mockFlags.getGlobalKillSwitch()).then(answerBoolean(flag));
                 return;
+                // Used by setFlagsForTests
+            case KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS:
+                when(mockFlags.getAdSelectionBiddingTimeoutPerCaMs())
+                        .thenReturn(Long.valueOf(flag.value));
+                return;
+            case KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS:
+                when(mockFlags.getAdSelectionScoringTimeoutMs())
+                        .thenReturn(Long.valueOf(flag.value));
+                return;
+            case KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED:
+                when(mockFlags.getFledgeRegisterAdBeaconEnabled())
+                        .thenReturn(Boolean.valueOf(flag.value));
+                return;
+            case KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED:
+                when(mockFlags.getFledgeFetchCustomAudienceEnabled())
+                        .thenReturn(Boolean.valueOf(flag.value));
+                return;
+            case KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS:
+                when(mockFlags.getAdSelectionOverallTimeoutMs())
+                        .thenReturn(Long.valueOf(flag.value));
+                return;
+            case KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE:
+                when(mockFlags.getFledgeScheduleCustomAudienceMinDelayMinsOverride())
+                        .thenReturn(Integer.valueOf(flag.value));
+                return;
+            case KEY_ENABLE_LOGGED_TOPIC:
+                when(mockFlags.getEnableLoggedTopic()).thenReturn(Boolean.valueOf(flag.value));
+                return;
+            case KEY_ENABLE_DATABASE_SCHEMA_VERSION_8:
+                when(mockFlags.getEnableDatabaseSchemaVersion8())
+                        .thenReturn(Boolean.valueOf(flag.value));
+                return;
+            case KEY_FLEDGE_AUCTION_SERVER_ENABLED:
+                when(mockFlags.getFledgeAuctionServerEnabled())
+                        .thenReturn(Boolean.valueOf(flag.value));
+                return;
+            case KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED:
+                when(mockFlags.getFledgeEventLevelDebugReportingEnabled())
+                        .thenReturn(Boolean.valueOf(flag.value));
+                return;
+            case KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED:
+                when(mockFlags.getFledgeBeaconReportingMetricsEnabled())
+                        .thenReturn(Boolean.valueOf(flag.value));
+                return;
+            case KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED:
+                when(mockFlags.getFledgeAppPackageNameLoggingEnabled())
+                        .thenReturn(Boolean.valueOf(flag.value));
+                return;
+            case KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED:
+                when(mockFlags.getFledgeAuctionServerKeyFetchMetricsEnabled())
+                        .thenReturn(Boolean.valueOf(flag.value));
+                return;
+            case KEY_PAS_EXTENDED_METRICS_ENABLED:
+                when(mockFlags.getPasExtendedMetricsEnabled())
+                        .thenReturn(Boolean.valueOf(flag.value));
+                return;
+
+                // Used by ScheduleCustomAudienceUpdateImplTest
             case KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK:
                 when(mockFlags.getDisableFledgeEnrollmentCheck())
                         .thenReturn(Boolean.valueOf(flag.value));
