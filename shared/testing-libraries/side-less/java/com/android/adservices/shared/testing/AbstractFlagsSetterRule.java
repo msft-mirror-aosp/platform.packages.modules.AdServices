@@ -60,6 +60,7 @@ import org.junit.runners.model.Statement;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -109,15 +110,13 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     private final List<Command> mInitialCommands = new ArrayList<>();
 
     // Name of flags that were changed by the test
-    private final Set<String> mChangedFlags = new LinkedHashSet<>();
+    private final Set<NameValuePair> mChangedFlags = new LinkedHashSet<>();
     // Name of system properties that were changed by the test
-    private final Set<String> mChangedSystemProperties = new LinkedHashSet<>();
+    private final Set<NameValuePair> mChangedSystemProperties = new LinkedHashSet<>();
     private final Matcher mSystemPropertiesMatcher;
 
     private final List<NameValuePair> mPreTestFlags = new ArrayList<>();
     private final List<NameValuePair> mPreTestSystemProperties = new ArrayList<>();
-    private final List<NameValuePair> mOnTestFailureFlags = new ArrayList<>();
-    private final List<NameValuePair> mOnTestFailureSystemProperties = new ArrayList<>();
 
     private DeviceConfig.SyncDisabledModeForTest mPreviousSyncDisabledModeForTest;
 
@@ -228,27 +227,6 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     }
 
     @Override
-    protected void onTestFailure(
-            Statement base,
-            Description description,
-            List<Throwable> cleanUpErrors,
-            Throwable testFailure) {
-        if (mSkipStuffWhenObjectsAreNullOnUnitTests) {
-            mLog.w(
-                    "onTestFailure(%s): skipping (should only happen on rule test itself)",
-                    TestHelper.getTestName(description));
-            return;
-        }
-
-        runSafely(cleanUpErrors, () -> mOnTestFailureFlags.addAll(mDeviceConfig.getAll()));
-        runSafely(
-                cleanUpErrors,
-                () ->
-                        mOnTestFailureSystemProperties.addAll(
-                                mSystemProperties.getAll(mSystemPropertiesMatcher)));
-    }
-
-    @Override
     protected void postTest(
             Statement base, Description description, List<Throwable> cleanUpErrors) {
         String testName = TestHelper.getTestName(description);
@@ -286,15 +264,22 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         StringBuilder extraInfo = new StringBuilder("*** Flags / system properties state ***\n");
         if (mFlagsClearedByTest) {
             extraInfo.append("(NOTE: test explicitly cleared all flags.)\n");
+        } else if (mChangedFlags.isEmpty() && mChangedSystemProperties.isEmpty()) {
+            mLog.v(
+                    "throwTestFailure(): rethrowing %s because no flag (or system property)"
+                            + " changed",
+                    testError);
+            throw testError;
         }
 
-        logAllAndDumpDiff("flags", extraInfo, mChangedFlags, mPreTestFlags, mOnTestFailureFlags);
+        // NOTE: currently mChangedFlags is a Set, so if the test changed the same flag multiple
+        // times, only the last value will be logged. It might be useful to change it to be a List
+        // instead (so it reports all changes), but that would require changing the message as well
+        // (as currently it's just flag_name: before=value, after=value)
+
+        logAllAndDumpDiff("flags", extraInfo, mChangedFlags, mPreTestFlags);
         logAllAndDumpDiff(
-                "system properties",
-                extraInfo,
-                mChangedSystemProperties,
-                mPreTestSystemProperties,
-                mOnTestFailureSystemProperties);
+                "system properties", extraInfo, mChangedSystemProperties, mPreTestSystemProperties);
 
         TestFailure.throwTestFailure(testError, extraInfo.toString());
     }
@@ -302,36 +287,35 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     private void logAllAndDumpDiff(
             String what,
             StringBuilder dump,
-            Set<String> changedNames,
-            List<NameValuePair> preTest,
-            List<NameValuePair> postTest) {
+            Set<NameValuePair> changedFlags,
+            List<NameValuePair> preTest) {
         // Log all values
         log(preTest, "%s before the test", what);
-        log(postTest, "%s after the test", what);
+        log(changedFlags, "%s after the test", what);
 
         // Dump only what was changed
-        appendChanges(dump, what, changedNames, preTest, postTest);
+        appendChanges(dump, what, changedFlags, preTest);
     }
 
     private void appendChanges(
             StringBuilder dump,
             String what,
-            Set<String> changedNames,
-            List<NameValuePair> preTest,
-            List<NameValuePair> postTest) {
-        if (changedNames.isEmpty()) {
+            Set<NameValuePair> changedFlags,
+            List<NameValuePair> preTest) {
+        if (changedFlags.isEmpty()) {
             dump.append("Test didn't change any ").append(what).append('\n');
             return;
         }
         dump.append("Test changed ")
-                .append(changedNames.size())
+                .append(changedFlags.size())
                 .append(' ')
                 .append(what)
-                .append(" (see log for all changes): \n");
+                .append(" (see log for all changes):\n");
 
-        for (String name : changedNames) {
+        for (var flag : changedFlags) {
+            String name = flag.name;
             String before = getValue(preTest, name);
-            String after = getValue(postTest, name);
+            String after = flag.value;
             dump.append('\t')
                     .append(name)
                     .append(": ")
@@ -379,7 +363,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
     @FormatMethod
     private void log(
-            List<NameValuePair> values,
+            Collection<NameValuePair> values,
             @FormatString String whatFmt,
             @Nullable Object... whatArgs) {
         String what = String.format(whatFmt, whatArgs);
@@ -628,7 +612,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     protected final T setFlag(NameValuePair flag) {
         // TODO(b/384798806): log as well? Or would it be too verbose?
         mFlagsSetter.accept(flag);
-        mChangedFlags.add(flag.name);
+        mChangedFlags.add(flag);
         return getThis();
     }
 
@@ -689,7 +673,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     private T setSystemProperty(NameValuePair systemProperty) {
         mLog.d("Setting system property: %s", systemProperty);
         mSystemProperties.set(systemProperty.name, systemProperty.value);
-        mChangedSystemProperties.add(systemProperty.name);
+        mChangedSystemProperties.add(systemProperty);
         return getThis();
     }
 

@@ -34,6 +34,7 @@ import static org.junit.Assert.assertThrows;
 import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassHasNoNothingAtAll;
 import com.android.adservices.shared.testing.AbstractFlagsSetterRule;
 import com.android.adservices.shared.testing.NameValuePair;
+import com.android.adservices.shared.testing.TestFailure;
 import com.android.adservices.shared.testing.annotations.SetDoubleFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
@@ -46,14 +47,16 @@ import com.android.adservices.shared.testing.annotations.SetStringArrayFlag;
 import com.android.adservices.shared.testing.annotations.SetStringFlag;
 import com.android.adservices.shared.testing.device.DeviceGateway;
 
+import com.google.common.collect.ImmutableList;
+
 import org.junit.Test;
 import org.junit.runner.Description;
 
 import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSetterRule<R>>
         extends SharedSidelessTestCase {
@@ -523,6 +526,55 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
                         new NameValuePair("string1", "One, the name is String One"),
                         new NameValuePair("string2", "Two, the name is String Two"))
                 .inOrder();
+    }
+
+    @Test
+    public final void testTestFails_throwsTestFailureWhenFlagsSet() throws Throwable {
+        R rule = newRule().setFlag("before", "I am Groot!");
+        Exception testFailure = new Exception("D'OH!");
+        mTest.onEvaluate(
+                () -> {
+                    rule.setFlag("inside", "out");
+                    throw testFailure;
+                });
+
+        TestFailure actualFailure = assertThrows(TestFailure.class, () -> runTest(rule));
+
+        expect.withMessage("actual failure")
+                .that(actualFailure)
+                .hasCauseThat()
+                .isSameInstanceAs(testFailure);
+
+        ImmutableList<String> extraInfo = actualFailure.getExtraInfo();
+        assertWithMessage("extra info").that(extraInfo).hasSize(1);
+
+        // TODO(b/340882758): should also set a flag whose value before is not null (and other whose
+        // value didn't change), but that's not supported by the current @VisibleForTesting
+        // constructor (that only takes a FlagSetter)
+        // TODO(b/338067482): remove SystemProperties check once moved out
+        expect.withMessage("extra info")
+                .that(extraInfo.get(0))
+                .isEqualTo(
+                        "*** Flags / system properties state ***"
+                                + "\nTest changed 2 flags (see log for all changes):"
+                                + "\n\tbefore: before=null, after=I am Groot!"
+                                + "\n\tinside: before=null, after=out"
+                                + "\nTest didn't change any system properties"
+                                + "\n");
+    }
+
+    @Test
+    public final void testTestFails_dontThrowTestFailureWhenFlagsSet() throws Throwable {
+        R rule = newRule();
+        Exception testFailure = new Exception("D'OH!");
+        mTest.onEvaluate(
+                () -> {
+                    throw testFailure;
+                });
+
+        var actualFailure = assertThrows(Throwable.class, () -> runTest(rule));
+
+        expect.withMessage("actual failure").that(actualFailure).isSameInstanceAs(testFailure);
     }
 
     // TODO(b/340882758): add more tests like:
