@@ -78,10 +78,12 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
     }
 
     @Test
-    public void testSetFlagMethods_nullNames() {
+    public void testSetFlagMethods_nullArgs() {
         R rule = newRule();
 
         expectNameCannotBeNull(() -> rule.setFlag(null, ""));
+        expectValueCannotBeNull(() -> rule.setFlag("flaggo", null));
+        expectNameCannotBeNull(() -> rule.setArrayFlag(null, ""));
         expectNameCannotBeNull(
                 () -> rule.setArrayFlagWithExplicitSeparator(null, "'", new String[] {""}));
         expectNameCannotBeNull(() -> rule.setFlag(null, true));
@@ -89,6 +91,8 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
         expectNameCannotBeNull(() -> rule.setFlag(null, 4815162342L));
         expectNameCannotBeNull(() -> rule.setFlag(null, 4.2F));
         expectNameCannotBeNull(() -> rule.setFlag(null, 0.42D));
+        expectNameCannotBeNull(() -> rule.setFlag(null, new Mambo(5)));
+        expectValueCannotBeNull(() -> rule.setFlag("flaggo", (Object) null));
     }
 
     private void expectNameCannotBeNull(Runnable r) {
@@ -97,6 +101,14 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
                 .that(e)
                 .hasMessageThat()
                 .isEqualTo("name cannot be null");
+    }
+
+    private void expectValueCannotBeNull(Runnable r) {
+        var e = assertThrows(NullPointerException.class, () -> r.run());
+        expect.withMessage("exception message")
+                .that(e)
+                .hasMessageThat()
+                .isEqualTo("value cannot be null");
     }
 
     // TODO(b/340882758): should also test that values are restored AFTER the test, but it would
@@ -113,7 +125,8 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
 
                     // Calls made inside the test are prefixed with i
                     rule.setFlag("iString", "String, the name is Inside String");
-                    rule.setFlag("iStringArray", "StringArray", "the name is Inside StringArray");
+                    rule.setArrayFlag(
+                            "iStringArray", "StringArray", "the name is Inside StringArray");
                     rule.setArrayFlagWithExplicitSeparator(
                             "iExplicitStringArray", "|",
                             "ExplicitStringArray", "the name is Inside ExplicitStringArray");
@@ -122,11 +135,12 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
                     rule.setFlag("iLong", 4815162342L);
                     rule.setFlag("iFloat", 4.2F);
                     rule.setFlag("iDouble", 0.42D);
+                    rule.setFlag("iMambo", new Mambo(5));
                 });
 
         // Calls made before test - should be cached (and set during the test)
         rule.setFlag("bString", "String, the name is Before String");
-        rule.setFlag("bStringArray", "StringArray", "the name is Before StringArray");
+        rule.setArrayFlag("bStringArray", "StringArray", "the name is Before StringArray");
         rule.setArrayFlagWithExplicitSeparator(
                 "bExplicitStringArray", "|",
                 "ExplicitStringArray", "the name is Before ExplicitStringArray");
@@ -135,6 +149,7 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
         rule.setFlag("bLong", 4223161584L);
         rule.setFlag("bFloat", 10.8F);
         rule.setFlag("bDouble", 1.08D);
+        rule.setFlag("bMambo", new Mambo(55));
 
         runTest(rule);
 
@@ -152,7 +167,8 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
                         new NameValuePair("bInteger", "108"),
                         new NameValuePair("bLong", "4223161584"),
                         new NameValuePair("bFloat", "10.8"),
-                        new NameValuePair("bDouble", "1.08"))
+                        new NameValuePair("bDouble", "1.08"),
+                        new NameValuePair("bMambo", "Mambo#55"))
                 .inOrder();
 
         expect.withMessage("calls made during the test")
@@ -169,12 +185,13 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
                         new NameValuePair("iInteger", "42"),
                         new NameValuePair("iLong", "4815162342"),
                         new NameValuePair("iFloat", "4.2"),
-                        new NameValuePair("iDouble", "0.42"))
+                        new NameValuePair("iDouble", "0.42"),
+                        new NameValuePair("iMambo", "Mambo#5"))
                 .inOrder();
 
         // Calls made after test - should be ignored
         rule.setFlag("aString", "String, the name is After String");
-        rule.setFlag("aStringArray", "StringArray", "the name is After StringArray");
+        rule.setArrayFlag("aStringArray", "StringArray", "the name is After StringArray");
         rule.setArrayFlagWithExplicitSeparator(
                 "aExplicitStringArray", "|",
                 "ExplicitStringArray", "the name is After ExplicitStringArray");
@@ -183,6 +200,7 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
         rule.setFlag("aLong", 66666666666666666L);
         rule.setFlag("aFloat", 66.6F);
         rule.setFlag("aDouble", 6.66);
+        rule.setFlag("aMambo", new Mambo(666));
 
         expect.withMessage("calls made after the test").that(mFakeFlagsSetter.getCalls()).isEmpty();
     }
@@ -290,7 +308,8 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
 
         Exception e =
                 assertThrows(
-                        NullPointerException.class, () -> rule.setFlag("DaName", (String[]) null));
+                        NullPointerException.class,
+                        () -> rule.setArrayFlag("DaName", (String[]) null));
         expect.withMessage("exception message")
                 .that(e)
                 .hasMessageThat()
@@ -299,13 +318,13 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
         e =
                 assertThrows(
                         IllegalArgumentException.class,
-                        () -> rule.setFlag("DaName", new String[0]));
+                        () -> rule.setArrayFlag("DaName", new String[0]));
         expect.withMessage("exception message")
                 .that(e)
                 .hasMessageThat()
                 .isEqualTo("no values (name=DaName)");
 
-        e = assertThrows(IllegalArgumentException.class, () -> rule.setFlag("DaName"));
+        e = assertThrows(IllegalArgumentException.class, () -> rule.setArrayFlag("DaName"));
         expect.withMessage("exception message")
                 .that(e)
                 .hasMessageThat()
@@ -321,16 +340,16 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
         // TODO(b/303901926, 340882758): should probably ignore null and empty, but it's better to
         // make this change in a separate CL (just in case it breaks stuff), and AFTER this class
         // has tests for the annotation as well
-        rule.setFlag("null", new String[] {null});
-        rule.setFlag("null, not stirred", (String) null);
-        rule.setFlag("nulls", null, null);
-        rule.setFlag("empty", new String[] {""});
-        rule.setFlag("empty, not stirred", "");
-        rule.setFlag("empties", "", "");
-        rule.setFlag("null and empty", new String[] {null, ""});
-        rule.setFlag("mixed", "4", null, "2", "");
-        rule.setFlag("one", new String[] {"is the loniest number"});
-        rule.setFlag("one, not stirred", "is the loniest number");
+        rule.setArrayFlag("null", new String[] {null});
+        rule.setArrayFlag("null, not stirred", (String) null);
+        rule.setArrayFlag("nulls", null, null);
+        rule.setArrayFlag("empty", new String[] {""});
+        rule.setArrayFlag("empty, not stirred", "");
+        rule.setArrayFlag("empties", "", "");
+        rule.setArrayFlag("null and empty", new String[] {null, ""});
+        rule.setArrayFlag("mixed", "4", null, "2", "");
+        rule.setArrayFlag("one", new String[] {"is the loniest number"});
+        rule.setArrayFlag("one, not stirred", "is the loniest number");
 
         runTest(rule);
 
@@ -660,4 +679,18 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
 
     @SetStringFlag(name = "string1", value = "One, the name is String One")
     private static final class AClassHasOneAnnotationOnly {}
+
+    // Used to check setFlag(String, Object)
+    private static final class Mambo {
+        private final int mId;
+
+        Mambo(int id) {
+            mId = id;
+        }
+
+        @Override
+        public String toString() {
+            return "Mambo#" + mId;
+        }
+    }
 }

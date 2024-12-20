@@ -413,13 +413,27 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         return setOrCacheFlag(name, Double.toString(value));
     }
 
+    /** Sets the flag with the given value. */
+    public final T setFlag(String name, String value) {
+        Objects.requireNonNull(value, "value cannot be null");
+        return setOrCacheFlag(name, value);
+    }
+
+    /**
+     * Sets the flag with the {@link Object#toString() string representation} of the given value.
+     */
+    public final T setFlag(String name, Object value) {
+        Objects.requireNonNull(value, "value cannot be null");
+        return setOrCacheFlag(name, value.toString());
+    }
+
     /**
      * Sets the flag with the given values and the {@link #ARRAY_SPLITTER_COMMA} separator.
      *
      * <p>This method could also be used to set a simple (i.e., no array) String flag, as the
      * separator is not added after the last element.
      */
-    public final T setFlag(String name, String... values) {
+    public final T setArrayFlag(String name, String... values) {
         return setArrayFlagWithExplicitSeparator(name, ARRAY_SPLITTER_COMMA, values);
     }
 

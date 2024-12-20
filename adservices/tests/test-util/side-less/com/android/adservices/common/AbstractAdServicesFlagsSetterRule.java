@@ -412,6 +412,6 @@ public abstract class AbstractAdServicesFlagsSetterRule<
                     name, testPkg);
             values = new String[] {testPkg};
         }
-        return setFlag(name, values);
+        return setArrayFlag(name, values);
     }
 }
