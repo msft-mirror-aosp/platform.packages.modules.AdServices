@@ -56,7 +56,6 @@ import android.net.Uri;
 import androidx.room.Room;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -79,7 +78,6 @@ import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -126,10 +124,6 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     private ScheduleCustomAudienceUpdateImpl mScheduleCustomAudienceUpdateImpl;
     private DevContext mDevContext;
     private CustomAudienceDao mCustomAudienceDao;
-
-    // TODO(b/384798806): move to superclass (but first must fix rule so it doesn't throw a
-    // TestFailure when test fail without setting any flag, as that would be misleading)
-    @Rule public final AdServicesFakeFlagsSetterRule flags = new AdServicesFakeFlagsSetterRule();
 
     // TODO(b/384949821): move to superclass
     private final Flags mFakeFlags = flags.getFlags();

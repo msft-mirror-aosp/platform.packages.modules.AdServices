@@ -38,7 +38,6 @@ import android.adservices.common.CommonFixture;
 import android.os.LimitExceededException;
 import android.os.Process;
 
-import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.annotations.SetPasAppAllowList;
@@ -51,7 +50,6 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -61,8 +59,6 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
 
-    // TODO(b/384798806): move to superclass
-    @Rule public final AdServicesFakeFlagsSetterRule flags = new AdServicesFakeFlagsSetterRule();
     // TODO(b/384949821): move to superclass
     private final Flags mFakeFlags = flags.getFlags();
 

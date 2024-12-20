@@ -83,7 +83,6 @@ import androidx.room.Room;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
@@ -316,9 +315,7 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
     private AdServicesHttpsClient mAdServicesHttpsClientSpy;
     private AdServicesLogger mAdServicesLoggerMock;
 
-    // TODO(b/384798806): move to superclass (but first must fix rule so it doesn't throw a
-    // TestFailure when test fail without setting any flag, as that would be misleading)
-    @Rule public final AdServicesFakeFlagsSetterRule flags = new AdServicesFakeFlagsSetterRule();
+    // TODO(b/384949821): move to superclass
     private final Flags mFakeFlags = flags.getFlags();
 
     @Rule(order = 2)

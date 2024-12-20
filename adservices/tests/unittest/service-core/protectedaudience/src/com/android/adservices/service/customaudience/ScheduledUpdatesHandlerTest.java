@@ -102,7 +102,6 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -219,9 +218,6 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     @Captor
     ArgumentCaptor<ScheduledCustomAudienceUpdateBackgroundJobStats>
             mScheduleCABackgroundJobStatsCaptor;
-
-    // TODO(b/384798806): move to superclass
-    @Rule public final AdServicesFakeFlagsSetterRule flags = new AdServicesFakeFlagsSetterRule();
 
     private boolean mFledgeFrequencyCapFilteringEnabled;
     private boolean mFledgeAppInstallFilteringEnabled;

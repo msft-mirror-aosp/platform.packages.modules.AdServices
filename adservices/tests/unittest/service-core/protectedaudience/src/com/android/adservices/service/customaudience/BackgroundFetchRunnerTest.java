@@ -45,7 +45,6 @@ import android.net.Uri;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.customaudience.DBCustomAudienceBackgroundFetchDataFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
@@ -87,10 +86,6 @@ import java.util.concurrent.TimeUnit;
 @SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
 @SetFlagEnabled(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
 public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTestCase {
-
-    // TODO(b/384798806): move to superclass (but first must fix rule so it doesn't throw a
-    // TestFailure when test fail without setting any flag, as it would be misleading
-    @Rule public final AdServicesFakeFlagsSetterRule flags = new AdServicesFakeFlagsSetterRule();
 
     // TODO(b/384949821): move to superclass
     private final Flags mFakeFlags = flags.getFlags();

@@ -61,7 +61,6 @@ import androidx.room.Room;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.annotations.SetPasAppAllowList;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
@@ -147,10 +146,6 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
 
     @Rule(order = 11)
     public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
-
-    // TODO(b/384798806): move to superclass (but first must fix rule so it doesn't throw a
-    // TestFailure when test fail without setting any flag, as that would be misleading)
-    @Rule public final AdServicesFakeFlagsSetterRule flags = new AdServicesFakeFlagsSetterRule();
 
     private DevSessionHelper mDevSessionHelper;
 
