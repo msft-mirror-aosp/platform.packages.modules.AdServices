@@ -235,9 +235,9 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
                 .isEqualTo(ENABLED);
         expect.withMessage("sdkSandbox.getState() after test")
                 .that(mSdkSandbox.getState())
-                .isEqualTo(mSdkSandboxStateBefore);
+                .isEqualTo(DISABLED);
 
-        expectCalls(ENABLED, mSdkSandboxStateBefore);
+        expectCalls(ENABLED, DISABLED);
     }
 
     @Test
