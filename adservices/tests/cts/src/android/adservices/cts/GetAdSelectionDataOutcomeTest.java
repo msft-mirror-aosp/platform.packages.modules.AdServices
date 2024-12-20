@@ -19,6 +19,9 @@ package android.adservices.cts;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.adservices.adselection.GetAdSelectionDataOutcome;
+import android.platform.test.annotations.RequiresFlagsEnabled;
+
+import com.android.adservices.flags.Flags;
 
 import org.junit.Test;
 
@@ -26,6 +29,7 @@ public final class GetAdSelectionDataOutcomeTest extends CtsAdServicesDeviceTest
     private static final long AD_SELECTION_ID = 123456789L;
     private static final byte[] AD_SELECTION_RESULT = new byte[] {1, 2, 3, 4};
 
+    @RequiresFlagsEnabled(Flags.FLAG_FLEDGE_AUCTION_SERVER_GET_AD_SELECTION_DATA_ID_ENABLED)
     @Test
     public void testGetAdSelectionDataRequest_validInput_success() {
         GetAdSelectionDataOutcome request =
