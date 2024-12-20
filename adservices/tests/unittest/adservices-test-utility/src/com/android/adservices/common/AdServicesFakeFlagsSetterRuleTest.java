@@ -15,43 +15,15 @@
  */
 package com.android.adservices.common;
 
-import static org.junit.Assert.assertThrows;
-
 import com.android.adservices.common.AdServicesFakeFlagsSetterRule.FakeFlags;
-
-import org.junit.Test;
 
 public final class AdServicesFakeFlagsSetterRuleTest
         extends AdServicesFlagsSetterRuleForUnitTestsTestCase<
                 AdServicesFakeFlagsSetterRule, FakeFlags> {
 
     @Override
-    protected FakeFlags newFlags() {
-        return new FakeFlags();
+    protected AdServicesFakeFlagsSetterRule newRule() {
+        return new AdServicesFakeFlagsSetterRule();
     }
 
-    @Override
-    protected AdServicesFakeFlagsSetterRule newRule(FakeFlags flags) {
-        return new AdServicesFakeFlagsSetterRule(flags);
-    }
-
-    @Test
-    public void testDefaultConstructor() {
-        var rule = new AdServicesFakeFlagsSetterRule();
-
-        expect.withMessage("getFlags()").that(rule.getFlags()).isNotNull();
-    }
-
-    @Test
-    public void testCustomConstructor_null() {
-        assertThrows(NullPointerException.class, () -> new AdServicesFakeFlagsSetterRule(null));
-    }
-
-    @Test
-    public void testCustomConstructor() {
-        var flags = new AdServicesFakeFlagsSetterRule.FakeFlags();
-        var rule = new AdServicesFakeFlagsSetterRule(flags);
-
-        expect.withMessage("getFlags()").that(rule.getFlags()).isSameInstanceAs(flags);
-    }
 }
