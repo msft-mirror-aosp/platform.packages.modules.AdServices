@@ -41,6 +41,8 @@ import android.content.Context;
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesJobServiceTestCase;
+import com.android.adservices.common.AdServicesMockFlagsSetterRule;
+import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -58,6 +60,7 @@ import com.google.common.util.concurrent.FluentFuture;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -91,11 +94,19 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     @Mock private JobParameters mMockJobParameters;
     @Mock private ConsentManager mMockConsentManager;
 
+    // TODO(b/384798806): should use AdServicesFakeFlagsSetterRule instead - for now it's more of a
+    // "guinea pig" / example of AdServicesMockFlagsSetterRule usage, as it cannot be replaced
+    // because the tests would fail (most likely because the test rely on some flag whose default
+    // value is true and the test is not explicitly setting
+    @Rule
+    public final AdServicesMockFlagsSetterRule flags =
+            new AdServicesMockFlagsSetterRule(mMockFlags);
+
     @Before
     public void setup() {
         assertWithMessage("job_scheduler").that(JOB_SCHEDULER).isNotNull();
         assertNoPendingJob();
-        mocker.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(flags.getFlags());
         mockFledgeConsentIsGiven();
         doReturn(JOB_SCHEDULER).when(mSpyEncodingJobService).getSystemService(JobScheduler.class);
     }
@@ -525,17 +536,17 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     }
 
     private void mockGetProtectedSignalPeriodicEncodingJobPeriodMs(long value) {
-        when(mMockFlags.getProtectedSignalPeriodicEncodingJobPeriodMs()).thenReturn(value);
+        flags.setFlag(FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS, value);
     }
 
     private void mockGetGaUxFeatureEnabled(boolean value) {
-        when(mMockFlags.getGaUxFeatureEnabled()).thenReturn(value);
+        flags.setFlag(FlagsConstants.KEY_GA_UX_FEATURE_ENABLED, value);
     }
 
     private void mockDisableParentKillSwitches() {
         mockGetGaUxFeatureEnabled(true);
-        when(mMockFlags.getProtectedSignalsEnabled()).thenReturn(true);
-        when(mMockFlags.getGlobalKillSwitch()).thenReturn(false);
+        flags.setFlag(FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED, true);
+        flags.setGlobalKillSwitch(false);
     }
 
     private void mockDisableRelevantKillSwitches() {
@@ -544,7 +555,7 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     }
 
     private void mockGetProtectedSignalsPeriodicEncodingEnabled(boolean value) {
-        when(mMockFlags.getProtectedSignalsPeriodicEncodingEnabled()).thenReturn(value);
+        flags.setFlag(FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED, value);
     }
 
     private void mockFlagsEnabledPeriodicEncoding() {

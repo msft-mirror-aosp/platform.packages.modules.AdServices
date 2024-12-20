@@ -34,8 +34,12 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUS
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS;
 
 import static org.mockito.Mockito.when;
 
@@ -170,6 +174,24 @@ public final class AdServicesMockFlagsSetterRule
                 when(mockFlags.getFledgeScheduleCustomAudienceUpdateEnabled())
                         .thenReturn(Boolean.valueOf(flag.value));
                 return;
+
+                // Used by PeriodicEncodingJobServiceTest
+            case KEY_GA_UX_FEATURE_ENABLED:
+                when(mockFlags.getGaUxFeatureEnabled()).thenReturn(Boolean.valueOf(flag.value));
+                return;
+            case KEY_PROTECTED_SIGNALS_ENABLED:
+                when(mockFlags.getProtectedSignalsEnabled())
+                        .thenReturn(Boolean.valueOf(flag.value));
+                return;
+            case KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED:
+                when(mockFlags.getProtectedSignalsPeriodicEncodingEnabled())
+                        .thenReturn(Boolean.valueOf(flag.value));
+                return;
+            case KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_JOB_PERIOD_MS:
+                when(mockFlags.getProtectedSignalPeriodicEncodingJobPeriodMs())
+                        .thenReturn(Long.valueOf(flag.value));
+                return;
+
             default:
                 throw new UnsupportedOperationException("Don't know how to mock " + flag);
         }

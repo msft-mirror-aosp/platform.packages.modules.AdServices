@@ -19,6 +19,24 @@ package com.android.adservices.service.kanon;
 import static android.adservices.common.KeyedFrequencyCapFixture.ONE_DAY_DURATION;
 
 import static com.android.adservices.common.DBAdDataFixture.getValidDbAdDataNoFiltersBuilder;
+import static com.android.adservices.service.FlagsConstants.KEY_ANON_GET_CHALLENGE_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_GET_TOKENS_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_KANON_FETCH_PARAMETERS_URL;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.OHTTP_CONTENT_TYPE;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.PROTOBUF_CONTENT_TYPE;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpsClient.DEFAULT_MAX_BYTES;
@@ -65,6 +83,7 @@ import androidx.room.Room;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
@@ -149,6 +168,9 @@ import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
 import com.android.adservices.shared.testing.SkipLoggingUsageRule;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -212,7 +234,19 @@ import java.util.stream.Collectors;
 @MockStatic(AppImportanceFilter.class)
 @MockStatic(FlagsFactory.class)
 @SkipLoggingUsageRule(reason = "b/355696393")
+@SetIntegerFlag(name = KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS, value = 100)
+@SetFlagTrue(KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED)
+@SetFlagFalse(KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED)
+@SetFlagTrue(KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE)
+@SetFlagTrue(KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE)
+@SetFlagFalse(KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH)
+@SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM)
+@SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT)
+@SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION)
+@SetFlagTrue(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
+@SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION)
 public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
+
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private final String PRIVATE_KEY_HEX =
             "e7b292f49df28b8065992cdeadbc9d032a0e09e8476cb6d8d507212e7be3b9b4";
@@ -282,13 +316,17 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
     private AdServicesHttpsClient mAdServicesHttpsClientSpy;
     private AdServicesLogger mAdServicesLoggerMock;
 
+    // TODO(b/384798806): move to superclass (but first must fix rule so it doesn't throw a
+    // TestFailure when test fail without setting any flag, as that would be misleading)
+    @Rule public final AdServicesFakeFlagsSetterRule flags = new AdServicesFakeFlagsSetterRule();
+    private final Flags mFakeFlags = flags.getFlags();
+
     @Rule(order = 2)
     public final MockWebServerRule mockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
     // This object access some system APIs
     @Mock public DevContextFilter mDevContextFilterMock;
     @Mock public AppImportanceFilter mAppImportanceFilterMock;
-    private Flags mFakeFlags;
     @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
     @Mock private ConsentManager mConsentManagerMock;
@@ -345,11 +383,11 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
     private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
 
     @Before
-    public void setUp() throws IOException {
+    public void setUp() throws Exception {
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
-        mFakeFlags = new KAnonE2ETestFlags(false, 20, true, 100);
+        mocker.mockGetFlags(mFakeFlags);
 
         mAdServicesLoggerMock = ExtendedMockito.mock(AdServicesLoggerImpl.class);
         mCustomAudienceDaoSpy =
@@ -461,13 +499,10 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS, value = 0)
     public void persistAdSelectionData_withKAnonImmediateValueZero_savesTheMessageInDB()
             throws Exception {
-        Flags flagsWithKAnonEnabledAndImmediateSignValueZero =
-                new KAnonE2ETestFlags(false, 20, true, 0);
         CountDownLatch countDownLatch = new CountDownLatch(1);
-        doReturn(flagsWithKAnonEnabledAndImmediateSignValueZero).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithKAnonEnabledAndImmediateSignValueZero;
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
         mAdSelectionService = createAdSelectionService();
@@ -488,11 +523,11 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS, value = 0)
+    @SetFlagFalse(KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED)
+    @SetFlagFalse(KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE)
     public void persistAdSelectionData_withKAnonFeatureFlagDisabled_doesNothing() throws Exception {
-        Flags flagsWithKAnonDisabled = new KAnonE2ETestFlags(false, 20, false, 0);
         CountDownLatch countDownLatch = new CountDownLatch(1);
-        doReturn(flagsWithKAnonDisabled).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithKAnonDisabled;
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
         mAdSelectionService = createAdSelectionService();
@@ -543,42 +578,13 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
         URL getTokensResponseUrl = server.getUrl(GET_TOKENS_PATH);
         URL joinUrl = server.getUrl(JOIN_PATH);
         URL fetchKeyUrl = server.getUrl(FETCH_KEY_PATH);
-        final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
 
-            FlagsWithUrls() {
-                super(false, 20, true, 100);
-            }
+        flags.setFlag(KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL, registerClientUrl)
+                .setFlag(KEY_KANON_FETCH_PARAMETERS_URL, fetchServerParamUrl)
+                .setFlag(KEY_FLEDGE_KANON_GET_TOKENS_URL, getTokensResponseUrl)
+                .setFlag(KEY_FLEDGE_KANON_JOIN_URL, joinUrl)
+                .setFlag(KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI, fetchKeyUrl);
 
-            @Override
-            public String getFledgeKAnonRegisterClientParametersUrl() {
-                return registerClientUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonFetchServerParamsUrl() {
-                return fetchServerParamUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonGetTokensUrl() {
-                return getTokensResponseUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonJoinUrl() {
-                return joinUrl.toString();
-            }
-
-            @Override
-            public String getFledgeAuctionServerJoinKeyFetchUri() {
-                return fetchKeyUrl.toString();
-            }
-        }
-
-        Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
-
-        doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -625,20 +631,8 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
                 getMockWebServerWithDelay(false, false, false, false, false, false, 0);
         URL fetchServerParamUrl = server.getUrl(GET_SERVER_PARAM_PATH);
 
-        final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
+        flags.setFlag(KEY_KANON_FETCH_PARAMETERS_URL, fetchServerParamUrl);
 
-            FlagsWithUrls() {
-                super(false, 20, true, 100);
-            }
-
-            @Override
-            public String getFledgeKAnonFetchServerParamsUrl() {
-                return fetchServerParamUrl.toString();
-            }
-        }
-        Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
-        doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -673,25 +667,9 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
 
         URL fetchServerParamUrl = server.getUrl(GET_SERVER_PARAM_PATH);
         URL registerClientUrl = server.getUrl(REGISTER_CLIENT_PARAMETERS_PATH);
-        final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
 
-            FlagsWithUrls() {
-                super(false, 20, true, 100);
-            }
-
-            @Override
-            public String getFledgeKAnonFetchServerParamsUrl() {
-                return fetchServerParamUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonRegisterClientParametersUrl() {
-                return registerClientUrl.toString();
-            }
-        }
-        Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
-        doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
+        flags.setFlag(KEY_KANON_FETCH_PARAMETERS_URL, fetchServerParamUrl)
+                .setFlag(KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL, registerClientUrl);
 
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
@@ -723,19 +701,9 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
         MockWebServer server =
                 getMockWebServerWithDelay(true, false, false, false, false, false, 0);
         URL fetchServerUrl = server.getUrl(GET_SERVER_PARAM_PATH);
-        final class FlagsWithFetchServerParams extends KAnonE2ETestFlags implements Flags {
-            FlagsWithFetchServerParams() {
-                super(false, 20, true, 100);
-            }
 
-            @Override
-            public String getFledgeKAnonFetchServerParamsUrl() {
-                return fetchServerUrl.toString();
-            }
-        }
-        Flags flagsWithCustomServerParamUrl = new FlagsWithFetchServerParams();
-        doReturn(flagsWithCustomServerParamUrl).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithCustomServerParamUrl;
+        flags.setFlag(KEY_KANON_FETCH_PARAMETERS_URL, fetchServerUrl);
+
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -766,29 +734,11 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
                 getMockWebServerWithDelay(false, false, false, false, false, true, 0);
         URL getChallengeUrl = server.getUrl(GET_CHALLENGE);
         URL fetchServerUrl = server.getUrl(GET_SERVER_PARAM_PATH);
-        final class FlagsWithGetChallengeUrl extends KAnonE2ETestFlags implements Flags {
-            FlagsWithGetChallengeUrl() {
-                super(false, 20, true, 100);
-            }
 
-            @Override
-            public String getFledgeKAnonFetchServerParamsUrl() {
-                return fetchServerUrl.toString();
-            }
+        flags.setFlag(KEY_KANON_FETCH_PARAMETERS_URL, fetchServerUrl)
+                .setFlag(KEY_ANON_GET_CHALLENGE_URL, getChallengeUrl)
+                .setFlag(KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED, true);
 
-            @Override
-            public String getFledgeKAnonGetChallengeUrl() {
-                return getChallengeUrl.toString();
-            }
-
-            @Override
-            public boolean getFledgeKAnonKeyAttestationEnabled() {
-                return true;
-            }
-        }
-        Flags flagsWithGetChallengeUrl = new FlagsWithGetChallengeUrl();
-        doReturn(flagsWithGetChallengeUrl).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithGetChallengeUrl;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -821,29 +771,11 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
                 getMockWebServerWithDelay(false, false, false, false, false, false, 0);
         URL getChallengeUrl = server.getUrl(GET_CHALLENGE);
         URL fetchServerUrl = server.getUrl(GET_SERVER_PARAM_PATH);
-        final class FlagsWithGetChallengeUrl extends KAnonE2ETestFlags implements Flags {
-            FlagsWithGetChallengeUrl() {
-                super(false, 20, true, 100);
-            }
 
-            @Override
-            public String getFledgeKAnonGetChallengeUrl() {
-                return getChallengeUrl.toString();
-            }
+        flags.setFlag(KEY_ANON_GET_CHALLENGE_URL, getChallengeUrl)
+                .setFlag(KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED, true)
+                .setFlag(KEY_KANON_FETCH_PARAMETERS_URL, fetchServerUrl);
 
-            @Override
-            public boolean getFledgeKAnonKeyAttestationEnabled() {
-                return true;
-            }
-
-            @Override
-            public String getFledgeKAnonFetchServerParamsUrl() {
-                return fetchServerUrl.toString();
-            }
-        }
-        Flags flagsWithGetChallengeUrl = new FlagsWithGetChallengeUrl();
-        doReturn(flagsWithGetChallengeUrl).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithGetChallengeUrl;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -900,51 +832,15 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
         URL getTokensResponseUrl = server.getUrl(GET_TOKENS_PATH);
         URL fetchKeyUrl = server.getUrl(FETCH_KEY_PATH);
         URL joinUrl = server.getUrl(JOIN_PATH);
-        final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
 
-            FlagsWithUrls() {
-                super(false, 20, true, 100);
-            }
+        flags.setFlag(KEY_ANON_GET_CHALLENGE_URL, getChallengeUrl)
+                .setFlag(KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED, true)
+                .setFlag(KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL, registerClientUrl)
+                .setFlag(KEY_KANON_FETCH_PARAMETERS_URL, fetchServerParamUrl)
+                .setFlag(KEY_FLEDGE_KANON_GET_TOKENS_URL, getTokensResponseUrl)
+                .setFlag(KEY_FLEDGE_KANON_JOIN_URL, joinUrl)
+                .setFlag(KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI, fetchKeyUrl);
 
-            @Override
-            public String getFledgeKAnonGetChallengeUrl() {
-                return getChallengeUrl.toString();
-            }
-
-            @Override
-            public boolean getFledgeKAnonKeyAttestationEnabled() {
-                return true;
-            }
-
-            @Override
-            public String getFledgeKAnonRegisterClientParametersUrl() {
-                return registerClientUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonFetchServerParamsUrl() {
-                return fetchServerParamUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonGetTokensUrl() {
-                return getTokensResponseUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonJoinUrl() {
-                return joinUrl.toString();
-            }
-
-            @Override
-            public String getFledgeAuctionServerJoinKeyFetchUri() {
-                return fetchKeyUrl.toString();
-            }
-        }
-
-        Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
-        doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -986,19 +882,9 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
             throws Exception {
         MockWebServer server = getMockWebServerWithDelay(false, false, false, false, true, true, 0);
         URL joinUrl = server.getUrl(JOIN_PATH);
-        final class FlagsWithCustomJoinUrl extends KAnonE2ETestFlags implements Flags {
-            FlagsWithCustomJoinUrl() {
-                super(false, 20, true, 100);
-            }
 
-            @Override
-            public String getFledgeKAnonJoinUrl() {
-                return joinUrl.toString();
-            }
-        }
-        Flags flagsWithCustomJoinUrl = new FlagsWithCustomJoinUrl();
-        doReturn(flagsWithCustomJoinUrl).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithCustomJoinUrl;
+        flags.setFlag(KEY_FLEDGE_KANON_JOIN_URL, joinUrl);
+
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1028,19 +914,9 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
         // parameters already exists in the database.
         MockWebServer server = getMockWebServerWithDelay(false, false, true, false, false, true, 0);
         URL getTokensUrl = server.getUrl(GET_TOKENS_PATH);
-        final class FlagsWithGetTokensUrl extends KAnonE2ETestFlags implements Flags {
-            FlagsWithGetTokensUrl() {
-                super(false, 20, true, 100);
-            }
 
-            @Override
-            public String getFledgeKAnonGetTokensUrl() {
-                return getTokensUrl.toString();
-            }
-        }
-        Flags flagsWithGetTokensUrl = new FlagsWithGetTokensUrl();
-        doReturn(flagsWithGetTokensUrl).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithGetTokensUrl;
+        flags.setFlag(KEY_FLEDGE_KANON_GET_TOKENS_URL, getTokensUrl);
+
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1066,10 +942,6 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
     @Test
     public void persistAdSelectionData_actRecoverTokensFails_shouldMarkMessagesAsFailed()
             throws Exception {
-        Flags flagsWithFeatureEnabledImmediateJoinHundred =
-                new KAnonE2ETestFlags(false, 20, true, 100);
-        doReturn(flagsWithFeatureEnabledImmediateJoinHundred).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithFeatureEnabledImmediateJoinHundred;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1117,21 +989,9 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
         MockWebServer server =
                 getMockWebServerWithDelay(false, false, true, false, false, false, 0);
         URL getTokensResponseUrl = server.getUrl(GET_TOKENS_PATH);
-        final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
 
-            FlagsWithUrls() {
-                super(false, 20, true, 100);
-            }
+        flags.setFlag(KEY_FLEDGE_KANON_GET_TOKENS_URL, getTokensResponseUrl);
 
-            @Override
-            public String getFledgeKAnonGetTokensUrl() {
-                return getTokensResponseUrl.toString();
-            }
-        }
-
-        Flags flagsWithUrlsAndFeatureEnabled = new FlagsWithUrls();
-        doReturn(flagsWithUrlsAndFeatureEnabled).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithUrlsAndFeatureEnabled;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1176,47 +1036,14 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
         URL getTokensResponseUrl = server.getUrl(GET_TOKENS_PATH);
         URL joinUrl = server.getUrl(JOIN_PATH);
         URL fetchKeyUrl = server.getUrl(FETCH_KEY_PATH);
-        final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
 
-            FlagsWithUrls() {
-                super(false, 20, true, 100);
-            }
+        flags.setFlag(KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL, registerClientUrl)
+                .setFlag(KEY_KANON_FETCH_PARAMETERS_URL, fetchServerParamUrl)
+                .setFlag(KEY_FLEDGE_KANON_GET_TOKENS_URL, getTokensResponseUrl)
+                .setFlag(KEY_FLEDGE_KANON_JOIN_URL, joinUrl)
+                .setFlag(KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI, fetchKeyUrl)
+                .setFlag(KEY_FLEDGE_KANON_HTTP_CLIENT_TIMEOUT, 1000);
 
-            @Override
-            public String getFledgeKAnonRegisterClientParametersUrl() {
-                return registerClientUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonFetchServerParamsUrl() {
-                return fetchServerParamUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonGetTokensUrl() {
-                return getTokensResponseUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonJoinUrl() {
-                return joinUrl.toString();
-            }
-
-            @Override
-            public String getFledgeAuctionServerJoinKeyFetchUri() {
-                return fetchKeyUrl.toString();
-            }
-
-            @Override
-            public int getFledgeKanonHttpClientTimeoutInMs() {
-                return 1000;
-            }
-        }
-
-        Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
-
-        doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1252,20 +1079,9 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
         MockWebServer server =
                 getMockWebServerWithDelay(false, false, true, false, false, false, 0);
         URL fetchServerParamUrl = server.getUrl(GET_SERVER_PARAM_PATH);
-        final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
 
-            FlagsWithUrls() {
-                super(false, 20, true, 100);
-            }
+        flags.setFlag(KEY_KANON_FETCH_PARAMETERS_URL, fetchServerParamUrl);
 
-            @Override
-            public String getFledgeKAnonFetchServerParamsUrl() {
-                return fetchServerParamUrl.toString();
-            }
-        }
-        Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
-        doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1301,19 +1117,9 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
         MockWebServer server =
                 getMockWebServerWithDelay(false, false, true, false, false, false, 0);
         URL getTokensUrl = server.getUrl(GET_TOKENS_PATH);
-        final class FlagsWithGetTokensUrl extends KAnonE2ETestFlags implements Flags {
-            FlagsWithGetTokensUrl() {
-                super(false, 20, true, 100);
-            }
 
-            @Override
-            public String getFledgeKAnonGetTokensUrl() {
-                return getTokensUrl.toString();
-            }
-        }
-        Flags flagsWithGetTokensUrl = new FlagsWithGetTokensUrl();
-        doReturn(flagsWithGetTokensUrl).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithGetTokensUrl;
+        flags.setFlag(KEY_FLEDGE_KANON_GET_TOKENS_URL, getTokensUrl);
+
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1345,19 +1151,9 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
         MockResponse response = new MockResponse().setResponseCode(429);
         MockWebServer server = mockWebServerRule.startMockWebServer(ImmutableList.of(response));
         URL fetchServerUrl = server.getUrl(GET_SERVER_PARAM_PATH);
-        final class FlagsWithFetchServerParams extends KAnonE2ETestFlags implements Flags {
-            FlagsWithFetchServerParams() {
-                super(false, 20, true, 100);
-            }
 
-            @Override
-            public String getFledgeKAnonFetchServerParamsUrl() {
-                return fetchServerUrl.toString();
-            }
-        }
-        Flags flagsWithCustomServerParamUrl = new FlagsWithFetchServerParams();
-        doReturn(flagsWithCustomServerParamUrl).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithCustomServerParamUrl;
+        flags.setFlag(KEY_KANON_FETCH_PARAMETERS_URL, fetchServerUrl);
+
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1397,25 +1193,9 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
         MockWebServer server = getMockWebServerWithDelay(false, true, true, false, false, false, 0);
         URL fetchServerParamUrl = server.getUrl(GET_SERVER_PARAM_PATH);
         URL registerClientUrl = server.getUrl(REGISTER_CLIENT_PARAMETERS_PATH);
-        final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
 
-            FlagsWithUrls() {
-                super(false, 20, true, 100);
-            }
-
-            @Override
-            public String getFledgeKAnonFetchServerParamsUrl() {
-                return fetchServerParamUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonRegisterClientParametersUrl() {
-                return registerClientUrl.toString();
-            }
-        }
-        Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
-        doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
+        flags.setFlag(KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL, registerClientUrl)
+                .setFlag(KEY_KANON_FETCH_PARAMETERS_URL, fetchServerParamUrl);
 
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
@@ -1474,42 +1254,13 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
         URL getTokensResponseUrl = server.getUrl(GET_TOKENS_PATH);
         URL joinUrl = server.getUrl(JOIN_PATH);
         URL fetchKeyUrl = server.getUrl(FETCH_KEY_PATH);
-        final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
 
-            FlagsWithUrls() {
-                super(false, 20, true, 100);
-            }
+        flags.setFlag(KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL, registerClientUrl)
+                .setFlag(KEY_KANON_FETCH_PARAMETERS_URL, fetchServerParamUrl)
+                .setFlag(KEY_FLEDGE_KANON_GET_TOKENS_URL, getTokensResponseUrl)
+                .setFlag(KEY_FLEDGE_KANON_JOIN_URL, joinUrl)
+                .setFlag(KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI, fetchKeyUrl);
 
-            @Override
-            public String getFledgeKAnonRegisterClientParametersUrl() {
-                return registerClientUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonFetchServerParamsUrl() {
-                return fetchServerParamUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonGetTokensUrl() {
-                return getTokensResponseUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonJoinUrl() {
-                return joinUrl.toString();
-            }
-
-            @Override
-            public String getFledgeAuctionServerJoinKeyFetchUri() {
-                return fetchKeyUrl.toString();
-            }
-        }
-
-        Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
-
-        doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1573,52 +1324,15 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
         URL getTokensResponseUrl = server.getUrl(GET_TOKENS_PATH);
         URL joinUrl = server.getUrl(JOIN_PATH);
         URL fetchKeyUrl = server.getUrl(FETCH_KEY_PATH);
-        final class FlagsWithUrls extends KAnonE2ETestFlags implements Flags {
 
-            FlagsWithUrls() {
-                super(false, 20, true, 100);
-            }
+        flags.setFlag(KEY_ANON_GET_CHALLENGE_URL, getChallengeUrl)
+                .setFlag(KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED, true)
+                .setFlag(KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL, registerClientUrl)
+                .setFlag(KEY_KANON_FETCH_PARAMETERS_URL, fetchServerParamUrl)
+                .setFlag(KEY_FLEDGE_KANON_GET_TOKENS_URL, getTokensResponseUrl)
+                .setFlag(KEY_FLEDGE_KANON_JOIN_URL, joinUrl)
+                .setFlag(KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI, fetchKeyUrl);
 
-            @Override
-            public String getFledgeKAnonGetChallengeUrl() {
-                return getChallengeUrl.toString();
-            }
-
-            @Override
-            public boolean getFledgeKAnonKeyAttestationEnabled() {
-                return true;
-            }
-
-            @Override
-            public String getFledgeKAnonRegisterClientParametersUrl() {
-                return registerClientUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonFetchServerParamsUrl() {
-                return fetchServerParamUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonGetTokensUrl() {
-                return getTokensResponseUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonJoinUrl() {
-                return joinUrl.toString();
-            }
-
-            @Override
-            public String getFledgeAuctionServerJoinKeyFetchUri() {
-                return fetchKeyUrl.toString();
-            }
-        }
-
-        Flags flagsWithCustomUrlsAndImmediateSignJoinValue100 = new FlagsWithUrls();
-
-        doReturn(flagsWithCustomUrlsAndImmediateSignJoinValue100).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithCustomUrlsAndImmediateSignJoinValue100;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -1676,47 +1390,14 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
         URL getTokensResponseUrl = server.getUrl(GET_TOKENS_PATH);
         URL joinUrl = server.getUrl(JOIN_PATH);
         URL fetchKeyUrl = server.getUrl(FETCH_KEY_PATH);
-        final class FlagsWithLogginDisabled extends KAnonE2ETestFlags implements Flags {
 
-            FlagsWithLogginDisabled() {
-                super(false, 20, true, 100);
-            }
+        flags.setFlag(KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL, registerClientUrl)
+                .setFlag(KEY_KANON_FETCH_PARAMETERS_URL, fetchServerParamUrl)
+                .setFlag(KEY_FLEDGE_KANON_GET_TOKENS_URL, getTokensResponseUrl)
+                .setFlag(KEY_FLEDGE_KANON_JOIN_URL, joinUrl)
+                .setFlag(KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED, false)
+                .setFlag(KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI, fetchKeyUrl);
 
-            @Override
-            public String getFledgeKAnonRegisterClientParametersUrl() {
-                return registerClientUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonFetchServerParamsUrl() {
-                return fetchServerParamUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonGetTokensUrl() {
-                return getTokensResponseUrl.toString();
-            }
-
-            @Override
-            public String getFledgeKAnonJoinUrl() {
-                return joinUrl.toString();
-            }
-
-            @Override
-            public boolean getFledgeKAnonLoggingEnabled() {
-                return false;
-            }
-
-            @Override
-            public String getFledgeAuctionServerJoinKeyFetchUri() {
-                return fetchKeyUrl.toString();
-            }
-        }
-
-        Flags flagsWithLogginDisabled = new FlagsWithLogginDisabled();
-
-        doReturn(flagsWithLogginDisabled).when(FlagsFactory::getFlags);
-        mFakeFlags = flagsWithLogginDisabled;
         CountDownLatch countDownLatch = new CountDownLatch(1);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 setupTestForPersistAdSelectionResult(countDownLatch);
@@ -2329,85 +2010,5 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
                         .setServerParamsVersion(mServerParamVersion)
                         .build();
         mServerParametersDao.insertServerParameters(serverParametersToSave);
-    }
-
-    static class KAnonE2ETestFlags implements Flags {
-        private final boolean mFledgeAuctionServerKillSwitch;
-
-        private final long mAdIdFetcherTimeoutMs;
-
-        private final boolean mKAnonSignJoinEnabled;
-
-        private final int mKanonImmediateJoinValue;
-
-        KAnonE2ETestFlags(
-                boolean fledgeAuctionServerKillSwitch,
-                long adIdFetcherTimeoutMs,
-                boolean kAnonSignJoinFeatureEnabled,
-                int kAnonImmediateJoinValue) {
-            mFledgeAuctionServerKillSwitch = fledgeAuctionServerKillSwitch;
-            mAdIdFetcherTimeoutMs = adIdFetcherTimeoutMs;
-            mKAnonSignJoinEnabled = kAnonSignJoinFeatureEnabled;
-            mKanonImmediateJoinValue = kAnonImmediateJoinValue;
-        }
-
-        @Override
-        public int getFledgeKAnonPercentageImmediateSignJoinCalls() {
-            return mKanonImmediateJoinValue;
-        }
-
-        @Override
-        public boolean getFledgeKAnonLoggingEnabled() {
-            return true;
-        }
-
-        public boolean getFledgeKAnonKeyAttestationEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean getFledgeKAnonBackgroundProcessEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean getFledgeKAnonSignJoinFeatureEnabled() {
-            return mKAnonSignJoinEnabled;
-        }
-
-        @Override
-        public boolean getFledgeKAnonSignJoinFeatureAuctionServerEnabled() {
-            return mKAnonSignJoinEnabled;
-        }
-
-        @Override
-        public boolean getFledgeAuctionServerKillSwitch() {
-            return mFledgeAuctionServerKillSwitch;
-        }
-
-        @Override
-        public boolean getFledgeAuctionServerEnabledForUpdateHistogram() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeAuctionServerEnabledForReportEvent() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeAuctionServerEnabledForSelectAdsMediation() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeRegisterAdBeaconEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeAuctionServerEnabledForReportImpression() {
-            return true;
-        }
     }
 }

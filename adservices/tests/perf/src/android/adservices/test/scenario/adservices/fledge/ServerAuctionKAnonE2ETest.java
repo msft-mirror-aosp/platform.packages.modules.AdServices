@@ -137,7 +137,7 @@ public class ServerAuctionKAnonE2ETest extends ServerAuctionE2ETestBase {
                     .setFlag(
                             FlagsConstants.KEY_FLEDGE_KANON_JOIN_URL_AUTHORIY,
                             joinAuthorityOption.get())
-                    .setFlag(FlagsConstants.KEY_ANON_GET_CHALLENGE_URl, getChallengeUrlOption.get())
+                    .setFlag(FlagsConstants.KEY_ANON_GET_CHALLENGE_URL, getChallengeUrlOption.get())
                     .setFlag(
                             FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI,
                             getCoordinator());
