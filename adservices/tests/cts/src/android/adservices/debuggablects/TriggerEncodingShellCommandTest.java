@@ -22,8 +22,6 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_A
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
-import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
-import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
@@ -43,13 +41,14 @@ import android.util.Log;
 
 import com.android.adservices.common.AdServicesShellCommandHelper;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.annotations.SetPasAppAllowList;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.shared.testing.BroadcastReceiverSyncCallback;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
-import com.android.adservices.shared.testing.annotations.SetStringFlag;
 import com.android.adservices.shared.testing.shell.CommandResult;
 
 import org.junit.Before;
@@ -62,8 +61,8 @@ import java.util.concurrent.Executors;
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_ENABLED)
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED)
 @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = PPAPI_AND_SYSTEM_SERVER)
-@SetStringFlag(name = KEY_PPAPI_APP_ALLOW_LIST, value = "*")
-@SetStringFlag(name = KEY_PAS_APP_ALLOW_LIST, value = "*")
+@SetPpapiAppAllowList
+@SetPasAppAllowList
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @EnableDebugFlag(KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED)
