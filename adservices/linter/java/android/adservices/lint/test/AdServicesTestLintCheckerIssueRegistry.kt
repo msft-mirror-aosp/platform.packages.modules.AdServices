@@ -32,7 +32,8 @@ class AdServicesTestLintCheckerIssueRegistry : IssueRegistry() {
             DeviceConfigUsageDetector.ISSUE,
             PreconditionsCheckStateDetector.ISSUE,
             ErrorLogUtilMockingUsageDetector.INVALID_ANNOTATION_ISSUE,
-            ErrorLogUtilMockingUsageDetector.MOCKING_INVOCATION_ISSUE
+            ErrorLogUtilMockingUsageDetector.MOCKING_INVOCATION_ISSUE,
+            JUnitAssertDetector.ISSUE,
         )
 
     override val api: Int
@@ -48,6 +49,6 @@ class AdServicesTestLintCheckerIssueRegistry : IssueRegistry() {
         Vendor(
             vendorName = "Android",
             feedbackUrl = "http://b/issues/new?component=1451456",
-            contact = "gehuang@google.com"
+            contact = "gehuang@google.com",
         )
 }

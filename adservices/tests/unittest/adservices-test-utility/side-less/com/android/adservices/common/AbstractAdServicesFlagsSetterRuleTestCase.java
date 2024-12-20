@@ -26,6 +26,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MDD_BACKGROUND_T
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MSMT_API_APP_ALLOW_LIST;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH;
@@ -104,6 +105,12 @@ public abstract class AbstractAdServicesFlagsSetterRuleTestCase<
                 (rule, apps) -> rule.setMsmtWebContextClientAllowList(apps));
     }
 
+    @Test
+    public final void testSetPasAppAllowList() throws Throwable {
+        appAllowListThatAcceptsDefaultPackageFlagTest(
+                KEY_PAS_APP_ALLOW_LIST, (rule, apps) -> rule.setPasAppAllowList(apps));
+    }
+
     private void appAllowListFlagTest(String key, BiConsumer<R, String[]> setter) throws Throwable {
         R rule = newRule();
 
@@ -128,6 +135,46 @@ public abstract class AbstractAdServicesFlagsSetterRuleTestCase<
         expect.withMessage("cached calls")
                 .that(cachedCalls)
                 .containsExactly(
+                        new NameValuePair(key, ""),
+                        new NameValuePair(key, ","),
+                        new NameValuePair(key, null),
+                        new NameValuePair(key, "null,null", ","),
+                        new NameValuePair(key, "mixed of null,null,and empty,,.", ","),
+                        new NameValuePair(key, "One Is The Loniest Number"),
+                        new NameValuePair(key, "4,8,15,16,23,42", ","))
+                .inOrder();
+    }
+
+    private void appAllowListThatAcceptsDefaultPackageFlagTest(
+            String key, BiConsumer<R, String[]> setter) throws Throwable {
+        R rule = newRule();
+
+        // Try invalid args first...
+        assertThrows(NullPointerException.class, () -> setter.accept(rule, /* apps= */ null));
+
+        // ...then valid
+        List<NameValuePair> cachedCalls = new ArrayList<>();
+        mTest.onEvaluate(() -> cachedCalls.addAll(mFakeFlagsSetter.getAndResetCalls()));
+
+        setter.accept(rule, new String[0]);
+        setter.accept(rule, new String[] {""});
+        setter.accept(rule, new String[] {"", ""});
+        setter.accept(rule, new String[] {null});
+        setter.accept(rule, new String[] {null, null});
+        setter.accept(rule, new String[] {"mixed of null", null, "and empty", "", "."});
+        setter.accept(rule, new String[] {"One Is The Loniest Number"});
+        setter.accept(rule, new String[] {"4", "8", "15", "16", "23", "42"});
+
+        runTest(rule);
+
+        expect.withMessage("cached calls")
+                .that(cachedCalls)
+                .containsExactly(
+                        new NameValuePair(
+                                key,
+                                InstrumentationRegistry.getInstrumentation()
+                                        .getContext()
+                                        .getPackageName()),
                         new NameValuePair(key, ""),
                         new NameValuePair(key, ","),
                         new NameValuePair(key, null),

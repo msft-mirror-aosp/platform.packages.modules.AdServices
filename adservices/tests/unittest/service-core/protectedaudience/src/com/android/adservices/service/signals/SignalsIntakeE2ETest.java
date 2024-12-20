@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
 import static com.android.adservices.service.signals.SignalsFixture.ADTECH;
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_KEY_1;
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_VALUE_1;
@@ -60,7 +61,9 @@ import androidx.room.Room;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.common.DbTestUtil;
+import com.android.adservices.common.annotations.SetPasAppAllowList;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.concurrency.AdServicesExecutors;
@@ -77,7 +80,7 @@ import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.FakeFlagsFactory;
+import com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdTechUriValidator;
@@ -131,6 +134,8 @@ import java.util.concurrent.TimeUnit;
 @RequiresSdkLevelAtLeastT
 @MockStatic(FlagsFactory.class)
 @MockStatic(DebugFlags.class)
+@SetDefaultFledgeFlags
+@SetPasAppAllowList
 public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
     private static final Uri URI = Uri.parse("https://localhost");
@@ -140,6 +145,10 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
 
     @Rule(order = 11)
     public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
+
+    // TODO(b/384798806): move to superclass (but first must fix rule so it doesn't throw a
+    // TestFailure when test fail without setting any flag, as that would be misleading)
+    @Rule public final AdServicesFakeFlagsSetterRule flags = new AdServicesFakeFlagsSetterRule();
 
     private DevSessionHelper mDevSessionHelper;
 
@@ -153,9 +162,12 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
     @Mock private DevContextFilter mDevContextFilterMock;
     @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
 
+    // TODO(b/384949821): move to superclass
+    private final Flags mFakeFlags = flags.getFlags();
+
     @Spy
-    FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
-            new FledgeAllowListsFilter(new SignalsIntakeE2ETestFlags(), mAdServicesLoggerMock);
+    private FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
+            new FledgeAllowListsFilter(mFakeFlags, mAdServicesLoggerMock);
 
     private ProtectedSignalsDao mSignalsDao;
     private EncoderEndpointsDao mEncoderEndpointsDao;
@@ -174,13 +186,11 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
     private EncoderPersistenceDao mEncoderPersistenceDao;
     private ExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
-    private Flags mFakeFlags;
     private EnrollmentDao mEnrollmentDao;
     private ForcedEncoder mForcedEncoder;
 
     @Before
     public void setup() {
-        mFakeFlags = new SignalsIntakeE2ETestFlags();
         mocker.mockGetFlags(mFakeFlags);
         mSignalsDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
@@ -895,12 +905,5 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
                 .setCreationTime(Instant.now())
                 .setPackageName(CommonFixture.TEST_PACKAGE_NAME)
                 .build();
-    }
-
-    private static final class SignalsIntakeE2ETestFlags extends FakeFlagsFactory.TestFlags {
-        @Override
-        public String getPasAppAllowList() {
-            return CommonFixture.TEST_PACKAGE_NAME;
-        }
     }
 }

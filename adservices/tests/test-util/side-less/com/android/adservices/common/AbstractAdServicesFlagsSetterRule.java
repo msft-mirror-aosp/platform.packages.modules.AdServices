@@ -30,6 +30,7 @@ import com.android.adservices.common.annotations.SetCompatModeFlags;
 import com.android.adservices.common.annotations.SetDefaultLogcatTags;
 import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
 import com.android.adservices.common.annotations.SetMsmtWebContextClientAppAllowList;
+import com.android.adservices.common.annotations.SetPasAppAllowList;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.shared.testing.AbstractFlagsSetterRule;
@@ -114,7 +115,8 @@ public abstract class AbstractAdServicesFlagsSetterRule<
                 || annotation instanceof SetDefaultLogcatTags
                 || annotation instanceof SetAllLogcatTags
                 || annotation instanceof SetMsmtApiAppAllowList
-                || annotation instanceof SetMsmtWebContextClientAppAllowList;
+                || annotation instanceof SetMsmtWebContextClientAppAllowList
+                || annotation instanceof SetPasAppAllowList;
     }
 
     @Override
@@ -140,6 +142,8 @@ public abstract class AbstractAdServicesFlagsSetterRule<
             setMsmtWebContextClientAllowList(
                     ((SetMsmtWebContextClientAppAllowList) annotation).value(),
                     USE_TEST_PACKAGE_AS_DEFAULT);
+        } else if (annotation instanceof SetPasAppAllowList) {
+            setPasAppAllowList(((SetPasAppAllowList) annotation).value());
         } else {
             // should not happen
             throw new IllegalStateException(
@@ -280,8 +284,17 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getMddBackgroundTaskKillSwitch()}.
      */
-    public T setMddBackgroundTaskKillSwitch(boolean value) {
+    public final T setMddBackgroundTaskKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
+    }
+
+    /**
+     * Overrides flag used by {@link com.android.adservices.service.PhFlags#getPasAppAllowList()}.
+     */
+    public final T setPasAppAllowList(String... value) {
+        mLog.d("setPasAppAllowList(%s)", Arrays.toString(value));
+        return setAllowListFlag(
+                FlagsConstants.KEY_PAS_APP_ALLOW_LIST, value, USE_TEST_PACKAGE_AS_DEFAULT);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

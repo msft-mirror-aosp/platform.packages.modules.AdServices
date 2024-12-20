@@ -26,6 +26,7 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
@@ -79,6 +80,7 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
             int apiName,
             @NonNull Throttler.ApiKey apiKey,
             DevContext devContext) {
+        LoggerFactory.Logger logger = LoggerFactory.getFledgeLogger();
         int traceCookie = Tracing.beginAsyncSection(Tracing.AD_SELECTION_SERVICE_FILTER);
         try {
             Objects.requireNonNull(callerPackageName);
@@ -94,6 +96,8 @@ public class AdSelectionServiceFilter extends AbstractFledgeServiceFilter {
             if (!Objects.isNull(adTech)) {
                 assertFledgeEnrollment(
                         adTech, callerPackageName, apiName, devContext, API_AD_SELECTION);
+            } else {
+                logger.d("Skipped enrollment check since the adTech is null.");
             }
             assertAppInAllowList(callerPackageName, apiName, API_AD_SELECTION);
             if (enforceConsent) {
