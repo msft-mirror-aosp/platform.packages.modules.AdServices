@@ -19,7 +19,9 @@ package {
 filegroup {
     name: "adservices-shared-sideless-flags-sources",
     srcs: [
+        // TODO(b/384798806): move package one level up
         "java/com/android/adservices/shared/common/flags/Constants.java",
+        "java/com/android/adservices/shared/flags/FlagsBackend.java",
     ],
     visibility: [
         "//packages/modules/AdServices:__subpackages__",
