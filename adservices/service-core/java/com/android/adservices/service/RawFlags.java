@@ -44,11 +44,11 @@ import java.util.stream.Collectors;
  * Implementation of {@link Flags} that simply returns the "raw" value of flags from a backend,
  * without any additional logic (like range validation or feature-flag dependency).
  *
- * <p>Ideally this class should be final and {@PhFlags} should have a reference to it, but that
- * would require adding the same methods in 2 places, so {@PhFlags} extends it instead. Hence, its
- * methods are divided in 2 "blocks": non-final (which will be overridden by {@PhFlags} to provide
- * additional logic) and final. So, when you're adding a new flag, make sure to add it to the bottom
- * of the proper block.
+ * <p>Ideally this class should be final and {@link PhFlags} should have a reference to it, but that
+ * would require adding the same methods in 2 places, so {@link PhFlags} extends it instead. Hence,
+ * its methods are divided in 2 "blocks": non-final (which will be overridden by {@link PhFlags} to
+ * provide additional logic) and final. So, when you're adding a new flag, make sure to add it to
+ * the bottom of the proper block.
  */
 public class RawFlags implements Flags {
 
