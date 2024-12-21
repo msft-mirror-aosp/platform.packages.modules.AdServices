@@ -137,6 +137,8 @@ public class ReportingStatus {
 
     private int mRetryCount;
 
+    private boolean mIsFakeReport;
+
     public ReportingStatus() {
         mReportType = ReportType.UNKNOWN;
         mUploadStatus = UploadStatus.UNKNOWN;
@@ -144,6 +146,7 @@ public class ReportingStatus {
         mUploadMethod = UploadMethod.UNKNOWN;
         mReportingDelay = 0L;
         mSourceRegistrant = "";
+        mIsFakeReport = false;
     }
 
     /** Get the type of report that is being uploaded. */
@@ -288,5 +291,15 @@ public class ReportingStatus {
     /** Set retry count. */
     public void setRetryCount(int retryCount) {
         mRetryCount = retryCount;
+    }
+
+    /** Gets if the report is fake. */
+    public boolean getIsFakeReport() {
+        return mIsFakeReport;
+    }
+
+    /** Sets if the report is fake. */
+    public void setIsFakeReport(boolean isFakeReport) {
+        mIsFakeReport = isFakeReport;
     }
 }

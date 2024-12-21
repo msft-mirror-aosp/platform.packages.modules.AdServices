@@ -30,6 +30,7 @@ import com.android.adservices.shared.common.flags.ModuleSharedFlags;
 import com.android.adservices.shared.testing.CallSuper;
 
 import org.junit.Rule;
+import org.mockito.quality.Strictness;
 
 // NOTE: currently no subclass needs a custom mocker; once they do, this class should be split
 // into a SharedMockerLessExtendededMockitoTestCase (similar to AdServiceExtendedMockitoTestCase /
@@ -39,14 +40,42 @@ import org.junit.Rule;
 public abstract class SharedExtendedMockitoTestCase extends SharedUnitTestCase {
 
     @Rule(order = 10)
-    public final AdServicesExtendedMockitoRule extendedMockito =
-            new AdServicesExtendedMockitoRule.Builder(this).build();
+    public final AdServicesExtendedMockitoRule extendedMockito = getAdServicesExtendedMockitoRule();
 
     /** Provides common expectations. */
     public final Mocker mocker = new Mocker(extendedMockito);
 
     protected final Context mMockContext = mock(Context.class);
     protected final ModuleSharedFlags mMockFlags = mock(ModuleSharedFlags.class);
+
+    /**
+     * Gets the {@link AdServicesExtendedMockitoRule} that will be set as the {@code
+     * extendedMockito} rule.
+     *
+     * <p>By default returns a rule created using {@link
+     * #newDefaultAdServicesExtendedMockitoRuleBuilder()}, which is enough for most tests. But
+     * subclasses can override it to handle special cases that cannot be configured through
+     * annotations, like :
+     *
+     * <ul>
+     *   <li>Changing the strictness mode.
+     *   <li>Setting the {@link com.android.modules.utils.testing.StaticMockFixture}s.
+     * </ul>
+     */
+    protected AdServicesExtendedMockitoRule getAdServicesExtendedMockitoRule() {
+        return newDefaultAdServicesExtendedMockitoRuleBuilder().build();
+    }
+
+    /**
+     * Creates a new {@link AdServicesExtendedMockitoRule.Builder} with the default properties.
+     *
+     * @return builder that initialize mocks for the class, using {@link Strictness.LENIENT lenient}
+     *     mode.
+     */
+    protected final AdServicesExtendedMockitoRule.Builder
+            newDefaultAdServicesExtendedMockitoRuleBuilder() {
+        return new AdServicesExtendedMockitoRule.Builder(this).setStrictness(Strictness.LENIENT);
+    }
 
     // TODO(b/361555631): rename to testSharedExtendedMockitoTestCaseFixtures() and annotate it with
     // @MetaTest

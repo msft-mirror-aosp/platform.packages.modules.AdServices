@@ -26,11 +26,11 @@ import static com.android.adservices.service.FlagsTest.getConstantValue;
 
 import static org.junit.Assert.assertThrows;
 
-import android.util.Log;
-
 import androidx.annotation.Nullable;
 
 import com.android.adservices.service.fixture.TestableSystemProperties;
+import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.Logger;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.truth.Expect;
@@ -41,15 +41,19 @@ import java.util.Optional;
 /** Provides utility methods for tests */
 public final class PhFlagsTestHelper {
 
-    private static final String TAG = "PhFlagsTestHelper";
+    private final Logger mLog = new Logger(AndroidLogger.getInstance(), PhFlagsTestHelper.class);
+
     private final FlagGuard mGlobalKillSwitchGuard = value -> setGlobalKillSwitch(!value);
 
     private final Flags mPhFlags;
+    private final boolean mIsRaw;
     private final Expect mExpect;
 
-    public PhFlagsTestHelper(Flags flags, Expect expect) {
-        this.mPhFlags = Objects.requireNonNull(flags);
-        this.mExpect = Objects.requireNonNull(expect);
+    public PhFlagsTestHelper(Flags flags, boolean isRaw, Expect expect) {
+        mLog.i("PhFlagsTestHelper(flags=%s, isRaw=%b)", flags, isRaw);
+        mPhFlags = Objects.requireNonNull(flags);
+        mIsRaw = isRaw;
+        mExpect = Objects.requireNonNull(expect);
     }
 
     /** Tests a featureFlag (DeviceConfig FeatureFlag) guarded by a {@code guard}. */
@@ -59,6 +63,13 @@ public final class PhFlagsTestHelper {
             FeatureFlagType type,
             @Nullable FlagGuard guard,
             Flaginator<Flags, Boolean> flaginator) {
+
+        if (mIsRaw) {
+            mLog.d("testGuardedFeatureFlag(%s): running as 'unguarded' on raw flags", flagName);
+            testConfigFlag(flagName, defaultValue, flaginator);
+            return;
+        }
+
         // This is the value of the getter when it's "disabled"
         boolean disabledValue = type.equals(FeatureFlagType.LEGACY_KILL_SWITCH);
 
@@ -111,20 +122,11 @@ public final class PhFlagsTestHelper {
         // This is the value of the getter when it's "disabled"
         boolean disabledValue = type.equals(FeatureFlagType.LEGACY_KILL_SWITCH);
 
-        Log.d(
-                TAG,
-                "testFeatureFlagBackedBySystemProperty("
-                        + defaultValueConstant
-                        + ") part 1: flagName="
-                        + flagName
-                        + ", constantValue="
-                        + constantValue
-                        + ", type="
-                        + type
-                        + ", defaultValue="
-                        + defaultValue
-                        + ", disabledValue="
-                        + disabledValue);
+        mLog.d(
+                "testFeatureFlagBackedBySystemProperty(flagName=%s) part 1:"
+                        + " defaultValueConstant=%s, constantValue=%s, type=%s, defaultValue=%s,"
+                        + " disabledValue=%s",
+                flagName, defaultValueConstant, constantValue, type, defaultValue, disabledValue);
 
         if (guard != null) {
             // First check the behavior when the guarding flags are in place(like kill switches on)
@@ -150,6 +152,14 @@ public final class PhFlagsTestHelper {
                 .that(flaginator.getFlagValue(mPhFlags))
                 .isEqualTo(defaultValue);
 
+        if (mIsRaw) {
+            mLog.d(
+                    "testGuardedFeatureFlagBackedBySystemProperty(%s): skipping part 2 on raw"
+                            + " flags",
+                    flagName);
+            return;
+        }
+
         // Now overriding the device config flag and system properties, so the expected value
         // is driven by the system properties one (and the feature flag type)
         boolean systemPropertyValue = !constantValue;
@@ -158,17 +168,15 @@ public final class PhFlagsTestHelper {
                 type.equals(FeatureFlagType.FEATURE_FLAG_BACKED_BY_LEGACY_KILL_SWITCH)
                         ? !systemPropertyValue
                         : systemPropertyValue;
-        Log.d(
-                TAG,
-                "testFeatureFlagBackedBySystemProperty("
-                        + defaultValueConstant
-                        + ") part 2: systemPropertyValue="
-                        + systemPropertyValue
-                        + ", deviceConfigValue="
-                        + deviceConfigValue
-                        + ", expectedFlagValue="
-                        + expectedFlagValue);
-
+        mLog.d(
+                "testFeatureFlagBackedBySystemProperty(flagName=%s) part 2:"
+                        + " defaultValueConstant=%s, systemPropertyValue=%s, deviceConfigValue=%s,"
+                        + " expectedFlagValue=%s",
+                flagName,
+                defaultValueConstant,
+                systemPropertyValue,
+                deviceConfigValue,
+                expectedFlagValue);
         setSystemProperty(flagName, systemPropertyValue);
         setAdservicesFlag(flagName, deviceConfigValue);
 
@@ -423,6 +431,14 @@ public final class PhFlagsTestHelper {
                 .that(flaginator.getFlagValue(mPhFlags))
                 .isEqualTo(overriddenValue);
 
+        if (mIsRaw) {
+            mLog.d(
+                    "testFeatureFlagDefaultOverriddenAndIllegalValue(%s):"
+                            + " testFeatureFlagForIllegalValue() part on raw flags",
+                    flagName);
+            return;
+        }
+
         if (illegalValue.isPresent()) {
             testFeatureFlagForIllegalValue(flagName, flaginator, illegalValue.get());
         }
@@ -446,6 +462,14 @@ public final class PhFlagsTestHelper {
                 .that(flaginator.getFlagValue(mPhFlags))
                 .isEqualTo(deviceConfigOverriddenValue);
 
+        if (mIsRaw) {
+            mLog.d(
+                    "testFeatureFlagDefaultOverriddenAndIllegalValueBackedBySystemProperty(%s):"
+                            + " skipping system-property and illegal value checking on raw flags",
+                    flagName);
+            return;
+        }
+
         if (illegalValue.isPresent()) {
             testFeatureFlagForIllegalValue(flagName, flaginator, illegalValue.get());
         }
@@ -460,6 +484,10 @@ public final class PhFlagsTestHelper {
     /** Checks whether setting a feature flag to an illegal value throws exception. */
     public <T> void testFeatureFlagForIllegalValue(
             String flagName, Flaginator<Flags, T> flaginator, T illegalValue) {
+        if (mIsRaw) {
+            mLog.d("testFeatureFlagForIllegalValue(%s): skipping on raw flags", flagName);
+            return;
+        }
         setAdservicesFlag(flagName, "" + illegalValue);
         // After overriding with illegal value, fetching of flag should throw exception.
         assertThrows(IllegalArgumentException.class, () -> flaginator.getFlagValue(mPhFlags));
@@ -587,7 +615,7 @@ public final class PhFlagsTestHelper {
     }
 
     private void setSystemProperty(String name, String value) {
-        Log.v(TAG, "setSystemProperty(): " + name + "=" + value);
+        mLog.d("setSystemProperty(): %s=%s", name, value);
         TestableSystemProperties.set(PhFlags.getSystemPropertyName(name), "" + value);
     }
 }

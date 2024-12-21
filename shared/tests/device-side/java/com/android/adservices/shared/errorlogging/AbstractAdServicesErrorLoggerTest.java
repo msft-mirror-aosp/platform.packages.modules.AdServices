@@ -44,6 +44,7 @@ public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCa
     private static final int PPAPI_NAME = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
     private static final int LINE_NUMBER = 11;
     private static final String SQ_LITE_EXCEPTION = "SQLiteException";
+    private static final String LAST_OBSERVED_EXCEPTION_NAME = "IllegalStateException";
 
     private AbstractAdServicesErrorLogger mErrorLoggerEnabled;
     private AbstractAdServicesErrorLogger mErrorLoggerDisabled;
@@ -117,6 +118,7 @@ public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCa
                         .setClassName(CLASS_NAME)
                         .setMethodName(METHOD_NAME)
                         .setLineNumber(LINE_NUMBER)
+                        .setLastObservedExceptionName(LAST_OBSERVED_EXCEPTION_NAME)
                         .build();
         verify(mMockStatsdLogger).logAdServicesError(stats);
     }
@@ -136,6 +138,7 @@ public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCa
                         .setClassName(CLASS_NAME)
                         .setMethodName(METHOD_NAME)
                         .setLineNumber(LINE_NUMBER)
+                        .setLastObservedExceptionName(LAST_OBSERVED_EXCEPTION_NAME)
                         .build();
         verify(mMockStatsdLogger).logAdServicesError(stats);
     }
@@ -155,6 +158,7 @@ public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCa
                         .setClassName(CLASS_NAME)
                         .setMethodName(METHOD_NAME)
                         .setLineNumber(LINE_NUMBER)
+                        .setLastObservedExceptionName("Throwable")
                         .build();
         verify(mMockStatsdLogger, never()).logAdServicesError(stats);
     }
@@ -176,6 +180,7 @@ public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCa
                         .setClassName(CLASS_NAME)
                         .setMethodName(METHOD_NAME)
                         .setLineNumber(LINE_NUMBER)
+                        .setLastObservedExceptionName(LAST_OBSERVED_EXCEPTION_NAME)
                         .build();
         verify(mMockStatsdLogger).logAdServicesError(stats);
     }
@@ -237,7 +242,7 @@ public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCa
 
     @Test
     public void testLogErrorWithExceptionInfo_emptyClassName_errorLoggingFlagEnabled() {
-        Exception exception = createSQLiteException(/* className = */ "", METHOD_NAME, LINE_NUMBER);
+        Exception exception = createSQLiteException(/* className= */ "", METHOD_NAME, LINE_NUMBER);
 
         mErrorLoggerEnabled.logErrorWithExceptionInfo(
                 exception,
@@ -287,7 +292,7 @@ public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCa
         if (number == 0) {
             return null;
         }
-        Throwable lastThrowable = new Throwable("lastThrowable");
+        Throwable lastThrowable = new IllegalStateException("lastThrowable");
         StackTraceElement[] lastStackTraceElements =
                 new StackTraceElement[] {
                     new StackTraceElement(className, methodName, "file", lineNumber)

@@ -1029,6 +1029,7 @@ public class AggregateReportingJobHandlerTest {
                 ArgumentCaptor.forClass(MeasurementReportsStats.class);
         verify(mLogger).logMeasurementReports(statusArg.capture(), eq(ENROLLMENT_ID));
         MeasurementReportsStats measurementReportsStats = statusArg.getValue();
+        assertFalse(measurementReportsStats.getIsFakeReport());
         assertEquals(
                 measurementReportsStats.getType(), ReportingStatus.ReportType.AGGREGATE.getValue());
         assertEquals(
@@ -1038,6 +1039,53 @@ public class AggregateReportingJobHandlerTest {
                 measurementReportsStats.getFailureType(),
                 ReportingStatus.FailureStatus.UNKNOWN.getValue());
         verify(mMeasurementDao, never()).incrementAndGetReportingRetryCount(any(), any());
+    }
+
+    @Test
+    public void testPerformScheduledPendingReports_LogFakeReport()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport1 =
+                new AggregateReport.Builder()
+                        .setId(AGGREGATE_REPORT_ID)
+                        .setStatus(AggregateReport.Status.PENDING)
+                        .setScheduledReportTime(1000L)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setRegistrationOrigin(REPORTING_URI)
+                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
+                        .setApi(AggregateReportFixture.ValidAggregateReportParams.API)
+                        .setIsFakeReport(true)
+                        .build();
+        JSONObject aggregateReportBody1 = createASampleAggregateReportBody(aggregateReport1);
+
+        when(mMeasurementDao.getPendingAggregateReportIdsByCoordinatorInWindow(1000, 1100))
+                .thenReturn(
+                        Map.of(COORDINATOR_ORIGIN.toString(), List.of(aggregateReport1.getId())));
+        when(mMeasurementDao.getAggregateReport(aggregateReport1.getId()))
+                .thenReturn(aggregateReport1);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_URI), any(), eq(null), anyString());
+        doReturn(aggregateReportBody1)
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(
+                        aggregateReport1, REPORTING_URI, AggregateCryptoFixture.getKey());
+
+        assertTrue(
+                mSpyAggregateReportingJobHandler.performScheduledPendingReportsInWindow(
+                        1000, 1100));
+        ArgumentCaptor<MeasurementReportsStats> statusArg =
+                ArgumentCaptor.forClass(MeasurementReportsStats.class);
+        verify(mLogger).logMeasurementReports(statusArg.capture(), eq(ENROLLMENT_ID));
+        MeasurementReportsStats measurementReportsStats = statusArg.getValue();
+        assertTrue(measurementReportsStats.getIsFakeReport());
+        assertEquals(
+                measurementReportsStats.getType(), ReportingStatus.ReportType.AGGREGATE.getValue());
+        assertEquals(
+                measurementReportsStats.getResultCode(),
+                ReportingStatus.UploadStatus.SUCCESS.getValue());
+        assertEquals(
+                measurementReportsStats.getFailureType(),
+                ReportingStatus.FailureStatus.UNKNOWN.getValue());
     }
 
     @Test
@@ -1056,6 +1104,7 @@ public class AggregateReportingJobHandlerTest {
                 ArgumentCaptor.forClass(MeasurementReportsStats.class);
         verify(mLogger).logMeasurementReports(statusArg.capture(), eq(null));
         MeasurementReportsStats measurementReportsStats = statusArg.getValue();
+        assertFalse(measurementReportsStats.getIsFakeReport());
         assertEquals(
                 measurementReportsStats.getType(), ReportingStatus.ReportType.AGGREGATE.getValue());
         assertEquals(

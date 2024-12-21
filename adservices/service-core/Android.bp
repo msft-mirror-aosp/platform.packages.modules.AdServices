@@ -183,6 +183,7 @@ android_library {
         "adservices-shared-common",
         "adservices-shared-datastore",
         "adservices-shared-error-logging",
+        "adservices-shared-flags-backend",
         "adservices-shared-spe",
         "adservices-shared-storage",
         "adservices-shared-util",

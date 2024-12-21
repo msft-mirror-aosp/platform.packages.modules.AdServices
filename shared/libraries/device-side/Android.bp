@@ -74,6 +74,24 @@ java_library {
 }
 
 java_library {
+    name: "adservices-shared-flags-backend",
+    min_sdk_version: "30",
+    sdk_version: "module_current",
+    srcs: [
+        ":adservices-shared-sideless-flags-sources",
+        "java/com/android/adservices/shared/flags/**/*.java",
+    ],
+    libs: [
+        "framework-configinfrastructure.stubs.module_lib",
+    ],
+    apex_available: [
+        "com.android.adservices",
+        "com.android.extservices",
+        "com.android.ondevicepersonalization",
+    ],
+}
+
+java_library {
     name: "adservices-statsd",
     sdk_version: "module_current",
     min_sdk_version: "30",
