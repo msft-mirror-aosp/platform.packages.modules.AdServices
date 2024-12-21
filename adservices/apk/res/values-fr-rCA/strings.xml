@@ -99,7 +99,7 @@
     <string name="notificationUI_change_any_time_in_privacy_settings_eu" msgid="6183291019161806921">"Vous pouvez changer d\'avis à tout moment dans les paramètres de confidentialité."</string>
     <string name="notificationUI_container1_control_ga_text_eu" msgid="4140760203991466914">"En savoir plus sur les sujets d\'annonces"</string>
     <string name="notificationUI_learn_more_from_privacy_policy" msgid="7612848815936356982">"Apprenez-en plus sur la façon dont Android protège vos données dans notre "<a href="https://policies.google.com/privacy">"politique de confidentialité"</a>"."</string>
-    <string name="notificationUI_right_control_button_ga_text_eu" msgid="460463361383121815">"En faire l\'essai"</string>
+    <string name="notificationUI_right_control_button_ga_text_eu" msgid="460463361383121815">"Essayer"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text3" msgid="3111631825321762696">"•  Les données qui sont utilisées"</string>
     <string name="notificationUI_how_it_works_topics_expanded_text4" msgid="1145343361575986367">"Vos sujets d\'annonces sont basés sur les applications que vous avez utilisées récemment sur cet appareil et sur la fréquence à laquelle vous les utilisez."</string>
     <string name="notificationUI_how_it_works_topics_expanded_text5" msgid="2413587107187922145">"•  Comment nous utilisons ces données"</string>
