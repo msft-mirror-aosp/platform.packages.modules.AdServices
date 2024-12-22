@@ -17,19 +17,14 @@ package com.android.sdksandbox.next;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import static org.junit.Assume.assumeTrue;
-
-import android.app.sdksandbox.testutils.DeviceSupportUtils;
 import android.os.SELinux;
 import android.platform.test.annotations.RequiresFlagsEnabled;
 import android.platform.test.flag.junit.CheckFlagsRule;
 import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 
-import androidx.test.platform.app.InstrumentationRegistry;
-
 import com.android.sdksandbox.flags.Flags;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
-import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -37,17 +32,10 @@ import org.junit.runners.JUnit4;
 
 /** Tests to check some basic properties of the Sdk Sandbox next process. */
 @RunWith(JUnit4.class)
-public class SdkSandboxNextTest {
+public class SdkSandboxNextTest extends DeviceSupportedBaseTest {
 
-    @Rule
+    @Rule(order = 0)
     public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
-
-    @Before
-    public void setUp() {
-        assumeTrue(
-                DeviceSupportUtils.isSdkSandboxSupported(
-                        InstrumentationRegistry.getInstrumentation().getContext()));
-    }
 
     @Test
     @RequiresFlagsEnabled(Flags.FLAG_SELINUX_INPUT_SELECTOR)

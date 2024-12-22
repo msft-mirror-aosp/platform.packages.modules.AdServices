@@ -25,6 +25,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
+import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
@@ -44,6 +45,7 @@ public class CompressedBuyerInputCreatorHelper {
     private int mEncodedSignalsTotalSizeInBytes = 0;
     private int mEncodedSignalsMaxSizeInBytes = 0;
     private int mEncodedSignalsMinSizeInBytes = Integer.MAX_VALUE;
+    private boolean mPasExtendedMetricsIncremented = false;
 
     public CompressedBuyerInputCreatorHelper(
             AuctionServerPayloadMetricsStrategy auctionServerPayloadMetricsStrategy,
@@ -138,6 +140,7 @@ public class CompressedBuyerInputCreatorHelper {
     /** Increments PAS extended metrics based on the length of the encoded payload. */
     public void incrementPasExtendedMetrics(byte[] encodedPayload) {
         if (mPasExtendedMetricsEnabled) {
+            mPasExtendedMetricsIncremented = true;
             int encodedSignalsInBytes = calculateEncodedSignalsInBytes(encodedPayload);
             mEncodedSignalsCount += 1;
             mEncodedSignalsTotalSizeInBytes += encodedSignalsInBytes;
@@ -151,18 +154,43 @@ public class CompressedBuyerInputCreatorHelper {
     /** Logs the buyer input generated stats. */
     public void logBuyerInputGeneratedStats(
             Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> perBuyerStats) {
-        // Log per buyer stats if feature is enabled
         if (mPasExtendedMetricsEnabled) {
+            int encodedSignalsMinSizeInBytes =
+                    mPasExtendedMetricsIncremented ? mEncodedSignalsMinSizeInBytes : 0;
             mAuctionServerPayloadMetricsStrategy
                     .logGetAdSelectionDataBuyerInputGeneratedStatsWithExtendedPasMetrics(
                             perBuyerStats,
                             mEncodedSignalsCount,
                             mEncodedSignalsTotalSizeInBytes,
                             mEncodedSignalsMaxSizeInBytes,
-                            mEncodedSignalsMinSizeInBytes);
+                            encodedSignalsMinSizeInBytes);
         } else {
             mAuctionServerPayloadMetricsStrategy.logGetAdSelectionDataBuyerInputGeneratedStats(
                     perBuyerStats);
         }
+    }
+
+    /** Adds seller configuration stats to {@code GetAdSelectionDataApiCalledStats} */
+    public void addSellerConfigurationStats(
+            GetAdSelectionDataApiCalledStats.Builder builder,
+            GetAdSelectionDataApiCalledStats.PayloadOptimizationResult payloadOptimizationResult,
+            int inputGenerationLatencyMs,
+            int compressedBuyerInputCreatorVersion,
+            int numReEstimations) {
+        mAuctionServerPayloadMetricsStrategy.setSellerConfigurationMetrics(
+                builder,
+                payloadOptimizationResult,
+                inputGenerationLatencyMs,
+                compressedBuyerInputCreatorVersion,
+                numReEstimations);
+    }
+
+    /** Adds buyer input latency stats to {@code GetAdSelectionDataApiCalledStats} */
+    public void addBuyerInputLatencyAndCompressedBuyerInputCreatorVersionToStats(
+            GetAdSelectionDataApiCalledStats.Builder builder,
+            int inputGenerationLatencyMs,
+            int compressedBuyerInputCreatorVersion) {
+        mAuctionServerPayloadMetricsStrategy.setInputGenerationLatencyMsAndBuyerCreatorVersion(
+                builder, inputGenerationLatencyMs, compressedBuyerInputCreatorVersion);
     }
 }

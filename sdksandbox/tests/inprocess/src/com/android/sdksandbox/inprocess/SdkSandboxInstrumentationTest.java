@@ -35,6 +35,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 
 import com.android.sdksandbox.flags.Flags;
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -45,15 +46,15 @@ import org.junit.runners.JUnit4;
 /** Tests for the instrumentation running the Sdk sanbdox tests. */
 @RunWith(JUnit4.class)
 @RequiresFlagsEnabled(Flags.FLAG_SDK_SANDBOX_INSTRUMENTATION_INFO)
-public class SdkSandboxInstrumentationTest {
+public class SdkSandboxInstrumentationTest extends DeviceSupportedBaseTest {
 
     private Context mContext;
     private Context mTargetContext;
 
-    @Rule
+    @Rule(order = 0)
     public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
-    @Rule
+    @Rule(order = 1)
     public final ActivityTestRule mActivityRule =
             new ActivityTestRule<>(
                     EmptyActivity.class,

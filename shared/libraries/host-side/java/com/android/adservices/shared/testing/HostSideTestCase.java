@@ -27,13 +27,11 @@ import java.util.Objects;
  */
 public abstract class HostSideTestCase extends SidelessTestCase implements IDeviceTest {
 
-    protected final Logger mLog = new Logger(ConsoleLogger.getInstance(), getClass());
-
     protected ITestDevice mDevice;
 
     @Override
     public final void setDevice(ITestDevice device) {
-        mDevice = Objects.requireNonNull(device);
+        mDevice = Objects.requireNonNull(device, "device cannot be null");
         // TODO(b/296240972): this is needed because our custom rules
         TestDeviceHelper.setTestDevice(device);
     }

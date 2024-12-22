@@ -36,10 +36,13 @@ android_test {
     platform_apis: true,
     srcs: ["src//**/*.java"],
     test_suites: [
-        "device-tests",
         "general-tests",
     ],
-    data: [":perfetto_artifacts"],
+    data: [
+        ":perfetto_artifacts",
+        ":EmptySdkProviderApp",
+        ":SdkSandboxCujClient",
+    ],
     min_sdk_version: "33",
     target_sdk_version: "33",
 }

@@ -34,8 +34,11 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 public class CommonFixture {
@@ -122,5 +125,31 @@ public class CommonFixture {
                 return "android.adservices.tests";
             }
         }
+    }
+
+    /** Returns a random alphanumeric string of length n. */
+    public static String getAlphaNumericString(int n) {
+        String AlphaNumericString =
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ" + "0123456789" + "abcdefghijklmnopqrstuvxyz";
+
+        StringBuilder sb = new StringBuilder(n);
+
+        for (int i = 0; i < n; i++) {
+            int index = (int) (AlphaNumericString.length() * Math.random());
+
+            // add Character one by one in end of sb
+            sb.append(AlphaNumericString.charAt(index));
+        }
+        return sb.toString();
+    }
+
+    /** Creates a list of {@code AdTechIdentifier} with N amountOfBuyers */
+    public static List<AdTechIdentifier> createNAmountOfBuyers(int amountOfBuyers) {
+        List<AdTechIdentifier> buyers = new ArrayList<>();
+        for (int b = 1; b <= amountOfBuyers; b++) {
+            String buyerName = String.format(Locale.ENGLISH, "test%d.com", b);
+            buyers.add(AdTechIdentifier.fromString(buyerName));
+        }
+        return buyers;
     }
 }

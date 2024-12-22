@@ -29,7 +29,6 @@ import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.tests.ui.libs.AdservicesWorkflows;
 import com.android.adservices.tests.ui.libs.UiConstants;
 import com.android.adservices.tests.ui.libs.UiUtils;
-import com.android.modules.utils.build.SdkLevel;
 
 import org.junit.After;
 import org.junit.Before;
@@ -54,9 +53,9 @@ public class NotificationLandingPage {
 
     @Before
     public void setup() throws Exception {
-        UiUtils.setFlipFlow(true);
-        UiUtils.setAsEuDevice();
-        UiUtils.enableGa();
+        UiUtils.setFlipFlow(flags, true);
+        UiUtils.setAsEuDevice(flags);
+        UiUtils.enableGa(flags);
         AdservicesTestHelper.killAdservicesProcess(sContext);
 
         // Initialize UiDevice instance
@@ -71,13 +70,10 @@ public class NotificationLandingPage {
     @Test
     public void testNotificationLandingPage() throws Exception {
         UiConstants.UX ux = UiConstants.UX.GA_UX;
-        if( SdkLevel.isAtLeastR() && !SdkLevel.isAtLeastS() ) {
-            ux = UiConstants.UX.RVC_UX;
-        }
 
         Trace.beginSection("NotificationTriggerEvent");
         AdservicesWorkflows.testNotificationActivityFlow(
-                sContext, sDevice, true, ux, true, false, true);
+                sContext, sDevice, flags, true, ux, true, false, true);
         Trace.endSection();
     }
 

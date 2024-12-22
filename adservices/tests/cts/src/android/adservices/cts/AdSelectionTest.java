@@ -16,7 +16,7 @@
 
 package android.adservices.cts;
 
-import static com.google.common.truth.Truth.assertThat;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 
 import static org.junit.Assert.assertThrows;
 
@@ -24,38 +24,25 @@ import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
-import android.content.Context;
 import android.net.Uri;
 
-import androidx.test.core.app.ApplicationProvider;
-
-import com.android.adservices.common.AdServicesDeviceSupportedRule;
-import com.android.adservices.shared.testing.SdkLevelSupportRule;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
+import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
-public final class AdSelectionTest {
-
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
+@RequiresSdkLevelAtLeastS
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
+public final class AdSelectionTest extends CtsAdServicesDeviceTestCase {
     private static final Executor sCallbackExecutor = Executors.newCachedThreadPool();
-
-    // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
-    @Rule(order = 0)
-    public final SdkLevelSupportRule sdkLevel = SdkLevelSupportRule.forAtLeastS();
-
-    // Skip the test if it runs on unsupported platforms.
-    @Rule(order = 1)
-    public final AdServicesDeviceSupportedRule adServicesDeviceSupportedRule =
-            new AdServicesDeviceSupportedRule();
 
     @Test
     @RequiresLowRamDevice
@@ -85,7 +72,7 @@ public final class AdSelectionTest {
 
         Exception exception =
                 assertThrows(ExecutionException.class, () -> client.selectAds(config).get());
-        assertThat(exception).hasCauseThat().isInstanceOf(IllegalStateException.class);
-        assertThat(exception).hasMessageThat().contains("Unable to find the AdSelection service");
+        expect.that(exception).hasCauseThat().isInstanceOf(IllegalStateException.class);
+        expect.that(exception).hasMessageThat().contains("Unable to find the AdSelection service");
     }
 }

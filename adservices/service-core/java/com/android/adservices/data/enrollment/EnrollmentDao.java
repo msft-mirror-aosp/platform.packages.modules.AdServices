@@ -55,6 +55,9 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.base.Supplier;
+import com.google.common.base.Suppliers;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -66,7 +69,20 @@ import java.util.Set;
 /** Data Access Object for the EnrollmentData. */
 public class EnrollmentDao implements IEnrollmentDao {
 
-    private static EnrollmentDao sSingleton;
+    private static volatile EnrollmentDao sSingleton;
+    private static Supplier<EnrollmentDao> sEnrollmentDaoSingletonSupplier =
+            Suppliers.memoize(
+                    () -> {
+                        Flags flags = FlagsFactory.getFlags();
+                        return new EnrollmentDao(
+                                ApplicationContextSingleton.get(),
+                                SharedDbHelper.getInstance(),
+                                flags,
+                                flags.isEnableEnrollmentTestSeed(),
+                                AdServicesLoggerImpl.getInstance(),
+                                EnrollmentUtil.getInstance());
+                    });
+
     private final SharedDbHelper mDbHelper;
     private final Context mContext;
     private final Flags mFlags;
@@ -109,20 +125,21 @@ public class EnrollmentDao implements IEnrollmentDao {
 
     /** Returns an instance of the EnrollmentDao given a context. */
     public static EnrollmentDao getInstance() {
-        synchronized (EnrollmentDao.class) {
-            if (sSingleton == null) {
-                Flags flags = FlagsFactory.getFlags();
-                sSingleton =
-                        new EnrollmentDao(
-                                ApplicationContextSingleton.get(),
-                                SharedDbHelper.getInstance(),
-                                flags,
-                                flags.isEnableEnrollmentTestSeed(),
-                                AdServicesLoggerImpl.getInstance(),
-                                EnrollmentUtil.getInstance());
+        if (sSingleton == null) {
+            synchronized (EnrollmentDao.class) {
+                if (sSingleton == null) {
+                    sSingleton = sEnrollmentDaoSingletonSupplier.get();
+                }
             }
-            return sSingleton;
         }
+        return sSingleton;
+    }
+
+    /**
+     * Returns the singleton supplier of the EnrollmentDao given a context for Lazy Initialization.
+     */
+    public static Supplier<EnrollmentDao> getSingletonSupplier() {
+        return sEnrollmentDaoSingletonSupplier;
     }
 
     @VisibleForTesting
@@ -313,15 +330,12 @@ public class EnrollmentDao implements IEnrollmentDao {
                     url, PrivacySandboxApi.PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING);
         }
 
-        int buildId = mEnrollmentUtil.getBuildId();
-        boolean originMatch = mFlags.getEnforceEnrollmentOriginMatch();
-        Optional<Uri> registrationBaseUri =
-                originMatch ? WebAddresses.originAndScheme(url)
-                        : WebAddresses.topPrivateDomainAndScheme(url);
-        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
+        Optional<Uri> registrationBaseUri = WebAddresses.topPrivateDomainAndScheme(url);
         if (!registrationBaseUri.isPresent()) {
             return null;
         }
+        int buildId = mEnrollmentUtil.getBuildId();
+        SQLiteDatabase db = mDbHelper.safeGetReadableDatabase();
         if (db == null) {
             mEnrollmentUtil.logTransactionStatsNoResult(
                     mLogger,
@@ -337,14 +351,12 @@ public class EnrollmentDao implements IEnrollmentDao {
                 getAttributionUrlSelection(
                                 EnrollmentTables.EnrollmentDataContract
                                         .ATTRIBUTION_SOURCE_REGISTRATION_URL,
-                                registrationBaseUri.get(),
-                                /* isSiteMatch = */ !originMatch)
+                                registrationBaseUri.get())
                         + " OR "
                         + getAttributionUrlSelection(
                                 EnrollmentTables.EnrollmentDataContract
                                         .ATTRIBUTION_TRIGGER_REGISTRATION_URL,
-                                registrationBaseUri.get(),
-                                /* isSiteMatch = */ !originMatch);
+                                registrationBaseUri.get());
         try (Cursor cursor =
                 db.query(
                         EnrollmentTables.EnrollmentDataContract.TABLE,
@@ -370,13 +382,9 @@ public class EnrollmentDao implements IEnrollmentDao {
                 EnrollmentData data =
                         SqliteObjectMapper.constructEnrollmentDataFromCursor(cursor);
                 if (validateAttributionUrl(
-                                data.getAttributionSourceRegistrationUrl(),
-                                registrationBaseUri,
-                                originMatch)
+                                data.getAttributionSourceRegistrationUrl(), registrationBaseUri)
                         || validateAttributionUrl(
-                                data.getAttributionTriggerRegistrationUrl(),
-                                registrationBaseUri,
-                                originMatch)) {
+                                data.getAttributionTriggerRegistrationUrl(), registrationBaseUri)) {
                     mEnrollmentUtil.logTransactionStats(
                             mLogger,
                             stats,
@@ -401,7 +409,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                     stats,
                     TransactionStatus.DATASTORE_EXCEPTION,
                     getEnrollmentRecordCountForLogging());
-            LogUtil.e(e, "Failed to get all enrollment data from DB.");
+            LogUtil.e(e, "Failed to get measurement enrollment data from DB.");
             return null;
         }
     }
@@ -412,16 +420,13 @@ public class EnrollmentDao implements IEnrollmentDao {
      *
      * @param enrolledUris : urls returned by selection query
      * @param registrationBaseUri : registration base url
-     * @return : true if validation is success
+     * @return : true if validation is successful
      */
-    private boolean validateAttributionUrl(
-            List<String> enrolledUris, Optional<Uri> registrationBaseUri, boolean originMatch) {
+    private static boolean validateAttributionUrl(
+            List<String> enrolledUris, Optional<Uri> registrationBaseUri) {
         // This match is needed to avoid matching .co in registration url to .com in enrolled url
         for (String uri : enrolledUris) {
-            Optional<Uri> enrolledBaseUri =
-                    originMatch
-                            ? WebAddresses.originAndScheme(Uri.parse(uri))
-                            : WebAddresses.topPrivateDomainAndScheme(Uri.parse(uri));
+            Optional<Uri> enrolledBaseUri = WebAddresses.topPrivateDomainAndScheme(Uri.parse(uri));
             if (registrationBaseUri.equals(enrolledBaseUri)) {
                 return true;
             }
@@ -429,7 +434,7 @@ public class EnrollmentDao implements IEnrollmentDao {
         return false;
     }
 
-    private String getAttributionUrlSelection(String field, Uri baseUri, boolean isSiteMatch) {
+    private static String getAttributionUrlSelection(String field, Uri baseUri) {
         String selectionQuery =
                 String.format(
                         Locale.ENGLISH,
@@ -437,20 +442,20 @@ public class EnrollmentDao implements IEnrollmentDao {
                         field,
                         DatabaseUtils.sqlEscapeString("%" + baseUri.toString() + "%"));
 
-        if (isSiteMatch) {
-            // site match needs to also match https://%.host.com
-            selectionQuery +=
-                    String.format(
-                            Locale.ENGLISH,
-                            "OR (%1$s LIKE %2$s)",
-                            field,
-                            DatabaseUtils.sqlEscapeString(
-                                    "%"
-                                            + baseUri.getScheme()
-                                            + "://%."
-                                            + baseUri.getEncodedAuthority()
-                                            + "%"));
-        }
+        // site match needs to also match https://%.host.com , this is needed to ensure matching
+        // with old enrollment file formats that included origin based URLs.
+        selectionQuery +=
+                String.format(
+                        Locale.ENGLISH,
+                        "OR (%1$s LIKE %2$s)",
+                        field,
+                        DatabaseUtils.sqlEscapeString(
+                                "%"
+                                        + baseUri.getScheme()
+                                        + "://%."
+                                        + baseUri.getEncodedAuthority()
+                                        + "%"));
+
         return selectionQuery;
     }
 
@@ -557,7 +562,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                     stats,
                     TransactionStatus.DATASTORE_EXCEPTION,
                     getEnrollmentRecordCountForLogging());
-            LogUtil.e(e, "Failed to get enrollment data from DB.");
+            LogUtil.e(e, "Failed to get fledge enrollment data from DB.");
             return null;
         }
     }
@@ -638,7 +643,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                     stats,
                     TransactionStatus.DATASTORE_EXCEPTION,
                     getEnrollmentRecordCountForLogging());
-            LogUtil.e(e, "Failed to get enrollment data from DB.");
+            LogUtil.e(e, "Failed to get fledge enrollment data from DB.");
             return null;
         }
     }
@@ -787,7 +792,7 @@ public class EnrollmentDao implements IEnrollmentDao {
                     stats,
                     TransactionStatus.DATASTORE_EXCEPTION,
                     getEnrollmentRecordCountForLogging());
-            LogUtil.e(e, "Failed to get enrollment data from DB.");
+            LogUtil.e(e, "Failed to get fledge enrollment data from DB.");
             return null;
         }
     }

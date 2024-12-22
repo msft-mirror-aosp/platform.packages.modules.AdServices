@@ -154,6 +154,9 @@ public class PackageChangedReceiver extends BroadcastReceiver {
                     // The broadcast is received from the system service. On T+ devices, we do this
                     // so
                     // that the PP API process is not woken up if the flag is disabled.
+                case Intent.ACTION_PACKAGE_ADDED:
+                    handlePackageAdded(context, packageUri);
+                    break;
                 case PACKAGE_CHANGED_BROADCAST:
                     switch (intent.getStringExtra(ACTION_KEY)) {
                         case PACKAGE_FULLY_REMOVED:
@@ -198,11 +201,8 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         LogUtil.d("Package Fully Removed:" + packageUri);
         sBackgroundExecutor.execute(
                 () ->
-                        MeasurementImpl.getInstance(
-                                        SdkLevel.isAtLeastS()
-                                                ? context
-                                                : context.getApplicationContext())
-                                .deletePackageRecords(packageUri));
+                        MeasurementImpl.getInstance()
+                                .deletePackageRecords(packageUri, System.currentTimeMillis()));
 
         // Log wipeout event triggered by request to uninstall package on device
         WipeoutStatus wipeoutStatus = new WipeoutStatus();
@@ -220,7 +220,8 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         LogUtil.d("Package Data Cleared: " + packageUri);
         sBackgroundExecutor.execute(
                 () -> {
-                    MeasurementImpl.getInstance(context).deletePackageRecords(packageUri);
+                    MeasurementImpl.getInstance()
+                            .deletePackageRecords(packageUri, System.currentTimeMillis());
                 });
 
         WipeoutStatus wipeoutStatus = new WipeoutStatus();
@@ -238,7 +239,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
         LogUtil.d("Package Added: " + packageUri);
         sBackgroundExecutor.execute(
                 () ->
-                        MeasurementImpl.getInstance(context)
+                        MeasurementImpl.getInstance()
                                 .doInstallAttribution(packageUri, System.currentTimeMillis()));
     }
 
@@ -386,7 +387,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     @VisibleForTesting
     CustomAudienceDatabase getCustomAudienceDatabase(@NonNull Context context) {
         Objects.requireNonNull(context);
-        return CustomAudienceDatabase.getInstance(context);
+        return CustomAudienceDatabase.getInstance();
     }
 
     /**
@@ -398,7 +399,7 @@ public class PackageChangedReceiver extends BroadcastReceiver {
     @VisibleForTesting
     SharedStorageDatabase getSharedStorageDatabase(@NonNull Context context) {
         Objects.requireNonNull(context);
-        return SharedStorageDatabase.getInstance(context);
+        return SharedStorageDatabase.getInstance();
     }
 
     private void logWipeoutStats(WipeoutStatus wipeoutStatus, String appPackageName) {

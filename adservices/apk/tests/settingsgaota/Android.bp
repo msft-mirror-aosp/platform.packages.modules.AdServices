@@ -52,7 +52,6 @@ android_test {
         "android.test.mock.stubs",
         "framework-adservices.impl",
         "framework-annotations-lib",
-        "framework-ondevicepersonalization.impl",
     ],
     test_suites: [
         "general-tests",

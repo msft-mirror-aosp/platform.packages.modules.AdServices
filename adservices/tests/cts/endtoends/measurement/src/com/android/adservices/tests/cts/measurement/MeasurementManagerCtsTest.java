@@ -41,6 +41,7 @@ import android.view.KeyEvent;
 
 import androidx.annotation.NonNull;
 
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
@@ -64,6 +65,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+@RequiresSdkLevelAtLeastS(reason = "Cannot run on R with Consent Source of truth removed")
 public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestCase {
 
     private static final Executor CALLBACK_EXECUTOR = Executors.newCachedThreadPool();
@@ -100,8 +102,10 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
 
     @Before
     public void setup() throws Exception {
-        mMeasurementManager = MeasurementManager.get(sContext);
-        assertWithMessage("MeasurementManager.get(%s)", sContext)
+        // Kill adservices process to avoid interfering from other tests.
+        AdservicesTestHelper.killAdservicesProcess(mContext);
+        mMeasurementManager = MeasurementManager.get(mContext);
+        assertWithMessage("MeasurementManager.get(%s)", mContext)
                 .that(mMeasurementManager)
                 .isNotNull();
 
@@ -112,7 +116,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     @Test
     @RequiresLowRamDevice
     public void testMeasurementApiDisabled_lowRamDevice() throws Exception {
-        MeasurementManager manager = MeasurementManager.get(sContext);
+        MeasurementManager manager = MeasurementManager.get(mContext);
         assertWithMessage("manager").that(manager).isNotNull();
 
         boolean result = callMeasurementApiStatus(false);
@@ -830,7 +834,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     @RequiresSdkLevelAtLeastS
     public void testDeleteRegistrations_withInvalidArgumentsWithCallbackOsReceiver_hasError()
             throws Exception {
-        MeasurementManager manager = MeasurementManager.get(sContext);
+        MeasurementManager manager = MeasurementManager.get(mContext);
         Objects.requireNonNull(manager);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
@@ -862,7 +866,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
     @Test
     public void testDeleteRegistrations_withInvalidArgumentsWithCallbackCustomReceiver_hasError()
             throws Exception {
-        MeasurementManager manager = MeasurementManager.get(sContext);
+        MeasurementManager manager = MeasurementManager.get(mContext);
         Objects.requireNonNull(manager);
 
         CompletableFuture<Void> future = new CompletableFuture<>();
@@ -974,7 +978,7 @@ public final class MeasurementManagerCtsTest extends CtsMeasurementEndToEndTestC
      */
     private boolean callMeasurementApiStatus(boolean useCustomReceiver) throws Exception {
         CountDownLatch countDownLatch = new CountDownLatch(1);
-        MeasurementManager manager = MeasurementManager.get(sContext);
+        MeasurementManager manager = MeasurementManager.get(mContext);
         List<Integer> resultCodes = new ArrayList<>();
 
         if (useCustomReceiver) {

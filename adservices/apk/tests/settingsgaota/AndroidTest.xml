@@ -17,9 +17,6 @@
 <configuration description="Config for Ad Services Settings App test cases">
     <option name="test-tag" value="AdServicesApkUISettingsGaOtaTests" />
     <option name="config-descriptor:metadata" key="parameter" value="not_secondary_user" />
-    <!-- disable device config sync during test -->
-    <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
-    <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
 
     <metrics_collector class="com.android.tradefed.device.metric.FilePullerLogCollector">
         <option name="directory-keys" value="/sdcard/Documents/adservices-tests" />
@@ -33,8 +30,6 @@
     </target_preparer>
 
     <target_preparer class="com.android.tradefed.targetprep.RunCommandTargetPreparer">
-        <!-- TODO(b/279938338): change to use log level TestPreparer -->
-        <option name="run-command" value="setprop log.tag.adservices VERBOSE"/>
         <option name="run-command" value="mkdir -p /data/local/tmp/cts/install" />
         <option name="teardown-command" value="rm -rf /data/local/tmp/cts"/>
     </target_preparer>

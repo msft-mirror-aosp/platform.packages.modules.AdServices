@@ -24,15 +24,14 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOT
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_FLEDGE_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
-import static com.android.adservices.service.Flags.CONSENT_MANAGER_DEBUG_MODE;
-import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
-import static com.android.adservices.service.Flags.CONSENT_NOTIFICATION_DEBUG_MODE;
-import static com.android.adservices.service.Flags.CONSENT_NOTIFIED_DEBUG_MODE;
-import static com.android.adservices.service.Flags.DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
 
 import androidx.annotation.VisibleForTesting;
 
@@ -73,6 +72,27 @@ public final class DebugFlags extends CommonDebugFlags {
     @VisibleForTesting
     static final boolean DEFAULT_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED = false;
 
+    /** Default value for sending a broadcast when schedule custom audience is completed. */
+    @VisibleForTesting static final boolean DEFAULT_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED = false;
+
+    /** Default value for sending a broadcast when schedule custom audience is completed. */
+    @VisibleForTesting
+    static final boolean DEFAULT_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED = false;
+
+    /** Default value for sending a broadcast when background key fetch is completed. */
+    @VisibleForTesting
+    static final boolean DEFAULT_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED = false;
+
+    static final boolean CONSENT_NOTIFICATION_DEBUG_MODE = false;
+    static final boolean CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE = false;
+    static final boolean CONSENT_NOTIFIED_DEBUG_MODE = false;
+    static final boolean CONSENT_MANAGER_DEBUG_MODE = false;
+    static final boolean DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE = false;
+
+    /** Default for if Protected App Signals sends a broadcast after encoder logic is registered. */
+    static final boolean DEFAULT_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED =
+            false;
+
     public static DebugFlags getInstance() {
         return sInstance;
     }
@@ -80,63 +100,90 @@ public final class DebugFlags extends CommonDebugFlags {
     private DebugFlags() {}
 
     public boolean getConsentNotificationDebugMode() {
-        return getDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, CONSENT_NOTIFICATION_DEBUG_MODE);
+        return getBoolean(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, CONSENT_NOTIFICATION_DEBUG_MODE);
     }
 
     public boolean getConsentNotifiedDebugMode() {
-        return getDebugFlag(KEY_CONSENT_NOTIFIED_DEBUG_MODE, CONSENT_NOTIFIED_DEBUG_MODE);
+        return getBoolean(KEY_CONSENT_NOTIFIED_DEBUG_MODE, CONSENT_NOTIFIED_DEBUG_MODE);
     }
 
     public boolean getConsentNotificationActivityDebugMode() {
-        return getDebugFlag(
+        return getBoolean(
                 KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE,
                 CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE);
     }
 
     public boolean getConsentManagerDebugMode() {
-        return getDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE, CONSENT_MANAGER_DEBUG_MODE);
+        return getBoolean(KEY_CONSENT_MANAGER_DEBUG_MODE, CONSENT_MANAGER_DEBUG_MODE);
     }
 
     public boolean getConsentManagerOTADebugMode() {
-        return getDebugFlag(
+        return getBoolean(
                 KEY_CONSENT_MANAGER_OTA_DEBUG_MODE, DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE);
     }
 
     public boolean getProtectedAppSignalsCommandsEnabled() {
-        return getDebugFlag(
+        return getBoolean(
                 KEY_PROTECTED_APP_SIGNALS_CLI_ENABLED, DEFAULT_PROTECTED_APP_SIGNALS_CLI_ENABLED);
     }
 
+    public boolean getProtectedAppSignalsEncoderLogicRegisteredBroadcastEnabled() {
+        return getBoolean(
+                KEY_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED,
+                DEFAULT_PROTECTED_APP_SIGNALS_ENCODER_LOGIC_REGISTERED_BROADCAST_ENABLED);
+    }
+
     public boolean getAdSelectionCommandsEnabled() {
-        return getDebugFlag(KEY_AD_SELECTION_CLI_ENABLED, DEFAULT_AD_SELECTION_CLI_ENABLED);
+        return getBoolean(KEY_AD_SELECTION_CLI_ENABLED, DEFAULT_AD_SELECTION_CLI_ENABLED);
     }
 
     /** Returns whether Consented Debugging is enabled for server auctions. */
     public boolean getFledgeAuctionServerConsentedDebuggingEnabled() {
-        return getDebugFlag(
+        return getBoolean(
                 KEY_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED,
                 DEFAULT_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED);
     }
 
     /** Returns the enabled status for custom audiences CLI feature. */
     public boolean getFledgeConsentedDebuggingCliEnabledStatus() {
-        return getDebugFlag(
+        return getBoolean(
                 KEY_FLEDGE_IS_CONSENTED_DEBUGGING_CLI_ENABLED,
                 DEFAULT_FLEDGE_CONSENTED_DEBUGGING_CLI_ENABLED);
     }
 
     /** Returns the enabled status for custom audiences CLI feature. */
     public boolean getFledgeCustomAudienceCLIEnabledStatus() {
-        return getDebugFlag(
+        return getBoolean(
                 KEY_FLEDGE_IS_CUSTOM_AUDIENCE_CLI_ENABLED,
                 DEFAULT_FLEDGE_CUSTOM_AUDIENCE_CLI_ENABLED);
     }
 
     /** Returns whether sending a broadcast when record topics is completed is enabled. */
     public boolean getRecordTopicsCompleteBroadcastEnabled() {
-        return getDebugFlag(
+        return getBoolean(
                 KEY_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED,
                 DEFAULT_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED);
+    }
+
+    /** Returns whether sending a broadcast when schedule CA is completed is enabled. */
+    public boolean getFledgeScheduleCACompleteBroadcastEnabled() {
+        return getBoolean(
+                KEY_FLEDGE_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED,
+                DEFAULT_SCHEDULE_CA_COMPLETE_BROADCAST_ENABLED);
+    }
+
+    /** Returns whether sending a broadcast when background fetch job is completed is enabled. */
+    public boolean getFledgeBackgroundFetchCompleteBroadcastEnabled() {
+        return getBoolean(
+                KEY_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED,
+                DEFAULT_FLEDGE_BACKGROUND_FETCH_COMPLETE_BROADCAST_ENABLED);
+    }
+
+    /** Returns whether sending a broadcast when Background Key Fetch completed is enabled. */
+    public boolean getFledgeBackgroundKeyFetchCompleteBroadcastEnabled() {
+        return getBoolean(
+                KEY_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED,
+                DEFAULT_FLEDGE_BACKGROUND_KEY_FETCH_COMPLETE_BROADCAST_ENABLED);
     }
 
     /**
@@ -144,7 +191,7 @@ public final class DebugFlags extends CommonDebugFlags {
      * logcat or not.
      */
     public boolean getAdServicesJsIsolateConsoleMessagesInLogsEnabled() {
-        return getDebugFlag(
+        return getBoolean(
                 KEY_AD_SERVICES_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED,
                 DEFAULT_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED);
     }

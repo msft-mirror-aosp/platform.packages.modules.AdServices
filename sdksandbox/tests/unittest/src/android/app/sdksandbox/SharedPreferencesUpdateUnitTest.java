@@ -21,6 +21,8 @@ import static com.google.common.truth.Truth.assertThat;
 import android.os.Bundle;
 import android.os.Parcel;
 
+import com.android.server.sdksandbox.DeviceSupportedBaseTest;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
@@ -29,7 +31,7 @@ import java.util.List;
 
 /** Tests {@link SharedPreferencesUpdate} APIs. */
 @RunWith(JUnit4.class)
-public class SharedPreferencesUpdateUnitTest {
+public class SharedPreferencesUpdateUnitTest extends DeviceSupportedBaseTest {
 
     private static final String KEY_LONG = "long";
     private static final String KEY_STRING = "string";

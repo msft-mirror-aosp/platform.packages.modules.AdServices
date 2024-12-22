@@ -18,11 +18,10 @@ package com.android.cobalt.observations;
 
 import static java.util.Objects.requireNonNull;
 
-import android.annotation.NonNull;
-
 import com.android.cobalt.data.EventRecordAndSystemProfile;
 import com.android.cobalt.data.EventVector;
 import com.android.cobalt.data.ObservationGenerator;
+import com.android.cobalt.logging.CobaltOperationLogger;
 import com.android.cobalt.system.SystemData;
 
 import com.google.cobalt.AggregateValue;
@@ -63,24 +62,27 @@ final class PrivateObservationGenerator implements ObservationGenerator {
     private final PrivacyGenerator mPrivacyGenerator;
     private final SecureRandom mSecureRandom;
     private final Encoder mEncoder;
+    private final CobaltOperationLogger mOperationLogger;
     private final int mCustomerId;
     private final int mProjectId;
     private final MetricDefinition mMetric;
     private final ReportDefinition mReport;
 
     PrivateObservationGenerator(
-            @NonNull SystemData systemData,
-            @NonNull PrivacyGenerator privacyGenerator,
-            @NonNull SecureRandom secureRandom,
-            @NonNull Encoder encoder,
+            SystemData systemData,
+            PrivacyGenerator privacyGenerator,
+            SecureRandom secureRandom,
+            Encoder encoder,
+            CobaltOperationLogger operationLogger,
             int customerId,
             int projectId,
-            @NonNull MetricDefinition metric,
-            @NonNull ReportDefinition report) {
+            MetricDefinition metric,
+            ReportDefinition report) {
         this.mSystemData = requireNonNull(systemData);
         this.mPrivacyGenerator = requireNonNull(privacyGenerator);
         this.mSecureRandom = requireNonNull(secureRandom);
         this.mEncoder = requireNonNull(encoder);
+        this.mOperationLogger = requireNonNull(operationLogger);
         this.mCustomerId = customerId;
         this.mProjectId = projectId;
         this.mMetric = requireNonNull(metric);
@@ -134,6 +136,7 @@ final class PrivateObservationGenerator implements ObservationGenerator {
             // Each EventRecordAndSystemProfile contains a unique event vector for the system
             // profile and day so the number of events can be compared to the event vector
             // buffer max of the report.
+            mOperationLogger.logEventVectorBufferMaxExceeded(mMetric.getId(), mReport.getId());
             events = events.subList(0, (int) mReport.getEventVectorBufferMax());
         }
 

@@ -43,7 +43,6 @@ android_test {
     libs: [
         "android.test.base.stubs.test",
         "android.test.runner.stubs.test",
-        "framework-configinfrastructure.stubs.system",
         "mockito",
     ],
     sdk_version: "test_current",
@@ -81,7 +80,6 @@ android_test {
     libs: [
         "android.test.base.stubs.test",
         "android.test.runner.stubs.test",
-        "framework-configinfrastructure.stubs.system",
         "mockito",
     ],
     sdk_version: "test_current",

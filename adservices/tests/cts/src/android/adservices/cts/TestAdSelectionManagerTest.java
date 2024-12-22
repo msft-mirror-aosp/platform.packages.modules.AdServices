@@ -17,8 +17,8 @@
 package android.adservices.cts;
 
 import static com.android.adservices.AdServicesCommon.BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
-import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE;
 import static com.android.adservices.service.FlagsConstants.KEY_ISOLATE_MAX_HEAP_SIZE_BYTES;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -47,10 +47,13 @@ import android.os.Process;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.annotations.EnableAllApis;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
@@ -68,10 +71,13 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
-@RequiresSdkLevelAtLeastS // TODO(b/291488819) - Remove SDK Level check if Fledge is enabled on R.
+@EnableAllApis
+@SetCompatModeFlags
+@RequiresSdkLevelAtLeastS
 @SetFlagEnabled(KEY_ENABLE_ENROLLMENT_TEST_SEED)
-@SetFlagDisabled(KEY_ENFORCE_ISOLATE_MAX_HEAP_SIZE)
 @SetFlagDisabled(KEY_ISOLATE_MAX_HEAP_SIZE_BYTES)
+@SetPpapiAppAllowList
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 // TODO (b/330324133): Short-term solution to allow test to extend binder timeout to
 // resolve the test flakiness.
 @SetLongDebugFlag(name = BINDER_TIMEOUT_SYSTEM_PROPERTY_NAME, value = 10_000)
@@ -109,13 +115,6 @@ public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
     private TestAdSelectionClient mTestAdSelectionClient;
     private boolean mIsDebugMode;
 
-    @Override
-    protected AdServicesFlagsSetterRule getAdServicesFlagsSetterRule() {
-        return AdServicesFlagsSetterRule.forAllApisEnabledTests()
-                .setCompatModeFlags()
-                .setPpapiAppAllowList(mPackageName);
-    }
-
     @Before
     public void setup() {
 
@@ -129,7 +128,7 @@ public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
                         .setExecutor(CALLBACK_EXECUTOR)
                         .build();
         DevContext devContext = DevContextFilter.create(sContext).createDevContext(Process.myUid());
-        mIsDebugMode = devContext.getDevOptionsEnabled();
+        mIsDebugMode = devContext.getDeviceDevOptionsEnabled();
 
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
@@ -174,11 +173,7 @@ public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
         ListenableFuture<Void> result = adSelectionClient.reportImpression(input);
 
         Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            result.get(10, TimeUnit.SECONDS);
-                        });
+                assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
         assertThat(exception.getCause()).isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -194,17 +189,12 @@ public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
                 mTestAdSelectionClient.overrideAdSelectionConfigRemoteInfo(request);
 
         Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            result.get(10, TimeUnit.SECONDS);
-                        });
+                assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
         assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
-    public void testAddOverrideFailsWithDebugModeDisabled_usingGetMethodToCreateManager()
-            throws Exception {
+    public void testAddOverrideFailsWithDebugModeDisabled_usingGetMethodToCreateManager() {
         Assume.assumeFalse(mIsDebugMode);
         overrideAdSelectionClient();
         testAddOverrideFailsWithDebugModeDisabled();
@@ -221,17 +211,12 @@ public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
                 mTestAdSelectionClient.removeAdSelectionConfigRemoteInfoOverride(request);
 
         Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            result.get(10, TimeUnit.SECONDS);
-                        });
+                assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
         assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
-    public void testRemoveOverrideFailsWithDebugModeDisabled_usingGetMethodToCreateManager()
-            throws Exception {
+    public void testRemoveOverrideFailsWithDebugModeDisabled_usingGetMethodToCreateManager() {
         Assume.assumeFalse(mIsDebugMode);
         overrideAdSelectionClient();
         testRemoveOverrideFailsWithDebugModeDisabled();
@@ -268,11 +253,7 @@ public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
                 testAdSelectionClient.resetAllAdSelectionConfigRemoteOverrides();
 
         Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            result.get(10, TimeUnit.SECONDS);
-                        });
+                assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
         assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
@@ -313,11 +294,7 @@ public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
                 adSelectionClient.selectAds(adSelectionConfigNoBuyers);
 
         Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            result.get(10, TimeUnit.SECONDS);
-                        });
+                assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
         assertThat(exception.getCause()).isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -331,7 +308,7 @@ public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
     }
 
     @Test
-    public void testAddFromOutcomesOverrideFailsWithDebugModeDisabled() throws Exception {
+    public void testAddFromOutcomesOverrideFailsWithDebugModeDisabled() {
         Assume.assumeFalse(mIsDebugMode);
 
         AddAdSelectionFromOutcomesOverrideRequest request =
@@ -342,16 +319,12 @@ public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
                 mTestAdSelectionClient.overrideAdSelectionFromOutcomesConfigRemoteInfo(request);
 
         Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            result.get(10, TimeUnit.SECONDS);
-                        });
+                assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
         assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
-    public void testRemoveFromOutcomesOverrideFailsWithDebugModeDisabled() throws Exception {
+    public void testRemoveFromOutcomesOverrideFailsWithDebugModeDisabled() {
         Assume.assumeFalse(mIsDebugMode);
 
         RemoveAdSelectionFromOutcomesOverrideRequest request =
@@ -362,27 +335,19 @@ public final class TestAdSelectionManagerTest extends ForegroundCtsTestCase {
                         request);
 
         Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            result.get(10, TimeUnit.SECONDS);
-                        });
+                assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
         assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 
     @Test
-    public void testResetAllFromOutcomesOverridesFailsWithDebugModeDisabled() throws Exception {
+    public void testResetAllFromOutcomesOverridesFailsWithDebugModeDisabled() {
         Assume.assumeFalse(mIsDebugMode);
 
         ListenableFuture<Void> result =
                 mTestAdSelectionClient.resetAllAdSelectionFromOutcomesConfigRemoteOverrides();
 
         Exception exception =
-                assertThrows(
-                        ExecutionException.class,
-                        () -> {
-                            result.get(10, TimeUnit.SECONDS);
-                        });
+                assertThrows(ExecutionException.class, () -> result.get(10, TimeUnit.SECONDS));
         assertThat(exception.getCause()).isInstanceOf(SecurityException.class);
     }
 

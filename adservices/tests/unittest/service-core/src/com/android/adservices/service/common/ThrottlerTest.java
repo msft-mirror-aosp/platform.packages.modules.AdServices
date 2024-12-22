@@ -25,21 +25,23 @@ import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT
 import static com.android.adservices.service.common.Throttler.ApiKey.MEASUREMENT_API_REGISTER_WEB_TRIGGER;
 import static com.android.adservices.service.common.Throttler.ApiKey.UNKNOWN;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.mock;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 
-import androidx.test.filters.SmallTest;
-
-import com.android.adservices.service.Flags;
+import com.android.adservices.common.AdServicesMockitoTestCase;
 
 import org.junit.Test;
 
 /** Unit tests for {@link Throttler}. */
-@SmallTest
-public class ThrottlerTest {
+public final class ThrottlerTest extends AdServicesMockitoTestCase {
+
+    @Test
+    public void testNewInstance_null() {
+        assertThrows(NullPointerException.class, () -> Throttler.newInstance(null));
+    }
+
     @Test
     public void testTryAcquire_skdName() throws InterruptedException {
         // Create a throttler with 1 permit per second.
@@ -117,17 +119,16 @@ public class ThrottlerTest {
     @Test
     public void testTryAcquire_withSeveralFlagsDifferentPermitsPerSecond() {
         // Create a throttler with several flags
-        final Flags flags = mock(Flags.class);
-        doReturn(1F).when(flags).getSdkRequestPermitsPerSecond();
-        doReturn(2F).when(flags).getAdIdRequestPermitsPerSecond();
-        doReturn(3F).when(flags).getAppSetIdRequestPermitsPerSecond();
-        doReturn(4F).when(flags).getMeasurementRegisterSourceRequestPermitsPerSecond();
-        doReturn(5F).when(flags).getMeasurementRegisterWebSourceRequestPermitsPerSecond();
-        doReturn(6F).when(flags).getMeasurementRegisterTriggerRequestPermitsPerSecond();
-        doReturn(7F).when(flags).getMeasurementRegisterWebTriggerRequestPermitsPerSecond();
-        doReturn(8F).when(flags).getMeasurementRegisterSourcesRequestPermitsPerSecond();
+        doReturn(1F).when(mMockFlags).getSdkRequestPermitsPerSecond();
+        doReturn(2F).when(mMockFlags).getAdIdRequestPermitsPerSecond();
+        doReturn(3F).when(mMockFlags).getAppSetIdRequestPermitsPerSecond();
+        doReturn(4F).when(mMockFlags).getMeasurementRegisterSourceRequestPermitsPerSecond();
+        doReturn(5F).when(mMockFlags).getMeasurementRegisterWebSourceRequestPermitsPerSecond();
+        doReturn(6F).when(mMockFlags).getMeasurementRegisterTriggerRequestPermitsPerSecond();
+        doReturn(7F).when(mMockFlags).getMeasurementRegisterWebTriggerRequestPermitsPerSecond();
+        doReturn(8F).when(mMockFlags).getMeasurementRegisterSourcesRequestPermitsPerSecond();
 
-        final Throttler throttler = new Throttler(flags);
+        Throttler throttler = Throttler.newInstance(mMockFlags);
 
         // Default ApiKey configured with 1 request per second
         assertAcquireSeveralTimes(throttler, UNKNOWN, 1);
@@ -155,36 +156,21 @@ public class ThrottlerTest {
     }
 
     @Test
-    public void testGetInstance_withOnePermitPerSecond() {
-        // Reset throttler state. There is no guarantee another class has initialized the Throttler
-        // using getInstance, therefore destroying the throttler before testing. This is the only
-        // method using getInstance while the others are using the constructor, therefore there is
-        // no need to add this to the setup and tear down test phase.
-        Throttler.destroyExistingThrottler();
-
+    public void testThrottler_withOnePermitPerSecond() {
         // Create a throttler with 1 permit per second from getInstance.
-        final Flags flags = createFlags(1F);
-        Throttler throttler = Throttler.getInstance(flags);
+        mockFlags(1F);
+        Throttler throttler = Throttler.newInstance(mMockFlags);
 
         // tryAcquire should return false after 1 permit
         assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_SOURCE, 1);
 
         // Calling a different API. tryAcquire should return false after 1 permit
         assertAcquireSeveralTimes(throttler, MEASUREMENT_API_REGISTER_TRIGGER, 1);
-
-        // Reset throttler state.
-        // If another class calls getInstance, it can be initialized to its original state
-        Throttler.destroyExistingThrottler();
-    }
-
-    @Test
-    public void testGetInstance_onEmptyFlags_throwNullPointerException() {
-        assertThrows(NullPointerException.class, () -> Throttler.getInstance(null));
     }
 
     private void assertAcquireSeveralTimes(
             Throttler throttler, Throttler.ApiKey apiKey, int validTimes) {
-        final String defaultRequester = "requester";
+        String defaultRequester = "requester";
         for (int i = 0; i < validTimes; i++) {
             assertThat(throttler.tryAcquire(apiKey, defaultRequester)).isTrue();
         }
@@ -192,30 +178,28 @@ public class ThrottlerTest {
     }
 
     private Throttler createThrottler(float permitsPerSecond) {
-        final Flags flags = createFlags(permitsPerSecond);
-        return new Throttler(flags);
+        mockFlags(permitsPerSecond);
+        return Throttler.newInstance(mMockFlags);
     }
 
-    private Flags createFlags(float permitsPerSecond) {
-        final Flags flags = mock(Flags.class);
-        doReturn(permitsPerSecond).when(flags).getSdkRequestPermitsPerSecond();
+    private void mockFlags(float permitsPerSecond) {
+        doReturn(permitsPerSecond).when(mMockFlags).getSdkRequestPermitsPerSecond();
         doReturn(permitsPerSecond)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementRegisterSourceRequestPermitsPerSecond();
         doReturn(permitsPerSecond)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementRegisterSourcesRequestPermitsPerSecond();
         doReturn(permitsPerSecond)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementRegisterWebSourceRequestPermitsPerSecond();
         doReturn(permitsPerSecond)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementRegisterTriggerRequestPermitsPerSecond();
         doReturn(permitsPerSecond)
-                .when(flags)
+                .when(mMockFlags)
                 .getMeasurementRegisterWebTriggerRequestPermitsPerSecond();
-        doReturn(permitsPerSecond).when(flags).getTopicsApiSdkRequestPermitsPerSecond();
-        doReturn(permitsPerSecond).when(flags).getTopicsApiAppRequestPermitsPerSecond();
-        return flags;
+        doReturn(permitsPerSecond).when(mMockFlags).getTopicsApiSdkRequestPermitsPerSecond();
+        doReturn(permitsPerSecond).when(mMockFlags).getTopicsApiAppRequestPermitsPerSecond();
     }
 }

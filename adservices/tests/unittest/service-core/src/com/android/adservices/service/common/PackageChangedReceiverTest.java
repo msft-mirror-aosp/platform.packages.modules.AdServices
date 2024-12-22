@@ -45,7 +45,6 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.SmallTest;
 
 import com.android.adservices.AdServicesCommon;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -55,7 +54,6 @@ import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.service.FakeFlagsFactory;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
@@ -80,21 +78,18 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.stubbing.Answer;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /** Unit test for {@link com.android.adservices.service.common.PackageChangedReceiver}. */
-@SmallTest
 @SpyStatic(AdServicesLoggerImpl.class)
 @SpyStatic(TopicsWorker.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(MeasurementImpl.class)
 @SpyStatic(ConsentManager.class)
 public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoTestCase {
-    private static final Context sContext = ApplicationProvider.getApplicationContext();
     private static final String SAMPLE_PACKAGE = "com.example.measurement.sampleapp";
     private static final String PACKAGE_SCHEME = "package:";
     private static final int BACKGROUND_THREAD_TIMEOUT_MS = 500;
@@ -110,7 +105,6 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     @Mock private AppInstallDao mAppInstallDaoMock;
     @Mock private FrequencyCapDao mFrequencyCapDaoMock;
     @Mock private ConsentManager mConsentManager;
-    @Mock private Flags mMockFlags;
 
     private TopicsWorker mSpyTopicsWorker;
 
@@ -130,7 +124,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
                                 FakeFlagsFactory.getFlagsForTest()));
         doReturn(true).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
         doReturn(true).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
-        PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
+        PackageChangedReceiver.enableReceiver(mContext, mMockFlags);
     }
 
     private PackageChangedReceiver createSpyPackageReceiverForMeasurement() {
@@ -288,7 +282,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
             throws Exception {
         doReturn(false).when(mMockFlags).getFledgeFrequencyCapFilteringEnabled();
         doReturn(true).when(mMockFlags).getFledgeScheduleCustomAudienceUpdateEnabled();
-        PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
+        PackageChangedReceiver.enableReceiver(mContext, mMockFlags);
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
@@ -303,7 +297,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
             throws Exception {
         doReturn(false).when(mMockFlags).getFledgeAppInstallFilteringEnabled();
         doReturn(true).when(mMockFlags).getFledgeScheduleCustomAudienceUpdateEnabled();
-        PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
+        PackageChangedReceiver.enableReceiver(mContext, mMockFlags);
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
@@ -327,7 +321,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     public void testReceivePackageFullyRemoved_fledgeKillSwitchOffRemoveScheduleCAUpdateDisabled()
             throws Exception {
         doReturn(true).when(mMockFlags).getFledgeScheduleCustomAudienceUpdateEnabled();
-        PackageChangedReceiver.enableReceiver(sContext, mMockFlags);
+        PackageChangedReceiver.enableReceiver(mContext, mMockFlags);
         Intent intent =
                 createIntentSentByAdServiceSystemService(
                         PackageChangedReceiver.PACKAGE_FULLY_REMOVED);
@@ -365,8 +359,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
      * cleared when the app is removed.
      */
     @Test
-    public void testReceivePackageFullyRemoved_consent_noPackageUid()
-            throws InterruptedException, IOException {
+    public void testReceivePackageFullyRemoved_consent_noPackageUid() throws Exception {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
         Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent =
@@ -384,7 +377,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
      */
     @Test
     public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault()
-            throws InterruptedException, IOException {
+            throws Exception {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
         Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent =
@@ -397,8 +390,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    public void testReceivePackageFullyRemoved_consent_noPackageUid_backCompat()
-            throws InterruptedException, IOException {
+    public void testReceivePackageFullyRemoved_consent_noPackageUid_backCompat() throws Exception {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
         Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
@@ -410,7 +402,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReceivePackageFullyRemoved_consent_packageUidIsExplicitlyDefault_backCompat()
-            throws InterruptedException, IOException {
+            throws Exception {
         Assume.assumeFalse(SdkLevel.isAtLeastT());
         Assume.assumeTrue(SdkLevel.isAtLeastS());
         Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_FULLY_REMOVED);
@@ -529,7 +521,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Initialize package receiver meant for Topics
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForTopics();
-        spyReceiver.onReceive(sContext, intent);
+        spyReceiver.onReceive(mContext, intent);
 
         // Grant some time to allow background thread to execute
         Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
@@ -550,7 +542,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
 
         // Initialize package receiver meant for Topics and execute
-        createSpyPackageReceiverForTopics().onReceive(sContext, intent);
+        createSpyPackageReceiverForTopics().onReceive(mContext, intent);
 
         // Grant some time to allow background thread to execute
         Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
@@ -568,11 +560,11 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Mock static method MeasurementImpl.getInstance that executes on a separate thread
         MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mockMeasurementImpl).when(MeasurementImpl::getInstance);
 
         // Initialize package receiver meant for Measurement
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
-        spyReceiver.onReceive(sContext, intent);
+        spyReceiver.onReceive(mContext, intent);
 
         // Verify only measurement fully removed method was executed from measurement methods
         verify(spyReceiver, never()).measurementOnPackageDataCleared(any(), any());
@@ -583,7 +575,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
         // Verify method inside measurement background thread executes
-        verify(mockMeasurementImpl, times(1)).deletePackageRecords(any());
+        verify(mockMeasurementImpl, times(1)).deletePackageRecords(any(), anyLong());
     }
 
     private void runPackageFullyRemovedForMsmtKillSwitchOn(Intent intent) throws Exception {
@@ -595,11 +587,11 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Mock static method MeasurementImpl.getInstance that executes on a separate thread
         MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mockMeasurementImpl).when(MeasurementImpl::getInstance);
 
         // Initialize package receiver meant for Measurement
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
-        spyReceiver.onReceive(sContext, intent);
+        spyReceiver.onReceive(mContext, intent);
 
         // Verify only measurement fully removed method was executed from measurement methods
         verify(spyReceiver, never()).measurementOnPackageDataCleared(any(), any());
@@ -610,7 +602,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
         // Verify method inside measurement background thread does not execute
-        verify(mockMeasurementImpl, never()).deletePackageRecords(any());
+        verify(mockMeasurementImpl, never()).deletePackageRecords(any(), anyLong());
     }
 
     private void runPackageFullyRemovedForFledgeKillSwitchOff(
@@ -655,7 +647,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
         doReturn(mCustomAudienceDatabaseMock).when(spyReceiver).getCustomAudienceDatabase(any());
         doReturn(mSharedStorageDatabaseMock).when(spyReceiver).getSharedStorageDatabase(any());
-        spyReceiver.onReceive(sContext, intent);
+        spyReceiver.onReceive(mContext, intent);
 
         verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
 
@@ -683,7 +675,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Initialize package receiver meant for FLEDGE
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
-        spyReceiver.onReceive(sContext, intent);
+        spyReceiver.onReceive(mContext, intent);
 
         verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
 
@@ -697,7 +689,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
     private void runPackageFullyRemovedForConsent_onS(Intent intent) throws Exception {
         // Mock static method AppConsentDao.getInstance() executed on a separate thread
-        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManager).when(ConsentManager::getInstance);
 
         CountDownLatch completionLatch = new CountDownLatch(1);
         doAnswer(
@@ -710,7 +702,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Initialize package receiver meant for Consent
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
-        spyReceiver.onReceive(sContext, intent);
+        spyReceiver.onReceive(mContext, intent);
 
         verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
 
@@ -720,9 +712,9 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
     }
 
     private void validateConsentWhenPackageUidAbsent(Intent intent, boolean isPackageStillInstalled)
-            throws IOException, InterruptedException {
+            throws Exception {
         // Mock static method AppConsentDao.getInstance() executed on a separate thread
-        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManager).when(ConsentManager::getInstance);
 
         // Track whether the clearConsentForUninstalledApp was ever invoked.
         // Use a CountDownLatch since this invocation happens on a background thread.
@@ -742,7 +734,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
                 .isPackageStillInstalled(any(), anyString());
 
         // Invoke the onReceive method to test the behavior
-        spyReceiver.onReceive(sContext, intent);
+        spyReceiver.onReceive(mContext, intent);
 
         // Package UID is expected to be -1 if there is no EXTRA_UID in the Intent's Extra.
         verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), eq(DEFAULT_PACKAGE_UID));
@@ -769,7 +761,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
                 .handleAppInstallation(Uri.parse(SAMPLE_PACKAGE));
 
         // Initialize package receiver meant for Topics and execute
-        createSpyPackageReceiverForTopics().onReceive(sContext, intent);
+        createSpyPackageReceiverForTopics().onReceive(mContext, intent);
 
         // Verify the execution in background thread has occurred.
         assertThat(completionLatch.await(/* timeout */ 500, TimeUnit.MILLISECONDS)).isTrue();
@@ -784,11 +776,11 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Mock static method MeasurementImpl.getInstance that executes on a separate thread
         MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mockMeasurementImpl).when(MeasurementImpl::getInstance);
 
         // Initialize package receiver meant for Measurement
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
-        spyReceiver.onReceive(sContext, intent);
+        spyReceiver.onReceive(mContext, intent);
 
         // Verify only measurement added method was executed from measurement methods
         verify(spyReceiver, never()).measurementOnPackageDataCleared(any(), any());
@@ -811,11 +803,11 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Mock static method MeasurementImpl.getInstance that executes on a separate thread
         MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mockMeasurementImpl).when(MeasurementImpl::getInstance);
 
         // Initialize package receiver meant for Measurement
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
-        spyReceiver.onReceive(sContext, intent);
+        spyReceiver.onReceive(mContext, intent);
 
         // Verify only measurement added method was executed from measurement methods
         verify(spyReceiver, never()).measurementOnPackageDataCleared(any(), any());
@@ -838,11 +830,11 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Mock static method MeasurementImpl.getInstance that executes on a separate thread
         MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mockMeasurementImpl).when(MeasurementImpl::getInstance);
 
         // Initialize package receiver meant for Measurement
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
-        spyReceiver.onReceive(sContext, intent);
+        spyReceiver.onReceive(mContext, intent);
 
         // Verify only measurement cleared method was executed from measurement methods
         verify(spyReceiver, times(1)).measurementOnPackageDataCleared(any(), any());
@@ -853,7 +845,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
         // Verify method inside measurement background thread executes
-        verify(mockMeasurementImpl, times(1)).deletePackageRecords(any());
+        verify(mockMeasurementImpl, times(1)).deletePackageRecords(any(), anyLong());
     }
 
     private void runPackageDataClearedForMsmtKillSwitchOn(Intent intent) throws Exception {
@@ -865,11 +857,11 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Mock static method MeasurementImpl.getInstance that executes on a separate thread
         MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
-        doReturn(mockMeasurementImpl).when(() -> MeasurementImpl.getInstance(any()));
+        doReturn(mockMeasurementImpl).when(MeasurementImpl::getInstance);
 
         // Initialize package receiver meant for Measurement
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
-        spyReceiver.onReceive(sContext, intent);
+        spyReceiver.onReceive(mContext, intent);
 
         // Verify only measurement cleared method was executed from measurement methods
         verify(spyReceiver, times(1)).measurementOnPackageDataCleared(any(), any());
@@ -880,7 +872,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         Thread.sleep(BACKGROUND_THREAD_TIMEOUT_MS);
 
         // Verify method inside measurement background thread does not execute
-        verify(mockMeasurementImpl, never()).deletePackageRecords(any());
+        verify(mockMeasurementImpl, never()).deletePackageRecords(any(), anyLong());
     }
 
     private void runPackageDataClearedForFledgeKillSwitchOff(Intent intent) throws Exception {
@@ -923,7 +915,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
         doReturn(mCustomAudienceDatabaseMock).when(spyReceiver).getCustomAudienceDatabase(any());
         doReturn(mSharedStorageDatabaseMock).when(spyReceiver).getSharedStorageDatabase(any());
-        spyReceiver.onReceive(sContext, intent);
+        spyReceiver.onReceive(mContext, intent);
 
         verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
 
@@ -943,7 +935,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
         // Initialize package receiver meant for FLEDGE
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForFledge();
-        spyReceiver.onReceive(sContext, intent);
+        spyReceiver.onReceive(mContext, intent);
 
         verify(spyReceiver).fledgeOnPackageFullyRemovedOrDataCleared(any(), any());
 
@@ -1013,9 +1005,9 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
 
     @Test
     @MockStatic(SdkLevel.class)
-    public void testAppConsentDeletion_onR() throws Exception {
+    public void testAppConsentDeletion_onR() {
         mocker.mockIsAtLeastS(false);
-        doReturn(mConsentManager).when(() -> ConsentManager.getInstance());
+        doReturn(mConsentManager).when(ConsentManager::getInstance);
         PackageChangedReceiver spyReceiver = createSpyPackageReceiverForConsent();
         Intent intent =
                 createIntentSentByAdServiceSystemService(
@@ -1023,7 +1015,7 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         doReturn(false).when(spyReceiver).isPackageStillInstalled(any(), anyString());
 
         // Invoke the onReceive method to test the behavior
-        spyReceiver.onReceive(sContext, intent);
+        spyReceiver.onReceive(mContext, intent);
 
         verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), anyInt());
         doSleep(BACKGROUND_THREAD_TIMEOUT_MS);
@@ -1044,9 +1036,29 @@ public final class PackageChangedReceiverTest extends AdServicesExtendedMockitoT
         doReturn(false).when(spyReceiver).isPackageStillInstalled(any(), anyString());
 
         // Invoke the onReceive method to test the behavior
-        spyReceiver.onReceive(sContext, intent);
+        spyReceiver.onReceive(mContext, intent);
 
         verify(spyReceiver).consentOnPackageFullyRemoved(any(), any(), eq(DEFAULT_PACKAGE_UID));
         verify(mConsentManager, never()).clearConsentForUninstalledApp(anyString());
+    }
+
+    @Test
+    public void testPackageAdded_OnS() {
+        Assume.assumeTrue(SdkLevel.isAtLeastS());
+        Intent intent = createIntentSentBySystem(Intent.ACTION_PACKAGE_ADDED);
+        doReturn(mConsentManager).when(ConsentManager::getInstance);
+
+        // Mock static method FlagsFactory.getFlags() to return Mock Flags.
+        when(FlagsFactory.getFlags()).thenReturn(mMockFlags);
+
+        // Mock static method MeasurementImpl.getInstance that executes on a separate thread
+        MeasurementImpl mockMeasurementImpl = mock(MeasurementImpl.class);
+        doReturn(mockMeasurementImpl).when(MeasurementImpl::getInstance);
+
+        // Initialize package receiver meant for Measurement
+        PackageChangedReceiver spyReceiver = createSpyPackageReceiverForMeasurement();
+        spyReceiver.onReceive(mContext, intent);
+
+        verify(spyReceiver).measurementOnPackageAdded(any(), any());
     }
 }

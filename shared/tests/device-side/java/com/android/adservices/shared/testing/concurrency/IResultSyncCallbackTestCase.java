@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 /** Base test for classes that extend ResultTestSyncCallback. */
 public abstract class IResultSyncCallbackTestCase<
-                R, CB extends IResultSyncCallback<R> & FreezableToString>
+                R, CB extends AbstractSyncCallback & IResultSyncCallback<R>>
         extends IBinderSyncCallbackTestCase<CB> {
 
     private static final AtomicInteger sNextId = new AtomicInteger();
@@ -73,7 +73,7 @@ public abstract class IResultSyncCallbackTestCase<
         assertInitialState(mCallback);
         R injectedResult = newResult();
 
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
         R receivedResult = mCallback.assertResultReceived();
 
         expect.withMessage("%s.assertResultReceived()", mCallback)
@@ -99,7 +99,7 @@ public abstract class IResultSyncCallbackTestCase<
         assertInitialState(mCallback);
         R injectedResult = null;
 
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
         R receivedResult = mCallback.assertResultReceived();
 
         expect.withMessage("%s.assertResultReceived()", mCallback).that(receivedResult).isNull();
@@ -115,7 +115,7 @@ public abstract class IResultSyncCallbackTestCase<
         assertInitialState(mCallback);
         R injectedResult = newResult();
 
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
         mCallback.assertCalled();
 
         assertGetResultMethods(mCallback, "after injectResult()", injectedResult);
@@ -126,7 +126,7 @@ public abstract class IResultSyncCallbackTestCase<
         assertInitialState(mCallback);
         R injectedResult = null;
 
-        runAsync(INJECTION_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
+        runAsync(BEFORE_ASSERT_CALLED_NAP_TIMEOUT_MS, () -> mCallback.injectResult(injectedResult));
         mCallback.assertCalled();
 
         assertGetResultMethods(mCallback, "after injectResult()", injectedResult);

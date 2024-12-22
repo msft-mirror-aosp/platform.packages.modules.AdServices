@@ -15,9 +15,6 @@
  */
 package com.android.adservices.shared.testing;
 
-import static com.android.adservices.shared.testing.concurrency.SyncCallback.LOG_TAG;
-
-import com.android.adservices.shared.testing.DeviceConfigHelper.SyncDisabledModeForTest;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
 import com.android.adservices.shared.testing.NameValuePair.Matcher;
@@ -49,6 +46,8 @@ import com.android.adservices.shared.testing.annotations.SetStringArrayFlag;
 import com.android.adservices.shared.testing.annotations.SetStringArrayFlags;
 import com.android.adservices.shared.testing.annotations.SetStringFlag;
 import com.android.adservices.shared.testing.annotations.SetStringFlags;
+import com.android.adservices.shared.testing.concurrency.SyncCallback;
+import com.android.adservices.shared.testing.device.DeviceConfig;
 
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
@@ -58,6 +57,7 @@ import org.junit.runners.model.Statement;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
@@ -75,6 +75,19 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
     protected static final String SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX = "log.tag.";
 
+    // TODO(b/331781012): add all of them
+    // TODO(b/331781012): include itself (mLog.getTag()), although it would require a new method
+    // to make sure the tag is set before logging (as the initial command to set the logcat tag is
+    // cached)
+    private static final String[] INFRA_TAGS = {SyncCallback.LOG_TAG};
+    private static final Matcher INFRA_LOGTAG_MATCHER =
+            (prop) ->
+                    Arrays.stream(INFRA_TAGS)
+                            .anyMatch(
+                                    tag ->
+                                            prop.name.equals(
+                                                    SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX + tag));
+
     private final String mDeviceConfigNamespace;
     private final DeviceConfigHelper mDeviceConfig;
     // TODO(b/338067482): move system properties to its own rule?
@@ -84,6 +97,9 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
     // Cache methods that were called before the test started, so the rule can be
     // instantiated using a builder-like approach.
+    // NOTE: they MUST be cached and only executed after the test starts, because there's no
+    // guarantee that the rule will be executed at all (for example, a rule executed earlier might
+    // throw an AssumptionViolatedException)
     private final List<Command> mInitialCommands = new ArrayList<>();
 
     // Name of flags that were changed by the test
@@ -97,7 +113,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     private final List<NameValuePair> mOnTestFailureFlags = new ArrayList<>();
     private final List<NameValuePair> mOnTestFailureSystemProperties = new ArrayList<>();
 
-    private final SyncDisabledModeForTest mPreviousSyncDisabledModeForTest;
+    private DeviceConfig.SyncDisabledModeForTest mPreviousSyncDisabledModeForTest = null;
 
     private boolean mIsRunning;
     private boolean mFlagsClearedByTest;
@@ -131,34 +147,27 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
 
         super(logger);
 
-        mDeviceConfigNamespace = Objects.requireNonNull(deviceConfigNamespace);
-        mDebugFlagPrefix = Objects.requireNonNull(debugFlagPrefix);
-        mSystemPropertiesMatcher = Objects.requireNonNull(systemPropertiesMatcher);
+        mDeviceConfigNamespace =
+                Objects.requireNonNull(
+                        deviceConfigNamespace, "deviceConfigNamespace cannot be null");
+        mDebugFlagPrefix =
+                Objects.requireNonNull(debugFlagPrefix, "debugFlagPrefix cannot be null");
+        Objects.requireNonNull(systemPropertiesMatcher, "systemPropertiesMatcher cannot be null");
+        mSystemPropertiesMatcher =
+                (prop) ->
+                        systemPropertiesMatcher.matches(prop) || INFRA_LOGTAG_MATCHER.matches(prop);
         mDeviceConfig =
                 new DeviceConfigHelper(deviceConfigInterfaceFactory, deviceConfigNamespace, logger);
         mSystemProperties = new SystemPropertiesHelper(systemPropertiesInterface, logger);
-        // TODO(b/294423183): ideally the current mode should be returned by
-        // setSyncDisabledMode(),
-        // but unfortunately getting the current mode is not straightforward due to
-        // different
-        // behaviors:
-        // - T+ provides get_sync_disabled_for_tests
-        // - S provides is_sync_disabled_for_tests
-        // - R doesn't provide anything
-        mPreviousSyncDisabledModeForTest = SyncDisabledModeForTest.NONE;
+        storeSyncDisabledMode();
         // Must set right away to avoid race conditions (for example, backend setting flags before
         // apply() is called)
-        setSyncDisabledMode(SyncDisabledModeForTest.PERSISTENT);
+        setSyncDisabledMode(DeviceConfig.SyncDisabledModeForTest.PERSISTENT);
 
         mLog.v(
                 "Constructor: mDeviceConfigNamespace=%s,"
-                        + " mDebugFlagPrefix=%s,mDeviceConfig=%s, mSystemProperties=%s,"
-                        + " mPreviousSyncDisabledModeForTest=%s",
-                mDeviceConfigNamespace,
-                mDebugFlagPrefix,
-                mDeviceConfig,
-                mSystemProperties,
-                mPreviousSyncDisabledModeForTest);
+                        + " mDebugFlagPrefix=%s,mDeviceConfig=%s, mSystemProperties=%s",
+                mDeviceConfigNamespace, mDebugFlagPrefix, mDeviceConfig, mSystemProperties);
     }
 
     @Override
@@ -169,6 +178,9 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         // TODO(b/294423183): ideally should be "setupErrors", but it's not used yet (other
         // than logging), so it doesn't matter
         runSafely(cleanUpErrors, () -> mPreTestFlags.addAll(mDeviceConfig.getAll()));
+        // Log flags set on the device prior to test execution. Useful for verifying if flag state
+        // is correct for flag-ramp / AOAO testing.
+        log(mPreTestFlags, "pre-test flags");
         runSafely(
                 cleanUpErrors,
                 () ->
@@ -199,13 +211,30 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         String testName = TestHelper.getTestName(description);
         runSafely(cleanUpErrors, () -> resetFlags(testName));
         runSafely(cleanUpErrors, () -> resetSystemProperties(testName));
-        runSafely(cleanUpErrors, () -> setSyncDisabledMode(mPreviousSyncDisabledModeForTest));
+        restoreSyncDisabledMode(cleanUpErrors);
         mIsRunning = false;
     }
 
-    private void setSyncDisabledMode(SyncDisabledModeForTest mode) {
+    private void restoreSyncDisabledMode(List<Throwable> cleanUpErrors) {
+        if (mPreviousSyncDisabledModeForTest != null) {
+            mLog.v(
+                    "mPreviousSyncDisabledModeForTest=%s; restoring flag sync mode",
+                    mPreviousSyncDisabledModeForTest);
+            runSafely(cleanUpErrors, () -> setSyncDisabledMode(mPreviousSyncDisabledModeForTest));
+        } else {
+            mLog.v("mPreviousSyncDisabledModeForTest=null; not restoring flag sync mode");
+        }
+    }
+
+    private void setSyncDisabledMode(DeviceConfig.SyncDisabledModeForTest mode) {
         runOrCache(
                 "setSyncDisabledMode(" + mode + ")", () -> mDeviceConfig.setSyncDisabledMode(mode));
+    }
+
+    private void storeSyncDisabledMode() {
+        runOrCache(
+                "storeSyncDisabledMode()",
+                () -> mPreviousSyncDisabledModeForTest = mDeviceConfig.getSyncDisabledMode());
     }
 
     @Override
@@ -214,8 +243,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
             dump.append("NOTE: test explicitly cleared all flags.\n");
         }
 
-        logAllAndDumpDiff(
-                "flags", dump, mChangedFlags, mPreTestFlags, mOnTestFailureSystemProperties);
+        logAllAndDumpDiff("flags", dump, mChangedFlags, mPreTestFlags, mOnTestFailureFlags);
         logAllAndDumpDiff(
                 "system properties",
                 dump,
@@ -235,7 +263,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         log(preTest, "%s before the test", what);
         log(postTest, "%s after the test", what);
 
-        // Dump only what was change
+        // Dump only what was changed
         appendChanges(dump, what, changedNames, preTest, postTest);
     }
 
@@ -246,7 +274,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
             List<NameValuePair> preTest,
             List<NameValuePair> postTest) {
         if (changedNames.isEmpty()) {
-            dump.append("Tested didn't change any ").append(what).append('\n');
+            dump.append("Test didn't change any ").append(what).append('\n');
             return;
         }
         dump.append("Test changed ")
@@ -256,25 +284,26 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
                 .append(" (see log for all changes): \n");
 
         for (String name : changedNames) {
-            String before = getValue("before", preTest, name);
-            String after = getValue("after", postTest, name);
+            String before = getValue(preTest, name);
+            String after = getValue(postTest, name);
             dump.append('\t')
                     .append(name)
                     .append(": ")
+                    .append("before=")
                     .append(before)
-                    .append(", ")
-                    .append(after)
+                    .append(", after=")
+                    .append(Objects.equals(before, after) ? "<<unchanged>>" : after)
                     .append('\n');
         }
     }
 
-    private String getValue(String when, List<NameValuePair> list, String name) {
+    private String getValue(List<NameValuePair> list, String name) {
         for (NameValuePair candidate : list) {
             if (candidate.name.equals(name)) {
-                return when + "=" + candidate.value;
+                return candidate.value;
             }
         }
-        return "(not set " + when + ")";
+        return null;
     }
 
     /**
@@ -309,11 +338,11 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
             @Nullable Object... whatArgs) {
         String what = String.format(whatFmt, whatArgs);
         if (values.isEmpty()) {
-            mLog.e("%s: empty", what);
+            mLog.d("%s: empty", what);
             return;
         }
-        mLog.i("Logging name/value of %d %s:", values.size(), what);
-        values.forEach(value -> mLog.i("\t%s", value));
+        mLog.d("Logging (on VERBOSE) name/value of %d %s", values.size(), what);
+        values.forEach(value -> mLog.v("\t%s", value));
     }
 
     /** Clears all flags from the namespace */
@@ -398,12 +427,12 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         return getThis();
     }
 
-    // TODO(b/331781012): add all of them
     // TODO(b/331781012): create @SetInfraLogcatTags as well
     /** Sets the {@code logcat} tags for the (shared) infra classes. */
     public final T setInfraLogcatTags() {
-        // TODO(b/331781012): create a String[] constants somewhere and iterate over it
-        setLogcatTag(LOG_TAG, LogLevel.VERBOSE);
+        for (String tag : INFRA_TAGS) {
+            setLogcatTag(tag, LogLevel.VERBOSE);
+        }
         return getThis();
     }
 
@@ -562,11 +591,17 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         return setDebugFlag(name, Boolean.toString(value));
     }
 
+    /** Sets the value of the given {@link com.android.adservices.service.DebugFlag}. */
+    public final T setDebugFlag(String name, int value) {
+        return setDebugFlag(name, Integer.toString(value));
+    }
+
     private T setOrCacheLogtagSystemProperty(String name, String value) {
         return setOrCacheSystemProperty(SYSTEM_PROPERTY_FOR_LOGCAT_TAGS_PREFIX + name, value);
     }
 
-    private T setDebugFlag(String name, String value) {
+    /** Sets the value of the given {@link com.android.adservices.service.DebugFlag}. */
+    public final T setDebugFlag(String name, String value) {
         return setOrCacheSystemProperty(mDebugFlagPrefix + name, value);
     }
 
@@ -710,18 +745,30 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         // Get all the flag based annotations from test class and super classes
         Class<?> clazz = description.getTestClass();
         do {
-            Annotation[] classAnnotations = clazz.getAnnotations();
-            if (classAnnotations != null) {
-                for (Annotation annotation : classAnnotations) {
-                    if (isFlagAnnotationPresent(annotation)) {
-                        result.add(annotation);
-                    }
-                }
+            addFlagAnnotations(result, clazz);
+            for (Class<?> classInterface : clazz.getInterfaces()) {
+                // TODO(b/340882758): add unit test for this as well. Also, unit test need to make
+                // sure class prevails - for example, if interface has SetFlag(x, true) and test
+                // have SetFlag(x, false), the interface annotation should be applied before the
+                // class one.
+                addFlagAnnotations(result, classInterface);
             }
             clazz = clazz.getSuperclass();
         } while (clazz != null);
 
         return result;
+    }
+
+    private void addFlagAnnotations(List<Annotation> annotations, Class<?> clazz) {
+        Annotation[] classAnnotations = clazz.getAnnotations();
+        if (classAnnotations == null) {
+            return;
+        }
+        for (Annotation annotation : classAnnotations) {
+            if (isFlagAnnotationPresent(annotation)) {
+                annotations.add(annotation);
+            }
+        }
     }
 
     // Single SetFlagEnabled annotations present
