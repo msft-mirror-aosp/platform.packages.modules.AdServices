@@ -126,7 +126,9 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     private CustomAudienceDao mCustomAudienceDao;
 
     // TODO(b/384798806): should use AdServicesFakeFlagsSetterRule instead - for now it's more of a
-    // "guinea pig" / example of AdServicesMockFlagsSetterRule usage
+    // "guinea pig" / example of AdServicesMockFlagsSetterRule usage, as it cannot be replaced
+    // because the tests would fail (most likely because the test rely on some flag whose default
+    // value is true and the test is not explicitly setting
     @Rule
     public final AdServicesMockFlagsSetterRule flags =
             new AdServicesMockFlagsSetterRule(mMockFlags);
@@ -135,7 +137,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     public void setup() {
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mCallingAppUid = CallingAppUidSupplierProcessImpl.create().getCallingAppUid();
-        mocker.mockGetFlags(mMockFlags);
+        mocker.mockGetFlags(flags.getFlags());
         mocker.mockGetDebugFlags(mMockDebugFlags);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
                 .thenReturn(false);
