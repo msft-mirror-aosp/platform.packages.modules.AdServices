@@ -45,7 +45,6 @@ public abstract class AbstractRethrowerRule extends AbstractRule {
             base.evaluate();
         } catch (Throwable t) {
             testError = t;
-            cleanUpErrors.add(t);
             onTestFailure(base, description, cleanUpErrors, t);
         } finally {
             postTest(base, description, cleanUpErrors);

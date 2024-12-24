@@ -36,11 +36,8 @@ abstract class AdServicesFlagsSetterRuleForUnitTestsTestCase<
                 R extends AdServicesFlagsSetterRuleForUnitTests<R, F>, F extends Flags>
         extends AdServicesUnitTestCase {
 
-    /** Creates a new instance of the flags. */
-    protected abstract F newFlags();
-
     /** Creates a new instance of the rule. */
-    protected abstract R newRule(F flags);
+    protected abstract R newRule();
 
     @Test
     public final void testSetDefaultFledgeFlagsMethod() throws Throwable {
@@ -157,14 +154,15 @@ abstract class AdServicesFlagsSetterRuleForUnitTestsTestCase<
         Objects.requireNonNull(description, "description cannot be null");
         Objects.requireNonNull(consumer, "consumer cannot be null");
 
-        F flags = newFlags();
-        if (flags == null) {
-            throw new IllegalStateException("newFlags() returned null");
-        }
-        R rule = newRule(flags);
+        R rule = newRule();
         if (rule == null) {
             throw new IllegalStateException("newRule() returned null");
         }
+        F flags = rule.getFlags();
+        if (flags == null) {
+            throw new IllegalStateException("rule.getFlags() returned null");
+        }
+
         SimpleStatement test = new SimpleStatement();
 
         test.onEvaluate(() -> consumer.accept(rule, flags));

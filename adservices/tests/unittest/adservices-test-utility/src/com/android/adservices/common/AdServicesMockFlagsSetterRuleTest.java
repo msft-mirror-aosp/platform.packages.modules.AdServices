@@ -27,13 +27,8 @@ public final class AdServicesMockFlagsSetterRuleTest
                 AdServicesMockFlagsSetterRule, Flags> {
 
     @Override
-    protected Flags newFlags() {
-        return mock(Flags.class);
-    }
-
-    @Override
-    protected AdServicesMockFlagsSetterRule newRule(Flags flags) {
-        return new AdServicesMockFlagsSetterRule(flags);
+    protected AdServicesMockFlagsSetterRule newRule() {
+        return new AdServicesMockFlagsSetterRule(mock(Flags.class));
     }
 
     @Test
