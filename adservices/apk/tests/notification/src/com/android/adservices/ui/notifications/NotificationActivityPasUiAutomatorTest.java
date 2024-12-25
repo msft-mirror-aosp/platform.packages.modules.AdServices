@@ -15,11 +15,9 @@
  */
 package com.android.adservices.ui.notifications;
 
-import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
-import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE;
 import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
@@ -29,44 +27,36 @@ import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.filters.FlakyTest;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetStringFlag;
 import com.android.adservices.ui.util.AdservicesNotificationUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
 
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 @RequiresSdkLevelAtLeastT(reason = "PAS UX is currently only available on T+ devices")
-@RunWith(AndroidJUnit4.class)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
+@SetFlagTrue(KEY_ENABLE_AD_SERVICES_SYSTEM_API)
+@SetFlagTrue(KEY_U18_UX_ENABLED)
+@SetStringFlag(name = KEY_DEBUG_UX, value = "GA_UX")
+@SetFlagTrue(KEY_PAS_UX_ENABLED)
+@SetFlagTrue(KEY_IS_EEA_DEVICE_FEATURE_ENABLED)
+@SetFlagFalse(KEY_IS_EEA_DEVICE)
+@SetFlagFalse(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED)
 public final class NotificationActivityPasUiAutomatorTest extends AdservicesNotificationUiTestCase {
 
     private static final String ANDROID_WIDGET_SWITCH = "android.widget.Switch";
     private static final int PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS = 2_000;
-
-    @Rule(order = 11)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setCompatModeFlags()
-                    .setDebugFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
-                    .setDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, true)
-                    .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true)
-                    .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
-                    .setFlag(KEY_U18_UX_ENABLED, true)
-                    .setFlag(KEY_DEBUG_UX, "GA_UX")
-                    .setFlag(KEY_PAS_UX_ENABLED, true)
-                    .setFlag(KEY_IS_EEA_DEVICE_FEATURE_ENABLED, true)
-                    .setFlag(KEY_IS_EEA_DEVICE, false)
-                    .setFlag(KEY_UI_TOGGLE_SPEED_BUMP_ENABLED, false);
 
     @Test
     @FlakyTest(bugId = 374129459)

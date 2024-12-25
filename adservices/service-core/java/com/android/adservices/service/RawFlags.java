@@ -3941,7 +3941,7 @@ public class RawFlags implements Flags {
 
     @Override
     public final String getFledgeKAnonGetChallengeUrl() {
-        return mBackend.getFlag(KEY_ANON_GET_CHALLENGE_URl, FLEDGE_DEFAULT_GET_CHALLENGE_URL);
+        return mBackend.getFlag(KEY_ANON_GET_CHALLENGE_URL, FLEDGE_DEFAULT_GET_CHALLENGE_URL);
     }
 
     @Override
