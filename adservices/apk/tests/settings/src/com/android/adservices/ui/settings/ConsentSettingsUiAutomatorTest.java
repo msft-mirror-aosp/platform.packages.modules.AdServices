@@ -125,7 +125,7 @@ public final class ConsentSettingsUiAutomatorTest extends AdservicesSettingsUiTe
     }
 
     private void consentTest(boolean dialogsOn) {
-        ApkTestUtil.launchSettingViewGivenUx(mDevice, LAUNCH_TIMEOUT, "BETA_UX");
+        ApkTestUtil.launchSettingViewGivenUx(mDevice, LAUNCH_TIMEOUT_MS, "BETA_UX");
 
         UiObject2 consentSwitch = ApkTestUtil.getConsentSwitch(mDevice);
         setConsentToFalse(dialogsOn);

@@ -20,7 +20,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.ui.util.ApkTestUtil.getString;
-import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT;
+import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT_MS;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -82,7 +82,7 @@ public final class NotificationActivityGAV2UiAutomatorTest
         rightControlButton.click();
         mDevice.wait(
                 Until.gone(By.text(getString(R.string.notificationUI_right_control_button_text))),
-                WINDOW_LAUNCH_TIMEOUT);
+                WINDOW_LAUNCH_TIMEOUT_MS);
 
         UiObject2 title2 =
                 ApkTestUtil.getElement(mDevice, R.string.notificationUI_header_ga_title_eu_v2);
@@ -109,7 +109,7 @@ public final class NotificationActivityGAV2UiAutomatorTest
                                 getString(
                                         R.string
                                                 .notificationUI_right_control_button_ga_text_eu_v2))),
-                WINDOW_LAUNCH_TIMEOUT);
+                WINDOW_LAUNCH_TIMEOUT_MS);
 
         // Retrieve a new instance to avoid android.support.test.uiautomator.StaleObjectException.
         title2 = ApkTestUtil.getElement(mDevice, R.string.notificationUI_header_ga_title_eu_v2);
@@ -134,7 +134,7 @@ public final class NotificationActivityGAV2UiAutomatorTest
         rightControlButton.click();
         mDevice.wait(
                 Until.gone(By.text(getString(R.string.notificationUI_right_control_button_text))),
-                WINDOW_LAUNCH_TIMEOUT);
+                WINDOW_LAUNCH_TIMEOUT_MS);
 
         // Retrieve new instances to avoid android.support.test.uiautomator.StaleObjectException.
         leftControlButton =
@@ -168,7 +168,7 @@ public final class NotificationActivityGAV2UiAutomatorTest
         leftControlButton.click();
         mDevice.wait(
                 Until.gone(By.text(getString(R.string.notificationUI_left_control_button_text))),
-                WINDOW_LAUNCH_TIMEOUT);
+                WINDOW_LAUNCH_TIMEOUT_MS);
 
         UiObject2 topicsTitle = ApkTestUtil.scrollTo(mDevice, R.string.settingsUI_topics_ga_title);
         assertWithMessage(

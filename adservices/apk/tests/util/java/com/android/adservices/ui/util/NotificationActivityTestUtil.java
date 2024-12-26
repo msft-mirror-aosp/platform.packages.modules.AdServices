@@ -18,7 +18,7 @@ package com.android.adservices.ui.util;
 
 import static android.Manifest.permission.READ_DEVICE_CONFIG;
 
-import static com.android.adservices.ui.util.AdServicesUiTestCase.LAUNCH_TIMEOUT;
+import static com.android.adservices.ui.util.AdServicesUiTestCase.LAUNCH_TIMEOUT_MS;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -44,7 +44,7 @@ import java.util.concurrent.TimeUnit;
 public final class NotificationActivityTestUtil {
     private static final String NOTIFICATION_PACKAGE = "android.adservices.ui.NOTIFICATIONS";
     private static final Context sContext = ApplicationProvider.getApplicationContext();
-    public static final int WINDOW_LAUNCH_TIMEOUT = 2_000;
+    public static final int WINDOW_LAUNCH_TIMEOUT_MS = 2_000;
     public static final int SCROLL_WAIT_TIME = 1_000;
 
     // Private constructor to ensure noninstantiability
@@ -64,7 +64,7 @@ public final class NotificationActivityTestUtil {
             throws InterruptedException {
         Intent intent = getNotificationIntent(isEUActivity);
         sContext.startActivity(intent);
-        device.wait(Until.hasObject(By.pkg(NOTIFICATION_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
+        device.wait(Until.hasObject(By.pkg(NOTIFICATION_PACKAGE).depth(0)), LAUNCH_TIMEOUT_MS);
     }
 
     /**
@@ -80,7 +80,7 @@ public final class NotificationActivityTestUtil {
         intent.putExtra("IS_RENOTIFY_KEY", true);
 
         sContext.startActivity(intent);
-        device.wait(Until.hasObject(By.pkg(NOTIFICATION_PACKAGE).depth(0)), LAUNCH_TIMEOUT);
+        device.wait(Until.hasObject(By.pkg(NOTIFICATION_PACKAGE).depth(0)), LAUNCH_TIMEOUT_MS);
     }
 
     /***
