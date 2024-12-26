@@ -22,6 +22,13 @@ import static android.adservices.customaudience.CustomAudience.PRIORITY_DEFAULT;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_PRIORITY_1;
 
 import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpsClient.DEFAULT_TIMEOUT_MS;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.ACTIVATION_TIME;
@@ -95,6 +102,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -107,7 +115,6 @@ import com.android.adservices.data.customaudience.DBCustomAudienceToLeave;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdateRequest;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
@@ -127,6 +134,9 @@ import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateBackgro
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedFailureStats;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedStats;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.collect.ImmutableList;
@@ -162,6 +172,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 @MockStatic(BackgroundFetchJob.class)
+@SetFlagTrue(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
 public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String OWNER = CustomAudienceFixture.VALID_OWNER;
@@ -209,13 +220,17 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     ArgumentCaptor<ScheduledCustomAudienceUpdateBackgroundJobStats>
             mScheduleCABackgroundJobStatsCaptor;
 
+    // TODO(b/384798806): move to superclass
+    @Rule public final AdServicesFakeFlagsSetterRule flags = new AdServicesFakeFlagsSetterRule();
+
     private boolean mFledgeFrequencyCapFilteringEnabled;
     private boolean mFledgeAppInstallFilteringEnabled;
     private boolean mFledgeAuctionServerAdRenderIdEnabled;
     private boolean mAuctionServerRequestFlags;
     private boolean mSellerConfigurationEnabled;
     private long mFledgeAuctionServerAdRenderIdMaxLength;
-    private Flags mFakeFlags;
+    // TODO(b/384949821): move to superclass
+    private final Flags mFakeFlags = flags.getFlags();
     @NonNull private CustomAudienceDao mCustomAudienceDao;
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
     @Mock private AppInstallDao mAppInstallDaoMock;
@@ -240,7 +255,6 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     @Before
     public void setup() throws Exception {
-        mFakeFlags = new ScheduleCustomAudienceUpdateFlags();
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDaoMock, mFrequencyCapDaoMock, mFakeFlags);
 
@@ -302,8 +316,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     }
 
     @Test
-    public void testPerformScheduledUpdates_Success()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+    public void testPerformScheduledUpdates_Success() throws Exception {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
 
@@ -523,8 +536,9 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     }
 
     @Test
-    public void testPerformScheduledUpdates_withQuantityChecker_Success()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+    @SetLongFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT, value = 2)
+    @SetLongFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT, value = 2)
+    public void testPerformScheduledUpdates_withQuantityChecker_Success() throws Exception {
         // We set the flag values such that the max number of CA per owner is 2.
         // We return 3 CA from the server response and assert that only two has been joined.
         List<DBPartialCustomAudience> partialCustomAudienceList =
@@ -533,27 +547,14 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         DB_PARTIAL_CUSTOM_AUDIENCE_2,
                         DB_PARTIAL_CUSTOM_AUDIENCE_3);
 
-        Flags flagsWithCAQuantityCheckerValues =
-                new FakeFlagsFactory.TestFlags() {
-                    @Override
-                    public long getFledgeCustomAudienceMaxOwnerCount() {
-                        return 2;
-                    }
-
-                    @Override
-                    public long getFledgeCustomAudienceMaxCount() {
-                        return 2;
-                    }
-                };
         CustomAudienceQuantityChecker customAudienceQuantityChecker =
-                new CustomAudienceQuantityChecker(
-                        mCustomAudienceDao, flagsWithCAQuantityCheckerValues);
+                new CustomAudienceQuantityChecker(mCustomAudienceDao, mFakeFlags);
 
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        flagsWithCAQuantityCheckerValues,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -622,38 +623,23 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @SetLongFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT, value = 100)
+    @SetLongFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT, value = 100)
+    @SetLongFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_PER_APP_MAX_COUNT, value = 1)
     public void testPerformScheduledUpdates_twoOwners_oneCaPerOwner_joinsOneCAForEachOwner()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+            throws Exception {
         // We set the flag values such that the max number of CA per owner is 1.
         // We return 3 CA from the server response: CA1 & CA2 from OWNER_1 and CA3 from OWNER_2  and
         // assert that CA1 and CA3 has joined.
 
-        Flags flagsWithCAQuantityCheckerValues =
-                new FakeFlagsFactory.TestFlags() {
-                    @Override
-                    public long getFledgeCustomAudienceMaxOwnerCount() {
-                        return 100;
-                    }
-
-                    @Override
-                    public long getFledgeCustomAudienceMaxCount() {
-                        return 100;
-                    }
-
-                    @Override
-                    public long getFledgeCustomAudiencePerAppMaxCount() {
-                        return 1;
-                    }
-                };
         CustomAudienceQuantityChecker customAudienceQuantityChecker =
-                new CustomAudienceQuantityChecker(
-                        mCustomAudienceDao, flagsWithCAQuantityCheckerValues);
+                new CustomAudienceQuantityChecker(mCustomAudienceDao, mFakeFlags);
 
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        flagsWithCAQuantityCheckerValues,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -715,8 +701,10 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @SetLongFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT, value = 0)
+    @SetLongFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT, value = 0)
     public void testPerformScheduledUpdates_withQuantityCheckerLimitZero_doesNotJoinAnyCA()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+            throws Exception {
         // We set the flag values such that the max number of CA per owner is 0.
         // We return 3 CA from the server response and assert that no custom audience has been
         // joined.
@@ -725,28 +713,14 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         DB_PARTIAL_CUSTOM_AUDIENCE_1,
                         DB_PARTIAL_CUSTOM_AUDIENCE_2,
                         DB_PARTIAL_CUSTOM_AUDIENCE_3);
-
-        Flags flagsWithCAQuantityCheckerValues =
-                new FakeFlagsFactory.TestFlags() {
-                    @Override
-                    public long getFledgeCustomAudienceMaxOwnerCount() {
-                        return 0;
-                    }
-
-                    @Override
-                    public long getFledgeCustomAudienceMaxCount() {
-                        return 0;
-                    }
-                };
         CustomAudienceQuantityChecker customAudienceQuantityChecker =
-                new CustomAudienceQuantityChecker(
-                        mCustomAudienceDao, flagsWithCAQuantityCheckerValues);
+                new CustomAudienceQuantityChecker(mCustomAudienceDao, mFakeFlags);
 
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        flagsWithCAQuantityCheckerValues,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -812,7 +786,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     @Test
     public void testPerformScheduledUpdates_SuccessWithAuctionServerRequestFlagsEnabled()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+            throws Exception {
         enableAuctionServerRequestFlags();
 
         List<DBPartialCustomAudience> partialCustomAudienceList =
@@ -907,7 +881,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     @Test
     public void testPerformScheduledUpdates_SuccessWithAuctionServerRequestFlagsDisabled()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+            throws Exception {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
 
@@ -1207,7 +1181,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     @Test
     public void testPerformScheduledUpdates_SuccessWithSellerConfigurationEnabled()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+            throws Exception {
         enableSellerConfigurationFlag();
 
         List<DBPartialCustomAudience> partialCustomAudienceList =
@@ -1303,7 +1277,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     @Test
     public void testPerformScheduledUpdates_SuccessWithSellerConfigurationDisabled()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+            throws Exception {
         disableSellerConfigurationFlag();
 
         List<DBPartialCustomAudience> partialCustomAudienceList =
@@ -1503,8 +1477,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     }
 
     @Test
-    public void testPerformScheduledUpdates_PartialCaDifferentNames_Success()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+    public void testPerformScheduledUpdates_PartialCaDifferentNames_Success() throws Exception {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
 
@@ -1583,8 +1556,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     }
 
     @Test
-    public void testPerformScheduledUpdates_InvalidPartialCa_PartialSuccess()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+    public void testPerformScheduledUpdates_InvalidPartialCa_PartialSuccess() throws Exception {
 
         DBPartialCustomAudience invalidPartialCustomAudience2 =
                 DBPartialCustomAudience.builder()
@@ -1676,8 +1648,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     }
 
     @Test
-    public void testPerformScheduledUpdates_NoOverrides_Success()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+    public void testPerformScheduledUpdates_NoOverrides_Success() throws Exception {
         List<DBPartialCustomAudience> partialCustomAudienceList = Collections.emptyList();
 
         DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
@@ -1755,8 +1726,9 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     }
 
     @Test
-    public void testPerformScheduledUpdates_LargeInsertFail_LeaveSuccess()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+    @SetIntegerFlag(name = KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B, value = 0)
+    @SetFlagTrue(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
+    public void testPerformScheduledUpdates_LargeInsertFail_LeaveSuccess() throws Exception {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
 
@@ -1798,7 +1770,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDaoMock,
                         mAdServicesHttpsClientMock,
-                        new FlagsWithSmallSizeLimits(),
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -1886,10 +1858,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         invocationTime.minus(STALE_DELAYED_UPDATE_AGE));
     }
 
-
     @Test
-    public void testPerformScheduledUpdates_withNoJoinField_logsCorrectly()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+    public void testPerformScheduledUpdates_withNoJoinField_logsCorrectly() throws Exception {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
 
@@ -1952,7 +1922,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     @Test
     public void testPerformScheduledUpdatesV2_firstHop_invalidMinDelay_logsCorrectly()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+            throws Exception {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
         mHandler =
@@ -2063,8 +2033,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     }
 
     @Test
-    public void testPerformScheduledUpdatesV2_firstHop_missingURI_logsCorrectly()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+    public void testPerformScheduledUpdatesV2_firstHop_missingURI_logsCorrectly() throws Exception {
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
@@ -2166,7 +2135,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     @Test
     public void testPerformScheduledUpdatesV2_firstHop_invalidPartialCAInScheduledCA_logsCorrectly()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+            throws Exception {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
         mHandler =
@@ -2296,7 +2265,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     @Test
     public void testPerformScheduledUpdatesV2_firstHop_invalidLeaveCAInScheduledCA_logsCorrectly()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+            throws Exception {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
         mHandler =
@@ -2426,7 +2395,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     @Test
     public void testPerformScheduledUpdatesV2_firstHop_withScheduledCA_logsCorrectly()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+            throws Exception {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
         mHandler =
@@ -2525,7 +2494,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     @Test
     public void testPerformScheduledUpdatesV2_firstHop_withScheduledCAAndJoinCA_logsCorrectly()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+            throws Exception {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
 
@@ -2639,7 +2608,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     @Test
     public void testPerformScheduledUpdatesV2_firstHop_bothValidAndInvalidSCA_logsCorrectly()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+            throws Exception {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
 
@@ -3321,8 +3290,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     }
 
     @Test
-    public void testPerformScheduledUpdates_withNoLeaveField_logsCorrectly()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+    public void testPerformScheduledUpdates_withNoLeaveField_logsCorrectly() throws Exception {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
 
@@ -3468,7 +3436,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     @Test
     public void testPerformScheduledUpdates_withQualityCheckerException_logsCorrectly()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+            throws Exception {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1);
 
@@ -3571,8 +3539,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     }
 
     @Test
-    public void testPerformScheduledUpdates_JsonExceptionForJoin_logsCorrectly()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+    public void testPerformScheduledUpdates_JsonExceptionForJoin_logsCorrectly() throws Exception {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
 
@@ -3680,24 +3647,17 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_MAX_CUSTOM_AUDIENCE_SIZE_B, value = 0)
     public void testPerformScheduledUpdates_withInvalidObjectExceptionDuringJoinCA_logsCorrectly()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+            throws Exception {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1);
-
-        Flags flagsWithCASizeZero =
-                new ScheduleCustomAudienceUpdateFlags() {
-                    @Override
-                    public int getFledgeFetchCustomAudienceMaxCustomAudienceSizeB() {
-                        return 0;
-                    }
-                };
 
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
                         mAdServicesHttpsClientMock,
-                        flagsWithCASizeZero,
+                        mFakeFlags,
                         Clock.systemUTC(),
                         AdServicesExecutors.getBackgroundExecutor(),
                         AdServicesExecutors.getLightWeightExecutor(),
@@ -3785,7 +3745,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     @Test
     public void testPerformScheduledUpdates_exceptionDueToInvalidExpirationTime_logsCorrectly()
-            throws JSONException, ExecutionException, InterruptedException, TimeoutException {
+            throws Exception {
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1);
 
@@ -3968,34 +3928,9 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         return jsonArray;
     }
 
-    private static class ScheduleCustomAudienceUpdateFlags implements Flags {
-        @Override
-        public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
-            return true;
-        }
-    }
-
-    private static class FlagsWithSmallSizeLimits implements Flags {
-        @Override
-        public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
-            return true;
-        }
-
-        @Override
-        public int getFledgeFetchCustomAudienceMaxCustomAudienceSizeB() {
-            return 0;
-        }
-    }
-
     private void enableAuctionServerRequestFlags() {
         // Enable auction server request flags
-        mFakeFlags =
-                new ScheduleCustomAudienceUpdateFlags() {
-                    @Override
-                    public boolean getFledgeAuctionServerRequestFlagsEnabled() {
-                        return true;
-                    }
-                };
+        flags.setFlag(KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED, true);
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDaoMock,
@@ -4015,13 +3950,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     private void enableSellerConfigurationFlag() {
         // Enable seller configuration flag
-        mFakeFlags =
-                new ScheduleCustomAudienceUpdateFlags() {
-                    @Override
-                    public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
-                        return true;
-                    }
-                };
+        flags.setFlag(KEY_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED, true);
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDaoMock,
@@ -4042,13 +3971,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     private void disableSellerConfigurationFlag() {
         // Disable seller configuration flag
         // Safeguard to ensure that tests continue to work as intended when flag is turned on
-        mFakeFlags =
-                new ScheduleCustomAudienceUpdateFlags() {
-                    @Override
-                    public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
-                        return false;
-                    }
-                };
+        flags.setFlag(KEY_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED, false);
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDaoMock,

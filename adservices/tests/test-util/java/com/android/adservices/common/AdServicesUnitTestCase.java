@@ -55,6 +55,7 @@ public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
     @CallSuper
     @Override
     protected void assertValidTestCaseFixtures() throws Exception {
+        // TODO(b/3847988060): add check to prohibit mFlags, FLAGS, TEST_FLAGS, etc...
         assertTestClassHasNoFieldsFromSuperclass(AdServicesUnitTestCase.class, "mAppContext");
         assertTestClassHasNoSuchField("APPLICATION_CONTEXT", APP_CONTEXT_MSG);
         assertTestClassHasNoSuchField("mApplicationContext", APP_CONTEXT_MSG);

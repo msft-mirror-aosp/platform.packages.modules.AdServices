@@ -19,6 +19,8 @@ package com.android.adservices.service.customaudience;
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.OMIT_ADS_VALUE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
@@ -52,13 +54,13 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -371,33 +373,19 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
     }
 
     @Test
+    @SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED)
     public void
             testFetchAndValidateSuccessfulFullCustomAudienceUpdatableDataWithAuctionServerRequestFlagsEnabled()
                     throws Exception {
-        class FlagsWithAuctionServerRequestEnabled extends FakeFlagsFactory.TestFlags {
-            @Override
-            public boolean getFledgeAuctionServerRequestFlagsEnabled() {
-                return true;
-            }
-
-            @Override
-            public boolean getFledgeFrequencyCapFilteringEnabled() {
-                return true;
-            }
-
-            @Override
-            public boolean getFledgeAppInstallFilteringEnabled() {
-                return true;
-            }
-        }
-
         BackgroundFetchRunner runner =
                 new BackgroundFetchRunner(
                         mCustomAudienceDaoMock,
                         mAppInstallDaoMock,
                         mPackageManagerMock,
                         mEnrollmentDaoMock,
-                        new FlagsWithAuctionServerRequestEnabled(),
+                        mFakeFlags,
                         mCustomAudienceLoggerFactoryMock);
 
         String jsonResponseString =
@@ -437,30 +425,13 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
     public void
             testFetchAndValidateSuccessfulFullCustomAudienceUpdatableDataWithAuctionServerRequestFlagsDisabled()
                     throws Exception {
-        class FlagsWithAuctionServerRequestDisabled extends FakeFlagsFactory.TestFlags {
-            @Override
-            public boolean getFledgeAuctionServerRequestFlagsEnabled() {
-                return false;
-            }
-
-            @Override
-            public boolean getFledgeFrequencyCapFilteringEnabled() {
-                return true;
-            }
-
-            @Override
-            public boolean getFledgeAppInstallFilteringEnabled() {
-                return true;
-            }
-        }
-
         BackgroundFetchRunner runner =
                 new BackgroundFetchRunner(
                         mCustomAudienceDaoMock,
                         mAppInstallDaoMock,
                         mPackageManagerMock,
                         mEnrollmentDaoMock,
-                        new FlagsWithAuctionServerRequestDisabled(),
+                        mFakeFlags,
                         mCustomAudienceLoggerFactoryMock);
 
         String jsonResponseString =
@@ -494,22 +465,16 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
         assertEquals(mFetchPath, fetchRequest.getPath());
     }
 
+    @SetIntegerFlag(name = KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS, value = 50)
     @Test
     public void testFetchAndValidateCustomAudienceUpdatableDataNetworkTimeout() throws Exception {
-        class FlagsWithSmallLimits implements Flags {
-            @Override
-            public int getFledgeBackgroundFetchNetworkReadTimeoutMs() {
-                return 50;
-            }
-        }
-
         BackgroundFetchRunner runnerWithSmallLimits =
                 new BackgroundFetchRunner(
                         mCustomAudienceDaoMock,
                         mAppInstallDaoMock,
                         mPackageManagerMock,
                         mEnrollmentDaoMock,
-                        new FlagsWithSmallLimits(),
+                        mFakeFlags,
                         mCustomAudienceLoggerFactoryMock);
 
         CountDownLatch responseLatch = new CountDownLatch(1);
