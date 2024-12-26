@@ -131,7 +131,7 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
     // TODO(b/294423183): figure out why it cannot adopt shell permissions (otherwise some tests
     // will fail due to lack of android.permission.INTERACT_ACROSS_USERS_FULL.
     @Rule(order = 11)
-    public final AdServicesFlagsSetterRule flags =
+    public final AdServicesFlagsSetterRule realFlags =
             AdServicesFlagsSetterRule.withoutAdoptingShellPermissions().setDefaultLogcatTags();
 
     private final List<AdServicesManagerService> mServices = new ArrayList<>();
@@ -1243,12 +1243,12 @@ public final class AdServicesManagerServiceTest extends AdServicesExtendedMockit
 
     private void setFlag(String name, boolean value) {
         Log.d(mTag, "setFlag(): " + name + "=" + value);
-        flags.setFlag(name, value);
+        realFlags.setFlag(name, value);
 
         // Make sure rule really set it
         // TODO(b/369198554): shouldn't be necessary
         assertWithMessage("flags.get(%s) after flags.set(%s, %s)", name, name, value)
-                .that(flags.getFlag(name))
+                .that(realFlags.getFlag(name))
                 .isEqualTo(Boolean.toString(value));
     }
 
