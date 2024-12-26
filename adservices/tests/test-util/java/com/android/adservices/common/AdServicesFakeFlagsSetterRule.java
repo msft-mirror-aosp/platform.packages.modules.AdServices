@@ -18,6 +18,7 @@ package com.android.adservices.common;
 
 import static com.android.adservices.common.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
 
+import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.RawFlags;
 import com.android.adservices.shared.flags.FlagsBackend;
 import com.android.adservices.shared.testing.AndroidLogger;
@@ -63,12 +64,28 @@ public final class AdServicesFakeFlagsSetterRule
     // Consumer<NameValuePair> lambda, but it's constructor is private)
     public static final class FakeFlags extends RawFlags {
 
-        private FakeFlags() {
+        // TODO(b/384798806): make it package protected once FakeFlagsFactory doesn't use it anymore
+        // (need to refactor tests to use AdServicesFakeFlagsSetterRule first)
+        public FakeFlags() {
             super(new FakeFlagsBackend());
         }
 
         private FakeFlagsBackend getFakeFlagsBackend() {
             return (FakeFlagsBackend) mBackend;
+        }
+
+        // NOTE: public because it's used by FakeFlagsFactory.getFlagsForTest()
+        /**
+         * Set flags that used to be set by {@code FakeFlagsFactory.TestFlags}.
+         *
+         * @deprecated tests should use {@link FakeFlagsFactory.SetDefaultFledgeFlags} instead.
+         */
+        @Deprecated
+        public FakeFlags setDefaultFledgeFlags() {
+            var backend = getFakeFlagsBackend();
+            AdServicesFlagsSetterRuleForUnitTests.setDefaultFledgeFlags(
+                    (name, value) -> backend.setFlag(name, value));
+            return this;
         }
     }
 
@@ -175,6 +192,10 @@ public final class AdServicesFakeFlagsSetterRule
             mLog.v("setFlag(%s)", flag);
             Objects.requireNonNull(flag, "internal error: NameValuePair cannot be null");
             mFlags.put(flag.name, flag);
+        }
+
+        private void setFlag(String name, String value) {
+            accept(new NameValuePair(name, value));
         }
     }
 }

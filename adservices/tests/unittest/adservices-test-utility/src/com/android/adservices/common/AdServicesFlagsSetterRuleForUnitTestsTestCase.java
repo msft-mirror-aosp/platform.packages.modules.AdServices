@@ -21,6 +21,8 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassHasNoNothingAtAll;
 import com.android.adservices.shared.meta_testing.SimpleStatement;
 
+import com.google.common.truth.StandardSubjectBuilder;
+
 import org.junit.Test;
 import org.junit.runner.Description;
 
@@ -64,6 +66,12 @@ abstract class AdServicesFlagsSetterRuleForUnitTestsTestCase<
     }
 
     private void assertDefaultFledgeFlags(Flags flags) {
+        assertDefaultFledgeFlags(expect, flags);
+    }
+
+    // TODO(b/384798806): merge with instance method once FakeFlagsFactoryTest is gone or doesn't
+    // use it anymore
+    public static void assertDefaultFledgeFlags(StandardSubjectBuilder expect, Flags flags) {
         // TODO(b/384798806): pass R as well and assert size of changed flags is 16
         expect.withMessage("getAdSelectionBiddingTimeoutPerCaMs()")
                 .that(flags.getAdSelectionBiddingTimeoutPerCaMs())
