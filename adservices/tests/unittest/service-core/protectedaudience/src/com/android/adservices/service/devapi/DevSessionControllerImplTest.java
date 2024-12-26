@@ -24,7 +24,9 @@ import static com.android.adservices.service.devapi.DevSessionControllerResult.F
 import static com.android.adservices.service.devapi.DevSessionControllerResult.NO_OP;
 import static com.android.adservices.service.devapi.DevSessionControllerResult.SUCCESS;
 
+import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
+import static com.google.common.util.concurrent.Futures.immediateVoidFuture;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -58,12 +60,13 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                         mMockDevSessionDataStore,
                         AdServicesExecutors.getLightWeightExecutor());
 
-        doReturn(immediateFuture(true))
+        doReturn(immediateVoidFuture())
                 .when(mMockDatabaseClearer)
                 .deleteProtectedAudienceAndAppSignalsData(
                         /* deleteCustomAudienceUpdate= */ true,
                         /* deleteAppInstallFiltering= */ true,
                         /* deleteProtectedSignals= */ true);
+        doReturn(immediateVoidFuture()).when(mMockDatabaseClearer).deleteMeasurementData();
     }
 
     @Test
@@ -79,7 +82,8 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void startDevSession_withFailingDatabaseClear_returnsFailure() throws Exception {
+    public void startDevSession_withFailingProtectedAudienceAndAppSignalsDataClear_returnsFailure()
+            throws Exception {
         when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_PROD));
         when(mMockDevSessionDataStore.set(any(DevSession.class)))
                 .thenReturn(immediateFuture(TRANSITIONING_PROD_TO_DEV))
@@ -89,6 +93,19 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
                         /* deleteAppInstallFiltering= */ true,
                         /* deleteProtectedSignals= */ true))
                 .thenThrow(new RuntimeException());
+
+        Future<DevSessionControllerResult> resultFuture = mDevSessionController.startDevSession();
+
+        expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(FAILURE);
+    }
+
+    @Test
+    public void startDevSession_withFailingMeasurementDataClear_returnsFailure() throws Exception {
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_PROD));
+        when(mMockDevSessionDataStore.set(any(DevSession.class)))
+                .thenReturn(immediateFuture(TRANSITIONING_PROD_TO_DEV))
+                .thenReturn(immediateFuture(IN_DEV));
+        when(mMockDatabaseClearer.deleteMeasurementData()).thenThrow(new RuntimeException());
 
         Future<DevSessionControllerResult> resultFuture = mDevSessionController.startDevSession();
 
@@ -184,6 +201,35 @@ public class DevSessionControllerImplTest extends AdServicesMockitoTestCase {
 
         expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(NO_OP);
         verifyZeroInteractions(mMockDatabaseClearer);
+    }
+
+    @Test
+    public void startDevSession_withClearsAllDatabases_returnsSuccess() throws Exception {
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_PROD));
+        when(mMockDevSessionDataStore.set(any(DevSession.class)))
+                .thenReturn(immediateFuture(TRANSITIONING_PROD_TO_DEV))
+                .thenReturn(immediateFuture(IN_DEV));
+
+        Future<DevSessionControllerResult> resultFuture = mDevSessionController.startDevSession();
+
+        expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(SUCCESS);
+    }
+
+    @Test
+    public void startDevSession_failingToDeleteProtectedAudienceAndAppSignalsData_returnsFailure()
+            throws Exception {
+        when(mMockDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
+                        /* deleteCustomAudienceUpdate= */ true,
+                        /* deleteAppInstallFiltering= */ true,
+                        /* deleteProtectedSignals= */ true))
+                .thenReturn(immediateFailedFuture(new Exception("Database clear failed")));
+        when(mMockDevSessionDataStore.get()).thenReturn(immediateFuture(IN_PROD));
+        when(mMockDevSessionDataStore.set(any(DevSession.class)))
+                .thenReturn(immediateFuture(TRANSITIONING_PROD_TO_DEV));
+
+        Future<DevSessionControllerResult> resultFuture = mDevSessionController.startDevSession();
+
+        expect.withMessage("DevSession future").that(wait(resultFuture)).isEqualTo(FAILURE);
     }
 
     private static <T> T wait(Future<T> future) throws Exception {

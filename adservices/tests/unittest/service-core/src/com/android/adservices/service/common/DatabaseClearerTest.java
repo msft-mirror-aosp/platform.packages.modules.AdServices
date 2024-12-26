@@ -19,14 +19,17 @@ package com.android.adservices.service.common;
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
@@ -48,6 +51,7 @@ public final class DatabaseClearerTest extends AdServicesMockitoTestCase {
     @Mock private FrequencyCapDao mFrequencyCapDao;
     @Mock private AppInstallDao mAppInstallDao;
     @Mock private ProtectedSignalsDao mProtectedSignalsDao;
+    @Mock private DatastoreManager mDatastoreManager;
     private DatabaseClearer mDatabaseClearer;
 
     @Before
@@ -69,6 +73,7 @@ public final class DatabaseClearerTest extends AdServicesMockitoTestCase {
                                         })
                                 .getFrequencyCapDataClearer(),
                         mProtectedSignalsDao,
+                        mDatastoreManager,
                         backgroundExecutor);
     }
 
@@ -174,5 +179,26 @@ public final class DatabaseClearerTest extends AdServicesMockitoTestCase {
                         /* deleteProtectedSignals= */ true);
 
         assertThrows(ExecutionException.class, () -> assertThat(future.get()).isTrue());
+    }
+
+    @Test
+    public void testDeleteMeasurementData_success() throws Exception {
+        when(mDatastoreManager.runInTransaction(any())).thenReturn(true);
+
+        ListenableFuture<Void> future = mDatabaseClearer.deleteMeasurementData();
+        future.get();
+
+        verify(mDatastoreManager, times(1)).runInTransaction(any());
+    }
+
+    @Test
+    public void testDeleteMeasurementData_fail() {
+        doThrow(new RuntimeException("MeasurementImpl delete measurement data failed"))
+                .when(mDatastoreManager)
+                .runInTransaction(any());
+
+        ListenableFuture<Void> future = mDatabaseClearer.deleteMeasurementData();
+
+        assertThrows(ExecutionException.class, future::get);
     }
 }

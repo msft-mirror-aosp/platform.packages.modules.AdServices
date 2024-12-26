@@ -210,21 +210,6 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
         return printProtoToJsonAndExit(request, out, err);
     }
 
-    private boolean isRunningInDevSession() {
-        // Seller variant is only available in developer mode as data from all buyers on the
-        // device (including 3rd party ad tech data) are included in the generated payload.
-        try {
-            return mDevSessionDataStore
-                    .get()
-                    .get(DB_TIMEOUT_SEC, SECONDS)
-                    .getState()
-                    .equals(DevSessionState.IN_DEV);
-        } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            sLogger.e(e, "Could not correctly retrieve dev session status");
-            return false;
-        }
-    }
-
     private ShellCommandResult getDataForSeller(
             String appPackageName, PrintWriter out, PrintWriter err) {
         ProtectedAuctionInput protectedAuctionInput;
@@ -247,6 +232,21 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
         }
         sLogger.v("Loaded ProtectedAuctionInput: %s", protectedAuctionInput);
         return printProtoToJsonAndExit(protectedAuctionInput, out, err);
+    }
+
+    private boolean isRunningInDevSession() {
+        // Seller variant is only available in developer mode as data from all buyers on the
+        // device (including 3rd party ad tech data) are included in the generated payload.
+        try {
+            return mDevSessionDataStore
+                    .get()
+                    .get(DB_TIMEOUT_SEC, SECONDS)
+                    .getState()
+                    .equals(DevSessionState.IN_DEV);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            sLogger.e(e, "Could not correctly retrieve dev session status");
+            return false;
+        }
     }
 
     private ShellCommandResult printProtoToJsonAndExit(

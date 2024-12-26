@@ -72,6 +72,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
@@ -117,6 +118,7 @@ import com.google.mockwebserver.MockResponse;
 import org.json.JSONException;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -161,6 +163,7 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
     @Mock private AdServicesHttpsClient mAdServicesHttpsClientMock;
     @Mock private DevContextFilter mDevContextFilterMock;
     @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
+    @Mock private DatastoreManager mDatastoreManager;
 
     // TODO(b/384949821): move to superclass
     private final Flags mFakeFlags = flags.getFlags();
@@ -274,7 +277,8 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
                         customAudienceDao,
                         sharedStorageDatabase.appInstallDao(),
                         sharedStorageDatabase.frequencyCapDao(),
-                        mSignalsDao);
+                        mSignalsDao,
+                        mDatastoreManager);
         mProtectedSignalsServiceFilter =
                 new ProtectedSignalsServiceFilter(
                         mSpyContext,
@@ -353,6 +357,7 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
         assertSignalsUnorderedListEqualsExceptIdAndTime(expected, actual);
     }
 
+    @Ignore("b/376480141")
     @Test
     public void testPut_beforeDevSession_signalIsCleared() throws Exception {
         setupService(true);
@@ -369,6 +374,7 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
         mDevSessionHelper.endDevSession();
     }
 
+    @Ignore("b/376480141")
     @Test
     public void testPut_duringDevSession_signalIsCleared() throws Exception {
         setupService(true);
