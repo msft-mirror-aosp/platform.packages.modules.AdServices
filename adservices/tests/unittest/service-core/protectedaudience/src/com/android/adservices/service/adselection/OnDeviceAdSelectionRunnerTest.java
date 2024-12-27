@@ -173,7 +173,6 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.debug.DebugReportSenderStrategy;
 import com.android.adservices.service.adselection.debug.DebugReporting;
@@ -330,8 +329,6 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
 
     @Mock private PerBuyerBiddingRunner mPerBuyerBiddingRunnerMock;
 
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;

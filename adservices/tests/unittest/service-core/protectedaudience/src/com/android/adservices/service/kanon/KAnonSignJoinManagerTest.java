@@ -40,7 +40,6 @@ import com.android.adservices.data.kanon.DBKAnonMessage;
 import com.android.adservices.data.kanon.KAnonDatabase;
 import com.android.adservices.data.kanon.KAnonMessageConstants;
 import com.android.adservices.data.kanon.KAnonMessageDao;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
@@ -65,8 +64,6 @@ public final class KAnonSignJoinManagerTest extends AdServicesExtendedMockitoTes
     private KAnonSignJoinManager mKAnonSignJoinManager;
     private KAnonMessageManager mKAnonMessageManager;
     private KAnonMessageDao mKAnonMessageDao;
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
     @Mock private Clock mMockClock;
     @Mock private KAnonCaller mMockKanonCaller;
     @Captor private ArgumentCaptor<List<KAnonMessageEntity>> kanonMessageEntityArgumentCaptor;

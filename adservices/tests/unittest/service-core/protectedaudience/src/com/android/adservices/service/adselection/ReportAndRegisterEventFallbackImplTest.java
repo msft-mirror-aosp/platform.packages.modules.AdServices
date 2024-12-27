@@ -178,9 +178,6 @@ public final class ReportAndRegisterEventFallbackImplTest
             AdServicesExecutors.getBackgroundExecutor();
     @Mock FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
 
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
-
     private final long mMaxRegisteredAdBeaconsTotalCount =
             mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
     private final long mMaxRegisteredAdBeaconsPerDestination =

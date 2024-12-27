@@ -136,8 +136,6 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
     private AdSelectionEntryDao mAdSelectionEntryDao;
     @Mock private AdOutcomeSelector mAdOutcomeSelectorMock;
     private OutcomeSelectionRunner mOutcomeSelectionRunner;
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     private ListeningExecutorService mBlockingExecutorService;

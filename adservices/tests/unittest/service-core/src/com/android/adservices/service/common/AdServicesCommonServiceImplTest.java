@@ -179,9 +179,6 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
             Mockito.spy(AdServicesLoggerImpl.getInstance());
     private AdServicesBackCompatInit mSpyBackCompatInit;
 
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
-
     @Before
     public void setup() {
         mCommonService =

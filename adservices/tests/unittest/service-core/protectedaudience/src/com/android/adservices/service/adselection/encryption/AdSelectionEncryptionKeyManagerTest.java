@@ -54,7 +54,6 @@ import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.data.adselection.EncryptionKeyDao;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
@@ -96,8 +95,6 @@ public final class AdSelectionEncryptionKeyManagerTest extends AdServicesMockito
     @Mock private AdServicesHttpsClient mMockHttpClient;
     @Spy private Clock mClock = Clock.systemUTC();
     private EncryptionKeyDao mEncryptionKeyDao;
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
     private AdServicesLogger mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
     private com.android.adservices.shared.util.Clock mLoggerClock =
             com.android.adservices.shared.util.Clock.getInstance();

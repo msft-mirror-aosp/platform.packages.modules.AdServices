@@ -90,8 +90,6 @@ public final class EpochManagerTest extends AdServicesExtendedMockitoTestCase {
             (int) (TEST_PERSIST_ENCRYPTED_TOPICS_TO_DB_END_TIMESTAMP
                     - TEST_PERSIST_ENCRYPTED_TOPICS_TO_DB_START_TIMESTAMP);
 
-    private final Flags mFakeFlags = FakeFlagsFactory.getFlagsForTest();
-
     private DbHelper mDbHelper;
     private TopicsDao mTopicsDao;
     private EpochManager mEpochManager;

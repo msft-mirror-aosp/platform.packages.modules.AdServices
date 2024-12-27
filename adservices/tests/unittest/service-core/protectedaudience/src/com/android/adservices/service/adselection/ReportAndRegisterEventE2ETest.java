@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.adselection;
 
-
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
@@ -233,8 +232,6 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
 
     private final ScheduledThreadPoolExecutor mScheduledExecutor =
             AdServicesExecutors.getScheduler();
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
 
     private final long mMaxRegisteredAdBeaconsTotalCount =
             mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();

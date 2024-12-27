@@ -81,7 +81,6 @@ import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -159,9 +158,6 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
     @Mock private DevContextFilter mDevContextFilterMock;
     @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
     @Mock private DatastoreManager mDatastoreManager;
-
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
 
     @Spy
     private FledgeAllowListsFilter mFledgeAllowListsFilterSpy =

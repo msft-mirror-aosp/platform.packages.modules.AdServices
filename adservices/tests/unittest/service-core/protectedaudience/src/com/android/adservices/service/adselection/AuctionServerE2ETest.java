@@ -373,8 +373,6 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
     // This object access some system APIs
     @Mock public DevContextFilter mDevContextFilterMock;
     @Mock public AppImportanceFilter mAppImportanceFilterMock;
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
 
     @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;

@@ -366,8 +366,6 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
     private CustomAudienceBiddingInfo mCustomAudienceBiddingInfo;
     private DevContext mDevContext;
     private CustomAudienceDao mCustomAudienceDao;
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherExactMatch;
     private IsolateSettings mIsolateSettings;
     private RunAdBiddingPerCAExecutionLogger mRunAdBiddingPerCAExecutionLogger;

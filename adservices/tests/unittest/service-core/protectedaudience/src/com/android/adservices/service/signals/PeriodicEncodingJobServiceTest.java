@@ -41,7 +41,6 @@ import android.content.Context;
 import android.util.Log;
 
 import com.android.adservices.common.AdServicesJobServiceTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
@@ -92,9 +91,6 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     @Mock private PeriodicEncodingJobWorker mMockPeriodicEncodingJobWorker;
     @Mock private JobParameters mMockJobParameters;
     @Mock private ConsentManager mMockConsentManager;
-
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
 
     @Before
     public void setup() {

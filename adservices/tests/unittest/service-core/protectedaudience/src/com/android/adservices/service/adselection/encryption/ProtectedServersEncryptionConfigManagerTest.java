@@ -58,7 +58,6 @@ import com.android.adservices.data.adselection.DBEncryptionKey;
 import com.android.adservices.data.adselection.DBProtectedServersEncryptionConfig;
 import com.android.adservices.data.adselection.ProtectedServersEncryptionConfigDao;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.devapi.DevContext;
@@ -116,9 +115,6 @@ public final class ProtectedServersEncryptionConfigManagerTest extends AdService
 
     @Spy private Clock mClock = Clock.systemUTC();
     private ProtectedServersEncryptionConfigDao mProtectedServersEncryptionConfigDao;
-
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
 
     private ExecutorService mLightweightExecutor;
     private AuctionEncryptionKeyParser mAuctionEncryptionKeyParser =

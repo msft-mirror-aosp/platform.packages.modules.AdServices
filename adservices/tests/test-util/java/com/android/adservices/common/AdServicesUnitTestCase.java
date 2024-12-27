@@ -45,6 +45,8 @@ public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
 
     private static final String APP_CONTEXT_MSG = "should use existing mAppContext instead";
 
+    private static final String FAKE_FLAGS_MSG = "should use mFakeFlags and flags rule insteads";
+
     @Rule(order = 5)
     public final ApplicationContextSingletonRule appContext =
             new ApplicationContextSingletonRule(/* restoreAfter= */ false);
@@ -59,6 +61,9 @@ public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
      * <p>In other words, it's the same as {@code mContext.getApplicationContext()}.
      */
     protected final Context mAppContext = mContext.getApplicationContext();
+
+    /** Stubbed {@link Flags} implementation that can be set by {@code flags}. */
+    protected final Flags mFakeFlags = flags.getFlags();
 
     /**
      * Creates the rule that will be referenced as {@code flags}.
@@ -75,11 +80,17 @@ public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
     protected void assertValidTestCaseFixtures() throws Exception {
         super.assertValidTestCaseFixtures();
 
-        // TODO(b/3847988060): add check to more prohibit flags like mFlags, FLAGS, TEST_FLAGS, ...
+        // TODO(b/388097793): add mLegacyFakeFlags once tests are refactored to not used it
         assertTestClassHasNoFieldsFromSuperclass(
-                AdServicesUnitTestCase.class, "mAppContext", "appContext", "flags", "mMockFlags");
+                AdServicesUnitTestCase.class,
+                "mAppContext",
+                "appContext",
+                "flags",
+                "mMockFlags",
+                "mFakeFlags");
         assertTestClassHasNoSuchField("APPLICATION_CONTEXT", APP_CONTEXT_MSG);
         assertTestClassHasNoSuchField("mApplicationContext", APP_CONTEXT_MSG);
+        assertTestClassHasNoSuchField("FLAGS", FAKE_FLAGS_MSG);
         // TODO(b/384798806): add a check prohibiting realFlags, which is currently using on some
         // unit tests that "really" change the Flags using DeviceConfig - these tests should instead
         // use AdServicesFakeFlagsSetterRule (which will eventually be provided by a superclass).
