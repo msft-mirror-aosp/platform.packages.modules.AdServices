@@ -23,6 +23,11 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
 import static com.android.adservices.data.adselection.CustomAudienceSignals.CONTEXTUAL_CA_NAME;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.MISSING_TRUSTED_SCORING_SIGNALS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.QUERY_PARAM_RENDER_URIS;
 import static com.android.adservices.service.adselection.AdsScoreGeneratorImpl.SCORES_COUNT_LESS_THAN_EXPECTED;
@@ -96,6 +101,9 @@ import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.RunAdScoringProcessReportedStats;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
@@ -134,6 +142,15 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;
 
+@SetFlagFalse(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS)
+@SetFlagTrue(KEY_FLEDGE_DATA_VERSION_HEADER_METRICS_ENABLED)
+@SetFlagTrue(KEY_FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED)
 public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
 
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
@@ -161,7 +178,8 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
 
     private AdsScoreGenerator mAdsScoreGenerator;
     private DevContext mDevContext;
-    private Flags mFakeFlags;
+    // TODO(b/384949821): move to superclass
+    private final Flags mFakeFlags = flags.getFlags();
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
 
@@ -184,7 +202,6 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
 
     @Before
     public void setUp() throws Exception {
-        mFakeFlags = new AdsScoreGeneratorImplTestFlags(false);
         mDevContext = DevContext.createForDevOptionsDisabled();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
@@ -788,8 +805,8 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
     public void testRunAdScoringContextual_Success() throws Exception {
-        mFakeFlags = new AdsScoreGeneratorImplTestFlags(true);
         boolean dataVersionHeaderEnabled = false;
         mAdsScoreGenerator = initAdScoreGenerator(mFakeFlags, dataVersionHeaderEnabled);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
@@ -911,10 +928,9 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
                 DATA_VERSION_HEADER_STATUS_DISABLED);
     }
 
-
     @Test
+    @SetFlagTrue(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
     public void testRunAdScoringContextual_withDebugReportingEnabled_Success() throws Exception {
-        mFakeFlags = new AdsScoreGeneratorImplTestFlags(true);
         boolean dataVersionHeaderEnabled = false;
         mAdsScoreGenerator = initAdScoreGenerator(mFakeFlags, dataVersionHeaderEnabled);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
@@ -1061,8 +1077,8 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
     public void testRunAdScoringContextual_UseOverride_Success() throws Exception {
-        mFakeFlags = new AdsScoreGeneratorImplTestFlags(true);
         boolean dataVersionHeaderEnabled = false;
         mAdsScoreGenerator = initAdScoreGenerator(mFakeFlags, dataVersionHeaderEnabled);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
@@ -1220,8 +1236,8 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
     public void testRunAdScoringContextualScoresMismatch_Failure() throws Exception {
-        mFakeFlags = new AdsScoreGeneratorImplTestFlags(true);
         boolean dataVersionHeaderEnabled = false;
         mAdsScoreGenerator = initAdScoreGenerator(mFakeFlags, dataVersionHeaderEnabled);
         when(mAdSelectionExecutionLoggerClock.elapsedRealtime())
@@ -1991,39 +2007,5 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
 
     interface ThrowingSupplier<T> {
         T get() throws Exception;
-    }
-
-    private static class AdsScoreGeneratorImplTestFlags implements Flags {
-
-        private final boolean mContextualAdsEnabled;
-
-        AdsScoreGeneratorImplTestFlags(boolean contextualAdsEnabled) {
-            mContextualAdsEnabled = contextualAdsEnabled;
-        }
-
-        @Override
-        public boolean getFledgeAdSelectionContextualAdsEnabled() {
-            return mContextualAdsEnabled;
-        }
-
-        @Override
-        public long getAdSelectionScoringTimeoutMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
-        }
-
-        @Override
-        public long getAdSelectionOverallTimeoutMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
-        }
-
-        @Override
-        public boolean getFledgeDataVersionHeaderMetricsEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeJsScriptResultCodeMetricsEnabled() {
-            return true;
-        }
     }
 }
