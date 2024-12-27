@@ -27,6 +27,8 @@ import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.DatastoreManagerFactory;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
@@ -75,6 +77,7 @@ public final class AdServicesApiShellCommandFactory implements ShellCommandFacto
     public static ShellCommandFactory getInstance() {
         AppInstallDao appInstallDao = SharedStorageDatabase.getInstance().appInstallDao();
         FrequencyCapDao frequencyCapDao = SharedStorageDatabase.getInstance().frequencyCapDao();
+        DatastoreManager datastoreManager = DatastoreManagerFactory.getDatastoreManager();
         return new AdServicesApiShellCommandFactory(
                 new DevSessionControllerImpl(
                         new DatabaseClearer(
@@ -86,6 +89,7 @@ public final class AdServicesApiShellCommandFactory implements ShellCommandFacto
                                                 FlagsFactory.getFlags())
                                         .getFrequencyCapDataClearer(),
                                 ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
+                                datastoreManager,
                                 AdServicesExecutors.getBackgroundExecutor()),
                         DevSessionDataStoreFactory.get(),
                         AdServicesExecutors.getLightWeightExecutor()),

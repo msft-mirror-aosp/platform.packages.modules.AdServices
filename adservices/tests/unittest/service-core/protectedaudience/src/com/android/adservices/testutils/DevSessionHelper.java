@@ -26,15 +26,15 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.DatabaseClearer;
 import com.android.adservices.service.devapi.DevSessionController;
 import com.android.adservices.service.devapi.DevSessionControllerImpl;
-import com.android.adservices.service.devapi.DevSessionInMemoryDataStore;
 import com.android.adservices.service.devapi.DevSessionControllerResult;
-import com.android.adservices.service.devapi.DevSessionDataStoreFactory;
+import com.android.adservices.service.devapi.DevSessionInMemoryDataStore;
 
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -71,7 +71,8 @@ public class DevSessionHelper {
             CustomAudienceDao customAudienceDao,
             AppInstallDao appInstallDao,
             FrequencyCapDao frequencyCapDao,
-            ProtectedSignalsDao protectedSignalsDao) {
+            ProtectedSignalsDao protectedSignalsDao,
+            DatastoreManager measurementDatastoreManager) {
         this.mDevSessionController =
                 new DevSessionControllerImpl(
                         new DatabaseClearer(
@@ -81,6 +82,7 @@ public class DevSessionHelper {
                                                 appInstallDao, frequencyCapDao, new Flags() {})
                                         .getFrequencyCapDataClearer(),
                                 protectedSignalsDao,
+                                measurementDatastoreManager,
                                 AdServicesExecutors.getBackgroundExecutor()),
                         new DevSessionInMemoryDataStore(),
                         AdServicesExecutors.getLightWeightExecutor());

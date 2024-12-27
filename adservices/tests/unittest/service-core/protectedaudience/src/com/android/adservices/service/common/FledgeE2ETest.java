@@ -996,6 +996,54 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    public void testOnDeviceAuctionFlowSuccessWithDevOverrides() throws Exception {
+        setupConsentGivenStubs();
+        setupAdSelectionConfig();
+
+        CustomAudience customAudience1 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_1, BIDS_FOR_BUYER_1);
+
+        CustomAudience customAudience2 =
+                createCustomAudience(
+                        mLocalhostBuyerDomain, CUSTOM_AUDIENCE_SEQ_2, BIDS_FOR_BUYER_2);
+
+        // We add permits to the semaphores when the MWS is called and remove them in the asserts
+        Semaphore impressionReportingSemaphore = new Semaphore(0);
+        Semaphore interactionReportingSemaphore = new Semaphore(0);
+
+        String decisionLogicJs = getDecisionLogicWithBeacons();
+        String biddingLogicJs = getBiddingLogicWithBeacons();
+
+        MockWebServer server =
+                getMockWebServerWithOnlyReportingEndpointsEnabled(
+                        impressionReportingSemaphore, interactionReportingSemaphore);
+
+        when(mDevContextFilterMock.createDevContext())
+                .thenReturn(
+                        DevContext.builder(CommonFixture.TEST_PACKAGE_NAME)
+                                .setDeviceDevOptionsEnabled(true)
+                                .build());
+
+        joinCustomAudienceAndAssertSuccess(customAudience1);
+        joinCustomAudienceAndAssertSuccess(customAudience2);
+
+        verifyBackgroundFetchJobInvocation(/* invocationTimes= */ 2);
+
+        setupOverridesAndAssertSuccess(
+                customAudience1, customAudience2, biddingLogicJs, decisionLogicJs);
+
+        // Run Ad Selection
+        selectAdsAndReport(
+                CommonFixture.getUri(
+                        mLocalhostBuyerDomain.getAuthority(),
+                        AD_URI_PREFIX + CUSTOM_AUDIENCE_SEQ_2 + "/ad3"),
+                impressionReportingSemaphore,
+                interactionReportingSemaphore);
+        verifyExpectedServerRequestsWithDevOverrides(server);
+    }
+
+    @Test
     public void testFledgeFlowSuccessWithDevOverridesGaUxEnabled() throws Exception {
         initClients(true, true, false, false, false, false);
         doReturn(AdServicesApiConsent.GIVEN)
@@ -4271,6 +4319,25 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                 mRequestMatcherPrefixMatch);
     }
 
+    void verifyExpectedServerRequestsWithDevOverrides(MockWebServer server) {
+        /*
+         * We expect only reporting requests since we are using dev overrides:
+         * 1 reportWin
+         * 1 reportResult
+         * 1 buyer click interaction report
+         * 1 seller click interaction report
+         */
+        mockWebServerRule.verifyMockServerRequests(
+                server,
+                4,
+                ImmutableList.of(
+                        SELLER_REPORTING_PATH,
+                        BUYER_REPORTING_PATH,
+                        CLICK_SELLER_PATH,
+                        CLICK_BUYER_PATH),
+                mRequestMatcherPrefixMatch);
+    }
+
     private void registerForAppInstallFiltering() throws RemoteException, InterruptedException {
         setAppInstallAdvertisers(
                 Collections.singleton(
@@ -4655,6 +4722,26 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         return new MockResponse()
                                 .setBody(TRUSTED_BIDDING_SIGNALS.toString())
                                 .addHeader(DATA_VERSION_HEADER_KEY, DATA_VERSION_1);
+                    }
+                    return new MockResponse().setResponseCode(404);
+                });
+    }
+
+    private MockWebServer getMockWebServerWithOnlyReportingEndpointsEnabled(
+            Semaphore impressionReportingSemaphore, Semaphore interactionReportingSemaphore)
+            throws Exception {
+        return mockWebServerRule.startMockWebServer(
+                request -> {
+                    String requestPath = request.getPath();
+                    switch (requestPath) {
+                        case CLICK_SELLER_PATH, CLICK_BUYER_PATH -> {
+                            interactionReportingSemaphore.release();
+                            return new MockResponse().setResponseCode(200);
+                        } // Intentional fallthrough
+                        case SELLER_REPORTING_PATH, BUYER_REPORTING_PATH -> {
+                            impressionReportingSemaphore.release();
+                            return new MockResponse().setResponseCode(200);
+                        }
                     }
                     return new MockResponse().setResponseCode(404);
                 });

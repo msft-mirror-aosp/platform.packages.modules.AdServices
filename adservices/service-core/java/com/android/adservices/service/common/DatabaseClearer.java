@@ -19,23 +19,26 @@ package com.android.adservices.service.common;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.adselection.FrequencyCapDataClearer;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
+import java.util.Collections;
 import java.util.Objects;
 
 /** Shared logic for clearing AdServices databases to factory-new states. */
 public final class DatabaseClearer {
 
-    private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getLogger();
 
     private final CustomAudienceDao mCustomAudienceDao;
     private final AppInstallDao mAppInstallDao;
     private final ProtectedSignalsDao mProtectedSignalsDao;
     private final FrequencyCapDataClearer mFrequencyCapDataClearer;
+    private final DatastoreManager mDatastoreManager;
     private final ListeningExecutorService mBackgroundExecutor;
 
     public DatabaseClearer(
@@ -43,6 +46,7 @@ public final class DatabaseClearer {
             AppInstallDao appInstallDao,
             FrequencyCapDataClearer frequencyCapDataClearer,
             ProtectedSignalsDao protectedSignalsDao,
+            DatastoreManager datastoreManager,
             ListeningExecutorService backgroundExecutor) {
         Objects.requireNonNull(customAudienceDao);
         Objects.requireNonNull(appInstallDao);
@@ -53,6 +57,7 @@ public final class DatabaseClearer {
         mAppInstallDao = appInstallDao;
         mProtectedSignalsDao = protectedSignalsDao;
         mFrequencyCapDataClearer = frequencyCapDataClearer;
+        mDatastoreManager = datastoreManager;
         mBackgroundExecutor = backgroundExecutor;
     }
 
@@ -73,7 +78,9 @@ public final class DatabaseClearer {
             boolean deleteProtectedSignals) {
         return mBackgroundExecutor.submit(
                 () -> {
-                    sLogger.v("DatabaseClearer: Beginning database clearing");
+                    sLogger.v(
+                            "DatabaseClearer: Beginning Protected Audience and App Signals"
+                                    + " database clearing");
                     mCustomAudienceDao.deleteAllCustomAudienceData(deleteCustomAudienceUpdate);
                     int numClearedEvents = mFrequencyCapDataClearer.clear();
                     sLogger.v("DatabaseClearer: Cleared %d frequency cap events", numClearedEvents);
@@ -83,8 +90,27 @@ public final class DatabaseClearer {
                     if (deleteProtectedSignals) {
                         mProtectedSignalsDao.deleteAllSignals();
                     }
-                    sLogger.v("DatabaseClearer: Completed DB clear operation");
+                    sLogger.v(
+                            "DatabaseClearer: Completed Protected Audience and App Signals"
+                                    + " DB clear operation");
                     return true;
+                });
+    }
+
+    /**
+     * Clear Measurement data to an empty state. This does not include consent data. For that logic,
+     * see {@link com.android.adservices.service.consent.ConsentManager}.
+     *
+     * @return A future indicating completion of DAO operation.
+     */
+    public ListenableFuture<Void> deleteMeasurementData() {
+        return mBackgroundExecutor.submit(
+                () -> {
+                    sLogger.v("DatabaseClearer: Beginning Measurement database clearing");
+                    mDatastoreManager.runInTransaction(
+                            (dao) -> dao.deleteAllMeasurementData(Collections.emptyList()));
+                    sLogger.v("DatabaseClearer: Completed Measurement DB clear operation");
+                    return null;
                 });
     }
 }

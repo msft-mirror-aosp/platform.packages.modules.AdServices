@@ -141,6 +141,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
@@ -358,6 +359,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
     @Mock private AdServicesHttpsClient mMockHttpClient;
     private RetryStrategyFactory mRetryStrategyFactory;
     private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
+    @Mock private DatastoreManager mDatastoreManager;
 
     @Before
     public void setUp() {
@@ -470,7 +472,8 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         mCustomAudienceDaoSpy,
                         mAppInstallDao,
                         mFrequencyCapDaoSpy,
-                        protectedSignalsDao);
+                        protectedSignalsDao,
+                        mDatastoreManager);
     }
 
     @After
