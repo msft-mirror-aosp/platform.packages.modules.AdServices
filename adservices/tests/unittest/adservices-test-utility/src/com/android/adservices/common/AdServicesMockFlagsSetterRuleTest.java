@@ -15,6 +15,10 @@
  */
 package com.android.adservices.common;
 
+import static com.android.adservices.common.MissingFlagBehavior.THROWS_EXCEPTION;
+import static com.android.adservices.common.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
+import static com.android.adservices.common.MissingFlagBehavior.USES_JAVA_LANGUAGE_DEFAULT;
+
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.mock;
 
@@ -22,9 +26,9 @@ import com.android.adservices.service.Flags;
 
 import org.junit.Test;
 
+@SuppressWarnings("deprecation")
 public final class AdServicesMockFlagsSetterRuleTest
-        extends AdServicesFlagsSetterRuleForUnitTestsTestCase<
-                AdServicesMockFlagsSetterRule, Flags> {
+        extends AdServicesFlagsSetterRuleForUnitTestsTestCase<AdServicesMockFlagsSetterRule> {
 
     @Override
     protected AdServicesMockFlagsSetterRule newRule() {
@@ -39,5 +43,21 @@ public final class AdServicesMockFlagsSetterRuleTest
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new AdServicesMockFlagsSetterRule(new Flags() {}));
+    }
+
+    @Test
+    public void testSetMissingFlagBehavior() {
+        var rule = newRule();
+
+        assertThrows(
+                UnsupportedOperationException.class,
+                () -> rule.setMissingFlagBehavior(USES_EXPLICIT_DEFAULT));
+        assertThrows(
+                UnsupportedOperationException.class,
+                () -> rule.setMissingFlagBehavior(THROWS_EXCEPTION));
+
+        expect.withMessage("setMockingMode(USES_JAVA_LANGUAGE_DEFAULT)")
+                .that(rule.setMissingFlagBehavior(USES_JAVA_LANGUAGE_DEFAULT))
+                .isSameInstanceAs(rule);
     }
 }

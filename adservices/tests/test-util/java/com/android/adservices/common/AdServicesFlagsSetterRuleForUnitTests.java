@@ -57,12 +57,13 @@ import java.util.function.Consumer;
  * @param <F> type of flags implementation used by the rule.
  */
 abstract class AdServicesFlagsSetterRuleForUnitTests<
-                R extends AdServicesFlagsSetterRuleForUnitTests<R, F>, F extends Flags>
+                R extends AdServicesFlagsSetterRuleForUnitTests<R>>
         extends AbstractAdServicesFlagsSetterRule<R> {
 
-    protected final F mFlags;
+    protected final Flags mFlags;
 
-    protected AdServicesFlagsSetterRuleForUnitTests(F flags, Consumer<NameValuePair> flagsSetter) {
+    protected AdServicesFlagsSetterRuleForUnitTests(
+            Flags flags, Consumer<NameValuePair> flagsSetter) {
         super(AndroidLogger.getInstance(), flagsSetter);
         mFlags = Objects.requireNonNull(flags, "flags cannot be null");
         mLog.d("Constructed for %s", flags);
@@ -73,7 +74,7 @@ abstract class AdServicesFlagsSetterRuleForUnitTests<
      *
      * <p>Typically used by test classes to pass to the object under test.
      */
-    public final F getFlags() {
+    public final Flags getFlags() {
         return mFlags;
     }
 
@@ -131,6 +132,14 @@ abstract class AdServicesFlagsSetterRuleForUnitTests<
     protected final int getDeviceSdk() {
         return Build.VERSION.SDK_INT;
     }
+
+    // NOTE: in theory we could add an annotation to set it as well, but it would be an overkill as
+    // it's supposed to be a temporary measure as ideally tests should explicitly set what they need
+    /**
+     * Sets the behavior for {@code getFlag(name, defaultValue)} when the test did not explicitly
+     * set the value of the flag.
+     */
+    public abstract R setMissingFlagBehavior(MissingFlagBehavior behavior);
 
     private void setNameValuePair(String name, String value) {
         mLog.v("setNameValuePair(%s, %s)", name, value);

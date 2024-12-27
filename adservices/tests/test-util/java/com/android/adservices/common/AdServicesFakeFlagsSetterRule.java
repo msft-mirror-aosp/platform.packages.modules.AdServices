@@ -16,12 +16,15 @@
 
 package com.android.adservices.common;
 
-import com.android.adservices.common.AdServicesFakeFlagsSetterRule.FakeFlags;
+import static com.android.adservices.common.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
+
 import com.android.adservices.service.RawFlags;
 import com.android.adservices.shared.flags.FlagsBackend;
 import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.NameValuePair;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +33,9 @@ import java.util.function.Consumer;
 
 /** {@code FlagsSetterRule} that uses a fake flags implementation. */
 public final class AdServicesFakeFlagsSetterRule
-        extends AdServicesFlagsSetterRuleForUnitTests<AdServicesFakeFlagsSetterRule, FakeFlags> {
+        extends AdServicesFlagsSetterRuleForUnitTests<AdServicesFakeFlagsSetterRule> {
+
+    private final FakeFlagsBackend mFakeFlagsBackend;
 
     public AdServicesFakeFlagsSetterRule() {
         this(new FakeFlags());
@@ -38,6 +43,19 @@ public final class AdServicesFakeFlagsSetterRule
 
     private AdServicesFakeFlagsSetterRule(FakeFlags fakeFlags) {
         super(fakeFlags, fakeFlags.getFakeFlagsBackend());
+        mFakeFlagsBackend = fakeFlags.getFakeFlagsBackend();
+    }
+
+    @Override
+    public AdServicesFakeFlagsSetterRule setMissingFlagBehavior(MissingFlagBehavior behavior) {
+        mLog.i("setMissingFlagBehavior(): from %s to %s", mFakeFlagsBackend.mBehavior, behavior);
+        mFakeFlagsBackend.mBehavior = Objects.requireNonNull(behavior, "behavior cannot be null");
+        return getThis();
+    }
+
+    @VisibleForTesting
+    MissingFlagBehavior getMissingFlagBehavior() {
+        return mFakeFlagsBackend.mBehavior;
     }
 
     // NOTE: this class is internal on purpose, so tests use the rule approach. But we could make it
@@ -55,16 +73,101 @@ public final class AdServicesFakeFlagsSetterRule
     }
 
     private static class FakeFlagsBackend implements FlagsBackend, Consumer<NameValuePair> {
-
-        private final Logger mLog =
-                new Logger(AndroidLogger.getInstance(), AdServicesFakeFlagsSetterRule.class);
-
         private final Map<String, NameValuePair> mFlags = new HashMap<>();
+
+        private final Logger mLog = new Logger(AndroidLogger.getInstance(), "FakeFlags");
+
+        private MissingFlagBehavior mBehavior = USES_EXPLICIT_DEFAULT;
 
         @Override
         public String getFlag(String name) {
-            var flag = mFlags.get(name);
-            return flag == null ? null : flag.value;
+            throw new UnsupportedOperationException(
+                    "INTERNAL ERROR: getFlag("
+                            + name
+                            + ") called when all methods should have been overridden!");
+        }
+
+        @Override
+        public boolean getFlag(String name, boolean defaultValue) {
+            var flag = getFlagChecked(name);
+            if (flag == null) {
+                var value = isMockingMode(name) ? false : defaultValue;
+                mLog.w("getFlag(%s, %b): returning %b for missing flag", name, defaultValue, value);
+                return value;
+            }
+            var value = Boolean.parseBoolean(flag.value);
+            mLog.v("getFlag(%s, %b): returning %b", name, defaultValue, value);
+            return value;
+        }
+
+        @Override
+        public String getFlag(String name, String defaultValue) {
+            var flag = getFlagChecked(name);
+            if (flag == null) {
+                var value = isMockingMode(name) ? null : defaultValue;
+                mLog.w("getFlag(%s, %s): returning %s for missing flag", name, defaultValue, value);
+                return value;
+            }
+            mLog.v("getFlag(%s, %s): returning %s", name, defaultValue, flag.value);
+            return flag.value;
+        }
+
+        @Override
+        public int getFlag(String name, int defaultValue) {
+            var flag = getFlagChecked(name);
+            if (flag == null) {
+                var value = isMockingMode(name) ? 0 : defaultValue;
+                mLog.w("getFlag(%s, %d): returning %d for missing flag", name, defaultValue, value);
+                return value;
+            }
+            var value = Integer.parseInt(flag.value);
+            mLog.v("getFlag(%s, %d): returning %d", name, defaultValue, value);
+            return value;
+        }
+
+        @Override
+        public long getFlag(String name, long defaultValue) {
+            var flag = getFlagChecked(name);
+            if (flag == null) {
+                var value = isMockingMode(name) ? 0 : defaultValue;
+                mLog.w("getFlag(%s, %d): returning %d for missing flag", name, defaultValue, value);
+                return value;
+            }
+            var value = Long.parseLong(flag.value);
+            mLog.v("getFlag(%s, %d): returning %d", name, defaultValue, value);
+            return value;
+        }
+
+        @Override
+        public float getFlag(String name, float defaultValue) {
+            var flag = getFlagChecked(name);
+            if (flag == null) {
+                var value = isMockingMode(name) ? 0 : defaultValue;
+                mLog.w("getFlag(%s, %f): returning %f for missing flag", name, defaultValue, value);
+                return value;
+            }
+            var value = Float.parseFloat(flag.value);
+            mLog.v("getFlag(%s, %f): returning %f", name, defaultValue, value);
+            return value;
+        }
+
+        private boolean isMockingMode(String name) {
+            switch (mBehavior) {
+                case THROWS_EXCEPTION:
+                    throw new IllegalStateException("Value of flag " + name + " not set");
+                case USES_EXPLICIT_DEFAULT:
+                    return false;
+                case USES_JAVA_LANGUAGE_DEFAULT:
+                    return true;
+                default:
+                    throw new UnsupportedOperationException("Unexpected behavior: " + mBehavior);
+            }
+        }
+
+        private NameValuePair getFlagChecked(String name) {
+            Objects.requireNonNull(name, "name cannot be null");
+            var value = mFlags.get(name);
+            return value == null ? null : value;
         }
 
         @Override
