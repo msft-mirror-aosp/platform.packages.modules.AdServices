@@ -19,7 +19,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.ui.util.ApkTestUtil.getString;
-import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT;
+import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT_MS;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -70,7 +70,7 @@ public final class NotificationActivityU18UxSelectorUiAutomatorTest
         mDevice.wait(
                 Until.gone(
                         By.text(getString(R.string.notificationUI_u18_right_control_button_text))),
-                WINDOW_LAUNCH_TIMEOUT);
+                WINDOW_LAUNCH_TIMEOUT_MS);
 
         // Retrieve a new instance to avoid android.support.test.uiautomator.StaleObjectException.
         u18NotificationTitle =
@@ -99,7 +99,7 @@ public final class NotificationActivityU18UxSelectorUiAutomatorTest
         mDevice.wait(
                 Until.gone(
                         By.text(getString(R.string.notificationUI_u18_left_control_button_text))),
-                WINDOW_LAUNCH_TIMEOUT);
+                WINDOW_LAUNCH_TIMEOUT_MS);
 
         // make sure it goes to u18 page rather than GA page
         UiObject2 topicTitle = ApkTestUtil.getElement(mDevice, R.string.settingsUI_topics_ga_title);

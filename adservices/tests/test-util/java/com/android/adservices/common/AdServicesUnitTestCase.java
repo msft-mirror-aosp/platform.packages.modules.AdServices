@@ -55,8 +55,15 @@ public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
     @CallSuper
     @Override
     protected void assertValidTestCaseFixtures() throws Exception {
+        // TODO(b/3847988060): add check to prohibit mFlags, FLAGS, TEST_FLAGS, etc...
         assertTestClassHasNoFieldsFromSuperclass(AdServicesUnitTestCase.class, "mAppContext");
         assertTestClassHasNoSuchField("APPLICATION_CONTEXT", APP_CONTEXT_MSG);
         assertTestClassHasNoSuchField("mApplicationContext", APP_CONTEXT_MSG);
+        // TODO(b/384798806): add a check prohibiting realFlags, which is currently using on some
+        // unit tests that "really" change the Flags using DeviceConfig - these tests should instead
+        // use AdServicesFakeFlagsSetterRule (which will eventually be provided by a superclass).
+        // We'll need to fix these test first (for example, some of them also set DebugFlags, which
+        // is not supported by AdServicesFakeFlagsSetterRule and won't be, as we should have a
+        // separate rule for DebugFlags / SystemProperties)
     }
 }

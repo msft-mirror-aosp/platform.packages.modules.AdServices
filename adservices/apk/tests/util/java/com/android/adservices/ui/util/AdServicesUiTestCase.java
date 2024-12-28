@@ -16,41 +16,58 @@
 
 package com.android.adservices.ui.util;
 
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.mockito.Mockito.spy;
 
 import android.app.KeyguardManager;
 import android.content.Context;
-import android.os.RemoteException;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.By;
 import androidx.test.uiautomator.UiDevice;
-import androidx.test.uiautomator.UiObjectNotFoundException;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
+import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
+import com.android.adservices.common.annotations.SetAllLogcatTags;
+import com.android.adservices.common.annotations.SetCompatModeFlags;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 
 /**
  * Base class for all settings UI unit tests.
  *
  * <p>Contains basic device setup and teardown methods.
  */
+@DisableGlobalKillSwitch
+@SetAllLogcatTags
+@SetCompatModeFlags
+@SetFlagTrue(KEY_GA_UX_FEATURE_ENABLED)
 public abstract class AdServicesUiTestCase extends AdServicesExtendedMockitoTestCase {
 
-    public static final int LAUNCH_TIMEOUT = 5_000;
+    public static final int LAUNCH_TIMEOUT_MS = 5_000;
+
+    // TODO(b/384798806): called realFlags because it's "really" changing the Flags using
+    // DeviceConfig (and superclass will eventually provide a flags object that uses
+    // AdServicesFakeFlagsSetterRule). Ideally this class should use that same flags, but it doesn't
+    // support DebugFlags (we'll need to wait until the DebugFlags logic is moved to its own rule).
+    @Rule(order = 11)
+    public final AdServicesFlagsSetterRule realFlags = AdServicesFlagsSetterRule.newInstance();
 
     protected final UiDevice mDevice =
             UiDevice.getInstance(InstrumentationRegistry.getInstrumentation());
     protected Context mSpyContext;
 
     @Before
-    public void setUpDevice() throws RemoteException {
+    public final void setUpDevice() throws Exception {
         mSpyContext = spy(appContext.get());
 
         // Unlock the device if required
@@ -70,11 +87,11 @@ public abstract class AdServicesUiTestCase extends AdServicesExtendedMockitoTest
         // Wait for launcher
         String launcherPackage = mDevice.getLauncherPackageName();
         assertThat(launcherPackage).isNotNull();
-        mDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT);
+        mDevice.wait(Until.hasObject(By.pkg(launcherPackage).depth(0)), LAUNCH_TIMEOUT_MS);
     }
 
     @After
-    public void teardown() throws UiObjectNotFoundException {
+    public final void takeScreenshotAndKillProcess() throws Exception {
         ApkTestUtil.takeScreenshot(mDevice, getClass().getSimpleName() + "_" + getTestName() + "_");
 
         AdservicesTestHelper.killAdservicesProcess(appContext.get());

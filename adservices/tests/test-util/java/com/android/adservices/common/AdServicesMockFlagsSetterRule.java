@@ -58,7 +58,7 @@ import java.util.Objects;
  */
 @Deprecated
 public final class AdServicesMockFlagsSetterRule
-        extends AdServicesFlagsSetterRuleForUnitTests<AdServicesMockFlagsSetterRule, Flags> {
+        extends AdServicesFlagsSetterRuleForUnitTests<AdServicesMockFlagsSetterRule> {
 
     private static final Logger sLog =
             new Logger(AndroidLogger.getInstance(), AdServicesMockFlagsSetterRule.class);
@@ -73,6 +73,19 @@ public final class AdServicesMockFlagsSetterRule
         if (!MockitoHelper.isMock(mockFlags)) {
             throw new IllegalArgumentException("not a mock: " + mockFlags);
         }
+    }
+
+    @Override
+    public AdServicesMockFlagsSetterRule setMissingFlagBehavior(MissingFlagBehavior behavior) {
+        mLog.e("setMissingFlagBehavior(%b)", behavior);
+        if (!MissingFlagBehavior.USES_JAVA_LANGUAGE_DEFAULT.equals(behavior)) {
+            throw new UnsupportedOperationException(
+                    "can only call with "
+                            + MissingFlagBehavior.USES_JAVA_LANGUAGE_DEFAULT
+                            + "(which is a no-op regardless), but called with "
+                            + behavior);
+        }
+        return getThis();
     }
 
     private static Answer<Boolean> answerBoolean(NameValuePair flag) {

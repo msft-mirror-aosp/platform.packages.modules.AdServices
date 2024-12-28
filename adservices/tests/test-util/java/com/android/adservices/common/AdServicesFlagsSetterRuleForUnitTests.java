@@ -46,6 +46,7 @@ import org.junit.runner.Description;
 
 import java.lang.annotation.Annotation;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -57,12 +58,13 @@ import java.util.function.Consumer;
  * @param <F> type of flags implementation used by the rule.
  */
 abstract class AdServicesFlagsSetterRuleForUnitTests<
-                R extends AdServicesFlagsSetterRuleForUnitTests<R, F>, F extends Flags>
+                R extends AdServicesFlagsSetterRuleForUnitTests<R>>
         extends AbstractAdServicesFlagsSetterRule<R> {
 
-    protected final F mFlags;
+    protected final Flags mFlags;
 
-    protected AdServicesFlagsSetterRuleForUnitTests(F flags, Consumer<NameValuePair> flagsSetter) {
+    protected AdServicesFlagsSetterRuleForUnitTests(
+            Flags flags, Consumer<NameValuePair> flagsSetter) {
         super(AndroidLogger.getInstance(), flagsSetter);
         mFlags = Objects.requireNonNull(flags, "flags cannot be null");
         mLog.d("Constructed for %s", flags);
@@ -73,7 +75,7 @@ abstract class AdServicesFlagsSetterRuleForUnitTests<
      *
      * <p>Typically used by test classes to pass to the object under test.
      */
-    public final F getFlags() {
+    public final Flags getFlags() {
         return mFlags;
     }
 
@@ -86,24 +88,28 @@ abstract class AdServicesFlagsSetterRuleForUnitTests<
      */
     public final R setDefaultFledgeFlags() {
         mLog.i("setDefaultFledgeFlags()");
-        setNameValuePair(KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS, "10000");
-        setNameValuePair(KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS, "10000");
-        setNameValuePair(KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, "600000");
-        setNameValuePair(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, "true");
-        setNameValuePair(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED, "true");
-        setNameValuePair(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, "true");
-        setNameValuePair(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED, "true");
-        setNameValuePair(
-                KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE, "-100");
-        setNameValuePair(KEY_ENABLE_LOGGED_TOPIC, "true");
-        setNameValuePair(KEY_ENABLE_DATABASE_SCHEMA_VERSION_8, "true");
-        setNameValuePair(KEY_FLEDGE_AUCTION_SERVER_ENABLED, "true");
-        setNameValuePair(KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED, "true");
-        setNameValuePair(KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED, "true");
-        setNameValuePair(KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED, "true");
-        setNameValuePair(KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED, "true");
-        setNameValuePair(KEY_PAS_EXTENDED_METRICS_ENABLED, "true");
+        setDefaultFledgeFlags((name, value) -> setNameValuePair(name, value));
         return getThis();
+    }
+
+    static void setDefaultFledgeFlags(BiConsumer<String, String> nameValueSetter) {
+        nameValueSetter.accept(KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS, "10000");
+        nameValueSetter.accept(KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS, "10000");
+        nameValueSetter.accept(KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, "600000");
+        nameValueSetter.accept(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, "true");
+        nameValueSetter.accept(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED, "true");
+        nameValueSetter.accept(KEY_FLEDGE_FETCH_CUSTOM_AUDIENCE_ENABLED, "true");
+        nameValueSetter.accept(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED, "true");
+        nameValueSetter.accept(
+                KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE, "-100");
+        nameValueSetter.accept(KEY_ENABLE_LOGGED_TOPIC, "true");
+        nameValueSetter.accept(KEY_ENABLE_DATABASE_SCHEMA_VERSION_8, "true");
+        nameValueSetter.accept(KEY_FLEDGE_AUCTION_SERVER_ENABLED, "true");
+        nameValueSetter.accept(KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED, "true");
+        nameValueSetter.accept(KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED, "true");
+        nameValueSetter.accept(KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED, "true");
+        nameValueSetter.accept(KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED, "true");
+        nameValueSetter.accept(KEY_PAS_EXTENDED_METRICS_ENABLED, "true");
     }
 
     @Override
@@ -131,6 +137,14 @@ abstract class AdServicesFlagsSetterRuleForUnitTests<
     protected final int getDeviceSdk() {
         return Build.VERSION.SDK_INT;
     }
+
+    // NOTE: in theory we could add an annotation to set it as well, but it would be an overkill as
+    // it's supposed to be a temporary measure as ideally tests should explicitly set what they need
+    /**
+     * Sets the behavior for {@code getFlag(name, defaultValue)} when the test did not explicitly
+     * set the value of the flag.
+     */
+    public abstract R setMissingFlagBehavior(MissingFlagBehavior behavior);
 
     private void setNameValuePair(String name, String value) {
         mLog.v("setNameValuePair(%s, %s)", name, value);

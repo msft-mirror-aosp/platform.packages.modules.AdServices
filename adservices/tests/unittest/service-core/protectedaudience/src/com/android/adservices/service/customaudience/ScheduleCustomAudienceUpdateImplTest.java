@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
+import static com.android.adservices.common.MissingFlagBehavior.USES_JAVA_LANGUAGE_DEFAULT;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS;
@@ -55,13 +56,14 @@ import android.net.Uri;
 import androidx.room.Room;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.AdServicesMockFlagsSetterRule;
+import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.service.DebugFlags;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -125,16 +127,18 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     private DevContext mDevContext;
     private CustomAudienceDao mCustomAudienceDao;
 
-    // TODO(b/384798806): should use AdServicesFakeFlagsSetterRule instead - for now it's more of a
-    // "guinea pig" / example of AdServicesMockFlagsSetterRule usage, as it cannot be replaced
-    // because the tests would fail (most likely because the test rely on some flag whose default
-    // value is true and the test is not explicitly setting
-    @Rule
-    public final AdServicesMockFlagsSetterRule flags =
-            new AdServicesMockFlagsSetterRule(mMockFlags);
+    // TODO(b/384798806): move to superclass (but first must fix rule so it doesn't throw a
+    // TestFailure when test fail without setting any flag, as that would be misleading)
+    @Rule public final AdServicesFakeFlagsSetterRule flags = new AdServicesFakeFlagsSetterRule();
+
+    // TODO(b/384949821): move to superclass
+    private final Flags mFakeFlags = flags.getFlags();
 
     @Before
     public void setup() {
+        // TODO(b/384798806): explicitly set missing flags instead - for now it's using this
+        // hac^H^H^H workaround as an example on how to convert tests from mock to fake.
+        flags.setMissingFlagBehavior(USES_JAVA_LANGUAGE_DEFAULT);
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mCallingAppUid = CallingAppUidSupplierProcessImpl.create().getCallingAppUid();
         mocker.mockGetFlags(flags.getFlags());
@@ -164,7 +168,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mContext,
                         mConsentManagerMock,
                         mCallingAppUid,
-                        mMockFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
@@ -302,7 +306,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mContext,
                         mConsentManagerMock,
                         mCallingAppUid,
-                        mMockFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
@@ -455,7 +459,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mContext,
                         mConsentManagerMock,
                         mCallingAppUid,
-                        mMockFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
@@ -496,7 +500,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mContext,
                         mConsentManagerMock,
                         mCallingAppUid,
-                        mMockFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
@@ -551,7 +555,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mContext,
                         mConsentManagerMock,
                         mCallingAppUid,
-                        mMockFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
@@ -608,7 +612,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mContext,
                         mConsentManagerMock,
                         mCallingAppUid,
-                        mMockFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
@@ -659,7 +663,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mContext,
                         mConsentManagerMock,
                         mCallingAppUid,
-                        mMockFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
@@ -776,7 +780,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mContext,
                         mConsentManagerMock,
                         mCallingAppUid,
-                        mMockFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
@@ -821,7 +825,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mContext,
                         mConsentManagerMock,
                         mCallingAppUid,
-                        mMockFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
@@ -856,7 +860,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mContext,
                         mConsentManagerMock,
                         mCallingAppUid,
-                        mMockFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,

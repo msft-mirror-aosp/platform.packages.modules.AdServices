@@ -66,7 +66,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     private static final String BASE_DIR = TEST_DIR.getAbsolutePath();
 
     @Rule(order = 11)
-    public final AdServicesFlagsSetterRule flags =
+    public final AdServicesFlagsSetterRule realFlags =
             AdServicesFlagsSetterRule.withoutAdoptingShellPermissions().setDefaultLogcatTags();
 
     @Mock private AdServicesErrorLogger mMockAdServicesErrorLogger;

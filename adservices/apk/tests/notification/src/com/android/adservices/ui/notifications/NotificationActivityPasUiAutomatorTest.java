@@ -23,7 +23,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_IS_EEA_DEVICE_FE
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_TOGGLE_SPEED_BUMP_ENABLED;
-import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT;
+import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT_MS;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -62,7 +62,7 @@ public final class NotificationActivityPasUiAutomatorTest extends AdservicesNoti
     @FlakyTest(bugId = 374129459)
     public void renotifyClickSettingsTest() throws Exception {
         // enable at least one of Fledge or Mesurement API
-        ApkTestUtil.launchSettingView(mDevice, LAUNCH_TIMEOUT);
+        ApkTestUtil.launchSettingView(mDevice, LAUNCH_TIMEOUT_MS);
         mDevice.waitForIdle();
         ApkTestUtil.scrollToAndClick(mDevice, R.string.settingsUI_apps_ga_title);
         UiObject2 appsToggle =
@@ -70,7 +70,7 @@ public final class NotificationActivityPasUiAutomatorTest extends AdservicesNoti
                         Until.findObject(By.clazz(ANDROID_WIDGET_SWITCH)),
                         PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         if (!appsToggle.isChecked()) {
-            appsToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
+            appsToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT_MS);
         }
         mDevice.waitForIdle();
 
@@ -91,7 +91,7 @@ public final class NotificationActivityPasUiAutomatorTest extends AdservicesNoti
         assertWithMessage("right button should show").that(rightControlButton).isNotNull();
 
         // check manage settings button works
-        leftControlButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
+        leftControlButton.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT_MS);
         UiObject2 topicsTitle =
                 ApkTestUtil.getElement(mDevice, R.string.settingsUI_topics_ga_title);
         ApkTestUtil.scrollTo(mDevice, R.string.settingsUI_topics_ga_title);
@@ -109,7 +109,7 @@ public final class NotificationActivityPasUiAutomatorTest extends AdservicesNoti
     @FlakyTest(bugId = 353988743)
     public void firstTimeRowCombinedTextShownTest() throws Exception {
         // disable both Fledge and Measurement
-        ApkTestUtil.launchSettingView(mDevice, LAUNCH_TIMEOUT);
+        ApkTestUtil.launchSettingView(mDevice, LAUNCH_TIMEOUT_MS);
         mDevice.waitForIdle();
         ApkTestUtil.scrollToAndClick(mDevice, R.string.settingsUI_apps_ga_title);
         UiObject2 appsToggle =
@@ -117,7 +117,7 @@ public final class NotificationActivityPasUiAutomatorTest extends AdservicesNoti
                         Until.findObject(By.clazz(ANDROID_WIDGET_SWITCH)),
                         PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         if (appsToggle.isChecked()) {
-            appsToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
+            appsToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT_MS);
         }
         mDevice.waitForIdle();
         mDevice.pressBack();
@@ -128,7 +128,7 @@ public final class NotificationActivityPasUiAutomatorTest extends AdservicesNoti
                         Until.findObject(By.clazz(ANDROID_WIDGET_SWITCH)),
                         PRIMITIVE_UI_OBJECTS_LAUNCH_TIMEOUT_MS);
         if (measurementToggle.isChecked()) {
-            measurementToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT);
+            measurementToggle.clickAndWait(Until.newWindow(), WINDOW_LAUNCH_TIMEOUT_MS);
         }
         mDevice.waitForIdle();
 

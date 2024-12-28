@@ -18,6 +18,7 @@ package com.android.adservices.service.common;
 
 import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE;
 
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
@@ -37,60 +38,56 @@ import android.adservices.common.CommonFixture;
 import android.os.LimitExceededException;
 import android.os.Process;
 
+import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.devapi.DevSessionFixture;
-import com.android.adservices.service.FakeFlagsFactory;
+import com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@SetPpapiAppAllowList
+@SetDefaultFledgeFlags
 public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCase {
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
-    private static final Flags TEST_FLAGS =
-            new FakeFlagsFactory.TestFlags() {
-                @Override
-                public String getPpapiAppAllowList() {
-                    return CALLER_PACKAGE_NAME;
-                }
-            };
 
-    private static final Flags FLAGS_WITH_ENROLLMENT_CHECK =
-            new Flags() {
-                @Override
-                public boolean getDisableFledgeEnrollmentCheck() {
-                    return false;
-                }
-            };
+    // TODO(b/384798806): move to superclass
+    @Rule public final AdServicesFakeFlagsSetterRule flags = new AdServicesFakeFlagsSetterRule();
+    // TODO(b/384949821): move to superclass
+    private final Flags mFakeFlags = flags.getFlags();
 
-    @Mock AppImportanceFilter mAppImportanceFilter;
+    @Mock private AppImportanceFilter mAppImportanceFilter;
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
 
     @Spy
-    FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
-            new FledgeAllowListsFilter(TEST_FLAGS, mAdServicesLoggerMock);
+    private FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
+            new FledgeAllowListsFilter(mFakeFlags, mAdServicesLoggerMock);
 
     @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
 
     @Spy
-    FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
+    private FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
             new FledgeAuthorizationFilter(
                     mSpyContext.getPackageManager(),
                     new EnrollmentDao(
-                            mSpyContext, DbTestUtil.getSharedDbHelperForTest(), TEST_FLAGS),
+                            mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mFakeFlags),
                     mAdServicesLoggerMock);
 
     @Mock private FledgeApiThrottleFilter mFledgeApiThrottleFilterMock;
@@ -112,7 +109,7 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
                 new AdSelectionServiceFilter(
                         mSpyContext,
                         mFledgeConsentFilterMock,
-                        TEST_FLAGS,
+                        mFakeFlags,
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
@@ -222,13 +219,14 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
     }
 
     @Test
+    @SetFlagFalse(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testFilterRequestThrowsAdTechNotAllowedExceptionWhenAdTechNotAuthorized() {
         // Create new AdSelectionServiceFilter with new flags
         mAdSelectionServiceFilter =
                 new AdSelectionServiceFilter(
                         mSpyContext,
                         mFledgeConsentFilterMock,
-                        FLAGS_WITH_ENROLLMENT_CHECK,
+                        mFakeFlags,
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
@@ -347,12 +345,13 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
     }
 
     @Test
+    @SetFlagFalse(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testFilterRequest_withLocalhostDomain_doesNotPass() {
         mAdSelectionServiceFilter =
                 new AdSelectionServiceFilter(
                         mSpyContext,
                         mFledgeConsentFilterMock,
-                        FLAGS_WITH_ENROLLMENT_CHECK,
+                        mFakeFlags,
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
@@ -393,12 +392,13 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
     }
 
     @Test
+    @SetFlagFalse(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testFilterRequest_withLocalhostDomainInDeveloperMode_skipCheck() {
         mAdSelectionServiceFilter =
                 new AdSelectionServiceFilter(
                         mSpyContext,
                         mFledgeConsentFilterMock,
-                        FLAGS_WITH_ENROLLMENT_CHECK,
+                        mFakeFlags,
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
@@ -420,6 +420,7 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
     }
 
     @Test
+    @SetFlagFalse(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testFilterRequest_withEnrollmentJobNotScheduledAndEnrollmentCheckFails() {
         doThrow(new ConsentManager.RevokedConsentException())
                 .when(mFledgeConsentFilterMock)
@@ -434,7 +435,7 @@ public final class AdSelectionServiceFilterTest extends AdServicesMockitoTestCas
                 new AdSelectionServiceFilter(
                         mSpyContext,
                         mFledgeConsentFilterMock,
-                        FLAGS_WITH_ENROLLMENT_CHECK,
+                        mFakeFlags,
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
