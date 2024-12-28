@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.customaudience;
 
-import static com.android.adservices.common.MissingFlagBehavior.USES_JAVA_LANGUAGE_DEFAULT;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS;
@@ -98,6 +97,8 @@ import java.util.concurrent.CountDownLatch;
 @SetFlagTrue(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
 @SetFlagFalse(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS)
+// NOTE: flag below was not set initially, when test was using mocks
+@SetFlagFalse(KEY_ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE)
 public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtendedMockitoTestCase {
     private static final int API_NAME =
             AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
@@ -130,9 +131,6 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
 
     @Before
     public void setup() {
-        // TODO(b/384798806): explicitly set missing flags instead - for now it's using this
-        // hac^H^H^H workaround as an example on how to convert tests from mock to fake.
-        flags.setMissingFlagBehavior(USES_JAVA_LANGUAGE_DEFAULT);
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mCallingAppUid = CallingAppUidSupplierProcessImpl.create().getCallingAppUid();
         mocker.mockGetFlags(flags.getFlags());
