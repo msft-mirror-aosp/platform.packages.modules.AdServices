@@ -15,9 +15,12 @@
  */
 package com.android.adservices.common;
 
+import static org.mockito.Mockito.mock;
+
 import android.annotation.CallSuper;
 import android.content.Context;
 
+import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
 
 import org.junit.Before;
@@ -33,11 +36,22 @@ import org.junit.Rule;
  */
 public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
 
+    // NOTE: must be defined here (instead of on AdServicesMockerLessExtendedMockitoTestCase),
+    // otherwise it would be null when flags call newFlagsRule() below (and tests override that
+    // method to return AdServicesMockFlagsSetterRule)
+    /**
+     * @deprecated tests should use {@link AdServicesFakeFlagsSetterRule} instead.
+     */
+    @Deprecated protected final Flags mMockFlags = mock(Flags.class);
+
     private static final String APP_CONTEXT_MSG = "should use existing mAppContext instead";
 
     @Rule(order = 5)
     public final ApplicationContextSingletonRule appContext =
             new ApplicationContextSingletonRule(/* restoreAfter= */ false);
+
+    @Rule(order = 6)
+    public final AdServicesFlagsSetterRuleForUnitTests<?> flags = newFlagsRule();
 
     /**
      * Reference to the application context of this test's instrumentation package (as defined by
@@ -52,11 +66,22 @@ public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
         mAppContext = mContext.getApplicationContext();
     }
 
+    /**
+     * Creates the rule that will be referenced as {@code flags}.
+     *
+     * <p>Returns a new {@link AdServicesFakeFlagsSetterRule} by default, should be overridden by
+     * tests that want to use {@code AdServicesMockFlagsSetterRule} instead.
+     */
+    protected AdServicesFlagsSetterRuleForUnitTests<?> newFlagsRule() {
+        return new AdServicesFakeFlagsSetterRule();
+    }
+
     @CallSuper
     @Override
     protected void assertValidTestCaseFixtures() throws Exception {
-        // TODO(b/3847988060): add check to prohibit mFlags, FLAGS, TEST_FLAGS, etc...
-        assertTestClassHasNoFieldsFromSuperclass(AdServicesUnitTestCase.class, "mAppContext");
+        // TODO(b/3847988060): add check to more prohibit flags like mFlags, FLAGS, TEST_FLAGS, ...
+        assertTestClassHasNoFieldsFromSuperclass(
+                AdServicesUnitTestCase.class, "mAppContext", "appContext", "flags", "mMockFlags");
         assertTestClassHasNoSuchField("APPLICATION_CONTEXT", APP_CONTEXT_MSG);
         assertTestClassHasNoSuchField("mApplicationContext", APP_CONTEXT_MSG);
         // TODO(b/384798806): add a check prohibiting realFlags, which is currently using on some

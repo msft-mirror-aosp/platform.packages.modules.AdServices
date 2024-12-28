@@ -38,7 +38,6 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
-import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.common.JsonFixture;
@@ -52,7 +51,6 @@ import com.google.common.collect.ImmutableList;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.List;
@@ -69,8 +67,6 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
     private static final List<DBAdData> INVALID_DB_AD_DATA_LIST =
             DBAdDataFixture.getInvalidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1);
 
-    // TODO(b/384798806): move to superclass
-    @Rule public final AdServicesFakeFlagsSetterRule flags = new AdServicesFakeFlagsSetterRule();
     // TODO(b/384949821): move to superclass
     private final Flags mFakeFlags = flags.getFlags();
 

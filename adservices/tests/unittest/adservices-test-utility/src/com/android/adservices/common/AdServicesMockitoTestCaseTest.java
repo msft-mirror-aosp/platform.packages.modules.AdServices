@@ -47,7 +47,9 @@ public final class AdServicesMockitoTestCaseTest extends AdServicesMockitoTestCa
     @Test
     public void testMockFlags() {
         expect.withMessage("mMockFlags").that(mMockFlags).isNotNull();
+        expect.withMessage("mMockFlags is a mock").that(isMock(mMockFlags)).isTrue();
         expect.withMessage("mMockDebugFlags").that(mMockDebugFlags).isNotNull();
+        expect.withMessage("mMockDebugFlags is a mock").that(isMock(mMockDebugFlags)).isTrue();
     }
 
     @Test

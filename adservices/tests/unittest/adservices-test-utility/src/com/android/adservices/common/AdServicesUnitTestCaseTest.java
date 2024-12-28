@@ -15,6 +15,8 @@
  */
 package com.android.adservices.common;
 
+import static com.android.adservices.shared.testing.mockito.MockitoHelper.isMock;
+
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import org.junit.Test;
@@ -34,5 +36,14 @@ public final class AdServicesUnitTestCaseTest extends AdServicesUnitTestCase {
         assertWithMessage("mAppContext")
                 .that(mAppContext)
                 .isEqualTo(mContext.getApplicationContext());
+    }
+
+    @Test
+    public void testFlagsRelatedAttributes() {
+        assertWithMessage("flags").that(flags).isNotNull();
+        expect.withMessage("flags.getFlags()").that(flags.getFlags()).isNotNull();
+
+        assertWithMessage("mMockFlags").that(mMockFlags).isNotNull();
+        expect.withMessage("mMockFlags is a mock").that(isMock(mMockFlags)).isTrue();
     }
 }

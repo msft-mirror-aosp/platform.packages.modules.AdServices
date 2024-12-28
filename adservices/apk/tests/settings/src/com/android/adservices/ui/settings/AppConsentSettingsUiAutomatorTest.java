@@ -42,7 +42,6 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
 import com.android.adservices.common.annotations.SetAllLogcatTags;
@@ -58,7 +57,6 @@ import com.android.compatibility.common.util.ShellUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 
 @DisableGlobalKillSwitch
@@ -80,9 +78,6 @@ public final class AppConsentSettingsUiAutomatorTest extends AdservicesSettingsU
     private int mUserId;
 
     private String mTestName;
-
-    @Rule(order = 5)
-    public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.newInstance();
 
     @Before
     public void setup() throws UiObjectNotFoundException {

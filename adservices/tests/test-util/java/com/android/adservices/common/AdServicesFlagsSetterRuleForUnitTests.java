@@ -57,7 +57,7 @@ import java.util.function.Consumer;
  * @param <R> concrete rule implementation
  * @param <F> type of flags implementation used by the rule.
  */
-abstract class AdServicesFlagsSetterRuleForUnitTests<
+public abstract class AdServicesFlagsSetterRuleForUnitTests<
                 R extends AdServicesFlagsSetterRuleForUnitTests<R>>
         extends AbstractAdServicesFlagsSetterRule<R> {
 

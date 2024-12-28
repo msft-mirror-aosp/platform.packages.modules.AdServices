@@ -34,7 +34,6 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 
-import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.AdDataConversionStrategy;
@@ -52,7 +51,6 @@ import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -108,8 +106,6 @@ public final class CustomAudienceImplTest extends AdServicesMockitoTestCase {
     @Mock private Clock mClockMock;
     @Mock private ComponentAdsStrategy mComponentAdsStrategyMock;
 
-    // TODO(b/384798806): move to superclass
-    @Rule public final AdServicesFakeFlagsSetterRule flags = new AdServicesFakeFlagsSetterRule();
     // TODO(b/384949821): move to superclass
     private final Flags mFakeFlags = flags.getFlags();
 

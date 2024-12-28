@@ -40,7 +40,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.util.Log;
 
-import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.common.AdServicesJobServiceTestCase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsConstants;
@@ -61,7 +60,6 @@ import com.google.common.util.concurrent.FluentFuture;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -94,10 +92,6 @@ public final class PeriodicEncodingJobServiceTest extends AdServicesJobServiceTe
     @Mock private PeriodicEncodingJobWorker mMockPeriodicEncodingJobWorker;
     @Mock private JobParameters mMockJobParameters;
     @Mock private ConsentManager mMockConsentManager;
-
-    // TODO(b/384798806): move to superclass (but first must fix rule so it doesn't throw a
-    // TestFailure when test fail without setting any flag, as that would be misleading)
-    @Rule public final AdServicesFakeFlagsSetterRule flags = new AdServicesFakeFlagsSetterRule();
 
     // TODO(b/384949821): move to superclass
     private final Flags mFakeFlags = flags.getFlags();

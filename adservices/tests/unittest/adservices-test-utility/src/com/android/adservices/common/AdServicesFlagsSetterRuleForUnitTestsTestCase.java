@@ -58,11 +58,7 @@ abstract class AdServicesFlagsSetterRuleForUnitTestsTestCase<
         Description description =
                 Description.createTestDescription(
                         AClassSetsAllDefaultFledgeTags.class, "butItHasATest");
-        onTest(
-                description,
-                (rule, flags) -> {
-                    assertDefaultFledgeFlags(flags);
-                });
+        onTest(description, (rule, flags) -> assertDefaultFledgeFlags(flags));
     }
 
     private void assertDefaultFledgeFlags(Flags flags) {
