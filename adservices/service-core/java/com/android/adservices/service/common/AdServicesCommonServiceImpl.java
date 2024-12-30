@@ -17,7 +17,13 @@
 package com.android.adservices.service.common;
 
 import static android.adservices.common.AdServicesCommonManager.MODULE_MEASUREMENT;
+import static android.adservices.common.AdServicesCommonManager.MODULE_ON_DEVICE_PERSONALIZATION;
+import static android.adservices.common.AdServicesCommonManager.MODULE_PROTECTED_APP_SIGNALS;
+import static android.adservices.common.AdServicesCommonManager.MODULE_PROTECTED_AUDIENCE;
 import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_ENABLED;
+import static android.adservices.common.AdServicesCommonManager.MODULE_TOPICS;
+import static android.adservices.common.AdServicesCommonManager.NOTIFICATION_NONE;
+import static android.adservices.common.AdServicesCommonManager.NOTIFICATION_ONGOING;
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN;
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE;
@@ -55,7 +61,6 @@ import static com.android.adservices.service.ui.constants.DebugMessages.SET_AD_S
 import static com.android.adservices.service.ui.constants.DebugMessages.UNAUTHORIZED_CALLER_MESSAGE;
 
 import android.adservices.adid.AdId;
-import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStates;
 import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesModuleUserChoice;
@@ -107,6 +112,7 @@ import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.shared.util.Clock;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -560,57 +566,103 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         SparseIntArray moduleStates = updateParams.getModuleStates();
         int notificationType = updateParams.getNotificationType();
         ConsentManager consentManager = ConsentManager.getInstance();
-        boolean apiDiff = false;
-        boolean personalizedAdsApiDiff = false;
-        boolean isRenotify = false;
-        boolean isOptedInPersonalizedAdsApisUser = false;
-        boolean isVisibleNotificationType =
-                notificationType != AdServicesCommonManager.NOTIFICATION_NONE;
+        boolean hasAnyModuleStateChanges = false;
+        boolean isPersonalizationBeingEnabled = false;
+        boolean anyUserChoicesKnown = false;
+        boolean isAnyToggleOnForAnyNewModule = false;
+        boolean hasExistingPersonalization = false;
+        boolean isVisibleNotificationType = notificationType != NOTIFICATION_NONE;
+        boolean isOngoingNotificationType = notificationType == NOTIFICATION_ONGOING;
 
+        // determine conditions
+        for (int i = 0; i < moduleStates.size(); i++) {
+            int module = moduleStates.keyAt(i);
+            int desiredState = moduleStates.valueAt(i);
+            int curState = consentManager.getModuleState(module);
+            int curUserChoice = consentManager.getUserChoice(module);
+
+            if (curState != desiredState
+                    && desiredState == MODULE_STATE_ENABLED
+                    && module != MODULE_MEASUREMENT) {
+                isPersonalizationBeingEnabled = true;
+            }
+            if (curState != desiredState) {
+                hasAnyModuleStateChanges = true;
+            }
+            if (curUserChoice != USER_CHOICE_UNKNOWN) {
+                anyUserChoicesKnown = true;
+            }
+            if (isAnyToggleOnForNewModule(consentManager, module, curState, desiredState)) {
+                isAnyToggleOnForAnyNewModule = true;
+            }
+            if (module != MODULE_MEASUREMENT && curState == MODULE_STATE_ENABLED) {
+                hasExistingPersonalization = true;
+            }
+        }
+
+        // determine all cases that require a notification
+        boolean isFirstTimeNotification =
+                isVisibleNotificationType && isPersonalizationBeingEnabled && !anyUserChoicesKnown;
+        boolean isValidRenotifyWithExistingPersonalization =
+                isVisibleNotificationType
+                        && isPersonalizationBeingEnabled
+                        && isAnyToggleOnForAnyNewModule
+                        && hasExistingPersonalization;
+        boolean isLimitedNotification =
+                isVisibleNotificationType
+                        && !isPersonalizationBeingEnabled
+                        && hasAnyModuleStateChanges;
+
+        // schedule a notification if required
+        if (isFirstTimeNotification
+                || isValidRenotifyWithExistingPersonalization
+                || isLimitedNotification) {
+            ConsentNotificationJobService.scheduleNotificationV2(
+                    mContext,
+                    anyUserChoicesKnown,
+                    isPersonalizationBeingEnabled,
+                    isOngoingNotificationType);
+        }
+
+        // reset any user choices of disabled modules
+        List<AdServicesModuleUserChoice> adServicesUserChoiceList = new ArrayList<>();
         for (int i = 0; i < moduleStates.size(); i++) {
             int key = moduleStates.keyAt(i);
             int value = moduleStates.valueAt(i);
-            int curState = consentManager.getModuleState(key);
-            if (curState != value) {
-                apiDiff = true;
-                if (key != MODULE_MEASUREMENT) {
-                    personalizedAdsApiDiff = true;
-                    if (consentManager.getUserChoice(key) == USER_CHOICE_OPTED_IN) {
-                        isOptedInPersonalizedAdsApisUser = true;
-                    }
-                }
-                if (consentManager.getUserChoice(key) != USER_CHOICE_UNKNOWN) {
-                    isRenotify = true;
-                }
+            if (value != MODULE_STATE_ENABLED) {
+                adServicesUserChoiceList.add(
+                        new AdServicesModuleUserChoice(key, USER_CHOICE_UNKNOWN));
             }
         }
+        consentManager.setUserChoices(adServicesUserChoiceList);
 
-        // Only need notification if APIs changed. Enabling personalized ads APIs requires the full
-        // notification. Otherwise, show limited notification. If user previously opted-out of all
-        // personalized APIs, then don't show notification.
-        if (apiDiff
-                && isVisibleNotificationType
-                && !(personalizedAdsApiDiff && isOptedInPersonalizedAdsApisUser)) {
-            boolean isOngoingNotification =
-                    notificationType == AdServicesCommonManager.NOTIFICATION_ONGOING;
-            // TODO(b/383589378): Reset user choices to unknown for unknown/disabled module states
-            //  after notification is shown.
-            ConsentNotificationJobService.scheduleNotificationV2(
-                    mContext, isRenotify, personalizedAdsApiDiff, isOngoingNotification);
-        } else {
-            List<AdServicesModuleUserChoice> adServicesUserChoiceList = new ArrayList<>();
-            for (int i = 0; i < moduleStates.size(); i++) {
-                int key = moduleStates.keyAt(i);
-                int value = moduleStates.valueAt(i);
-                if (value != MODULE_STATE_ENABLED) {
-                    adServicesUserChoiceList.add(
-                            new AdServicesModuleUserChoice(key, USER_CHOICE_UNKNOWN));
-                }
-            }
-            consentManager.setUserChoices(adServicesUserChoiceList);
+        // finally, set the module state
+        boolean isPersonalizationEnabledFirstTimeForExistingUser =
+                anyUserChoicesKnown && isPersonalizationBeingEnabled && !hasExistingPersonalization;
+        if (isPersonalizationEnabledFirstTimeForExistingUser) {
+            // if existing user having personalization being enabled for first time, then skip as
+            // this is currently not allowed
+            return;
         }
-
         consentManager.setModuleStates(moduleStates);
+    }
+
+    private static boolean isAnyToggleOnForNewModule(
+            ConsentManager consentManager, int module, int curState, int desiredState) {
+        if (desiredState == curState || desiredState != MODULE_STATE_ENABLED) {
+            // same state OR not being enabled, therefore is not a new module being introduced
+            return false;
+        }
+        Map<Integer, int[]> moduleToToggleMap =
+                Map.of(
+                        MODULE_MEASUREMENT, new int[] {MODULE_MEASUREMENT},
+                        MODULE_PROTECTED_AUDIENCE, new int[] {MODULE_PROTECTED_AUDIENCE},
+                        MODULE_TOPICS, new int[] {MODULE_TOPICS},
+                        MODULE_PROTECTED_APP_SIGNALS, new int[] {MODULE_PROTECTED_AUDIENCE},
+                        MODULE_ON_DEVICE_PERSONALIZATION,
+                                new int[] {MODULE_PROTECTED_AUDIENCE, MODULE_MEASUREMENT});
+        return Arrays.stream(moduleToToggleMap.getOrDefault(module, new int[] {}))
+                .anyMatch(toggle -> consentManager.getUserChoice(toggle) == USER_CHOICE_OPTED_IN);
     }
 
     /** Sets AdServices feature user choices. */
