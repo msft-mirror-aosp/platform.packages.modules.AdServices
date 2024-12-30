@@ -2498,14 +2498,6 @@ public final class ConsentManager {
             }
             case FLEDGE -> {
                 userChoices.add(new AdServicesModuleUserChoice(PROTECTED_AUDIENCE, userChoice));
-                if (mFlags.getPasUxEnabled() || mFlags.getEeaPasUxEnabled()) {
-                    userChoices.add(
-                            new AdServicesModuleUserChoice(PROTECTED_APP_SIGNALS, userChoice));
-                    userChoices.add(
-                            new AdServicesModuleUserChoice(ON_DEVICE_PERSONALIZATION, userChoice));
-                    // set in case flag is ramped down, so legacy logic will still work
-                    recordPasNotificationOpened(true);
-                }
             }
             case MEASUREMENTS -> {
                 userChoices.add(new AdServicesModuleUserChoice(MEASUREMENT, userChoice));
@@ -2611,10 +2603,10 @@ public final class ConsentManager {
     }
 
     /**
-     * get pas consent for fledge, pasUxEnable flag has checked iseea, thus we don't need to check
-     * this again
+     * Gets PAS consent for fledge, pasUxEnable flag has checked is eea, thus we don't need to check
+     * this again.
      */
-    public boolean isPasFledgeConsentGiven() {
+    public boolean isPasConsentGiven() {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().isPasFledgeConsentGiven();
         }
@@ -2622,8 +2614,8 @@ public final class ConsentManager {
             return true;
         }
         if (mFlags.getAdServicesConsentBusinessLogicMigrationEnabled()) {
-            return (mFlags.getPasUxEnabled() || mFlags.getEeaPasUxEnabled())
-                    && getConsent(AdServicesApiType.FLEDGE).isGiven();
+            return getUserChoice(PROTECTED_AUDIENCE) == USER_CHOICE_OPTED_IN
+                    && getUserChoice(PROTECTED_APP_SIGNALS) == USER_CHOICE_OPTED_IN;
         }
         if (mFlags.getEeaPasUxEnabled()) {
             if (DeviceRegionProvider.isEuDevice(ApplicationContextSingleton.get())) {
@@ -2636,13 +2628,43 @@ public final class ConsentManager {
                 && getConsent(AdServicesApiType.FLEDGE).isGiven();
     }
 
-    /** get pas conset for measurement */
-    public boolean isPasMeasurementConsentGiven() {
+    /**
+     * Gets ODP consent for fledge, pasUxEnable flag has checked is eea, thus we don't need to check
+     * this again.
+     */
+    public boolean isOdpFledgeConsentGiven() {
+        if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
+            return ConsentManagerV2.getInstance().isPasFledgeConsentGiven();
+        }
+        if (mDebugFlags.getConsentManagerDebugMode()) {
+            return true;
+        }
+        if (mFlags.getAdServicesConsentBusinessLogicMigrationEnabled()) {
+            return getUserChoice(PROTECTED_AUDIENCE) == USER_CHOICE_OPTED_IN
+                    && getUserChoice(ON_DEVICE_PERSONALIZATION) == USER_CHOICE_OPTED_IN;
+        }
+        if (mFlags.getEeaPasUxEnabled()) {
+            if (DeviceRegionProvider.isEuDevice(ApplicationContextSingleton.get())) {
+                return wasPasNotificationOpened() && getConsent(AdServicesApiType.FLEDGE).isGiven();
+            }
+        }
+
+        return mFlags.getPasUxEnabled()
+                && wasPasNotificationDisplayed()
+                && getConsent(AdServicesApiType.FLEDGE).isGiven();
+    }
+
+    /** Gets ODP consent for measurement. */
+    public boolean isOdpMeasurementConsentGiven() {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
             return ConsentManagerV2.getInstance().isPasMeasurementConsentGiven();
         }
         if (mDebugFlags.getConsentManagerDebugMode()) {
             return true;
+        }
+        if (mFlags.getAdServicesConsentBusinessLogicMigrationEnabled()) {
+            return getUserChoice(MEASUREMENT) == USER_CHOICE_OPTED_IN
+                    && getUserChoice(ON_DEVICE_PERSONALIZATION) == USER_CHOICE_OPTED_IN;
         }
         if (mFlags.getEeaPasUxEnabled()) {
             if (DeviceRegionProvider.isEuDevice(ApplicationContextSingleton.get())) {

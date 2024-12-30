@@ -260,7 +260,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilterSpy,
                         mFledgeApiThrottleFilterMock);
-        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
+        when(mConsentManagerMock.isPasConsentGiven()).thenReturn(true);
 
         doReturn(DevContext.createForDevOptionsDisabled())
                 .when(mDevContextFilterMock)

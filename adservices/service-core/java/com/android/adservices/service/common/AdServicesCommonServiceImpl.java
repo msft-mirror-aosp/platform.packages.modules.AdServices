@@ -736,7 +736,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     private @ConsentStatus.ConsentStatusCode int getConsentStatus(
             ConsentManager consentManager, AdServicesApiType apiType) {
         if (apiType == AdServicesApiType.FLEDGE) {
-            if (consentManager.isPasFledgeConsentGiven()) {
+            if (consentManager.isOdpFledgeConsentGiven()) {
                 if (consentManager.isPaDataReset()) {
                     return ConsentStatus.WAS_RESET;
                 }
@@ -745,7 +745,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             return ConsentStatus.REVOKED;
         }
         if (apiType == AdServicesApiType.MEASUREMENTS) {
-            if (consentManager.isPasMeasurementConsentGiven()) {
+            if (consentManager.isOdpMeasurementConsentGiven()) {
                 if (consentManager.isMeasurementDataReset()) {
                     return ConsentStatus.WAS_RESET;
                 }

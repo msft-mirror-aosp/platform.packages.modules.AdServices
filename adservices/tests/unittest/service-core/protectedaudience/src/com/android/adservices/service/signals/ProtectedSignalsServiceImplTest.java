@@ -171,7 +171,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                 .thenReturn(ADTECH);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
                 .thenReturn(false);
-        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
+        when(mConsentManagerMock.isPasConsentGiven()).thenReturn(true);
         SettableFuture<Object> emptyReturn = SettableFuture.create();
         emptyReturn.set(new Object());
         when(mUpdateSignalsOrchestratorMock.orchestrateUpdate(
@@ -538,7 +538,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
                 .thenReturn(true);
         // Seen the PAS notification
-        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
+        when(mConsentManagerMock.isPasConsentGiven()).thenReturn(true);
 
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
         verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED, PACKAGE);
@@ -558,7 +558,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
                 .thenReturn(false);
         // Not seen the PAS notification
-        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(false);
+        when(mConsentManagerMock.isPasConsentGiven()).thenReturn(false);
 
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
         verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED, PACKAGE);
@@ -578,7 +578,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
                 .thenReturn(true);
         // Revokes PAS consent
-        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(false);
+        when(mConsentManagerMock.isPasConsentGiven()).thenReturn(false);
 
         mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
         verifyUpdateSignalsApiUsageLog(AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED, PACKAGE);
