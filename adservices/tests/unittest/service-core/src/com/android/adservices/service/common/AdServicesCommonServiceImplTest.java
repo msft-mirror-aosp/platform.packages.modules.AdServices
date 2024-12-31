@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_DISABLED;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_ENABLED;
+import static android.adservices.common.AdServicesCommonManager.NOTIFICATION_ONGOING;
+import static android.adservices.common.AdServicesCommonManager.NOTIFICATION_REGULAR;
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN;
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT;
 import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN;
@@ -24,6 +28,8 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+import static android.adservices.common.Module.PROTECTED_APP_SIGNALS;
+import static android.adservices.common.Module.PROTECTED_AUDIENCE;
 
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_DISABLE;
 import static com.android.adservices.data.common.AdservicesEntryPointConstant.ADSERVICES_ENTRY_POINT_STATUS_ENABLE;
@@ -50,7 +56,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
 
-import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesCommonStatesResponse;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesStates;
@@ -68,6 +73,7 @@ import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
 import android.adservices.common.Module;
 import android.adservices.common.NotificationType;
+import android.adservices.common.NotificationType.NotificationTypeCode;
 import android.adservices.common.UpdateAdIdRequest;
 import android.adservices.common.UpdateAdServicesModuleStatesParams;
 import android.adservices.common.UpdateAdServicesUserChoicesParams;
@@ -998,64 +1004,385 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     }
 
     @Test
-    public void testRequestAdServicesModuleOverrides() throws Exception {
+    public void testRequestAdServicesModuleOverrides_GaAlreadyEnrolled() {
+        requestAdServicesModuleOverridesHelper(
+                new int[] {
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED
+                },
+                new int[] {
+                    USER_CHOICE_OPTED_IN,
+                    USER_CHOICE_OPTED_IN,
+                    USER_CHOICE_UNKNOWN,
+                    USER_CHOICE_OPTED_IN,
+                    USER_CHOICE_UNKNOWN
+                },
+                new int[] {
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED
+                },
+                NOTIFICATION_REGULAR,
+                false,
+                new boolean[] {false, true, false});
+    }
+
+    @Test
+    public void testRequestAdServicesModuleOverrides_PasAlreadyEnrolled() {
+        requestAdServicesModuleOverridesHelper(
+                new int[] {
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED
+                },
+                new int[] {
+                    USER_CHOICE_OPTED_IN,
+                    USER_CHOICE_OPTED_IN,
+                    USER_CHOICE_OPTED_IN,
+                    USER_CHOICE_OPTED_IN,
+                    USER_CHOICE_OPTED_IN
+                },
+                new int[] {
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED
+                },
+                NOTIFICATION_REGULAR,
+                false,
+                new boolean[] {false, true, false});
+    }
+
+    @Test
+    public void testRequestAdServicesModuleOverrides_GaFirstTimeReg() {
+        requestAdServicesModuleOverridesHelper(
+                new int[] {
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_DISABLED
+                },
+                new int[] {
+                    USER_CHOICE_UNKNOWN,
+                    USER_CHOICE_UNKNOWN,
+                    USER_CHOICE_UNKNOWN,
+                    USER_CHOICE_UNKNOWN,
+                    USER_CHOICE_UNKNOWN
+                },
+                new int[] {
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED
+                },
+                NOTIFICATION_REGULAR,
+                true,
+                new boolean[] {false, true, false});
+    }
+
+    @Test
+    public void testRequestAdServicesModuleOverrides_PasRenotifyRegAllOptIn() {
+        requestAdServicesModuleOverridesHelper(
+                new int[] {
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED
+                },
+                new int[] {
+                    USER_CHOICE_OPTED_IN,
+                    USER_CHOICE_OPTED_IN,
+                    USER_CHOICE_UNKNOWN,
+                    USER_CHOICE_OPTED_IN,
+                    USER_CHOICE_UNKNOWN
+                },
+                new int[] {
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED
+                },
+                NOTIFICATION_REGULAR,
+                true,
+                new boolean[] {true, true, false});
+    }
+
+    @Test
+    public void testRequestAdServicesModuleOverrides_PasRenotifyRegSomeOptIn() {
+        requestAdServicesModuleOverridesHelper(
+                new int[] {
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED
+                },
+                new int[] {
+                    USER_CHOICE_OPTED_IN,
+                    USER_CHOICE_OPTED_OUT,
+                    USER_CHOICE_UNKNOWN,
+                    USER_CHOICE_OPTED_IN,
+                    USER_CHOICE_UNKNOWN
+                },
+                new int[] {
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED
+                },
+                NOTIFICATION_REGULAR,
+                true,
+                new boolean[] {true, true, false});
+    }
+
+    @Test
+    public void testRequestAdServicesModuleOverrides_PasRenotifyOngoingSomeOptIn() {
+        requestAdServicesModuleOverridesHelper(
+                new int[] {
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED
+                },
+                new int[] {
+                    USER_CHOICE_OPTED_IN,
+                    USER_CHOICE_OPTED_OUT,
+                    USER_CHOICE_UNKNOWN,
+                    USER_CHOICE_OPTED_IN,
+                    USER_CHOICE_UNKNOWN
+                },
+                new int[] {
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED
+                },
+                NOTIFICATION_ONGOING,
+                true,
+                new boolean[] {true, true, true});
+    }
+
+    @Test
+    public void testRequestAdServicesModuleOverrides_PasRenotifyRegAllOptOut() {
+        requestAdServicesModuleOverridesHelper(
+                new int[] {
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED
+                },
+                new int[] {
+                    USER_CHOICE_OPTED_OUT,
+                    USER_CHOICE_OPTED_OUT,
+                    USER_CHOICE_UNKNOWN,
+                    USER_CHOICE_OPTED_OUT,
+                    USER_CHOICE_UNKNOWN
+                },
+                new int[] {
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED
+                },
+                NOTIFICATION_REGULAR,
+                false,
+                new boolean[] {true, true, false});
+    }
+
+    @Test
+    public void testRequestAdServicesModuleOverrides_MsmtOnlyFirstTime() {
+        requestAdServicesModuleOverridesHelper(
+                new int[] {
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_DISABLED
+                },
+                new int[] {
+                    USER_CHOICE_UNKNOWN,
+                    USER_CHOICE_UNKNOWN,
+                    USER_CHOICE_UNKNOWN,
+                    USER_CHOICE_UNKNOWN,
+                    USER_CHOICE_UNKNOWN
+                },
+                new int[] {
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_DISABLED
+                },
+                NOTIFICATION_REGULAR,
+                true,
+                new boolean[] {false, false, false});
+    }
+
+    @Test
+    public void testRequestAdServicesModuleOverrides_MsmtOnlyDetention() {
+        requestAdServicesModuleOverridesHelper(
+                new int[] {
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED
+                },
+                new int[] {
+                    USER_CHOICE_OPTED_IN,
+                    USER_CHOICE_OPTED_IN,
+                    USER_CHOICE_UNKNOWN,
+                    USER_CHOICE_OPTED_IN,
+                    USER_CHOICE_UNKNOWN
+                },
+                new int[] {
+                    MODULE_STATE_ENABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_DISABLED,
+                    MODULE_STATE_DISABLED
+                },
+                NOTIFICATION_REGULAR,
+                true,
+                new boolean[] {true, false, false});
+    }
+
+    /**
+     * Ordering of modules: {MSMT, PA, PAS, TOPICS, ODP} Ordering of notification booleans:
+     * {isRenotify, isNewAdPersonalizationModuleEnabled, isOngoingNotification}
+     */
+    private void requestAdServicesModuleOverridesHelper(
+            int[] curStates,
+            int[] userChoices,
+            int[] desiredStates,
+            @NotificationTypeCode int notificationType,
+            boolean expectNotification,
+            boolean[] expectedBooleans) {
+        try {
+            requestAdServicesModuleOverridesHelper(
+                    toSparseIntArray(curStates),
+                    toSparseIntArray(userChoices),
+                    toSparseIntArray(desiredStates),
+                    notificationType,
+                    expectNotification,
+                    expectedBooleans);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private SparseIntArray toSparseIntArray(int[] array) {
+        SparseIntArray sparseArray = new SparseIntArray(array.length);
+        for (int i = 0; i < array.length; i++) {
+            if (array[i] < 0) {
+                continue;
+            }
+            sparseArray.put(i, array[i]);
+        }
+        return sparseArray;
+    }
+
+    private void requestAdServicesModuleOverridesHelper(
+            SparseIntArray curStates,
+            SparseIntArray userChoices,
+            SparseIntArray desiredStates,
+            @NotificationTypeCode int notificationType,
+            boolean expectNotification,
+            boolean[] expectedBooleans)
+            throws InterruptedException {
+        // common setup
         doReturn(true).when(mMockFlags).getAdServicesConsentBusinessLogicMigrationEnabled();
         ExtendedMockito.doReturn(true)
                 .when(
                         () ->
                                 PermissionHelper.hasAccessAdServicesCommonStatePermission(
                                         any(), any()));
-
         ExtendedMockito.doReturn(mConsentManager).when(ConsentManager::getInstance);
 
         RequestAdServicesModuleOverridesCallback callback =
                 new RequestAdServicesModuleOverridesCallback(BINDER_CONNECTION_TIMEOUT_MS);
-        UpdateAdServicesModuleStatesParams params =
-                new UpdateAdServicesModuleStatesParams.Builder()
-                        .setModuleState(
-                                Module.PROTECTED_AUDIENCE,
-                                AdServicesCommonManager.MODULE_STATE_ENABLED)
-                        .setModuleState(
-                                Module.PROTECTED_APP_SIGNALS,
-                                AdServicesCommonManager.MODULE_STATE_DISABLED)
-                        .setNotificationType(NotificationType.NOTIFICATION_ONGOING)
-                        .build();
         doNothing()
                 .when(
                         () ->
                                 ConsentNotificationJobService.scheduleNotificationV2(
                                         any(), anyBoolean(), anyBoolean(), anyBoolean()));
+
+        // specific setup
+        for (int i = 0; i < userChoices.size(); i++) {
+            int module = userChoices.keyAt(i);
+            int userChoice = userChoices.valueAt(i);
+            doReturn(userChoice).when(mConsentManager).getUserChoice(module);
+        }
+        for (int i = 0; i < curStates.size(); i++) {
+            int module = curStates.keyAt(i);
+            int state = curStates.valueAt(i);
+            doReturn(state).when(mConsentManager).getModuleState(module);
+        }
+
+        // specific inputs
+        UpdateAdServicesModuleStatesParams.Builder builder =
+                new UpdateAdServicesModuleStatesParams.Builder();
+        for (int i = 0; i < desiredStates.size(); i++) {
+            int module = desiredStates.keyAt(i);
+            int state = desiredStates.valueAt(i);
+            builder.setModuleState(module, state);
+        }
+        builder.setNotificationType(notificationType);
+        UpdateAdServicesModuleStatesParams params = builder.build();
+
+        // make call
         mCommonService.requestAdServicesModuleOverrides(params, callback);
 
+        // common checks
         callback.assertSuccess();
         verify(mConsentManager, atLeastOnce())
                 .setModuleStates(mAdservicesModuleStatesArgumentCaptor.capture());
-        SparseIntArray moduleStates = mAdservicesModuleStatesArgumentCaptor.getValue();
-        assertThat(moduleStates.size()).isEqualTo(2);
-        boolean isPaAvailable = false;
-        boolean isPasAvailable = false;
-        for (int i = 0; i < moduleStates.size(); i++) {
-            int key = moduleStates.keyAt(i);
-            int value = moduleStates.valueAt(i);
-            switch (key) {
-                case Module.PROTECTED_AUDIENCE:
-                    isPaAvailable = true;
-                    expect.withMessage("module: PROTECTED_AUDIENCE")
-                            .that(value)
-                            .isEqualTo(AdServicesCommonManager.MODULE_STATE_ENABLED);
-                    break;
-                case Module.PROTECTED_APP_SIGNALS:
-                    isPasAvailable = true;
-                    expect.withMessage("module: PROTECTED_APP_SIGNALS")
-                            .that(value)
-                            .isEqualTo(AdServicesCommonManager.MODULE_STATE_DISABLED);
-                    break;
-                default:
-                    break;
-            }
+
+        // specific checks
+        SparseIntArray actualModuleStates = mAdservicesModuleStatesArgumentCaptor.getValue();
+        assertThat(actualModuleStates.size()).isEqualTo(desiredStates.size());
+        for (int i = 0; i < actualModuleStates.size(); i++) {
+            int module = actualModuleStates.keyAt(i);
+            int actualState = actualModuleStates.valueAt(i);
+            int expectedState = desiredStates.get(module);
+
+            expect.withMessage("state for module:" + module)
+                    .that(actualState)
+                    .isEqualTo(expectedState);
         }
-        expect.withMessage("isPaAvailable").that(isPaAvailable).isTrue();
-        expect.withMessage("isPasAvailable").that(isPasAvailable).isTrue();
+        if (expectNotification) {
+            ExtendedMockito.verify(
+                    () ->
+                            ConsentNotificationJobService.scheduleNotificationV2(
+                                    any(),
+                                    eq(expectedBooleans[0]),
+                                    eq(expectedBooleans[1]),
+                                    eq(expectedBooleans[2])),
+                    times(1));
+        } else {
+            ExtendedMockito.verify(
+                    () ->
+                            ConsentNotificationJobService.scheduleNotificationV2(
+                                    any(), anyBoolean(), anyBoolean(), anyBoolean()),
+                    never());
+        }
     }
 
     @Test
@@ -1073,12 +1400,8 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new RequestAdServicesModuleOverridesCallback(BINDER_CONNECTION_TIMEOUT_MS);
         UpdateAdServicesModuleStatesParams params =
                 new UpdateAdServicesModuleStatesParams.Builder()
-                        .setModuleState(
-                                Module.PROTECTED_AUDIENCE,
-                                AdServicesCommonManager.MODULE_STATE_ENABLED)
-                        .setModuleState(
-                                Module.PROTECTED_APP_SIGNALS,
-                                AdServicesCommonManager.MODULE_STATE_DISABLED)
+                        .setModuleState(PROTECTED_AUDIENCE, MODULE_STATE_ENABLED)
+                        .setModuleState(PROTECTED_APP_SIGNALS, MODULE_STATE_DISABLED)
                         .setNotificationType(NotificationType.NOTIFICATION_ONGOING)
                         .build();
         doNothing()
@@ -1107,8 +1430,8 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
 
         UpdateAdServicesUserChoicesParams params =
                 new UpdateAdServicesUserChoicesParams.Builder()
-                        .setUserChoice(Module.PROTECTED_AUDIENCE, USER_CHOICE_OPTED_IN)
-                        .setUserChoice(Module.PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_OUT)
+                        .setUserChoice(PROTECTED_AUDIENCE, USER_CHOICE_OPTED_IN)
+                        .setUserChoice(PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_OUT)
                         .build();
         mCommonService.requestAdServicesModuleUserChoices(params, callback);
         callback.assertSuccess();
@@ -1121,13 +1444,13 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         boolean isPasAvailable = false;
         for (AdServicesModuleUserChoice userChoice : userChoiceList) {
             switch (userChoice.getModule()) {
-                case Module.PROTECTED_AUDIENCE:
+                case PROTECTED_AUDIENCE:
                     isPaAvailable = true;
                     expect.withMessage("state.getModule(): PROTECTED_AUDIENCE")
                             .that(userChoice.getUserChoice())
                             .isEqualTo(USER_CHOICE_OPTED_IN);
                     break;
-                case Module.PROTECTED_APP_SIGNALS:
+                case PROTECTED_APP_SIGNALS:
                     isPasAvailable = true;
                     expect.withMessage("state.getModule(): PROTECTED_APP_SIGNALS")
                             .that(userChoice.getUserChoice())
@@ -1156,10 +1479,9 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         UpdateAdServicesUserChoicesParams params =
                 new UpdateAdServicesUserChoicesParams.Builder()
                         .setUserChoice(
-                                Module.PROTECTED_AUDIENCE,
-                                AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN)
+                                PROTECTED_AUDIENCE, AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN)
                         .setUserChoice(
-                                Module.PROTECTED_APP_SIGNALS,
+                                PROTECTED_APP_SIGNALS,
                                 AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT)
                         .build();
         mCommonService.requestAdServicesModuleUserChoices(params, callback);
@@ -1176,12 +1498,8 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                                 PermissionHelper.hasAccessAdServicesCommonStatePermission(
                                         any(), any()));
         ExtendedMockito.doReturn(mConsentManager).when(ConsentManager::getInstance);
-        doReturn(USER_CHOICE_UNKNOWN)
-                .when(mConsentManager)
-                .getUserChoice(Module.PROTECTED_AUDIENCE);
-        doReturn(USER_CHOICE_OPTED_OUT)
-                .when(mConsentManager)
-                .getUserChoice(Module.PROTECTED_APP_SIGNALS);
+        doReturn(USER_CHOICE_UNKNOWN).when(mConsentManager).getUserChoice(PROTECTED_AUDIENCE);
+        doReturn(USER_CHOICE_OPTED_OUT).when(mConsentManager).getUserChoice(PROTECTED_APP_SIGNALS);
         doReturn(USER_CHOICE_OPTED_IN).when(mConsentManager).getUserChoice(Module.MEASUREMENT);
 
         RequestAdServicesModuleUserChoicesCallback callback =
@@ -1189,8 +1507,8 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
 
         UpdateAdServicesUserChoicesParams params =
                 new UpdateAdServicesUserChoicesParams.Builder()
-                        .setUserChoice(Module.PROTECTED_AUDIENCE, USER_CHOICE_OPTED_IN)
-                        .setUserChoice(Module.PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_IN)
+                        .setUserChoice(PROTECTED_AUDIENCE, USER_CHOICE_OPTED_IN)
+                        .setUserChoice(PROTECTED_APP_SIGNALS, USER_CHOICE_OPTED_IN)
                         .setUserChoice(Module.MEASUREMENT, USER_CHOICE_UNKNOWN)
                         .build();
         mCommonService.requestAdServicesModuleUserChoices(params, callback);
@@ -1205,10 +1523,10 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         boolean isMsmtReset = false;
         for (AdServicesModuleUserChoice userChoice : userChoiceList) {
             switch (userChoice.getModule()) {
-                case Module.PROTECTED_AUDIENCE:
+                case PROTECTED_AUDIENCE:
                     isPaOptedIn = userChoice.getUserChoice() == USER_CHOICE_OPTED_IN;
                     break;
-                case Module.PROTECTED_APP_SIGNALS:
+                case PROTECTED_APP_SIGNALS:
                     fail("PROTECTED_APP_SIGNALS should not be set");
                     break;
                 case Module.MEASUREMENT:
