@@ -397,7 +397,7 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                 // For UX notification or Privacy Sandbox opt-out failures, see the consent check in
                 // the service filter
                 // TODO (b/327187357): Move per-API/per-app consent into the filter
-                if (mConsentManager.isPasFledgeConsentGiven()) {
+                if (mConsentManager.isPasConsentGiven()) {
                     if (!mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
                             input.getCallerPackageName())) {
                         sLogger.v("Orchestrating signal update");

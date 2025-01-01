@@ -19,6 +19,7 @@ package com.android.adservices.data.signals;
 import static com.android.adservices.data.signals.EncoderLogicHandler.EMPTY_ADTECH_ID;
 import static com.android.adservices.data.signals.EncoderLogicHandler.ENCODER_VERSION_RESPONSE_HEADER;
 import static com.android.adservices.data.signals.EncoderLogicHandler.FALLBACK_VERSION;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_INVALID_OR_MISSING_ENCODER_VERSION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_UPDATE_FOR_ENCODING_LOGIC_ON_PERSISTENCE_LAYER_FAILED;
@@ -55,6 +56,7 @@ import com.android.adservices.service.stats.pas.EncodingFetchStats;
 import com.android.adservices.service.stats.pas.EncodingJsFetchProcessLoggerImpl;
 import com.android.adservices.shared.testing.BooleanSyncCallback;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
@@ -83,6 +85,7 @@ import java.util.concurrent.locks.ReentrantLock;
 @SetErrorLogUtilDefaultParams(
         throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
+@SetFlagTrue(KEY_PAS_EXTENDED_METRICS_ENABLED)
 public final class EncoderLogicHandlerTest extends AdServicesExtendedMockitoTestCase {
 
     @Mock private EncoderPersistenceDao mEncoderPersistenceDao;
@@ -99,7 +102,8 @@ public final class EncoderLogicHandlerTest extends AdServicesExtendedMockitoTest
     private final ListeningExecutorService mExecutorService =
             MoreExecutors.newDirectExecutorService();
     private final ExecutorService mService = Executors.newFixedThreadPool(5);
-    private final Flags mFakeFlags = new EncoderLogicHandlerTestFlags();
+    // TODO(b/384949821): move to superclass
+    private final Flags mFakeFlags = flags.getFlags();
 
     private EncoderLogicHandler mEncoderLogicHandler;
 
@@ -394,12 +398,5 @@ public final class EncoderLogicHandlerTest extends AdServicesExtendedMockitoTest
         DBEncoderLogicMetadata metadata = mDBEncoderLogicArgumentCaptor.getValue();
         expect.that(metadata.getBuyer()).isEqualTo(buyer);
         expect.that(metadata.getVersion()).isEqualTo(version);
-    }
-
-    private static final class EncoderLogicHandlerTestFlags implements Flags {
-        @Override
-        public boolean getPasExtendedMetricsEnabled() {
-            return true;
-        }
     }
 }

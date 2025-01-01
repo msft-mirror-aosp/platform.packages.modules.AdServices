@@ -313,7 +313,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                         mFledgeAllowListsFilterSpy,
                         mFledgeApiThrottleFilterMock);
 
-        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
+        when(mConsentManagerMock.isPasConsentGiven()).thenReturn(true);
         doReturn(DevContext.createForDevOptionsDisabled())
                 .when(mDevContextFilterMock)
                 .createDevContext();

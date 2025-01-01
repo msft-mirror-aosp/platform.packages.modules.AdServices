@@ -26,6 +26,12 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CPC_BILLING_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED;
 import static com.android.adservices.service.adselection.AdBidGeneratorImpl.BIDDING_TIMED_OUT;
 import static com.android.adservices.service.adselection.AdBidGeneratorImpl.MISSING_TRUSTED_BIDDING_SIGNALS;
 import static com.android.adservices.service.adselection.DataVersionFetcher.DATA_VERSION_HEADER_KEY;
@@ -104,6 +110,9 @@ import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStats;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.adservices.shared.util.Clock;
 
 import com.google.common.collect.ImmutableList;
@@ -137,6 +146,16 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;
 
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS)
+@SetFlagFalse(KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION,
+        value = JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3)
+@SetFlagTrue(KEY_FLEDGE_CPC_BILLING_METRICS_ENABLED)
+@SetFlagTrue(KEY_FLEDGE_DATA_VERSION_HEADER_METRICS_ENABLED)
+@SetFlagTrue(KEY_FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED)
 public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
     private static final List<Double> BIDS =
             new ArrayList<>(ImmutableList.of(-10.0, 0.0, 1.0, 5.4, -1.0));
@@ -347,7 +366,8 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
     private CustomAudienceBiddingInfo mCustomAudienceBiddingInfo;
     private DevContext mDevContext;
     private CustomAudienceDao mCustomAudienceDao;
-    private Flags mFakeFlags;
+    // TODO(b/384949821): move to superclass
+    private final Flags mFakeFlags = flags.getFlags();
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherExactMatch;
     private IsolateSettings mIsolateSettings;
     private RunAdBiddingPerCAExecutionLogger mRunAdBiddingPerCAExecutionLogger;
@@ -371,7 +391,6 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
 
     @Before
     public void setUp() throws Exception {
-        mFakeFlags = new AdBidGeneratorImplTestFlags();
         mDevContext = DevContext.createForDevOptionsDisabled();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
@@ -1737,15 +1756,9 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @SetLongFlag(name = KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION, value = 2)
     public void testV2BiddingLogicDoesNotAddHeaders_Success() throws Exception {
-        Flags jsVersionV2Flags =
-                new AdBidGeneratorImplTestFlags() {
-                    @Override
-                    public long getFledgeAdSelectionBiddingLogicJsVersion() {
-                        return 2;
-                    }
-                };
-        final Dispatcher versionHeaderFailsDispatcher =
+        Dispatcher versionHeaderFailsDispatcher =
                 new Dispatcher() {
                     @Override
                     public MockResponse dispatch(RecordedRequest request) {
@@ -1772,7 +1785,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
                         mAdSelectionScriptEngine,
                         customAudienceDevOverridesHelper,
                         AD_COUNTER_KEY_COPIER_NO_OP,
-                        jsVersionV2Flags,
+                        mFakeFlags,
                         mIsolateSettings,
                         mJsFetcher,
                         mDebugReporting,
@@ -3464,39 +3477,6 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
             } catch (JSONException e) {
                 return false;
             }
-            return true;
-        }
-    }
-
-    private static class AdBidGeneratorImplTestFlags implements Flags {
-
-        @Override
-        public long getAdSelectionBiddingTimeoutPerCaMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
-        }
-
-        @Override
-        public boolean getFledgeEventLevelDebugReportingEnabled() {
-            return false;
-        }
-
-        @Override
-        public long getFledgeAdSelectionBiddingLogicJsVersion() {
-            return JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3;
-        }
-
-        @Override
-        public boolean getFledgeCpcBillingMetricsEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeDataVersionHeaderMetricsEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeJsScriptResultCodeMetricsEnabled() {
             return true;
         }
     }

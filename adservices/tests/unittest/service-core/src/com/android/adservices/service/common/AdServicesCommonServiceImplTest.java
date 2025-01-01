@@ -895,8 +895,8 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 .when(mMockFlags)
                 .getAdServicesCommonStatesAllowList();
         ExtendedMockito.doReturn(mConsentManager).when(ConsentManager::getInstance);
-        doReturn(true).when(mConsentManager).isPasMeasurementConsentGiven();
-        doReturn(false).when(mConsentManager).isPasFledgeConsentGiven();
+        doReturn(true).when(mConsentManager).isOdpMeasurementConsentGiven();
+        doReturn(false).when(mConsentManager).isPasConsentGiven();
         doReturn(false).when(mConsentManager).isMeasurementDataReset();
         doReturn(false).when(mConsentManager).isPaDataReset();
         doNothing().when(mConsentManager).setMeasurementDataReset(anyBoolean());
@@ -936,8 +936,8 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 .when(mMockFlags)
                 .getAdServicesCommonStatesAllowList();
         ExtendedMockito.doReturn(mConsentManager).when(ConsentManager::getInstance);
-        doReturn(true).when(mConsentManager).isPasMeasurementConsentGiven();
-        doReturn(false).when(mConsentManager).isPasFledgeConsentGiven();
+        doReturn(true).when(mConsentManager).isOdpMeasurementConsentGiven();
+        doReturn(false).when(mConsentManager).isPasConsentGiven();
         doReturn(true).when(mConsentManager).isMeasurementDataReset();
         doReturn(true).when(mConsentManager).isPaDataReset();
         doNothing().when(mConsentManager).setMeasurementDataReset(anyBoolean());
