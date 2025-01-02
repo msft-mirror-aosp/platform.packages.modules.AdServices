@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 The Android Open Source Project
+ * Copyright (C) 2025 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,24 @@
 
 package com.android.adservices.service.shell.adservicesapi;
 
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN;
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT;
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN;
+import static android.adservices.common.Module.ADID;
+import static android.adservices.common.Module.MEASUREMENT;
+import static android.adservices.common.Module.ON_DEVICE_PERSONALIZATION;
+import static android.adservices.common.Module.PROTECTED_APP_SIGNALS;
+import static android.adservices.common.Module.PROTECTED_AUDIENCE;
+import static android.adservices.common.Module.TOPICS;
+
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
 import static com.android.adservices.service.shell.adservicesapi.AdServicesApiShellCommandFactory.COMMAND_PREFIX;
-import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_ENABLE_ADSERVICES;
+import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_SET_USER_CHOICES;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
 
 import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesOutcomeReceiver;
-import android.adservices.common.AdServicesStates;
+import android.adservices.common.UpdateAdServicesUserChoicesParams;
 import android.annotation.SuppressLint;
 import android.os.Build;
 import android.util.Log;
@@ -42,44 +52,67 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.io.PrintWriter;
+import java.util.Map;
 
 /**
- * This class implements enable_adservices shell command.
+ * This class implements set_user_choice shell command.
  *
  * <p>It triggers the adservices related apis.
  */
 @RequiresApi(Build.VERSION_CODES.S)
-public final class EnableAdServicesCommand extends AbstractShellCommand {
+public class SetUserChoicesCommand extends AbstractShellCommand {
     /** Runs the shell command and returns the result. */
-    public static final String CMD_ENABLE_ADSERVICES = "enable-adservices";
+    public static final String CMD_SET_USER_CHOICES = "set-user-choices";
 
-    public static final String HELP_ENABLE_ADSERVICES =
+    private static final Map<String, Integer> MODULE_CODE_INTDEF_MAPPING =
+            Map.of(
+                    "msmt", MEASUREMENT,
+                    "pa", PROTECTED_AUDIENCE,
+                    "pas", PROTECTED_APP_SIGNALS,
+                    "topics", TOPICS,
+                    "odp", ON_DEVICE_PERSONALIZATION,
+                    "adid", ADID);
+
+    private static final Map<String, Integer> USER_CHOICES_INTDEF_MAPPING =
+            Map.of(
+                    "unknown", USER_CHOICE_UNKNOWN,
+                    "opted-in", USER_CHOICE_OPTED_IN,
+                    "opted-out", USER_CHOICE_OPTED_OUT);
+
+    public static final String HELP =
             "usage:\n "
                     + COMMAND_PREFIX
                     + " "
-                    + CMD_ENABLE_ADSERVICES
-                    + " [--adid true|false][--adult true|false][--u18 "
-                    + "true|false]";
-
-    private static final String ADID_KEY = "adid";
-
-    private static final String ADULT_ACCOUNT_KEY = "adult";
-
-    private static final String U18_ACCOUNT_KEY = "u18";
+                    + CMD_SET_USER_CHOICES
+                    + " [--msmt unknown|opted-in|opted-out][--pa unknown|opted-in|opted-out] "
+                    + " [--pas unknown|opted-in|opted-out][--topics unknown|opted-in|opted-out] "
+                    + " [--odp unknown|opted-in|opted-out][--adid unknown|opted-in|opted-out] ";
 
     private static final int ARG_PARSE_START_INDEX = 2;
 
+    /** Runs the shell command and returns the result. */
     @SuppressLint("MissingPermission")
     @Override
     public ShellCommandResult run(PrintWriter out, PrintWriter err, String[] args) {
         // args length should be even number, first and second arg is factory and command name
         if (args.length < 2 || args.length % 2 != 0) {
-            return invalidArgsError(
-                    HELP_ENABLE_ADSERVICES, err, ShellCommandStats.COMMAND_ENABLE_ADSERVICES, args);
+            return invalidArgsError(HELP, err, COMMAND_SET_USER_CHOICES, args);
         }
         ImmutableMap<String, String> paramMap =
                 ShellCommandArgParserHelper.parseCliArguments(
                         args, ARG_PARSE_START_INDEX, /* removeKeyPrefix= */ true);
+
+        UpdateAdServicesUserChoicesParams.Builder updateAdServicesUserChoicesParamsBuilder =
+                new UpdateAdServicesUserChoicesParams.Builder();
+
+        for (Map.Entry<String, String> entry : paramMap.entrySet()) {
+            if (MODULE_CODE_INTDEF_MAPPING.containsKey(entry.getKey())
+                    && USER_CHOICES_INTDEF_MAPPING.containsKey(entry.getValue())) {
+                updateAdServicesUserChoicesParamsBuilder.setUserChoice(
+                        MODULE_CODE_INTDEF_MAPPING.get(entry.getKey()),
+                        USER_CHOICES_INTDEF_MAPPING.get(entry.getValue()));
+            }
+        }
 
         AdServicesCommonManager commonManager =
                 AdServicesCommonManager.get(ApplicationContextSingleton.get());
@@ -87,27 +120,13 @@ public final class EnableAdServicesCommand extends AbstractShellCommand {
         ListenableFuture<Boolean> responseFuture =
                 CallbackToFutureAdapter.getFuture(
                         completer -> {
-                            commonManager.enableAdServices(
-                                    new AdServicesStates.Builder()
-                                            .setAdIdEnabled(
-                                                    Boolean.parseBoolean(
-                                                            paramMap.getOrDefault(
-                                                                    ADID_KEY, "true")))
-                                            .setAdultAccount(
-                                                    Boolean.parseBoolean(
-                                                            paramMap.getOrDefault(
-                                                                    ADULT_ACCOUNT_KEY, "true")))
-                                            .setU18Account(
-                                                    Boolean.parseBoolean(
-                                                            paramMap.getOrDefault(
-                                                                    U18_ACCOUNT_KEY, "false")))
-                                            .setPrivacySandboxUiEnabled(true)
-                                            .build(),
+                            commonManager.requestAdServicesModuleUserChoices(
+                                    updateAdServicesUserChoicesParamsBuilder.build(),
                                     AdServicesExecutors.getLightWeightExecutor(),
                                     new AdServicesOutcomeReceiver<>() {
                                         @Override
-                                        public void onResult(Boolean result) {
-                                            completer.set(result);
+                                        public void onResult(Void result) {
+                                            completer.set(true);
                                         }
 
                                         @Override
@@ -115,34 +134,39 @@ public final class EnableAdServicesCommand extends AbstractShellCommand {
                                             completer.setException(exception);
                                         }
                                     });
-                            return "enableAdservices";
+                            return "set user choices data";
                         });
 
         try {
             Boolean response = responseFuture.get();
+            if (response) {
+                String msg = "User choices data has been set.";
+                Log.i(TAG, msg);
+                out.print(msg);
+            }
             return toShellCommandResult(
                     response ? RESULT_SUCCESS : ShellCommandStats.RESULT_GENERIC_ERROR,
-                    ShellCommandStats.COMMAND_ENABLE_ADSERVICES);
+                    COMMAND_SET_USER_CHOICES);
         } catch (Exception e) {
-            err.printf("Failed to enable adServices: %s\n", e.getMessage());
-            Log.e(TAG, "Failed to enable adServices: " + e.getMessage());
+            err.printf("Failed to set user choices for adServices: %s\n", e.getMessage());
+            Log.e(TAG, "Failed to set user choices for adServices: " + e.getMessage());
             return toShellCommandResult(
-                    ShellCommandStats.RESULT_GENERIC_ERROR, COMMAND_ENABLE_ADSERVICES);
+                    ShellCommandStats.RESULT_GENERIC_ERROR, COMMAND_SET_USER_CHOICES);
         }
     }
 
     @Override
     public String getCommandName() {
-        return CMD_ENABLE_ADSERVICES;
+        return CMD_SET_USER_CHOICES;
     }
 
     @Override
     public int getMetricsLoggerCommand() {
-        return COMMAND_ENABLE_ADSERVICES;
+        return COMMAND_SET_USER_CHOICES;
     }
 
     @Override
     public String getCommandHelp() {
-        return HELP_ENABLE_ADSERVICES;
+        return HELP;
     }
 }
