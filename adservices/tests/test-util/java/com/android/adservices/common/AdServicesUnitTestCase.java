@@ -23,7 +23,6 @@ import android.content.Context;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
 
-import org.junit.Before;
 import org.junit.Rule;
 
 /**
@@ -59,12 +58,7 @@ public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
      *
      * <p>In other words, it's the same as {@code mContext.getApplicationContext()}.
      */
-    protected Context mAppContext;
-
-    @Before
-    public final void setAdServicesUnitTestCaseFixtures() {
-        mAppContext = mContext.getApplicationContext();
-    }
+    protected final Context mAppContext = mContext.getApplicationContext();
 
     /**
      * Creates the rule that will be referenced as {@code flags}.
@@ -79,6 +73,8 @@ public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
     @CallSuper
     @Override
     protected void assertValidTestCaseFixtures() throws Exception {
+        super.assertValidTestCaseFixtures();
+
         // TODO(b/3847988060): add check to more prohibit flags like mFlags, FLAGS, TEST_FLAGS, ...
         assertTestClassHasNoFieldsFromSuperclass(
                 AdServicesUnitTestCase.class, "mAppContext", "appContext", "flags", "mMockFlags");

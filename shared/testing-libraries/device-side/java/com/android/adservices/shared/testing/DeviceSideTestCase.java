@@ -21,10 +21,6 @@ import android.platform.test.ravenwood.RavenwoodRule;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.shared.testing.Logger.LogLevel;
-
-import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -56,26 +52,28 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
     /**
      * @deprecated use {@link #mContext}
      */
-    @Deprecated protected static Context sContext;
+    @Deprecated
+    protected static final Context sContext =
+            InstrumentationRegistry.getInstrumentation().getContext();
 
     /**
      * Package name of the app being instrumented.
      *
      * @deprecated use {@link #mPackageName} instead.
      */
-    @Deprecated protected static String sPackageName;
+    @Deprecated protected static final String sPackageName = sContext.getPackageName();
 
     /**
      * Reference to the context of this test's instrumentation package (as defined by {@link
      * android.app.Instrumentation#getContext()})
      */
-    protected Context mContext;
+    protected final Context mContext = sContext;
 
     /**
      * Package name of this test's instrumentation package (as defined by {@link
      * android.app.Instrumentation#getContext()})
      */
-    protected String mPackageName;
+    protected final String mPackageName = sPackageName;
 
     @ClassRule
     public static final RavenwoodRule sRavenwood =
@@ -92,34 +90,6 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
     @Rule
     public final ProcessLifeguardRule processLifeguard =
             new ProcessLifeguardRule(ProcessLifeguardRule.Mode.IGNORE);
-
-    @BeforeClass
-    public static void setStaticFixtures() {
-        if (sContext != null) {
-            // TODO(b/335935200): remove this check once the static initialization is gone
-            return;
-        }
-        try {
-            sContext = InstrumentationRegistry.getInstrumentation().getContext();
-            sPackageName = sContext.getPackageName();
-        } catch (Exception e) {
-            DynamicLogger.getInstance()
-                    .log(
-                            LogLevel.ERROR,
-                            TAG,
-                            e,
-                            "setStaticFixtures() failed (usually happens under Ravenwood). Setting"
-                                    + " sContext=%s, sPackageName=%s",
-                            sContext,
-                            sPackageName);
-        }
-    }
-
-    @Before
-    public final void setInstanceFixtures() {
-        mContext = sContext;
-        mPackageName = sPackageName;
-    }
 
     // TODO(b/361555631): merge 2 classes below into testDeviceSideTestCaseFixtures() and annotate
     // it with @MetaTest
@@ -211,17 +181,5 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
                 "staticMockitoSession", REASON_SESSION_MANAGED_BY_RULE);
         testInstance.assertTestClassHasNoSuchField(
                 "staticMockSession", REASON_SESSION_MANAGED_BY_RULE);
-    }
-
-    // TODO(b/335935200): temporary hac^H^H^Hworkaround to set context references before subclasses
-    // when the class or instance is initialized.
-    // In the long term, these tests must be refactored to use them "inside" the test (otherwise
-    // it would not work when running on host-side / ravenwood), then they can be removed.
-    static {
-        setStaticFixtures();
-    }
-
-    protected DeviceSideTestCase() {
-        setInstanceFixtures();
     }
 }
