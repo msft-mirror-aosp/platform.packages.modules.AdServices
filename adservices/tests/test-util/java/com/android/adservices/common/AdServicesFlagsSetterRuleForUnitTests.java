@@ -79,6 +79,14 @@ public abstract class AdServicesFlagsSetterRuleForUnitTests<
         return mFlags;
     }
 
+    /**
+     * Gets a "snapshot" of the flags implementation - the values of the flags won't change even if
+     * methods such as {@code setFlag} are called.
+     *
+     * @throws IllegalStateException if called before the test started
+     */
+    public abstract Flags getFlagsSnapshot();
+
     // NOTE: currently is only used by unit tests, but it might be worth to move to superclass so
     // it can be used by CTS tests as well
     /**
