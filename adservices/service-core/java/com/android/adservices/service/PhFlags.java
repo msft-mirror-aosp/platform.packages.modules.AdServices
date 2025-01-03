@@ -161,6 +161,23 @@ public final class PhFlags implements Flags {
         return sSingleton;
     }
 
+    /**
+     * @deprecated - reading a flag from {@link SystemProperties} first is deprecated - this method
+     *     should only be used to refactor existing methods in this class, not on new ones.
+     */
+    @Deprecated
+    @SuppressWarnings("AvoidSystemPropertiesUsage") // Helper method.
+    private static boolean getFlagFromSystemPropertiesOrDeviceConfig(
+            String name, boolean defaultValue) {
+        return SystemProperties.getBoolean(
+                getSystemPropertyName(name), getDeviceConfigFlag(name, defaultValue));
+    }
+
+    @VisibleForTesting
+    static String getSystemPropertyName(String key) {
+        return AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + key;
+    }
+
     @Override
     public long getAsyncRegistrationJobQueueIntervalMs() {
         return getDeviceConfigFlag(
@@ -5023,25 +5040,6 @@ public final class PhFlags implements Flags {
     public boolean getPasEncodingJobImprovementsEnabled() {
         return getDeviceConfigFlag(
                 KEY_PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED, PAS_ENCODING_JOB_IMPROVEMENTS_ENABLED);
-    }
-
-    // Do NOT add Flag / @Override methods below - it should only contain helpers
-
-    /**
-     * @deprecated - reading a flag from {@link SystemProperties} first is deprecated - this method
-     *     should only be used to refactor existing methods in this class, not on new ones.
-     */
-    @Deprecated
-    @SuppressWarnings("AvoidSystemPropertiesUsage") // Helper method.
-    private static boolean getFlagFromSystemPropertiesOrDeviceConfig(
-            String name, boolean defaultValue) {
-        return SystemProperties.getBoolean(
-                getSystemPropertyName(name), getDeviceConfigFlag(name, defaultValue));
-    }
-
-    @VisibleForTesting
-    static String getSystemPropertyName(String key) {
-        return AdServicesCommon.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX + key;
     }
 
     @Override
