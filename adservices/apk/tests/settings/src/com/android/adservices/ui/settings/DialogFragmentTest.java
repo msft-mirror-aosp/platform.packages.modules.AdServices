@@ -38,7 +38,6 @@ import androidx.test.uiautomator.Until;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.api.R;
-import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.annotations.SetAllLogcatTags;
 import com.android.adservices.data.topics.Topic;
@@ -49,6 +48,7 @@ import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.App;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.ui.util.AdservicesSettingsUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -69,7 +69,7 @@ import java.util.List;
 @SpyStatic(BackgroundJobsManager.class)
 @SpyStatic(ConsentManager.class)
 @SpyStatic(FlagsFactory.class)
-public final class DialogFragmentTest extends AdServicesExtendedMockitoTestCase {
+public final class DialogFragmentTest extends AdservicesSettingsUiTestCase {
 
     private static final String PRIVACY_SANDBOX_TEST_PACKAGE = "android.test.adservices.ui.MAIN";
     private static final int LAUNCH_TIMEOUT = 5000;
