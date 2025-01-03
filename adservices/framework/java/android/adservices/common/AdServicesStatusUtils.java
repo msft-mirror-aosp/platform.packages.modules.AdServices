@@ -262,6 +262,9 @@ public final class AdServicesStatusUtils {
     /** This error occurs when dev session state is unable to be read. */
     public static final int STATUS_DEV_SESSION_FAILURE = 33;
 
+    /** This error occurs when dev session state is unable to be read. */
+    public static final int STATUS_CALLER_NOT_ALLOWED_DENY_LIST = 34;
+
     /** The error message to be returned along with {@link LimitExceededException}. */
     public static final String RATE_LIMIT_REACHED_ERROR_MESSAGE = "API rate limit exceeded.";
 
@@ -349,6 +352,13 @@ public final class AdServicesStatusUtils {
     public static final String UPDATE_ALREADY_PENDING_ERROR_MESSAGE =
             "Failed to schedule update. A request is already pending.";
 
+    /**
+     * The error message to be returned along with {@link SecurityException} when caller is not
+     * allowed to call AdServices API (present in the deny list).
+     */
+    public static final String CALLER_NOT_ALLOWED_DENY_LIST_ERROR_MESSAGE =
+            "Caller is not authorized to call this API as caller is in deny list.";
+
     /** Returns true for a successful status. */
     public static boolean isSuccess(@StatusCode int statusCode) {
         return statusCode == STATUS_SUCCESS;
@@ -412,6 +422,8 @@ public final class AdServicesStatusUtils {
                 return new SecurityException(DEV_SESSION_CALLER_IS_NON_DEBUGGABLE_MESSAGE);
             case STATUS_DEV_SESSION_FAILURE:
                 return new IllegalStateException(DEV_SESSION_FAILURE_MESSAGE);
+            case STATUS_CALLER_NOT_ALLOWED_DENY_LIST:
+                return new SecurityException(CALLER_NOT_ALLOWED_DENY_LIST_ERROR_MESSAGE);
             default:
                 return new IllegalStateException();
         }
@@ -466,6 +478,7 @@ public final class AdServicesStatusUtils {
                 STATUS_DEV_SESSION_IS_STILL_TRANSITIONING,
                 STATUS_DEV_SESSION_CALLER_IS_NON_DEBUGGABLE,
                 STATUS_DEV_SESSION_FAILURE,
+                STATUS_CALLER_NOT_ALLOWED_DENY_LIST,
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface StatusCode {}

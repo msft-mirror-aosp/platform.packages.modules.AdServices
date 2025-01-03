@@ -1739,4 +1739,8 @@ public final class FlagsConstants {
 
     /** Key to enable the AdServices latency metrics {@code RbATrace}. */
     public static final String KEY_ENABLE_RB_ATRACE = "enable_rb_atrace";
+
+    /** Key to enable prod debug feature in server auctions */
+    public static final String KEY_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST =
+            "Measurement__enable_register_source_package_deny_list";
 }

@@ -6080,6 +6080,13 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENABLE_RB_ATRACE;
     }
 
+    boolean DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST = false;
+
+    /** Returns if the use of package deny list in msmt register source api */
+    default boolean getEnableMsmtRegisterSourcePackageDenyList() {
+        return DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
     ////////////////////////////////////////////////////////////////////////////////////////////////

@@ -39,6 +39,8 @@ public class CachedFlags {
     private final String mApiAppAllowList;
     private final String mApiAppBlockList;
     private final String mWebContextClientAppAllowList;
+    private final boolean mEnableMsmtRegisterSourcePackageDenyList;
+
     private final Flags mFlags;
 
     public CachedFlags(Flags flags) {
@@ -69,6 +71,8 @@ public class CachedFlags {
         mApiAppBlockList = flags.getMsmtApiAppBlockList();
         mWebContextClientAppAllowList = flags.getWebContextClientAppAllowList();
         mEnableApiStatusAllowListCheck = flags.getMsmtEnableApiStatusAllowListCheck();
+        mEnableMsmtRegisterSourcePackageDenyList =
+                flags.getEnableMsmtRegisterSourcePackageDenyList();
     }
 
     public boolean getMeasurementApiRegisterSourceKillSwitch() {
@@ -177,5 +181,11 @@ public class CachedFlags {
         return mEnableSessionStableKillSwitches
                 ? mWebContextClientAppAllowList
                 : mFlags.getWebContextClientAppAllowList();
+    }
+
+    public boolean getEnableMsmtRegisterSourcePackageDenyList() {
+        return mEnableSessionStableKillSwitches
+                ? mEnableMsmtRegisterSourcePackageDenyList
+                : mFlags.getEnableMsmtRegisterSourcePackageDenyList();
     }
 }
