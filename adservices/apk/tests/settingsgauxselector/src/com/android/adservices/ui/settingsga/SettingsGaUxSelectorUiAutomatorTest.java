@@ -28,7 +28,7 @@ import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetStringFlag;
-import com.android.adservices.ui.util.AdServicesUiTestCase;
+import com.android.adservices.ui.util.AdservicesSettingsUiTestCase;
 import com.android.adservices.ui.util.SettingsTestUtil;
 
 import org.junit.Test;
@@ -38,7 +38,7 @@ import org.junit.Test;
 @SetFlagEnabled(KEY_U18_UX_ENABLED)
 @SetStringFlag(name = KEY_DEBUG_UX, value = "GA_UX")
 @SetFlagDisabled(KEY_PAS_UX_ENABLED)
-public final class SettingsGaUxSelectorUiAutomatorTest extends AdServicesUiTestCase {
+public final class SettingsGaUxSelectorUiAutomatorTest extends AdservicesSettingsUiTestCase {
 
     @Test
     public void settingsRemoveMainToggleAndMeasurementEntryTest() {

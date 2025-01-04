@@ -40,7 +40,7 @@ import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.adservices.shared.testing.annotations.SetStringFlag;
-import com.android.adservices.ui.util.AdServicesUiTestCase;
+import com.android.adservices.ui.util.AdservicesSettingsUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.BlockedTopicsSettingsTestUtil;
 
@@ -59,7 +59,8 @@ import org.junit.Test;
 @SetFlagEnabled(KEY_U18_UX_ENABLED)
 @SetStringFlag(name = KEY_DEBUG_UX, value = "GA_UX")
 @SetLongFlag(name = KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value = TEST_EPOCH_JOB_PERIOD_MS)
-public final class BlockedTopicsSettingsUxSelectorUiAutomatorTest extends AdServicesUiTestCase {
+public final class BlockedTopicsSettingsUxSelectorUiAutomatorTest
+        extends AdservicesSettingsUiTestCase {
 
     // Time out to start UI launcher.
     private static final int LAUNCHER_LAUNCH_TIMEOUT_MS = 3_000;
