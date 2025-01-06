@@ -33,6 +33,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.consent.AdServicesApiType;
+import com.android.adservices.service.consent.ConsentConstants.EndUserUx;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.consent.DeviceRegionProvider;
 import com.android.adservices.service.ui.enrollment.collection.PrivacySandboxEnrollmentChannelCollection;
@@ -192,6 +193,10 @@ public class UxStatesManager {
         }
         return getFlag(KEY_PAS_UX_ENABLED)
                 && (wasPasNotificationDisplayed() || beforeNotificationShown);
+    }
+
+    public EndUserUx getEndUserUx() {
+        return mConsentManager.determineEndUserSettingsUxFromEnrollmentData();
     }
 
     /** Returns if PAS notification was displayed. */
