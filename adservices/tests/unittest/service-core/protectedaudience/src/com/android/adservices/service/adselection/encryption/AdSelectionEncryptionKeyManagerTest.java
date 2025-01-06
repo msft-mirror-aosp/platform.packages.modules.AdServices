@@ -20,6 +20,12 @@ import static android.adservices.adselection.AuctionEncryptionKeyFixture.AUCTION
 import static android.adservices.adselection.AuctionEncryptionKeyFixture.ENCRYPTION_KEY_AUCTION;
 import static android.adservices.adselection.AuctionEncryptionKeyFixture.ENCRYPTION_KEY_AUCTION_TTL_1SECS;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_REFRESH_EXPIRED_KEYS_DURING_AUCTION;
 import static com.android.adservices.service.adselection.encryption.JoinEncryptionKeyTestUtil.ENCRYPTION_KEY_JOIN;
 import static com.android.adservices.service.adselection.encryption.JoinEncryptionKeyTestUtil.ENCRYPTION_KEY_JOIN_TTL_1SECS;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE;
@@ -57,6 +63,8 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.ServerAuctionKeyFetchCalledStats;
 import com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerImpl;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
@@ -75,6 +83,8 @@ import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
+@SetIntegerFlag(name = KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING, value = 5)
+@SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED)
 public final class AdSelectionEncryptionKeyManagerTest extends AdServicesMockitoTestCase {
     private static final Long EXPIRY_TTL_1SEC = 1L;
 
@@ -86,7 +96,8 @@ public final class AdSelectionEncryptionKeyManagerTest extends AdServicesMockito
     @Mock private AdServicesHttpsClient mMockHttpClient;
     @Spy private Clock mClock = Clock.systemUTC();
     private EncryptionKeyDao mEncryptionKeyDao;
-    private Flags mFakeFlags = new AdSelectionEncryptionKeyManagerTestFlags();
+    // TODO(b/384949821): move to superclass
+    private final Flags mFakeFlags = flags.getFlags();
     private AdServicesLogger mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
     private com.android.adservices.shared.util.Clock mLoggerClock =
             com.android.adservices.shared.util.Clock.getInstance();
@@ -105,6 +116,11 @@ public final class AdSelectionEncryptionKeyManagerTest extends AdServicesMockito
 
     @Before
     public void setUp() {
+        // NOTE: not using annotations to set flags below because these constants are not public
+        flags.setFlag(KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI, AUCTION_KEY_FETCH_URI);
+        flags.setFlag(KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI, JOIN_KEY_FETCH_URI);
+        flags.setFlag(KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS, EXPIRY_TTL_1SEC);
+
         mLightweightExecutor = AdServicesExecutors.getLightWeightExecutor();
         mEncryptionKeyDao =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
@@ -363,6 +379,7 @@ public final class AdSelectionEncryptionKeyManagerTest extends AdServicesMockito
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_REFRESH_EXPIRED_KEYS_DURING_AUCTION)
     public void test_getLatestOhttpKeyConfig_refreshFlagOn_withExpiredKey_returnsNewKey()
             throws Exception {
         mEncryptionKeyDao.insertAllKeys(ImmutableList.of(ENCRYPTION_KEY_AUCTION_TTL_1SECS));
@@ -379,7 +396,7 @@ public final class AdSelectionEncryptionKeyManagerTest extends AdServicesMockito
         mKeyManager =
                 new AdSelectionEncryptionKeyManager(
                         mEncryptionKeyDao,
-                        new RefreshKeysFlagOn(),
+                        mFakeFlags,
                         mClock,
                         mAuctionEncryptionKeyParser,
                         mJoinEncryptionKeyParser,
@@ -642,44 +659,7 @@ public final class AdSelectionEncryptionKeyManagerTest extends AdServicesMockito
         assertThat(actualKeyConfig.getPublicKey()).isEqualTo(expectedPublicKey);
     }
 
-    private static class AdSelectionEncryptionKeyManagerTestFlags implements Flags {
-        AdSelectionEncryptionKeyManagerTestFlags() {}
-
-        @Override
-        public String getFledgeAuctionServerAuctionKeyFetchUri() {
-            return AUCTION_KEY_FETCH_URI;
-        }
-
-        @Override
-        public String getFledgeAuctionServerJoinKeyFetchUri() {
-            return JOIN_KEY_FETCH_URI;
-        }
-
-        @Override
-        public int getFledgeAuctionServerAuctionKeySharding() {
-            return 5;
-        }
-
-        @Override
-        public long getFledgeAuctionServerEncryptionKeyMaxAgeSeconds() {
-            return EXPIRY_TTL_1SEC;
-        }
-
-        @Override
-        public boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
-            return true;
-        }
-    }
-
     private void addDelayToExpireKeys(long delaySeconds) {
         when(mClock.instant()).thenReturn(Clock.systemUTC().instant().plusSeconds(delaySeconds));
-    }
-
-    private static class RefreshKeysFlagOn extends AdSelectionEncryptionKeyManagerTestFlags {
-
-        @Override
-        public boolean getFledgeAuctionServerRefreshExpiredKeysDuringAuction() {
-            return true;
-        }
     }
 }

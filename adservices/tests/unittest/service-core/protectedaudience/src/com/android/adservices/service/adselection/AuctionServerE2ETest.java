@@ -4768,7 +4768,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
         }
     }
 
-    // TODO(b/384798806): this is used on 2 tests that would fail if the FlagsFactory singleton is
+    // TODO(b/388097793): this is used on 2 tests that would fail if the FlagsFactory singleton is
     // the mFakeFlags set by flags; we need to refactor those tests and/or add a new infra that
     // would "clone" the initial flags (before it's annotated by the test)
     private static final class LegacyAuctionServerE2ETestFlags implements Flags {

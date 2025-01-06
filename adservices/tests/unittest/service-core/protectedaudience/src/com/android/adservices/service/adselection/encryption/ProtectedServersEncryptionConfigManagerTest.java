@@ -22,6 +22,13 @@ import static android.adservices.adselection.AuctionEncryptionKeyFixture.COORDIN
 import static android.adservices.adselection.AuctionEncryptionKeyFixture.COORDINATOR_URL_AUCTION_ORIGIN;
 import static android.adservices.adselection.AuctionEncryptionKeyFixture.ENCRYPTION_KEY_AUCTION_WITH_COORDINATOR;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_REFRESH_EXPIRED_KEYS_DURING_AUCTION;
 import static com.android.adservices.service.adselection.encryption.JoinEncryptionKeyTestUtil.COORDINATOR_URL_JOIN;
 import static com.android.adservices.service.adselection.encryption.JoinEncryptionKeyTestUtil.ENCRYPTION_KEY_JOIN_WITH_COORDINATOR;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.REQUEST_PROPERTIES_PROTOBUF_CONTENT_TYPE;
@@ -60,6 +67,9 @@ import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.ServerAuctionKeyFetchCalledStats;
 import com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerImpl;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetStringFlag;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.BaseEncoding;
@@ -79,6 +89,11 @@ import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 
+@SetIntegerFlag(name = KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_SHARDING, value = 5)
+@SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED)
+@SetStringFlag(
+        name = KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST,
+        value = COORDINATOR_URL_AUCTION)
 public final class ProtectedServersEncryptionConfigManagerTest extends AdServicesMockitoTestCase {
 
     private static final Long EXPIRY_TTL_1SEC = 1L;
@@ -101,7 +116,9 @@ public final class ProtectedServersEncryptionConfigManagerTest extends AdService
 
     @Spy private Clock mClock = Clock.systemUTC();
     private ProtectedServersEncryptionConfigDao mProtectedServersEncryptionConfigDao;
-    private Flags mFakeFlags = new ProtectedServersEncryptionConfigManagerTestFlags();
+
+    // TODO(b/384949821): move to superclass
+    private final Flags mFakeFlags = flags.getFlags();
 
     private ExecutorService mLightweightExecutor;
     private AuctionEncryptionKeyParser mAuctionEncryptionKeyParser =
@@ -113,6 +130,12 @@ public final class ProtectedServersEncryptionConfigManagerTest extends AdService
 
     @Before
     public void setUp() {
+        // NOTE: not using annotations to set flags below because these constants are not public
+        flags.setFlag(
+                KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI, AUCTION_KEY_FETCH_DEFAULT_URI);
+        flags.setFlag(KEY_FLEDGE_AUCTION_SERVER_JOIN_KEY_FETCH_URI, JOIN_KEY_FETCH_DEFAULT_URI);
+        flags.setFlag(KEY_FLEDGE_AUCTION_SERVER_ENCRYPTION_KEY_MAX_AGE_SECONDS, EXPIRY_TTL_1SEC);
+
         mLightweightExecutor = AdServicesExecutors.getLightWeightExecutor();
         mProtectedServersEncryptionConfigDao =
                 Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
@@ -520,6 +543,7 @@ public final class ProtectedServersEncryptionConfigManagerTest extends AdService
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_REFRESH_EXPIRED_KEYS_DURING_AUCTION)
     public void test_getLatestOhttpKeyConfig_refreshFlagOn_withExpiredKey_returnsNewKey()
             throws Exception {
         when(mMockHttpClient.fetchPayloadWithLogging(
@@ -534,7 +558,7 @@ public final class ProtectedServersEncryptionConfigManagerTest extends AdService
         mKeyManager =
                 new ProtectedServersEncryptionConfigManager(
                         mProtectedServersEncryptionConfigDao,
-                        new RefreshKeysFlagOn(),
+                        mFakeFlags,
                         mClock,
                         mAuctionEncryptionKeyParser,
                         mJoinEncryptionKeyParser,
@@ -679,52 +703,5 @@ public final class ProtectedServersEncryptionConfigManagerTest extends AdService
                 Base64.getDecoder()
                         .decode(AUCTION_KEY_1.publicKey().getBytes(StandardCharsets.UTF_8));
         assertThat(actualKeyConfig.getPublicKey()).isEqualTo(expectedPublicKey);
-    }
-
-    private static class ProtectedServersEncryptionConfigManagerTestFlags implements Flags {
-        ProtectedServersEncryptionConfigManagerTestFlags() {}
-
-        @Override
-        public String getFledgeAuctionServerAuctionKeyFetchUri() {
-            return AUCTION_KEY_FETCH_DEFAULT_URI;
-        }
-
-        @Override
-        public String getFledgeAuctionServerCoordinatorUrlAllowlist() {
-            return COORDINATOR_URL_AUCTION;
-        }
-
-        @Override
-        public String getFledgeAuctionServerJoinKeyFetchUri() {
-            return JOIN_KEY_FETCH_DEFAULT_URI;
-        }
-
-        @Override
-        public int getFledgeAuctionServerAuctionKeySharding() {
-            return 5;
-        }
-
-        @Override
-        public long getFledgeAuctionServerEncryptionKeyMaxAgeSeconds() {
-            return EXPIRY_TTL_1SEC;
-        }
-
-        @Override
-        public boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
-            return true;
-        }
-    }
-
-    private static class RefreshKeysFlagOn
-            extends ProtectedServersEncryptionConfigManagerTestFlags {
-
-        @Override
-        public boolean getFledgeAuctionServerRefreshExpiredKeysDuringAuction() {
-            return true;
-        }
-    }
-
-    private void addDelayToExpireKeys(long delaySeconds) {
-        when(mClock.instant()).thenReturn(Clock.systemUTC().instant().plusSeconds(delaySeconds));
     }
 }

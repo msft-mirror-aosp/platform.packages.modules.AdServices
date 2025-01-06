@@ -22,6 +22,14 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 import static android.view.MotionEvent.ACTION_BUTTON_PRESS;
 
+import static com.android.adservices.service.FlagsConstants.KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
 import static com.android.adservices.service.adselection.ReportEventDisabledImpl.API_DISABLED_MESSAGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
@@ -64,6 +72,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
+import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
@@ -123,6 +132,9 @@ import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -156,6 +168,15 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(AdServicesJobServiceLogger.class)
 @MockStatic(ServiceCompatUtils.class)
+@SetFlagTrue(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
+@SetFlagTrue(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
+@SetFlagFalse(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED)
+@SetFlagFalse(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH)
+@SetFlagFalse(KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH)
+@SetLongFlag(name = KEY_ASYNC_REGISTRATION_JOB_QUEUE_INTERVAL_MS, value = 0)
+@SetMsmtApiAppAllowList
+@SetFlagTrue(KEY_GA_UX_FEATURE_ENABLED)
+@SetFlagTrue(KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED)
 public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMockitoTestCase {
     private final DevContext mDevContext = DevContext.createForDevOptionsDisabled();
 
@@ -212,7 +233,8 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
 
     private final ScheduledThreadPoolExecutor mScheduledExecutor =
             AdServicesExecutors.getScheduler();
-    private Flags mFakeFlags = new ReportAndRegisterEventTestFlags();
+    // TODO(b/384949821): move to superclass
+    private final Flags mFakeFlags = flags.getFlags();
 
     private final long mMaxRegisteredAdBeaconsTotalCount =
             mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
@@ -374,19 +396,12 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
     }
 
     @Test
+    @SetFlagFalse(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
     public void testService_reportingDisabled() throws Exception {
         enableMeasurementConsentAndARAPermission();
         persistReportingArtifacts();
-
         // Re-initialize service with the feature disabled altogether.
-        Flags flags =
-                new ReportAndRegisterEventTestFlags() {
-                    @Override
-                    public boolean getFledgeRegisterAdBeaconEnabled() {
-                        return false;
-                    }
-                };
-        mAdSelectionService = getAdSelectionServiceImpl(flags);
+        mAdSelectionService = getAdSelectionServiceImpl(mFakeFlags);
 
         // Mock server to report the event in addition to being registered by measurement.
         MockWebServer server =
@@ -421,19 +436,13 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
     }
 
     @Test
+    @SetFlagFalse(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
     public void testService_onlyReportingEnabled() throws Exception {
         enableMeasurementConsentAndARAPermission();
         persistReportingArtifacts();
 
         // Re-initialize service with the event registering disabled.
-        Flags flags =
-                new ReportAndRegisterEventTestFlags() {
-                    @Override
-                    public boolean getFledgeMeasurementReportAndRegisterEventApiEnabled() {
-                        return false;
-                    }
-                };
-        mAdSelectionService = getAdSelectionServiceImpl(flags);
+        mAdSelectionService = getAdSelectionServiceImpl(mFakeFlags);
 
         // Mock server to report the event in addition to being registered by measurement.
         MockWebServer server =
@@ -471,6 +480,7 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
                         BUYER_INTERACTION_REPORTING_PATH + EVENT_KEY),
                 mRequestMatcherPrefixMatch);
     }
+
 
     @Test
     public void testService_ReportingAndRegisteringEnabled() throws Exception {
@@ -515,20 +525,14 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
     }
 
     @Test
+    @SetFlagTrue(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH)
     public void testService_ReportingAndRegisteringEnabled_measurementKillSwitchEnabled()
             throws Exception {
         enableMeasurementConsentAndARAPermission();
         persistReportingArtifacts();
 
         // Re-initialize service with kill switch turned on.
-        Flags flags =
-                new ReportAndRegisterEventTestFlags() {
-                    @Override
-                    public boolean getMeasurementApiRegisterSourceKillSwitch() {
-                        return true;
-                    }
-                };
-        mAdSelectionService = getAdSelectionServiceImpl(flags);
+        mAdSelectionService = getAdSelectionServiceImpl(mFakeFlags);
 
         // Mock server to report the event in addition to being registered by measurement.
         MockWebServer server =
@@ -568,20 +572,14 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
     }
 
     @Test
+    @SetMsmtApiAppAllowList(AllowLists.ALLOW_NONE)
     public void testService_ReportingAndRegisteringEnabled_appIsNotInMeasurementAllowlisted()
             throws Exception {
         enableMeasurementConsentAndARAPermission();
         persistReportingArtifacts();
 
         // Re-initialize service with no allow list.
-        Flags flags =
-                new ReportAndRegisterEventTestFlags() {
-                    @Override
-                    public String getMsmtApiAppAllowList() {
-                        return AllowLists.ALLOW_NONE;
-                    }
-                };
-        mAdSelectionService = getAdSelectionServiceImpl(flags);
+        mAdSelectionService = getAdSelectionServiceImpl(mFakeFlags);
 
         // Mock server to report the event in addition to being registered by measurement.
         MockWebServer server =
@@ -722,19 +720,12 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED)
     public void testService_ReportingAndRegisteringFallbackEnabled() throws Exception {
         enableMeasurementConsentAndARAPermission();
         persistReportingArtifacts();
 
-        // Re-initialize service with fallback turned on.
-        Flags flags =
-                new ReportAndRegisterEventTestFlags() {
-                    @Override
-                    public boolean getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled() {
-                        return true;
-                    }
-                };
-        mAdSelectionService = getAdSelectionServiceImpl(flags);
+        mAdSelectionService = getAdSelectionServiceImpl(mFakeFlags);
 
         // Mock server to report the event in addition to being registered by measurement.
         MockWebServer server =
@@ -781,25 +772,15 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED)
+    @SetFlagTrue(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH)
     public void testService_ReportingAndRegisteringFallbackEnabled_measurementKillSwitchEnabled()
             throws Exception {
         enableMeasurementConsentAndARAPermission();
         persistReportingArtifacts();
 
         // Re-initialize service with kill switch turned on.
-        Flags flags =
-                new ReportAndRegisterEventTestFlags() {
-                    @Override
-                    public boolean getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getMeasurementApiRegisterSourceKillSwitch() {
-                        return true;
-                    }
-                };
-        mAdSelectionService = getAdSelectionServiceImpl(flags);
+        mAdSelectionService = getAdSelectionServiceImpl(mFakeFlags);
 
         // Mock server to report the event in addition to being registered by measurement.
         MockWebServer server =
@@ -839,26 +820,15 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED)
+    @SetMsmtApiAppAllowList(AllowLists.ALLOW_NONE)
     public void
             testService_ReportingAndRegisteringFallbackEnabled_appIsNotInMeasurementAllowlisted()
                     throws Exception {
         enableMeasurementConsentAndARAPermission();
         persistReportingArtifacts();
-
-        // Re-initialize service with no allow list.
-        Flags flags =
-                new ReportAndRegisterEventTestFlags() {
-                    @Override
-                    public boolean getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public String getMsmtApiAppAllowList() {
-                        return AllowLists.ALLOW_NONE;
-                    }
-                };
-        mAdSelectionService = getAdSelectionServiceImpl(flags);
+        // Re-initialize service with the feature disabled altogether.
+        mAdSelectionService = getAdSelectionServiceImpl(mFakeFlags);
 
         // Mock server to report the event in addition to being registered by measurement.
         MockWebServer server =
@@ -898,6 +868,7 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED)
     public void testService_ReportingAndRegisteringFallbackEnabled_measurementConsentRevoked()
             throws Exception {
         // Revoke consent for measurement.
@@ -910,16 +881,8 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
                                 PermissionHelper.hasAttributionPermission(
                                         any(Context.class), anyString()));
         persistReportingArtifacts();
-
-        // Re-initialize service with fallback turned on.
-        Flags flags =
-                new ReportAndRegisterEventTestFlags() {
-                    @Override
-                    public boolean getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled() {
-                        return true;
-                    }
-                };
-        mAdSelectionService = getAdSelectionServiceImpl(flags);
+        // Re-initialize service with the feature disabled altogether.
+        mAdSelectionService = getAdSelectionServiceImpl(mFakeFlags);
 
         // Mock server to report the event in addition to being registered by measurement.
         MockWebServer server =
@@ -959,6 +922,7 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED)
     public void testService_ReportingAndRegisteringFallbackEnabled_noPermissionForARA()
             throws Exception {
         // Disable permission for ARA.
@@ -973,14 +937,7 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
         persistReportingArtifacts();
 
         // Re-initialize service with fallback turned on.
-        Flags flags =
-                new ReportAndRegisterEventTestFlags() {
-                    @Override
-                    public boolean getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled() {
-                        return true;
-                    }
-                };
-        mAdSelectionService = getAdSelectionServiceImpl(flags);
+        mAdSelectionService = getAdSelectionServiceImpl(mFakeFlags);
 
         // Mock server to report the event in addition to being registered by measurement.
         MockWebServer server =
@@ -1202,53 +1159,6 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
         public void onFailure(FledgeErrorResponse fledgeErrorResponse) throws RemoteException {
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
-        }
-    }
-
-    private static class ReportAndRegisterEventTestFlags implements Flags {
-        @Override
-        public boolean getFledgeRegisterAdBeaconEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeMeasurementReportAndRegisterEventApiEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean getMeasurementApiRegisterSourceKillSwitch() {
-            return false;
-        }
-
-        @Override
-        public boolean getAsyncRegistrationJobQueueKillSwitch() {
-            return false;
-        }
-
-        @Override
-        public long getAsyncRegistrationJobQueueIntervalMs() {
-            return 0;
-        }
-
-        @Override
-        public String getMsmtApiAppAllowList() {
-            return AllowLists.ALLOW_ALL;
-        }
-
-        @Override
-        public boolean getGaUxFeatureEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeAppPackageNameLoggingEnabled() {
-            return true;
         }
     }
 }
