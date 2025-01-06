@@ -857,6 +857,8 @@ public abstract class AdSelectionEntryDao {
                         .setAdSelectionId(adSelectionId)
                         .setBuyerReportingUri(reportingData.getBuyerWinReportingUri())
                         .setSellerReportingUri(reportingData.getSellerWinReportingUri())
+                        .setComponentSellerReportingUri(
+                                reportingData.getComponentSellerWinReportingUri())
                         .build();
 
         insertDBReportingData(dbReportingData);
@@ -963,7 +965,8 @@ public abstract class AdSelectionEntryDao {
     /** Query reporting URI records from DBReportingData if adSelectionId exists. */
     @Query(
             "SELECT buyer_reporting_uri AS buyerWinReportingUri, "
-                    + "seller_reporting_uri AS sellerWinReportingUri "
+                    + "seller_reporting_uri AS sellerWinReportingUri, "
+                    + "component_seller_reporting_uri AS componentSellerWinReportingUri "
                     + "FROM reporting_data WHERE ad_selection_id = :adSelectionId")
     public abstract ReportingData getReportingUris(long adSelectionId);
 

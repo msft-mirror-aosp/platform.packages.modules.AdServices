@@ -23,10 +23,15 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEFA
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_SOURCE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENFORCE_FOREGROUND_STATUS_REGISTER_TRIGGER;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -38,6 +43,7 @@ import android.adservices.measurement.WebSourceParams;
 import android.adservices.measurement.WebSourceRegistrationRequest;
 import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
+import android.adservices.utils.DevContextUtils;
 import android.adservices.utils.MockWebServerRule;
 import android.net.Uri;
 
@@ -45,6 +51,7 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import androidx.test.uiautomator.UiDevice;
 
 import com.android.adservices.common.AdServicesSupportHelper;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
@@ -52,6 +59,7 @@ import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -100,6 +108,10 @@ public final class MeasurementCtsDebuggableTest extends AdServicesDebuggableTest
             "/.well-known/attribution-reporting/report-aggregate-attribution";
     private static final String EVENT_ATTRIBUTION_REPORT_URI_PATH =
             "/.well-known/attribution-reporting/report-event-attribution";
+
+    @Rule(order = 11)
+    public final SupportedByConditionRule devOptionsEnabled =
+            DevContextUtils.createDevOptionsAvailableRule(mContext, LOGCAT_TAG_MEASUREMENT);
 
     private MeasurementManager mMeasurementManager;
 
@@ -585,7 +597,13 @@ public final class MeasurementCtsDebuggableTest extends AdServicesDebuggableTest
                 .setFlag(KEY_MEASUREMENT_EVENT_REPORTS_VTC_EARLY_REPORTING_WINDOWS, "8,15")
                 .setFlag(KEY_MEASUREMENT_AGGREGATE_REPORT_DELAY_CONFIG, "0,0")
                 .setFlag(KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME, "0.0")
-                .setFlag(KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME, "0.0");
+                .setFlag(KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME, "0.0")
+                .setFlag(KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH, false)
+                // Avoid reporting jobs acquiring lock
+                .setFlag(KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH, true)
+                .setFlag(KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH, true)
+                .setFlag(KEY_MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH, true)
+                .setFlag(KEY_MEASUREMENT_REPORTING_JOB_SERVICE_ENABLED, false);
 
         sleep();
     }

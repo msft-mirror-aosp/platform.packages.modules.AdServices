@@ -100,10 +100,10 @@ public final class DevSessionControllerImpl implements DevSessionController {
         return FluentFuture.from(setDevSessionState(TRANSITIONING_DEV_TO_PROD))
                 .transformAsync(this::clearDatabase, mLightWeightExecutor)
                 .transformAsync(success -> setDevSessionState(IN_PROD), mLightWeightExecutor)
-                .transformAsync(
+                .transform(
                         state -> {
                             sLogger.v("completed transition to IN_PROD");
-                            return immediateFuture(SUCCESS);
+                            return SUCCESS;
                         },
                         mLightWeightExecutor)
                 .catching(
@@ -120,10 +120,10 @@ public final class DevSessionControllerImpl implements DevSessionController {
         return FluentFuture.from(setDevSessionState(TRANSITIONING_PROD_TO_DEV))
                 .transformAsync(this::clearDatabase, mLightWeightExecutor)
                 .transformAsync(success -> setDevSessionState(IN_DEV), mLightWeightExecutor)
-                .transformAsync(
+                .transform(
                         state -> {
                             sLogger.v("completed transition to IN_DEV");
-                            return immediateFuture(SUCCESS);
+                            return SUCCESS;
                         },
                         mLightWeightExecutor)
                 .catching(
@@ -140,11 +140,15 @@ public final class DevSessionControllerImpl implements DevSessionController {
         return mDevSessionDataStore.set(DevSession.builder().setState(desiredState).build());
     }
 
-    private ListenableFuture<Boolean> clearDatabase(DevSession unused) {
+    private ListenableFuture<Void> clearDatabase(DevSession unused) {
         sLogger.d("Beginning clearDatabase()");
-        return mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
-                /* deleteCustomAudienceUpdate= */ true,
-                /* deleteAppInstallFiltering= */ true,
-                /* deleteProtectedSignals= */ true);
+        return FluentFuture.from(
+                        mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
+                                /* deleteCustomAudienceUpdate= */ true,
+                                /* deleteAppInstallFiltering= */ true,
+                                /* deleteProtectedSignals= */ true))
+                .transformAsync(
+                        deletionStatus -> mDatabaseClearer.deleteMeasurementData(),
+                        mLightWeightExecutor);
     }
 }

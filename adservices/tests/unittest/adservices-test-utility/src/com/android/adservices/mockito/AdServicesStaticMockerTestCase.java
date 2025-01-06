@@ -20,10 +20,10 @@ import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.common.AdServicesFakeFlagsSetterRule.FakeFlags;
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.mockito.AbstractStaticMocker.ClassNotSpiedOrMockedException;
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -96,9 +96,7 @@ public abstract class AdServicesStaticMockerTestCase<T extends AdServicesStaticM
         var actual = FlagsFactory.getFlags();
 
         expect.withMessage("FlagsFactory.getFlags()").that(actual).isNotNull();
-        expect.withMessage("FlagsFactory.getFlags()")
-                .that(actual)
-                .isInstanceOf(FakeFlagsFactory.TestFlags.class);
+        expect.withMessage("FlagsFactory.getFlags()").that(actual).isInstanceOf(FakeFlags.class);
     }
 
     @Test

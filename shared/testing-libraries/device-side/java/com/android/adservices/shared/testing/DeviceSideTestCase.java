@@ -23,8 +23,6 @@ import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.shared.testing.Logger.LogLevel;
 
-import com.google.common.annotations.VisibleForTesting;
-
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -45,8 +43,9 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
             "tests should use mContext instead - if it needs the target context, please add to"
                     + " DeviceSideTestCase instead";
 
-    // TODO(b/335935200): figure out if there is a way to read it from AndroidTest.xml
-    @VisibleForTesting static final String RAVENWOOD_PACKAGE_NAME = "I.am.Groot.I.mean.Ravenwood";
+    // TODO(b/335935200): This (and RavenwoodConfig) should be removed once Ravenwood starts
+    // using the package name from the build file.
+    private static final String RAVENWOOD_PACKAGE_NAME = "com.android.adservices.shared.tests";
 
     /** {@code logcat} tag. */
     protected final String mTag = getClass().getSimpleName();
@@ -178,7 +177,7 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
                 "mocker",
                 "sInlineCleaner",
                 "sSpyContext",
-                "mMockFlags",
+                // NOTE: mMockFlags is now checked by AdServicesUnitTestCase itself
                 "mMockDebugFlags");
         testInstance.assertTestClassHasNoSuchField(
                 "mContextMock", "should use existing mMockContext instead");

@@ -15,13 +15,11 @@
  */
 package com.android.adservices.ui.notifications;
 
-import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
-import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
 import static com.android.adservices.ui.util.ApkTestUtil.getString;
-import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT;
+import static com.android.adservices.ui.util.NotificationActivityTestUtil.WINDOW_LAUNCH_TIMEOUT_MS;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -32,28 +30,21 @@ import androidx.test.uiautomator.UiObject2;
 import androidx.test.uiautomator.Until;
 
 import com.android.adservices.api.R;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetStringFlag;
 import com.android.adservices.ui.util.AdservicesNotificationUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.NotificationActivityTestUtil;
 
-import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(AndroidJUnit4.class)
+@SetFlagTrue(KEY_ENABLE_AD_SERVICES_SYSTEM_API)
+@SetFlagTrue(KEY_U18_UX_ENABLED)
+@SetStringFlag(name = KEY_DEBUG_UX, value = "U18_UX")
 public final class NotificationActivityU18UxSelectorUiAutomatorTest
         extends AdservicesNotificationUiTestCase {
-
-    @Rule(order = 11)
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests()
-                    .setCompatModeFlags()
-                    .setDebugFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE, true)
-                    .setFlag(KEY_ENABLE_AD_SERVICES_SYSTEM_API, true)
-                    .setFlag(KEY_GA_UX_FEATURE_ENABLED, true)
-                    .setFlag(KEY_U18_UX_ENABLED, true)
-                    .setFlag(KEY_DEBUG_UX, "U18_UX");
 
     @Test
     public void acceptFlowTest() throws Exception {
@@ -79,7 +70,7 @@ public final class NotificationActivityU18UxSelectorUiAutomatorTest
         mDevice.wait(
                 Until.gone(
                         By.text(getString(R.string.notificationUI_u18_right_control_button_text))),
-                WINDOW_LAUNCH_TIMEOUT);
+                WINDOW_LAUNCH_TIMEOUT_MS);
 
         // Retrieve a new instance to avoid android.support.test.uiautomator.StaleObjectException.
         u18NotificationTitle =
@@ -108,7 +99,7 @@ public final class NotificationActivityU18UxSelectorUiAutomatorTest
         mDevice.wait(
                 Until.gone(
                         By.text(getString(R.string.notificationUI_u18_left_control_button_text))),
-                WINDOW_LAUNCH_TIMEOUT);
+                WINDOW_LAUNCH_TIMEOUT_MS);
 
         // make sure it goes to u18 page rather than GA page
         UiObject2 topicTitle = ApkTestUtil.getElement(mDevice, R.string.settingsUI_topics_ga_title);

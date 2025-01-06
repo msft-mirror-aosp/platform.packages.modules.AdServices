@@ -32,6 +32,7 @@ public class MeasurementReportsStats {
     private long mReportingDelay;
     private String mSourceRegistrant;
     private int mRetryCount;
+    private boolean mIsFakeReport;
 
     public MeasurementReportsStats() {}
 
@@ -48,7 +49,8 @@ public class MeasurementReportsStats {
                 && mUploadMethod == measurementReportsStats.getUploadMethod()
                 && mReportingDelay == measurementReportsStats.getReportingDelay()
                 && Objects.equals(mSourceRegistrant, measurementReportsStats.getSourceRegistrant())
-                && mRetryCount == measurementReportsStats.getRetryCount();
+                && mRetryCount == measurementReportsStats.getRetryCount()
+                && mIsFakeReport == measurementReportsStats.getIsFakeReport();
     }
 
     @Override
@@ -61,7 +63,8 @@ public class MeasurementReportsStats {
                 mUploadMethod,
                 mReportingDelay,
                 mSourceRegistrant,
-                mRetryCount);
+                mRetryCount,
+                mIsFakeReport);
     }
 
     public int getCode() {
@@ -94,6 +97,10 @@ public class MeasurementReportsStats {
 
     public int getRetryCount() {
         return mRetryCount;
+    }
+
+    public boolean getIsFakeReport() {
+        return mIsFakeReport;
     }
 
     /**
@@ -158,6 +165,12 @@ public class MeasurementReportsStats {
         /** See {@link MeasurementReportsStats#getRetryCount()} . */
         public @NonNull MeasurementReportsStats.Builder setRetryCount(int retryCount) {
             mBuilding.mRetryCount = retryCount;
+            return this;
+        }
+
+        /** See {@link MeasurementReportsStats#getIsFakeReport()}. */
+        public @NonNull MeasurementReportsStats.Builder setIsFakeReport(boolean isFakeReport) {
+            mBuilding.mIsFakeReport = isFakeReport;
             return this;
         }
 

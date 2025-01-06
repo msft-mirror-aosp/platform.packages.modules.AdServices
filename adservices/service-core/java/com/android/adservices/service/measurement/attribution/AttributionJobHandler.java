@@ -18,7 +18,6 @@ package com.android.adservices.service.measurement.attribution;
 
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_REPORT_DELAY_SPAN;
 import static com.android.adservices.service.measurement.PrivacyParams.AGGREGATE_REPORT_MIN_DELAY;
-import static com.android.adservices.service.measurement.aggregation.AggregateReport.isDelayed;
 import static com.android.adservices.service.measurement.attribution.AttributionStatus.AttributionResult;
 import static com.android.adservices.service.measurement.attribution.AttributionStatus.FailureType;
 import static com.android.adservices.service.measurement.util.Time.roundDownToDay;
@@ -595,8 +594,7 @@ class AttributionJobHandler {
                     new AggregatePayloadGenerator(mFlags)
                             .generateAttributionReport(source, trigger);
             if (!contributions.isPresent()) {
-                if (maybeAggregatableAttributionSource.isPresent()
-                        && maybeAggregatableAttributionTrigger.isPresent()) {
+                if (maybeAggregatableAttributionTrigger.isPresent()) {
                     mDebugReportApi.scheduleTriggerDebugReport(
                             source,
                             trigger,
@@ -766,7 +764,7 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao, Trigger trigger, AttributionStatus attributionStatus)
             throws DatastoreException, JSONException {
         float nullRate = mFlags.getMeasurementNullAggReportRateExclSourceRegistrationTime();
-        if (!isDelayed(trigger,mFlags)) {
+        if (!AggregateReport.isDelayed(trigger, mFlags)) {
             nullRate = 1.0F;
         }
         if (getRandom() < nullRate) {

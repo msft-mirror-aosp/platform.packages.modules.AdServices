@@ -20,6 +20,13 @@ import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERV
 import static android.adservices.customaudience.CustomAudience.PRIORITY_DEFAULT;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_PRIORITY_1;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.OMIT_ADS_VALUE;
 
 import static org.junit.Assert.assertEquals;
@@ -33,31 +40,40 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.common.JsonFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import com.google.common.collect.ImmutableList;
 
-import org.json.JSONException;
 import org.junit.Test;
 
 import java.util.List;
 
-public class CustomAudienceUpdatableDataTest {
+// NOTE: used Flags that extended FakeFlagsFactory.TestFlags (which in turn was replaced by
+// @SetDefaultFledgeFlags), but apparently it doesn't need @SetDefaultFledgeFlags
+@SetFlagTrue(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
+@SetFlagTrue(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
+public final class CustomAudienceUpdatableDataTest extends AdServicesUnitTestCase {
     private static final DBTrustedBiddingData VALID_DB_TRUSTED_BIDDING_DATA =
             DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
     private static final List<DBAdData> VALID_DB_AD_DATA_LIST =
             DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1);
 
-    private static final Flags TEST_FLAGS = new CustomAudienceUpdateableDataTestFlags();
+    // TODO(b/384949821): move to superclass
+    private final Flags mFakeFlags = flags.getFlags();
 
     @Test
-    public void testBuildUpdatableDataSuccess() throws JSONException {
+    public void testBuildUpdatableDataSuccess() throws Exception {
         AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
                 AdSelectionSignals.fromString(
                         JsonFixture.formatAsOrgJsonJSONObjectString(
@@ -98,7 +114,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
-                        TEST_FLAGS);
+                        mFakeFlags);
 
         assertEquals(
                 "Manually built updatable data does not match built from response string \""
@@ -109,7 +125,8 @@ public class CustomAudienceUpdatableDataTest {
     }
 
     @Test
-    public void testBuildUpdatableDataSuccessWithAuctionServerFlagsEnabled() throws JSONException {
+    @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED)
+    public void testBuildUpdatableDataSuccessWithAuctionServerFlagsEnabled() throws Exception {
         AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
                 AdSelectionSignals.fromString(
                         JsonFixture.formatAsOrgJsonJSONObjectString(
@@ -155,7 +172,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
-                        new FlagsWithAuctionServerRequestFlagsSet(true));
+                        mFakeFlags);
 
         assertEquals(
                 "Manually built updatable data does not match built from response string \""
@@ -166,8 +183,9 @@ public class CustomAudienceUpdatableDataTest {
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED)
     public void testBuildUpdatableDataSuccessWithJunkWithAuctionServerFlagsEnabled()
-            throws JSONException {
+            throws Exception {
         AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
                 AdSelectionSignals.fromString(
                         JsonFixture.formatAsOrgJsonJSONObjectString(
@@ -214,7 +232,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
-                        new FlagsWithAuctionServerRequestFlagsSet(true));
+                        mFakeFlags);
 
         assertEquals(
                 "Manually built updatable data does not match built from response string \""
@@ -225,7 +243,8 @@ public class CustomAudienceUpdatableDataTest {
     }
 
     @Test
-    public void testBuildUpdatableDataSuccessWithAuctionServerFlagsDisabled() throws JSONException {
+    @SetFlagFalse(KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED)
+    public void testBuildUpdatableDataSuccessWithAuctionServerFlagsDisabled() throws Exception {
         AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
                 AdSelectionSignals.fromString(
                         JsonFixture.formatAsOrgJsonJSONObjectString(
@@ -267,7 +286,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
-                        new FlagsWithAuctionServerRequestFlagsSet(false));
+                        mFakeFlags);
 
         assertEquals(
                 "Manually built updatable data does not match built from response string \""
@@ -279,7 +298,8 @@ public class CustomAudienceUpdatableDataTest {
     }
 
     @Test
-    public void testUpdatableDataSuccessWithSellerConfigurationEnabled() throws JSONException {
+    @SetFlagEnabled(KEY_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
+    public void testUpdatableDataSuccessWithSellerConfigurationEnabled() throws Exception {
         AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
                 AdSelectionSignals.fromString(
                         JsonFixture.formatAsOrgJsonJSONObjectString(
@@ -324,7 +344,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
-                        new FlagsWithSellerConfigurationSet(true));
+                        mFakeFlags);
 
         assertEquals(
                 "Manually built updatable data does not match built from response string \""
@@ -340,7 +360,8 @@ public class CustomAudienceUpdatableDataTest {
     }
 
     @Test
-    public void testUpdatableDataSuccessWithSellerConfigurationDisabled() throws JSONException {
+    @SetFlagDisabled(KEY_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
+    public void testUpdatableDataSuccessWithSellerConfigurationDisabled() throws Exception {
         AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
                 AdSelectionSignals.fromString(
                         JsonFixture.formatAsOrgJsonJSONObjectString(
@@ -384,7 +405,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
-                        new FlagsWithSellerConfigurationSet(false));
+                        mFakeFlags);
 
         assertEquals(
                 "Manually built updatable data does not match built from response string \""
@@ -397,7 +418,8 @@ public class CustomAudienceUpdatableDataTest {
     }
 
     @Test
-    public void testUpdatableDataSuccessWithNoPriorityValueInResponseString() throws JSONException {
+    @SetFlagEnabled(KEY_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
+    public void testUpdatableDataSuccessWithNoPriorityValueInResponseString() throws Exception {
         AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
                 AdSelectionSignals.fromString(
                         JsonFixture.formatAsOrgJsonJSONObjectString(
@@ -441,7 +463,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
-                        new FlagsWithSellerConfigurationSet(true));
+                        mFakeFlags);
 
         assertEquals(
                 "Manually built updatable data does not match built from response string \""
@@ -460,7 +482,7 @@ public class CustomAudienceUpdatableDataTest {
     }
 
     @Test
-    public void testBuildEmptyUpdatableDataSuccess() throws JSONException {
+    public void testBuildEmptyUpdatableDataSuccess() throws Exception {
         boolean expectedContainsSuccessfulUpdate = true;
         CustomAudienceUpdatableData updatableDataFromBuilder =
                 CustomAudienceUpdatableData.builder()
@@ -490,7 +512,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
-                        TEST_FLAGS);
+                        mFakeFlags);
 
         assertEquals(
                 "Manually built updatable data does not match built from response string \""
@@ -505,7 +527,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         "",
-                        TEST_FLAGS);
+                        mFakeFlags);
 
         assertEquals(
                 "Updatable data created with empty string does not match built from response"
@@ -517,7 +539,7 @@ public class CustomAudienceUpdatableDataTest {
     }
 
     @Test
-    public void testBuildEmptyUpdatableDataWithNonEmptyResponseSuccess() throws JSONException {
+    public void testBuildEmptyUpdatableDataWithNonEmptyResponseSuccess() throws Exception {
         boolean expectedContainsSuccessfulUpdate = false;
         CustomAudienceUpdatableData updatableDataFromBuilder =
                 CustomAudienceUpdatableData.builder()
@@ -550,7 +572,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
-                        TEST_FLAGS);
+                        mFakeFlags);
 
         assertEquals(
                 "Manually built updatable data does not match built from response string \""
@@ -561,7 +583,7 @@ public class CustomAudienceUpdatableDataTest {
     }
 
     @Test
-    public void testHarmlessJunkIgnoredInUpdatableDataCreateFromResponse() throws JSONException {
+    public void testHarmlessJunkIgnoredInUpdatableDataCreateFromResponse() throws Exception {
         // In this case, a regular full response was parsed without any extra fields
         final String jsonResponseWithoutHarmlessJunk =
                 CustomAudienceUpdatableDataFixture.toJsonResponseString(
@@ -574,7 +596,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponseWithoutHarmlessJunk,
-                        TEST_FLAGS);
+                        mFakeFlags);
 
         // Harmless junk was added to the same response
         final String jsonResponseWithHarmlessJunk =
@@ -588,7 +610,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponseWithHarmlessJunk,
-                        TEST_FLAGS);
+                        mFakeFlags);
 
         assertNotEquals(
                 "Harmless junk was not added to the response JSON",
@@ -622,7 +644,7 @@ public class CustomAudienceUpdatableDataTest {
     }
 
     @Test
-    public void testUnsuccessfulInitialUpdateResultCausesUnsuccessfulUpdate() throws JSONException {
+    public void testUnsuccessfulInitialUpdateResultCausesUnsuccessfulUpdate() throws Exception {
         // If the initial update result is anything except for SUCCESS, the resulting updatableData
         // should not contain a successful update
         for (BackgroundFetchRunner.UpdateResultType initialUpdateResult :
@@ -633,7 +655,7 @@ public class CustomAudienceUpdatableDataTest {
                             CommonFixture.VALID_BUYER_1,
                             initialUpdateResult,
                             CustomAudienceUpdatableDataFixture.getEmptyJsonResponseString(),
-                            TEST_FLAGS);
+                            mFakeFlags);
             assertEquals(
                     "Incorrect update success when initial result is "
                             + initialUpdateResult.toString(),
@@ -650,7 +672,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         "this (input ,string .is -not real json'",
-                        TEST_FLAGS);
+                        mFakeFlags);
 
         assertNull(updatableData.getUserBiddingSignals());
         assertNull(updatableData.getTrustedBiddingData());
@@ -663,30 +685,15 @@ public class CustomAudienceUpdatableDataTest {
         assertFalse(updatableData.getContainsSuccessfulUpdate());
     }
 
+    @SetIntegerFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B, value = 1)
+    @SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
+    @SetFlagEnabled(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
     @Test
-    public void testCreateFromFullJsonResponseStringWithSmallLimitStillSuccess()
-            throws JSONException {
-        class FlagsWithSmallLimits implements Flags {
-            @Override
-            public int getFledgeCustomAudienceMaxUserBiddingSignalsSizeB() {
-                return 1;
-            }
-
-            @Override
-            public boolean getFledgeFrequencyCapFilteringEnabled() {
-                return true;
-            }
-
-            @Override
-            public boolean getFledgeAppInstallFilteringEnabled() {
-                return true;
-            }
-        }
-
+    public void testCreateFromFullJsonResponseStringWithSmallLimitStillSuccess() throws Exception {
         String validUserBiddingSignalsAsJsonObjectString =
                 JsonFixture.formatAsOrgJsonJSONObjectString(
                         CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
-        final String jsonResponse =
+        String jsonResponse =
                 CustomAudienceUpdatableDataFixture.toJsonResponseString(
                         validUserBiddingSignalsAsJsonObjectString,
                         VALID_DB_TRUSTED_BIDDING_DATA,
@@ -697,7 +704,7 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
-                        new FlagsWithSmallLimits());
+                        mFakeFlags);
 
         // Because *something* was updated, even a failed unit of data still creates a successful
         // update, but the failed unit is not updated
@@ -710,25 +717,11 @@ public class CustomAudienceUpdatableDataTest {
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B, value = 1)
+    @SetIntegerFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_TRUSTED_BIDDING_DATA_SIZE_B, value = 1)
+    @SetIntegerFlag(name = KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B, value = 1)
     public void testCreateFromResponseStringWithLargeFieldsCausesUnsuccessfulUpdate()
-            throws JSONException {
-        class FlagsWithSmallLimits implements Flags {
-            @Override
-            public int getFledgeCustomAudienceMaxUserBiddingSignalsSizeB() {
-                return 1;
-            }
-
-            @Override
-            public int getFledgeCustomAudienceMaxTrustedBiddingDataSizeB() {
-                return 1;
-            }
-
-            @Override
-            public int getFledgeCustomAudienceMaxAdsSizeB() {
-                return 1;
-            }
-        }
-
+            throws Exception {
         String validUserBiddingSignalsAsJsonObjectString =
                 JsonFixture.formatAsOrgJsonJSONObjectString(
                         CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString());
@@ -743,48 +736,9 @@ public class CustomAudienceUpdatableDataTest {
                         CommonFixture.VALID_BUYER_1,
                         BackgroundFetchRunner.UpdateResultType.SUCCESS,
                         jsonResponse,
-                        new FlagsWithSmallLimits());
+                        mFakeFlags);
 
         // All found fields in the response were too large, failing validation
         assertFalse(updatableDataFromResponseString.getContainsSuccessfulUpdate());
-    }
-
-    static class CustomAudienceUpdateableDataTestFlags extends FakeFlagsFactory.TestFlags {
-        @Override
-        public boolean getFledgeFrequencyCapFilteringEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeAppInstallFilteringEnabled() {
-            return true;
-        }
-    }
-
-    static class FlagsWithAuctionServerRequestFlagsSet
-            extends CustomAudienceUpdateableDataTestFlags {
-        private final boolean mAuctionServerRequestFlagsEnabled;
-
-        FlagsWithAuctionServerRequestFlagsSet(boolean auctionServerRequestFlagsEnabled) {
-            mAuctionServerRequestFlagsEnabled = auctionServerRequestFlagsEnabled;
-        }
-
-        @Override
-        public boolean getFledgeAuctionServerRequestFlagsEnabled() {
-            return mAuctionServerRequestFlagsEnabled;
-        }
-    }
-
-    static class FlagsWithSellerConfigurationSet extends CustomAudienceUpdateableDataTestFlags {
-        private final boolean mSellerConfigurationFlagEnabled;
-
-        FlagsWithSellerConfigurationSet(boolean sellerConfigurationFlagEnabled) {
-            mSellerConfigurationFlagEnabled = sellerConfigurationFlagEnabled;
-        }
-
-        @Override
-        public boolean getFledgeGetAdSelectionDataSellerConfigurationEnabled() {
-            return mSellerConfigurationFlagEnabled;
-        }
     }
 }

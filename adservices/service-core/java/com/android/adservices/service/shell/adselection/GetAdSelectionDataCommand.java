@@ -210,6 +210,30 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
         return printProtoToJsonAndExit(request, out, err);
     }
 
+    private ShellCommandResult getDataForSeller(
+            String appPackageName, PrintWriter out, PrintWriter err) {
+        ProtectedAuctionInput protectedAuctionInput;
+        try {
+            protectedAuctionInput =
+                    ProtectedAuctionInput.newBuilder()
+                            .putAllBuyerInput(getBuyerInputsAsProtoMap(getBuyerInputs()))
+                            .setPublisherName(appPackageName)
+                            .setEnableDebugReporting(IS_DEBUG_REPORTING_ENABLED)
+                            .setEnableUnlimitedEgress(IS_UNLIMITED_EGRESS_ENABLED)
+                            .setGenerationId(Long.toString(mAdSelectionIdGenerator.generateId()))
+                            .setConsentedDebugConfig(getConsentedDebugConfiguration())
+                            .setProdDebug(IS_DEBUG_REPORTING_ENABLED)
+                            .build();
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            err.printf(ERROR_TIMEOUT_DB);
+            sLogger.v(ERROR_TIMEOUT_DB);
+            return toShellCommandResult(
+                    RESULT_TIMEOUT_ERROR, COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA);
+        }
+        sLogger.v("Loaded ProtectedAuctionInput: %s", protectedAuctionInput);
+        return printProtoToJsonAndExit(protectedAuctionInput, out, err);
+    }
+
     private boolean isRunningInDevSession() {
         // Seller variant is only available in developer mode as data from all buyers on the
         // device (including 3rd party ad tech data) are included in the generated payload.
@@ -223,29 +247,6 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
             sLogger.e(e, "Could not correctly retrieve dev session status");
             return false;
         }
-    }
-
-    private ShellCommandResult getDataForSeller(
-            String appPackageName, PrintWriter out, PrintWriter err) {
-        ProtectedAuctionInput protectedAuctionInput;
-        try {
-            protectedAuctionInput =
-                    ProtectedAuctionInput.newBuilder()
-                            .putAllBuyerInput(getBuyerInputsAsProtoMap(getBuyerInputs()))
-                            .setPublisherName(appPackageName)
-                            .setEnableDebugReporting(IS_DEBUG_REPORTING_ENABLED)
-                            .setEnableUnlimitedEgress(IS_UNLIMITED_EGRESS_ENABLED)
-                            .setGenerationId(Long.toString(mAdSelectionIdGenerator.generateId()))
-                            .setConsentedDebugConfig(getConsentedDebugConfiguration())
-                            .build();
-        } catch (ExecutionException | InterruptedException | TimeoutException e) {
-            err.printf(ERROR_TIMEOUT_DB);
-            sLogger.v(ERROR_TIMEOUT_DB);
-            return toShellCommandResult(
-                    RESULT_TIMEOUT_ERROR, COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA);
-        }
-        sLogger.v("Loaded ProtectedAuctionInput: %s", protectedAuctionInput);
-        return printProtoToJsonAndExit(protectedAuctionInput, out, err);
     }
 
     private ShellCommandResult printProtoToJsonAndExit(
@@ -301,6 +302,7 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
                 .setTopLevelSeller(TOP_LEVEL_SELLER_HINT)
                 .setSeller(SELLER_HINT)
                 .setBuyerKvExperimentGroupId(BUYER_KV_EXPERIMENT_ID_HINT)
+                .setIsDebugEligible(IS_DEBUG_REPORTING_ENABLED)
                 .build();
     }
 

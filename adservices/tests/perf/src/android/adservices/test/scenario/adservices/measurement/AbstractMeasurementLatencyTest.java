@@ -35,6 +35,7 @@ import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.DebugFlagsConstants;
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.common.flags.Constants;
 
 import com.google.common.base.Stopwatch;
 import com.google.common.truth.Truth;
@@ -84,7 +85,9 @@ public class AbstractMeasurementLatencyTest {
     public static void setup() throws Exception {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+                .adoptShellPermissionIdentity(
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG);
     }
 
     protected void runRegisterSource(String testClassName, String testName) throws Exception {
@@ -178,10 +181,10 @@ public class AbstractMeasurementLatencyTest {
         flags.setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false);
 
         // Override the flag to allow current package to call APIs.
-        flags.setPpapiAppAllowList(FlagsConstants.ALLOWLIST_ALL);
+        flags.setPpapiAppAllowList(Constants.ALLOWLIST_ALL);
 
         // Override the flag to allow current package to call delete API.
-        flags.setMsmtWebContextClientAllowList(FlagsConstants.ALLOWLIST_ALL);
+        flags.setMsmtWebContextClientAllowList(Constants.ALLOWLIST_ALL);
 
         // Override the flag for the global kill switch.
         flags.setFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, false);

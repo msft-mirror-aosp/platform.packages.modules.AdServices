@@ -16,7 +16,6 @@
 package com.android.adservices.common;
 
 import static com.android.adservices.common.AbstractAdServicesSystemPropertiesDumperRule.SYSTEM_PROPERTY_FOR_DEBUGGING_PREFIX;
-import static com.android.adservices.service.FlagsConstants.ARRAY_SPLITTER_COMMA;
 import static com.android.adservices.service.FlagsConstants.KEY_ADID_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
@@ -31,12 +30,14 @@ import com.android.adservices.common.annotations.SetCompatModeFlags;
 import com.android.adservices.common.annotations.SetDefaultLogcatTags;
 import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
 import com.android.adservices.common.annotations.SetMsmtWebContextClientAppAllowList;
+import com.android.adservices.common.annotations.SetPasAppAllowList;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.shared.testing.AbstractFlagsSetterRule;
 import com.android.adservices.shared.testing.DeviceConfigHelper;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.NameValuePair;
 import com.android.adservices.shared.testing.NameValuePair.Matcher;
 import com.android.adservices.shared.testing.SystemPropertiesHelper;
 
@@ -44,6 +45,7 @@ import org.junit.runner.Description;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
+import java.util.function.Consumer;
 
 // TODO(b/294423183): add unit tests for the most relevant / less repetitive stuff (don't need to
 // test all setters / getters, for example)
@@ -97,6 +99,12 @@ public abstract class AbstractAdServicesFlagsSetterRule<
                 systemPropertiesInterface);
     }
 
+    // Used for testing purposes only
+    protected AbstractAdServicesFlagsSetterRule(
+            RealLogger logger, Consumer<NameValuePair> flagsSetter) {
+        super(logger, flagsSetter);
+    }
+
     @Override
     protected boolean isAnnotationSupported(Annotation annotation) {
         // NOTE: add annotations sorted by "most likely usage"
@@ -107,7 +115,8 @@ public abstract class AbstractAdServicesFlagsSetterRule<
                 || annotation instanceof SetDefaultLogcatTags
                 || annotation instanceof SetAllLogcatTags
                 || annotation instanceof SetMsmtApiAppAllowList
-                || annotation instanceof SetMsmtWebContextClientAppAllowList;
+                || annotation instanceof SetMsmtWebContextClientAppAllowList
+                || annotation instanceof SetPasAppAllowList;
     }
 
     @Override
@@ -133,6 +142,8 @@ public abstract class AbstractAdServicesFlagsSetterRule<
             setMsmtWebContextClientAllowList(
                     ((SetMsmtWebContextClientAppAllowList) annotation).value(),
                     USE_TEST_PACKAGE_AS_DEFAULT);
+        } else if (annotation instanceof SetPasAppAllowList) {
+            setPasAppAllowList(((SetPasAppAllowList) annotation).value());
         } else {
             // should not happen
             throw new IllegalStateException(
@@ -157,15 +168,6 @@ public abstract class AbstractAdServicesFlagsSetterRule<
 
     // Helper methods to set more commonly used flags such as kill switches.
     // Less common flags can be set directly using setFlags methods.
-
-    // TODO(b/303901926): add unit test
-    /**
-     * Sets a flag that takes an array of strings with just the given value, using the default
-     * separator.
-     */
-    public final T setSimpleArrayFlag(String name, String value) {
-        return setFlag(name, new String[] {value}, ARRAY_SPLITTER_COMMA);
-    }
 
     /**
      * Overrides the flag that sets the global AdServices kill switch.
@@ -282,8 +284,17 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getMddBackgroundTaskKillSwitch()}.
      */
-    public T setMddBackgroundTaskKillSwitch(boolean value) {
+    public final T setMddBackgroundTaskKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
+    }
+
+    /**
+     * Overrides flag used by {@link com.android.adservices.service.PhFlags#getPasAppAllowList()}.
+     */
+    public final T setPasAppAllowList(String... value) {
+        mLog.d("setPasAppAllowList(%s)", Arrays.toString(value));
+        return setAllowListFlag(
+                FlagsConstants.KEY_PAS_APP_ALLOW_LIST, value, USE_TEST_PACKAGE_AS_DEFAULT);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -401,6 +412,6 @@ public abstract class AbstractAdServicesFlagsSetterRule<
                     name, testPkg);
             values = new String[] {testPkg};
         }
-        return setFlag(name, values, ARRAY_SPLITTER_COMMA);
+        return setArrayFlag(name, values);
     }
 }

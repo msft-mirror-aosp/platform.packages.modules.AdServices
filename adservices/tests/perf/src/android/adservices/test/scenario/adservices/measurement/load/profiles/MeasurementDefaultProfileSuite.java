@@ -19,6 +19,7 @@ package android.adservices.test.scenario.adservices.measurement.load.profiles;
 import android.Manifest;
 import android.adservices.test.longevity.concurrent.ProfileSuite;
 import android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource;
+import android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger;
 import android.adservices.test.scenario.adservices.measurement.load.scenarios.DeviceChangeTime;
 import android.adservices.test.scenario.adservices.measurement.load.scenarios.DeviceExecuteShellCommand;
 import android.adservices.test.scenario.adservices.measurement.load.scenarios.ForceRunJob;
@@ -37,6 +38,7 @@ import com.android.adservices.common.AdServicesFlagsSetterRule;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.DebugFlagsConstants;
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.common.flags.Constants;
 
 import com.google.mockwebserver.MockWebServer;
 
@@ -52,6 +54,7 @@ import java.io.IOException;
 @RunWith(ProfileSuite.class)
 @SuiteClasses({
     CallRegisterSource.class,
+    CallRegisterTrigger.class,
     ForceRunJob.class,
     DeviceChangeTime.class,
     DeviceExecuteShellCommand.class
@@ -72,9 +75,9 @@ public class MeasurementDefaultProfileSuite {
                     // Override adid kill switch.
                     .setFlag(FlagsConstants.KEY_ADID_KILL_SWITCH, false)
                     // Override the flag to allow current package to call APIs.
-                    .setPpapiAppAllowList(FlagsConstants.ALLOWLIST_ALL)
+                    .setPpapiAppAllowList(Constants.ALLOWLIST_ALL)
                     // Override the flag to allow current package to call delete API.
-                    .setMsmtWebContextClientAllowList(FlagsConstants.ALLOWLIST_ALL)
+                    .setMsmtWebContextClientAllowList(Constants.ALLOWLIST_ALL)
                     // Override the flag for the global kill switch.
                     .setFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, false)
                     // Override measurement kill switch.
@@ -119,7 +122,9 @@ public class MeasurementDefaultProfileSuite {
     public static void setup() throws Exception {
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
+                .adoptShellPermissionIdentity(
+                        Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG);
         Log.i(TAG, "Added DeviceWriteConfig Permission");
         InstrumentationRegistry.getInstrumentation()
                 .getUiAutomation()

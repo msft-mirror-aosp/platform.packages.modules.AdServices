@@ -16,7 +16,6 @@
 
 package android.adservices.test.scenario.adservices.fledge;
 
-import android.Manifest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.clients.customaudience.AdvertisingCustomAudienceClient;
@@ -27,27 +26,18 @@ import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.adservices.test.scenario.adservices.utils.MockWebServerRule;
 import android.adservices.test.scenario.adservices.utils.MockWebServerRuleFactory;
-import android.adservices.test.scenario.adservices.utils.SelectAdsFlagRule;
 import android.content.Context;
 import android.net.Uri;
-import android.platform.test.rule.CleanPackageRule;
-import android.platform.test.rule.KillAppsRule;
 import android.platform.test.scenario.annotation.Scenario;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.platform.app.InstrumentationRegistry;
-
-import com.android.adservices.common.AdServicesFlagsSetterRule;
-import com.android.adservices.common.AdservicesTestHelper;
 
 import com.google.mockwebserver.Dispatcher;
 import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.RecordedRequest;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Rule;
-import org.junit.rules.RuleChain;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
@@ -63,7 +53,7 @@ import java.util.concurrent.Executors;
 
 @Scenario
 @RunWith(JUnit4.class)
-public class AbstractPerfTest {
+public class AbstractPerfTest extends FledgePerfTestCase {
 
     public static final Duration CUSTOM_AUDIENCE_EXPIRE_IN = Duration.ofDays(1);
     public static final Instant VALID_ACTIVATION_TIME = Instant.now();
@@ -158,34 +148,6 @@ public class AbstractPerfTest {
                     .build();
     @Rule public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
     protected Dispatcher mDefaultDispatcher;
-
-    // Per-test method rules, run in the given order.
-    @Rule
-    public RuleChain rules =
-            RuleChain.outerRule(
-                            new KillAppsRule(
-                                    AdservicesTestHelper.getAdServicesPackageName(mContext)))
-                    .around(
-                            // CleanPackageRule should not execute after each test method because
-                            // there's a chance it interferes with ShowmapSnapshotListener snapshot
-                            // at the end of the test, impacting collection of memory metrics for
-                            // AdServices process.
-                            new CleanPackageRule(
-                                    AdservicesTestHelper.getAdServicesPackageName(mContext),
-                                    /* clearOnStarting = */ true,
-                                    /* clearOnFinished = */ false))
-                    .around(new SelectAdsFlagRule());
-
-    @Rule
-    public final AdServicesFlagsSetterRule flags =
-            AdServicesFlagsSetterRule.forGlobalKillSwitchDisabledTests().setCompatModeFlags();
-
-    @BeforeClass
-    public static void setupBeforeClass() {
-        InstrumentationRegistry.getInstrumentation()
-                .getUiAutomation()
-                .adoptShellPermissionIdentity(Manifest.permission.WRITE_DEVICE_CONFIG);
-    }
 
     public static Uri getUri(String name, String path) {
         return Uri.parse("https://" + name + path);

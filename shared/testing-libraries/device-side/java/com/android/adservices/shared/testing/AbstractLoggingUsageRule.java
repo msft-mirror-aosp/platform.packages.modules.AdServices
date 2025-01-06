@@ -45,23 +45,17 @@ public abstract class AbstractLoggingUsageRule extends AbstractRule {
         // Rule can only be applied to individual tests.
         TestHelper.throwIfNotTest(description);
 
-        // Skip scanning + verification log usage if appropriate annotation is detected.
-        SkipLoggingUsageRule annotation =
-                TestHelper.getAnnotation(description, SkipLoggingUsageRule.class);
-        if (annotation != null) {
-            mLog.v("Skipping log usage rule, reason: %s", annotation.reason());
-            return;
-        }
-
         // Fetch log verifiers based on enabled log types for the rule.
         List<LogVerifier> logVerifiers = getLogVerifiers();
-        if (logVerifiers.isEmpty()) {
-            mLog.v("No log verifiers configured.");
-            return;
-        }
 
-        // Setup work to scan expected calls and track actual calls
-        logVerifiers.forEach(LogVerifier::setup);
+        // Setup work to scan expected calls and track actual calls only if the logging usage rule
+        // is active for the test.
+        SkipLoggingUsageRule annotation =
+                TestHelper.getAnnotationFromAnywhere(description, SkipLoggingUsageRule.class);
+        boolean shouldUseVerifiers = annotation == null;
+        if (shouldUseVerifiers) {
+            logVerifiers.forEach(LogVerifier::setup);
+        }
 
         // Execute test
         try {
@@ -71,6 +65,12 @@ public abstract class AbstractLoggingUsageRule extends AbstractRule {
             // Skip log verification and rethrow the exception in case the issue caused by
             // the rule itself e.g. capturing and casting arguments from log calls.
             throw t;
+        }
+
+        // Skip verification of log usage if appropriate annotation is detected.
+        if (!shouldUseVerifiers) {
+            mLog.v("Skipping log usage rule verification, reason: %s", annotation.reason());
+            return;
         }
 
         // Ensure all log calls have been verified. Fail fast if any of the log verifiers

@@ -16,6 +16,16 @@
 
 package com.android.adservices.service.common;
 
+import static android.adservices.common.AdServicesCommonManager.MODULE_MEASUREMENT;
+import static android.adservices.common.AdServicesCommonManager.MODULE_ON_DEVICE_PERSONALIZATION;
+import static android.adservices.common.AdServicesCommonManager.MODULE_PROTECTED_APP_SIGNALS;
+import static android.adservices.common.AdServicesCommonManager.MODULE_PROTECTED_AUDIENCE;
+import static android.adservices.common.AdServicesCommonManager.MODULE_STATE_ENABLED;
+import static android.adservices.common.AdServicesCommonManager.MODULE_TOPICS;
+import static android.adservices.common.AdServicesCommonManager.NOTIFICATION_NONE;
+import static android.adservices.common.AdServicesCommonManager.NOTIFICATION_ONGOING;
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN;
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE;
 import static android.adservices.common.AdServicesPermissions.ACCESS_ADSERVICES_STATE_COMPAT;
 import static android.adservices.common.AdServicesPermissions.MODIFY_ADSERVICES_STATE;
@@ -25,6 +35,7 @@ import static android.adservices.common.AdServicesPermissions.UPDATE_PRIVILEGED_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_ADSERVICES_ACTIVITY_DISABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.ConsentStatus.SERVICE_NOT_ENABLED;
@@ -52,7 +63,6 @@ import static com.android.adservices.service.ui.constants.DebugMessages.UNAUTHOR
 import android.adservices.adid.AdId;
 import android.adservices.common.AdServicesCommonStates;
 import android.adservices.common.AdServicesCommonStatesResponse;
-import android.adservices.common.AdServicesModuleState;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.AdServicesStates;
 import android.adservices.common.CallerMetadata;
@@ -67,8 +77,9 @@ import android.adservices.common.IRequestAdServicesModuleOverridesCallback;
 import android.adservices.common.IRequestAdServicesModuleUserChoicesCallback;
 import android.adservices.common.IUpdateAdIdCallback;
 import android.adservices.common.IsAdServicesEnabledResult;
-import android.adservices.common.NotificationType;
 import android.adservices.common.UpdateAdIdRequest;
+import android.adservices.common.UpdateAdServicesModuleStatesParams;
+import android.adservices.common.UpdateAdServicesUserChoicesParams;
 import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.content.Context;
@@ -77,13 +88,16 @@ import android.os.Binder;
 import android.os.Build;
 import android.os.RemoteException;
 import android.os.Trace;
+import android.util.SparseIntArray;
 
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdCacheManager;
 import com.android.adservices.service.adid.AdIdWorker;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
@@ -97,7 +111,10 @@ import com.android.adservices.service.ui.UxEngine;
 import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.shared.util.Clock;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 
@@ -119,12 +136,14 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
 
     private final AdServicesLogger mAdServicesLogger;
     private final Flags mFlags;
+    private final DebugFlags mDebugFlags;
     private final AdIdWorker mAdIdWorker;
     private final Clock mClock;
 
     public AdServicesCommonServiceImpl(
             Context context,
             Flags flags,
+            DebugFlags debugFlags,
             UxEngine uxEngine,
             UxStatesManager uxStatesManager,
             AdIdWorker adIdWorker,
@@ -132,6 +151,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             @NonNull Clock clock) {
         mContext = context;
         mFlags = flags;
+        mDebugFlags = debugFlags;
         mUxEngine = uxEngine;
         mUxStatesManager = uxStatesManager;
         mAdIdWorker = adIdWorker;
@@ -295,7 +315,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         ConsentManager consentManager = ConsentManager.getInstance();
         return (!consentManager.wasGaUxNotificationDisplayed()
                         && !consentManager.wasNotificationDisplayed())
-                || mFlags.getConsentNotificationDebugMode();
+                || mDebugFlags.getConsentNotificationDebugMode();
     }
 
     /** Check ROW device and see if it fit reconsent */
@@ -506,8 +526,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     @Override
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void requestAdServicesModuleOverrides(
-            List<AdServicesModuleState> adServicesModuleStateList,
-            @NotificationType.NotificationTypeCode int notificationType,
+            UpdateAdServicesModuleStatesParams updateParams,
             IRequestAdServicesModuleOverridesCallback callback) {
 
         boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
@@ -519,12 +538,16 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
                             return;
                         }
-                        ConsentManager consentManager = ConsentManager.getInstance();
-                        consentManager.setModuleStates(adServicesModuleStateList);
+                        boolean businessLogicMigrationEnabled =
+                                FlagsFactory.getFlags()
+                                        .getAdServicesConsentBusinessLogicMigrationEnabled();
+                        if (!businessLogicMigrationEnabled) {
+                            callback.onFailure(STATUS_KILLSWITCH_ENABLED);
+                            LogUtil.d("Business logic migration flag not enabled");
+                            return;
+                        }
+                        sendNotificationIfNeededAndUpdateState(updateParams);
                         callback.onSuccess();
-
-                        // TODO(361411984): Add the notification trigger logic
-
                     } catch (Exception e) {
                         LogUtil.e(
                                 "requestAdServicesModuleOverrides() failed to complete: "
@@ -538,11 +561,115 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                 });
     }
 
+    private void sendNotificationIfNeededAndUpdateState(
+            UpdateAdServicesModuleStatesParams updateParams) {
+        SparseIntArray moduleStates = updateParams.getModuleStates();
+        int notificationType = updateParams.getNotificationType();
+        ConsentManager consentManager = ConsentManager.getInstance();
+        boolean hasAnyModuleStateChanges = false;
+        boolean isPersonalizationBeingEnabled = false;
+        boolean anyUserChoicesKnown = false;
+        boolean isAnyToggleOnForAnyNewModule = false;
+        boolean hasExistingPersonalization = false;
+        boolean isVisibleNotificationType = notificationType != NOTIFICATION_NONE;
+        boolean isOngoingNotificationType = notificationType == NOTIFICATION_ONGOING;
+
+        // 1. determine conditions
+        for (int i = 0; i < moduleStates.size(); i++) {
+            int module = moduleStates.keyAt(i);
+            int desiredState = moduleStates.valueAt(i);
+            int curState = consentManager.getModuleState(module);
+            int curUserChoice = consentManager.getUserChoice(module);
+
+            if (curState != desiredState
+                    && desiredState == MODULE_STATE_ENABLED
+                    && module != MODULE_MEASUREMENT) {
+                isPersonalizationBeingEnabled = true;
+            }
+            if (curState != desiredState) {
+                hasAnyModuleStateChanges = true;
+            }
+            if (curUserChoice != USER_CHOICE_UNKNOWN) {
+                anyUserChoicesKnown = true;
+            }
+            if (isAnyToggleOnForNewModule(consentManager, module, curState, desiredState)) {
+                isAnyToggleOnForAnyNewModule = true;
+            }
+            if (module != MODULE_MEASUREMENT && curState == MODULE_STATE_ENABLED) {
+                hasExistingPersonalization = true;
+            }
+        }
+
+        // 2. determine all cases that require a notification
+        boolean isFirstTimeNotification =
+                isVisibleNotificationType && isPersonalizationBeingEnabled && !anyUserChoicesKnown;
+        boolean isValidRenotifyWithExistingPersonalization =
+                isVisibleNotificationType
+                        && isPersonalizationBeingEnabled
+                        && isAnyToggleOnForAnyNewModule
+                        && hasExistingPersonalization;
+        boolean isLimitedNotification =
+                isVisibleNotificationType
+                        && !isPersonalizationBeingEnabled
+                        && hasAnyModuleStateChanges;
+
+        // 3. schedule a notification if required
+        if (isFirstTimeNotification
+                || isValidRenotifyWithExistingPersonalization
+                || isLimitedNotification) {
+            ConsentNotificationJobService.scheduleNotificationV2(
+                    mContext,
+                    anyUserChoicesKnown,
+                    isPersonalizationBeingEnabled,
+                    isOngoingNotificationType);
+        }
+
+        // 4. reset any user choices of disabled modules
+        List<AdServicesModuleUserChoice> adServicesUserChoiceList = new ArrayList<>();
+        for (int i = 0; i < moduleStates.size(); i++) {
+            int key = moduleStates.keyAt(i);
+            int value = moduleStates.valueAt(i);
+            if (value != MODULE_STATE_ENABLED) {
+                adServicesUserChoiceList.add(
+                        new AdServicesModuleUserChoice(key, USER_CHOICE_UNKNOWN));
+            }
+        }
+        consentManager.setUserChoices(adServicesUserChoiceList);
+
+        // 5. finally, set the module state
+        boolean isPersonalizationEnabledFirstTimeForExistingUser =
+                anyUserChoicesKnown && isPersonalizationBeingEnabled && !hasExistingPersonalization;
+        if (isPersonalizationEnabledFirstTimeForExistingUser) {
+            // if existing user having personalization being enabled for first time, then skip as
+            // this is currently not allowed
+            return;
+        }
+        consentManager.setModuleStates(moduleStates);
+    }
+
+    private static boolean isAnyToggleOnForNewModule(
+            ConsentManager consentManager, int module, int curState, int desiredState) {
+        if (desiredState == curState || desiredState != MODULE_STATE_ENABLED) {
+            // same state OR not being enabled, therefore is not a new module being introduced
+            return false;
+        }
+        Map<Integer, int[]> moduleToToggleMap =
+                Map.of(
+                        MODULE_MEASUREMENT, new int[] {MODULE_MEASUREMENT},
+                        MODULE_PROTECTED_AUDIENCE, new int[] {MODULE_PROTECTED_AUDIENCE},
+                        MODULE_TOPICS, new int[] {MODULE_TOPICS},
+                        MODULE_PROTECTED_APP_SIGNALS, new int[] {MODULE_PROTECTED_AUDIENCE},
+                        MODULE_ON_DEVICE_PERSONALIZATION,
+                                new int[] {MODULE_PROTECTED_AUDIENCE, MODULE_MEASUREMENT});
+        return Arrays.stream(moduleToToggleMap.getOrDefault(module, new int[] {}))
+                .anyMatch(toggle -> consentManager.getUserChoice(toggle) == USER_CHOICE_OPTED_IN);
+    }
+
     /** Sets AdServices feature user choices. */
     @Override
     @RequiresPermission(anyOf = {MODIFY_ADSERVICES_STATE, MODIFY_ADSERVICES_STATE_COMPAT})
     public void requestAdServicesModuleUserChoices(
-            List<AdServicesModuleUserChoice> adServicesFeatureUserChoiceList,
+            UpdateAdServicesUserChoicesParams updateParams,
             IRequestAdServicesModuleUserChoicesCallback callback) {
 
         boolean authorizedCaller = PermissionHelper.hasModifyAdServicesStatePermission(mContext);
@@ -555,8 +682,15 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                             LogUtil.d(UNAUTHORIZED_CALLER_MESSAGE);
                             return;
                         }
-                        ConsentManager consentManager = ConsentManager.getInstance();
-                        consentManager.setUserChoices(adServicesFeatureUserChoiceList);
+                        boolean businessLogicMigrationEnabled =
+                                FlagsFactory.getFlags()
+                                        .getAdServicesConsentBusinessLogicMigrationEnabled();
+                        if (!businessLogicMigrationEnabled) {
+                            callback.onFailure(STATUS_KILLSWITCH_ENABLED);
+                            LogUtil.d("Business logic migration flag not enabled");
+                            return;
+                        }
+                        filterAndSetUserChoices(updateParams);
                         LogUtil.i("requestAdServicesModuleUserChoices");
                         callback.onSuccess();
 
@@ -566,6 +700,22 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                                         + e.getMessage());
                     }
                 });
+    }
+
+    private void filterAndSetUserChoices(UpdateAdServicesUserChoicesParams updateParams) {
+        ConsentManager consentManager = ConsentManager.getInstance();
+        List<AdServicesModuleUserChoice> adServicesFeatureUserChoiceList = new ArrayList<>();
+        for (Map.Entry<Integer, Integer> entry : updateParams.getUserChoiceMap().entrySet()) {
+            // If current user choice is unknown, then set to desired user choice.
+            // If setting to unknown user choice, then it is an explicit decision by the caller that
+            // plans to override any previous user choice.
+            if (consentManager.getUserChoice(entry.getKey()) == USER_CHOICE_UNKNOWN
+                    || entry.getValue() == USER_CHOICE_UNKNOWN) {
+                adServicesFeatureUserChoiceList.add(
+                        new AdServicesModuleUserChoice(entry.getKey(), entry.getValue()));
+            }
+        }
+        consentManager.setUserChoices(adServicesFeatureUserChoiceList);
     }
 
     private int getLatency(CallerMetadata metadata, long serviceStartTime) {
@@ -586,7 +736,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     private @ConsentStatus.ConsentStatusCode int getConsentStatus(
             ConsentManager consentManager, AdServicesApiType apiType) {
         if (apiType == AdServicesApiType.FLEDGE) {
-            if (consentManager.isPasFledgeConsentGiven()) {
+            if (consentManager.isOdpFledgeConsentGiven()) {
                 if (consentManager.isPaDataReset()) {
                     return ConsentStatus.WAS_RESET;
                 }
@@ -595,7 +745,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
             return ConsentStatus.REVOKED;
         }
         if (apiType == AdServicesApiType.MEASUREMENTS) {
-            if (consentManager.isPasMeasurementConsentGiven()) {
+            if (consentManager.isOdpMeasurementConsentGiven()) {
                 if (consentManager.isMeasurementDataReset()) {
                     return ConsentStatus.WAS_RESET;
                 }

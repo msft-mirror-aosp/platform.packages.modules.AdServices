@@ -23,6 +23,15 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SELECT_ADS_FROM_OUTCOMES_API_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.adselection.AdOutcomeSelectorImpl.OUTCOME_SELECTION_JS_RETURNED_UNEXPECTED_RESULT;
 import static com.android.adservices.service.adselection.OutcomeSelectionRunner.SELECTED_OUTCOME_MUST_BE_ONE_OF_THE_INPUTS;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION;
@@ -93,6 +102,7 @@ import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -105,12 +115,14 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
-import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesApiCalledStats;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetFloatFlag;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -135,6 +147,21 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 
+@SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION)
+@SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION)
+@SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE)
+@SetFlagTrue(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS)
+// Unlimited rate for unit tests to avoid flake in tests due to rate
+// limiting
+@SetFloatFlag(name = KEY_SDK_REQUEST_PERMITS_PER_SECOND, value = -1)
+@SetFlagTrue(KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED)
+@SetFlagTrue(KEY_FLEDGE_SELECT_ADS_FROM_OUTCOMES_API_METRICS_ENABLED)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(DebugFlags.class)
 public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMockitoTestCase {
@@ -189,7 +216,8 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
-    private final Flags mFakeFlags = new AdSelectionFromOutcomesE2ETest.TestFlags();
+    // TODO(b/384949821): move to superclass
+    private final Flags mFakeFlags = flags.getFlags();
 
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
@@ -236,10 +264,7 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @Mock private AdIdFetcher mAdIdFetcher;
     private RetryStrategyFactory mRetryStrategyFactory;
-    private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
-    private ConsentedDebugConfigurationGeneratorFactory
-            mConsentedDebugConfigurationGeneratorFactory;
-    private EgressConfigurationGenerator mEgressConfigurationGenerator;
+    private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
 
     @Before
     public void setUp() throws Exception {
@@ -283,20 +308,23 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                         AdServicesExecutors.getBlockingExecutor(),
                         CacheProviderFactory.createNoOpCache());
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
-        mConsentedDebugConfigurationDao =
+        ConsentedDebugConfigurationDao consentedDebugConfigurationDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDatabase.class)
                         .build()
                         .consentedDebugConfigurationDao();
-        mConsentedDebugConfigurationGeneratorFactory =
+        ConsentedDebugConfigurationGeneratorFactory consentedDebugConfigurationGeneratorFactory =
                 new ConsentedDebugConfigurationGeneratorFactory(
-                        false, mConsentedDebugConfigurationDao);
-        mEgressConfigurationGenerator =
-                EgressConfigurationGenerator.createInstance(
-                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
-                        mAdIdFetcher,
+                        false, consentedDebugConfigurationDao);
+        mAuctionServerDebugConfigurationGenerator =
+                new AuctionServerDebugConfigurationGenerator(
+                        Flags.ADID_KILL_SWITCH,
                         Flags.DEFAULT_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
+                        Flags.FLEDGE_AUCTION_SERVER_ENABLE_DEBUG_REPORTING,
+                        Flags.DEFAULT_FLEDGE_AUCTION_SERVER_ENABLE_PAS_UNLIMITED_EGRESS,
+                        Flags.DEFAULT_PROD_DEBUG_IN_AUCTION_SERVER,
+                        mAdIdFetcher,
+                        consentedDebugConfigurationGeneratorFactory.create(),
                         mLightweightExecutorService);
-
         when(mDevContextFilter.createDevContext())
                 .thenReturn(DevContext.createForDevOptionsDisabled());
         when(mMockCallerMetadata.getBinderElapsedTimestamp())
@@ -331,9 +359,8 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         // Create a dispatcher that helps map a request -> response in mockWebServer
         mDispatcher =
@@ -424,16 +451,8 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
 
     @Test
     public void testSelectAdsFromOutcomesPickHighestSuccessDifferentTables() throws Exception {
-        Flags auctionServerEnabledFlags =
-                new TestFlags() {
-                    @Override
-                    public boolean getFledgeAuctionServerEnabledForSelectAdsMediation() {
-                        return true;
-                    }
-                };
-
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
-        final String selectionLogicPath = SELECTION_PICK_HIGHEST_LOGIC_JS_PATH;
+        String selectionLogicPath = SELECTION_PICK_HIGHEST_LOGIC_JS_PATH;
 
         CountDownLatch loggingLatch = new CountDownLatch(1);
         ExtendedMockito.doAnswer(
@@ -478,7 +497,7 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        auctionServerEnabledFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
@@ -491,9 +510,8 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(adSelectionService, config, CALLER_PACKAGE_NAME);
@@ -575,9 +593,8 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                         mUnusedKAnonSignJoinFactory,
                         true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);
@@ -1055,55 +1072,6 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
             mIsSuccess = false;
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
-        }
-    }
-
-    private static class TestFlags implements Flags {
-        @Override
-        public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
-            return true;
-        }
-
-        @Override
-        public boolean getEnforceForegroundStatusForFledgeReportImpression() {
-            return true;
-        }
-
-        @Override
-        public boolean getEnforceForegroundStatusForFledgeOverrides() {
-            return true;
-        }
-
-        @Override
-        public boolean getDisableFledgeEnrollmentCheck() {
-            return true;
-        }
-
-        @Override
-        public long getAdSelectionSelectingOutcomeTimeoutMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
-        }
-
-        @Override
-        public long getAdSelectionFromOutcomesOverallTimeoutMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
-        }
-
-        @Override
-        public float getSdkRequestPermitsPerSecond() {
-            // Unlimited rate for unit tests to avoid flake in tests due to rate
-            // limiting
-            return -1;
-        }
-
-        @Override
-        public boolean getFledgeAdSelectionPrebuiltUriEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeSelectAdsFromOutcomesApiMetricsEnabled() {
-            return true;
         }
     }
 }

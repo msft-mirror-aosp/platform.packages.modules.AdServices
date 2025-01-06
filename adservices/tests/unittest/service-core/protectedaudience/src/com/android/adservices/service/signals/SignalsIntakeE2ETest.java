@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
 import static com.android.adservices.service.signals.SignalsFixture.ADTECH;
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_KEY_1;
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_VALUE_1;
@@ -28,6 +29,13 @@ import static com.android.adservices.service.signals.UpdateProcessingOrchestrato
 import static com.android.adservices.service.signals.UpdatesDownloader.CONVERSION_ERROR_MSG;
 import static com.android.adservices.service.signals.UpdatesDownloader.PACKAGE_NAME_HEADER;
 import static com.android.adservices.service.signals.updateprocessors.Append.TOO_MANY_SIGNALS_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_COLLISION_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_CONVERTING_UPDATE_SIGNALS_RESPONSE_TO_JSON_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FLEDGE_CONSENT_NOT_GIVEN;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FLEDGE_CONSENT_REVOKED_FOR_APP_AFTER_SETTING_FLEDGE_USE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_JSON_PROCESSING_STATUS_SEMANTIC_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_INVALID_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
@@ -52,14 +60,18 @@ import android.os.RemoteException;
 import androidx.room.Room;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
+import com.android.adservices.common.annotations.SetPasAppAllowList;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.signals.DBProtectedSignal;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
@@ -67,8 +79,10 @@ import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
-import com.android.adservices.service.FakeFlagsFactory;
+import com.android.adservices.service.DebugFlags;
+import com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;
@@ -92,6 +106,7 @@ import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLogg
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.testutils.DevSessionHelper;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -99,6 +114,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.mockwebserver.MockResponse;
 
+import org.json.JSONException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -117,7 +133,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 @RequiresSdkLevelAtLeastT
-public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
+@MockStatic(FlagsFactory.class)
+@MockStatic(DebugFlags.class)
+@SetDefaultFledgeFlags
+@SetPasAppAllowList
+public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
     private static final Uri URI = Uri.parse("https://localhost");
     private static final long WAIT_TIME_SECONDS = 1L;
@@ -127,7 +147,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
     @Rule(order = 11)
     public MockWebServerRule mMockWebServerRule = MockWebServerRuleFactory.createForHttps();
 
-    public DevSessionHelper mDevSessionHelper;
+    private DevSessionHelper mDevSessionHelper;
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
@@ -138,10 +158,14 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
     @Mock private AdServicesHttpsClient mAdServicesHttpsClientMock;
     @Mock private DevContextFilter mDevContextFilterMock;
     @Mock private UpdateSignalsProcessReportedLogger mUpdateSignalsProcessReportedLoggerMock;
+    @Mock private DatastoreManager mDatastoreManager;
+
+    // TODO(b/384949821): move to superclass
+    private final Flags mFakeFlags = flags.getFlags();
 
     @Spy
-    FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
-            new FledgeAllowListsFilter(new SignalsIntakeE2ETestFlags(), mAdServicesLoggerMock);
+    private FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
+            new FledgeAllowListsFilter(mFakeFlags, mAdServicesLoggerMock);
 
     private ProtectedSignalsDao mSignalsDao;
     private EncoderEndpointsDao mEncoderEndpointsDao;
@@ -160,12 +184,12 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
     private EncoderPersistenceDao mEncoderPersistenceDao;
     private ExecutorService mLightweightExecutorService;
     private ListeningExecutorService mBackgroundExecutorService;
-    private Flags mFakeFlags;
     private EnrollmentDao mEnrollmentDao;
+    private ForcedEncoder mForcedEncoder;
 
     @Before
     public void setup() {
-        mFakeFlags = new SignalsIntakeE2ETestFlags();
+        mocker.mockGetFlags(mFakeFlags);
         mSignalsDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
                         .build()
@@ -199,13 +223,22 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mFakeFlags);
+        mForcedEncoder =
+                new ForcedEncoderFactory(
+                                mFakeFlags.getFledgeEnableForcedEncodingAfterSignalsUpdate(),
+                                mFakeFlags
+                                        .getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds(),
+                                mSpyContext)
+                        .createInstance();
         mUpdateEncoderEventHandler =
                 new UpdateEncoderEventHandler(
                         mEncoderEndpointsDao,
                         mEncoderLogicHandler,
                         mSpyContext,
                         AdServicesExecutors.getBackgroundExecutor(),
-                        /* isCompletionBroadcastEnabled= */ false);
+                        /* isCompletionBroadcastEnabled= */ false,
+                        mForcedEncoder,
+                        false);
         int oversubscriptionBytesLimit =
                 mFakeFlags.getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes();
         mSignalEvictionController =
@@ -218,7 +251,8 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         mSignalsDao,
                         mUpdateProcessorSelector,
                         mUpdateEncoderEventHandler,
-                        mSignalEvictionController);
+                        mSignalEvictionController,
+                        mForcedEncoder);
         mAdtechUriValidator = new AdTechUriValidator("", "", "", "");
         mFledgeAuthorizationFilter =
                 ExtendedMockito.spy(
@@ -238,7 +272,8 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         customAudienceDao,
                         sharedStorageDatabase.appInstallDao(),
                         sharedStorageDatabase.frequencyCapDao(),
-                        mSignalsDao);
+                        mSignalsDao,
+                        mDatastoreManager);
         mProtectedSignalsServiceFilter =
                 new ProtectedSignalsServiceFilter(
                         mSpyContext,
@@ -248,7 +283,7 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                         mFledgeAuthorizationFilter,
                         mFledgeAllowListsFilterSpy,
                         mFledgeApiThrottleFilterMock);
-        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
+        when(mConsentManagerMock.isPasConsentGiven()).thenReturn(true);
         doReturn(DevContext.createForDevOptionsDisabled())
                 .when(mDevContextFilterMock)
                 .createDevContext();
@@ -643,6 +678,14 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_JSON_PROCESSING_STATUS_SEMANTIC_ERROR,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS,
+            throwable = IllegalArgumentException.class)
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_INVALID_ARGUMENT,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
     public void testBadAppend() throws Exception {
         setupService(false);
         String json =
@@ -688,6 +731,17 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_JSON_PROCESSING_STATUS_SEMANTIC_ERROR,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS,
+            throwable = IllegalArgumentException.class)
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_INVALID_ARGUMENT,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_COLLISION_ERROR,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
     public void testCollision() throws Exception {
         setupService(false);
         String json =
@@ -731,6 +785,14 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_CONVERTING_UPDATE_SIGNALS_RESPONSE_TO_JSON_ERROR,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS,
+            throwable = JSONException.class)
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_NOTIFY_FAILURE_INVALID_ARGUMENT,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
     public void testFailure() throws Exception {
         setupService(false);
         String badJson = "{";
@@ -748,18 +810,25 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FLEDGE_CONSENT_REVOKED_FOR_APP_AFTER_SETTING_FLEDGE_USE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
     public void testNoConsentCallerPackageHasNoConsent() throws Exception {
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(true);
-        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
+        when(mConsentManagerMock.isPasConsentGiven()).thenReturn(true);
         baseTestNoConsent();
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FLEDGE_CONSENT_NOT_GIVEN,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
     public void testNoConsentUserNotSeenNotification() throws Exception {
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(false);
-        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(false);
+        when(mConsentManagerMock.isPasConsentGiven()).thenReturn(false);
         baseTestNoConsent();
     }
 
@@ -837,12 +906,5 @@ public final class SignalsIntakeE2ETest extends AdServicesMockitoTestCase {
                 .setCreationTime(Instant.now())
                 .setPackageName(CommonFixture.TEST_PACKAGE_NAME)
                 .build();
-    }
-
-    private static final class SignalsIntakeE2ETestFlags extends FakeFlagsFactory.TestFlags {
-        @Override
-        public String getPasAppAllowList() {
-            return CommonFixture.TEST_PACKAGE_NAME;
-        }
     }
 }

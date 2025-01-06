@@ -40,8 +40,8 @@ import android.os.Process;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
+import com.android.adservices.common.annotations.SetPasAppAllowList;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
@@ -54,17 +54,13 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Spy;
 
+@SetPasAppAllowList
 public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTestCase {
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
 
-    private static final Flags TEST_FLAGS =
-            new FakeFlagsFactory.TestFlags() {
-                @Override
-                public String getPasAppAllowList() {
-                    return CALLER_PACKAGE_NAME;
-                }
-            };
+    // TODO(b/384949821): move to superclass
+    private final Flags mFakeFlags = flags.getFlags();
 
     @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
 
@@ -76,15 +72,15 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
 
     @Spy
-    FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
-            new FledgeAllowListsFilter(TEST_FLAGS, mAdServicesLoggerMock);
+    private FledgeAllowListsFilter mFledgeAllowListsFilterSpy =
+            new FledgeAllowListsFilter(mFakeFlags, mAdServicesLoggerMock);
 
     @Spy
-    FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
+    private FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy =
             new FledgeAuthorizationFilter(
                     mSpyContext.getPackageManager(),
                     new EnrollmentDao(
-                            mSpyContext, DbTestUtil.getSharedDbHelperForTest(), TEST_FLAGS),
+                            mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mFakeFlags),
                     mAdServicesLoggerMock);
 
     @Mock private FledgeApiThrottleFilter mFledgeApiThrottleFilterMock;
@@ -104,7 +100,7 @@ public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTe
                 new ProtectedSignalsServiceFilter(
                         mSpyContext,
                         mFledgeConsentFilterMock,
-                        TEST_FLAGS,
+                        mFakeFlags,
                         mAppImportanceFilter,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,

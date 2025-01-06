@@ -28,6 +28,12 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesPermissions;
@@ -62,6 +68,7 @@ import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
+import com.android.adservices.service.common.BinderFlagReader;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.CallingAppUidSupplierBinderImpl;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
@@ -78,6 +85,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.time.Clock;
@@ -113,7 +121,12 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 CustomAudienceImpl.getInstance(),
                 FledgeAuthorizationFilter.create(context, AdServicesLoggerImpl.getInstance()),
                 ConsentManager.getInstance(),
-                DevContextFilter.create(context),
+                DevContextFilter.create(
+                        context,
+                        BinderFlagReader.readFlag(
+                                () ->
+                                        DebugFlags.getInstance()
+                                                .getDeveloperSessionFeatureEnabled())),
                 AdServicesExecutors.getBackgroundExecutor(),
                 AdServicesLoggerImpl.getInstance(),
                 AppImportanceFilter.create(
@@ -145,6 +158,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     }
 
     /** Creates a new instance of {@link CustomAudienceServiceImpl}. */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static CustomAudienceServiceImpl create(@NonNull Context context) {
         return new CustomAudienceServiceImpl(context);
     }
@@ -208,7 +223,11 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, ownerPackageName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, ownerPackageName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -288,7 +307,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         } finally {
             if (shouldLog) {
                 mAdServicesLogger.logFledgeApiCallStats(
-                        apiName, ownerPackageName, resultCode, /*latencyMs=*/ 0);
+                        apiName, ownerPackageName, resultCode, /* latencyMs= */ 0);
             }
         }
     }
@@ -311,8 +330,11 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
-
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -395,7 +417,11 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     apiName,
                     input.getCallerPackageName(),
                     STATUS_INVALID_ARGUMENT,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE);
 
             // Rethrow because we want to fail fast
             throw exception;
@@ -419,6 +445,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                     mConsentManager,
                                     callerUid,
                                     mFlags,
+                                    mDebugFlags,
                                     mAdServicesLogger,
                                     AdServicesExecutors.getBackgroundExecutor(),
                                     mCustomAudienceServiceFilter,
@@ -448,8 +475,11 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, ownerPackageName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
-
+                    apiName, ownerPackageName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE);
             // Rethrow because we want to fail fast
             throw exception;
         }
@@ -493,7 +523,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 mCustomAudienceServiceFilter.filterRequest(
                         buyer,
                         ownerPackageName,
-                        mFlags.getEnforceForegroundStatusForFledgeCustomAudience(),
+                        mFlags.getEnforceForegroundStatusForLeaveCustomAudience(),
                         false,
                         !mDebugFlags.getConsentNotificationDebugMode(),
                         callerUid,
@@ -534,7 +564,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         } finally {
             if (shouldLog) {
                 mAdServicesLogger.logFledgeApiCallStats(
-                        apiName, ownerPackageName, resultCode, /*latencyMs=*/ 0);
+                        apiName, ownerPackageName, resultCode, /* latencyMs= */ 0);
             }
         }
     }
@@ -566,7 +596,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow to fail fast
             throw exception;
         }
@@ -578,7 +608,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     apiName,
                     devContext.getCallingAppPackageName(),
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -633,7 +663,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow to fail fast
             throw exception;
         }
@@ -645,7 +675,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     apiName,
                     devContext.getCallingAppPackageName(),
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -672,7 +702,6 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         overrider.removeOverride(owner, buyer, name, callback);
     }
 
-
     /**
      * Resets all custom audience overrides for a given caller.
      *
@@ -686,7 +715,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             Objects.requireNonNull(callback);
         } catch (NullPointerException exception) {
             mAdServicesLogger.logFledgeApiCallStats(
-                    apiName, STATUS_INVALID_ARGUMENT, /*latencyMs=*/ 0);
+                    apiName, STATUS_INVALID_ARGUMENT, /* latencyMs= */ 0);
             // Rethrow to fail fast
             throw exception;
         }
@@ -700,7 +729,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     apiName,
                     devContext.getCallingAppPackageName(),
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             throw new SecurityException(API_NOT_AUTHORIZED_MSG);
         }
 
@@ -740,7 +769,11 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     apiNameLoggingId,
                     callerAppPackageName,
                     STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
+            AdsRelevanceStatusUtils.checkAndLogCelByApiNameLoggingId(
+                    illegalStateException,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE,
+                    apiNameLoggingId);
             throw illegalStateException;
         }
     }

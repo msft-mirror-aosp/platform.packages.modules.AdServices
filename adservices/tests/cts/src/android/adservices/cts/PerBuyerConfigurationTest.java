@@ -21,15 +21,19 @@ import static android.adservices.adselection.SellerConfigurationFixture.BUYER_1_
 import static android.adservices.adselection.SellerConfigurationFixture.BUYER_2;
 import static android.adservices.adselection.SellerConfigurationFixture.BUYER_2_TARGET_SIZE_B;
 
+import static com.android.adservices.flags.Flags.FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
+
 import static org.junit.Assert.assertThrows;
 
 import android.adservices.adselection.PerBuyerConfiguration;
 import android.os.Parcel;
+import android.platform.test.annotations.RequiresFlagsEnabled;
 
 import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
+@RequiresFlagsEnabled(FLAG_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED)
 public final class PerBuyerConfigurationTest extends CtsAdServicesDeviceTestCase {
     @Test
     public void testPerBuyerConfiguration_success() {

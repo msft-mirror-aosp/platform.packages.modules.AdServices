@@ -78,7 +78,7 @@
     <string name="notificationUI_notification_ga_title" msgid="2396067549986723667">"Nove funkcije privatnosti pri izloženosti oglasima"</string>
     <string name="notificationUI_notification_ga_content" msgid="6996769289378595646">"Teme oglasa i nove kontrole vam daju više izbora u vezi s oglasima koje vidite"</string>
     <string name="notificationUI_header_ga_title" msgid="71431748916938411">"Sada su dostupne nove funkcije privatnosti pri izloženosti oglasima"</string>
-    <string name="notificationUI_container2_ga_introduction" msgid="7475765551849576649">"Android bilježi teme koje vas zanimaju na osnovu aplikacija koje ste nedavno koristili. Aplikacije koje koristite također mogu odrediti šta vam se sviđa. Kasnije, aplikacije mogu zatražiti ove informacije da vam prikažu personalizirane oglase. Možete odabrati teme i aplikacije koje će se koristiti za prikazivanje oglasa."</string>
+    <string name="notificationUI_container2_ga_introduction" msgid="7475765551849576649">"Android bilježi teme koje vas zanimaju na osnovu aplikacija koje ste nedavno koristili. Aplikacije koje koristite također mogu utvrditi šta vam se sviđa. Kasnije, aplikacije mogu zatražiti ove informacije da vam prikažu personalizirane oglase. Možete odabrati teme i aplikacije koje će se koristiti za prikazivanje oglasa."</string>
     <string name="notificationUI_container3_ga_introduction" msgid="23684889230122342">"Za mjerenje performansi oglasa ograničene vrste podataka se dijele između aplikacija."</string>
     <string name="notificationUI_ga_container1_control_text" msgid="2890804613753992753">"Više o oglasima na Androidu"</string>
     <string name="notificationUI_how_it_works_row_subtitle1" msgid="912825880702200971">"Više korisnih oglasa"</string>
@@ -226,7 +226,7 @@
     <string name="settingsUI_reset_topics_ga_title" msgid="1580902912944562790">"Poništi sve teme oglasa"</string>
     <string name="settingsU_topics_view_footer" msgid="1030678323154113993">"Android bilježi teme koje vas zanimaju na osnovu aplikacija koje ste koristili u posljednjih nekoliko sedmica.\n\nAplikacija koju koristite može kasnije zatražiti vaše teme od Androida da personalizira oglase koji vam se prikazuju. Android dijeli do 3 teme štiteći pritom vaš identitet i informacije o korištenju aplikacije.\n\nAndroid redovno automatski briše teme. Dok nastavljate koristiti aplikacije, određena tema se može ponovo pojaviti na listi. Također možete blokirati teme koje ne želite da Android dijeli s aplikacijama.\n\nOglas koji vam se prikaže u aplikacijama može biti personaliziran, ovisno o ovoj postavci, postavci oglasa koje predlažu aplikacije, postavkama ID-a za oglašavanje i o tome personalizira li aplikacija koju koristite oglase."</string>
     <string name="settingsUI_apps_switch_title" msgid="4459742127173310507">"Dozvoli oglase koje predlažu aplikacije"</string>
-    <string name="settingsUI_apps_view_ga_subtitle" msgid="4376440601964010807">"Aplikacije koje koristite mogu odrediti šta vam se sviđa, a zatim predlagati oglase u drugim aplikacijama.\n\nMožete blokirati mogućnost aplikacija da daju prijedloge. Pored toga, Android redovno automatski briše podatke koje predlažu aplikacije.\n\nIako se ova funkcija može uključiti, možda nećete vidjeti listu aplikacija dok funkcija ne bude potpuno dostupna i aplikacije je ne počnu koristiti."</string>
+    <string name="settingsUI_apps_view_ga_subtitle" msgid="4376440601964010807">"Aplikacije koje koristite mogu utvrditi šta vam se sviđa, a zatim predlagati oglase u drugim aplikacijama.\n\nMožete blokirati mogućnost aplikacija da daju prijedloge. Pored toga, Android redovno automatski briše podatke koje predlažu aplikacije.\n\nIako se ova funkcija može uključiti, možda nećete vidjeti listu aplikacija dok funkcija ne bude potpuno dostupna i aplikacije je ne počnu koristiti."</string>
     <string name="settingsUI_blocked_apps_ga_title" msgid="3403673196085504304">"Aplikacije koje ste blokirali"</string>
     <string name="settingsUI_reset_apps_ga_title" msgid="8096477193202146197">"Poništi podatke o prijedlozima aplikacija"</string>
     <string name="settingsUI_apps_view_footer" msgid="5502656868680626279">"Uobičajeno je da aplikacije koje koristite pamte stvari koje vas zanimaju da personaliziraju vaše iskustvo. Aplikacije također mogu pohranjivati informacije o vašim temama u Androidu.\n\nNaprimjer, ako koristite aplikaciju o treningu za maraton, aplikacija može utvrditi da vas zanimaju patike za trčanje. Kasnije, ako koristite drugu aplikaciju, ona vam može prikazati oglas za patike za trčanje koje je predložila prva aplikacija.\n\nAndroid redovno automatski briše podatke o prijedlozima aplikacija. Aplikacija koju ponovo koristite može se ponovo pojaviti na listi. Ili možete blokirati da vam aplikacija predlaže oglase.\n\nOglas koji vam se prikaže u aplikacijama može biti personaliziran, ovisno o ovoj postavci, postavci tema oglasa, postavkama ID-a za oglašavanje i o tome personalizira li oglase aplikacija koju koristite."</string>
@@ -303,7 +303,7 @@
     <string name="topic10032" msgid="5492959212920168739">"Dance i elektronska muzika"</string>
     <string name="topic10033" msgid="895853536740398847">"Folk i tradicionalna muzika"</string>
     <string name="topic10034" msgid="4234814709585731313">"Jazz"</string>
-    <string name="topic10035" msgid="4357756001621317728">"Prijenosi i preuzimanja muzike"</string>
+    <string name="topic10035" msgid="4357756001621317728">"Prenosi i preuzimanja muzike"</string>
     <string name="topic10036" msgid="449833307315797283">"Muzički videozapisi"</string>
     <string name="topic10037" msgid="51698216720637667">"Muzički instrumenti"</string>
     <string name="topic10038" msgid="8450729953573104572">"Klaviri i klavijature"</string>
@@ -322,8 +322,8 @@
     <string name="topic10051" msgid="5719726125732251258">"Reggae i karipska muzika"</string>
     <string name="topic10052" msgid="1284902821545612733">"Online galerije slika"</string>
     <string name="topic10053" msgid="5420622301656482567">"Online videozapis"</string>
-    <string name="topic10054" msgid="4562235511593399260">"Prijenos videozapisa uživo"</string>
-    <string name="topic10055" msgid="3752987507076288470">"Prijenos filmova i TV-a"</string>
+    <string name="topic10054" msgid="4562235511593399260">"Prenos videozapisa uživo"</string>
+    <string name="topic10055" msgid="3752987507076288470">"Prenos filmova i TV-a"</string>
     <string name="topic10056" msgid="1316228709578133569">"Opera"</string>
     <string name="topic10057" msgid="3265794667031664331">"TV vodič i upućivanje"</string>
     <string name="topic10058" msgid="8409884272709263707">"TV mreže i stanice"</string>
@@ -458,7 +458,7 @@
     <string name="topic10187" msgid="3321209590831212269">"Računovodstvo i revizija"</string>
     <string name="topic10188" msgid="6091864564976149142">"Priprema i planiranje poreza"</string>
     <string name="topic10189" msgid="5722909809680931661">"Bankarstvo"</string>
-    <string name="topic10190" msgid="4954502185848303449">"Usluge prijenosa novca i bezgotovinski prijenos"</string>
+    <string name="topic10190" msgid="4954502185848303449">"Usluge prenosa novca i bezgotovinski prenos"</string>
     <string name="topic10191" msgid="374364159635356705">"Krediti i pozajmljivanje"</string>
     <string name="topic10192" msgid="4780985034026130257">"Kreditne kartice"</string>
     <string name="topic10193" msgid="5010972379907168829">"Stambeno kreditiranje"</string>

@@ -16,8 +16,8 @@
 
 package com.android.adservices.service.common;
 
-import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithThrowable;
-import static com.android.adservices.common.logging.ErrorLogUtilCallback.mockErrorLogUtilWithoutThrowable;
+import static com.android.adservices.common.logging.ErrorLogUtilSyncCallback.mockErrorLogUtilWithThrowable;
+import static com.android.adservices.common.logging.ErrorLogUtilSyncCallback.mockErrorLogUtilWithoutThrowable;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_ATTRIBUTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_TOPICS;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_ALL;
@@ -44,10 +44,8 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.util.Log;
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.ErrorLogUtilCallback;
+import com.android.adservices.common.logging.ErrorLogUtilSyncCallback;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.FlagsFactory;
@@ -157,7 +155,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     public void testLogUsage_secondTimeDifferentResult() throws Exception {
         int result = RESULT_ALLOWED_APP_ALLOWS_ALL;
         // 1st call
-        Log.d(mTag, "1st call: result=" + result);
+        mLog.d("1st call: result=%s", result);
         logUsageAndWait(PKG_NAME, API, result);
 
         int valueBefore = mPrefs.getInt(KEY_PKG_NAME_API, RESULT_UNSPECIFIED);
@@ -167,7 +165,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
         // 2nd call
         result = RESULT_ALLOWED_BY_DEFAULT_APP_DOES_NOT_HAVE_CONFIG;
-        Log.d(mTag, "2nd call: result=" + result);
+        mLog.d("2nd call: result=%s", result);
         logUsageAndWait(PKG_NAME, API, result);
 
         Map<String, ?> allProps = mPrefs.getAll();
@@ -185,11 +183,13 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
     @Test
     // TODO (b/355696393): Enhance rule to verify log calls that happen in the background.
-    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
+    @SkipLoggingUsageRule(
+            reason = "Using ErrorLogUtilSyncCallback as logging happens in background.")
     public void testLogUsage_handlesRuntimeException() throws Exception {
         // Do not move this into setup as it will conflict with ErrorLogUtil mocking behavior
         // required by the AdServicesLoggingUsageRule.
-        ErrorLogUtilCallback mErrorLogUtilWithThrowableCallback = mockErrorLogUtilWithThrowable();
+        ErrorLogUtilSyncCallback errorLogUtilWithThrowableCallback =
+                mockErrorLogUtilWithThrowable();
 
         RuntimeException exception = new RuntimeException("D'OH!");
 
@@ -197,7 +197,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
         logUsageAndDontWait(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
 
-        mErrorLogUtilWithThrowableCallback.assertReceived(
+        errorLogUtilWithThrowableCallback.assertReceived(
                 expect,
                 exception,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION,
@@ -207,11 +207,12 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
 
     @Test
     // TODO (b/355696393): Enhance rule to verify log calls that happen in the background.
-    @SkipLoggingUsageRule(reason = "Using ErrorLogUtilCallback as logging happens in background.")
+    @SkipLoggingUsageRule(
+            reason = "Using ErrorLogUtilSyncCallback as logging happens in background.")
     public void testLogUsage_commitFailed() throws Exception {
         // Do not move this into setup as it will conflict with ErrorLogUtil mocking behavior
         // required by the AdServicesLoggingUsageRule.
-        ErrorLogUtilCallback mErrorLogUtilWithoutThrowableCallback =
+        ErrorLogUtilSyncCallback errorLogUtilWithoutThrowableCallback =
                 mockErrorLogUtilWithoutThrowable();
         mPrefs.onCommitReturns(/* result= */ false);
 
@@ -220,7 +221,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         Map<String, ?> allProps = mPrefs.getAll();
         assertWithMessage("allProps").that(allProps).isEmpty();
 
-        mErrorLogUtilWithoutThrowableCallback.assertReceived(
+        errorLogUtilWithoutThrowableCallback.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
                 AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
@@ -239,7 +240,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
                             return mPrefs;
                         });
 
-        logUsageAndWait(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
+        logUsageAndWait(/* async= */ true, PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
 
         assertWithMessage("execution thread")
                 .that(executionThread.get())
@@ -326,7 +327,8 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     private final Object mPrefsListenersLock = new Object();
 
     // Needs to wait until the shared prefs is committed() as it happens in a separated thread
-    private void logUsageAndWait(String appName, @ApiType int api, @Result int callResult)
+    private void logUsageAndWait(
+            boolean async, String appName, @ApiType int api, @Result int callResult)
             throws InterruptedException {
         synchronized (mPrefsListenersLock) {
             SyncOnSharedPreferenceChangeListener listener =
@@ -335,15 +337,27 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
             try {
                 AppManifestConfigCall call = new AppManifestConfigCall(appName, api);
                 call.result = callResult;
-                Log.v(mTag, "logUsageAndWait(call=" + call + ", listener=" + listener + ")");
+                mLog.v("logUsageAndWait(async=%b, call=%s, listener=%s)", async, call, listener);
 
-                AppManifestConfigMetricsLogger.logUsage(call);
+                if (async) {
+                    // Only testLogUsage_handlesToBgThread care about the "real" method...
+                    AppManifestConfigMetricsLogger.logUsage(call);
+                } else {
+                    // ...every other test can just call handleLogUsage() instead
+                    AppManifestConfigMetricsLogger.handleLogUsage(call);
+                }
+
                 String result = listener.assertResultReceived();
-                Log.v(mTag, "result: " + result);
+                mLog.v("result: %s", result);
             } finally {
                 mPrefs.unregisterOnSharedPreferenceChangeListener(listener);
             }
         }
+    }
+
+    private void logUsageAndWait(String appName, @ApiType int api, @Result int callResult)
+            throws InterruptedException {
+        logUsageAndWait(/* async= */ false, appName, api, callResult);
     }
 
     // Should only be used in cases where the call is expect to not change the shared preferences
@@ -351,7 +365,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     private void logUsageAndDontWait(String appName, int api, @Result int callResult) {
         AppManifestConfigCall call = new AppManifestConfigCall(appName, api);
         call.result = callResult;
-        Log.v(mTag, "logUsageAndDontWait(call=" + call + ")");
+        mLog.v("logUsageAndDontWait(call=%s)", call);
         AppManifestConfigMetricsLogger.logUsage(call);
     }
 
@@ -380,7 +394,7 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     // adservices-service-core project - need to figure out a way to extend the rule to allow such
     // dependencies)
     private void mockGetStatsdAdServicesLogger() {
-        Log.v(mTag, "mockGetStatsdAdServicesLogger(): " + mStatsdLogger);
+        mLog.v("mockGetStatsdAdServicesLogger(): %s", mStatsdLogger);
         doReturn(mStatsdLogger).when(StatsdAdServicesLogger::getInstance);
     }
 }

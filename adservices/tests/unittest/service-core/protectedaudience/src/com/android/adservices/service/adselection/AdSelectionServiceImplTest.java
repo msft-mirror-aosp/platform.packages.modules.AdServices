@@ -50,6 +50,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_AD_SELECTION_CONFIG_REMOTE_OVERRIDES;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
@@ -113,12 +115,12 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebViewSupportUtil;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportDao;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
 import com.android.adservices.data.adselection.AppInstallDao;
-import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBAdSelectionFromOutcomesOverride;
@@ -139,7 +141,7 @@ import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AppInstallAdvertisersSetterTest.SetAppInstallAdvertisersTestCallback;
-import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
+import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.encryption.ObliviousHttpEncryptor;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -162,7 +164,6 @@ import com.android.adservices.service.js.JSSandboxIsNotAvailableException;
 import com.android.adservices.service.js.JSScriptEngine;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.measurement.MeasurementImpl;
-import com.android.adservices.service.signals.EgressConfigurationGenerator;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.FetchProcessLogger;
@@ -290,7 +291,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     private final AdTechIdentifier mContextualSignals =
             AdTechIdentifier.fromString("{\"contextual_signals\":1}");
     private final int mBytesPerPeriod = 1;
-
     private final DevContext mDevContext = DevContext.createForDevOptionsDisabled();
 
     @Spy
@@ -299,15 +299,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                     AdServicesExecutors.getBlockingExecutor(),
                     CacheProviderFactory.createNoOpCache());
 
-    @Mock private AdServicesLogger mAdServicesLoggerMock;
-    @Mock private DevContextFilter mDevContextFilterMock;
-    @Mock private AppImportanceFilter mAppImportanceFilterMock;
-
     private Flags mFakeFlags;
-
-    @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
-
-    @Mock private ConsentManager mConsentManagerMock;
     private CustomAudienceDao mCustomAudienceDao;
     private EncodedPayloadDao mEncodedPayloadDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
@@ -320,20 +312,23 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     private CustomAudienceSignals mCustomAudienceSignals;
     private AdTechIdentifier mSeller;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
+    private MultiCloudSupportStrategy mMultiCloudSupportStrategy;
+    private RetryStrategyFactory mRetryStrategyFactory;
 
+    @Mock private AdServicesLogger mAdServicesLoggerMock;
+    @Mock private DevContextFilter mDevContextFilterMock;
+    @Mock private AppImportanceFilter mAppImportanceFilterMock;
+    @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
+    @Mock private ConsentManager mConsentManagerMock;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private ObliviousHttpEncryptor mObliviousHttpEncryptor;
-    private MultiCloudSupportStrategy mMultiCloudSupportStrategy;
     @Mock private MeasurementImpl mMeasurementServiceMock;
     @Mock private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     @Mock private AdIdFetcher mAdIdFetcher;
     @Mock private KAnonSignJoinFactory mUnusedKAnonSignJoinFactory;
 
-    private RetryStrategyFactory mRetryStrategyFactory;
-    private ConsentedDebugConfigurationGeneratorFactory
-            mConsentedDebugConfigurationGeneratorFactory;
-    @Mock private ConsentedDebugConfigurationDao mConsentedDebugConfigurationDao;
-    @Mock private EgressConfigurationGenerator mEgressConfigurationGenerator;
+    @Mock
+    private AuctionServerDebugConfigurationGenerator mAuctionServerDebugConfigurationGenerator;
 
     @Rule(order = 11)
     public final SupportedByConditionRule webViewSupportsJSSandbox =
@@ -430,9 +425,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
         mMultiCloudSupportStrategy =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptor);
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
-        mConsentedDebugConfigurationGeneratorFactory =
-                new ConsentedDebugConfigurationGeneratorFactory(
-                        false, mConsentedDebugConfigurationDao);
     }
 
     @Test
@@ -528,9 +520,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -645,9 +636,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -782,9 +772,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -907,9 +896,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1025,9 +1013,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1150,9 +1137,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1266,9 +1252,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1398,9 +1383,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1531,9 +1515,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1652,9 +1635,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1791,9 +1773,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -1930,9 +1911,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2070,9 +2050,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2204,9 +2183,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2329,9 +2307,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2448,9 +2425,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2566,9 +2542,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2688,9 +2663,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         /* shouldUseUnifiedTables= */ true,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2799,9 +2773,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -2925,9 +2898,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3048,9 +3020,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3177,9 +3148,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3355,9 +3325,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3502,9 +3471,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3667,9 +3635,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3837,9 +3804,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -3998,9 +3964,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4148,9 +4113,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4302,9 +4266,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4472,9 +4435,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4650,9 +4612,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4797,9 +4758,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -4906,9 +4866,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -5014,9 +4973,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -5126,9 +5084,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -5235,9 +5192,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -5339,9 +5295,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -5442,9 +5397,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -5546,9 +5500,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -5665,9 +5618,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -5810,9 +5762,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(AD_SELECTION_ID)
@@ -5907,9 +5858,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -5970,9 +5920,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -6031,9 +5980,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -6095,9 +6043,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -6168,9 +6115,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -6239,9 +6185,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -6312,9 +6257,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -6385,9 +6329,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -6500,9 +6443,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -6617,9 +6559,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -6732,9 +6673,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig1 = mAdSelectionConfigBuilder.build();
         AdSelectionConfig adSelectionConfig2 =
@@ -6845,9 +6785,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock).shutdown();
@@ -6887,9 +6826,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         adSelectionService.destroy();
         verify(jsScriptEngineMock, never()).shutdown();
@@ -6943,9 +6881,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
@@ -7011,9 +6948,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -7080,9 +7016,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -7140,9 +7075,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -7202,9 +7136,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -7258,9 +7191,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -7318,9 +7250,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionOverrideTestCallback callback = callResetAllOverrides(adSelectionService);
 
@@ -7422,9 +7353,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7543,9 +7473,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7665,9 +7594,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7792,9 +7720,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -7900,9 +7827,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
         ReportImpressionInput request =
                 new ReportImpressionInput.Builder()
                         .setAdSelectionId(INCORRECT_AD_SELECTION_ID)
@@ -8011,9 +7937,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8148,9 +8073,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8264,9 +8188,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8382,9 +8305,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8522,9 +8444,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8658,9 +8579,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8776,9 +8696,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -8842,9 +8761,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8907,9 +8825,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -8970,9 +8887,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9035,9 +8951,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9112,9 +9027,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9187,9 +9101,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9261,9 +9174,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9335,9 +9247,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9458,9 +9369,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9579,9 +9489,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9700,9 +9609,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionFromOutcomesConfig config1 =
                 AdSelectionFromOutcomesConfigFixture.anAdSelectionFromOutcomesConfig();
@@ -9839,9 +9747,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         AdSelectionOverrideTestCallback overridesCallback =
                 callAddOverrideForSelectAds(
@@ -9943,6 +9850,10 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION,
+            throwable = NullPointerException.class)
     public void testReportEvent_nullInput_throws() {
         assertThrows(
                 NullPointerException.class,
@@ -9952,6 +9863,10 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SELECTION_SERVICE_NULL_ARGUMENT,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION,
+            throwable = NullPointerException.class)
     public void testReportEvent_nullCallback_throws() throws InterruptedException {
         AdSelectionServiceImpl adSelectionService = generateAdSelectionServiceImpl();
 
@@ -10448,9 +10363,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -10513,9 +10427,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -10580,9 +10493,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mUnusedKAnonSignJoinFactory,
                         false,
                         mRetryStrategyFactory,
-                        mConsentedDebugConfigurationGeneratorFactory,
-                        mEgressConfigurationGenerator,
-                        CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                        CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                        mAuctionServerDebugConfigurationGenerator);
 
         ReportImpressionInput input =
                 new ReportImpressionInput.Builder()
@@ -10641,9 +10553,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                 mUnusedKAnonSignJoinFactory,
                 false,
                 mRetryStrategyFactory,
-                mConsentedDebugConfigurationGeneratorFactory,
-                mEgressConfigurationGenerator,
-                CONSOLE_MESSAGE_IN_LOGS_ENABLED);
+                CONSOLE_MESSAGE_IN_LOGS_ENABLED,
+                mAuctionServerDebugConfigurationGenerator);
     }
 
     private void persistAdSelectionEntryDaoResults(Map<Long, Double> adSelectionIdToBidMap) {

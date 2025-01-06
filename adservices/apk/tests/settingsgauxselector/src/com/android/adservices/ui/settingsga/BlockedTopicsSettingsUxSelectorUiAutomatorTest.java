@@ -23,7 +23,6 @@ import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_O
 import static com.android.adservices.service.FlagsConstants.KEY_DEBUG_UX;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
-import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_U18_UX_ENABLED;
@@ -35,25 +34,20 @@ import static com.google.common.truth.Truth.assertThat;
 import androidx.test.uiautomator.UiObject2;
 
 import com.android.adservices.api.R;
-import com.android.adservices.common.AdServicesFlagsSetterRule;
-import com.android.adservices.common.annotations.DisableGlobalKillSwitch;
-import com.android.adservices.common.annotations.SetCompatModeFlags;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.adservices.shared.testing.annotations.SetStringFlag;
-import com.android.adservices.ui.util.AdServicesUiTestCase;
+import com.android.adservices.ui.util.AdservicesSettingsUiTestCase;
 import com.android.adservices.ui.util.ApkTestUtil;
 import com.android.adservices.ui.util.BlockedTopicsSettingsTestUtil;
 
 import org.junit.Ignore;
-import org.junit.Rule;
 import org.junit.Test;
 
 /** Class to test the CUJ that blocks/unblocks/resets topics with dialog enabled. */
-@DisableGlobalKillSwitch
 @SetFlagDisabled(KEY_TOPICS_KILL_SWITCH)
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE)
 @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = 2)
@@ -63,29 +57,26 @@ import org.junit.Test;
 @SetFlagEnabled(KEY_CLASSIFIER_FORCE_USE_BUNDLED_FILES)
 @SetFlagEnabled(KEY_ENABLE_AD_SERVICES_SYSTEM_API)
 @SetFlagEnabled(KEY_U18_UX_ENABLED)
-@SetFlagEnabled(KEY_GA_UX_FEATURE_ENABLED)
 @SetStringFlag(name = KEY_DEBUG_UX, value = "GA_UX")
 @SetLongFlag(name = KEY_TOPICS_EPOCH_JOB_PERIOD_MS, value = TEST_EPOCH_JOB_PERIOD_MS)
-@SetCompatModeFlags
-public final class BlockedTopicsSettingsUxSelectorUiAutomatorTest extends AdServicesUiTestCase {
-    @Rule(order = 11)
-    public final AdServicesFlagsSetterRule flags = AdServicesFlagsSetterRule.newInstance();
+public final class BlockedTopicsSettingsUxSelectorUiAutomatorTest
+        extends AdservicesSettingsUiTestCase {
 
     // Time out to start UI launcher.
-    private static final int LAUNCHER_LAUNCH_TIMEOUT = 3000;
+    private static final int LAUNCHER_LAUNCH_TIMEOUT_MS = 3_000;
     // The epoch length to override. It would increase the test running time if it's too long. And
     // it would make the test flaky if it's too short -- it may have passed 3 epochs so that the
     // generated topic wouldn't take effect during the test.
     //
     // Set it to 10 seconds because AVD takes longer time to operate UI. Normally 3 seconds are
     // enough for a non-ui test.
-    static final long TEST_EPOCH_JOB_PERIOD_MS = 10000;
+    static final long TEST_EPOCH_JOB_PERIOD_MS = 10_000;
 
     @Ignore("b/296642754")
     @Test
     public void topicBlockUnblockTest() throws Exception {
         // Launch main view of Privacy Sandbox Settings.
-        ApkTestUtil.launchSettingView(mDevice, LAUNCHER_LAUNCH_TIMEOUT);
+        ApkTestUtil.launchSettingView(mDevice, LAUNCHER_LAUNCH_TIMEOUT_MS);
 
         // Enter Topics Consent view.
         BlockedTopicsSettingsTestUtil.enterGaTopicsConsentView(mDevice);

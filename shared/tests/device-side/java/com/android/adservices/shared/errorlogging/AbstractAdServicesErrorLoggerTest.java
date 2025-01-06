@@ -21,11 +21,12 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import android.database.sqlite.SQLiteException;
+
+import androidx.annotation.Nullable;
 
 import com.android.adservices.shared.SharedMockitoTestCase;
 
@@ -43,6 +44,7 @@ public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCa
     private static final int PPAPI_NAME = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
     private static final int LINE_NUMBER = 11;
     private static final String SQ_LITE_EXCEPTION = "SQLiteException";
+    private static final String LAST_OBSERVED_EXCEPTION_NAME = "IllegalStateException";
 
     private AbstractAdServicesErrorLogger mErrorLoggerEnabled;
     private AbstractAdServicesErrorLogger mErrorLoggerDisabled;
@@ -66,7 +68,7 @@ public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCa
     }
 
     @Test
-    public void testLogError_errorLoggingDisabled() {
+    public void testLogError_withOutThrowable_errorLoggingDisabled() {
         mErrorLoggerDisabled.logError(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME);
 
@@ -74,7 +76,7 @@ public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCa
     }
 
     @Test
-    public void testLogError_errorLoggingFlagEnabled() {
+    public void testLogError_withOutThrowable_errorLoggingFlagEnabled() {
         mErrorLoggerEnabled.logError(
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME);
 
@@ -86,9 +88,10 @@ public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCa
         Exception exception =
                 createSQLiteExceptionWith3StackTraceElements(CLASS_NAME, METHOD_NAME, LINE_NUMBER);
         mErrorLoggerEnabled.logErrorInternal(
+                (Throwable) exception,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR,
                 PPAPI_NAME,
-                exception);
+                false);
 
         AdServicesErrorStats stats =
                 AdServicesErrorStats.builder()
@@ -98,7 +101,88 @@ public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCa
                         .setMethodName(METHOD_NAME)
                         .setLineNumber(LINE_NUMBER)
                         .build();
-        verify(mMockStatsdLogger).logAdServicesError(eq(stats));
+        verify(mMockStatsdLogger).logAdServicesError(stats);
+    }
+
+    @Test
+    public void testLogError_withThrowable_errorLoggingFlagEnabled() {
+        Throwable tr = createThrowableWithMultipleCauses(CLASS_NAME, METHOD_NAME, LINE_NUMBER, 1);
+
+        mErrorLoggerEnabled.logError(
+                tr, AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME);
+
+        AdServicesErrorStats stats =
+                AdServicesErrorStats.builder()
+                        .setErrorCode(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR)
+                        .setPpapiName(PPAPI_NAME)
+                        .setClassName(CLASS_NAME)
+                        .setMethodName(METHOD_NAME)
+                        .setLineNumber(LINE_NUMBER)
+                        .setLastObservedExceptionName(LAST_OBSERVED_EXCEPTION_NAME)
+                        .build();
+        verify(mMockStatsdLogger).logAdServicesError(stats);
+    }
+
+    // test get the stack trace that not from the first throwable, but further cause.
+    @Test
+    public void testLogError_getStackTraceFromCause() {
+        Throwable tr = createThrowableWithMultipleCauses(CLASS_NAME, METHOD_NAME, LINE_NUMBER, 3);
+
+        mErrorLoggerEnabled.logError(
+                tr, AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME);
+
+        AdServicesErrorStats stats =
+                AdServicesErrorStats.builder()
+                        .setErrorCode(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR)
+                        .setPpapiName(PPAPI_NAME)
+                        .setClassName(CLASS_NAME)
+                        .setMethodName(METHOD_NAME)
+                        .setLineNumber(LINE_NUMBER)
+                        .setLastObservedExceptionName(LAST_OBSERVED_EXCEPTION_NAME)
+                        .build();
+        verify(mMockStatsdLogger).logAdServicesError(stats);
+    }
+
+    // test get stack trace from further cause, but longer than the maximum limitation.
+    @Test
+    public void testLogError_getStackTraceFromCauseBeyondLimit() {
+        Throwable tr = createThrowableWithMultipleCauses(CLASS_NAME, METHOD_NAME, LINE_NUMBER, 7);
+
+        mErrorLoggerEnabled.logError(
+                tr, AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME);
+
+        AdServicesErrorStats stats =
+                AdServicesErrorStats.builder()
+                        .setErrorCode(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR)
+                        .setPpapiName(PPAPI_NAME)
+                        .setClassName(CLASS_NAME)
+                        .setMethodName(METHOD_NAME)
+                        .setLineNumber(LINE_NUMBER)
+                        .setLastObservedExceptionName("Throwable")
+                        .build();
+        verify(mMockStatsdLogger, never()).logAdServicesError(stats);
+    }
+
+    // Test if a empty stacktrace in the middle of list of cause, it won't affect get the later one.
+    @Test
+    public void logError_emptyStackTraceInMiddleOfCause() {
+        Throwable tr = createThrowableWithMultipleCauses(CLASS_NAME, METHOD_NAME, LINE_NUMBER, 2);
+        Throwable topTr = new Throwable("emptyStackTraceThrowable", tr);
+        topTr.setStackTrace(new StackTraceElement[] {});
+
+        mErrorLoggerEnabled.logError(
+                tr, AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR, PPAPI_NAME);
+
+        AdServicesErrorStats stats =
+                AdServicesErrorStats.builder()
+                        .setErrorCode(AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CONSENT_REVOKED_ERROR)
+                        .setPpapiName(PPAPI_NAME)
+                        .setClassName(CLASS_NAME)
+                        .setMethodName(METHOD_NAME)
+                        .setLineNumber(LINE_NUMBER)
+                        .setLastObservedExceptionName(LAST_OBSERVED_EXCEPTION_NAME)
+                        .build();
+        verify(mMockStatsdLogger).logAdServicesError(stats);
     }
 
     @Test
@@ -130,7 +214,7 @@ public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCa
                         .setLineNumber(LINE_NUMBER)
                         .setLastObservedExceptionName(SQ_LITE_EXCEPTION)
                         .build();
-        verify(mMockStatsdLogger).logAdServicesError(eq(stats));
+        verify(mMockStatsdLogger).logAdServicesError(stats);
     }
 
     @Test
@@ -153,12 +237,12 @@ public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCa
                         .setLineNumber(LINE_NUMBER)
                         .setLastObservedExceptionName(SQ_LITE_EXCEPTION)
                         .build();
-        verify(mMockStatsdLogger).logAdServicesError(eq(stats));
+        verify(mMockStatsdLogger).logAdServicesError(stats);
     }
 
     @Test
     public void testLogErrorWithExceptionInfo_emptyClassName_errorLoggingFlagEnabled() {
-        Exception exception = createSQLiteException(/* className = */ "", METHOD_NAME, LINE_NUMBER);
+        Exception exception = createSQLiteException(/* className= */ "", METHOD_NAME, LINE_NUMBER);
 
         mErrorLoggerEnabled.logErrorWithExceptionInfo(
                 exception,
@@ -174,7 +258,7 @@ public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCa
                         .setLineNumber(LINE_NUMBER)
                         .setLastObservedExceptionName(SQ_LITE_EXCEPTION)
                         .build();
-        verify(mMockStatsdLogger).logAdServicesError(eq(stats));
+        verify(mMockStatsdLogger).logAdServicesError(stats);
     }
 
     Exception createSQLiteException(String className, String methodName, int lineNumber) {
@@ -200,5 +284,35 @@ public final class AbstractAdServicesErrorLoggerTest extends SharedMockitoTestCa
         Exception exception = new SQLiteException();
         exception.setStackTrace(stackTraceElements);
         return exception;
+    }
+
+    @Nullable
+    private Throwable createThrowableWithMultipleCauses(
+            String className, String methodName, int lineNumber, int number) {
+        if (number == 0) {
+            return null;
+        }
+        Throwable lastThrowable = new IllegalStateException("lastThrowable");
+        StackTraceElement[] lastStackTraceElements =
+                new StackTraceElement[] {
+                    new StackTraceElement(className, methodName, "file", lineNumber)
+                };
+        lastThrowable.setStackTrace(lastStackTraceElements);
+        Throwable formerThrowable = lastThrowable;
+        for (int i = 0; i < number - 1; i++) {
+            Throwable throwable =
+                    new Throwable(String.format("createThrowable%d", i), formerThrowable);
+            StackTraceElement[] stackTraceElements =
+                    new StackTraceElement[] {
+                        new StackTraceElement(
+                                String.format("testClassName%d", i),
+                                String.format("testMethodName%d", i),
+                                "file",
+                                i)
+                    };
+            throwable.setStackTrace(stackTraceElements);
+            formerThrowable = throwable;
+        }
+        return formerThrowable;
     }
 }

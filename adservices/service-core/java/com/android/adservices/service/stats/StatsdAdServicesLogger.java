@@ -155,7 +155,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 getAllowlistedAppPackageName(measurementReportsStats.getSourceRegistrant()),
                 measurementReportsStats.getRetryCount(),
                 /* httpResponseCode */ 0,
-                /* isMarkedForDeletion */ false);
+                /* isMarkedForDeletion */ false,
+                /* isFakeReport */ measurementReportsStats.getIsFakeReport());
     }
 
     /** log method for API call stats. */
@@ -921,7 +922,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 ENCODING_JOB_RUN,
                 stats.getSignalEncodingSuccesses(),
                 stats.getSignalEncodingFailures(),
-                stats.getSignalEncodingSkips());
+                stats.getSignalEncodingSkips(),
+                stats.getEncodingSourceType());
     }
 
     @Override

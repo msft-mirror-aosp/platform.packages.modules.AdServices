@@ -16,8 +16,6 @@
 package com.android.adservices.shared.meta_testing;
 
 import static com.android.adservices.shared.meta_testing.CommonDescriptions.newTestMethodForClassRule;
-import static com.android.adservices.shared.testing.AndroidSdk.SC;
-import static com.android.adservices.shared.testing.AndroidSdk.SC_V2;
 import static com.android.adservices.shared.testing.SdkSandbox.State.DISABLED;
 import static com.android.adservices.shared.testing.SdkSandbox.State.ENABLED;
 import static com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest.DISABLED_SOMEHOW;
@@ -41,8 +39,6 @@ import com.android.adservices.shared.testing.DynamicLogger;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.SdkSandbox;
 import com.android.adservices.shared.testing.SetSdkSandboxStateAction;
-import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
-import com.android.adservices.shared.testing.annotations.RequiresSdkRange;
 import com.android.adservices.shared.testing.device.DeviceConfig;
 import com.android.adservices.shared.testing.device.DeviceConfig.SyncDisabledModeForTest;
 import com.android.adservices.shared.testing.flags.AbstractFlagsPreparerClassRule;
@@ -239,9 +235,9 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
                 .isEqualTo(ENABLED);
         expect.withMessage("sdkSandbox.getState() after test")
                 .that(mSdkSandbox.getState())
-                .isEqualTo(mSdkSandboxStateBefore);
+                .isEqualTo(DISABLED);
 
-        expectCalls(ENABLED, mSdkSandboxStateBefore);
+        expectCalls(ENABLED, DISABLED);
     }
 
     @Test
@@ -262,21 +258,10 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
     }
 
     @Test
-    @RequiresSdkRange(atLeast = SC, atMost = SC_V2, reason = "disabled type is unknown on S")
-    public final void testClassAnnotation_setSyncDisabledModeForTestAnnotation_untilReboot_S()
+    public final void testClassAnnotation_setSyncDisabledModeForTestAnnotation_untilReboot()
             throws Throwable {
-        testClassAnnotation_setSyncDisabledModeForTestAnnotation_untilReboot(DISABLED_SOMEHOW);
-    }
-
-    @Test
-    @RequiresSdkLevelAtLeastT(reason = "disabled type is unknown on S")
-    public final void testClassAnnotation_setSyncDisabledModeForTestAnnotation_untilReboot_TPlus()
-            throws Throwable {
-        testClassAnnotation_setSyncDisabledModeForTestAnnotation_untilReboot(UNTIL_REBOOT);
-    }
-
-    private void testClassAnnotation_setSyncDisabledModeForTestAnnotation_untilReboot(
-            SyncDisabledModeForTest expectedModeAfterSet) throws Throwable {
+        SyncDisabledModeForTest expectedModeAfterSet =
+                sdkLevel.isAtLeastT() ? UNTIL_REBOOT : DISABLED_SOMEHOW;
         setSyncMode(NONE);
         Description test = newTestMethodForClassRule(AClassDisablesDeviceConfigUntilReboot.class);
 
@@ -296,6 +281,8 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
     public final void
             testClassAndMethodAnnotation_setSyncDisabledModeForTestAnnotation_untilRebootThenNone()
                     throws Throwable {
+        SyncDisabledModeForTest expectedModeOnTest =
+                sdkLevel.isAtLeastT() ? UNTIL_REBOOT : DISABLED_SOMEHOW;
         setSyncMode(NONE);
         Description test =
                 newTestMethodForClassRule(
@@ -307,7 +294,7 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
 
         expect.withMessage("deviceConfig.getSyncDisabledMode() on test")
                 .that(mSyncModeOnTest.get())
-                .isEqualTo(UNTIL_REBOOT);
+                .isEqualTo(expectedModeOnTest);
         expect.withMessage("deviceConfig.getSyncDisabledMode() after test")
                 .that(mDeviceConfig.getSyncDisabledMode())
                 .isEqualTo(NONE);
@@ -405,6 +392,8 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
 
     @Test
     public final void testAnnotationsFromATypicalSubclass() throws Throwable {
+        SyncDisabledModeForTest expectedModeOnTest =
+                sdkLevel.isAtLeastT() ? PERSISTENT : DISABLED_SOMEHOW;
         setSyncMode(NONE);
 
         // ATypicalSubclass doesn't declare any annotation, but its superclass sets sync mode as
@@ -415,7 +404,7 @@ public abstract class AbstractFlagsPreparerClassRuleIntegrationTestCase<
 
         expect.withMessage("deviceConfig.getSyncDisabledMode() on test")
                 .that(mSyncModeOnTest.get())
-                .isEqualTo(PERSISTENT);
+                .isEqualTo(expectedModeOnTest);
         expect.withMessage("deviceConfig.getSyncDisabledMode() after test")
                 .that(mDeviceConfig.getSyncDisabledMode())
                 .isEqualTo(NONE);

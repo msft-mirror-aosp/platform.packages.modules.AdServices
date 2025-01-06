@@ -54,7 +54,7 @@ import com.android.adservices.download.MddJobService;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.MaintenanceJobService;
-import com.android.adservices.service.adselection.DebugReportSenderJobService;
+import com.android.adservices.service.adselection.debug.DebugReportSenderJobService;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.encryptionkey.EncryptionKeyJobService;
 import com.android.adservices.service.measurement.DeleteExpiredJobService;
@@ -78,6 +78,8 @@ import java.util.Objects;
 
 /** Provides functionality to schedule or unschedule all relevant background jobs. */
 @RequiresApi(Build.VERSION_CODES.S)
+// TODO(b/311183933): Remove passed in Context from static method.
+@SuppressWarnings("AvoidStaticContext")
 public class BackgroundJobsManager {
     /**
      * Tries to schedule all the relevant background jobs.

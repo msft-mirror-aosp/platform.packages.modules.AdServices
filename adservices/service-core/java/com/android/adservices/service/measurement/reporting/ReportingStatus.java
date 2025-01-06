@@ -56,6 +56,7 @@ public class ReportingStatus {
         VERBOSE_DEBUG_TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA(30),
         VERBOSE_DEBUG_TRIGGER_EVENT_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT(31),
         VERBOSE_DEBUG_TRIGGER_AGG_ATTRIBUTIONS_PER_SOURCE_DESTINATION_LIMIT(32),
+        VERBOSE_DEBUG_HEADER_ERROR(33),
         VERBOSE_DEBUG_UNKNOWN(9999);
 
         private final int mValue;
@@ -136,6 +137,8 @@ public class ReportingStatus {
 
     private int mRetryCount;
 
+    private boolean mIsFakeReport;
+
     public ReportingStatus() {
         mReportType = ReportType.UNKNOWN;
         mUploadStatus = UploadStatus.UNKNOWN;
@@ -143,6 +146,7 @@ public class ReportingStatus {
         mUploadMethod = UploadMethod.UNKNOWN;
         mReportingDelay = 0L;
         mSourceRegistrant = "";
+        mIsFakeReport = false;
     }
 
     /** Get the type of report that is being uploaded. */
@@ -222,6 +226,8 @@ public class ReportingStatus {
             mReportType = ReportType.VERBOSE_DEBUG_TRIGGER_EVENT_REPORT_WINDOW_NOT_STARTED;
         } else if (reportType.equals(DebugReportApi.Type.TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA)) {
             mReportType = ReportType.VERBOSE_DEBUG_TRIGGER_EVENT_NO_MATCHING_TRIGGER_DATA;
+        } else if (reportType.equals(DebugReportApi.Type.HEADER_PARSING_ERROR)) {
+            mReportType = ReportType.VERBOSE_DEBUG_HEADER_ERROR;
         } else {
             mReportType = ReportType.VERBOSE_DEBUG_UNKNOWN;
         }
@@ -285,5 +291,15 @@ public class ReportingStatus {
     /** Set retry count. */
     public void setRetryCount(int retryCount) {
         mRetryCount = retryCount;
+    }
+
+    /** Gets if the report is fake. */
+    public boolean getIsFakeReport() {
+        return mIsFakeReport;
+    }
+
+    /** Sets if the report is fake. */
+    public void setIsFakeReport(boolean isFakeReport) {
+        mIsFakeReport = isFakeReport;
     }
 }

@@ -24,8 +24,6 @@ import static com.android.adservices.service.DebugFlagsConstants.KEY_PROTECTED_A
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS;
-import static com.android.adservices.service.FlagsConstants.KEY_PAS_APP_ALLOW_LIST;
-import static com.android.adservices.service.FlagsConstants.KEY_PPAPI_APP_ALLOW_LIST;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.PPAPI_AND_SYSTEM_SERVER;
@@ -51,6 +49,8 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.common.WebViewSupportUtil;
+import com.android.adservices.common.annotations.SetPasAppAllowList;
+import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.DBEncodedPayload;
@@ -79,7 +79,8 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.AppPackageNameRetriever;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
-import com.android.adservices.service.devapi.DevSessionDataStoreFactory;
+import com.android.adservices.service.devapi.DevSessionInMemoryDataStore;
+import com.android.adservices.service.signals.ForcedEncoder;
 import com.android.adservices.service.signals.PeriodicEncodingJobRunner;
 import com.android.adservices.service.signals.ProtectedSignalsServiceImpl;
 import com.android.adservices.service.signals.SignalsProviderAndArgumentFactory;
@@ -102,7 +103,6 @@ import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
-import com.android.adservices.shared.testing.annotations.SetStringFlag;
 import com.android.adservices.shared.testing.concurrency.SimpleSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -126,8 +126,8 @@ import java.io.PrintWriter;
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED)
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_ENABLED)
 @SetFlagEnabled(KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS)
-@SetStringFlag(name = KEY_PPAPI_APP_ALLOW_LIST, value = "*")
-@SetStringFlag(name = KEY_PAS_APP_ALLOW_LIST, value = "*")
+@SetPpapiAppAllowList
+@SetPasAppAllowList
 @SetIntegerFlag(name = KEY_CONSENT_SOURCE_OF_TRUTH, value = PPAPI_AND_SYSTEM_SERVER)
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 @EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
@@ -191,6 +191,7 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private UpdateSignalsProcessReportedLoggerImpl mUpdateSignalsProcessReportedLoggerMock;
     private ProtectedSignalsDao mProtectedSignalsDao;
+    @Mock ForcedEncoder mForcedEncoder;
 
     @Before
     public void setUp() throws Exception {
@@ -245,7 +246,10 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                         encoderLogicHandler,
                         new EncodingExecutionLogHelperImpl(
                                 logger, Clock.getInstance(), EnrollmentDao.getInstance()),
-                        new EncodingJobRunStatsLoggerImpl(logger, EncodingJobRunStats.builder()),
+                        new EncodingJobRunStatsLoggerImpl(
+                                logger,
+                                EncodingJobRunStats.builder(),
+                                /* FledgeEnableForcedEncodingAfterSignalsUpdate = */ false),
                         mEncoderLogicMetadataDao);
         mProtectedSignalsService =
                 new ProtectedSignalsServiceImpl(
@@ -262,8 +266,11 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                                                 encoderLogicHandler,
                                                 /* context= */ mContext,
                                                 AdServicesExecutors.getBackgroundExecutor(),
-                                                /* isCompletionBroadcastEnabled= */ true),
-                                        new SignalEvictionController()),
+                                                /* isCompletionBroadcastEnabled= */ true,
+                                                mForcedEncoder,
+                                                false),
+                                        new SignalEvictionController(),
+                                        mForcedEncoder),
                                 new AdTechUriValidator(
                                         "caller",
                                         "",
@@ -291,7 +298,7 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                                         Throttler.newInstance(mMockFlags), logger)),
                         EnrollmentDao.getInstance(),
                         mUpdateSignalsProcessReportedLoggerMock);
-        when(mConsentManagerMock.isPasFledgeConsentGiven()).thenReturn(true);
+        when(mConsentManagerMock.isPasConsentGiven()).thenReturn(true);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(false);
         mocker.mockGetConsentNotificationDebugMode(true);
@@ -378,7 +385,7 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                     sContext.getContentResolver(),
                     sContext.getPackageManager(),
                     AppPackageNameRetriever.create(sContext),
-                    DevSessionDataStoreFactory.get());
+                    new DevSessionInMemoryDataStore());
         }
 
         @Override

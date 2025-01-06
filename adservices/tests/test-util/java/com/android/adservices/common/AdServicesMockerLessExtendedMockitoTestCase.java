@@ -86,7 +86,6 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
 
     @Mock protected Context mMockContext;
 
-    protected final Flags mMockFlags = mock(Flags.class);
     protected final DebugFlags mMockDebugFlags = mock(DebugFlags.class);
 
     /** Spy the {@link AdServicesUnitTestCase#mContext} */
@@ -310,8 +309,8 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         }
 
         @Override
-        public void mockGetDeveloperModeFeatureEnabled(boolean value) {
-            mAdServicesFlagsMocker.mockGetDeveloperModeFeatureEnabled(value);
+        public void mockGetDeveloperSessionFeatureEnabled(boolean value) {
+            mAdServicesDebugFlagsMocker.mockGetDeveloperSessionFeatureEnabled(value);
         }
 
         // AdServicesDebugFlagsMocker methods

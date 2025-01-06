@@ -42,6 +42,7 @@ import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiType;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.profiling.Tracing;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
@@ -111,7 +112,8 @@ public class PeriodicEncodingJobService extends JobService {
         int traceCookie = Tracing.beginAsyncSection(Tracing.START_JOB);
         PeriodicEncodingJobWorker encodingWorker = PeriodicEncodingJobWorker.getInstance();
         encodingWorker
-                .encodeProtectedSignals()
+                .encodeProtectedSignals(
+                        AdsRelevanceStatusUtils.PAS_ENCODING_SOURCE_TYPE_ENCODING_JOB_SERVICE)
                 .addCallback(
                         new FutureCallback<Void>() {
                             @Override
@@ -164,6 +166,8 @@ public class PeriodicEncodingJobService extends JobService {
     /**
      * Attempts to schedule the Periodic encoding as a singleton job if it is not already scheduled.
      */
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     public static void scheduleIfNeeded(Context context, Flags flags, boolean forceSchedule) {
         LoggerFactory.getFledgeLogger()
                 .v(
@@ -204,6 +208,8 @@ public class PeriodicEncodingJobService extends JobService {
      * <p>Split out from {@link #scheduleIfNeeded(Context, Flags, boolean)} for mockable testing
      */
     @VisibleForTesting
+    // TODO(b/311183933): Remove passed in Context from static method.
+    @SuppressWarnings("AvoidStaticContext")
     protected static void schedule(Context context, Flags flags) {
         if (!flags.getProtectedSignalsPeriodicEncodingEnabled()) {
             LoggerFactory.getFledgeLogger()

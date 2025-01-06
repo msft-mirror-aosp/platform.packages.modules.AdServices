@@ -16,6 +16,7 @@
 
 package com.android.adservices.mockito;
 
+import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.service.Flags;
 
 /**
@@ -25,7 +26,10 @@ import com.android.adservices.service.Flags;
  * tests less verbose and easier to maintain (for example, when a flag is not needed by a feature
  * anymore, only the implementation of this interface would need to be changed, not individual
  * tests).
+ *
+ * @deprecated tests should use {@link AdServicesFakeFlagsSetterRule} instead.
  */
+@Deprecated
 public interface AdServicesFlagsMocker {
 
     // TODO(b/358120731): rename some methods below, like:
@@ -57,7 +61,4 @@ public interface AdServicesFlagsMocker {
      * for the testing release stage.
      */
     void mockGetAdservicesReleaseStageForCobalt(String stage);
-
-    /** Mocks a call to {@link Flags#getDeveloperModeFeatureEnabled()}. */
-    void mockGetDeveloperModeFeatureEnabled(boolean value);
 }

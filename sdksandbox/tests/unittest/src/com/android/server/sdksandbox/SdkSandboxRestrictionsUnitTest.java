@@ -149,6 +149,7 @@ public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
                 .adoptShellPermissionIdentity(
                         Manifest.permission.READ_DEVICE_CONFIG,
                         Manifest.permission.WRITE_DEVICE_CONFIG,
+                        Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG,
                         // for Context#registerReceiverForAllUsers
                         Manifest.permission.INTERACT_ACROSS_USERS_FULL);
 

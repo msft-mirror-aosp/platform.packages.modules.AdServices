@@ -18,7 +18,7 @@ package com.android.adservices.service.ui.util;
 
 import static com.google.common.truth.Truth.assertThat;
 
-import android.adservices.common.AdServicesModuleState;
+import android.adservices.common.AdServicesCommonManager;
 import android.adservices.common.AdServicesModuleUserChoice;
 import android.adservices.common.Module;
 
@@ -28,31 +28,24 @@ public class EnrollmentDataTest {
     @Test
     public void moduleStateTest() {
         EnrollmentData data = new EnrollmentData();
-        AdServicesModuleState moduleStateMeasurement =
-                new AdServicesModuleState(
-                        Module.MEASUREMENT, AdServicesModuleState.MODULE_STATE_ENABLED);
-        AdServicesModuleState moduleStatePa =
-                new AdServicesModuleState(
-                        Module.PROTECTED_AUDIENCE, AdServicesModuleState.MODULE_STATE_DISABLED);
-        AdServicesModuleState moduleStateTopic =
-                new AdServicesModuleState(
-                        Module.TOPICS, AdServicesModuleState.MODULE_STATE_UNKNOWN);
-        data.putModuleState(moduleStateMeasurement);
-        data.putModuleState(moduleStatePa);
-        data.putModuleState(moduleStateTopic);
+
+        data.putModuleState(Module.MEASUREMENT, AdServicesCommonManager.MODULE_STATE_ENABLED);
+        data.putModuleState(
+                Module.PROTECTED_AUDIENCE, AdServicesCommonManager.MODULE_STATE_DISABLED);
+        data.putModuleState(Module.TOPICS, AdServicesCommonManager.MODULE_STATE_UNKNOWN);
 
         assertThat(data.getModuleState(Module.MEASUREMENT))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_ENABLED);
+                .isEqualTo(AdServicesCommonManager.MODULE_STATE_ENABLED);
         assertThat(data.getModuleState(Module.PROTECTED_AUDIENCE))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_DISABLED);
+                .isEqualTo(AdServicesCommonManager.MODULE_STATE_DISABLED);
         assertThat(data.getModuleState(Module.TOPICS))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_UNKNOWN);
+                .isEqualTo(AdServicesCommonManager.MODULE_STATE_UNKNOWN);
         assertThat(data.getModuleState(Module.ADID))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_UNKNOWN);
+                .isEqualTo(AdServicesCommonManager.MODULE_STATE_UNKNOWN);
         assertThat(data.getModuleState(Module.PROTECTED_APP_SIGNALS))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_UNKNOWN);
+                .isEqualTo(AdServicesCommonManager.MODULE_STATE_UNKNOWN);
         assertThat(data.getModuleState(Module.ON_DEVICE_PERSONALIZATION))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_UNKNOWN);
+                .isEqualTo(AdServicesCommonManager.MODULE_STATE_UNKNOWN);
     }
 
     @Test
@@ -106,25 +99,17 @@ public class EnrollmentDataTest {
         data.putUserChoice(userChoicePa);
         data.putUserChoice(userChoiceTopic);
 
-        AdServicesModuleState moduleStateMeasurement =
-                new AdServicesModuleState(
-                        Module.MEASUREMENT, AdServicesModuleState.MODULE_STATE_ENABLED);
-        AdServicesModuleState moduleStatePa =
-                new AdServicesModuleState(
-                        Module.PROTECTED_AUDIENCE, AdServicesModuleState.MODULE_STATE_DISABLED);
-        AdServicesModuleState moduleStateTopic =
-                new AdServicesModuleState(
-                        Module.TOPICS, AdServicesModuleState.MODULE_STATE_UNKNOWN);
-        data.putModuleState(moduleStateMeasurement);
-        data.putModuleState(moduleStatePa);
-        data.putModuleState(moduleStateTopic);
+        data.putModuleState(Module.MEASUREMENT, AdServicesCommonManager.MODULE_STATE_ENABLED);
+        data.putModuleState(
+                Module.PROTECTED_AUDIENCE, AdServicesCommonManager.MODULE_STATE_DISABLED);
+        data.putModuleState(Module.TOPICS, AdServicesCommonManager.MODULE_STATE_UNKNOWN);
 
         assertThat(data.getModuleState(Module.MEASUREMENT))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_ENABLED);
+                .isEqualTo(AdServicesCommonManager.MODULE_STATE_ENABLED);
         assertThat(data.getModuleState(Module.PROTECTED_AUDIENCE))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_DISABLED);
+                .isEqualTo(AdServicesCommonManager.MODULE_STATE_DISABLED);
         assertThat(data.getModuleState(Module.TOPICS))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_UNKNOWN);
+                .isEqualTo(AdServicesCommonManager.MODULE_STATE_UNKNOWN);
 
         assertThat(data.getUserChoice(Module.MEASUREMENT))
                 .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
@@ -138,74 +123,11 @@ public class EnrollmentDataTest {
         EnrollmentData newData = EnrollmentData.deserialize(result);
 
         assertThat(newData.getModuleState(Module.MEASUREMENT))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_ENABLED);
+                .isEqualTo(AdServicesCommonManager.MODULE_STATE_ENABLED);
         assertThat(newData.getModuleState(Module.PROTECTED_AUDIENCE))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_DISABLED);
+                .isEqualTo(AdServicesCommonManager.MODULE_STATE_DISABLED);
         assertThat(newData.getModuleState(Module.TOPICS))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_UNKNOWN);
-
-        assertThat(newData.getUserChoice(Module.MEASUREMENT))
-                .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
-        assertThat(newData.getUserChoice(Module.PROTECTED_AUDIENCE))
-                .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT);
-        assertThat(newData.getUserChoice(Module.TOPICS))
-                .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN);
-    }
-
-    @Test
-    public void serializationBase64Test() {
-        EnrollmentData data = EnrollmentData.deserialize("");
-        AdServicesModuleUserChoice userChoiceMeasurement =
-                new AdServicesModuleUserChoice(
-                        Module.MEASUREMENT, AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
-        AdServicesModuleUserChoice userChoicePa =
-                new AdServicesModuleUserChoice(
-                        Module.PROTECTED_AUDIENCE,
-                        AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT);
-        AdServicesModuleUserChoice userChoiceTopic =
-                new AdServicesModuleUserChoice(
-                        Module.TOPICS, AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN);
-        data.putUserChoice(userChoiceMeasurement);
-        data.putUserChoice(userChoicePa);
-        data.putUserChoice(userChoiceTopic);
-
-        AdServicesModuleState moduleStateMeasurement =
-                new AdServicesModuleState(
-                        Module.MEASUREMENT, AdServicesModuleState.MODULE_STATE_ENABLED);
-        AdServicesModuleState moduleStatePa =
-                new AdServicesModuleState(
-                        Module.PROTECTED_AUDIENCE, AdServicesModuleState.MODULE_STATE_DISABLED);
-        AdServicesModuleState moduleStateTopic =
-                new AdServicesModuleState(
-                        Module.TOPICS, AdServicesModuleState.MODULE_STATE_UNKNOWN);
-        data.putModuleState(moduleStateMeasurement);
-        data.putModuleState(moduleStatePa);
-        data.putModuleState(moduleStateTopic);
-
-        assertThat(data.getModuleState(Module.MEASUREMENT))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_ENABLED);
-        assertThat(data.getModuleState(Module.PROTECTED_AUDIENCE))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_DISABLED);
-        assertThat(data.getModuleState(Module.TOPICS))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_UNKNOWN);
-
-        assertThat(data.getUserChoice(Module.MEASUREMENT))
-                .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);
-        assertThat(data.getUserChoice(Module.PROTECTED_AUDIENCE))
-                .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_OPTED_OUT);
-        assertThat(data.getUserChoice(Module.TOPICS))
-                .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN);
-
-        String result = EnrollmentData.serialize(data);
-
-        EnrollmentData newData = EnrollmentData.deserialize(result);
-
-        assertThat(newData.getModuleState(Module.MEASUREMENT))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_ENABLED);
-        assertThat(newData.getModuleState(Module.PROTECTED_AUDIENCE))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_DISABLED);
-        assertThat(newData.getModuleState(Module.TOPICS))
-                .isEqualTo(AdServicesModuleState.MODULE_STATE_UNKNOWN);
+                .isEqualTo(AdServicesCommonManager.MODULE_STATE_UNKNOWN);
 
         assertThat(newData.getUserChoice(Module.MEASUREMENT))
                 .isEqualTo(AdServicesModuleUserChoice.USER_CHOICE_OPTED_IN);

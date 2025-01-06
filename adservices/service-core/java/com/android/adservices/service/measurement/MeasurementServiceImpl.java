@@ -62,6 +62,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.download.MddJob;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
+import com.android.adservices.service.common.AdPackageDenyResolver;
 import com.android.adservices.service.common.AllowLists;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.PermissionHelper;
@@ -77,6 +78,7 @@ import com.android.adservices.service.measurement.access.DevContextAccessResolve
 import com.android.adservices.service.measurement.access.ForegroundEnforcementAccessResolver;
 import com.android.adservices.service.measurement.access.IAccessResolver;
 import com.android.adservices.service.measurement.access.KillSwitchAccessResolver;
+import com.android.adservices.service.measurement.access.PackageDenyAccessResolver;
 import com.android.adservices.service.measurement.access.PermissionAccessResolver;
 import com.android.adservices.service.measurement.access.UserConsentAccessResolver;
 import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
@@ -102,6 +104,7 @@ import com.google.common.util.concurrent.ListeningExecutorService;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -128,6 +131,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
     private final Context mContext;
     private final Throttler mThrottler;
     private final DevContextFilter mDevContextFilter;
+    private final AdPackageDenyResolver mAdPackageDenyResolver;
 
     public MeasurementServiceImpl(
             @NonNull Context context,
@@ -146,7 +150,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                 debugFlags,
                 AdServicesLoggerImpl.getInstance(),
                 appImportanceFilter,
-                DevContextFilter.create(context),
+                DevContextFilter.create(context, /* developerModeFeatureEnabled= */ false),
+                AdPackageDenyResolver.getInstance(),
                 AdServicesExecutors.getBackgroundExecutor());
     }
 
@@ -162,6 +167,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
             @NonNull AdServicesLogger adServicesLogger,
             @NonNull AppImportanceFilter appImportanceFilter,
             @NonNull DevContextFilter devContextFilter,
+            @NonNull AdPackageDenyResolver adPackageDenyResolver,
             @NonNull ListeningExecutorService backgroundExecutor) {
         mContext = context;
         mClock = clock;
@@ -173,6 +179,7 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
         mAdServicesLogger = adServicesLogger;
         mAppImportanceFilter = appImportanceFilter;
         mDevContextFilter = devContextFilter;
+        mAdPackageDenyResolver = adPackageDenyResolver;
         mBackgroundExecutor = backgroundExecutor;
     }
 
@@ -231,7 +238,16 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                     new DevContextAccessResolver(
                                             mDevContextFilter.createDevContextFromCallingUid(
                                                     callerUid),
-                                            request)),
+                                            request),
+                                    new PackageDenyAccessResolver(
+                                            mFlags.getEnableMsmtRegisterSourcePackageDenyList(),
+                                            mAdPackageDenyResolver,
+                                            request.getAppPackageName(),
+                                            request.getSdkPackageName(),
+                                            Set.of(
+                                                    PackageDenyAccessResolver.MEASUREMENT_GROUP,
+                                                    PackageDenyAccessResolver
+                                                            .MEASUREMENT_API_REGISTER_SOURCE))),
                             callback,
                             apiNameId,
                             request.getAppPackageName(),
@@ -577,7 +593,6 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                                     mFlags.getMsmtApiAppBlockList(),
                                                     statusParam.getAppPackageName()));
                         }
-
                         AccessResolverInfo accessResolverInfo = getAccessDenied(accessResolvers);
                         Optional<IAccessResolver> optionalResolver =
                                 accessResolverInfo.getAccessResolver();

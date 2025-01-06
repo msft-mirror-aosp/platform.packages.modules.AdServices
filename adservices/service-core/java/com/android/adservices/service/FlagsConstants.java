@@ -44,18 +44,6 @@ public final class FlagsConstants {
     // AdServices Namespace String from DeviceConfig class not available in S Minus
     public static final String NAMESPACE_ADSERVICES = "adservices";
 
-    /** (Default) string used to separate array values on flattened flags. */
-    public static final String ARRAY_SPLITTER_COMMA = ",";
-
-    /** Constant used to allow everything (typically all packages) on allow-list flags. */
-    public static final String ALLOWLIST_ALL = "*";
-
-    /** Constant used to not allow anything (typically all packages) on allow-list flags. */
-    public static final String ALLOWLIST_NONE = "";
-
-    // Maximum possible percentage for percentage variables
-    public static final int MAX_PERCENTAGE = 100;
-
     // *********************************************
     // * Flag names (initially defined by PhFlags) *
     // *********************************************
@@ -610,6 +598,20 @@ public final class FlagsConstants {
             "protected_signals_encoder_refresh_window_seconds";
     public static final String KEY_PROTECTED_SIGNALS_FETCH_SIGNAL_UPDATES_MAX_SIZE_BYTES =
             "key_protected_signals_fetch_signal_updates_max_size_bytes";
+    public static final String
+            KEY_PROTECTED_SIGNALS_MAX_JS_FAILURE_EXECUTION_ON_CERTAIN_VERSION_BEFORE_STOP =
+                    "Fledge__protected_signals_failed_encoding_max_count";
+    public static final String KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_BYTES =
+            "Fledge__protected_signals_raw_signals_max_size_per_buyer_bytes";
+    public static final String
+            KEY_PROTECTED_SIGNALS_MAX_SIGNAL_SIZE_PER_BUYER_WITH_OVERSUBSCIPTION_BYTES =
+                    "Fledge__protected_signals_raw_signals_max_oversubscribed_size_per_buyer_bytes";
+
+    public static final String KEY_FLEDGE_ENABLE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE =
+            "Fledge__enable_forced_encoding_after_signals_update";
+
+    public static final String KEY_FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS =
+            "Fledge__forced_encoding_after_signals_update_cooldown_seconds";
 
     // FLEDGE Ad Selection keys
     public static final String KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT =
@@ -843,6 +845,20 @@ public final class FlagsConstants {
     public static final String KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_CUSTOM_AUDIENCE =
             "fledge_ad_selection_enforce_foreground_status_custom_audience";
 
+    public static final String KEY_ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE =
+            "Fledge__enforce_fetch_and_join_custom_audience_foreground_status";
+    public static final String KEY_ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE =
+            "Fledge__enforce_leave_custom_audience_foreground_status";
+    public static final String KEY_ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE =
+            "Fledge__enforce_schedule_custom_audience_foreground_status";
+
+    public static final String KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS =
+            "Fledge__enable_custom_audience_component_ads";
+    public static final String KEY_MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE =
+            "Fledge__max_component_ads_per_custom_audience";
+    public static final String KEY_COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES =
+            "Fledge__component_ad_render_id_max_length_bytes";
+
     // Protected Signals keys
     public static final String KEY_PROTECTED_SIGNALS_CLEANUP_ENABLED =
             "protected_signals_cleanup_enabled";
@@ -1007,8 +1023,34 @@ public final class FlagsConstants {
             "topics_api_app_request_permits_per_second";
     public static final String KEY_TOPICS_API_SDK_REQUEST_PERMITS_PER_SECOND =
             "topics_api_sdk_request_permits_per_second";
+    public static final String KEY_FLEDGE_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_join_custom_audience_request_permits_per_second";
+    public static final String
+            KEY_FLEDGE_FETCH_AND_JOIN_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND =
+                    "RateLimiter__fledge_fetch_and_join_custom_audience_request_permits_per_second";
+    public static final String
+            KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_REQUEST_PERMITS_PER_SECOND =
+                    "RateLimiter__fledge_schedule_custom_audience_update_request_permits_per_second";
+    public static final String KEY_FLEDGE_LEAVE_CUSTOM_AUDIENCE_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_leave_custom_audience_request_permits_per_second";
+    public static final String KEY_FLEDGE_UPDATE_SIGNALS_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_update_signals_request_permits_per_second";
+    public static final String KEY_FLEDGE_SELECT_ADS_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_select_ads_request_permits_per_second";
+    public static final String KEY_FLEDGE_SELECT_ADS_WITH_OUTCOMES_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_select_ads_with_outcomes_request_permits_per_second";
+    public static final String KEY_FLEDGE_GET_AD_SELECTION_DATA_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_get_ad_selection_data_request_permits_per_second";
+    public static final String KEY_FLEDGE_PERSIST_AD_SELECTION_RESULT_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_persist_ad_selection_result_request_permits_per_second";
+    public static final String KEY_FLEDGE_REPORT_IMPRESSION_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_report_impression_request_permits_per_second";
     public static final String KEY_FLEDGE_REPORT_INTERACTION_REQUEST_PERMITS_PER_SECOND =
             "fledge_report_interaction_request_permits_per_second";
+    public static final String KEY_FLEDGE_SET_APP_INSTALL_ADVERTISERS_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_set_app_install_advertisers_request_permits_per_second";
+    public static final String KEY_FLEDGE_UPDATE_AD_COUNTER_HISTOGRAM_REQUEST_PERMITS_PER_SECOND =
+            "RateLimiter__fledge_update_ad_counter_histogram_request_permits_per_second";
 
     // Adservices enable status keys.
     public static final String KEY_ADSERVICES_ENABLED = "adservice_enabled";
@@ -1060,10 +1102,6 @@ public final class FlagsConstants {
 
     // App/SDK AllowList/DenyList keys that have access to the web registration APIs
     public static final String KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST = "web_context_client_allow_list";
-
-    // If the developer session feature is enabled.
-    public static final String KEY_DEVELOPER_MODE_FEATURE_ENABLED =
-            "CommonInfra__enable_developer_mode";
 
     // Max response payload size allowed per source/trigger registration
     public static final String KEY_MAX_RESPONSE_BASED_REGISTRATION_SIZE_BYTES =
@@ -1156,6 +1194,12 @@ public final class FlagsConstants {
     public static final String KEY_MDD_ENROLLMENT_MANIFEST_FILE_URL =
             "mdd_enrollment_manifest_file_url";
     public static final String KEY_ENROLLMENT_PROTO_FILE_ENABLED = "enrollment_proto_file_enabled";
+    public static final String KEY_CONFIG_DELIVERY__ENABLE_ENROLLMENT_CONFIG_V3_DB =
+            "ConfigDelivery__enable_enrollment_config_v3_db";
+    public static final String KEY_CONFIG_DELIVERY__USE_CONFIGS_MANAGER_TO_QUERY_ENROLLMENT =
+            "ConfigDelivery__use_configs_manager_to_query_enrollment";
+    public static final String KEY_CONFIG_DELIVERY__MDD_MANIFEST_URLS =
+            "ConfigDelivery__mdd_manifest_urls";
 
     // New Feature Flags
     public static final String KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED =
@@ -1476,7 +1520,7 @@ public final class FlagsConstants {
     public static final String KEY_KANON_FETCH_PARAMETERS_URL = "kanon_fetch_parameters_url";
 
     /** Key for get challenge url. */
-    public static final String KEY_ANON_GET_CHALLENGE_URl = "kanon_get_challenge_url";
+    public static final String KEY_ANON_GET_CHALLENGE_URL = "kanon_get_challenge_url";
 
     /** Key for kanon register client parameters url. */
     public static final String KEY_FLEDGE_KANON_REGISTER_CLIENT_PARAMETERS_URL =
@@ -1662,6 +1706,14 @@ public final class FlagsConstants {
     public static final String KEY_PACKAGE_DENY__ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD =
             "PackageDeny__enable_package_deny_job_on_mdd_download";
 
+    /** Key for package deny enable package installed filtering */
+    public static final String KEY_PACKAGE_DENY_ENABLE_INSTALLED_PACKAGE_FILTER =
+            "PackageDeny__enable_installed_package_filter";
+
+    /** Key for package dny background job period in millis */
+    public static final String KEY_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS =
+            "PackageDeny__background_job_period_millis";
+
     /** Key for MDD Package Deny registry manifest file url */
     public static final String KEY_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL =
             "DownloadConfig__default_mdd_package_deny_manifest_file_url";
@@ -1672,4 +1724,23 @@ public final class FlagsConstants {
 
     /** Key to enable Ad Id migration. */
     public static final String KEY_AD_ID_MIGRATION_ENABLED = "ad_id_migration_enabled";
+
+    /** Key to enable report event for component seller as one of the destination. */
+    public static final String KEY_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER =
+            "Fledge__enable_report_event_for_component_seller";
+
+    /** Key to enable winning seller id field in ad selection outcome */
+    public static final String KEY_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME =
+            "Fledge__enable_winning_seller_id_in_ad_selection_outcome";
+
+    /** Key to enable prod debug feature in server auctions */
+    public static final String KEY_FLEDGE_ENABLE_PROD_DEBUG_IN_SERVER_AUCTION =
+            "Fledge__enable_prod_debug_in_auction_server";
+
+    /** Key to enable the AdServices latency metrics {@code RbATrace}. */
+    public static final String KEY_ENABLE_RB_ATRACE = "enable_rb_atrace";
+
+    /** Key to enable prod debug feature in server auctions */
+    public static final String KEY_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST =
+            "Measurement__enable_register_source_package_deny_list";
 }

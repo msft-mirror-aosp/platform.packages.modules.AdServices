@@ -61,7 +61,7 @@
           "url": "https://reporter1.test/register-source",
           "response": {
             "Attribution-Reporting-Register-Source": {
-              "destination": "android-app://destination.test",
+              "destination": "android-app://destination.test/path",
               "aggregation_keys": {
                 "a": "0x3"
               },
@@ -92,7 +92,7 @@
           "url": "https://reporter.test/register-source",
           "response": {
             "Attribution-Reporting-Register-Source": {
-              "destination": "android-app://destination.test",
+              "destination": "android-app://destination.test/path",
               "aggregatable_debug_reporting": {
                 "budget": 1000,
                 "key_piece": "0x3",
@@ -121,8 +121,8 @@
           "response": {
             "Attribution-Reporting-Register-Source": {
               "web_destination": [
-                "https://destination0.test",
-                "https://destination.test"
+                "https://destination0.test/path",
+                "https://destination.test/path"
               ],
               "aggregatable_debug_reporting": {
                 "budget": 1000,
@@ -197,6 +197,80 @@
                   },
                   {
                     "types": ["source-success"],
+                    "key_piece": "0x3",
+                    "value": 777
+                  }
+                ]
+              }
+            }
+          }
+        }]
+      },
+      // Invalid `aggregatable_debug_reporting` due to duplicate unknown types
+      // within a list. No aggregatable debug report generated.
+      {
+        "timestamp": "13100",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "source.test"
+        },
+        "responses": [{
+          "url": "https://reporter.test/register-source",
+          "response": {
+            "Attribution-Reporting-Register-Source": {
+              "destination": "android-app://destination.test",
+              "aggregation_keys": {
+                "abc": "0x9"
+              },
+              "aggregatable_debug_reporting": {
+                "budget": 1024,
+                "key_piece": "0x789",
+                "debug_data": [
+                  {
+                    "types": [
+                      "source-success",
+                      "unknown-report-type",
+                      "unknown-report-type"
+                    ],
+                    "key_piece": "0x2",
+                    "value": 666
+                  }
+                ]
+              }
+            }
+          }
+        }]
+      },
+      // Invalid `aggregatable_debug_reporting` due to duplicate unknown types
+      // across lists. No aggregatable debug report generated.
+      {
+        "timestamp": "13200",
+        "registration_request": {
+          "source_type": "navigation",
+          "registrant": "source.test"
+        },
+        "responses": [{
+          "url": "https://reporter.test/register-source",
+          "response": {
+            "Attribution-Reporting-Register-Source": {
+              "destination": "android-app://destination.test",
+              "aggregation_keys": {
+                "b": "0x36"
+              },
+              "aggregatable_debug_reporting": {
+                "budget": 1024,
+                "key_piece": "0x789",
+                "debug_data": [
+                  {
+                    "types": ["source-success", "unknown-report-type"],
+                    "key_piece": "0x2",
+                    "value": 666
+                  },
+                  {
+                    "types": [
+                      "source-destination-limit",
+                      "unknown-report-type"
+                    ],
                     "key_piece": "0x3",
                     "value": 777
                   }
@@ -450,6 +524,46 @@
             }
           }
         ]
+      },
+      // Verifies that the previous source was registered (timestamp: 13,100).
+      // Creates an aggregatable attribution report.
+      {
+        "timestamp": "13150",
+        "registration_request": {
+          "registrant": "destination.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_values": {
+                  "abc": 65536
+                }
+              }
+            }
+          }
+        ]
+      },
+      // Verifies that the previous source was registered (timestamp: 13,200).
+      // Creates an aggregatable attribution report.
+      {
+        "timestamp": "13250",
+        "registration_request": {
+          "registrant": "destination.test"
+        },
+        "responses": [
+          {
+            "url": "https://reporter.test/register-trigger",
+            "response": {
+              "Attribution-Reporting-Register-Trigger": {
+                "aggregatable_values": {
+                  "b": 65536
+                }
+              }
+            }
+          }
+        ]
       }
     ]
   },
@@ -495,6 +609,54 @@
       },
       {
         "report_time": "3613000",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://destination.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "3613",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x36",
+              "value": 65536
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ]
+        }
+      },
+      {
+        "report_time": "3613150",
+        "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://destination.test",
+            "reporting_origin": "https://reporter.test",
+            "scheduled_report_time": "3613",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x9",
+              "value": 65536
+            },
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0},
+            {"key": "0x0", "value": 0}
+          ]
+        }
+      },
+      {
+        "report_time": "3613250",
         "report_url": "https://reporter.test/.well-known/attribution-reporting/report-aggregate-attribution",
         "payload": {
           "shared_info": {

@@ -45,7 +45,6 @@ public abstract class AbstractRethrowerRule extends AbstractRule {
             base.evaluate();
         } catch (Throwable t) {
             testError = t;
-            cleanUpErrors.add(t);
             onTestFailure(base, description, cleanUpErrors, t);
         } finally {
             postTest(base, description, cleanUpErrors);
@@ -67,9 +66,12 @@ public abstract class AbstractRethrowerRule extends AbstractRule {
             mLog.i("%s is being ignored: %s", testName, testError);
             throw testError;
         }
-        StringBuilder dump = new StringBuilder();
-        String dumpDescription = decorateTestFailureMessage(dump, cleanUpErrors);
-        failTest(testName, testError, dumpDescription, dump);
+
+        mLog.e(
+                "%s failed with %s; calling throwTestFailure() to add more info to it (if"
+                        + " necessary)",
+                testName, testError);
+        throwTestFailure(testError, cleanUpErrors);
     }
 
     /**
@@ -109,16 +111,13 @@ public abstract class AbstractRethrowerRule extends AbstractRule {
         mLog.v("postTest(%s): not overridden by subclass", TestHelper.getTestName(description));
     }
 
-    /** Decorates the message that is thrown when a test fail. */
-    protected abstract String decorateTestFailureMessage(
-            StringBuilder dump, List<Throwable> cleanUpErrors);
-
-    // Currently private, but could be exposed
-    private void failTest(
-            String testName, Throwable testError, String dumpDescription, StringBuilder dump)
-            throws Exception {
-        mLog.e("%s failed with %s. %s: \n%s", testName, testError, dumpDescription, dump);
-
-        throw new TestFailure(testError, dumpDescription, dump);
-    }
+    /**
+     * Throws an exception because the test failed with {@code testError}.
+     *
+     * <p>Subclasses will typically call {@link TestFailure#throwTestFailure(Throwable, String)} to
+     * decorate {@code testError} with extra info, but could throw {@code testError} directly as
+     * well.
+     */
+    protected abstract void throwTestFailure(Throwable testError, List<Throwable> cleanUpErrors)
+            throws Throwable;
 }

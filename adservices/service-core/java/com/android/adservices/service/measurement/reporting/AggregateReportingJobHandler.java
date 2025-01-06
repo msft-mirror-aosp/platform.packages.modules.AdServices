@@ -270,6 +270,7 @@ public class AggregateReportingJobHandler {
             return;
         }
         AggregateReport aggregateReport = aggregateReportOpt.get();
+        reportingStatus.setIsFakeReport(aggregateReport.isFakeReport());
         enrollmentId = aggregateReport.getEnrollmentId();
         reportingStatus.setReportingDelay(
                 mTimeSource.currentTimeMillis() - aggregateReport.getScheduledReportTime());
@@ -568,6 +569,7 @@ public class AggregateReportingJobHandler {
                         .setReportingDelay(reportingStatus.getReportingDelay())
                         .setSourceRegistrant(reportingStatus.getSourceRegistrant())
                         .setRetryCount(reportingStatus.getRetryCount())
+                        .setIsFakeReport(reportingStatus.getIsFakeReport())
                         .build(),
                 enrollmentId);
     }

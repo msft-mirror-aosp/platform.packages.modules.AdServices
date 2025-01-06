@@ -16,11 +16,21 @@
 
 package com.android.adservices.ui.util;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
+
+import androidx.test.ext.junit.runners.AndroidJUnit4;
+
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+
 import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.runner.RunWith;
 
+@RunWith(AndroidJUnit4.class)
+@EnableDebugFlag(KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE)
 public abstract class AdservicesNotificationUiTestCase extends AdServicesUiTestCase {
+
     @BeforeClass
     public static void classSetup() throws Exception {
         NotificationActivityTestUtil.setupBeforeTests();
