@@ -172,7 +172,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
 
     private FledgeAuthorizationFilter mFledgeAuthorizationFilterSpy;
 
-    private Flags mFakeFlags;
+    private Flags mLegacyFakeFlags;
     private ProtectedSignalsDao mSignalsDao;
     private EncoderEndpointsDao mEncoderEndpointsDao;
     private EncoderLogicMetadataDao mEncoderLogicMetadataDao;
@@ -198,7 +198,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
     private ProtectedSignalsServiceImpl mService;
     @Before
     public void setup() {
-        mFakeFlags = new ForcedEncodingE2ETestFlags();
+        mLegacyFakeFlags = new ForcedEncodingE2ETestFlags();
 
         mSignalsDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
@@ -217,7 +217,8 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                         .build()
                         .getEncodedPayloadDao();
         mEnrollmentDao =
-                new EnrollmentDao(mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mFakeFlags);
+                new EnrollmentDao(
+                        mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mLegacyFakeFlags);
         mEncoderPersistenceDao = EncoderPersistenceDao.getInstance();
 
         mLightweightExecutor = AdServicesExecutors.getLightWeightExecutor();
@@ -234,7 +235,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                         mAdServicesHttpsClient,
                         mBackgroundExecutor,
                         mAdServicesLoggerMock,
-                        mFakeFlags);
+                        mLegacyFakeFlags);
 
         RetryStrategy retryStrategy = new NoOpRetryStrategyImpl();
         mScriptEngine =
@@ -253,14 +254,14 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                         mScriptEngine,
                         mBackgroundExecutor,
                         mLightweightExecutor,
-                        mFakeFlags,
+                        mLegacyFakeFlags,
                         mEnrollmentDao,
                         CLOCK,
                         mAdServicesLoggerMock);
 
         mForcedEncoder =
                 new ForcedEncoderImpl(
-                        mFakeFlags.getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds(),
+                        mLegacyFakeFlags.getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds(),
                         mEncoderLogicHandler,
                         mEncodedPayloadDao,
                         mSignalsDao,
@@ -279,11 +280,11 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                         /* isForcedEncodingBroadcastEnabled= */ true);
 
         int oversubscriptionBytesLimit =
-                mFakeFlags.getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes();
+                mLegacyFakeFlags.getProtectedSignalsMaxSignalSizePerBuyerWithOversubsciptionBytes();
         mSignalEvictionController =
                 new SignalEvictionController(
                         ImmutableList.of(),
-                        mFakeFlags.getProtectedSignalsMaxSignalSizePerBuyerBytes(),
+                        mLegacyFakeFlags.getProtectedSignalsMaxSignalSizePerBuyerBytes(),
                         oversubscriptionBytesLimit);
 
         mUpdateProcessorSelector = new UpdateProcessorSelector();
@@ -307,7 +308,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                 new ProtectedSignalsServiceFilter(
                         mSpyContext,
                         mFledgeConsentFilterMock,
-                        mFakeFlags,
+                        mLegacyFakeFlags,
                         mAppImportanceFilterMock,
                         mFledgeAuthorizationFilterSpy,
                         mFledgeAllowListsFilterSpy,
@@ -339,7 +340,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                         mDevContextFilterMock,
                         AdServicesExecutors.getBackgroundExecutor(),
                         mAdServicesLoggerImplMock,
-                        mFakeFlags,
+                        mLegacyFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mProtectedSignalsServiceFilter,
@@ -470,7 +471,8 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
         // Persist an encoded payload created before the cooldown window start.
         Duration cooldownWindow =
                 Duration.ofSeconds(
-                        mFakeFlags.getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds());
+                        mLegacyFakeFlags
+                                .getFledgeForcedEncodingAfterSignalsUpdateCooldownSeconds());
         DBEncodedPayload dbEncodedPayload =
                 DBEncodedPayload.builder()
                         .setBuyer(BUYER)
