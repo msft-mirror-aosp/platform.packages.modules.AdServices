@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.kanon;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB;
@@ -41,14 +43,13 @@ import com.android.adservices.data.kanon.KAnonMessageDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.adservices.shared.testing.annotations.SetLongFlag;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -290,19 +291,18 @@ public final class KAnonSignJoinManagerTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
-    @Ignore("b/327172045")
     @MockStatic(FlagsFactory.class)
+    @SetFlagTrue(KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED)
+    @SetLongFlag(name = KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS, value = 100_000L)
     public void processNewMessage_noBackgroundJobRunning_schedulesBackgroundService() {
-        when(mMockFlags.getFledgeKAnonBackgroundProcessEnabled()).thenReturn(true);
-        when(mMockFlags.getFledgeKAnonBackgroundProcessTimePeriodInMs()).thenReturn(100000L);
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         mKAnonSignJoinManager =
                 new KAnonSignJoinManager(
                         mContext,
                         mMockKanonCaller,
                         mKAnonMessageManager,
-                        mMockFlags,
+                        mFakeFlags,
                         mMockClock,
                         mMockAdServicesLogger);
             KAnonMessageEntity kAnonMessageEntity =
