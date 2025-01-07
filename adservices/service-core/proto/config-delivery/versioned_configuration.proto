@@ -22,10 +22,12 @@ import "packages/modules/AdServices/adservices/service-core/proto/config-deliver
 
 option java_multiple_files = true;
 
-message Configurations {
-  // Version of this configuration.
+// A wrapper proto around Configuration proto with version number.
+message VersionedConfiguration {
+// Version number will be used in storage to figure out the latest configuration in
+// the configurations list.
   uint64 version = 1;
 
-  // List of Privacy Sandbox configurations.
-  repeated Configuration configurations = 2;
+  // Privacy Sandbox configuration.
+  Configuration configuration = 2;
 }
