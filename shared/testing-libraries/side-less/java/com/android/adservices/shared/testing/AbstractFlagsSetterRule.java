@@ -510,6 +510,10 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         return getDeviceSdk() > 32;
     }
 
+    protected final boolean isRunning() {
+        return mIsRunning;
+    }
+
     // Helper to get a reference to this object, taking care of the generic casting.
     @SuppressWarnings("unchecked")
     protected final T getThis() {

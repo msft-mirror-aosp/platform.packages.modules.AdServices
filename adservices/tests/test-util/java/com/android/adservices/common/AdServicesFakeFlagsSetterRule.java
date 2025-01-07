@@ -19,6 +19,7 @@ package com.android.adservices.common;
 import static com.android.adservices.common.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
 
 import com.android.adservices.service.FakeFlagsFactory;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.RawFlags;
 import com.android.adservices.shared.flags.FlagsBackend;
 import com.android.adservices.shared.testing.AndroidLogger;
@@ -31,6 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /** {@code FlagsSetterRule} that uses a fake flags implementation. */
 public final class AdServicesFakeFlagsSetterRule
@@ -54,6 +56,16 @@ public final class AdServicesFakeFlagsSetterRule
         return getThis();
     }
 
+    @Override
+    public Flags getFlagsSnapshot() {
+        var flags = mFakeFlagsBackend.mFlags;
+        mLog.v("getFlagsSnapshot(): cloning %s", flags);
+        if (!isRunning()) {
+            throw new IllegalStateException("getFlagsSnapshot() can only be called inside a test");
+        }
+        return new FakeFlags(new FakeFlagsBackend(new HashMap<>(mFakeFlagsBackend.mFlags)));
+    }
+
     @VisibleForTesting
     MissingFlagBehavior getMissingFlagBehavior() {
         return mFakeFlagsBackend.mBehavior;
@@ -67,7 +79,11 @@ public final class AdServicesFakeFlagsSetterRule
         // TODO(b/384798806): make it package protected once FakeFlagsFactory doesn't use it anymore
         // (need to refactor tests to use AdServicesFakeFlagsSetterRule first)
         public FakeFlags() {
-            super(new FakeFlagsBackend());
+            this(new FakeFlagsBackend());
+        }
+
+        private FakeFlags(FlagsBackend backend) {
+            super(backend);
         }
 
         private FakeFlagsBackend getFakeFlagsBackend() {
@@ -87,14 +103,34 @@ public final class AdServicesFakeFlagsSetterRule
                     (name, value) -> backend.setFlag(name, value));
             return this;
         }
+
+        @Override
+        public String toString() {
+            var flags = getFakeFlagsBackend().mFlags;
+            if (flags.isEmpty()) {
+                return "FakeFlags{empty}";
+            }
+            return flags.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey()) // sort by key
+                    .map(entry -> entry.getValue().toString())
+                    .collect(Collectors.joining(", ", "FakeFlags{", "}"));
+        }
     }
 
     private static class FakeFlagsBackend implements FlagsBackend, Consumer<NameValuePair> {
-        private final Map<String, NameValuePair> mFlags = new HashMap<>();
+        private final Map<String, NameValuePair> mFlags;
 
         private final Logger mLog = new Logger(AndroidLogger.getInstance(), "FakeFlags");
 
         private MissingFlagBehavior mBehavior = USES_EXPLICIT_DEFAULT;
+
+        private FakeFlagsBackend() {
+            this(new HashMap<>());
+        }
+
+        private FakeFlagsBackend(Map<String, NameValuePair> flags) {
+            mFlags = flags;
+        }
 
         @Override
         public String getFlag(String name) {
