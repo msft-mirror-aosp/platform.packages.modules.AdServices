@@ -601,27 +601,26 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         }
 
         // 2. determine all cases that require a notification
-        boolean isFirstTimeNotification =
-                isVisibleNotificationType && isPersonalizationBeingEnabled && !anyUserChoicesKnown;
+        boolean isFirstTimeNotification = isPersonalizationBeingEnabled && !anyUserChoicesKnown;
         boolean isValidRenotifyWithExistingPersonalization =
-                isVisibleNotificationType
-                        && isPersonalizationBeingEnabled
+                isPersonalizationBeingEnabled
                         && isAnyToggleOnForAnyNewModule
                         && hasExistingPersonalization;
-        boolean isLimitedNotification =
-                isVisibleNotificationType
-                        && !isPersonalizationBeingEnabled
-                        && hasAnyModuleStateChanges;
+        boolean isLimitedNotification = !isPersonalizationBeingEnabled && hasAnyModuleStateChanges;
 
         // 3. schedule a notification if required
         if (isFirstTimeNotification
                 || isValidRenotifyWithExistingPersonalization
                 || isLimitedNotification) {
-            ConsentNotificationJobService.scheduleNotificationV2(
-                    mContext,
-                    anyUserChoicesKnown,
-                    isPersonalizationBeingEnabled,
-                    isOngoingNotificationType);
+            if (isVisibleNotificationType) {
+                ConsentNotificationJobService.scheduleNotificationV2(
+                        mContext,
+                        anyUserChoicesKnown,
+                        isPersonalizationBeingEnabled,
+                        isOngoingNotificationType);
+            } else {
+                LogUtil.d("Notification type is none, skip triggering notification.");
+            }
         }
 
         // 4. reset any user choices of disabled modules
