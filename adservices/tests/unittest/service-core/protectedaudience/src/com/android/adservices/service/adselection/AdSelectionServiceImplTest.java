@@ -36,6 +36,25 @@ import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B;
+import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.adselection.AdSelectionScriptEngine.NUM_BITS_STOCHASTIC_ROUNDING;
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.CALLER_PACKAGE_NAME_MISMATCH;
 import static com.android.adservices.service.adselection.ImpressionReporterLegacy.UNABLE_TO_FIND_AD_SELECTION_WITH_GIVEN_ID;
@@ -169,6 +188,11 @@ import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetFloatFlag;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -212,6 +236,32 @@ import java.util.concurrent.TimeUnit;
 @MockStatic(ConsentManager.class)
 @MockStatic(MeasurementImpl.class)
 @MockStatic(AppImportanceFilter.class)
+@SetFlagTrue(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
+@SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION)
+@SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION)
+@SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE)
+// Unlimited rate for unit tests to avoid flake in tests due to rate limiting
+@SetFloatFlag(name = KEY_SDK_REQUEST_PERMITS_PER_SECOND, value = -1)
+@SetFlagTrue(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
+@SetFlagFalse(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
+@SetFlagFalse(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED)
+@SetFlagTrue(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS)
+@SetFlagFalse(KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES)
 @SkipLoggingUsageRule(reason = "b/355696393")
 public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
@@ -299,7 +349,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                     AdServicesExecutors.getBlockingExecutor(),
                     CacheProviderFactory.createNoOpCache());
 
-    private Flags mFakeFlags;
+    // TODO(b/384949821): move to superclass
+    private final Flags mFakeFlags = flags.getFlags();
     private CustomAudienceDao mCustomAudienceDao;
     private EncodedPayloadDao mEncodedPayloadDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
@@ -339,7 +390,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Before
     public void setUp() {
-        mFakeFlags = new AdSelectionServicesTestsFlags(false);
         mocker.mockGetFlags(mFakeFlags);
         mocker.mockGetDebugFlags(mMockDebugFlags);
         mocker.mockGetConsentNotificationDebugMode(false);
@@ -428,15 +478,8 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @SetFlagFalse(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
     public void testReportImpressionSuccessWithRegisterAdBeaconDisabled() throws Exception {
-        boolean enrollmentCheckDisabled = false;
-        mFakeFlags =
-                new AdSelectionServicesTestsFlags(enrollmentCheckDisabled) {
-                    @Override
-                    public boolean getFledgeRegisterAdBeaconEnabled() {
-                        return false;
-                    }
-                };
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -678,17 +721,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION)
     public void testReportImpressionSuccessCallbackThrowsErrorAuctionServerEnabled()
             throws Exception {
-        boolean enrollmentCheckDisabled = false;
-
-        mFakeFlags =
-                new AdSelectionServicesTestsFlags(enrollmentCheckDisabled) {
-                    @Override
-                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return true;
-                    }
-                };
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -802,17 +837,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION)
     public void testReportImpressionFailureCallbackThrowsErrorAuctionServerEnabled()
             throws Exception {
-        boolean enrollmentCheckDisabled = false;
-
-        mFakeFlags =
-                new AdSelectionServicesTestsFlags(enrollmentCheckDisabled) {
-                    @Override
-                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return true;
-                    }
-                };
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -919,17 +946,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @SetFlagFalse(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION)
     public void testReportImpressionSuccessCallbackThrowsErrorAuctionServerDisabled()
             throws Exception {
-        boolean enrollmentCheckDisabled = false;
-
-        mFakeFlags =
-                new AdSelectionServicesTestsFlags(enrollmentCheckDisabled) {
-                    @Override
-                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return false;
-                    }
-                };
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -1043,17 +1062,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @SetFlagFalse(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION)
     public void testReportImpressionFailureCallbackThrowsErrorAuctionServerDisabled()
             throws Exception {
-        boolean enrollmentCheckDisabled = false;
-
-        mFakeFlags =
-                new AdSelectionServicesTestsFlags(enrollmentCheckDisabled) {
-                    @Override
-                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return false;
-                    }
-                };
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -1667,18 +1678,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionSuccessWithUnifiedTablesEnabledAuctionServerDisabled()
             throws Exception {
-        Flags auctionServerReportingDisabledFlags =
-                new AdSelectionServicesTestsFlags(false) {
-                    @Override
-                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
-                        return true;
-                    }
-                };
+        setAuctionServerReportingDisabledFlags();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1760,7 +1760,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        auctionServerReportingDisabledFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -1805,18 +1805,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     @Test
     public void testReportImpressionSuccessWithUnifiedTablesEnabledAuctionServerEnabled()
             throws Exception {
-        Flags auctionServerReportingEnabledFlags =
-                new AdSelectionServicesTestsFlags(false) {
-                    @Override
-                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
-                        return true;
-                    }
-                };
+        setAuctionServerReportingEnabledFlags();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -1898,7 +1887,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        auctionServerReportingEnabledFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -1944,18 +1933,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void
             testReportImpressionFailsWithInvalidAdSelectionIdUnifiedTablesEnabledAuctionServerEnabled()
                     throws Exception {
-        Flags auctionServerReportingEnabledFlags =
-                new AdSelectionServicesTestsFlags(false) {
-                    @Override
-                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
-                        return true;
-                    }
-                };
+        setAuctionServerReportingEnabledFlags();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -2037,7 +2015,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        auctionServerReportingEnabledFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -2077,18 +2055,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void
             testReportImpressionFailsWithInvalidAdSelectionIdUnifiedTablesEnabledAuctionServerDisabled()
                     throws Exception {
-        Flags auctionServerReportingDisabledFlags =
-                new AdSelectionServicesTestsFlags(false) {
-                    @Override
-                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
-                        return true;
-                    }
-                };
+        setAuctionServerReportingDisabledFlags();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -2170,7 +2137,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        auctionServerReportingDisabledFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -2210,18 +2177,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void
             testReportImpressionFailsWithIncorrectPackageNameUnifiedTablesEnabledAuctionServerDisabled()
                     throws Exception {
-        Flags auctionServerReportingDisabledFlags =
-                new AdSelectionServicesTestsFlags(false) {
-                    @Override
-                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
-                        return true;
-                    }
-                };
+        setAuctionServerReportingDisabledFlags();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -2294,7 +2250,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        auctionServerReportingDisabledFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -2328,18 +2284,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void
             testReportImpressionFailsWithIncorrectPackageNameUnifiedTablesEnabledAuctionServerEnabled()
                     throws Exception {
-        Flags auctionServerReportingEnabledFlags =
-                new AdSelectionServicesTestsFlags(false) {
-                    @Override
-                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
-                        return true;
-                    }
-                };
+        setAuctionServerReportingEnabledFlags();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -2412,7 +2357,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        auctionServerReportingEnabledFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -2446,18 +2391,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void
             testReportImpressionFailsWhenDataIsInOldTablesUnifiedTablesEnabledAuctionServerDisabled()
                     throws Exception {
-        Flags auctionServerReportingDisabledFlags =
-                new AdSelectionServicesTestsFlags(false) {
-                    @Override
-                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
-                        return true;
-                    }
-                };
+        setAuctionServerReportingDisabledFlags();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -2529,7 +2463,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        auctionServerReportingDisabledFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -2567,18 +2501,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void
             testReportImpressionFailsWhenDataIsInOldTablesUnifiedTablesEnabledAuctionServerEnabled()
                     throws Exception {
-        Flags auctionServerReportingEnabledFlags =
-                new AdSelectionServicesTestsFlags(false) {
-                    @Override
-                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
-                        return true;
-                    }
-                };
+        setAuctionServerReportingEnabledFlags();
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -2650,7 +2573,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        auctionServerReportingEnabledFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -3213,18 +3136,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    // Re init flags with registerAdBeaconDisabled
+    @SetFlagFalse(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
     public void testReportImpressionFailsWithRegisterAdBeaconDisabled() throws Exception {
-
-        // Re init flags with registerAdBeaconDisabled
-        boolean enrollmentCheckDisabled = false;
-        mFakeFlags =
-                new AdSelectionServicesTestsFlags(enrollmentCheckDisabled) {
-                    @Override
-                    public boolean getFledgeRegisterAdBeaconEnabled() {
-                        return false;
-                    }
-                };
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -4152,6 +4066,10 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    // Create new flag with overridden value so that only 3 entries can be registered
+    @SetLongFlag(
+            name = KEY_FLEDGE_REPORT_IMPRESSION_MAX_REGISTERED_AD_BEACONS_TOTAL_COUNT,
+            value = 3)
     public void testReportImpressionDoesNotRegisterMoreThanMaxInteractionUrisFromPhFlag()
             throws Exception {
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
@@ -4227,16 +4145,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
         long maxRegisteredAdBeacons = 3;
 
-        // Create new flag with overridden value so that only 3 entries can be registered
-        boolean enrollmentCheckDisabled = false;
-        Flags flagsWithSmallerMaxEventUris =
-                new AdSelectionServicesTestsFlags(enrollmentCheckDisabled) {
-                    @Override
-                    public long getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount() {
-                        return maxRegisteredAdBeacons;
-                    }
-                };
-
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDao,
@@ -4253,7 +4161,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        flagsWithSmallerMaxEventUris,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -4313,6 +4221,10 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    // Override flags to return a smaller max interaction key size
+    @SetIntegerFlag(
+            name = KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B,
+            value = 15)
     public void
             testReportImpressionSucceedsButDesNotRegisterUrisWithInteractionKeySizeThatExceedsMax()
                     throws Exception {
@@ -4325,17 +4237,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
         Uri hoverUriSeller = mMockWebServerRule.uriForPath(HOVER_SELLER_PATH);
         Uri clickUriBuyer = mMockWebServerRule.uriForPath(CLICK_BUYER_PATH);
         Uri hoverUriBuyer = mMockWebServerRule.uriForPath(HOVER_BUYER_PATH);
-
-        // Override flags to return a smaller max interaction key size
-        boolean enrollmentCheckDisabled = false;
-        Flags flagsWithSmallerMaxInteractionKeySize =
-                new AdSelectionServicesTestsFlags(enrollmentCheckDisabled) {
-                    @Override
-                    public long
-                            getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB() {
-                        return 15;
-                    }
-                };
 
         String longerClickEventSeller = "click_seller_12345";
         String longerHoverEventBuyer = "hover_buyer_12345";
@@ -4422,7 +4323,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        flagsWithSmallerMaxInteractionKeySize,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -4513,14 +4414,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                 mMockWebServerRule.uriForPath(HOVER_BUYER_PATH + longUriSuffix);
 
         // Override flags to return a smaller max size for reporting uris
-        boolean enrollmentCheckDisabled = false;
-        Flags flagsWithSmallerMaxInteractionReportingUriSize =
-                new AdSelectionServicesTestsFlags(enrollmentCheckDisabled) {
-                    @Override
-                    public long getFledgeReportImpressionMaxInteractionReportingUriSizeB() {
-                        return maxSize;
-                    }
-                };
+        flags.setFlag(KEY_FLEDGE_REPORT_IMPRESSION_MAX_INTERACTION_REPORTING_URI_SIZE_B, maxSize);
 
         String sellerDecisionLogicJs =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) "
@@ -4599,7 +4493,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        flagsWithSmallerMaxInteractionReportingUriSize,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -7620,12 +7514,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    // Reset flags to perform enrollment check
+    @SetFlagFalse(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testReportImpressionSucceedsWhenAdTechPassesEnrollmentCheck() throws Exception {
-
-        // Reset flags to perform enrollment check
-        boolean enrollmentCheckEnabled = true;
-        mFakeFlags = new AdSelectionServicesTestsFlags(enrollmentCheckEnabled);
-
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
 
@@ -8475,13 +8366,11 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @SetFlagFalse(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testReportImpressionOnlyReportsSellerWhenBuyerReportingUriIsNotEnrolled()
             throws Exception {
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
-
-        Flags flagsWithEnrollment = new AdSelectionServicesTestsFlags(true);
-
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
                 .assertAdTechFromUriEnrolled(
@@ -8566,7 +8455,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        flagsWithEnrollment,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -9961,17 +9850,11 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @SetFlagFalse(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
     public void testReportEvent_disabled_failsFast() throws Exception {
         doReturn(mMeasurementServiceMock).when(MeasurementImpl::getInstance);
 
         // Generate service instance with feature disabled.
-        mFakeFlags =
-                new AdSelectionServicesTestsFlags(false) {
-                    @Override
-                    public boolean getFledgeRegisterAdBeaconEnabled() {
-                        return false;
-                    }
-                };
         AdSelectionServiceImpl adSelectionService = generateAdSelectionServiceImpl();
 
         // Call disabled feature.
@@ -10319,17 +10202,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @SetFlagFalse(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION)
     public void testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOff()
             throws Exception {
-        boolean enrollmentCheck = false;
-        Flags unifiedFlowReportingDisabled =
-                new AdSelectionServicesTestsFlags(enrollmentCheck) {
-                    @Override
-                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return false;
-                    }
-                };
-
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         mockCreateDevContextForDevOptionsDisabled();
@@ -10350,7 +10225,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        unifiedFlowReportingDisabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -10383,17 +10258,9 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION)
     public void testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOn()
             throws Exception {
-        boolean enrollmentCheck = false;
-        Flags unifiedFlowReportingEnabled =
-                new AdSelectionServicesTestsFlags(enrollmentCheck) {
-                    @Override
-                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return true;
-                    }
-                };
-
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         mockCreateDevContextForDevOptionsDisabled();
@@ -10414,7 +10281,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        unifiedFlowReportingEnabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -10447,19 +10314,12 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION)
     public void
             testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOnWithUXNotificationEnforcementDisabled()
                     throws Exception {
         boolean enrollmentCheck = false;
         mocker.mockGetConsentNotificationDebugMode(true);
-        Flags flagsWithUXConsentEnforcementDisabled =
-                new AdSelectionServicesTestsFlags(enrollmentCheck) {
-                    @Override
-                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return true;
-                    }
-                };
-
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         mockCreateDevContextForDevOptionsDisabled();
@@ -10480,7 +10340,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                         mScheduledExecutor,
                         mContext,
                         mAdServicesLoggerMock,
-                        flagsWithUXConsentEnforcementDisabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
@@ -11047,6 +10907,16 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                 .logFledgeApiCallStats(eq(apiName), eq(resultCode), /* latencyMs= */ anyInt());
     }
 
+    private void setAuctionServerReportingEnabledFlags() {
+        flags.setFlag(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION, true);
+        flags.setFlag(KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES, true);
+    }
+
+    private void setAuctionServerReportingDisabledFlags() {
+        flags.setFlag(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION, false);
+        flags.setFlag(KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES, true);
+    }
+
     private static class ReportImpressionTestCallback extends ReportImpressionCallback.Stub {
         protected final CountDownLatch mCountDownLatch;
         boolean mIsSuccess = false;
@@ -11185,90 +11055,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
             mIsSuccess = true;
             mCountDownLatch.countDown();
             throw new RemoteException();
-        }
-    }
-
-    private static class AdSelectionServicesTestsFlags implements Flags {
-        private final boolean mEnrollmentCheckEnabled;
-
-        AdSelectionServicesTestsFlags(boolean enrollmentCheckEnabled) {
-            mEnrollmentCheckEnabled = enrollmentCheckEnabled;
-        }
-
-        @Override
-        public boolean getDisableFledgeEnrollmentCheck() {
-            return !mEnrollmentCheckEnabled;
-        }
-
-        @Override
-        public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
-            return true;
-        }
-
-        @Override
-        public boolean getEnforceForegroundStatusForFledgeReportImpression() {
-            return true;
-        }
-
-        @Override
-        public boolean getEnforceForegroundStatusForFledgeOverrides() {
-            return true;
-        }
-
-        @Override
-        public float getSdkRequestPermitsPerSecond() {
-            // Unlimited rate for unit tests to avoid flake in tests due to rate limiting
-            return -1;
-        }
-
-        @Override
-        public boolean getFledgeRegisterAdBeaconEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeMeasurementReportAndRegisterEventApiEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean getFledgeAppInstallFilteringEnabled() {
-            return true;
-        }
-
-        @Override
-        public long getAdSelectionBiddingTimeoutPerCaMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
-        }
-
-        @Override
-        public long getAdSelectionScoringTimeoutMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
-        }
-
-        @Override
-        public long getAdSelectionOverallTimeoutMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
-        }
-
-        @Override
-        public long getAdSelectionFromOutcomesOverallTimeoutMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
-        }
-
-        @Override
-        public long getReportImpressionOverallTimeoutMs() {
-            return EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
-        }
-
-        @Override
-        public boolean getFledgeOnDeviceAuctionShouldUseUnifiedTables() {
-            return false;
         }
     }
 }
