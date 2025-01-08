@@ -2440,6 +2440,19 @@ public final class ConsentManager {
                 /* errorLogger= */ null);
     }
 
+    /** Returns if any module sate is enabled. */
+    public boolean getIsAnyModuleStateEnabled() {
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
+        SparseIntArray states = data.getModuleStates();
+        boolean isAnyModuleStateEnabled = false;
+        for (int i = 0; i < states.size(); i++) {
+            if (states.valueAt(i) == MODULE_STATE_ENABLED) {
+                isAnyModuleStateEnabled = true;
+            }
+        }
+        return isAnyModuleStateEnabled;
+    }
+
     /**
      * Get module state for desired module.
      *

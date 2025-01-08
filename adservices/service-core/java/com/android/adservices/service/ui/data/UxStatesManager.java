@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service.ui.data;
 
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_EEA_PAS_UX_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PAS_UX_ENABLED;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.UNSUPPORTED_UX;
@@ -141,12 +142,19 @@ public class UxStatesManager {
      * we then set ux and default measurement consent.
      */
     public boolean isEnrolledUser(Context context) {
-        boolean isNotificationDisplayed =
-                mConsentManager.wasGaUxNotificationDisplayed()
-                        || mConsentManager.wasU18NotificationDisplayed()
-                        || mConsentManager.wasNotificationDisplayed()
-                        || (getFlag(KEY_PAS_UX_ENABLED)
-                                && mConsentManager.wasPasNotificationDisplayed());
+        boolean isNotificationDisplayed;
+        if (getFlag(KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED)) {
+            // ConsentManager checks any states enabled
+            isNotificationDisplayed = mConsentManager.getIsAnyModuleStateEnabled();
+        } else {
+            isNotificationDisplayed =
+                    mConsentManager.wasGaUxNotificationDisplayed()
+                            || mConsentManager.wasU18NotificationDisplayed()
+                            || mConsentManager.wasNotificationDisplayed()
+                            || (getFlag(KEY_PAS_UX_ENABLED)
+                                    && mConsentManager.wasPasNotificationDisplayed());
+        }
+        LogUtil.d("isNotificationDisplayed: " + isNotificationDisplayed);
         // We follow the Chrome's capabilities practice here, when user is not in adult account and
         // u18 account, (the u18 account is for teen and un-supervised account), we are consider
         // them as supervised accounts for now, it actually also contains robot account, but we
