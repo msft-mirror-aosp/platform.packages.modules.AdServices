@@ -56,7 +56,6 @@ public class ConsentNotificationDebugChannelTest extends AdServicesExtendedMocki
     private final ConsentNotificationDebugChannel mConsentNotificationDebugChannel =
             new ConsentNotificationDebugChannel();
 
-    @Mock private Context mContext;
     @Mock private PrivacySandboxUxCollection mPrivacySandboxUxCollection;
     @Mock private UxStatesManager mUxStatesManager;
     @Mock private ConsentManager mConsentManager;
@@ -92,7 +91,7 @@ public class ConsentNotificationDebugChannelTest extends AdServicesExtendedMocki
     public void enrollTest_adIdDisabledConsentNotification() {
         doReturn(false).when(mConsentManager).isAdIdEnabled();
 
-        mConsentNotificationDebugChannel.enroll(mContext, mConsentManager);
+        mConsentNotificationDebugChannel.enroll(mMockContext, mConsentManager);
 
         verify(
                 () ->
@@ -105,7 +104,7 @@ public class ConsentNotificationDebugChannelTest extends AdServicesExtendedMocki
     public void enrollTest_adIdEnabledConsentNotification() {
         doReturn(true).when(mConsentManager).isAdIdEnabled();
 
-        mConsentNotificationDebugChannel.enroll(mContext, mConsentManager);
+        mConsentNotificationDebugChannel.enroll(mMockContext, mConsentManager);
 
         verify(
                 () ->

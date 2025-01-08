@@ -17,6 +17,7 @@
 syntax = "proto3";
 
 package com.android.adservices.service.proto;
+
 option java_multiple_files = true;
 
 // Protobuf describing the Rb enrollment list on Android.
@@ -38,16 +39,21 @@ enum PrivacySandboxApi {
 
 // A single Adtech enrollment entry.
 message RbEnrollment {
+  // Identifier provided to Adtechs upon enrollment.
+  //
+  // Note: This field will not be populated when the v3 enrollment config is
+  // generated with this proto, as id will be already populated in
+  // ConfigurationRecord (within which this proto is embedded).
+  string enrollment_id = 1 [deprecated = true];
 
-  // An identifier provided to Adtechs upon enrollment
-  string enrollment_id = 1;
-
-  // SDK Package names provided by Adtech during enrollment
+  // SDK Package names provided by Adtech during enrollment.
   repeated string sdk_names = 2;
 
-  // The site provided by the AdTech during enrollment.
+  // Site provided by the AdTech during enrollment.
   string enrolled_site = 3;
 
-  // A list of APIs for which the Adtech has enrolled into.
-  repeated PrivacySandboxApi enrolled_apis = 4;
+  // List of APIs for which Adtech has enrolled into.
+  repeated PrivacySandboxApi enrolled_apis = 5;
+
+  reserved 4;
 }

@@ -60,4 +60,42 @@ public final class AdServicesMockFlagsSetterRuleTest
                 .that(rule.setMissingFlagBehavior(USES_JAVA_LANGUAGE_DEFAULT))
                 .isSameInstanceAs(rule);
     }
+
+    @Test
+    public void testGetFlagsSnapshot() {
+        var rule = newRule();
+
+        assertThrows(UnsupportedOperationException.class, () -> rule.getFlagsSnapshot());
+    }
+
+    @Test
+    public void testToString() {
+        var rule = newRule();
+        var flags = rule.getFlags();
+        // should be immutable
+        var expectedString = flags.toString();
+
+        expect.withMessage("toString() right away")
+                .that(flags.toString())
+                .isEqualTo(expectedString);
+
+        rule.setFlag("dude", "sweet");
+        expect.withMessage("toString() after setting 1 flag")
+                .that(flags.toString())
+                .isEqualTo(expectedString);
+        rule.setFlag("sweet", "lord");
+        expect.withMessage("toString() after setting 2 flags")
+                .that(flags.toString())
+                .isEqualTo(expectedString);
+        // make sure they're sorted
+        rule.setFlag("a flag", "has a name");
+        expect.withMessage("toString() after setting 3 flags")
+                .that(flags.toString())
+                .isEqualTo(expectedString);
+
+        rule.setFlag("dude", "SWEEET");
+        expect.withMessage("toString() after setting 3 flags")
+                .that(flags.toString())
+                .isEqualTo(expectedString);
+    }
 }

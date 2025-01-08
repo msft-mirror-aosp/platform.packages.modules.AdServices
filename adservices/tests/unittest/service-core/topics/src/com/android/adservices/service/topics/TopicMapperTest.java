@@ -21,7 +21,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
 import android.content.res.Resources;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
@@ -34,8 +33,7 @@ import org.mockito.Mock;
 
 /** Tests for {@link TopicsMapper}. */
 public final class TopicMapperTest extends AdServicesMockitoTestCase {
-    @Mock private Context mContext;
-    @Mock private Resources mResources;
+    @Mock private Resources mMockResources;
 
     /** Test single {@link Topic} to Android resource id mapper. */
     @Test
@@ -44,12 +42,12 @@ public final class TopicMapperTest extends AdServicesMockitoTestCase {
         long taxonomyId = 1L;
         long modelVersion = 1L;
         int expectedResourceId = 123;
-        when(mResources.getIdentifier(any(), any(), any())).thenReturn(expectedResourceId);
-        when(mContext.getResources()).thenReturn(mResources);
+        when(mMockResources.getIdentifier(any(), any(), any())).thenReturn(expectedResourceId);
+        when(mMockContext.getResources()).thenReturn(mMockResources);
 
         int resourceId =
                 TopicsMapper.getResourceIdByTopic(
-                        Topic.create(topicId, taxonomyId, modelVersion), mContext);
+                        Topic.create(topicId, taxonomyId, modelVersion), mMockContext);
 
         assertThat(resourceId).isEqualTo(expectedResourceId);
     }
@@ -65,14 +63,14 @@ public final class TopicMapperTest extends AdServicesMockitoTestCase {
         int secondTopicExpectedResourceId = 2;
         Topic firstTopic = Topic.create(firstTopicId, taxonomyId, modelVersion);
         Topic secondTopic = Topic.create(secondTopicId, taxonomyId, modelVersion);
-        when(mResources.getIdentifier(any(), any(), any()))
+        when(mMockResources.getIdentifier(any(), any(), any()))
                 .thenReturn(firstTopicExpectedResourceId)
                 .thenReturn(secondTopicExpectedResourceId);
-        when(mContext.getResources()).thenReturn(mResources);
+        when(mMockContext.getResources()).thenReturn(mMockResources);
 
         ImmutableList<Integer> topicsListContainingResourceId =
                 TopicsMapper.getResourcesIdMapByTopicsList(
-                        ImmutableList.of(firstTopic, secondTopic), mContext);
+                        ImmutableList.of(firstTopic, secondTopic), mMockContext);
 
         assertThat(topicsListContainingResourceId)
                 .containsExactly(firstTopicExpectedResourceId, secondTopicExpectedResourceId);

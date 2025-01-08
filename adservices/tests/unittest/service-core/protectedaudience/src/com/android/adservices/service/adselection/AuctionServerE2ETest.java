@@ -137,7 +137,6 @@ import android.os.Process;
 import android.os.RemoteException;
 
 import androidx.room.Room;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -415,7 +414,6 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
-        mContext = ApplicationProvider.getApplicationContext();
         mocker.mockGetDebugFlags(mMockDebugFlags);
         mocker.mockGetConsentNotificationDebugMode(false);
 

@@ -26,6 +26,8 @@ import static com.android.adservices.service.Flags.UI_OTA_STRINGS_MANIFEST_FILE_
 
 import static org.junit.Assert.assertThrows;
 
+import com.android.adservices.service.FlagsConstants;
+
 import org.junit.Test;
 
 public final class AdServicesFakeFlagsSetterRuleTest
@@ -48,6 +50,66 @@ public final class AdServicesFakeFlagsSetterRuleTest
         var rule = newRule();
 
         testSetMissingFlagBehaviorDefaultBehavior(rule, "by default");
+    }
+
+    @Test
+    public void testGetFlagsSnapshot_beforeTest() {
+        var rule = newRule();
+
+        assertThrows(IllegalStateException.class, () -> rule.getFlagsSnapshot());
+    }
+
+    @Test
+    public void testGetFlagsSnapshot() throws Throwable {
+        onTest(
+                (rule, flags) -> {
+                    rule.setFlag(FlagsConstants.KEY_AD_ID_CACHE_TTL_MS, 4815162342L);
+                    expect.withMessage("flags.getAdIdCacheTtlMs() after setting it")
+                            .that(flags.getAdIdCacheTtlMs())
+                            .isEqualTo(4815162342L);
+
+                    var snapshot = rule.getFlagsSnapshot();
+                    expect.withMessage("clonedFlags.getAdIdCacheTtlMs() after cloning")
+                            .that(snapshot.getAdIdCacheTtlMs())
+                            .isEqualTo(4815162342L);
+
+                    rule.setFlag(FlagsConstants.KEY_AD_ID_CACHE_TTL_MS, 108);
+                    expect.withMessage("flags.getAdIdCacheTtlMs() after updating it")
+                            .that(flags.getAdIdCacheTtlMs())
+                            .isEqualTo(108);
+                    expect.withMessage("clonedFlags.getAdIdCacheTtlMs() after updating source")
+                            .that(snapshot.getAdIdCacheTtlMs())
+                            .isEqualTo(4815162342L);
+                });
+    }
+
+    @Test
+    public void testToString() throws Throwable {
+        onTest(
+                (rule, flags) -> {
+                    expect.withMessage("toString() right away")
+                            .that(flags.toString())
+                            .isEqualTo("FakeFlags{empty}");
+
+                    rule.setFlag("dude", "sweet");
+                    expect.withMessage("toString() after setting 1 flag")
+                            .that(flags.toString())
+                            .isEqualTo("FakeFlags{dude=sweet}");
+                    rule.setFlag("sweet", "lord");
+                    expect.withMessage("toString() after setting 2 flags")
+                            .that(flags.toString())
+                            .isEqualTo("FakeFlags{dude=sweet, sweet=lord}");
+                    // make sure they're sorted
+                    rule.setFlag("a flag", "has a name");
+                    expect.withMessage("toString() after setting 3 flags")
+                            .that(flags.toString())
+                            .isEqualTo("FakeFlags{a flag=has a name, dude=sweet, sweet=lord}");
+                    // update a value
+                    rule.setFlag("dude", "SWEEET");
+                    expect.withMessage("toString() after updating value of 1st flag")
+                            .that(flags.toString())
+                            .isEqualTo("FakeFlags{a flag=has a name, dude=SWEEET, sweet=lord}");
+                });
     }
 
     @Test

@@ -37,7 +37,30 @@ import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_BA
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CPC_BILLING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_SDK_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_BUYERS_OR_CONTEXTUAL_ADS_AVAILABLE;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_NO_CA_AND_CONTEXTUAL_ADS_AVAILABLE;
@@ -58,7 +81,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.isA;
@@ -132,7 +154,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.FakeFlagsFactory;
+import com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdCacheManager;
@@ -162,7 +184,10 @@ import com.android.adservices.service.stats.RunAdBiddingProcessReportedStats;
 import com.android.adservices.service.stats.RunAdScoringProcessReportedStats;
 import com.android.adservices.service.stats.RunAdSelectionProcessReportedStats;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
-import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetFloatFlag;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -203,7 +228,46 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 // injecting mocked flags everywhere is annoying and non-trivial for static methods
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(DebugFlags.class)
-@SetFlagDisabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
+@SetFlagFalse(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
+@SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION)
+@SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION)
+@SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE)
+@SetFlagTrue(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
+@SetFlagFalse(KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS)
+// Unlimited rate for unit tests to avoid flake in tests due to rate limiting
+@SetFloatFlag(name = KEY_SDK_REQUEST_PERMITS_PER_SECOND, value = -1)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION,
+        value = JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3)
+@SetFlagTrue(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
+@SetFlagTrue(KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED)
+@SetFlagFalse(KEY_FLEDGE_CPC_BILLING_ENABLED)
+@SetFlagFalse(KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORTING_ENABLED)
+@SetFlagFalse(KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY)
 public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -637,7 +701,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
-    private Flags mFakeFlags = new AdSelectionE2ETestFlags();
+    private Flags mFakeFlags = flags.getFlags();
 
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
@@ -700,7 +764,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     @Before
     public void setUp() throws Exception {
-        doReturn(new AdSelectionE2ETestFlags()).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
         mocker.mockGetDebugFlags(mMockDebugFlags);
         mocker.mockGetConsentNotificationDebugMode(false);
 
@@ -1016,17 +1080,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_CPC_BILLING_ENABLED)
     public void testRunAdSelectionSuccess_preV3BiddingLogicWithAdCostCpcBillingEnabled()
             throws Exception {
-        AdSelectionE2ETestFlags flagsWithCPCEnabled =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public boolean getFledgeCpcBillingEnabled() {
-                        return true;
-                    }
-                };
-        doReturn(flagsWithCPCEnabled).when(FlagsFactory::getFlags);
-
         // Re init adSelection service with new flags
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -1044,7 +1100,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithCPCEnabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1148,17 +1204,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED)
     public void testRunAdSelectionSuccess_preV3BiddingLogicWithDataVersionHeaderFlagEnabled()
             throws Exception {
-        AdSelectionE2ETestFlags flagsWithDataVersionHeaderEnabled =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public boolean getFledgeDataVersionHeaderEnabled() {
-                        return true;
-                    }
-                };
-        doReturn(flagsWithDataVersionHeaderEnabled).when(FlagsFactory::getFlags);
-
         // Re init adSelection service with new flags
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -1176,7 +1224,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithDataVersionHeaderEnabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1299,17 +1347,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SetFlagFalse(KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED)
     public void testRunAdSelectionSuccess_preV3BiddingLogicWithDataVersionHeaderFlagDisabled()
             throws Exception {
-        AdSelectionE2ETestFlags flagsWithDataVersionHeaderEnabled =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public boolean getFledgeDataVersionHeaderEnabled() {
-                        return false;
-                    }
-                };
-        doReturn(flagsWithDataVersionHeaderEnabled).when(FlagsFactory::getFlags);
-
         // Re init adSelection service with new flags
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -1327,7 +1367,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithDataVersionHeaderEnabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1446,17 +1486,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED)
     public void testRunAdSelectionSuccess_preV3BiddingLogicWinnerWithoutBuyerDataVersionHeader()
             throws Exception {
-        AdSelectionE2ETestFlags flagsWithDataVersionHeaderEnabled =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public boolean getFledgeDataVersionHeaderEnabled() {
-                        return true;
-                    }
-                };
-        doReturn(flagsWithDataVersionHeaderEnabled).when(FlagsFactory::getFlags);
-
         // Re init adSelection service with new flags
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -1474,7 +1506,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithDataVersionHeaderEnabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1574,17 +1606,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SetFlagFalse(KEY_FLEDGE_CPC_BILLING_ENABLED)
     public void testRunAdSelectionSuccess_preV3BiddingLogicWithAdCostCpcBillingDisabled()
             throws Exception {
-        AdSelectionE2ETestFlags flagsWithCPCDisabled =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public boolean getFledgeCpcBillingEnabled() {
-                        return false;
-                    }
-                };
-        doReturn(flagsWithCPCDisabled).when(FlagsFactory::getFlags);
-
         // Re init adSelection service with new flags
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -1602,7 +1626,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithCPCDisabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1801,15 +1825,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SetFlagFalse(KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED)
     public void testRunAdSelectionSuccess_prebuiltFeatureDisabled_failure() throws Exception {
-        Flags prebuiltDisabledFlags =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public boolean getFledgeAdSelectionPrebuiltUriEnabled() {
-                        return false;
-                    }
-                };
-
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDaoSpy,
@@ -1826,7 +1843,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        prebuiltDisabledFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -1911,8 +1928,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SetLongFlag(name = KEY_FLEDGE_AD_SELECTION_BIDDING_LOGIC_JS_VERSION, value = 2)
     public void testRunAdSelectionSuccess_flagToPreV3_preV3BiddingLogic() throws Exception {
-        mFakeFlags = new AdSelectionE2ETestFlags(2, false);
         mocker.mockGetFlags(mFakeFlags);
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -2097,17 +2114,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_CPC_BILLING_ENABLED)
     public void testRunAdSelectionSuccess_v3BiddingLogicWithAdCostCpcBillingEnabled()
             throws Exception {
-        AdSelectionE2ETestFlags flagsWithCPCEnabled =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public boolean getFledgeCpcBillingEnabled() {
-                        return true;
-                    }
-                };
-        doReturn(flagsWithCPCEnabled).when(FlagsFactory::getFlags);
-
         // Re init adSelection service with new flags
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -2125,7 +2134,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithCPCEnabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2227,17 +2236,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED)
     public void testRunAdSelectionSuccess_v3BiddingLogicWithDataVersionHeaderFlagEnabled()
             throws Exception {
-        AdSelectionE2ETestFlags flagsWithDataVersionHeaderEnabled =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public boolean getFledgeDataVersionHeaderEnabled() {
-                        return true;
-                    }
-                };
-        doReturn(flagsWithDataVersionHeaderEnabled).when(FlagsFactory::getFlags);
-
         // Re init adSelection service with new flags
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -2255,7 +2256,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithDataVersionHeaderEnabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2378,17 +2379,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SetFlagFalse(KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED)
     public void testRunAdSelectionSuccess_v3BiddingLogicWithDataVersionHeaderFlagDisabled()
             throws Exception {
-        AdSelectionE2ETestFlags flagsWithDataVersionHeaderEnabled =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public boolean getFledgeDataVersionHeaderEnabled() {
-                        return false;
-                    }
-                };
-        doReturn(flagsWithDataVersionHeaderEnabled).when(FlagsFactory::getFlags);
-
         // Re init adSelection service with new flags
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -2406,7 +2399,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithDataVersionHeaderEnabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2525,17 +2518,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_DATA_VERSION_HEADER_ENABLED)
     public void testRunAdSelectionSuccess_v3BiddingLogicWinnerWithoutBuyerDataVersionHeader()
             throws Exception {
-        AdSelectionE2ETestFlags flagsWithDataVersionHeaderEnabled =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public boolean getFledgeDataVersionHeaderEnabled() {
-                        return true;
-                    }
-                };
-        doReturn(flagsWithDataVersionHeaderEnabled).when(FlagsFactory::getFlags);
-
         // Re init adSelection service with new flags
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -2553,7 +2538,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithDataVersionHeaderEnabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -2653,17 +2638,9 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SetFlagFalse(KEY_FLEDGE_CPC_BILLING_ENABLED)
     public void testRunAdSelectionSuccess_v3BiddingLogicWithAdCostCpcBillingDisabled()
             throws Exception {
-        AdSelectionE2ETestFlags flagsWithCPCDisabled =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public boolean getFledgeCpcBillingEnabled() {
-                        return false;
-                    }
-                };
-        doReturn(flagsWithCPCDisabled).when(FlagsFactory::getFlags);
-
         // Re init adSelection service with new flags
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -2681,7 +2658,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithCPCDisabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -3293,6 +3270,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SetFlagFalse(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
     public void testRunAdSelectionContextualAds_Disabled_Success() throws Exception {
         // Logger calls come after the callback is returned
         CountDownLatch runAdSelectionProcessLoggerLatch = new CountDownLatch(3);
@@ -3356,14 +3334,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(BUYER_2),
                 false);
 
-        Flags flagsWithContextualAdsDisabled =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public boolean getFledgeAdSelectionContextualAdsEnabled() {
-                        return false;
-                    }
-                };
-
         AdSelectionServiceImpl adSelectionService =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDaoSpy,
@@ -3380,7 +3350,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithContextualAdsDisabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -5954,25 +5924,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .when(mAdServicesLoggerMock)
                 .logRunAdSelectionProcessReportedStats(any());
 
-        Flags flagsWithSmallerLimits =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public long getAdSelectionBiddingTimeoutPerCaMs() {
-                        return 1500;
-                    }
-
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-
-                    @Override
-                    public float getSdkRequestPermitsPerSecond() {
-                        // Unlimited rate for unit tests to avoid flake in tests due to rate
-                        // limiting
-                        return -1;
-                    }
-                };
+        setFlagsWithSmallerLimits();
 
         // Create an instance of AdSelection Service with real dependencies
         mAdSelectionService =
@@ -5991,7 +5943,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithSmallerLimits,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -6136,30 +6088,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         Long tightPerBuyerTimeOutLimit = 2000L;
         int largeCACountForBuyer = 300;
 
-        Flags flagsWithLenientBuyerBiddingLimits =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public long getAdSelectionBiddingTimeoutPerBuyerMs() {
-                        return lenientPerBuyerTimeOutLimit;
-                    }
-
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-
-                    @Override
-                    public float getSdkRequestPermitsPerSecond() {
-                        // Unlimited rate for unit tests to avoid flake in tests due to rate
-                        // limiting
-                        return -1;
-                    }
-
-                    @Override
-                    public long getAdSelectionOverallTimeoutMs() {
-                        return lenientPerBuyerTimeOutLimit * 3;
-                    }
-                };
+        setFlagsWithLenientBuyerBiddingLimits(lenientPerBuyerTimeOutLimit);
 
         MockWebServer server = mMockWebServerRule.startMockWebServer(mDispatcher);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
@@ -6244,7 +6173,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithLenientBuyerBiddingLimits,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -6273,35 +6202,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         int networkRequestCountWithLenientTimeout = server.getRequestCount();
 
         // Now we run the same Ad selection with tight per buyer timeout limits
-        Flags flagsWithTightBuyerBiddingLimits =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public long getAdSelectionBiddingTimeoutPerBuyerMs() {
-                        return tightPerBuyerTimeOutLimit;
-                    }
-
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-
-                    @Override
-                    public float getSdkRequestPermitsPerSecond() {
-                        // Unlimited rate for unit tests to avoid flake in tests due to rate
-                        // limiting
-                        return -1;
-                    }
-
-                    @Override
-                    public long getAdSelectionOverallTimeoutMs() {
-                        return lenientPerBuyerTimeOutLimit * 3;
-                    }
-
-                    @Override
-                    public int getAdSelectionMaxConcurrentBiddingCount() {
-                        return 1;
-                    }
-                };
+        setFlagsWithTightBuyerBiddingLimits(tightPerBuyerTimeOutLimit, lenientPerBuyerTimeOutLimit);
 
         // Create an instance of AdSelection Service with tight dependencies
         mAdSelectionService =
@@ -6320,7 +6221,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithTightBuyerBiddingLimits,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -6405,31 +6306,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         Long tightPerBuyerTimeOutLimit = 2000L;
         int largeCACountForBuyer = 300;
 
-        Flags flagsWithLenientBuyerBiddingLimits =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public long getAdSelectionBiddingTimeoutPerBuyerMs() {
-                        return lenientPerBuyerTimeOutLimit;
-                    }
-
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-
-                    @Override
-                    public float getSdkRequestPermitsPerSecond() {
-                        // Unlimited rate for unit tests to avoid flake in tests due to rate
-                        // limiting
-                        return -1;
-                    }
-
-                    @Override
-                    public long getAdSelectionOverallTimeoutMs() {
-                        return lenientPerBuyerTimeOutLimit * 3;
-                    }
-                };
-
+        setFlagsWithLenientBuyerBiddingLimits(lenientPerBuyerTimeOutLimit);
         MockWebServer server = mMockWebServerRule.startMockWebServer(DISPATCHER_V3_BIDDING_LOGIC);
         List<Double> bidsForBuyer1 = ImmutableList.of(1.1, 2.2);
         List<Double> bidsForBuyer2 = ImmutableList.of(4.5, 6.7, 10.0);
@@ -6513,7 +6390,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithLenientBuyerBiddingLimits,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -6542,35 +6419,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         int networkRequestCountWithLenientTimeout = server.getRequestCount();
 
         // Now we run the same Ad selection with tight per buyer timeout limits
-        Flags flagsWithTightBuyerBiddingLimits =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public long getAdSelectionBiddingTimeoutPerBuyerMs() {
-                        return tightPerBuyerTimeOutLimit;
-                    }
-
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-
-                    @Override
-                    public float getSdkRequestPermitsPerSecond() {
-                        // Unlimited rate for unit tests to avoid flake in tests due to rate
-                        // limiting
-                        return -1;
-                    }
-
-                    @Override
-                    public long getAdSelectionOverallTimeoutMs() {
-                        return lenientPerBuyerTimeOutLimit * 3;
-                    }
-
-                    @Override
-                    public int getAdSelectionMaxConcurrentBiddingCount() {
-                        return 1;
-                    }
-                };
+        setFlagsWithTightBuyerBiddingLimits(tightPerBuyerTimeOutLimit, lenientPerBuyerTimeOutLimit);
 
         // Create an instance of AdSelection Service with tight dependencies
         mAdSelectionService =
@@ -6589,7 +6438,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithTightBuyerBiddingLimits,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -6671,25 +6520,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                 .when(mAdServicesLoggerMock)
                 .logRunAdSelectionProcessReportedStats(any());
 
-        Flags flagsWithSmallerLimits =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public long getAdSelectionScoringTimeoutMs() {
-                        return 1500;
-                    }
-
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-
-                    @Override
-                    public float getSdkRequestPermitsPerSecond() {
-                        // Unlimited rate for unit tests to avoid flake in tests due to rate
-                        // limiting
-                        return -1;
-                    }
-                };
+        setFlagsWithSmallerLimits();
 
         // Create an instance of AdSelection Service with real dependencies
         mAdSelectionService =
@@ -6708,7 +6539,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithSmallerLimits,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -7371,17 +7202,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SetFlagFalse(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testRunAdSelectionFailsWhenAdTechFailsEnrollmentCheck() throws Exception {
-        Flags flagsWithEnrollmentCheckEnabled =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return false;
-                    }
-                };
-
-        doReturn(flagsWithEnrollmentCheckEnabled).when(FlagsFactory::getFlags);
-
         doThrow(new FilterException(new FledgeAuthorizationFilter.AdTechNotAllowedException()))
                 .when(mAdSelectionServiceFilter)
                 .filterRequest(
@@ -7412,7 +7234,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithEnrollmentCheckEnabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -7497,42 +7319,18 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SetDefaultFledgeFlags
+    @SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION)
+    @SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION)
+    @SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE)
+    @SetFlagTrue(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
+    // Testing the default throttling limit
+    @SetFloatFlag(name = KEY_SDK_REQUEST_PERMITS_PER_SECOND, value = 1)
     public void testRunAdSelectionThrottledSubsequentCallFailure() throws Exception {
-        doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-
-        class FlagsWithThrottling extends AdSelectionE2ETestFlags implements Flags {
-            @Override
-            public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
-                return true;
-            }
-
-            @Override
-            public boolean getEnforceForegroundStatusForFledgeReportImpression() {
-                return true;
-            }
-
-            @Override
-            public boolean getEnforceForegroundStatusForFledgeOverrides() {
-                return true;
-            }
-
-            @Override
-            public boolean getDisableFledgeEnrollmentCheck() {
-                return true;
-            }
-
-            // Testing the default throttling limit
-            @Override
-            public float getSdkRequestPermitsPerSecond() {
-                return 1;
-            }
-        }
-
         // NOTE: used to call Throttler.destroyExistingThrottler(), but constructor below doesn't
         // actually set a Throttler - the "real" constructor uses the Throttler when instantiating
         // the FledgeApiThrottleFilter (which in turn is passed to the constructor of
         // AdSelectionServiceFilter)
-        Flags throttlingFlags = new FlagsWithThrottling();
         AdSelectionServiceImpl adSelectionServiceWithThrottling =
                 new AdSelectionServiceImpl(
                         mAdSelectionEntryDaoSpy,
@@ -7549,7 +7347,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        throttlingFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -7649,17 +7447,8 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
+    @SetFlagFalse(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testRunAdSelectionSucceedsWhenAdTechPassesEnrollmentCheck() throws Exception {
-        Flags flagsWithEnrollmentCheckEnabled =
-                new AdSelectionE2ETestFlags() {
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return false;
-                    }
-                };
-
-        doReturn(flagsWithEnrollmentCheckEnabled).when(FlagsFactory::getFlags);
-
         // Create an instance of AdSelection Service with real dependencies
         mAdSelectionService =
                 new AdSelectionServiceImpl(
@@ -7677,7 +7466,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithEnrollmentCheckEnabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -8114,7 +7903,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         }
     }
 
-    public static class ReportImpressionTestCallback extends ReportImpressionCallback.Stub {
+    public static final class ReportImpressionTestCallback extends ReportImpressionCallback.Stub {
         private final CountDownLatch mCountDownLatch;
         boolean mIsSuccess = false;
         FledgeErrorResponse mFledgeErrorResponse;
@@ -8136,120 +7925,30 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
         }
     }
 
-    private static class AdSelectionE2ETestFlags implements Flags {
-        private final long mBiddingLogicVersion;
+    private void setFlagsWithSmallerLimits() {
+        flags.setFlag(KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS, 1500);
+        flags.setFlag(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, false);
+        // Unlimited rate for unit tests to avoid flake in tests due to rate limiting
+        flags.setFlag(KEY_SDK_REQUEST_PERMITS_PER_SECOND, -1);
+    }
 
-        private final boolean mDebugReportingEnabled;
+    private void setFlagsWithTightBuyerBiddingLimits(
+            long tightPerBuyerTimeOutLimit, long lenientPerBuyerTimeOutLimit) {
+        flags.setFlag(
+                KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS, tightPerBuyerTimeOutLimit);
+        flags.setFlag(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, true);
+        flags.setFlag(KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, lenientPerBuyerTimeOutLimit * 3);
+        flags.setFlag(KEY_FLEDGE_AD_SELECTION_MAX_CONCURRENT_BIDDING_COUNT, 1);
+        // Unlimited rate for unit tests to avoid flake in tests due to rate limiting
+        flags.setFlag(KEY_SDK_REQUEST_PERMITS_PER_SECOND, -1);
+    }
 
-        AdSelectionE2ETestFlags() {
-            this(JsVersionRegister.BUYER_BIDDING_LOGIC_VERSION_VERSION_3, false);
-        }
-
-        AdSelectionE2ETestFlags(long biddingLogicVersion, boolean enableDebugReporting) {
-            mBiddingLogicVersion = biddingLogicVersion;
-            mDebugReportingEnabled = enableDebugReporting;
-        }
-
-        @Override
-        public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
-            return true;
-        }
-
-        @Override
-        public boolean getEnforceForegroundStatusForFledgeReportImpression() {
-            return true;
-        }
-
-        @Override
-        public boolean getEnforceForegroundStatusForFledgeOverrides() {
-            return true;
-        }
-
-        @Override
-        public boolean getDisableFledgeEnrollmentCheck() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeOnDeviceAuctionKillSwitch() {
-            return false;
-        }
-
-        @Override
-        public long getAdSelectionBiddingTimeoutPerCaMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
-        }
-
-        @Override
-        public long getAdSelectionScoringTimeoutMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
-        }
-
-        @Override
-        public long getAdSelectionSelectingOutcomeTimeoutMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
-        }
-
-        @Override
-        public long getAdSelectionOverallTimeoutMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
-        }
-
-        @Override
-        public long getAdSelectionFromOutcomesOverallTimeoutMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
-        }
-
-        @Override
-        public long getReportImpressionOverallTimeoutMs() {
-            return EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
-        }
-
-        @Override
-        public int getFledgeBackgroundFetchNetworkConnectTimeoutMs() {
-            return EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_CONNECT_TIMEOUT_MS;
-        }
-
-        @Override
-        public int getFledgeBackgroundFetchNetworkReadTimeoutMs() {
-            return EXTENDED_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
-        }
-
-        @Override
-        public float getSdkRequestPermitsPerSecond() {
-            // Unlimited rate for unit tests to avoid flake in tests due to rate
-            // limiting
-            return -1;
-        }
-
-        @Override
-        public long getFledgeAdSelectionBiddingLogicJsVersion() {
-            return mBiddingLogicVersion;
-        }
-
-        @Override
-        public boolean getFledgeAdSelectionContextualAdsEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeAdSelectionPrebuiltUriEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeCpcBillingEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean getFledgeEventLevelDebugReportingEnabled() {
-            return mDebugReportingEnabled;
-        }
-
-        @Override
-        public boolean getFledgeEventLevelDebugReportSendImmediately() {
-            return false;
-        }
+    private void setFlagsWithLenientBuyerBiddingLimits(long lenientPerBuyerTimeOutLimit) {
+        flags.setFlag(
+                KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS, lenientPerBuyerTimeOutLimit);
+        flags.setFlag(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, true);
+        // Unlimited rate for unit tests to avoid flake in tests due to rate limiting
+        flags.setFlag(KEY_SDK_REQUEST_PERMITS_PER_SECOND, -1);
+        flags.setFlag(KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, lenientPerBuyerTimeOutLimit * 3);
     }
 }
