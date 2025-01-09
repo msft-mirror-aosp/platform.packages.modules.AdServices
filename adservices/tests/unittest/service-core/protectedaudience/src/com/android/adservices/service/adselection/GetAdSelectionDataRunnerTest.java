@@ -179,7 +179,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                             .setToken(DEBUG_TOKEN)
                             .setIsDebugInfoInResponse(false)
                             .build();
-    private Flags mFakeFlags;
+    private Flags mLegacyFakeFlags;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
     private ScheduledThreadPoolExecutor mScheduledExecutor;
@@ -215,7 +215,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
 
     @Before
     public void setup() throws Exception {
-        mFakeFlags = new GetAdSelectionDataRunnerTestFlags();
+        mLegacyFakeFlags = new GetAdSelectionDataRunnerTestFlags();
         mocker.mockGetDebugFlags(mMockDebugFlags);
         mocker.mockGetConsentNotificationDebugMode(false);
         mMultiCloudSupportStrategyFlagOff =
@@ -263,7 +263,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         sCallerMetadata,
                         mFledgeAuctionServerExecutionLoggerClockMock,
                         mAdServicesLoggerSpy,
-                        mFakeFlags,
+                        mLegacyFakeFlags,
                         AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA);
         mAdsRelevanceExecutionLogger =
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
@@ -278,12 +278,12 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                                         .setConsentedDebugConfiguration(
                                                 CONSENTED_DEBUG_CONFIGURATION)
                                         .build()));
-        mGetAdSelectionDataRunner = initRunner(mFakeFlags, mAdsRelevanceExecutionLogger);
+        mGetAdSelectionDataRunner = initRunner(mLegacyFakeFlags, mAdsRelevanceExecutionLogger);
     }
 
     @Test
     public void testRunner_getAdSelectionData_returnsSuccess() throws Exception {
-        mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetFlags(mLegacyFakeFlags);
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong(), any(), any());
@@ -329,7 +329,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
             throws Exception {
         mocker.mockGetConsentNotificationDebugMode(true);
 
-        mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetFlags(mLegacyFakeFlags);
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong(), any(), any());
@@ -344,7 +344,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         .build();
 
         GetAdSelectionDataRunner getAdSelectionDataRunner =
-                initRunner(mFakeFlags, mAdsRelevanceExecutionLogger);
+                initRunner(mLegacyFakeFlags, mAdsRelevanceExecutionLogger);
 
         GetAdSelectionDataTestCallback callback =
                 invokeGetAdSelectionData(getAdSelectionDataRunner, inputParams);
@@ -636,7 +636,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                 buyerInputGeneratedStatsArgumentCaptor =
                         ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
 
-        mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetFlags(mLegacyFakeFlags);
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong(), any(), any());
@@ -650,7 +650,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mGetAdSelectionDataRunner =
                 initRunner(
-                        mFakeFlags,
+                        mLegacyFakeFlags,
                         mAdsRelevanceExecutionLogger,
                         MultiCloudTestStrategyFactory.getDisabledTestStrategy(
                                 mObliviousHttpEncryptorMock),
@@ -739,7 +739,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                 buyerInputGeneratedStatsArgumentCaptor =
                         ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
 
-        mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetFlags(mLegacyFakeFlags);
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong(), any(), any());
@@ -753,7 +753,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mGetAdSelectionDataRunner =
                 initRunner(
-                        mFakeFlags,
+                        mLegacyFakeFlags,
                         mAdsRelevanceExecutionLogger,
                         MultiCloudTestStrategyFactory.getDisabledTestStrategy(
                                 mObliviousHttpEncryptorMock),
@@ -838,14 +838,14 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     public void
             testRunner_getAdSelectionData_returnsSuccessMetricsEnabled_withApiSourceCoordinator()
                     throws Exception {
-        mFakeFlags = new GetAdSelectionDataRunnerTestFlagsWithMultiCloudEnabled(true);
+        mLegacyFakeFlags = new GetAdSelectionDataRunnerTestFlagsWithMultiCloudEnabled(true);
         ArgumentCaptor<GetAdSelectionDataApiCalledStats> apiCalledArgumentCaptor =
                 ArgumentCaptor.forClass(GetAdSelectionDataApiCalledStats.class);
         ArgumentCaptor<GetAdSelectionDataBuyerInputGeneratedStats>
                 buyerInputGeneratedStatsArgumentCaptor =
                         ArgumentCaptor.forClass(GetAdSelectionDataBuyerInputGeneratedStats.class);
 
-        mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetFlags(mLegacyFakeFlags);
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong(), any(), any());
@@ -859,7 +859,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mGetAdSelectionDataRunner =
                 initRunner(
-                        mFakeFlags,
+                        mLegacyFakeFlags,
                         mAdsRelevanceExecutionLogger,
                         MultiCloudTestStrategyFactory.getEnabledTestStrategy(
                                 mObliviousHttpEncryptorMock, ALLOW_LIST_COORDINATORS),
@@ -952,7 +952,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
         mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
                 mMultiCloudSupportStrategyFlagOn);
 
-        mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetFlags(mLegacyFakeFlags);
 
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
@@ -985,7 +985,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     @Test
     public void testRunner_getAdSelectionData_multiCloudFlagOn_validCoordinator_IsSuccess()
             throws Exception {
-        mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetFlags(mLegacyFakeFlags);
 
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
@@ -1015,7 +1015,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     public void testRunner_getAdSelectionData_multiCloudFlagOn_nullCoordinator_IsSuccess()
             throws Exception {
 
-        mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetFlags(mLegacyFakeFlags);
 
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
@@ -1045,7 +1045,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     public void testRunner_getAdSelectionData_multiCloudFlagOff_invalidCoordinator_IsSuccess()
             throws Exception {
 
-        mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetFlags(mLegacyFakeFlags);
 
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
@@ -1077,11 +1077,11 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                 .when(mObliviousHttpEncryptorMock)
                 .encryptBytes(any(), anyLong(), anyLong(), any(), any());
 
-        mFakeFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
+        mLegacyFakeFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
         mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock));
 
-        mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetFlags(mLegacyFakeFlags);
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -1132,13 +1132,13 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_INTERNAL_ERROR)
     public void testRunner_getAdSelectionData_returnsInternalErrorWhenEncounteringIOException()
             throws Exception {
-        mFakeFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
+        mLegacyFakeFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
         mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
                 mMultiCloudSupportStrategyFlagOff);
         doThrow(new IOException())
                 .when(() -> AssetFileDescriptorUtil.setupAssetFileDescriptorResponse(any(), any()));
 
-        mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetFlags(mLegacyFakeFlags);
 
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
                 .when(mObliviousHttpEncryptorMock)
@@ -1166,7 +1166,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     @ExpectErrorLogUtilCall(
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_FILTER_AND_REVOKED_CONSENT_EXCEPTION)
     public void testRunner_revokedUserConsent_returnsRandomResult() throws Exception {
-        mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetFlags(mLegacyFakeFlags);
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
@@ -1204,10 +1204,10 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_FILTER_AND_REVOKED_CONSENT_EXCEPTION)
     public void testRunner_revokedUserConsent_returnsRandomResultWithExcessiveSizeFormatterVersion()
             throws Exception {
-        mFakeFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
-        mGetAdSelectionDataRunner = initRunner(mFakeFlags, mAdsRelevanceExecutionLogger);
+        mLegacyFakeFlags = new GetAdSelectionDataRunnerTestFlagsWithExcessiveSizeFormatter();
+        mGetAdSelectionDataRunner = initRunner(mLegacyFakeFlags, mAdsRelevanceExecutionLogger);
 
-        mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetFlags(mLegacyFakeFlags);
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilterMock)
                 .filterRequest(
@@ -1289,7 +1289,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         .setIsDebugInfoInResponse(false)
                         .build();
         long adSelectionId = 234L;
-        mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetFlags(mLegacyFakeFlags);
         mockGetAdSelectionDataRunnerWithFledgeAuctionServerExecutionLogger(
                 mMultiCloudSupportStrategyFlagOff);
         AuctionServerDebugConfiguration auctionServerDebugConfiguration =
@@ -1355,7 +1355,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     @ExpectErrorLogUtilCall(
             errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_TIMEOUT)
     public void testRunner_getAdSelectionData_timeoutFailure() throws Exception {
-        mocker.mockGetFlags(mFakeFlags);
+        mocker.mockGetFlags(mLegacyFakeFlags);
 
         Flags shortTimeoutFlags =
                 new GetAdSelectionDataRunnerTestFlags() {
@@ -1508,7 +1508,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                 mAdsRelevanceExecutionLoggerFactory.getAdsRelevanceExecutionLogger();
         mGetAdSelectionDataRunner =
                 initRunner(
-                        mFakeFlags,
+                        mLegacyFakeFlags,
                         mAdsRelevanceExecutionLogger,
                         multiCloudSupportStrategy,
                         new AuctionServerPayloadMetricsStrategyDisabled());

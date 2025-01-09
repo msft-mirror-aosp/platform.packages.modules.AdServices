@@ -292,9 +292,6 @@
       "name": "CtsLocationPrivilegedTestCases"
     },
     {
-      "name": "CtsMediaBetterTogetherTestCases"
-    },
-    {
       "name": "CtsMediaCodecTestCases"
     },
     {
@@ -311,6 +308,12 @@
     },
     {
       "name": "CtsMediaProjectionTestCases"
+    },
+    {
+      "name": "CtsMediaRouterTestCases"
+    },
+    {
+      "name": "CtsMediaSessionTestCases"
     },
     {
       "name": "CtsOpenGLTestCases"
