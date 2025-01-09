@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.signals;
 
-import static com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
+import static com.android.adservices.service.FakeFlagsFactory.SetFakeFlagsFactoryFlags;
 import static com.android.adservices.service.signals.SignalsFixture.ADTECH;
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_KEY_1;
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_VALUE_1;
@@ -80,7 +80,7 @@ import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
+import com.android.adservices.service.FakeFlagsFactory.SetFakeFlagsFactoryFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -134,7 +134,7 @@ import java.util.concurrent.TimeUnit;
 @RequiresSdkLevelAtLeastT
 @MockStatic(FlagsFactory.class)
 @MockStatic(DebugFlags.class)
-@SetDefaultFledgeFlags
+@SetFakeFlagsFactoryFlags
 @SetPasAppAllowList
 public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");

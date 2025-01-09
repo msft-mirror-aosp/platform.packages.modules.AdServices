@@ -44,7 +44,7 @@ import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.devapi.DevSessionFixture;
-import com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
+import com.android.adservices.service.FakeFlagsFactory.SetFakeFlagsFactoryFlags;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -58,7 +58,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 
 @SetPpapiAppAllowList
-@SetDefaultFledgeFlags
+@SetFakeFlagsFactoryFlags
 public final class CustomAudienceServiceFilterTest extends AdServicesMockitoTestCase {
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;

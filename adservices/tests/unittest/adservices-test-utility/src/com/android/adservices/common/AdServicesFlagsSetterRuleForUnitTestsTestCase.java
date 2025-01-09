@@ -15,7 +15,7 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
+import static com.android.adservices.service.FakeFlagsFactory.SetFakeFlagsFactoryFlags;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassHasNoNothingAtAll;
@@ -42,11 +42,11 @@ abstract class AdServicesFlagsSetterRuleForUnitTestsTestCase<
     protected abstract R newRule();
 
     @Test
-    public final void testSetDefaultFledgeFlagsMethod() throws Throwable {
+    public final void testSetFakeFlagsFactoryFlagsMethod() throws Throwable {
         onTest(
                 (rule, flags) -> {
-                    R returnedRule = rule.setDefaultFledgeFlags();
-                    expect.withMessage("setFlagsForTests()")
+                    R returnedRule = rule.setFakeFlagsFactoryFlags();
+                    expect.withMessage("setFakeFlagsFactoryFlags()")
                             .that(returnedRule)
                             .isSameInstanceAs(rule);
                     assertDefaultFledgeFlags(flags);
@@ -54,10 +54,10 @@ abstract class AdServicesFlagsSetterRuleForUnitTestsTestCase<
     }
 
     @Test
-    public final void testSetDefaultFledgeFlagsAnnotation() throws Throwable {
+    public final void testSetFakeFlagsFactoryFlagsAnnotation() throws Throwable {
         Description description =
                 Description.createTestDescription(
-                        AClassSetsAllDefaultFledgeTags.class, "butItHasATest");
+                        AClassUsesSetFakeFlagsFactoryFlags.class, "butItHasATest");
         onTest(description, (rule, flags) -> assertDefaultFledgeFlags(flags));
     }
 
@@ -175,6 +175,6 @@ abstract class AdServicesFlagsSetterRuleForUnitTestsTestCase<
 
     }
 
-    @SetDefaultFledgeFlags
-    private static final class AClassSetsAllDefaultFledgeTags {}
+    @SetFakeFlagsFactoryFlags
+    private static final class AClassUsesSetFakeFlagsFactoryFlags {}
 }
