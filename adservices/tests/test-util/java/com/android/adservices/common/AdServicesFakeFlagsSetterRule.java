@@ -99,7 +99,7 @@ public final class AdServicesFakeFlagsSetterRule
         @Deprecated
         public FakeFlags setFakeFlagsFactoryFlags() {
             var backend = getFakeFlagsBackend();
-            AdServicesFlagsSetterRuleForUnitTests.setDefaultFledgeFlags(
+            AdServicesFlagsSetterRuleForUnitTests.setFakeFlagsFactoryFlags(
                     (name, value) -> backend.setFlag(name, value));
             return this;
         }

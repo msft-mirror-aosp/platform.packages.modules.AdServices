@@ -95,12 +95,12 @@ public abstract class AdServicesFlagsSetterRuleForUnitTests<
      * <p>In other words, the same flags from {@code FakeFlagsFactory.TestFlags}.
      */
     public final R setFakeFlagsFactoryFlags() {
-        mLog.i("setDefaultFledgeFlags()");
-        setDefaultFledgeFlags((name, value) -> setNameValuePair(name, value));
+        mLog.i("setFakeFlagsFactoryFlags()");
+        setFakeFlagsFactoryFlags((name, value) -> setNameValuePair(name, value));
         return getThis();
     }
 
-    static void setDefaultFledgeFlags(BiConsumer<String, String> nameValueSetter) {
+    static void setFakeFlagsFactoryFlags(BiConsumer<String, String> nameValueSetter) {
         nameValueSetter.accept(KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS, "10000");
         nameValueSetter.accept(KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS, "10000");
         nameValueSetter.accept(KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, "600000");

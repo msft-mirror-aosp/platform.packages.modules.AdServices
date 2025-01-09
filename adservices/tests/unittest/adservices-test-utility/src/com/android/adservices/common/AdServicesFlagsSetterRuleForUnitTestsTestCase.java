@@ -49,7 +49,7 @@ abstract class AdServicesFlagsSetterRuleForUnitTestsTestCase<
                     expect.withMessage("setFakeFlagsFactoryFlags()")
                             .that(returnedRule)
                             .isSameInstanceAs(rule);
-                    assertDefaultFledgeFlags(flags);
+                    assertFakeFlagsFactoryFlags(flags);
                 });
     }
 
@@ -58,16 +58,16 @@ abstract class AdServicesFlagsSetterRuleForUnitTestsTestCase<
         Description description =
                 Description.createTestDescription(
                         AClassUsesSetFakeFlagsFactoryFlags.class, "butItHasATest");
-        onTest(description, (rule, flags) -> assertDefaultFledgeFlags(flags));
+        onTest(description, (rule, flags) -> assertFakeFlagsFactoryFlags(flags));
     }
 
-    private void assertDefaultFledgeFlags(Flags flags) {
-        assertDefaultFledgeFlags(expect, flags);
+    private void assertFakeFlagsFactoryFlags(Flags flags) {
+        assertFakeFlagsFactoryFlags(expect, flags);
     }
 
     // TODO(b/384798806): merge with instance method once FakeFlagsFactoryTest is gone or doesn't
     // use it anymore
-    public static void assertDefaultFledgeFlags(StandardSubjectBuilder expect, Flags flags) {
+    public static void assertFakeFlagsFactoryFlags(StandardSubjectBuilder expect, Flags flags) {
         // TODO(b/384798806): pass R as well and assert size of changed flags is 16
         expect.withMessage("getAdSelectionBiddingTimeoutPerCaMs()")
                 .that(flags.getAdSelectionBiddingTimeoutPerCaMs())
