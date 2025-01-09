@@ -48,7 +48,6 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
@@ -56,7 +55,6 @@ import static java.util.concurrent.TimeUnit.DAYS;
 
 import android.adservices.measurement.DeletionRequest;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
@@ -64,11 +62,10 @@ import android.net.Uri;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.measurement.MeasurementTables.DebugReportContract;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -100,6 +97,7 @@ import com.android.adservices.service.measurement.reporting.EventReportWindowCal
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMultiset;
@@ -108,13 +106,9 @@ import com.google.common.truth.Truth;
 import org.json.JSONException;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.internal.util.collections.Sets;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.quality.Strictness;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -137,9 +131,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-@RunWith(MockitoJUnitRunner.class)
-public class MeasurementDaoTest {
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(MeasurementDbHelper.class)
+public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase {
     private static final Uri APP_TWO_SOURCES = Uri.parse("android-app://com.example1.two-sources");
     private static final Uri APP_ONE_SOURCE = Uri.parse("android-app://com.example2.one-source");
     private static final String DEFAULT_ENROLLMENT_ID = "enrollment-id";
@@ -193,7 +187,9 @@ public class MeasurementDaoTest {
 
     // Fake ID count for initializing triggers.
     private int mValueId = 1;
-    private Flags mFlags;
+    // TODO(b/384798806): ideally it should use mFakeFlags, but this class mixes usage of fake and
+    // mock flags - some tests can only pass if mLegacyFlags is set to mMockFlags
+    private Flags mLegacyFlags = FakeFlagsFactory.getFlagsForTest();
     private DatastoreManager mDatastoreManager;
     public static final Uri REGISTRATION_ORIGIN_2 =
             WebUtil.validUri("https://subdomain_2.example.test");
@@ -207,18 +203,9 @@ public class MeasurementDaoTest {
     public static final Uri TOP_LEVEL_REGISTRANT_1 = Uri.parse("android-app://com.example1.sample");
     public static final Uri TOP_LEVEL_REGISTRANT_2 = Uri.parse("android-app://com.example2.sample");
 
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(FlagsFactory.class)
-                    .spyStatic(MeasurementDbHelper.class)
-                    .setStrictness(Strictness.WARN)
-                    .build();
-
     @Before
     public void before() {
-        ExtendedMockito.doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-        mFlags = FakeFlagsFactory.getFlagsForTest();
+        mocker.mockGetFlagsForTesting();
         mDatastoreManager =
                 new SQLDatastoreManager(
                         MeasurementDbHelper.getInstance(),
@@ -309,7 +296,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testInsertSource_flexibleEventReport_equal() throws JSONException {
+    public void testInsertSource_flexibleEventReport_equal() throws Exception {
         Source validSource = SourceFixture.getValidSourceWithFlexEventReport();
         mDatastoreManager.runInTransaction((dao) -> dao.insertSource(validSource));
 
@@ -387,10 +374,10 @@ public class MeasurementDaoTest {
 
     @Test
     public void testInsertSource_attributionScopeEnabled_success() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
-        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+        mLegacyFlags = mMockFlags;
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableAttributionScope();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mMockFlags).getMeasurementDbSizeLimit();
 
         Source validSource =
                 insertSourceForAttributionScope(
@@ -420,10 +407,9 @@ public class MeasurementDaoTest {
     @Test
     public void
             testInsertSource_attributionScopeDisabled_doesNotInsertAttributionScopeRelatedData() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(false).when(mFlags).getMeasurementEnableAttributionScope();
-        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(false).when(mMockFlags).getMeasurementEnableAttributionScope();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mMockFlags).getMeasurementDbSizeLimit();
 
         Source validSource =
                 insertSourceForAttributionScope(
@@ -452,10 +438,9 @@ public class MeasurementDaoTest {
 
     @Test
     public void testInsertSource_aggregateDebugReportingEnabled_success() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableAggregateDebugReporting();
-        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableAggregateDebugReporting();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mMockFlags).getMeasurementDbSizeLimit();
 
         Source validSource =
                 SourceFixture.getValidSourceBuilder()
@@ -541,10 +526,9 @@ public class MeasurementDaoTest {
 
     @Test
     public void testInsertSource_aggregateDebugReportingDisabled_relatedDataNotInserted() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(false).when(mFlags).getMeasurementEnableAggregateDebugReporting();
-        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(false).when(mMockFlags).getMeasurementEnableAggregateDebugReporting();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mMockFlags).getMeasurementDbSizeLimit();
 
         Source validSource =
                 SourceFixture.getValidSourceBuilder()
@@ -628,10 +612,9 @@ public class MeasurementDaoTest {
 
     @Test
     public void testInsertSource_aggregatableNamedBudgetsEnabled_success() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
-        when(mFlags.getMeasurementDbSizeLimit()).thenReturn(MEASUREMENT_DB_SIZE_LIMIT);
+        mocker.mockGetFlags(mMockFlags);
+        when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
+        when(mMockFlags.getMeasurementDbSizeLimit()).thenReturn(MEASUREMENT_DB_SIZE_LIMIT);
 
         AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
         aggregatableNamedBudgets.createContributionBudget("budget1", 400);
@@ -683,10 +666,9 @@ public class MeasurementDaoTest {
 
     @Test
     public void testInsertSource_aggregatableNamedBudgetsDisabled_relatedDataNotInserted() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(false);
-        when(mFlags.getMeasurementDbSizeLimit()).thenReturn(MEASUREMENT_DB_SIZE_LIMIT);
+        mocker.mockGetFlags(mMockFlags);
+        when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(false);
+        when(mMockFlags.getMeasurementDbSizeLimit()).thenReturn(MEASUREMENT_DB_SIZE_LIMIT);
 
         AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
         aggregatableNamedBudgets.createContributionBudget("budget3", 470);
@@ -2918,9 +2900,8 @@ public class MeasurementDaoTest {
     @Test
     public void
             testInstallAttribution_reinstallReattributionEnabled_skipsAttributionForReinstall() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableReinstallReattribution();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableReinstallReattribution();
         long currentTimestamp = System.currentTimeMillis();
         long reinstallWindow = DAYS.toMillis(50);
         insertSource(
@@ -2999,9 +2980,8 @@ public class MeasurementDaoTest {
 
     @Test
     public void testInstallAttribution_reinstallReattributionDisabled_doesNotSkipReinstall() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(false).when(mFlags).getMeasurementEnableReinstallReattribution();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(false).when(mMockFlags).getMeasurementEnableReinstallReattribution();
         long currentTimestamp = System.currentTimeMillis();
         insertSource(
                 createSourceForIATest(
@@ -3075,9 +3055,8 @@ public class MeasurementDaoTest {
     @Test
     public void
             testInstallAttribution_reinstallReattributionEnabledNoWindow_doesNotSkipReinstall() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableReinstallReattribution();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableReinstallReattribution();
         long currentTimestamp = System.currentTimeMillis();
         insertSource(
                 createSourceForIATest(
@@ -3154,9 +3133,8 @@ public class MeasurementDaoTest {
 
     @Test
     public void testInstallAttribution_reinstallReattributionEnabledNoReinstall_doesNotSkip() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableReinstallReattribution();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableReinstallReattribution();
         long currentTimestamp = System.currentTimeMillis();
         insertSource(
                 createSourceForIATest(
@@ -3381,7 +3359,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void deleteFlexEventReportsAndAttributions_success() throws JSONException {
+    public void deleteFlexEventReportsAndAttributions_success() throws Exception {
         // Setup - Creates the following -
         // source - S1, S2
         // trigger - T1, T2, T3
@@ -3493,8 +3471,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void deleteSources_providedIds_deletesMatchingSourcesAndRelatedData()
-            throws JSONException {
+    public void deleteSources_providedIds_deletesMatchingSourcesAndRelatedData() throws Exception {
         // Setup - Creates the following -
         // source - S1, S2, S3, S4
         // trigger - T1, T2, T3, T4
@@ -3614,7 +3591,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void deleteTriggers_providedIds_deletesMatchingTriggersAndRelatedData()
-            throws JSONException {
+            throws Exception {
         // Setup - Creates the following -
         // source - S1, S2, S3, S4
         // trigger - T1, T2, T3, T4
@@ -3671,7 +3648,7 @@ public class MeasurementDaoTest {
     // trigger - T1, T2
     // event reports - E11_1, E11_2, E11_3, E21, E22_1, E22_2
     // attributions - ATT11_1, ATT11_2, ATT11_3, ATT21, ATT22_1, ATT22_2
-    private void prepareDataForFlexEventReportAndAttributionDeletion() throws JSONException {
+    private void prepareDataForFlexEventReportAndAttributionDeletion() throws Exception {
         SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
         Source s1 =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -3765,7 +3742,7 @@ public class MeasurementDaoTest {
     // event reports - E11, E12, E21, E22, E23, E33, E44
     // aggregate reports - AR11, AR12, AR21, AR34
     // attributions - ATT11, ATT12, ATT21, ATT22, ATT33, ATT44
-    private void prepareDataForSourceAndTriggerDeletion() throws JSONException {
+    private void prepareDataForSourceAndTriggerDeletion() throws Exception {
         SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
         Source s1 =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -4601,7 +4578,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void updateSourceAttributedTriggers_baseline_equal() throws JSONException {
+    public void updateSourceAttributedTriggers_baseline_equal() throws Exception {
         SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
         Objects.requireNonNull(db);
 
@@ -4982,10 +4959,10 @@ public class MeasurementDaoTest {
 
     @Test
     public void testGetMatchingActiveSources_attributionScopeEnabled_populateScopes() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
-        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+        mLegacyFlags = mMockFlags;
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableAttributionScope();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mMockFlags).getMeasurementDbSizeLimit();
 
         // S0: attribution scopes -> [], destinations -> [D1, D2]
         Source source0 =
@@ -5072,10 +5049,10 @@ public class MeasurementDaoTest {
 
     @Test
     public void testGetAttributionScopesForRegistration() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
-        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+        mLegacyFlags = mMockFlags;
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableAttributionScope();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mMockFlags).getMeasurementDbSizeLimit();
 
         insertSourceForAttributionScope(
                 List.of("1"),
@@ -5887,7 +5864,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void testDeleteEventReportAndAttribution() throws JSONException {
+    public void testDeleteEventReportAndAttribution() throws Exception {
         SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
         Source s1 =
                 SourceFixture.getMinimalValidSourceBuilder()
@@ -7169,9 +7146,8 @@ public class MeasurementDaoTest {
     public void
             fetchSourceIdsForLowestPriorityDest_appDestEmptyExclusions_delLowPriorityDestination() {
         // Setup
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableSourceDestinationLimitPriority();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableSourceDestinationLimitPriority();
         long baseEventTime = System.currentTimeMillis();
         long commonExpiryTime = baseEventTime + DAYS.toMillis(30);
         insertSource(
@@ -7245,9 +7221,8 @@ public class MeasurementDaoTest {
     public void
             fetchSourceIdsForLowPriorityDest_webDestEmptyExclusions_delLowPriorityDestinations() {
         // Setup
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableSourceDestinationLimitPriority();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableSourceDestinationLimitPriority();
         long baseEventTime = System.currentTimeMillis();
         long commonExpiryTime = baseEventTime + DAYS.toMillis(30);
         insertSource(
@@ -7637,13 +7612,12 @@ public class MeasurementDaoTest {
 
     @Test
     public void fetchMatchingSourcesUninstall_outsideReportLifetime_deleteSources()
-            throws JSONException {
+            throws Exception {
         // Setup
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableMinReportLifespanForUninstall();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableMinReportLifespanForUninstall();
         doReturn(TimeUnit.DAYS.toSeconds(1))
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementMinReportLifespanForUninstallSeconds();
 
         long currentTime = System.currentTimeMillis();
@@ -7715,13 +7689,12 @@ public class MeasurementDaoTest {
 
     @Test
     public void fetchMatchingSourcesUninstall_withinReportLifetime_ignoreSources()
-            throws JSONException {
+            throws Exception {
         // Setup
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableMinReportLifespanForUninstall();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableMinReportLifespanForUninstall();
         doReturn(TimeUnit.DAYS.toSeconds(1))
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementMinReportLifespanForUninstallSeconds();
 
         long currentTime = System.currentTimeMillis();
@@ -7791,13 +7764,12 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void fetchMatchingSourcesUninstall_deleteAndIgnoreSources() throws JSONException {
+    public void fetchMatchingSourcesUninstall_deleteAndIgnoreSources() throws Exception {
         // Setup
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableMinReportLifespanForUninstall();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableMinReportLifespanForUninstall();
         doReturn(TimeUnit.DAYS.toSeconds(1))
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementMinReportLifespanForUninstallSeconds();
 
         long currentTime = System.currentTimeMillis();
@@ -7880,13 +7852,12 @@ public class MeasurementDaoTest {
 
     @Test
     public void fetchMatchingTriggersUninstall_outsideReportLifetime_deleteTriggers()
-            throws JSONException {
+            throws Exception {
         // Setup
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableMinReportLifespanForUninstall();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableMinReportLifespanForUninstall();
         doReturn(TimeUnit.DAYS.toSeconds(1))
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementMinReportLifespanForUninstallSeconds();
 
         long currentTime = System.currentTimeMillis();
@@ -7957,13 +7928,12 @@ public class MeasurementDaoTest {
 
     @Test
     public void fetchMatchingTriggersUninstall_withinReportLifetime_ignoreTriggers()
-            throws JSONException {
+            throws Exception {
         // Setup
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableMinReportLifespanForUninstall();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableMinReportLifespanForUninstall();
         doReturn(TimeUnit.DAYS.toSeconds(1))
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementMinReportLifespanForUninstallSeconds();
 
         long currentTime = System.currentTimeMillis();
@@ -8032,13 +8002,12 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void fetchMatchingTriggersUninstall_deleteAndIgnoreTriggers() throws JSONException {
+    public void fetchMatchingTriggersUninstall_deleteAndIgnoreTriggers() throws Exception {
         // Setup
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableMinReportLifespanForUninstall();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableMinReportLifespanForUninstall();
         doReturn(TimeUnit.DAYS.toSeconds(1))
-                .when(mFlags)
+                .when(mMockFlags)
                 .getMeasurementMinReportLifespanForUninstallSeconds();
 
         long currentTime = System.currentTimeMillis();
@@ -8936,10 +8905,11 @@ public class MeasurementDaoTest {
     @Test
     public void getSource_nonExistingInDb_throwsException() {
         // Setup - insert 2 sources with different IDs
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
-        doReturn(1.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true)
+                .when(mMockFlags)
+                .getMeasurementEnableDatastoreManagerThrowDatastoreException();
+        doReturn(1.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
         SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
         String sourceId1 = "source1";
         Source source1WithDestinations =
@@ -8967,10 +8937,11 @@ public class MeasurementDaoTest {
     @Test
     public void getSource_nonExistingInDbNoSampling_swallowException() {
         // Setup - insert 2 sources with different IDs
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
-        doReturn(0.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true)
+                .when(mMockFlags)
+                .getMeasurementEnableDatastoreManagerThrowDatastoreException();
+        doReturn(0.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
         SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
         String sourceId1 = "source1";
         Source source1WithDestinations =
@@ -8992,10 +8963,11 @@ public class MeasurementDaoTest {
     @Test
     public void getSource_nonExistingInDbThrowingDisabled_swallowException() {
         // Setup - insert 2 sources with different IDs
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(false).when(mFlags).getMeasurementEnableDatastoreManagerThrowDatastoreException();
-        doReturn(1.0f).when(mFlags).getMeasurementThrowUnknownExceptionSamplingRate();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(false)
+                .when(mMockFlags)
+                .getMeasurementEnableDatastoreManagerThrowDatastoreException();
+        doReturn(1.0f).when(mMockFlags).getMeasurementThrowUnknownExceptionSamplingRate();
         SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
         String sourceId1 = "source1";
         Source source1WithDestinations =
@@ -9093,7 +9065,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void fetchMatchingEventReports_returnsMatchingReports() throws JSONException {
+    public void fetchMatchingEventReports_returnsMatchingReports() throws Exception {
         // setup - create reports for 3*3 combinations of source and trigger
         List<Source> sources =
                 Arrays.asList(
@@ -9354,7 +9326,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void fetchFlexSourceIdsFor_bringsMatchingSources_expectedSourceReturned()
-            throws JSONException {
+            throws Exception {
         // Setup
         TriggerSpecs testTriggerSpecs = SourceFixture.getValidTriggerSpecsCountBased();
         Source source1 =
@@ -9476,7 +9448,7 @@ public class MeasurementDaoTest {
 
     @Test
     public void fetchFlexSourceIdsFor_moreThanSqliteMaxCompoundSelect_expectedSourceReturned()
-            throws JSONException {
+            throws Exception {
         // Setup
         TriggerSpecs testTriggerSpecs = SourceFixture.getValidTriggerSpecsCountBased();
         Source source1 =
@@ -9597,8 +9569,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void fetchFlexSourceIdsFor_emptyInputSourceId_noSourceReturned()
-            throws JSONException {
+    public void fetchFlexSourceIdsFor_emptyInputSourceId_noSourceReturned() throws Exception {
         // Setup
         TriggerSpecs testTriggerSpecs = SourceFixture.getValidTriggerSpecsCountBased();
         Source source1 =
@@ -9714,7 +9685,7 @@ public class MeasurementDaoTest {
     }
 
     @Test
-    public void fetchFlexSourceIdsFor_doesNotMatchV1Sources() throws JSONException {
+    public void fetchFlexSourceIdsFor_doesNotMatchV1Sources() throws Exception {
         // Setup
         EventReport eventReport1 =
                 EventReportFixture.getBaseEventReportBuild()
@@ -10253,10 +10224,9 @@ public class MeasurementDaoTest {
 
     @Test
     public void testUpdateSourceAggregatableNamedBudgetAndContribution_updatesBudgets() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
-        when(mFlags.getMeasurementDbSizeLimit()).thenReturn(MEASUREMENT_DB_SIZE_LIMIT);
+        mocker.mockGetFlags(mMockFlags);
+        when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
+        when(mMockFlags.getMeasurementDbSizeLimit()).thenReturn(MEASUREMENT_DB_SIZE_LIMIT);
 
         AggregatableNamedBudgets aggregatableNamedBudgets = new AggregatableNamedBudgets();
         aggregatableNamedBudgets.createContributionBudget("budget1", 400);
@@ -10293,10 +10263,9 @@ public class MeasurementDaoTest {
     @Test
     public void
             testUpdateSourceAggregatableNamedBudgetAndContribution_budgetDoesNotExistCreatesRow() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        when(mFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
-        when(mFlags.getMeasurementDbSizeLimit()).thenReturn(MEASUREMENT_DB_SIZE_LIMIT);
+        mocker.mockGetFlags(mMockFlags);
+        when(mMockFlags.getMeasurementEnableAggregatableNamedBudgets()).thenReturn(true);
+        when(mMockFlags.getMeasurementDbSizeLimit()).thenReturn(MEASUREMENT_DB_SIZE_LIMIT);
 
         Source validSource = SourceFixture.getValidSource();
         mDatastoreManager.runInTransaction((dao) -> dao.insertSource(validSource));
@@ -11622,10 +11591,10 @@ public class MeasurementDaoTest {
     @Test
     public void
             testUpdateSourcesForAttributionScope_diffMaxViewStates_ignoresSourcesDeletesReports() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
-        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+        mLegacyFlags = mMockFlags;
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableAttributionScope();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mMockFlags).getMeasurementDbSizeLimit();
 
         Source source1 =
                 insertSourceForAttributionScope(
@@ -11800,10 +11769,10 @@ public class MeasurementDaoTest {
 
     @Test
     public void testUpdateSourcesForAttributionScope_smallerLimit_ignoresSourcesDeletesReports() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
-        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+        mLegacyFlags = mMockFlags;
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableAttributionScope();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mMockFlags).getMeasurementDbSizeLimit();
         Source source1 =
                 insertSourceForAttributionScope(
                         List.of("1"),
@@ -11992,10 +11961,10 @@ public class MeasurementDaoTest {
     @Test
     public void
             testUpdateSourcesForAttributionScope_scopedSource_ignoresNonScopedAndDeletesReports() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
-        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+        mLegacyFlags = mMockFlags;
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableAttributionScope();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mMockFlags).getMeasurementDbSizeLimit();
 
         Source source1 =
                 insertSourceForAttributionScope(
@@ -12091,10 +12060,10 @@ public class MeasurementDaoTest {
 
     @Test
     public void testUpdateSourcesForAttributionScope_newNonScopedSource_removesScopes() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
-        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+        mLegacyFlags = mMockFlags;
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableAttributionScope();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mMockFlags).getMeasurementDbSizeLimit();
         Consumer<? super Source> verifyAttributionScopeEmptyFn =
                 source -> {
                     assertThat(
@@ -12196,10 +12165,10 @@ public class MeasurementDaoTest {
 
     @Test
     public void testUpdateSourcesForAttributionScope_scopesNotSelected_ignoreSources() {
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableAttributionScope();
-        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+        mLegacyFlags = mMockFlags;
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableAttributionScope();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mMockFlags).getMeasurementDbSizeLimit();
         // Below are the sources registered with attribution scopes and destinations.
         // For each destination, two sources are registered, and only one's scopes are to be
         // deleted.
@@ -12445,7 +12414,7 @@ public class MeasurementDaoTest {
                         .runInTransactionWithResult(
                                 measurementDao ->
                                         measurementDao.getLatestReportTimeInBatchWindow(
-                                                mFlags
+                                                mLegacyFlags
                                                         .getMeasurementReportingJobServiceBatchWindowMillis()))
                         .orElseThrow();
 
@@ -12468,7 +12437,7 @@ public class MeasurementDaoTest {
                         .runInTransactionWithResult(
                                 measurementDao ->
                                         measurementDao.getLatestReportTimeInBatchWindow(
-                                                mFlags
+                                                mLegacyFlags
                                                         .getMeasurementReportingJobServiceBatchWindowMillis()))
                         .orElseThrow();
 
@@ -12509,7 +12478,7 @@ public class MeasurementDaoTest {
                         .runInTransactionWithResult(
                                 measurementDao ->
                                         measurementDao.getLatestReportTimeInBatchWindow(
-                                                mFlags
+                                                mLegacyFlags
                                                         .getMeasurementReportingJobServiceBatchWindowMillis()))
                         .orElseThrow();
 
@@ -12550,7 +12519,7 @@ public class MeasurementDaoTest {
                         .runInTransactionWithResult(
                                 measurementDao ->
                                         measurementDao.getLatestReportTimeInBatchWindow(
-                                                mFlags
+                                                mLegacyFlags
                                                         .getMeasurementReportingJobServiceBatchWindowMillis()))
                         .orElseThrow();
 
@@ -12584,7 +12553,7 @@ public class MeasurementDaoTest {
                         .runInTransactionWithResult(
                                 measurementDao ->
                                         measurementDao.getLatestReportTimeInBatchWindow(
-                                                mFlags
+                                                mLegacyFlags
                                                         .getMeasurementReportingJobServiceBatchWindowMillis()))
                         .orElseThrow();
 
@@ -12617,7 +12586,7 @@ public class MeasurementDaoTest {
                         .runInTransactionWithResult(
                                 measurementDao ->
                                         measurementDao.getLatestReportTimeInBatchWindow(
-                                                mFlags
+                                                mLegacyFlags
                                                         .getMeasurementReportingJobServiceBatchWindowMillis()))
                         .orElseThrow();
 
@@ -12657,7 +12626,7 @@ public class MeasurementDaoTest {
                         .runInTransactionWithResult(
                                 measurementDao ->
                                         measurementDao.getLatestReportTimeInBatchWindow(
-                                                mFlags
+                                                mLegacyFlags
                                                         .getMeasurementReportingJobServiceBatchWindowMillis()))
                         .orElseThrow();
 
@@ -12697,7 +12666,7 @@ public class MeasurementDaoTest {
                         .runInTransactionWithResult(
                                 measurementDao ->
                                         measurementDao.getLatestReportTimeInBatchWindow(
-                                                mFlags
+                                                mLegacyFlags
                                                         .getMeasurementReportingJobServiceBatchWindowMillis()))
                         .orElseThrow();
 
@@ -12746,7 +12715,7 @@ public class MeasurementDaoTest {
                         .runInTransactionWithResult(
                                 measurementDao ->
                                         measurementDao.getLatestReportTimeInBatchWindow(
-                                                mFlags
+                                                mLegacyFlags
                                                         .getMeasurementReportingJobServiceBatchWindowMillis()))
                         .orElseThrow();
 
@@ -12759,7 +12728,7 @@ public class MeasurementDaoTest {
                 mDatastoreManager.runInTransactionWithResult(
                         measurementDao ->
                                 measurementDao.getLatestReportTimeInBatchWindow(
-                                        mFlags
+                                        mLegacyFlags
                                                 .getMeasurementReportingJobServiceBatchWindowMillis()));
 
         assertTrue(results.isEmpty());
@@ -12768,10 +12737,9 @@ public class MeasurementDaoTest {
     @Test
     public void testInsertSource_withDestinationLimitPriorityEnabled_fetchesTheSetValue() {
         // Setup
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableSourceDestinationLimitPriority();
-        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableSourceDestinationLimitPriority();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mMockFlags).getMeasurementDbSizeLimit();
 
         // Execution
         Source validSource =
@@ -13176,10 +13144,9 @@ public class MeasurementDaoTest {
     @Test
     public void updateSourceAggregateDebugContributions_updateFromPreValue_success() {
         // Setup
-        mFlags = mock(Flags.class);
-        ExtendedMockito.doReturn(mFlags).when(FlagsFactory::getFlags);
-        doReturn(true).when(mFlags).getMeasurementEnableAggregateDebugReporting();
-        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mFlags).getMeasurementDbSizeLimit();
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableAggregateDebugReporting();
+        doReturn(MEASUREMENT_DB_SIZE_LIMIT).when(mMockFlags).getMeasurementDbSizeLimit();
         int initialContributions = 1024;
         Source source =
                 SourceFixture.getValidSourceBuilder()
@@ -13372,8 +13339,8 @@ public class MeasurementDaoTest {
                         eventTrigger.getTriggerData(),
                         eventTrigger,
                         new Pair<>(null, null),
-                        new EventReportWindowCalcDelegate(mFlags),
-                        new SourceNoiseHandler(mFlags),
+                        new EventReportWindowCalcDelegate(mLegacyFlags),
+                        new SourceNoiseHandler(mLegacyFlags),
                         source.getAttributionDestinations(trigger.getDestinationType()))
                 .setId(reportId)
                 .setSourceEventId(source.getEventId())
@@ -13550,7 +13517,8 @@ public class MeasurementDaoTest {
                 (dao) -> {
                     dao.insertSource(validSource);
                     Source insertedSource = dao.getSource(validSource.getId());
-                    boolean attributionScopeEnabled = mFlags.getMeasurementEnableAttributionScope();
+                    boolean attributionScopeEnabled =
+                            mLegacyFlags.getMeasurementEnableAttributionScope();
                     assertThat(insertedSource.getMaxEventStates())
                             .isEqualTo(attributionScopeEnabled ? maxEventStates : null);
                     assertThat(insertedSource.getAttributionScopeLimit())

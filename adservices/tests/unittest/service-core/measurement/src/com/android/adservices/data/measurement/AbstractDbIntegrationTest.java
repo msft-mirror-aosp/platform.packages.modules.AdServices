@@ -19,16 +19,15 @@ package com.android.adservices.data.measurement;
 import android.Manifest;
 import android.app.UiAutomation;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
 import android.provider.DeviceConfig;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.platform.app.InstrumentationRegistry;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.service.FlagsConstants;
 import com.android.adservices.service.measurement.Attribution;
@@ -67,24 +66,21 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
- * Abstract class for parameterized tests that
- * check the database state of measurement
- * tables against expected output after an action
- * is run.
+ * Abstract class for parameterized tests that check the database state of measurement tables
+ * against expected output after an action is run.
  *
- * Consider @RunWith(Parameterized.class)
+ * <p>Consider @RunWith(Parameterized.class)
  */
-public abstract class AbstractDbIntegrationTest {
+public abstract class AbstractDbIntegrationTest extends AdServicesUnitTestCase {
     @Rule
     public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
             new TestableDeviceConfig.TestableDeviceConfigRule();
 
     private static final String PH_FLAGS_OVERRIDE_KEY = "phflags_override";
 
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
-    public final DbState mInput;
-    public final DbState mOutput;
-    public Map<String, String> mFlagsMap;
+    protected final DbState mInput;
+    protected final DbState mOutput;
+    protected final Map<String, String> mFlagsMap;
 
     @Before
     public void before() {
@@ -754,6 +750,7 @@ public abstract class AbstractDbIntegrationTest {
         return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
     }
 
+    // TODO(b/384798806): refactor to use flags rule
     private void setupFlags() {
         UiAutomation uiAutomation = getUiAutomation();
         try {
