@@ -992,7 +992,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     public void testRunAdSelectionSuccessWithSellerDataVersionHeader() throws Exception {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
-        doReturn(mFakeFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         mAdBiddingOutcomeForBuyer1 =
                 AdBiddingOutcomeFixture.anAdBiddingOutcomeBuilder(BUYER_1, 1.0).build();
