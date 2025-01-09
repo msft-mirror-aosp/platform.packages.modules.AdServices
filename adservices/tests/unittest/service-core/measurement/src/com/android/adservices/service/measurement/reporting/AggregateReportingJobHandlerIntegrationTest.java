@@ -55,7 +55,7 @@ import java.util.Objects;
 
 /** Integration tests for {@link AggregateReportingJobHandler} */
 @RunWith(Parameterized.class)
-public class AggregateReportingJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
+public final class AggregateReportingJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
     private final JSONObject mParam;
     private final AdServicesLogger mLogger;
     private final AdServicesErrorLogger mErrorLogger;

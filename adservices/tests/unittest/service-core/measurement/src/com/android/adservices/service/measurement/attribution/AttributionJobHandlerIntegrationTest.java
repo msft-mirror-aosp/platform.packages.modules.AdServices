@@ -40,11 +40,9 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
 
-/**
- * Integration tests for {@link AttributionJobHandler}
- */
+/** Integration tests for {@link AttributionJobHandler} */
 @RunWith(Parameterized.class)
-public class AttributionJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
+public final class AttributionJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
 
     private final AdServicesLogger mLogger;
     private final AdServicesErrorLogger mErrorLogger;
