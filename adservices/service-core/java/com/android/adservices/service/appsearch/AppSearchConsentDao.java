@@ -208,6 +208,43 @@ class AppSearchConsentDao extends AppSearchDao {
         return dao.isConsented();
     }
 
+    /**
+     * Read the consent data from AppSearch.
+     *
+     * @param searchSession we use GlobalSearchSession here to allow AdServices to read.
+     * @param executor the Executor to use.
+     * @param userId the user ID for the query.
+     * @param apiType the API type for the query.
+     * @return whether the row is consented for this user ID and apiType.
+     */
+    static Boolean readConsentDataNullable(
+            @NonNull ListenableFuture<GlobalSearchSession> searchSession,
+            @NonNull Executor executor,
+            @NonNull String userId,
+            @NonNull String apiType,
+            @NonNull String adServicesPackageName) {
+        Objects.requireNonNull(searchSession);
+        Objects.requireNonNull(executor);
+        Objects.requireNonNull(userId);
+        Objects.requireNonNull(apiType);
+        Objects.requireNonNull(adServicesPackageName);
+
+        String query = getQuery(userId, apiType);
+        AppSearchConsentDao dao =
+                AppSearchDao.readConsentData(
+                        AppSearchConsentDao.class,
+                        searchSession,
+                        executor,
+                        NAMESPACE,
+                        query,
+                        adServicesPackageName);
+        LogUtil.d("AppSearch app consent data read: " + dao + " [ query: " + query + "]");
+        if (dao == null) {
+            return null;
+        }
+        return dao.isConsented();
+    }
+
     // Get the search query for AppSearch. Format specified at http://shortn/_RwVKmB74f3.
     // Note: AND as an operator is not supported by AppSearch on S or T.
     @VisibleForTesting

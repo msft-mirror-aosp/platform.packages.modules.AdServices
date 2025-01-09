@@ -264,11 +264,23 @@ public final class AdServicesManagerService extends IAdServicesManager.Stub {
     @Override
     @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
     public ConsentParcel getConsent(@ConsentParcel.ConsentApiType int consentApiType) {
-        return executeGetter(/* defaultReturn= */
-                ConsentParcel.createRevokedConsent(consentApiType),
-                (userId) -> mUserInstanceManager
-                        .getOrCreateUserConsentManagerInstance(userId)
-                        .getConsent(consentApiType));
+        return executeGetter(
+                /* defaultReturn= */ ConsentParcel.createRevokedConsent(consentApiType),
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserConsentManagerInstance(userId)
+                                .getConsent(consentApiType));
+    }
+
+    @Override
+    @RequiresPermission(AdServicesPermissions.ACCESS_ADSERVICES_MANAGER)
+    public ConsentParcel getConsentNullable(@ConsentParcel.ConsentApiType int consentApiType) {
+        return executeGetter(
+                /* defaultReturn= */ null,
+                (userId) ->
+                        mUserInstanceManager
+                                .getOrCreateUserConsentManagerInstance(userId)
+                                .getConsentNullable(consentApiType));
     }
 
     // Return the User Identifier from the CallingUid.
