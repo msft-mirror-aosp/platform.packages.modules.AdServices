@@ -37,6 +37,23 @@ import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.service.adselection.AdSelectionRunner.AD_SELECTION_ERROR_PATTERN;
 import static com.android.adservices.service.adselection.AdSelectionRunner.AD_SELECTION_TIMED_OUT;
 import static com.android.adservices.service.adselection.AdSelectionRunner.ERROR_AD_SELECTION_FAILURE;
@@ -156,7 +173,6 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.encryptionkey.EncryptionKeyDao;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.debug.DebugReportSenderStrategy;
 import com.android.adservices.service.adselection.debug.DebugReporting;
@@ -186,6 +202,9 @@ import com.android.adservices.service.stats.RunAdBiddingProcessReportedStats;
 import com.android.adservices.service.stats.RunAdSelectionProcessReportedStats;
 import com.android.adservices.service.stats.SignatureVerificationStats;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -220,11 +239,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 /**
@@ -235,6 +252,26 @@ import java.util.stream.Collectors;
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(DebugFlags.class)
 @MockStatic(com.android.adservices.shared.util.Clock.class)
+@SetFlagTrue(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS)
+@SetFlagFalse(KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH)
 public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMockitoTestCase {
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
@@ -292,7 +329,6 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
 
     @Mock private PerBuyerBiddingRunner mPerBuyerBiddingRunnerMock;
 
-    private Flags mFakeFlags = new OnDeviceAdSelectionRunnerTestFlags();
     private AdServicesHttpsClient mAdServicesHttpsClient;
     private ExecutorService mLightweightExecutorService;
     private ExecutorService mBackgroundExecutorService;
@@ -439,7 +475,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelectionSuccess() throws AdServicesException {
+    public void testRunAdSelectionSuccess() throws Exception {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         verifyAndSetupCommonSuccessScenario(adSelectionConfig);
         mAdSelectionRunner =
@@ -546,8 +582,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelectionSuccessWithUXNotificationEnforcementDisabled()
-            throws AdServicesException {
+    public void testRunAdSelectionSuccessWithUXNotificationEnforcementDisabled() throws Exception {
         mocker.mockGetConsentNotificationDebugMode(true);
 
         doReturn(mFakeFlags).when(FlagsFactory::getFlags);
@@ -669,8 +704,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelectionSuccessWithShouldUseUnifiedTablesFlag()
-            throws AdServicesException {
+    public void testRunAdSelectionSuccessWithShouldUseUnifiedTablesFlag() throws Exception {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         verifyAndSetupCommonSuccessScenario(adSelectionConfig);
 
@@ -811,7 +845,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelectionSuccessWithBuyerContextualSignals() throws AdServicesException {
+    public void testRunAdSelectionSuccessWithBuyerContextualSignals() throws Exception {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFakeFlags).when(FlagsFactory::getFlags);
@@ -955,7 +989,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelectionSuccessWithSellerDataVersionHeader() throws AdServicesException {
+    public void testRunAdSelectionSuccessWithSellerDataVersionHeader() throws Exception {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFakeFlags).when(FlagsFactory::getFlags);
@@ -1085,22 +1119,11 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelectionSuccessFilteringDisabled() throws AdServicesException {
+    @SetLongFlag(name = KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, value = 300)
+    public void testRunAdSelectionSuccessFilteringDisabled() throws Exception {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
-        Flags flagsWithFilteringDisabled =
-                new OnDeviceAdSelectionRunnerTestFlags() {
-                    @Override
-                    public long getAdSelectionOverallTimeoutMs() {
-                        return 300;
-                    }
-
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-                };
-        doReturn(flagsWithFilteringDisabled).when(FlagsFactory::getFlags);
+        doReturn(mFakeFlags).when(FlagsFactory::getFlags);
 
         DBCustomAudience dbCustomAudienceNoFilterBuyer1 = createDBCustomAudienceNoFilters(BUYER_1);
         DBCustomAudience dbCustomAudienceNoFilterBuyer2 = createDBCustomAudienceNoFilters(BUYER_2);
@@ -1111,14 +1134,14 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                 .runBidding(
                         BUYER_1,
                         Collections.singletonList(dbCustomAudienceNoFilterBuyer1),
-                        flagsWithFilteringDisabled.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
         doReturn(ImmutableList.of(Futures.immediateFuture(mAdBiddingOutcomeForBuyer2)))
                 .when(mPerBuyerBiddingRunnerMock)
                 .runBidding(
                         BUYER_2,
                         Collections.singletonList(dbCustomAudienceNoFilterBuyer2),
-                        flagsWithFilteringDisabled.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
 
         // Getting ScoringOutcome-ForBuyerX corresponding to each BiddingOutcome-forBuyerX
@@ -1143,7 +1166,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        flagsWithFilteringDisabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
@@ -1199,13 +1222,13 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                 .runBidding(
                         BUYER_1,
                         Collections.singletonList(dbCustomAudienceNoFilterBuyer1),
-                        flagsWithFilteringDisabled.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
         verify(mPerBuyerBiddingRunnerMock)
                 .runBidding(
                         BUYER_2,
                         Collections.singletonList(dbCustomAudienceNoFilterBuyer2),
-                        flagsWithFilteringDisabled.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
 
         verify(mMockAdsScoreGenerator).runAdScoring(mAdBiddingOutcomeList, adSelectionConfig);
@@ -1239,8 +1262,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelectionRetriesAdSelectionIdGenerationAfterCollision()
-            throws AdServicesException {
+    public void testRunAdSelectionRetriesAdSelectionIdGenerationAfterCollision() throws Exception {
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFakeFlags).when(FlagsFactory::getFlags);
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -1408,7 +1430,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelectionWithRevokedUserConsentSuccess() throws AdServicesException {
+    public void testRunAdSelectionWithRevokedUserConsentSuccess() throws Exception {
         doReturn(mFakeFlags).when(FlagsFactory::getFlags);
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilterMock)
@@ -1497,7 +1519,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelectionMissingBuyerSignals() throws AdServicesException {
+    public void testRunAdSelectionMissingBuyerSignals() throws Exception {
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFakeFlags).when(FlagsFactory::getFlags);
 
@@ -1759,21 +1781,9 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         eq(RUN_AD_SELECTION_OVERALL_LATENCY_MS));
     }
 
+    @SetFlagFalse(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION)
     @Test
     public void testRunAdSelectionCallerNotInForegroundFlagDisabled_doesNotFailValidation() {
-        Flags flags =
-                new OnDeviceAdSelectionRunnerTestFlags() {
-                    @Override
-                    public boolean getEnforceForegroundStatusForFledgeRunAdSelection() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-                };
-
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
@@ -1793,7 +1803,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        flags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
@@ -1826,7 +1836,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelectionWithValidSubdomainsSuccess() throws AdServicesException {
+    public void testRunAdSelectionWithValidSubdomainsSuccess() throws Exception {
         AdSelectionConfig adSelectionConfigWithValidSubdomains =
                 mAdSelectionConfigBuilder
                         .setDecisionLogicUri(
@@ -1946,7 +1956,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelectionPartialBidding() throws AdServicesException {
+    public void testRunAdSelectionPartialBidding() throws Exception {
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFakeFlags).when(FlagsFactory::getFlags);
 
@@ -2179,7 +2189,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelectionScoringFailure() throws AdServicesException {
+    public void testRunAdSelectionScoringFailure() throws Exception {
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFakeFlags).when(FlagsFactory::getFlags);
 
@@ -2279,7 +2289,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelectionNegativeScoring() throws AdServicesException {
+    public void testRunAdSelectionNegativeScoring() throws Exception {
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFakeFlags).when(FlagsFactory::getFlags);
 
@@ -2387,7 +2397,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelectionPartialNegativeScoring() throws AdServicesException {
+    public void testRunAdSelectionPartialNegativeScoring() throws Exception {
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFakeFlags).when(FlagsFactory::getFlags);
 
@@ -2525,7 +2535,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelectionScoringException() throws AdServicesException {
+    public void testRunAdSelectionScoringException() throws Exception {
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFakeFlags).when(FlagsFactory::getFlags);
 
@@ -2629,14 +2639,8 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH)
     public void testRunAdSelection_withOnDeviceAuctionDisabled_throwsIllegalStateException() {
-        Flags flagsWithOnDeviceAuctionDisabled =
-                new OnDeviceAdSelectionRunnerTestFlags() {
-                    @Override
-                    public boolean getFledgeOnDeviceAuctionKillSwitch() {
-                        return true;
-                    }
-                };
         mAdSelectionExecutionLogger =
                 new AdSelectionExecutionLogger(
                         sCallerMetadata,
@@ -2658,7 +2662,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        flagsWithOnDeviceAuctionDisabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
@@ -2683,22 +2687,10 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testmMockDBAdSeleciton() throws AdServicesException {
+    @SetLongFlag(name = KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, value = 1000)
+    public void testMockDBAdSelection() throws Exception {
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFakeFlags).when(FlagsFactory::getFlags);
-
-        Flags flagsWithSmallerLimits =
-                new OnDeviceAdSelectionRunnerTestFlags() {
-                    @Override
-                    public long getAdSelectionOverallTimeoutMs() {
-                        return 1000;
-                    }
-
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-                };
 
         // Creating ad selection config for happy case with all the buyers in place
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
@@ -2719,14 +2711,14 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                 .runBidding(
                         BUYER_1,
                         ImmutableList.of(mDBCustomAudienceForBuyer1),
-                        flagsWithSmallerLimits.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
         doReturn(ImmutableList.of(Futures.immediateFuture(mAdBiddingOutcomeForBuyer2)))
                 .when(mPerBuyerBiddingRunnerMock)
                 .runBidding(
                         BUYER_2,
                         ImmutableList.of(mDBCustomAudienceForBuyer2),
-                        flagsWithSmallerLimits.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
 
         // Getting ScoringOutcome-ForBuyerX corresponding to each BiddingOutcome-forBuyerX
@@ -2757,7 +2749,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        flagsWithSmallerLimits,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
@@ -2797,26 +2789,11 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelectionPerBuyerTimeout() throws AdServicesException {
-        Flags flagsWithSmallPerBuyerTimeout =
-                new OnDeviceAdSelectionRunnerTestFlags() {
-                    @Override
-                    public long getAdSelectionOverallTimeoutMs() {
-                        return 5000;
-                    }
-
-                    @Override
-                    public long getAdSelectionBiddingTimeoutPerBuyerMs() {
-                        return 100;
-                    }
-
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-                };
+    @SetLongFlag(name = KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, value = 5000)
+    @SetLongFlag(name = KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_BUYER_MS, value = 100)
+    public void testRunAdSelectionPerBuyerTimeout() throws Exception {
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
-        doReturn(flagsWithSmallPerBuyerTimeout).when(FlagsFactory::getFlags);
+        doReturn(mFakeFlags).when(FlagsFactory::getFlags);
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         // Populating the Custom Audience DB
@@ -2832,9 +2809,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
         Callable<AdBiddingOutcome> delayedBiddingOutcomeForBuyer1 =
                 () -> {
                     TimeUnit.MILLISECONDS.sleep(
-                            10
-                                    * flagsWithSmallPerBuyerTimeout
-                                            .getAdSelectionBiddingTimeoutPerBuyerMs());
+                            10 * mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs());
                     return mAdBiddingOutcomeForBuyer1;
                 };
 
@@ -2843,14 +2818,14 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                 .runBidding(
                         BUYER_1,
                         ImmutableList.of(mDBCustomAudienceForBuyer1),
-                        flagsWithSmallPerBuyerTimeout.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
         doReturn(ImmutableList.of(Futures.immediateFuture(mAdBiddingOutcomeForBuyer2)))
                 .when(mPerBuyerBiddingRunnerMock)
                 .runBidding(
                         BUYER_2,
                         ImmutableList.of(mDBCustomAudienceForBuyer2),
-                        flagsWithSmallPerBuyerTimeout.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
 
         // bidding Outcome List should only have one bidding outcome
@@ -2908,7 +2883,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        flagsWithSmallPerBuyerTimeout,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
@@ -2932,13 +2907,13 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                 .runBidding(
                         BUYER_1,
                         ImmutableList.of(mDBCustomAudienceForBuyer1),
-                        flagsWithSmallPerBuyerTimeout.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
         verify(mPerBuyerBiddingRunnerMock)
                 .runBidding(
                         BUYER_2,
                         ImmutableList.of(mDBCustomAudienceForBuyer2),
-                        flagsWithSmallPerBuyerTimeout.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
         verify(mMockAdsScoreGenerator).runAdScoring(adBiddingOutcomeList, adSelectionConfig);
 
@@ -2965,7 +2940,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelectionThrottledFailure() throws AdServicesException {
+    public void testRunAdSelectionThrottledFailure() throws Exception {
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         doReturn(mFakeFlags).when(FlagsFactory::getFlags);
         // Creating ad selection config for happy case with all the buyers in place
@@ -3039,29 +3014,11 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testFilterOneAd() throws AdServicesException {
-        final Flags flags =
-                new OnDeviceAdSelectionRunnerTestFlags() {
-                    @Override
-                    public boolean getFledgeAppInstallFilteringEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeFrequencyCapFilteringEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAppInstallFilteringMetricsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeFrequencyCapFilteringMetricsEnabled() {
-                        return true;
-                    }
-                };
+    @SetFlagTrue(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
+    @SetFlagTrue(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
+    @SetFlagTrue(KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED)
+    @SetFlagTrue(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED)
+    public void testFilterOneAd() throws Exception {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         verifyAndSetupAdFilteringSuccessScenario(adSelectionConfig);
         mAdSelectionRunner =
@@ -3078,7 +3035,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        flags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
@@ -3135,13 +3092,13 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                 .runBidding(
                         BUYER_1,
                         ImmutableList.of(caWithoutFilterAd),
-                        flags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
         verify(mPerBuyerBiddingRunnerMock)
                 .runBidding(
                         BUYER_2,
                         ImmutableList.of(mDBCustomAudienceForBuyer2),
-                        flags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
 
         verify(mMockFrequencyCapAdFilterer, times(1))
@@ -3159,29 +3116,11 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testFilterOneAd_appInstall() throws AdServicesException {
-        final Flags flags =
-                new OnDeviceAdSelectionRunnerTestFlags() {
-                    @Override
-                    public boolean getFledgeAppInstallFilteringEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeFrequencyCapFilteringEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAppInstallFilteringMetricsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeFrequencyCapFilteringMetricsEnabled() {
-                        return true;
-                    }
-                };
+    @SetFlagTrue(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
+    @SetFlagTrue(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
+    @SetFlagTrue(KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED)
+    @SetFlagTrue(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED)
+    public void testFilterOneAd_appInstall() throws Exception {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         verifyAndSetupAdFilteringSuccessScenario(adSelectionConfig);
         mAdSelectionRunner =
@@ -3198,7 +3137,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        flags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
@@ -3263,13 +3202,13 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                 .runBidding(
                         BUYER_1,
                         ImmutableList.of(caWithoutFilterAd),
-                        flags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
         verify(mPerBuyerBiddingRunnerMock)
                 .runBidding(
                         BUYER_2,
                         ImmutableList.of(mDBCustomAudienceForBuyer2),
-                        flags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
 
         verify(mMockAppInstallAdFilterer, times(1))
@@ -3287,29 +3226,11 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testFilterWholeCa() throws AdServicesException {
-        final Flags flags =
-                new OnDeviceAdSelectionRunnerTestFlags() {
-                    @Override
-                    public boolean getFledgeAppInstallFilteringEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeFrequencyCapFilteringEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAppInstallFilteringMetricsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeFrequencyCapFilteringMetricsEnabled() {
-                        return true;
-                    }
-                };
+    @SetFlagTrue(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
+    @SetFlagTrue(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
+    @SetFlagTrue(KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED)
+    @SetFlagTrue(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_METRICS_ENABLED)
+    public void testFilterWholeCa() throws Exception {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         verifyAndSetupAdFilteringSuccessScenario(adSelectionConfig);
         mAdSelectionRunner =
@@ -3326,7 +3247,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        flags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
@@ -3374,7 +3295,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                 .runBidding(
                         BUYER_2,
                         ImmutableList.of(mDBCustomAudienceForBuyer2),
-                        flags.getAdSelectionBiddingTimeoutPerBuyerMs(),
+                        mFakeFlags.getAdSelectionBiddingTimeoutPerBuyerMs(),
                         adSelectionConfig);
         verify(mPerBuyerBiddingRunnerMock, times(0))
                 .runBidding(eq(BUYER_1), any(), anyLong(), any());
@@ -3394,8 +3315,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testGetDecisionLogic_PreDownloaded()
-            throws ExecutionException, InterruptedException, TimeoutException, AdServicesException {
+    public void testGetDecisionLogic_PreDownloaded() throws Exception {
         mAdScoringOutcomeForBuyer1 =
                 AdScoringOutcomeFixture.anAdScoringBuilder(BUYER_1, 1.0)
                         .setBiddingLogicJsDownloaded(true)
@@ -3440,8 +3360,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testGetDecisionLogic_NotPreDownloaded()
-            throws ExecutionException, InterruptedException, TimeoutException, AdServicesException {
+    public void testGetDecisionLogic_NotPreDownloaded() throws Exception {
         mAdScoringOutcomeForBuyer1 =
                 AdScoringOutcomeFixture.anAdScoringBuilder(BUYER_1, 1.0)
                         .setBiddingLogicUri(DECISION_LOGIC_URI)
@@ -3506,36 +3425,15 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testContextualAdsEnabled_success() throws AdServicesException {
+    @SetLongFlag(name = KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, value = 300)
+    @SetFlagTrue(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
+    @SetFlagTrue(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED)
+    public void testContextualAdsEnabled_success() throws Exception {
         Map<AdTechIdentifier, SignedContextualAds> signedContextualAdsMap = createContextualAds();
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilderWithNoBuyers
                         .setPerBuyerSignedContextualAds(signedContextualAdsMap)
                         .build();
-
-        final Flags flags =
-                new OnDeviceAdSelectionRunnerTestFlags() {
-                    @Override
-                    public long getAdSelectionOverallTimeoutMs() {
-                        return 300;
-                    }
-
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAdSelectionContextualAdsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAdSelectionContextualAdsMetricsEnabled() {
-                        return true;
-                    }
-                };
-
         setAdSelectionExecutionLoggerMockWithContextualAdsAndNoCAs();
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
@@ -3551,7 +3449,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        flags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
@@ -3583,36 +3481,16 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @SetLongFlag(name = KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, value = 300)
+    @SetFlagTrue(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
+    @SetFlagFalse(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED)
     public void testContextualAds_successfulSignatureVerification_loggingDisabled()
-            throws AdServicesException {
+            throws Exception {
         Map<AdTechIdentifier, SignedContextualAds> signedContextualAdsMap = createContextualAds();
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilderWithNoBuyers
                         .setPerBuyerSignedContextualAds(signedContextualAdsMap)
                         .build();
-
-        final Flags flags =
-                new OnDeviceAdSelectionRunnerTestFlags() {
-                    @Override
-                    public long getAdSelectionOverallTimeoutMs() {
-                        return 300;
-                    }
-
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAdSelectionContextualAdsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAdSelectionContextualAdsMetricsEnabled() {
-                        return false;
-                    }
-                };
 
         setAdSelectionExecutionLoggerMockWithContextualAdsAndNoCAs();
         mAdSelectionRunner =
@@ -3629,7 +3507,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        flags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
@@ -3658,36 +3536,16 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @SetLongFlag(name = KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, value = 300)
+    @SetFlagTrue(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
+    @SetFlagTrue(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED)
     public void testContextualAds_successfulSignatureVerification_loggingEnabled()
-            throws AdServicesException {
+            throws Exception {
         Map<AdTechIdentifier, SignedContextualAds> signedContextualAdsMap = createContextualAds();
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilderWithNoBuyers
                         .setPerBuyerSignedContextualAds(signedContextualAdsMap)
                         .build();
-
-        final Flags flags =
-                new OnDeviceAdSelectionRunnerTestFlags() {
-                    @Override
-                    public long getAdSelectionOverallTimeoutMs() {
-                        return 300;
-                    }
-
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAdSelectionContextualAdsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAdSelectionContextualAdsMetricsEnabled() {
-                        return true;
-                    }
-                };
 
         setAdSelectionExecutionLoggerMockWithContextualAdsAndNoCAs();
         mAdSelectionRunner =
@@ -3704,7 +3562,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        flags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
@@ -3736,8 +3594,12 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @SetLongFlag(name = KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, value = 300)
+    @SetFlagTrue(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
+    @SetFlagFalse(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED)
+    @SetFlagTrue(KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED)
     public void testContextualAds_failedSignatureContextualAdsRemovec_loggingEnabled()
-            throws AdServicesException {
+            throws Exception {
         Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap = createContextualAds();
         SignedContextualAds contextualAdsWithInvalidSignature =
                 new SignedContextualAds.Builder(contextualAdsMap.get(BUYER_2))
@@ -3749,34 +3611,6 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                 mAdSelectionConfigBuilderWithNoBuyers
                         .setPerBuyerSignedContextualAds(contextualAdsMap)
                         .build();
-
-        final Flags flags =
-                new OnDeviceAdSelectionRunnerTestFlags() {
-                    @Override
-                    public long getAdSelectionOverallTimeoutMs() {
-                        return 300;
-                    }
-
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAdSelectionContextualAdsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAdSelectionContextualAdsMetricsEnabled() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean getFledgeAppInstallFilteringMetricsEnabled() {
-                        return true;
-                    }
-                };
 
         setAdSelectionExecutionLoggerMockWithAdFiltering();
         mAdSelectionRunner =
@@ -3793,7 +3627,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        flags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
@@ -3831,24 +3665,13 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @SetFlagFalse(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
     public void testContextualAdsDisabled_contextualAdsRemovedFromAuction() {
         when(mClockSpy.instant()).thenReturn(Clock.systemUTC().instant());
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilderWithNoBuyers
                         .setPerBuyerSignedContextualAds(createContextualAds())
                         .build();
-        final Flags flags =
-                new OnDeviceAdSelectionRunnerTestFlags() {
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAdSelectionContextualAdsEnabled() {
-                        return false;
-                    }
-                };
 
         setAdSelectionExecutionLoggerMockWithFailedAdSelectionByNoCAs();
         mAdSelectionRunner =
@@ -3865,7 +3688,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        flags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
@@ -3894,41 +3717,17 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testContextualAds_appInstallFilteringEnabled_success() throws AdServicesException {
+    @SetFlagTrue(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
+    @SetFlagTrue(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
+    @SetFlagFalse(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_METRICS_ENABLED)
+    @SetFlagTrue(KEY_FLEDGE_APP_INSTALL_FILTERING_METRICS_ENABLED)
+    public void testContextualAds_appInstallFilteringEnabled_success() throws Exception {
         Map<AdTechIdentifier, SignedContextualAds> contextualAdsMap = createContextualAds();
 
         AdSelectionConfig adSelectionConfig =
                 mAdSelectionConfigBuilderWithNoBuyers
                         .setPerBuyerSignedContextualAds(contextualAdsMap)
                         .build();
-
-        final Flags flags =
-                new OnDeviceAdSelectionRunnerTestFlags() {
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAppInstallFilteringEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAdSelectionContextualAdsEnabled() {
-                        return true;
-                    }
-
-                    @Override
-                    public boolean getFledgeAdSelectionContextualAdsMetricsEnabled() {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean getFledgeAppInstallFilteringMetricsEnabled() {
-                        return true;
-                    }
-                };
 
         setAdSelectionExecutionLoggerMockWithContextualAdsAndNoCAs();
         mAdSelectionRunner =
@@ -3945,7 +3744,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        flags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
@@ -4006,7 +3805,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testCopiedAdCounterKeysArePersisted() throws AdServicesException {
+    public void testCopiedAdCounterKeysArePersisted() throws Exception {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         verifyAndSetupCommonSuccessScenario(adSelectionConfig);
         mAdSelectionRunner =
@@ -4251,12 +4050,12 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelection_withKAnonSignJoinEnabled_success() throws AdServicesException {
+    public void testRunAdSelection_withKAnonSignJoinEnabled_success() throws Exception {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         doReturn(mKAnonSignJoinManagerMock)
                 .when(mKAnonSignJoinFactoryMock)
                 .getKAnonSignJoinManager();
-        Flags flagsWithKAnonEnabled = new FlagsWithKAnonEnabled();
+        setFlagsWithKAnonEnabled();
         verifyAndSetupCommonSuccessScenario(adSelectionConfig);
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
@@ -4272,7 +4071,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        flagsWithKAnonEnabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
@@ -4376,8 +4175,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     }
 
     @Test
-    public void testRunAdSelection_kAnonSignJoinCrashes_doesntAffectOtherPaths()
-            throws AdServicesException {
+    public void testRunAdSelection_kAnonSignJoinCrashes_doesntAffectOtherPaths() throws Exception {
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
         doReturn(mKAnonSignJoinManagerMock)
                 .when(mKAnonSignJoinFactoryMock)
@@ -4385,7 +4183,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
         doThrow(new RuntimeException())
                 .when(mKAnonSignJoinManagerMock)
                 .processNewMessages(anyList());
-        Flags flagsWithKAnonEnabled = new FlagsWithKAnonEnabled();
+        setFlagsWithKAnonEnabled();
         verifyAndSetupCommonSuccessScenario(adSelectionConfig);
         mAdSelectionRunner =
                 new OnDeviceAdSelectionRunner(
@@ -4401,7 +4199,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
                         mMockAdSelectionIdGenerator,
                         mClockSpy,
                         mAdServicesLoggerMock,
-                        flagsWithKAnonEnabled,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CALLER_UID,
                         mAdSelectionServiceFilterMock,
@@ -5035,53 +4833,8 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
         verify(mDebugReportSenderMock, times(0)).flush();
     }
 
-    private static class FlagsWithKAnonEnabled extends OnDeviceAdSelectionRunnerTestFlags {
-        @Override
-        public boolean getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled() {
-            return true;
-        }
-    }
-
-    private static class OnDeviceAdSelectionRunnerTestFlags implements Flags {
-        @Override
-        public boolean getDisableFledgeEnrollmentCheck() {
-            return true;
-        }
-
-        @Override
-        public long getAdSelectionBiddingTimeoutPerCaMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS;
-        }
-
-        @Override
-        public long getAdSelectionScoringTimeoutMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS;
-        }
-
-        @Override
-        public long getAdSelectionSelectingOutcomeTimeoutMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
-        }
-
-        @Override
-        public long getAdSelectionOverallTimeoutMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS;
-        }
-
-        @Override
-        public long getAdSelectionFromOutcomesOverallTimeoutMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
-        }
-
-        @Override
-        public long getReportImpressionOverallTimeoutMs() {
-            return EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS;
-        }
-
-        @Override
-        public boolean getFledgeOnDeviceAuctionKillSwitch() {
-            return false;
-        }
+    private void setFlagsWithKAnonEnabled() {
+        flags.setFlag(KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE, true);
     }
 
     private Map<AdTechIdentifier, SignedContextualAds> createContextualAds() {

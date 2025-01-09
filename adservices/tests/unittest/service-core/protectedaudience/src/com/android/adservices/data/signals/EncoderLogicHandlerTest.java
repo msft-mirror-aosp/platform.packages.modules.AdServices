@@ -45,7 +45,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -102,8 +101,6 @@ public final class EncoderLogicHandlerTest extends AdServicesExtendedMockitoTest
     private final ListeningExecutorService mExecutorService =
             MoreExecutors.newDirectExecutorService();
     private final ExecutorService mService = Executors.newFixedThreadPool(5);
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
 
     private EncoderLogicHandler mEncoderLogicHandler;
 

@@ -157,7 +157,6 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AppInstallAdvertisersSetterTest.SetAppInstallAdvertisersTestCallback;
 import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
@@ -349,8 +348,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
                     AdServicesExecutors.getBlockingExecutor(),
                     CacheProviderFactory.createNoOpCache());
 
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
     private CustomAudienceDao mCustomAudienceDao;
     private EncodedPayloadDao mEncodedPayloadDao;
     private AdSelectionEntryDao mAdSelectionEntryDao;
@@ -10318,7 +10315,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void
             testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOnWithUXNotificationEnforcementDisabled()
                     throws Exception {
-        boolean enrollmentCheck = false;
         mocker.mockGetConsentNotificationDebugMode(true);
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 

@@ -42,7 +42,6 @@ import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.annotations.SetPasAppAllowList;
 import com.android.adservices.data.enrollment.EnrollmentDao;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -58,9 +57,6 @@ import org.mockito.Spy;
 public final class ProtectedSignalsServiceFilterTest extends AdServicesMockitoTestCase {
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
-
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
 
     @Mock private FledgeConsentFilter mFledgeConsentFilterMock;
 

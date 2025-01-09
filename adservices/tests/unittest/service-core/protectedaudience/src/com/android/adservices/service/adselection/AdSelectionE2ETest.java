@@ -701,7 +701,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
-    private Flags mFakeFlags = flags.getFlags();
 
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a

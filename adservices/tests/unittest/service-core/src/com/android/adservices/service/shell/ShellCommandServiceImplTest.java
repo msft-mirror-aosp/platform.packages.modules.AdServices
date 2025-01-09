@@ -52,8 +52,6 @@ import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.EncoderLogicMetadataDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
-import com.android.adservices.service.FakeFlagsFactory;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.adselection.AuctionServerDataCompressor;
 import com.android.adservices.service.adselection.AuctionServerDataCompressorFactory;
@@ -117,7 +115,6 @@ public final class ShellCommandServiceImplTest extends AdServicesMockitoTestCase
     @Mock private DevSessionController mDevSessionController;
     @Mock private DevSessionDataStore mDevSessionDataStore;
 
-    private final Flags mFakeFlags = FakeFlagsFactory.getFlagsForTest();
     private ShellCommandServiceImpl mShellCommandService;
     private final SyncIShellCommandCallback mSyncIShellCommandCallback =
             new SyncIShellCommandCallback();
