@@ -20,8 +20,6 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
-import androidx.test.core.app.ApplicationProvider;
-
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
@@ -32,10 +30,10 @@ import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
 import org.json.JSONException;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 import java.io.IOException;
@@ -49,7 +47,7 @@ import javax.net.ssl.HttpsURLConnection;
 
 /** Integration tests for {@link AggregateEncryptionKeyManager} */
 @RunWith(Parameterized.class)
-public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbIntegrationTest {
+public final class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbIntegrationTest {
     private static final int NUM_KEYS_REQUESTED = 5;
     private static final String AGGREGATION_COORDINATOR_ORIGIN_1 =
             WebUtil.validUrl("https://not-going-to-be-visited.test");
@@ -58,14 +56,13 @@ public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbInte
 
     private static final String MEASUREMENT_AGGREGATION_COORDINATOR_ORIGIN_PATH = "test/path";
 
-    @Mock Clock mClock;
+    @Mock private Clock mClock;
 
     @Spy
-    AggregateEncryptionKeyFetcher mFetcher =
-            new AggregateEncryptionKeyFetcher(ApplicationProvider.getApplicationContext());
+    private AggregateEncryptionKeyFetcher mFetcher = new AggregateEncryptionKeyFetcher(mContext);
 
-    @Mock HttpsURLConnection mUrlConnection;
-    @Mock AdServicesErrorLogger mErrorLogger;
+    @Mock private HttpsURLConnection mUrlConnection;
+    @Mock private AdServicesErrorLogger mErrorLogger;
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {
@@ -82,7 +79,10 @@ public class AggregateEncryptionKeyManagerIntegrationTest extends AbstractDbInte
             Map<String, String> flagsMap,
             String name) throws IOException {
         super(input, output, flagsMap);
-        MockitoAnnotations.initMocks(this);
+    }
+
+    @Before
+    public void setInitialExpectations() throws Exception {
         when(mClock.millis()).thenReturn(AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         AggregateEncryptionKeyTestUtil.prepareMockAggregateEncryptionKeyFetcher(
                 mFetcher, mUrlConnection, AggregateEncryptionKeyTestUtil.getDefaultResponseBody());

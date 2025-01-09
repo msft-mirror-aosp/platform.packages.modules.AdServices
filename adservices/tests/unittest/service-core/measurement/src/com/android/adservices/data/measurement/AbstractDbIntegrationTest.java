@@ -16,20 +16,15 @@
 
 package com.android.adservices.data.measurement;
 
-import android.Manifest;
-import android.app.UiAutomation;
 import android.content.ContentValues;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.net.Uri;
-import android.provider.DeviceConfig;
 
-import androidx.test.platform.app.InstrumentationRegistry;
-
-import com.android.adservices.LoggerFactory;
-import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Attribution;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.KeyValueData;
@@ -40,7 +35,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.registration.AsyncRegistration;
 import com.android.adservices.service.measurement.reporting.DebugReport;
 import com.android.adservices.service.measurement.util.UnsignedLong;
-import com.android.modules.utils.testing.TestableDeviceConfig;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -48,7 +43,6 @@ import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -71,10 +65,8 @@ import java.util.stream.Collectors;
  *
  * <p>Consider @RunWith(Parameterized.class)
  */
-public abstract class AbstractDbIntegrationTest extends AdServicesUnitTestCase {
-    @Rule
-    public final TestableDeviceConfig.TestableDeviceConfigRule mDeviceConfigRule =
-            new TestableDeviceConfig.TestableDeviceConfigRule();
+@SpyStatic(FlagsFactory.class)
+public abstract class AbstractDbIntegrationTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String PH_FLAGS_OVERRIDE_KEY = "phflags_override";
 
@@ -102,15 +94,11 @@ public abstract class AbstractDbIntegrationTest extends AdServicesUnitTestCase {
         setCommonFlags();
     }
 
-    /**
-     * Runs the action we want to test.
-     */
-    public abstract void runActionToTest() throws DatastoreException;
+    /** Runs the action we want to test. */
+    protected abstract void runActionToTest() throws DatastoreException;
 
     @Test
-    public void runTest() throws DatastoreException {
-        // Flags must be set after TestableDeviceConfigRule so as to apply to the mock device
-        // config.
+    public void runTest() throws Exception {
         setupFlags();
         runActionToTest();
         SQLiteDatabase readerDb = DbTestUtil.getMeasurementDbHelperForTest().getReadableDatabase();
@@ -750,30 +738,8 @@ public abstract class AbstractDbIntegrationTest extends AdServicesUnitTestCase {
         return Optional.ofNullable(uri).map(Uri::toString).orElse(null);
     }
 
-    // TODO(b/384798806): refactor to use flags rule
     private void setupFlags() {
-        UiAutomation uiAutomation = getUiAutomation();
-        try {
-            uiAutomation.adoptShellPermissionIdentity(
-                    Manifest.permission.WRITE_ALLOWLISTED_DEVICE_CONFIG);
-            mFlagsMap
-                    .keySet()
-                    .forEach(
-                            key -> {
-                                    LoggerFactory.getMeasurementLogger().d(
-                                            "Setting PhFlag %s to %s", key, mFlagsMap.get(key));
-                                    DeviceConfig.setProperty(
-                                            DeviceConfig.NAMESPACE_ADSERVICES,
-                                            key,
-                                            mFlagsMap.get(key),
-                                            false);
-                            });
-        } finally {
-            uiAutomation.dropShellPermissionIdentity();
-        }
-    }
-
-    private static UiAutomation getUiAutomation() {
-        return InstrumentationRegistry.getInstrumentation().getUiAutomation();
+        mocker.mockGetFlags(mFakeFlags);
+        mFlagsMap.entrySet().forEach(entry -> flags.setFlag(entry.getKey(), entry.getValue()));
     }
 }
