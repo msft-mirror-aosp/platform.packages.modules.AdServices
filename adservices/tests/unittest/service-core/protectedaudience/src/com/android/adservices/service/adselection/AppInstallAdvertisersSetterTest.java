@@ -142,7 +142,6 @@ public class AppInstallAdvertisersSetterTest extends AdServicesExtendedMockitoTe
     }
 
     @Test
-    @SetFlagTrue(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
     public void testSetAppInstallAdvertisersSuccessWithUxNotificationEnforcementDisabled()
             throws Exception {
         mocker.mockGetConsentNotificationDebugMode(true);

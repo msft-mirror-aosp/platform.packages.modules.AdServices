@@ -478,7 +478,6 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
                 mRequestMatcherPrefixMatch);
     }
 
-
     @Test
     public void testService_ReportingAndRegisteringEnabled() throws Exception {
         enableMeasurementConsentAndARAPermission();
@@ -722,6 +721,7 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
         enableMeasurementConsentAndARAPermission();
         persistReportingArtifacts();
 
+        // Re-initialize service with fallback turned on.
         mAdSelectionService = getAdSelectionServiceImpl(mFakeFlags);
 
         // Mock server to report the event in addition to being registered by measurement.
@@ -824,7 +824,8 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
                     throws Exception {
         enableMeasurementConsentAndARAPermission();
         persistReportingArtifacts();
-        // Re-initialize service with the feature disabled altogether.
+
+        // Re-initialize service with no allow list.
         mAdSelectionService = getAdSelectionServiceImpl(mFakeFlags);
 
         // Mock server to report the event in addition to being registered by measurement.
@@ -878,7 +879,8 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
                                 PermissionHelper.hasAttributionPermission(
                                         any(Context.class), anyString()));
         persistReportingArtifacts();
-        // Re-initialize service with the feature disabled altogether.
+
+        // Re-initialize service with fallback turned on.
         mAdSelectionService = getAdSelectionServiceImpl(mFakeFlags);
 
         // Mock server to report the event in addition to being registered by measurement.
