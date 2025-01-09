@@ -154,7 +154,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
+import com.android.adservices.service.FakeFlagsFactory.SetFakeFlagsFactoryFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdCacheManager;
@@ -7318,7 +7318,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @SetDefaultFledgeFlags
+    @SetFakeFlagsFactoryFlags
     @SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION)
     @SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION)
     @SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE)

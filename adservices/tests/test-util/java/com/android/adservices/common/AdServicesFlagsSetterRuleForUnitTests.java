@@ -37,7 +37,7 @@ import android.os.Build;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
+import com.android.adservices.service.FakeFlagsFactory.SetFakeFlagsFactoryFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.adservices.shared.testing.NameValuePair;
@@ -94,7 +94,7 @@ public abstract class AdServicesFlagsSetterRuleForUnitTests<
      *
      * <p>In other words, the same flags from {@code FakeFlagsFactory.TestFlags}.
      */
-    public final R setDefaultFledgeFlags() {
+    public final R setFakeFlagsFactoryFlags() {
         mLog.i("setDefaultFledgeFlags()");
         setDefaultFledgeFlags((name, value) -> setNameValuePair(name, value));
         return getThis();
@@ -122,15 +122,15 @@ public abstract class AdServicesFlagsSetterRuleForUnitTests<
 
     @Override
     protected final boolean isAnnotationSupported(Annotation annotation) {
-        return (annotation instanceof SetDefaultFledgeFlags)
+        return (annotation instanceof SetFakeFlagsFactoryFlags)
                 || super.isAnnotationSupported(annotation);
     }
 
     @Override
     protected final void processAnnotation(Description description, Annotation annotation) {
         // NOTE: add annotations sorted by "most likely usage"
-        if (annotation instanceof SetDefaultFledgeFlags) {
-            setDefaultFledgeFlags();
+        if (annotation instanceof SetFakeFlagsFactoryFlags) {
+            setFakeFlagsFactoryFlags();
         } else {
             super.processAnnotation(description, annotation);
         }
