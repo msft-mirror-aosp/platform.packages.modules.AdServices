@@ -23,6 +23,7 @@ import static com.android.adservices.service.DebugFlags.CONSENT_NOTIFICATION_ACT
 import static com.android.adservices.service.DebugFlags.CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlags.CONSENT_NOTIFIED_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlags.DEFAULT_AD_SELECTION_CLI_ENABLED;
+import static com.android.adservices.service.DebugFlags.DEFAULT_ATTRIBUTION_REPORTING_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlags.DEFAULT_CONSENT_MANAGER_OTA_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlags.DEFAULT_DEVELOPER_SESSION_FEATURE_ENABLED;
 import static com.android.adservices.service.DebugFlags.DEFAULT_FLEDGE_AUCTION_SERVER_CONSENTED_DEBUGGING_ENABLED;
@@ -35,6 +36,7 @@ import static com.android.adservices.service.DebugFlags.DEFAULT_PROTECTED_APP_SI
 import static com.android.adservices.service.DebugFlags.DEFAULT_RECORD_TOPICS_COMPLETE_BROADCAST_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SELECTION_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SERVICES_JS_ISOLATE_CONSOLE_MESSAGES_IN_LOGS_ENABLED;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_ATTRIBUTION_REPORTING_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_MANAGER_OTA_DEBUG_MODE;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_ACTIVITY_DEBUG_MODE;
@@ -193,6 +195,14 @@ public final class DebugFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_FORCED_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED,
                 DEFAULT_FORCED_ENCODING_COMPLETE_BROADCAST_ENABLED,
                 DebugFlags::getForcedEncodingJobCompleteBroadcastEnabled);
+    }
+
+    @Test
+    public void testAttributionReportingCliEnabled() {
+        testDebugFlag(
+                KEY_ATTRIBUTION_REPORTING_CLI_ENABLED,
+                DEFAULT_ATTRIBUTION_REPORTING_CLI_ENABLED,
+                DebugFlags::getAttributionReportingCommandsEnabled);
     }
 
     @Test
