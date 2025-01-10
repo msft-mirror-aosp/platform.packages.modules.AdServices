@@ -101,6 +101,16 @@ public final class AdServicesFakeFlagsSetterRuleTest
                     expect.withMessage("clonedFlags.getAdIdCacheTtlMs() after updating source")
                             .that(snapshot.getAdIdCacheTtlMs())
                             .isEqualTo(4815162342L);
+
+                    // Make sure it's immutable
+                    assertThrows(
+                            UnsupportedOperationException.class,
+                            () ->
+                                    ((FakeFlags) snapshot)
+                                            .setFlag(FlagsConstants.KEY_AD_ID_CACHE_TTL_MS, "108"));
+                    expect.withMessage("clonedFlags.getAdIdCacheTtlMs() after trying to change it")
+                            .that(snapshot.getAdIdCacheTtlMs())
+                            .isEqualTo(4815162342L);
                 });
     }
 
