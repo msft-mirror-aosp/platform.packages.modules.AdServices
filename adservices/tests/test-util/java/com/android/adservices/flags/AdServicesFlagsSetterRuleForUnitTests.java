@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.common;
+package com.android.adservices.flags;
 
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_8;
@@ -37,8 +37,8 @@ import android.os.Build;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
+import com.android.adservices.common.AbstractAdServicesFlagsSetterRule;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.SetFakeFlagsFactoryFlags;
 import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.adservices.shared.testing.NameValuePair;
 

@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.common;
+package com.android.adservices.flags;
 
-import static com.android.adservices.common.MissingFlagBehavior.THROWS_EXCEPTION;
-import static com.android.adservices.common.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
-import static com.android.adservices.common.MissingFlagBehavior.USES_JAVA_LANGUAGE_DEFAULT;
+import static com.android.adservices.flags.MissingFlagBehavior.THROWS_EXCEPTION;
+import static com.android.adservices.flags.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
+import static com.android.adservices.flags.MissingFlagBehavior.USES_JAVA_LANGUAGE_DEFAULT;
 import static com.android.adservices.service.Flags.FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND;

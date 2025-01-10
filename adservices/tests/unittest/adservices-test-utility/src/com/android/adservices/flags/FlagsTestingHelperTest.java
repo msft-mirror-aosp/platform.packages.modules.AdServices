@@ -13,14 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.common;
+package com.android.adservices.flags;
 
-import static com.android.adservices.common.FlagsTestingHelper.asMap;
+import static com.android.adservices.flags.FlagsTestingHelper.asMap;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.when;
+
+import com.android.adservices.common.AdServicesMockitoTestCase;
 
 import org.junit.Test;
 

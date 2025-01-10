@@ -15,6 +15,8 @@
  */
 package com.android.adservices.service;
 
+import com.android.adservices.flags.FakeFlags;
+
 /** Provides a {@link Flags} singleton that overrides some common values that are used in tests. */
 public final class FakeFlagsFactory {
 
