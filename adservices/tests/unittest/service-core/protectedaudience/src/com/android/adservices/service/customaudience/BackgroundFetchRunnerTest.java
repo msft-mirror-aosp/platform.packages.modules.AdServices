@@ -87,9 +87,6 @@ import java.util.concurrent.TimeUnit;
 @SetFlagEnabled(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
 public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTestCase {
 
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
-
     private final String mFetchPath = "/fetch";
 
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;

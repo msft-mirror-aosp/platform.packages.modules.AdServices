@@ -15,7 +15,7 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
+import static com.android.adservices.service.FakeFlagsFactory.SetFakeFlagsFactoryFlags;
 
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassHasNoNothingAtAll;
@@ -42,32 +42,32 @@ abstract class AdServicesFlagsSetterRuleForUnitTestsTestCase<
     protected abstract R newRule();
 
     @Test
-    public final void testSetDefaultFledgeFlagsMethod() throws Throwable {
+    public final void testSetFakeFlagsFactoryFlagsMethod() throws Throwable {
         onTest(
                 (rule, flags) -> {
-                    R returnedRule = rule.setDefaultFledgeFlags();
-                    expect.withMessage("setFlagsForTests()")
+                    R returnedRule = rule.setFakeFlagsFactoryFlags();
+                    expect.withMessage("setFakeFlagsFactoryFlags()")
                             .that(returnedRule)
                             .isSameInstanceAs(rule);
-                    assertDefaultFledgeFlags(flags);
+                    assertFakeFlagsFactoryFlags(flags);
                 });
     }
 
     @Test
-    public final void testSetDefaultFledgeFlagsAnnotation() throws Throwable {
+    public final void testSetFakeFlagsFactoryFlagsAnnotation() throws Throwable {
         Description description =
                 Description.createTestDescription(
-                        AClassSetsAllDefaultFledgeTags.class, "butItHasATest");
-        onTest(description, (rule, flags) -> assertDefaultFledgeFlags(flags));
+                        AClassUsesSetFakeFlagsFactoryFlags.class, "butItHasATest");
+        onTest(description, (rule, flags) -> assertFakeFlagsFactoryFlags(flags));
     }
 
-    private void assertDefaultFledgeFlags(Flags flags) {
-        assertDefaultFledgeFlags(expect, flags);
+    private void assertFakeFlagsFactoryFlags(Flags flags) {
+        assertFakeFlagsFactoryFlags(expect, flags);
     }
 
     // TODO(b/384798806): merge with instance method once FakeFlagsFactoryTest is gone or doesn't
     // use it anymore
-    public static void assertDefaultFledgeFlags(StandardSubjectBuilder expect, Flags flags) {
+    public static void assertFakeFlagsFactoryFlags(StandardSubjectBuilder expect, Flags flags) {
         // TODO(b/384798806): pass R as well and assert size of changed flags is 16
         expect.withMessage("getAdSelectionBiddingTimeoutPerCaMs()")
                 .that(flags.getAdSelectionBiddingTimeoutPerCaMs())
@@ -175,6 +175,6 @@ abstract class AdServicesFlagsSetterRuleForUnitTestsTestCase<
 
     }
 
-    @SetDefaultFledgeFlags
-    private static final class AClassSetsAllDefaultFledgeTags {}
+    @SetFakeFlagsFactoryFlags
+    private static final class AClassUsesSetFakeFlagsFactoryFlags {}
 }

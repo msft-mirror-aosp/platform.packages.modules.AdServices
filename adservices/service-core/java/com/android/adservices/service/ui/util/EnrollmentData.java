@@ -31,13 +31,11 @@ import com.android.adservices.LogUtil;
 
 import com.google.common.base.Strings;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.Serializable;
-import java.util.Base64;
 
 /**
  * Container object that has enrollment data. Should not be used as storage. This is only a helper
@@ -45,8 +43,12 @@ import java.util.Base64;
  */
 public class EnrollmentData implements Serializable {
     // IMPORTANT: New data must be serialized/deserialized correctly to be stored
-    private SparseIntArray mModuleStates = new SparseIntArray();
-    private SparseIntArray mUserChoices = new SparseIntArray();
+    private final SparseIntArray mModuleStates = new SparseIntArray();
+    private final SparseIntArray mUserChoices = new SparseIntArray();
+
+    private static final String MODULE_STATE_JSON_KEY = "mModuleStates";
+
+    private static final String USER_CHOICE_JSON_KEY = "mUserChoices";
 
     /**
      * Serializes module enrollment state data to string.
@@ -55,15 +57,21 @@ public class EnrollmentData implements Serializable {
      * @return Serialized string.
      */
     public static String serialize(EnrollmentData data) {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-            oos.writeObject(getPairs(data.getModuleStates()));
-            oos.writeObject(getPairs(data.getUserChoices()));
-            return Base64.getEncoder().encodeToString(bos.toByteArray());
-        } catch (IOException e) {
+        JSONObject jsonObject = new JSONObject();
+        String enrollmentDataStr = "";
+        try {
+            // Serialize mModuleStates
+            JSONArray moduleStatesArray = getJsonArrFromSparseArr(data.mModuleStates);
+            jsonObject.put(MODULE_STATE_JSON_KEY, moduleStatesArray);
+
+            // Serialize mUserChoices
+            JSONArray userChoicesArray = getJsonArrFromSparseArr(data.mUserChoices);
+            jsonObject.put(USER_CHOICE_JSON_KEY, userChoicesArray);
+            enrollmentDataStr = jsonObject.toString();
+        } catch (JSONException e) {
             LogUtil.e("Enrollment Data serializing error:" + e);
-            return "";
         }
+        return enrollmentDataStr;
     }
 
     /**
@@ -72,21 +80,25 @@ public class EnrollmentData implements Serializable {
      * @param string String to deserialize.
      * @return Object with enrollment data.
      */
-    public static EnrollmentData deserialize(String byteString) {
-        EnrollmentData data = new EnrollmentData();
-        if (Strings.isNullOrEmpty(byteString)) {
-            return data;
+    public static EnrollmentData deserialize(String jsonStr) {
+        EnrollmentData enrollmentData = new EnrollmentData();
+        if (Strings.isNullOrEmpty(jsonStr)) {
+            return enrollmentData;
         }
-        try (ByteArrayInputStream bis =
-                        new ByteArrayInputStream(Base64.getDecoder().decode(byteString));
-                ObjectInputStream ois = new ObjectInputStream(bis)) {
-            data.mModuleStates = sparseIntArrayFromPairs((int[][]) ois.readObject());
-            data.mUserChoices = sparseIntArrayFromPairs((int[][]) ois.readObject());
-            return data;
-        } catch (IOException | ClassNotFoundException e) {
+        JSONObject jsonObject;
+        try {
+            jsonObject = new JSONObject(jsonStr);
+            // Deserialize mModuleStates
+            JSONArray moduleStatesArray = jsonObject.getJSONArray(MODULE_STATE_JSON_KEY);
+            populateSparseArrFromJsonArr(moduleStatesArray, enrollmentData.mModuleStates);
+
+            // Deserialize mUserChoices
+            JSONArray userChoicesArray = jsonObject.getJSONArray(USER_CHOICE_JSON_KEY);
+            populateSparseArrFromJsonArr(userChoicesArray, enrollmentData.mUserChoices);
+        } catch (JSONException e) {
             LogUtil.e("Enrollment Data deserializing error:" + e);
         }
-        return new EnrollmentData();
+        return enrollmentData;
     }
 
     /**
@@ -162,19 +174,25 @@ public class EnrollmentData implements Serializable {
         mUserChoices.put(moduleCode, userChoiceCode);
     }
 
-    private static int[][] getPairs(SparseIntArray array) {
-        int[][] pairs = new int[array.size()][];
-        for (int i = 0; i < array.size(); i++) {
-            pairs[i] = new int[] {array.keyAt(i), array.valueAt(i)};
+    private static JSONArray getJsonArrFromSparseArr(SparseIntArray inputArr) throws JSONException {
+        JSONArray jsonArr = new JSONArray();
+        for (int i = 0; i < inputArr.size(); i++) {
+            JSONObject jsonObj = new JSONObject();
+            jsonObj.put(String.valueOf(inputArr.keyAt(i)), String.valueOf(inputArr.valueAt(i)));
+
+            jsonArr.put(jsonObj);
         }
-        return pairs;
+        return jsonArr;
     }
 
-    private static SparseIntArray sparseIntArrayFromPairs(int[][] pairs) {
-        SparseIntArray array = new SparseIntArray(pairs.length);
-        for (int[] pair : pairs) {
-            array.append(pair[0], pair[1]);
+    private static void populateSparseArrFromJsonArr(JSONArray jsonArr, SparseIntArray outputArr)
+            throws JSONException {
+        for (int i = 0; i < jsonArr.length(); i++) {
+            JSONObject jsonObj = jsonArr.getJSONObject(i);
+            for (int j = 0; j < jsonObj.names().length(); j++) {
+                String key = jsonObj.names().getString(j);
+                outputArr.put(Integer.parseInt(key), Integer.parseInt(jsonObj.getString(key)));
+            }
         }
-        return array;
     }
 }

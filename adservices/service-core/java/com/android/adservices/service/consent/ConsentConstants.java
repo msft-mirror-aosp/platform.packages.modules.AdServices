@@ -106,4 +106,11 @@ public class ConsentConstants {
     public static final String IS_PA_DATA_RESET = "IS_PA_DATA_RESET";
 
     public static final String MODULE_ENROLLMENT_STATE = "MODULE_ENROLLMENT_STATE";
+
+    public enum EndUserUx {
+        UNKNOWN,
+        GA,
+        U18,
+        GA_WITH_PAS
+    }
 }

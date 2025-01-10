@@ -29,11 +29,8 @@ import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
-import androidx.test.filters.SmallTest;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregateDebugReportData;
@@ -41,7 +38,7 @@ import com.android.adservices.service.measurement.aggregation.AggregateDebugRepo
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementRegistrationResponseStats;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -49,12 +46,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.quality.Strictness;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -69,9 +62,9 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /** Unit tests for {@link FetcherUtil} */
-@SmallTest
-@RunWith(MockitoJUnitRunner.class)
-public final class FetcherUtilTest {
+@SpyStatic(FlagsFactory.class)
+public final class FetcherUtilTest extends AdServicesExtendedMockitoTestCase {
+
     private static final String LONG_FILTER_STRING = "12345678901234567890123456";
     private static final Uri REGISTRATION_URI = WebUtil.validUri("https://foo.test");
     private static final Uri REGISTRANT_URI = WebUtil.validUri("https://bar.test");
@@ -83,21 +76,21 @@ public final class FetcherUtilTest {
     public static final int UNKNOWN_REGISTRATION_FAILURE_TYPE = 0;
     private static final String ENROLLMENT_ID = "enrollment_id";
 
-    @Mock Flags mFlags;
-    @Mock AdServicesLogger mLogger;
+    @Mock private AdServicesLogger mLogger;
 
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(FlagsFactory.class)
-                    .setStrictness(Strictness.WARN)
-                    .build();
+    // felipeal: Remove
+    //    @Rule
+    //    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
+    //            new AdServicesExtendedMockitoRule.Builder(this)
+    //                    .spyStatic(FlagsFactory.class)
+    //                    .setStrictness(Strictness.WARN)
+    //                    .build();
 
     @Before
     public void setup() {
-        ExtendedMockito.doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(true);
-        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
+        mocker.mockGetFlagsForTesting();
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
     }
 
     @Test
@@ -541,32 +534,32 @@ public final class FetcherUtilTest {
 
     @Test
     public void testIsValidAggregateKeyPiece_valid() {
-        assertTrue(FetcherUtil.isValidAggregateKeyPiece("0x15A", mFlags));
+        assertTrue(FetcherUtil.isValidAggregateKeyPiece("0x15A", mMockFlags));
     }
 
     @Test
     public void testIsValidAggregateKeyPiece_validWithUpperCasePrefix() {
-        assertTrue(FetcherUtil.isValidAggregateKeyPiece("0X15A", mFlags));
+        assertTrue(FetcherUtil.isValidAggregateKeyPiece("0X15A", mMockFlags));
     }
 
     @Test
     public void testIsValidAggregateKeyPiece_null() {
-        assertFalse(FetcherUtil.isValidAggregateKeyPiece(null, mFlags));
+        assertFalse(FetcherUtil.isValidAggregateKeyPiece(null, mMockFlags));
     }
 
     @Test
     public void testIsValidAggregateKeyPiece_emptyString() {
-        assertFalse(FetcherUtil.isValidAggregateKeyPiece("", mFlags));
+        assertFalse(FetcherUtil.isValidAggregateKeyPiece("", mMockFlags));
     }
 
     @Test
     public void testIsValidAggregateKeyPiece_missingPrefix() {
-        assertFalse(FetcherUtil.isValidAggregateKeyPiece("1234", mFlags));
+        assertFalse(FetcherUtil.isValidAggregateKeyPiece("1234", mMockFlags));
     }
 
     @Test
     public void testIsValidAggregateKeyPiece_tooShort() {
-        assertFalse(FetcherUtil.isValidAggregateKeyPiece("0x", mFlags));
+        assertFalse(FetcherUtil.isValidAggregateKeyPiece("0x", mMockFlags));
     }
 
     @Test
@@ -575,7 +568,7 @@ public final class FetcherUtilTest {
         for (int i = 0; i < 33; i++) {
             keyPiece.append("1");
         }
-        assertFalse(FetcherUtil.isValidAggregateKeyPiece(keyPiece.toString(), mFlags));
+        assertFalse(FetcherUtil.isValidAggregateKeyPiece(keyPiece.toString(), mMockFlags));
     }
 
     @Test
@@ -588,7 +581,7 @@ public final class FetcherUtilTest {
         assertTrue(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -604,7 +597,7 @@ public final class FetcherUtilTest {
         assertTrue(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ false));
     }
@@ -619,7 +612,7 @@ public final class FetcherUtilTest {
         assertTrue(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -634,11 +627,11 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": 123"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertTrue(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ true,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -653,11 +646,11 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": 123"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertTrue(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ true,
                         /* shouldCheckFilterSize= */ false));
     }
@@ -672,12 +665,12 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": 12.0"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertWithMessage("lookbackWindowZeroDecimalRetTrue")
                 .that(
                         FetcherUtil.areValidAttributionFilters(
                                 filters,
-                                mFlags,
+                                mMockFlags,
                                 /* canIncludeLookbackWindow= */ true,
                                 /* shouldCheckFilterSize= */ true))
                 .isTrue();
@@ -694,12 +687,12 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": 12.0"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertWithMessage("lookbackWindowZeroDecimalRetTrue_noConstraints")
                 .that(
                         FetcherUtil.areValidAttributionFilters(
                                 filters,
-                                mFlags,
+                                mMockFlags,
                                 /* canIncludeLookbackWindow= */ true,
                                 /* shouldCheckFilterSize= */ false))
                 .isTrue();
@@ -715,12 +708,12 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": -12.0"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertWithMessage("negativeLookbackWindow_withDecimalRetFalse")
                 .that(
                         FetcherUtil.areValidAttributionFilters(
                                 filters,
-                                mFlags,
+                                mMockFlags,
                                 /* canIncludeLookbackWindow= */ true,
                                 /* shouldCheckFilterSize= */ true))
                 .isFalse();
@@ -736,12 +729,12 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": 12.3"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertWithMessage("lookbackWindowNonZeroDecimalRetFalse")
                 .that(
                         FetcherUtil.areValidAttributionFilters(
                                 filters,
-                                mFlags,
+                                mMockFlags,
                                 /* canIncludeLookbackWindow= */ true,
                                 /* shouldCheckFilterSize= */ true))
                 .isFalse();
@@ -757,12 +750,12 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": -12.3"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertWithMessage("negativeLookbackWindowNonZeroDecimalRetFalse")
                 .that(
                         FetcherUtil.areValidAttributionFilters(
                                 filters,
-                                mFlags,
+                                mMockFlags,
                                 /* canIncludeLookbackWindow= */ true,
                                 /* shouldCheckFilterSize= */ true))
                 .isFalse();
@@ -778,12 +771,12 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": 1.23e2"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertWithMessage("lookbackWindowScientificNotationRetTrue")
                 .that(
                         FetcherUtil.areValidAttributionFilters(
                                 filters,
-                                mFlags,
+                                mMockFlags,
                                 /* canIncludeLookbackWindow= */ true,
                                 /* shouldCheckFilterSize= */ true))
                 .isTrue();
@@ -800,12 +793,12 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": 1.23e2"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertWithMessage("lookbackWindowScientificNotationRetTrue_noConstraints")
                 .that(
                         FetcherUtil.areValidAttributionFilters(
                                 filters,
-                                mFlags,
+                                mMockFlags,
                                 /* canIncludeLookbackWindow= */ true,
                                 /* shouldCheckFilterSize= */ false))
                 .isTrue();
@@ -821,12 +814,12 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": 1.234e2"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertWithMessage("lookbackWindowScientificNotation_nonZeroDecimalRetFalse")
                 .that(
                         FetcherUtil.areValidAttributionFilters(
                                 filters,
-                                mFlags,
+                                mMockFlags,
                                 /* canIncludeLookbackWindow= */ true,
                                 /* shouldCheckFilterSize= */ true))
                 .isFalse();
@@ -842,12 +835,12 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": -1.23e2"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertWithMessage("lookbackWindowNegativeScientificNotationRetFalse")
                 .that(
                         FetcherUtil.areValidAttributionFilters(
                                 filters,
-                                mFlags,
+                                mMockFlags,
                                 /* canIncludeLookbackWindow= */ true,
                                 /* shouldCheckFilterSize= */ true))
                 .isFalse();
@@ -862,12 +855,12 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": \"123\""
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertWithMessage("stringLookbackWindowRetFalse")
                 .that(
                         FetcherUtil.areValidAttributionFilters(
                                 filters,
-                                mFlags,
+                                mMockFlags,
                                 /* canIncludeLookbackWindow= */ true,
                                 /* shouldCheckFilterSize= */ true))
                 .isFalse();
@@ -883,12 +876,12 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": \"123\""
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertWithMessage("StringLookbackWindowNoConstraintsRetFalse")
                 .that(
                         FetcherUtil.areValidAttributionFilters(
                                 filters,
-                                mFlags,
+                                mMockFlags,
                                 /* canIncludeLookbackWindow= */ true,
                                 /* shouldCheckFilterSize= */ false))
                 .isFalse();
@@ -904,12 +897,12 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": 9223372036854775808"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertWithMessage("lookbackWindowGreaterThanLongMAXVAL_retTrue")
                 .that(
                         FetcherUtil.areValidAttributionFilters(
                                 filters,
-                                mFlags,
+                                mMockFlags,
                                 /* canIncludeLookbackWindow= */ true,
                                 /* shouldCheckFilterSize= */ true))
                 .isTrue();
@@ -925,12 +918,12 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": 9223372036854775808"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertWithMessage("lookbackWindowGreaterThanLongMAXVAL_noConstraintsRetTrue")
                 .that(
                         FetcherUtil.areValidAttributionFilters(
                                 filters,
-                                mFlags,
+                                mMockFlags,
                                 /* canIncludeLookbackWindow= */ true,
                                 /* shouldCheckFilterSize= */ false))
                 .isTrue();
@@ -946,11 +939,11 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": abcd"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ true,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -966,11 +959,11 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": abcd"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ true,
                         /* shouldCheckFilterSize= */ false));
     }
@@ -985,11 +978,11 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": 123"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(false);
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -1005,11 +998,11 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": 123"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(false);
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ false));
     }
@@ -1023,11 +1016,11 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": 0"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ true,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -1042,11 +1035,11 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": 0"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ true,
                         /* shouldCheckFilterSize= */ false));
     }
@@ -1061,11 +1054,11 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": -123"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ true,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -1081,11 +1074,11 @@ public final class FetcherUtilTest {
                         + "\"_lookback_window\": -123"
                         + "}]";
         JSONArray filters = new JSONArray(json);
-        when(mFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
+        when(mMockFlags.getMeasurementEnableLookbackWindowFilter()).thenReturn(true);
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ true,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -1096,7 +1089,7 @@ public final class FetcherUtilTest {
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         nullFilterMap,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -1108,7 +1101,7 @@ public final class FetcherUtilTest {
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         nullFilterMap,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ false));
     }
@@ -1125,7 +1118,7 @@ public final class FetcherUtilTest {
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -1143,7 +1136,7 @@ public final class FetcherUtilTest {
         assertTrue(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ false));
     }
@@ -1160,7 +1153,7 @@ public final class FetcherUtilTest {
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -1178,7 +1171,7 @@ public final class FetcherUtilTest {
         assertTrue(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ false));
     }
@@ -1193,7 +1186,7 @@ public final class FetcherUtilTest {
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -1212,7 +1205,7 @@ public final class FetcherUtilTest {
         assertTrue(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ false));
     }
@@ -1227,7 +1220,7 @@ public final class FetcherUtilTest {
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -1246,7 +1239,7 @@ public final class FetcherUtilTest {
         assertTrue(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ false));
     }
@@ -1269,7 +1262,7 @@ public final class FetcherUtilTest {
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -1292,7 +1285,7 @@ public final class FetcherUtilTest {
         assertTrue(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ false));
     }
@@ -1311,7 +1304,7 @@ public final class FetcherUtilTest {
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -1333,7 +1326,7 @@ public final class FetcherUtilTest {
         assertTrue(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ false));
     }
@@ -1352,7 +1345,7 @@ public final class FetcherUtilTest {
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -1374,7 +1367,7 @@ public final class FetcherUtilTest {
         assertTrue(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ false));
     }
@@ -1389,7 +1382,7 @@ public final class FetcherUtilTest {
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -1408,7 +1401,7 @@ public final class FetcherUtilTest {
         assertTrue(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ false));
     }
@@ -1423,7 +1416,7 @@ public final class FetcherUtilTest {
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -1442,7 +1435,7 @@ public final class FetcherUtilTest {
         assertTrue(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ false));
     }
@@ -1458,7 +1451,7 @@ public final class FetcherUtilTest {
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -1474,7 +1467,7 @@ public final class FetcherUtilTest {
         assertFalse(
                 FetcherUtil.areValidAttributionFilters(
                         filters,
-                        mFlags,
+                        mMockFlags,
                         /* canIncludeLookbackWindow= */ false,
                         /* shouldCheckFilterSize= */ true));
     }
@@ -1662,57 +1655,57 @@ public final class FetcherUtilTest {
     public void isHeaderErrorDebugReportEnabled_nullValue_returnsFalse() {
         assertFalse(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        /* attributionInfoHeader= */ null, mFlags));
+                        /* attributionInfoHeader= */ null, mMockFlags));
     }
 
     @Test
     public void isHeaderErrorDebugReportEnabled_noMatchingKey_returnsFalse() {
         assertFalse(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        List.of("preferred-platform=web"), mFlags));
+                        List.of("preferred-platform=web"), mMockFlags));
     }
 
     @Test
     public void isHeaderErrorDebugReportEnabled_matchingKeyWrongFormat_returnsFalse() {
         assertFalse(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        List.of("report-header-errors=os"), mFlags));
+                        List.of("report-header-errors=os"), mMockFlags));
     }
 
     @Test
     public void isHeaderErrorDebugReportEnabled_matchingKeyEnabled_returnsTrue() {
         assertTrue(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        List.of("report-header-errors"), mFlags));
+                        List.of("report-header-errors"), mMockFlags));
         assertTrue(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        List.of("report-header-errors=?1"), mFlags));
+                        List.of("report-header-errors=?1"), mMockFlags));
         assertTrue(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        List.of("preferred-platform=web, report-header-errors;"), mFlags));
+                        List.of("preferred-platform=web, report-header-errors;"), mMockFlags));
     }
 
     @Test
     public void isHeaderErrorDebugReportEnabled_debugReportDisabled_returnsFalse() {
-        when(mFlags.getMeasurementEnableDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(false);
         assertFalse(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        List.of("report-header-errors"), mFlags));
+                        List.of("report-header-errors"), mMockFlags));
     }
 
     @Test
     public void isHeaderErrorDebugReportEnabled_headerErrorReportDisabled_returnsFalse() {
-        when(mFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(false);
         assertFalse(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        List.of("report-header-errors"), mFlags));
+                        List.of("report-header-errors"), mMockFlags));
     }
 
     @Test
     public void isHeaderErrorDebugReportEnabled_matchingKeyDisabled_returnsFalse() {
         assertFalse(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        List.of("preferred-platform=web, report-header-errors=?0;"), mFlags));
+                        List.of("preferred-platform=web, report-header-errors=?0;"), mMockFlags));
     }
 
     @Test
@@ -1722,41 +1715,45 @@ public final class FetcherUtilTest {
                         List.of(
                                 "preferred-platform=web,"
                                         + " report-header-errors=?0;report-header-errors"),
-                        mFlags));
+                        mMockFlags));
         assertFalse(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
                         List.of(
                                 "report-header-errors;report-header-errors=?0,"
                                         + " preferred-platform=os;"),
-                        mFlags));
+                        mMockFlags));
     }
 
     @Test
     public void isHeaderErrorDebugReportEnabled_multipleHeaders_returnsLast() {
         assertTrue(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        Arrays.asList("report-header-errors=?0", "report-header-errors"), mFlags));
+                        Arrays.asList("report-header-errors=?0", "report-header-errors"),
+                        mMockFlags));
         assertFalse(
                 FetcherUtil.isHeaderErrorDebugReportEnabled(
-                        Arrays.asList("report-header-errors", "report-header-errors=?0"), mFlags));
+                        Arrays.asList("report-header-errors", "report-header-errors=?0"),
+                        mMockFlags));
     }
 
     @Test
     public void getValidAggregateDebugReportingString_emptyObject_fails() throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
         JSONObject obj = new JSONObject();
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingWithoutBudget_missingBudget_succeeds()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "0x3");
         String aggregateDebugReportingString =
-                FetcherUtil.getValidAggregateDebugReportingWithoutBudget(obj, mFlags).get();
+                FetcherUtil.getValidAggregateDebugReportingWithoutBudget(obj, mMockFlags).get();
         AggregateDebugReporting aggregateDebugReporting =
                 new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
                         .build();
@@ -1766,65 +1763,75 @@ public final class FetcherUtilTest {
     @Test
     public void getValidAggregateDebugReportingWithBudget_missingBudget_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "0x3");
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_nonNumericBudget_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "0x3");
         obj.put("budget", "65536");
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_nonIntegerBudget_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "0x3");
         obj.put("budget", 65535.5);
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_budgetLowerLimitExceeded_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "0x3");
         obj.put("budget", 0);
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_budgetUpperLimitExceeded_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "0x3");
         obj.put("budget", 65537);
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_validBudget_succeeds() throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "0x3");
         obj.put("budget", 65536);
         String aggregateDebugReportingString =
-                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags).get();
         AggregateDebugReporting aggregateDebugReporting =
                 new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
                         .build();
@@ -1834,109 +1841,125 @@ public final class FetcherUtilTest {
 
     @Test
     public void getValidAggregateDebugReportingString_missingKeyPiece_fails() throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
         JSONObject obj = new JSONObject();
         obj.put("budget", 65536);
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_emptyKeyPiece_fails() throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "");
         obj.put("budget", 65536);
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_nonStringKeyPiece_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
         JSONObject obj = new JSONObject();
         obj.put("key_piece", 123);
         obj.put("budget", 65536);
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_invalidKeyPiece_fails() throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "1x3");
         obj.put("budget", 65536);
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_nonStringOrigin_fails() throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "0x3");
         obj.put("budget", 65536);
         obj.put("aggregation_coordinator_origin", 1234);
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_emptyOrigin_fails() throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "0x3");
         obj.put("budget", 65536);
         obj.put("aggregation_coordinator_origin", "");
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_invalidOrigin_fails() throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "0x3");
         obj.put("budget", 65536);
         obj.put("aggregation_coordinator_origin", "abcd");
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_originNotInAllowList_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "0x3");
         obj.put("budget", 65536);
         obj.put("aggregation_coordinator_origin", "https://cloud.coordination1.test");
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_originInAllowList_succeeds()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "0x3");
         obj.put("budget", 65536);
         obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
         String aggregateDebugReportingString =
-                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags).get();
         AggregateDebugReporting aggregateDebugReporting =
                 new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
                         .build();
@@ -1949,8 +1972,8 @@ public final class FetcherUtilTest {
     @Test
     public void getValidAggregateDebugReportingString_emptyDebugData_succeeds()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "0x3");
@@ -1958,7 +1981,7 @@ public final class FetcherUtilTest {
         obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
         obj.put("debug_data", new JSONArray());
         String aggregateDebugReportingString =
-                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags).get();
         AggregateDebugReporting aggregateDebugReporting =
                 new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
                         .build();
@@ -1972,23 +1995,25 @@ public final class FetcherUtilTest {
     @Test
     public void getValidAggregateDebugReportingString_invalidDebugData_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "0x3");
         obj.put("budget", 65536);
         obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
         obj.put("debug_data", new JSONObject());
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_invalidDebugDataObject_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         JSONArray emptyData = new JSONArray();
@@ -1997,15 +2022,17 @@ public final class FetcherUtilTest {
         obj.put("budget", 65536);
         obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
         obj.put("debug_data", emptyData);
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_emptyDebugDataObject_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         JSONArray emptyData = new JSONArray();
@@ -2014,15 +2041,17 @@ public final class FetcherUtilTest {
         obj.put("budget", 65536);
         obj.put("aggregation_coordinator_origin", "https://cloud.coordination.test");
         obj.put("debug_data", emptyData);
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_missingDebugDataKeyPiece_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         JSONObject dataObj1 = new JSONObject();
@@ -2036,15 +2065,17 @@ public final class FetcherUtilTest {
         dataObj2.put("value", 65536);
         dataObj2.put("types", new JSONArray(Arrays.asList("source-max-event-states-limit")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_emptyDebugDataKeyPiece_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         JSONObject dataObj1 = new JSONObject();
@@ -2059,15 +2090,17 @@ public final class FetcherUtilTest {
         dataObj2.put("value", 65536);
         dataObj2.put("types", new JSONArray(Arrays.asList("source-max-event-states-limit")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_nonStringDebugDataKeyPiece_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         JSONObject dataObj1 = new JSONObject();
@@ -2082,15 +2115,17 @@ public final class FetcherUtilTest {
         dataObj2.put("value", 65536);
         dataObj2.put("types", new JSONArray(Arrays.asList("source-max-event-states-limit")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_invalidDebugDataKeyPiece_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         JSONObject dataObj1 = new JSONObject();
@@ -2105,15 +2140,17 @@ public final class FetcherUtilTest {
         dataObj2.put("value", 65536);
         dataObj2.put("types", new JSONArray(Arrays.asList("source-max-event-states-limit")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_valueExceedsLowerLimit_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         JSONObject dataObj1 = new JSONObject();
@@ -2128,15 +2165,17 @@ public final class FetcherUtilTest {
         dataObj2.put("value", 0);
         dataObj2.put("types", new JSONArray(Arrays.asList("source-max-event-states-limit")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_valueExceedsUpperLimit_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         JSONObject dataObj1 = new JSONObject();
@@ -2151,14 +2190,16 @@ public final class FetcherUtilTest {
         dataObj2.put("value", 65537);
         dataObj2.put("types", new JSONArray(Arrays.asList("source-max-event-states-limit")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_invalidTypeList_fails() throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         JSONObject dataObj1 = new JSONObject();
@@ -2173,14 +2214,16 @@ public final class FetcherUtilTest {
         dataObj2.put("value", 65536);
         dataObj2.put("types", new JSONObject());
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_emptyTypeList_fails() throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         JSONObject dataObj1 = new JSONObject();
@@ -2195,15 +2238,17 @@ public final class FetcherUtilTest {
         dataObj2.put("value", 65536);
         dataObj2.put("types", new JSONArray());
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_nonStringReportType_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         JSONObject dataObj1 = new JSONObject();
@@ -2218,7 +2263,9 @@ public final class FetcherUtilTest {
         dataObj2.put("value", 65536);
         dataObj2.put("types", new JSONArray(Arrays.asList("source-max-event-states-limit", true)));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
@@ -2226,8 +2273,8 @@ public final class FetcherUtilTest {
     public void getValidAggregateDebugReportingString_invalidReportType_ignoreInvalidReportType()
             throws JSONException {
         // Setup
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         JSONObject dataObj1 = new JSONObject();
@@ -2248,7 +2295,7 @@ public final class FetcherUtilTest {
 
         // Execution
         String aggregateDebugReportingString =
-                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags).get();
         AggregateDebugReporting aggregateDebugReporting =
                 new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
                         .build();
@@ -2281,8 +2328,8 @@ public final class FetcherUtilTest {
     @Test
     public void getValidAggregateDebugReportingString_duplicateTypesInTheSameObject_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         JSONObject dataObj1 = new JSONObject();
@@ -2303,15 +2350,17 @@ public final class FetcherUtilTest {
                                 "source-storage-limit",
                                 "source-max-event-states-limit")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_duplicateUnknownTypesInTheSameObject_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         JSONObject dataObj1 = new JSONObject();
@@ -2332,15 +2381,17 @@ public final class FetcherUtilTest {
                                 "source-storage-limit",
                                 "invalid-report-type")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
     @Test
     public void getValidAggregateDebugReportingString_duplicateTypesInDifferentObjects_fails()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         JSONObject dataObj1 = new JSONObject();
@@ -2357,7 +2408,9 @@ public final class FetcherUtilTest {
                 "types",
                 new JSONArray(Arrays.asList("source-max-event-states-limit", "source-noised")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
@@ -2365,8 +2418,8 @@ public final class FetcherUtilTest {
     public void
             getValidAggregateDebugReportingString_duplicateUnknownTypesInDifferentObjects_fails()
                     throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         JSONObject dataObj1 = new JSONObject();
@@ -2384,7 +2437,9 @@ public final class FetcherUtilTest {
                 new JSONArray(
                         Arrays.asList("source-max-event-states-limit", "invalid-report-type")));
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
-        assertThat(FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).isPresent())
+        assertThat(
+                        FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags)
+                                .isPresent())
                 .isFalse();
     }
 
@@ -2392,8 +2447,8 @@ public final class FetcherUtilTest {
     public void getValidAggregateDebugReportingString_defaultReportType_succeeds()
             throws JSONException {
         // Setup
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "0x3");
@@ -2414,7 +2469,7 @@ public final class FetcherUtilTest {
 
         // Execution
         String aggregateDebugReportingString =
-                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags).get();
         AggregateDebugReporting aggregateDebugReporting =
                 new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
                         .build();
@@ -2448,8 +2503,8 @@ public final class FetcherUtilTest {
     @Test
     public void getValidAggregateDebugReportingString_noDuplicatesTypes_succeeds()
             throws JSONException {
-        when(mFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
-        when(mFlags.getMeasurementAggregationCoordinatorOriginList())
+        when(mMockFlags.getMeasurementMaxSumOfAggregateValuesPerSource()).thenReturn(65536);
+        when(mMockFlags.getMeasurementAggregationCoordinatorOriginList())
                 .thenReturn("https://cloud.coordination.test");
         JSONObject obj = new JSONObject();
         obj.put("key_piece", "0x3");
@@ -2471,7 +2526,7 @@ public final class FetcherUtilTest {
         dataObj2.put("types", types2);
         obj.put("debug_data", new JSONArray(Arrays.asList(dataObj1, dataObj2)));
         String aggregateDebugReportingString =
-                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mFlags).get();
+                FetcherUtil.getValidAggregateDebugReportingWithBudget(obj, mMockFlags).get();
         AggregateDebugReporting aggregateDebugReporting =
                 new AggregateDebugReporting.Builder(new JSONObject(aggregateDebugReportingString))
                         .build();

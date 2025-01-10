@@ -61,7 +61,6 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -125,9 +124,6 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     private ScheduleCustomAudienceUpdateImpl mScheduleCustomAudienceUpdateImpl;
     private DevContext mDevContext;
     private CustomAudienceDao mCustomAudienceDao;
-
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
 
     @Before
     public void setup() {

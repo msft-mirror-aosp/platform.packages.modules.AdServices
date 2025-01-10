@@ -29,46 +29,39 @@ import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Parcel;
-import android.os.RemoteException;
 import android.os.SystemClock;
 import android.view.InputEvent;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.SqliteObjectMapper;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.quality.Strictness;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-public class EnqueueAsyncRegistrationTest {
+@SpyStatic(FlagsFactory.class)
+public final class EnqueueAsyncRegistrationTest extends AdServicesExtendedMockitoTestCase {
 
-    private static final Context sDefaultContext = ApplicationProvider.getApplicationContext();
     private static final Uri REGISTRATION_URI_1 = Uri.parse("https://bar.test/bar?q=134");
     private static final Uri REGISTRATION_URI_2 = Uri.parse("https://foo.test/bar?q=256");
     private static final Uri INVALID_REGISTRATION_URI = Uri.parse("http://foo.test/bar?q=347");
@@ -115,13 +108,6 @@ public class EnqueueAsyncRegistrationTest {
     @Mock private ContentProviderClient mMockContentProviderClient;
     @Mock private AdServicesErrorLogger mErrorLogger;
 
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(FlagsFactory.class)
-                    .setStrictness(Strictness.WARN)
-                    .build();
-
     private static final WebSourceRegistrationRequest
             VALID_WEB_SOURCE_REGISTRATION_NULL_INPUT_EVENT =
                     new WebSourceRegistrationRequest.Builder(
@@ -145,9 +131,8 @@ public class EnqueueAsyncRegistrationTest {
     }
 
     @Before
-    public void before() throws RemoteException {
-        ExtendedMockito.doReturn(FakeFlagsFactory.getFlagsForTest()).when(FlagsFactory::getFlags);
-        MockitoAnnotations.initMocks(this);
+    public void before() throws Exception {
+        mocker.mockGetFlags(FakeFlagsFactory.getFlagsForTest());
         Uri triggerUri = TriggerContentProvider.getTriggerUri();
         when(mContentResolver.acquireContentProviderClient(triggerUri))
                 .thenReturn(mMockContentProviderClient);
@@ -162,7 +147,7 @@ public class EnqueueAsyncRegistrationTest {
                 RegistrationRequestFixture.getInvalidRegistrationRequest(
                         RegistrationRequest.REGISTER_SOURCE,
                         INVALID_REGISTRATION_URI,
-                        sDefaultContext.getPackageName(),
+                        mPackageName,
                         SDK_PACKAGE_NAME);
 
         Assert.assertTrue(
@@ -199,7 +184,7 @@ public class EnqueueAsyncRegistrationTest {
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
                                 Uri.parse("https://baz.test"),
-                                sDefaultContext.getPackageName(),
+                                mPackageName,
                                 SDK_PACKAGE_NAME)
                         .build();
 
@@ -257,7 +242,7 @@ public class EnqueueAsyncRegistrationTest {
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
                                 Uri.parse("https://baz.test"),
-                                sDefaultContext.getPackageName(),
+                                mPackageName,
                                 SDK_PACKAGE_NAME)
                         .setInputEvent(mInputEvent)
                         .build();
@@ -317,7 +302,7 @@ public class EnqueueAsyncRegistrationTest {
                 RegistrationRequestFixture.getInvalidRegistrationRequest(
                         RegistrationRequest.REGISTER_TRIGGER,
                         INVALID_REGISTRATION_URI,
-                        sDefaultContext.getPackageName(),
+                        mPackageName,
                         SDK_PACKAGE_NAME);
 
         Assert.assertTrue(
@@ -354,7 +339,7 @@ public class EnqueueAsyncRegistrationTest {
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_TRIGGER,
                                 Uri.parse("https://baz.test"),
-                                sDefaultContext.getPackageName(),
+                                mPackageName,
                                 SDK_PACKAGE_NAME)
                         .build();
 
@@ -408,7 +393,7 @@ public class EnqueueAsyncRegistrationTest {
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_TRIGGER,
                                 Uri.parse("https://baz.test"),
-                                sDefaultContext.getPackageName(),
+                                mPackageName,
                                 SDK_PACKAGE_NAME)
                         .setAdIdValue(PLATFORM_AD_ID_VALUE)
                         .setAdIdPermissionGranted(true)
@@ -454,7 +439,7 @@ public class EnqueueAsyncRegistrationTest {
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_TRIGGER,
                                 Uri.parse("https://baz.test"),
-                                sDefaultContext.getPackageName(),
+                                mPackageName,
                                 SDK_PACKAGE_NAME)
                         .setAdIdPermissionGranted(true)
                         .build();
@@ -694,7 +679,7 @@ public class EnqueueAsyncRegistrationTest {
                 new RegistrationRequest.Builder(
                                 RegistrationRequest.REGISTER_SOURCE,
                                 Uri.parse("https://baz.test"),
-                                sDefaultContext.getPackageName(),
+                                mPackageName,
                                 SDK_PACKAGE_NAME)
                         .build();
 
@@ -757,7 +742,7 @@ public class EnqueueAsyncRegistrationTest {
         SourceRegistrationRequestInternal sourceRegistrationRequestInternal =
                 new SourceRegistrationRequestInternal.Builder(
                                 sourceRegistrationRequest,
-                                sDefaultContext.getPackageName(),
+                                mPackageName,
                                 SDK_PACKAGE_NAME,
                                 SystemClock.uptimeMillis())
                         .setAdIdValue(PLATFORM_AD_ID_VALUE)
@@ -766,7 +751,7 @@ public class EnqueueAsyncRegistrationTest {
                 EnqueueAsyncRegistration.appSourcesRegistrationRequest(
                         sourceRegistrationRequestInternal,
                         /* adId permission*/ true,
-                        Uri.parse(sDefaultContext.getPackageName()),
+                        Uri.parse(mPackageName),
                         System.currentTimeMillis(),
                         Source.SourceType.EVENT,
                         POST_BODY,
@@ -823,7 +808,7 @@ public class EnqueueAsyncRegistrationTest {
         SourceRegistrationRequestInternal sourceRegistrationRequestInternal =
                 new SourceRegistrationRequestInternal.Builder(
                                 sourceRegistrationRequest,
-                                sDefaultContext.getPackageName(),
+                                mPackageName,
                                 SDK_PACKAGE_NAME,
                                 SystemClock.uptimeMillis())
                         .setAdIdValue(PLATFORM_AD_ID_VALUE)
@@ -832,7 +817,7 @@ public class EnqueueAsyncRegistrationTest {
                 EnqueueAsyncRegistration.appSourcesRegistrationRequest(
                         sourceRegistrationRequestInternal,
                         /* adId permission*/ true,
-                        Uri.parse(sDefaultContext.getPackageName()),
+                        Uri.parse(mPackageName),
                         System.currentTimeMillis(),
                         Source.SourceType.NAVIGATION,
                         POST_BODY,
@@ -889,7 +874,7 @@ public class EnqueueAsyncRegistrationTest {
         SourceRegistrationRequestInternal sourceRegistrationRequestInternal =
                 new SourceRegistrationRequestInternal.Builder(
                                 sourceRegistrationRequest,
-                                sDefaultContext.getPackageName(),
+                                mPackageName,
                                 SDK_PACKAGE_NAME,
                                 SystemClock.uptimeMillis())
                         .setAdIdValue(PLATFORM_AD_ID_VALUE)
@@ -898,7 +883,7 @@ public class EnqueueAsyncRegistrationTest {
                 EnqueueAsyncRegistration.appSourcesRegistrationRequest(
                         sourceRegistrationRequestInternal,
                         /* adId permission*/ true,
-                        Uri.parse(sDefaultContext.getPackageName()),
+                        Uri.parse(mPackageName),
                         System.currentTimeMillis(),
                         Source.SourceType.NAVIGATION,
                         null,
@@ -964,12 +949,9 @@ public class EnqueueAsyncRegistrationTest {
                 asyncRegistration.getType());
     }
 
-    private static void assertEqualsAppSourcesRegistrationCommon(
-            AsyncRegistration asyncRegistration) {
-        Assert.assertEquals(
-                sDefaultContext.getPackageName(), asyncRegistration.getRegistrant().toString());
-        Assert.assertEquals(
-                sDefaultContext.getPackageName(), asyncRegistration.getTopOrigin().toString());
+    private void assertEqualsAppSourcesRegistrationCommon(AsyncRegistration asyncRegistration) {
+        Assert.assertEquals(mPackageName, asyncRegistration.getRegistrant().toString());
+        Assert.assertEquals(mPackageName, asyncRegistration.getTopOrigin().toString());
         Assert.assertEquals(
                 AsyncRegistration.RegistrationType.APP_SOURCES, asyncRegistration.getType());
         Assert.assertFalse(Objects.requireNonNull(asyncRegistration.getRegistrationId()).isEmpty());

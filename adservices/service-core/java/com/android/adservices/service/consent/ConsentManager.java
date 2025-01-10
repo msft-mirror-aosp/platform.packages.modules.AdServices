@@ -98,6 +98,7 @@ import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
+import com.android.adservices.service.consent.ConsentConstants.EndUserUx;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -2427,6 +2428,65 @@ public final class ConsentManager {
         return UNSUPPORTED_UX;
     }
 
+    /**
+     * Determines what UX should be displayed to the end user currently.
+     *
+     * @return UX for end user.
+     */
+    public EndUserUx determineEndUserSettingsUxFromEnrollmentData() {
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
+        int[] allModules =
+                new int[] {
+                    MODULE_TOPICS,
+                    MODULE_PROTECTED_AUDIENCE,
+                    MODULE_MEASUREMENT,
+                    MODULE_PROTECTED_APP_SIGNALS,
+                    MODULE_ON_DEVICE_PERSONALIZATION
+                };
+        boolean isAnyModuleEnabled = false;
+        boolean isNotFirstTimeUser = false;
+        boolean isPersonalizedAdsModuleEnabled = false;
+        boolean isPasOdpModuleEnabled = false;
+        boolean isPasOdpModuleOptedIn = false;
+        for (int apiModule : allModules) {
+            int state = data.getModuleState(apiModule);
+            int userChoice = data.getUserChoice(apiModule);
+            if (state == MODULE_STATE_ENABLED) {
+                isAnyModuleEnabled = true;
+                if (apiModule != MODULE_MEASUREMENT) {
+                    isPersonalizedAdsModuleEnabled = true;
+                }
+                if (apiModule == MODULE_PROTECTED_APP_SIGNALS
+                        || apiModule == MODULE_ON_DEVICE_PERSONALIZATION) {
+                    isPasOdpModuleEnabled = true;
+                }
+            }
+            if (userChoice != USER_CHOICE_UNKNOWN) {
+                isNotFirstTimeUser = true;
+            }
+            if (userChoice == USER_CHOICE_OPTED_IN
+                    && (apiModule == MODULE_PROTECTED_APP_SIGNALS
+                            || apiModule == MODULE_ON_DEVICE_PERSONALIZATION)) {
+                isPasOdpModuleOptedIn = true;
+            }
+        }
+
+        // whether PAS/ODP APIs are being enabled with other APIs for the first time, OR PAS/ODP
+        // APIs have been activated via System API setting user choice to opted-in, which does not
+        // signify user has opted-in, as the final consent needs to be combined with the toggle
+        // consents.
+        boolean PasOdpFirstTimeOrActivated =
+                isPasOdpModuleEnabled && (!isNotFirstTimeUser || isPasOdpModuleOptedIn);
+        if (PasOdpFirstTimeOrActivated) {
+            return EndUserUx.GA_WITH_PAS;
+        } else if (isPersonalizedAdsModuleEnabled) {
+            return EndUserUx.GA;
+        } else if (isAnyModuleEnabled) {
+            return EndUserUx.U18;
+        }
+        return EndUserUx.GA;
+    }
+
     /** Set the current UX to storage based on consent_source_of_truth. */
     public void setUx(PrivacySandboxUxCollection ux) {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
@@ -2438,6 +2498,19 @@ public final class ConsentManager {
                 () -> mAdServicesManager.setUx(ux.toString()),
                 () -> mAppSearchConsentManager.setUx(ux),
                 /* errorLogger= */ null);
+    }
+
+    /** Returns if any module sate is enabled. */
+    public boolean getIsAnyModuleStateEnabled() {
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
+        SparseIntArray states = data.getModuleStates();
+        boolean isAnyModuleStateEnabled = false;
+        for (int i = 0; i < states.size(); i++) {
+            if (states.valueAt(i) == MODULE_STATE_ENABLED) {
+                isAnyModuleStateEnabled = true;
+            }
+        }
+        return isAnyModuleStateEnabled;
     }
 
     /**

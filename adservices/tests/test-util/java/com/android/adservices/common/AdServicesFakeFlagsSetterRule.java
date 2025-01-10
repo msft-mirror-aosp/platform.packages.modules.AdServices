@@ -94,12 +94,12 @@ public final class AdServicesFakeFlagsSetterRule
         /**
          * Set flags that used to be set by {@code FakeFlagsFactory.TestFlags}.
          *
-         * @deprecated tests should use {@link FakeFlagsFactory.SetDefaultFledgeFlags} instead.
+         * @deprecated tests should use {@link FakeFlagsFactory.SetFakeFlagsFactoryFlags} instead.
          */
         @Deprecated
-        public FakeFlags setDefaultFledgeFlags() {
+        public FakeFlags setFakeFlagsFactoryFlags() {
             var backend = getFakeFlagsBackend();
-            AdServicesFlagsSetterRuleForUnitTests.setDefaultFledgeFlags(
+            AdServicesFlagsSetterRuleForUnitTests.setFakeFlagsFactoryFlags(
                     (name, value) -> backend.setFlag(name, value));
             return this;
         }

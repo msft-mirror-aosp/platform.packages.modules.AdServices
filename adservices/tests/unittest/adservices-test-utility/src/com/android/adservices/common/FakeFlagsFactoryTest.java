@@ -15,7 +15,7 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.common.AdServicesFlagsSetterRuleForUnitTestsTestCase.assertDefaultFledgeFlags;
+import static com.android.adservices.common.AdServicesFlagsSetterRuleForUnitTestsTestCase.assertFakeFlagsFactoryFlags;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -31,6 +31,6 @@ public final class FakeFlagsFactoryTest extends AdServicesUnitTestCase {
         var flags = FakeFlagsFactory.getFlagsForTest();
 
         assertWithMessage("getFlagsForTest()").that(flags).isNotNull();
-        assertDefaultFledgeFlags(expect, flags);
+        assertFakeFlagsFactoryFlags(expect, flags);
     }
 }

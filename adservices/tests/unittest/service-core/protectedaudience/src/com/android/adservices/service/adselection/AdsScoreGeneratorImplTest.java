@@ -178,8 +178,6 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
 
     private AdsScoreGenerator mAdsScoreGenerator;
     private DevContext mDevContext;
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
 
     private AdSelectionEntryDao mAdSelectionEntryDao;
 

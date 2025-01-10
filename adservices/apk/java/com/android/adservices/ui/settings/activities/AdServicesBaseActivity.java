@@ -26,6 +26,7 @@ import androidx.annotation.RequiresApi;
 import androidx.core.view.WindowCompat;
 
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.ConsentConstants;
 import com.android.adservices.ui.OTAResourcesManager;
 import com.android.adservices.ui.UxSelector;
 import com.android.settingslib.collapsingtoolbar.CollapsingToolbarBaseActivity;
@@ -38,7 +39,7 @@ import com.android.settingslib.collapsingtoolbar.CollapsingToolbarBaseActivity;
 @RequiresApi(Build.VERSION_CODES.S)
 public abstract class AdServicesBaseActivity extends CollapsingToolbarBaseActivity
         implements UxSelector {
-    private UxSelector.EndUserUx mCurUx;
+    private ConsentConstants.EndUserUx mCurUx;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

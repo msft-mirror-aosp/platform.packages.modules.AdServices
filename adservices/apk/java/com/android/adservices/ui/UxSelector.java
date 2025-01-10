@@ -20,6 +20,9 @@ package com.android.adservices.ui;
 import android.annotation.RequiresApi;
 import android.os.Build;
 
+import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.consent.ConsentConstants.EndUserUx;
+import com.android.adservices.service.ui.data.UxStatesManager;
 import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection;
 
 /**
@@ -28,12 +31,6 @@ import com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollectio
  */
 @RequiresApi(Build.VERSION_CODES.S)
 public interface UxSelector {
-    enum EndUserUx {
-        UNKNOWN,
-        GA,
-        U18,
-        GA_WITH_PAS
-    }
 
     /**
      * This method will be called in during initialization of class to determine which ux to choose.
@@ -85,6 +82,9 @@ public interface UxSelector {
      * @return Ux that end user should see.
      */
     default EndUserUx getEndUserUx(boolean beforePasUxActive) {
+        if (FlagsFactory.getFlags().getAdServicesConsentBusinessLogicMigrationEnabled()) {
+            return UxStatesManager.getInstance().getEndUserUx();
+        }
         switch (UxUtil.getUx()) {
             case U18_UX:
                 return EndUserUx.U18;

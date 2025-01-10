@@ -34,11 +34,9 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
 
-/**
- * Tests for {@link MeasurementDao} app deletion that affect the database.
- */
+/** Tests for {@link MeasurementDao} app deletion that affect the database. */
 @RunWith(Parameterized.class)
-public class AppDeletionIntegrationTest extends AbstractDbIntegrationTest {
+public final class AppDeletionIntegrationTest extends AbstractDbIntegrationTest {
     private final Uri mUri;
     private final AdServicesLogger mLogger;
     private final AdServicesErrorLogger mErrorLogger;

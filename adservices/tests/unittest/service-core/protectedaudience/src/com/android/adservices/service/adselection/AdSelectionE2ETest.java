@@ -154,7 +154,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
+import com.android.adservices.service.FakeFlagsFactory.SetFakeFlagsFactoryFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adid.AdIdCacheManager;
@@ -701,7 +701,6 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
 
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
-    private Flags mFakeFlags = flags.getFlags();
 
     // Every test in this class requires that the JS Sandbox be available. The JS Sandbox
     // availability depends on an external component (the system webview) being higher than a
@@ -7319,7 +7318,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    @SetDefaultFledgeFlags
+    @SetFakeFlagsFactoryFlags
     @SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_RUN_AD_SELECTION)
     @SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_IMPRESSION)
     @SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_OVERRIDE)

@@ -21,8 +21,10 @@ import static com.android.adservices.common.MissingFlagBehavior.USES_JAVA_LANGUA
 import static com.android.adservices.service.Flags.FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND;
+import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.Flags.UI_OTA_STRINGS_MANIFEST_FILE_URL;
+import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
 
 import static org.junit.Assert.assertThrows;
 
@@ -57,6 +59,24 @@ public final class AdServicesFakeFlagsSetterRuleTest
         var rule = newRule();
 
         assertThrows(IllegalStateException.class, () -> rule.getFlagsSnapshot());
+    }
+
+    @Test
+    public void smokeTest() throws Throwable {
+        // This test checks some "crucial" flags; for example, non-final getters on RawFlags
+        onTest(
+                (rule, flags) -> {
+                    long defaultTopicsEpochJobPeriodMs = TOPICS_EPOCH_JOB_PERIOD_MS;
+                    expect.withMessage("getTopicsEpochJobPeriodMs() by default")
+                            .that(flags.getTopicsEpochJobPeriodMs())
+                            .isEqualTo(defaultTopicsEpochJobPeriodMs);
+
+                    long newTopicsEpochJobPeriodMs = -defaultTopicsEpochJobPeriodMs;
+                    rule.setFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, newTopicsEpochJobPeriodMs);
+                    expect.withMessage("getTopicsEpochJobPeriodMs() after setting it")
+                            .that(flags.getTopicsEpochJobPeriodMs())
+                            .isEqualTo(newTopicsEpochJobPeriodMs);
+                });
     }
 
     @Test

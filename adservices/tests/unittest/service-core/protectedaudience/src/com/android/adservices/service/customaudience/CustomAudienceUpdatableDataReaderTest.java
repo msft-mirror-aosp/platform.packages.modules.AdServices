@@ -44,7 +44,6 @@ import com.android.adservices.common.JsonFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
-import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 
 import com.google.common.collect.ImmutableList;
@@ -66,9 +65,6 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
             DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1);
     private static final List<DBAdData> INVALID_DB_AD_DATA_LIST =
             DBAdDataFixture.getInvalidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1);
-
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
 
     @Test
     public void testGetUserBiddingSignalsFromFullJsonObjectSuccess() throws Exception {

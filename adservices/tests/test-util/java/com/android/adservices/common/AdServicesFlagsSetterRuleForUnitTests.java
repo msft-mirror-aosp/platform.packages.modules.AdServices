@@ -37,7 +37,7 @@ import android.os.Build;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.service.FakeFlagsFactory.SetDefaultFledgeFlags;
+import com.android.adservices.service.FakeFlagsFactory.SetFakeFlagsFactoryFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.adservices.shared.testing.NameValuePair;
@@ -94,13 +94,13 @@ public abstract class AdServicesFlagsSetterRuleForUnitTests<
      *
      * <p>In other words, the same flags from {@code FakeFlagsFactory.TestFlags}.
      */
-    public final R setDefaultFledgeFlags() {
-        mLog.i("setDefaultFledgeFlags()");
-        setDefaultFledgeFlags((name, value) -> setNameValuePair(name, value));
+    public final R setFakeFlagsFactoryFlags() {
+        mLog.i("setFakeFlagsFactoryFlags()");
+        setFakeFlagsFactoryFlags((name, value) -> setNameValuePair(name, value));
         return getThis();
     }
 
-    static void setDefaultFledgeFlags(BiConsumer<String, String> nameValueSetter) {
+    static void setFakeFlagsFactoryFlags(BiConsumer<String, String> nameValueSetter) {
         nameValueSetter.accept(KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS, "10000");
         nameValueSetter.accept(KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS, "10000");
         nameValueSetter.accept(KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, "600000");
@@ -122,15 +122,15 @@ public abstract class AdServicesFlagsSetterRuleForUnitTests<
 
     @Override
     protected final boolean isAnnotationSupported(Annotation annotation) {
-        return (annotation instanceof SetDefaultFledgeFlags)
+        return (annotation instanceof SetFakeFlagsFactoryFlags)
                 || super.isAnnotationSupported(annotation);
     }
 
     @Override
     protected final void processAnnotation(Description description, Annotation annotation) {
         // NOTE: add annotations sorted by "most likely usage"
-        if (annotation instanceof SetDefaultFledgeFlags) {
-            setDefaultFledgeFlags();
+        if (annotation instanceof SetFakeFlagsFactoryFlags) {
+            setFakeFlagsFactoryFlags();
         } else {
             super.processAnnotation(description, annotation);
         }

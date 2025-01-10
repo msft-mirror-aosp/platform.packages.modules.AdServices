@@ -114,7 +114,6 @@ import com.android.adservices.data.customaudience.DBCustomAudienceToLeave;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdateRequest;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
 import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -225,8 +224,6 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     private boolean mAuctionServerRequestFlags;
     private boolean mSellerConfigurationEnabled;
     private long mFledgeAuctionServerAdRenderIdMaxLength;
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
     @NonNull private CustomAudienceDao mCustomAudienceDao;
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
     @Mock private AppInstallDao mAppInstallDaoMock;

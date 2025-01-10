@@ -23,7 +23,6 @@ import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
 
@@ -44,9 +43,8 @@ import java.util.Objects;
 
 /** Integration tests for {@link EventReportingJobHandler} */
 @RunWith(Parameterized.class)
-public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
+public final class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrationTest {
     private final JSONObject mParam;
-    private final Flags mFlags;
     private final AdServicesLogger mLogger;
     private final AdServicesErrorLogger mErrorLogger;
 
@@ -67,7 +65,6 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
             String name) {
         super(input, output, flagsMap);
         mParam = param;
-        mFlags = Mockito.mock(Flags.class);
         mLogger = Mockito.mock(AdServicesLogger.class);
         mErrorLogger = Mockito.mock(AdServicesErrorLogger.class);
     }
@@ -89,7 +86,7 @@ public class EventReportingJobHandlerIntegrationTest extends AbstractDbIntegrati
                 Mockito.spy(
                         new EventReportingJobHandler(
                                 datastoreManager,
-                                mFlags,
+                                mMockFlags,
                                 mLogger,
                                 sContext,
                                 new AndroidTimeSource()));

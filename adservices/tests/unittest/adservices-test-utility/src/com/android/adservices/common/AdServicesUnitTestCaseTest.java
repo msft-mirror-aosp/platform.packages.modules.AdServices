@@ -45,5 +45,8 @@ public final class AdServicesUnitTestCaseTest extends AdServicesUnitTestCase {
 
         assertWithMessage("mMockFlags").that(mMockFlags).isNotNull();
         expect.withMessage("mMockFlags is a mock").that(isMock(mMockFlags)).isTrue();
+
+        assertWithMessage("mFakeFlags").that(mFakeFlags).isNotNull();
+        assertWithMessage("flags.getFlags()").that(flags.getFlags()).isSameInstanceAs(mFakeFlags);
     }
 }
