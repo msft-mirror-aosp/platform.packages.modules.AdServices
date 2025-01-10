@@ -67,8 +67,11 @@ public final class ResetConsentCommandTest extends ShellCommandTestCase<ResetCon
                 run(new ResetConsentCommand(), COMMAND_PREFIX, CMD_RESET_CONSENT_DATA);
         expectSuccess(
                 actualResult,
-                "Consent data has been reset.",
                 ShellCommandStats.COMMAND_RESET_CONSENT_DATA);
+
+        expect.withMessage("out")
+                .that(actualResult.mOut)
+                .startsWith("Consent data has been reset.");
 
         verify(mMockAdServicesCommonManager)
                 .recordUserManualInteractionWithConsent(NO_MANUAL_INTERACTIONS_RECORDED);

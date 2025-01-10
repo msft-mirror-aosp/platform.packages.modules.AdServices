@@ -2617,8 +2617,8 @@ public final class ConsentManager {
         setModuleEnrollmentData(EnrollmentData.serialize(data));
     }
 
-    /** Set module enrollment data to storage based on consent_source_of_truth. */
-    String getModuleEnrollmentState() {
+    /** Sets module enrollment data to storage based on consent_source_of_truth. */
+    public String getModuleEnrollmentState() {
         return executeGettersByConsentSourceOfTruth(
                 "",
                 () -> mDatastore.getString(ConsentConstants.MODULE_ENROLLMENT_STATE),
