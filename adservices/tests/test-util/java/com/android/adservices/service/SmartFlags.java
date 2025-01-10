@@ -35,6 +35,8 @@ import com.android.adservices.shared.flags.DeviceConfigFlagsBackend;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
+//TODO(b/386415138): this class is should be moved to service-core, but currently it's only used by
+//tests
 /**
  * Flags Implementation that adds extra logic to some getters (hence the "smart" name).
  *

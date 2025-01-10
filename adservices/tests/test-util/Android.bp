@@ -70,6 +70,7 @@ android_library {
         "adservices-service-core",
         "adservices-shared-mockito-expectations", // TODO(b/338132355): should not be needed if mocker is split
         "adservices-shared-testing",
+        "adservices-shared-flags-backend", // TODO(b/386415138): should be provided by adservices-service-core"
         "androidx.test.runner",
         "compatibility-device-util-axt",
         "modules-utils-preconditions",
