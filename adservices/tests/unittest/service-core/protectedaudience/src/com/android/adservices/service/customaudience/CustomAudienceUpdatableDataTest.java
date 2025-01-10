@@ -59,7 +59,7 @@ import org.junit.Test;
 import java.util.List;
 
 // NOTE: used Flags that extended FakeFlagsFactory.TestFlags (which in turn was replaced by
-// @SetDefaultFledgeFlags), but apparently it doesn't need @SetDefaultFledgeFlags
+// @SetFakeFlagsFactoryFlags), but apparently it doesn't need it
 @SetFlagTrue(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
 @SetFlagTrue(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
 public final class CustomAudienceUpdatableDataTest extends AdServicesUnitTestCase {
