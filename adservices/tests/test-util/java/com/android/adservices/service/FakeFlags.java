@@ -21,6 +21,7 @@ import com.android.adservices.common.AdServicesFlagsSetterRuleForUnitTests;
 import com.android.adservices.common.MissingFlagBehavior;
 import com.android.adservices.shared.flags.FlagsBackend;
 import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.Identifiable;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.NameValuePair;
 
@@ -35,8 +36,11 @@ import java.util.stream.Collectors;
  * rule, but it's currently public because the rule is located in a different package - we should
  * move all related classes to a common .something.flags package instead...
  */
-public final class FakeFlags extends RawFlags {
+public final class FakeFlags extends RawFlags implements Identifiable {
 
+    private static int sNextId;
+
+    private final String mId = String.valueOf(++sNextId);
     private final boolean mCalledByRule;
 
     private FakeFlags(boolean calledByRule) {
@@ -103,15 +107,21 @@ public final class FakeFlags extends RawFlags {
     }
 
     @Override
+    public String getId() {
+        return mId;
+    }
+
+    @Override
     public String toString() {
+        var prefix = "FakeFlags#" + mId + "{";
         var flags = getFakeFlagsBackend().mFlags;
         if (flags.isEmpty()) {
-            return "FakeFlags{empty}";
+            return prefix + "empty}";
         }
         return flags.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey()) // sort by key
                 .map(entry -> entry.getValue().toString())
-                .collect(Collectors.joining(", ", "FakeFlags{", "}"));
+                .collect(Collectors.joining(", ", prefix, "}"));
     }
 
     // TODO(b/384798806): remove this method (and callers) when stuff moved to the same package. */

@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.signals;
 
-import static com.android.adservices.service.FakeFlagsFactory.SetFakeFlagsFactoryFlags;
 import static com.android.adservices.service.signals.SignalsFixture.ADTECH;
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_KEY_1;
 import static com.android.adservices.service.signals.SignalsFixture.BASE64_VALUE_1;
@@ -80,8 +79,8 @@ import com.android.adservices.data.signals.EncoderPersistenceDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.FakeFlagsFactory.SetFakeFlagsFactoryFlags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.SetFakeFlagsFactoryFlags;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.FledgeAllowListsFilter;

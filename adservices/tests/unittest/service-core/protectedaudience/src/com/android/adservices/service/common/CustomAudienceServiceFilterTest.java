@@ -44,7 +44,7 @@ import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.devapi.DevSessionFixture;
-import com.android.adservices.service.FakeFlagsFactory.SetFakeFlagsFactoryFlags;
+import com.android.adservices.service.SetFakeFlagsFactoryFlags;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
