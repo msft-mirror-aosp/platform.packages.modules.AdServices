@@ -74,11 +74,6 @@ android_app {
     updatable: true,
     certificate: "sdk_sandbox",
     apex_available: ["com.android.adservices"],
-    optimize: {
-        // TODO(b/293177283): Remove after eliminating use of reflection
-        // for SandboxedSdkHolder instantiation.
-        proguard_compatibility: true,
-    },
     defaults: [
         "sdksandbox-java-defaults",
     ],
