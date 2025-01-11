@@ -42,7 +42,6 @@ import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
 import com.android.adservices.data.measurement.SqliteObjectMapper;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.attribution.TriggerContentProvider;
@@ -132,7 +131,7 @@ public final class EnqueueAsyncRegistrationTest extends AdServicesExtendedMockit
 
     @Before
     public void before() throws Exception {
-        mocker.mockGetFlags(FakeFlagsFactory.getFlagsForTest());
+        mocker.mockGetFlags(mFakeFlags);
         Uri triggerUri = TriggerContentProvider.getTriggerUri();
         when(mContentResolver.acquireContentProviderClient(triggerUri))
                 .thenReturn(mMockContentProviderClient);

@@ -28,7 +28,6 @@ import com.android.adservices.data.measurement.AbstractDbIntegrationTest;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.DbState;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.measurement.aggregation.AggregateCryptoFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKey;
 import com.android.adservices.service.measurement.aggregation.AggregateEncryptionKeyManager;
@@ -110,7 +109,7 @@ public final class AggregateReportingJobHandlerIntegrationTest extends AbstractD
                         new AggregateReportingJobHandler(
                                 datastoreManager,
                                 mockKeyManager,
-                                FakeFlagsFactory.getFlagsForTest(),
+                                mFakeFlags,
                                 mLogger,
                                 sContext,
                                 new AndroidTimeSource()));

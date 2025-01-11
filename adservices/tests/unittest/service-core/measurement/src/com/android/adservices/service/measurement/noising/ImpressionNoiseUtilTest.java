@@ -24,7 +24,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.TriggerSpec;
@@ -432,11 +431,11 @@ public final class ImpressionNoiseUtilTest extends AdServicesExtendedMockitoTest
      * @return TriggerSpecs for test
      * @throws JSONException JSON syntax error
      */
-    private static TriggerSpecs getValidTriggerSpecsForRandomOrderTest() throws JSONException {
+    private TriggerSpecs getValidTriggerSpecsForRandomOrderTest() throws JSONException {
         Source source = SourceFixture.getMinimalValidSourceBuilder().build();
         TriggerSpecs triggerSpecs = new TriggerSpecs(getValidTriggerSpecArray(), 3, source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, mFakeFlags);
         return triggerSpecs;
     }
 }

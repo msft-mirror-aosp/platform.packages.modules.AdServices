@@ -66,7 +66,6 @@ import androidx.annotation.NonNull;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.data.measurement.MeasurementTables.DebugReportContract;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.AggregatableNamedBudgets;
@@ -189,7 +188,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
     private int mValueId = 1;
     // TODO(b/384798806): ideally it should use mFakeFlags, but this class mixes usage of fake and
     // mock flags - some tests can only pass if mLegacyFlags is set to mMockFlags
-    private Flags mLegacyFlags = FakeFlagsFactory.getFlagsForTest();
+    private Flags mLegacyFlags = mFakeFlags;
     private DatastoreManager mDatastoreManager;
     public static final Uri REGISTRATION_ORIGIN_2 =
             WebUtil.validUri("https://subdomain_2.example.test");
@@ -13330,8 +13329,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
 
     private EventReport createEventReportForSourceAndTrigger(
             String reportId, Source source, Trigger trigger) throws JSONException {
-        EventTrigger eventTrigger = trigger.parseEventTriggers(
-                FakeFlagsFactory.getFlagsForTest()).get(0);
+        EventTrigger eventTrigger = trigger.parseEventTriggers(mFakeFlags).get(0);
         return new EventReport.Builder()
                 .populateFromSourceAndTrigger(
                         source,
@@ -13351,8 +13349,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
 
     private EventReport createEventReportForSourceAndTriggerForUninstall(
             String reportId, Source source, Trigger trigger) throws JSONException {
-        EventTrigger eventTrigger =
-                trigger.parseEventTriggers(FakeFlagsFactory.getFlagsForTest()).get(0);
+        EventTrigger eventTrigger = trigger.parseEventTriggers(mFakeFlags).get(0);
         return new EventReport.Builder()
                 .setTriggerTime(trigger.getTriggerTime())
                 .setSourceEventId(source.getEventId())
