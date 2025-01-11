@@ -25,6 +25,7 @@ import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
 import com.android.adservices.service.shell.adservicesapi.AdServicesApiShellCommandFactory;
+import com.android.adservices.service.shell.attributionreporting.AttributionReportingShellCommandFactory;
 import com.android.adservices.service.shell.customaudience.CustomAudienceShellCommandFactory;
 import com.android.adservices.service.shell.signals.SignalsShellCommandFactory;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
@@ -36,6 +37,7 @@ import com.google.common.collect.ImmutableList;
 public final class AdservicesShellCommandFactorySupplier extends ShellCommandFactorySupplier {
     private static final ImmutableList<ShellCommandFactory> sDefaultFactories =
             ImmutableList.of(
+                    AttributionReportingShellCommandFactory.newInstance(DebugFlags.getInstance()),
                     CustomAudienceShellCommandFactory.newInstance(
                             DebugFlags.getInstance(),
                             FlagsFactory.getFlags(),

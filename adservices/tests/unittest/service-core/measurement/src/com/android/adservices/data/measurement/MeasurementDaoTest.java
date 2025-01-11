@@ -8508,6 +8508,9 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         values.put(
                 SourceContract.REINSTALL_REATTRIBUTION_WINDOW,
                 source.getReinstallReattributionWindow());
+        if (source.getDebugKey() != null) {
+            values.put(SourceContract.DEBUG_KEY, source.getDebugKey().getValue());
+        }
         long row = db.insert(SourceContract.TABLE, null, values);
         assertNotEquals("Source insertion failed", -1, row);
 
@@ -13168,6 +13171,78 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         // Verification
         assertThat(getFirstSourceFromDb().getAggregateDebugReportContributions())
                 .isEqualTo(expectedUpdatedContributions);
+    }
+
+    /** Test that records in SourceContract Table are fetched properly. */
+    @Test
+    public void testFetchAllSourceRegistrations_pass() {
+        Source source1 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("1")
+                        .setEventTime(8640000000L)
+                        .setExpiryTime(8640000010L)
+                        .setDebugKey(new UnsignedLong(7834690L))
+                        .build();
+        insertSource(source1, source1.getId());
+
+        Source source2 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("2")
+                        .setEventTime(8640000000L)
+                        .setExpiryTime(8640000010L)
+                        .setDebugKey(new UnsignedLong(7834690L))
+                        .build();
+        insertSource(source2, source2.getId());
+
+        List<Source> fetchedAllSourceRegistration =
+                mDatastoreManager
+                        .runInTransactionWithResult(dao -> dao.fetchAllSourceRegistrations())
+                        .orElseThrow();
+
+        assertNotNull(fetchedAllSourceRegistration);
+        assertThat(fetchedAllSourceRegistration.size()).isEqualTo(2);
+
+        assertThat(fetchedAllSourceRegistration.get(0)).isEqualTo(source1);
+        assertThat(fetchedAllSourceRegistration.get(1)).isEqualTo(source2);
+    }
+
+    @Test
+    public void testFetchAllSourceRegistrations_passMultipleDestinations() {
+        List<Uri> webDestinations1 =
+                List.of(
+                        Uri.parse("https://first-place.test"),
+                        Uri.parse("https://second-place.test"),
+                        Uri.parse("https://third-place.test"));
+
+        Source source1 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("1")
+                        .setWebDestinations(webDestinations1)
+                        .build();
+        insertSource(source1, source1.getId());
+
+        List<Uri> webDestinations2 =
+                List.of(
+                        Uri.parse("https://not-first-place.test"),
+                        Uri.parse("https://not-second-place.test"),
+                        Uri.parse("https://third-place.test"));
+        Source source2 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("2")
+                        .setWebDestinations(webDestinations2)
+                        .build();
+        insertSource(source2, source2.getId());
+
+        List<Source> fetchedAllSourceRegistration =
+                mDatastoreManager
+                        .runInTransactionWithResult(dao -> dao.fetchAllSourceRegistrations())
+                        .orElseThrow();
+
+        assertNotNull(fetchedAllSourceRegistration);
+        assertThat(fetchedAllSourceRegistration.size()).isEqualTo(2);
+
+        assertThat(fetchedAllSourceRegistration.get(0)).isEqualTo(source1);
+        assertThat(fetchedAllSourceRegistration.get(1)).isEqualTo(source2);
     }
 
     private Source getFirstSourceFromDb() {

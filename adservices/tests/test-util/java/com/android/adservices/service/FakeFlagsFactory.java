@@ -15,8 +15,6 @@
  */
 package com.android.adservices.service;
 
-import com.android.adservices.common.AdServicesFakeFlagsSetterRule.FakeFlags;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -40,7 +38,7 @@ public final class FakeFlagsFactory {
     @Deprecated
     public static Flags getFlagsForTest() {
         // Use the Flags that has constant values.
-        return new FakeFlags().setFakeFlagsFactoryFlags();
+        return FakeFlags.createFakeFlagsForFakeFlagsFactoryPurposesOnly();
     }
 
     private FakeFlagsFactory() {

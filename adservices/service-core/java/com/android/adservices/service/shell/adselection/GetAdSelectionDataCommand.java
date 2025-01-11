@@ -21,9 +21,9 @@ import static com.android.adservices.service.shell.adselection.AdSelectionShellC
 import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.FIRST_ARG_FOR_PARSING;
 import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.OUTPUT_PROTO_FIELD_NAME;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA;
+import static com.android.adservices.service.stats.ShellCommandStats.RESULT_DEV_MODE_UNCONFIRMED;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_TIMEOUT_ERROR;
-import static com.android.adservices.service.stats.ShellCommandStats.RESULT_UNKNOWN;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -151,7 +151,8 @@ public class GetAdSelectionDataCommand extends AbstractShellCommand {
     public ShellCommandResult run(PrintWriter out, PrintWriter err, String[] args) {
         if (!isRunningInDevSession()) {
             err.printf(ERROR_DEVELOPER_MODE);
-            return toShellCommandResult(RESULT_UNKNOWN, COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA);
+            return toShellCommandResult(
+                    RESULT_DEV_MODE_UNCONFIRMED, COMMAND_AD_SELECTION_GET_AD_SELECTION_DATA);
         }
 
         Map<String, String> cliArgs;

@@ -96,6 +96,9 @@ public final class ShellCommandStats {
     public static final int COMMAND_APP_SIGNALS_TRIGGER_ENCODING =
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_APP_SIGNALS_TRIGGER_ENCODING;
+    public static final int COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS =
+            AdServicesStatsLog
+                    .AD_SERVICES_SHELL_COMMAND_CALLED__COMMAND__COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS;
 
     @IntDef({
         COMMAND_UNKNOWN,
@@ -128,7 +131,10 @@ public final class ShellCommandStats {
 
         // Protected App Signals commands
         COMMAND_APP_SIGNALS_GENERATE_INPUT_FOR_ENCODING,
-        COMMAND_APP_SIGNALS_TRIGGER_ENCODING
+        COMMAND_APP_SIGNALS_TRIGGER_ENCODING,
+
+        // Attribution Reporting commands
+        COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS
     })
     @Retention(SOURCE)
     public @interface Command {}
@@ -154,6 +160,9 @@ public final class ShellCommandStats {
     public static final int RESULT_NOT_ENABLED =
             AdServicesStatsLog
                     .AD_SERVICES_SHELL_COMMAND_CALLED__RESULT_CODE__COMMAND_RESULT_NOT_ENABLED;
+    public static final int RESULT_DEV_MODE_UNCONFIRMED =
+            AdServicesStatsLog
+                    .AD_SERVICES_SHELL_COMMAND_CALLED__RESULT_CODE__COMMAND_RESULT_DEV_MODE_UNCONFIRMED;
 
     @IntDef({
         RESULT_UNKNOWN,
@@ -162,7 +171,8 @@ public final class ShellCommandStats {
         RESULT_INVALID_ARGS,
         RESULT_TIMEOUT_ERROR,
         RESULT_INVALID_COMMAND,
-        RESULT_NOT_ENABLED
+        RESULT_NOT_ENABLED,
+        RESULT_DEV_MODE_UNCONFIRMED
     })
     @Retention(SOURCE)
     public @interface CommandResult {}

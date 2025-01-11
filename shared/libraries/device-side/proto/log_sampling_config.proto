@@ -6,6 +6,8 @@ option java_package = "com.android.adservices.shared.proto";
 
 // Describes a configuration for sampling events
 message LogSamplingConfig {
+  // Configuration of per-event sampling.
+  // See go/rb-per-event-sampling for more details.
   message PerEventSampling {
     // Sampling rate for events. The value must be between 0 and 1 where 0 means no events are
     // sampled and 1 means all events are sampled.
@@ -14,4 +16,30 @@ message LogSamplingConfig {
 
   // Configuration of per-event sampling
   optional PerEventSampling per_event_sampling = 1;
+
+  // Configuration of per-device sampling i.e. a subset of devices is selected and every event is
+  // logged from them.  For more detail, see go/rb-device-level-sampling.
+  message PerDeviceSampling {
+    // Percentage of devices that should log the event. It is between 0 and 1. 0 means no devices
+    // perform the sampling and 1 means all the devices log.
+    optional double sampling_rate = 1;
+    // The length of the rotation period i.e. the length of the period after which the devices to
+    // log are rotated.
+    optional int32 rotation_period_days = 2;
+    // The length of the staggering period at which the rotation is staggered. With Staggering there
+    // will be (staggering_period_days/rotation_period_days) devices rotated every day. This will
+    // allow to compute metrics for a portion of devices on any arbitrary day.
+    // Note: Staggering period should be less than rotation period.
+    optional int32 staggering_period_days = 3;
+    // Name of the group to which metric belongs. Metrics that belong to the same sampling group log
+    // from the same set of devices irrespective of the sampling rate. All the metrics that need to
+    // be joined should have the same group. If group name is not present, we use the default group.
+    // For example, with same group, we have 2 metrics with sampling rate 5% and sampling rate 10%.
+    // Devices which are part of sampling rate 5% will also be part of sampling rate 10%. Some of
+    // the devices which are not part of 5% can be part of 10% sampling rate.
+    optional string group_name = 4;
+  }
+
+  // Configuration of per-device sampling
+  optional PerDeviceSampling per_device_sampling = 2;
 }

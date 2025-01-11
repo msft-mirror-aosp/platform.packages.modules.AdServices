@@ -45,6 +45,7 @@ import androidx.annotation.RequiresApi;
 import androidx.concurrent.futures.CallbackToFutureAdapter;
 
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.shell.AbstractShellCommand;
 import com.android.adservices.service.shell.ShellCommandArgParserHelper;
 import com.android.adservices.service.shell.ShellCommandResult;
@@ -109,6 +110,7 @@ public class SetModuleStatesCommand extends AbstractShellCommand {
         if (args.length < 2 || args.length % 2 != 0) {
             return invalidArgsError(HELP, err, ShellCommandStats.COMMAND_ENABLE_ADSERVICES, args);
         }
+        ConsentManager consentManager = ConsentManager.getInstance();
         ImmutableMap<String, String> paramMap =
                 ShellCommandArgParserHelper.parseCliArguments(
                         args, ARG_PARSE_START_INDEX, /* removeKeyPrefix= */ true);
@@ -157,7 +159,9 @@ public class SetModuleStatesCommand extends AbstractShellCommand {
         try {
             Boolean response = responseFuture.get();
             if (response) {
-                String msg = "Module states data has been set.";
+                String msg =
+                        "Module states data has been set. Current enrollment data is: \n"
+                                + consentManager.getModuleEnrollmentState();
                 Log.i(TAG, msg);
                 out.print(msg);
             }

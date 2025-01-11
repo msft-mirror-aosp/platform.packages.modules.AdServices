@@ -16,18 +16,29 @@
 
 package com.android.adservices.service.shell.adservicesapi;
 
+import static android.adservices.common.AdServicesCommonManager.MODULE_ADID;
+import static android.adservices.common.AdServicesCommonManager.MODULE_MEASUREMENT;
+import static android.adservices.common.AdServicesCommonManager.MODULE_ON_DEVICE_PERSONALIZATION;
+import static android.adservices.common.AdServicesCommonManager.MODULE_PROTECTED_APP_SIGNALS;
+import static android.adservices.common.AdServicesCommonManager.MODULE_PROTECTED_AUDIENCE;
+import static android.adservices.common.AdServicesCommonManager.MODULE_TOPICS;
+import static android.adservices.common.AdServicesModuleUserChoice.USER_CHOICE_UNKNOWN;
+
 import static com.android.adservices.service.consent.AdServicesApiType.FLEDGE;
 import static com.android.adservices.service.consent.AdServicesApiType.MEASUREMENTS;
 import static com.android.adservices.service.consent.AdServicesApiType.TOPICS;
 import static com.android.adservices.service.consent.ConsentManager.NO_MANUAL_INTERACTIONS_RECORDED;
+import static com.android.adservices.service.consent.ConsentManager.UNKNOWN;
 import static com.android.adservices.service.shell.AdServicesShellCommandHandler.TAG;
 import static com.android.adservices.service.shell.adservicesapi.AdServicesApiShellCommandFactory.COMMAND_PREFIX;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_RESET_CONSENT_DATA;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_SUCCESS;
 
+import android.adservices.common.AdServicesModuleUserChoice;
 import android.content.Context;
 import android.os.Build;
 import android.util.Log;
+import android.util.SparseIntArray;
 
 import androidx.annotation.RequiresApi;
 
@@ -38,6 +49,8 @@ import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.modules.utils.build.SdkLevel;
 
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This class implements reset_consent_bits shell command.
@@ -77,7 +90,30 @@ public final class ResetConsentCommand extends AbstractShellCommand {
         consentManager.setU18NotificationDisplayed(false);
         consentManager.setU18Account(false);
 
-        String msg = "Consent data has been reset.";
+        // Reset enrollment data
+        List<AdServicesModuleUserChoice> adServicesUserChoiceList = new ArrayList<>();
+        SparseIntArray moduleStates = new SparseIntArray();
+        List<Integer> moduleList =
+                List.of(
+                        MODULE_MEASUREMENT,
+                        MODULE_PROTECTED_AUDIENCE,
+                        MODULE_PROTECTED_APP_SIGNALS,
+                        MODULE_TOPICS,
+                        MODULE_ON_DEVICE_PERSONALIZATION,
+                        MODULE_ADID);
+
+        for (int moduleCode : moduleList) {
+            moduleStates.put(moduleCode, UNKNOWN);
+            adServicesUserChoiceList.add(
+                    new AdServicesModuleUserChoice(moduleCode, USER_CHOICE_UNKNOWN));
+        }
+        consentManager.setUserChoices(adServicesUserChoiceList);
+        consentManager.setModuleStates(moduleStates);
+
+        String msg =
+                "Consent data has been reset. Current enrollment data is: \n"
+                        + consentManager.getModuleEnrollmentState();
+
         Log.i(TAG, msg);
         out.print(msg);
 

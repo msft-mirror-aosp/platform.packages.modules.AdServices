@@ -40,6 +40,8 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+// TODO(b/386415138): this class is should be moved to service-core, but currently it's only used by
+// tests
 /**
  * Implementation of {@link Flags} that simply returns the "raw" value of flags from a backend,
  * without any additional logic (like range validation or feature-flag dependency).

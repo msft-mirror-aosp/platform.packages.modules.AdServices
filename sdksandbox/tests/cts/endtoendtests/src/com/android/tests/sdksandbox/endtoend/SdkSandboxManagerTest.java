@@ -26,6 +26,7 @@ import static androidx.lifecycle.Lifecycle.State;
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
 import static com.android.sdksandbox.flags.Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT;
+import static com.android.window.flags.Flags.FLAG_UNIVERSAL_RESIZABLE_BY_DEFAULT;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -36,6 +37,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 
 import android.Manifest;
@@ -912,6 +914,13 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     public void testSandboxActivityOrientationLocking() throws RemoteException {
         assumeTrue(SdkLevel.isAtLeastU());
 
+        if (isLargeScreenDevice()) {
+            // When the flag is removed after Android B release, replace this check with isAtLeastB.
+            assumeFalse(
+                    (new DeviceFlagsValueProvider())
+                            .getBoolean(FLAG_UNIVERSAL_RESIZABLE_BY_DEFAULT));
+        }
+
         ICtsSdkProviderApi sdk = loadSdk();
 
         ActivityStarter sandboxActivityStarter = new ActivityStarter();
@@ -1152,6 +1161,17 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
         public boolean isActivityResumed() {
             return mActivityResumed;
         }
+    }
+
+    private boolean isLargeScreenDevice() {
+        // Use Configuration.SCREENLAYOUT_SIZE_MASK to check for large screens
+        return (InstrumentationRegistry.getInstrumentation()
+                                .getContext()
+                                .getResources()
+                                .getConfiguration()
+                                .screenLayout
+                        & Configuration.SCREENLAYOUT_SIZE_MASK)
+                >= Configuration.SCREENLAYOUT_SIZE_LARGE;
     }
 
     private Bundle getRequestSurfacePackageParams() {
