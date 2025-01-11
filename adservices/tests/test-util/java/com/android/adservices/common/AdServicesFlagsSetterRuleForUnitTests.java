@@ -100,7 +100,8 @@ public abstract class AdServicesFlagsSetterRuleForUnitTests<
         return getThis();
     }
 
-    static void setFakeFlagsFactoryFlags(BiConsumer<String, String> nameValueSetter) {
+    /** TODO(b/384798806): make it package protected. */
+    public static void setFakeFlagsFactoryFlags(BiConsumer<String, String> nameValueSetter) {
         nameValueSetter.accept(KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS, "10000");
         nameValueSetter.accept(KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS, "10000");
         nameValueSetter.accept(KEY_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS, "600000");
