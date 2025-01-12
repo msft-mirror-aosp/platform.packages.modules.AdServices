@@ -1,0 +1,36 @@
+[
+  {
+    "property": "version_info",
+    "taxonomy_type": "chrome_and_mobile_taxonomy",
+    "taxonomy_version": "0",
+    "updated_date": "2022-10-19"
+  },
+  {
+    "asset_name": "labels_topics",
+    "asset_version": "0",
+    "path": "assets/classifier/labels_topics.txt",
+    "checksum": "343c214d1db795ffe9bae1e30d5ac2b4739fd7f7",
+    "updated_date": "2022-10-19"
+  },
+  {
+    "asset_name": "precomputed_app_list",
+    "asset_version": "0",
+    "path": "assets/classifier/precomputed_app_list.csv",
+    "checksum": "a7c8c4ef9b0c33fd63a934e17afd1c9aca2c2e09",
+    "updated_date": "2022-10-19"
+  },
+  {
+    "asset_name": "topic_id_to_name",
+    "asset_version": "0",
+    "path": "assets/classifier/topic_id_to_name.csv",
+    "checksum": "24b392c22680eb83e75e60f52dc9b48221d70612",
+    "updated_date": "2022-10-19"
+  },
+  {
+    "asset_name": "tflite_model",
+    "asset_version": "0",
+    "path": "assets/classifier/model.tflite",
+    "checksum": "da39a3ee5e6b4b0d3255bfef95601890afd80709",
+    "updated_date": "2022-10-19"
+  }
+]
