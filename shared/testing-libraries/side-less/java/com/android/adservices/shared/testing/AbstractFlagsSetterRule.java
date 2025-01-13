@@ -66,7 +66,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.function.Consumer;
 
 // TODO(b/294423183): add unit tests for the most relevant / less repetitive stuff (don't need to
 // test all setters / getters, for example)
@@ -123,7 +122,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     private boolean mIsRunning;
     private boolean mFlagsClearedByTest;
 
-    private final Consumer<NameValuePair> mFlagsSetter;
+    private final NameValuePairSetter mFlagsSetter;
 
     private final boolean mSkipStuffWhenObjectsAreNullOnUnitTests;
 
@@ -173,7 +172,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
         // apply() is called)
         setSyncDisabledMode(DeviceConfig.SyncDisabledModeForTest.PERSISTENT);
 
-        mFlagsSetter = flag -> defaultFlagsSetterImplementation(flag);
+        mFlagsSetter = nvp -> defaultFlagsSetterImplementation(nvp);
         mSkipStuffWhenObjectsAreNullOnUnitTests = false;
 
         mLog.v(
@@ -189,7 +188,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     // split into multiple rules (for example, to set DebugFlags and Logcat tags) - as more features
     // are tested and/or refactored, these references should be properly set (and eventually the
     // constructors merged);
-    protected AbstractFlagsSetterRule(RealLogger logger, Consumer<NameValuePair> flagsSetter) {
+    protected AbstractFlagsSetterRule(RealLogger logger, NameValuePairSetter flagsSetter) {
         super(logger);
         mFlagsSetter = flagsSetter;
 
@@ -629,7 +628,7 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     // TODO(b/384798806): add unit test and/or javadoc
     protected final T setFlag(NameValuePair flag) {
         // TODO(b/384798806): log as well? Or would it be too verbose?
-        mFlagsSetter.accept(flag);
+        mFlagsSetter.set(flag);
         mChangedFlags.add(flag);
         return getThis();
     }

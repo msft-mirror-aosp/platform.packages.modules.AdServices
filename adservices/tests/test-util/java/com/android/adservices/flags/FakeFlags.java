@@ -23,13 +23,13 @@ import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.adservices.shared.testing.Identifiable;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.NameValuePair;
+import com.android.adservices.shared.testing.NameValuePairSetter;
 
 import com.google.common.annotations.VisibleForTesting;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 // TODO(b/384798806): make it package protected once FakeFlagsFactory is moved to this package
@@ -62,7 +62,7 @@ public final class FakeFlags extends RawFlags implements Identifiable {
         return new FakeFlags(/* immutable= */ true).setFakeFlagsFactoryFlags();
     }
 
-    Consumer<NameValuePair> getFlagsSetter() {
+    NameValuePairSetter getFlagsSetter() {
         return getFakeFlagsBackend();
     }
 
@@ -114,7 +114,7 @@ public final class FakeFlags extends RawFlags implements Identifiable {
                 .collect(Collectors.joining(", ", prefix, "}"));
     }
 
-    private static class FakeFlagsBackend implements FlagsBackend, Consumer<NameValuePair> {
+    private static class FakeFlagsBackend implements FlagsBackend, NameValuePairSetter {
 
         private final Map<String, NameValuePair> mFlags;
 
@@ -222,14 +222,14 @@ public final class FakeFlags extends RawFlags implements Identifiable {
         }
 
         @Override
-        public void accept(NameValuePair flag) {
-            mLog.v("setFlag(%s)", flag);
+        public void set(NameValuePair flag) {
+            mLog.v("set(%s)", flag);
             Objects.requireNonNull(flag, "internal error: NameValuePair cannot be null");
             mFlags.put(flag.name, flag);
         }
 
         void setFlag(String name, String value) {
-            accept(new NameValuePair(name, value));
+            set(new NameValuePair(name, value));
         }
     }
 }

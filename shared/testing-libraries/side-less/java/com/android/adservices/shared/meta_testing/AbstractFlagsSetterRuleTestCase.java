@@ -34,6 +34,7 @@ import static org.junit.Assert.assertThrows;
 import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassHasNoNothingAtAll;
 import com.android.adservices.shared.testing.AbstractFlagsSetterRule;
 import com.android.adservices.shared.testing.NameValuePair;
+import com.android.adservices.shared.testing.NameValuePairSetter;
 import com.android.adservices.shared.testing.TestFailure;
 import com.android.adservices.shared.testing.annotations.SetDoubleFlag;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
@@ -56,7 +57,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSetterRule<R>>
         extends SharedSidelessTestCase {
@@ -69,7 +69,7 @@ public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSet
             Description.createTestDescription(AClassHasNoNothingAtAll.class, "butItHasATest");
 
     /** Gets a new concrete implementation of the rule. */
-    protected abstract R newRule(DeviceGateway deviceGateway, Consumer<NameValuePair> flagsSetter);
+    protected abstract R newRule(DeviceGateway deviceGateway, NameValuePairSetter flagsSetter);
 
     protected final R newRule() {
         var rule = newRule(mFakeDeviceGateway, mFakeFlagsSetter);

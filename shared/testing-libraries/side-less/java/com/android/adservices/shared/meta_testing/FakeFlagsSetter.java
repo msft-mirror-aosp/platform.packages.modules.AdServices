@@ -18,22 +18,22 @@ package com.android.adservices.shared.meta_testing;
 import com.android.adservices.shared.testing.DynamicLogger;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.NameValuePair;
+import com.android.adservices.shared.testing.NameValuePairSetter;
 
 import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
 
-public final class FakeFlagsSetter implements Consumer<NameValuePair> {
+public final class FakeFlagsSetter implements NameValuePairSetter {
 
     private final Logger mLog = new Logger(DynamicLogger.getInstance(), getClass());
 
     private final List<NameValuePair> mCalls = new ArrayList<>();
 
     @Override
-    public void accept(NameValuePair nvp) {
-        mLog.d("setting %s", nvp);
+    public void set(NameValuePair nvp) {
+        mLog.d("set(%s)", nvp);
         mCalls.add(nvp);
     }
 
