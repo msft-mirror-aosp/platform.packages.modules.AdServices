@@ -205,7 +205,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
 
     @Before
     public void before() {
-        mocker.mockGetFlagsForTesting();
+        mocker.mockGetFlags(mFakeFlags);
         mDatastoreManager =
                 new SQLDatastoreManager(
                         MeasurementDbHelper.getInstance(),

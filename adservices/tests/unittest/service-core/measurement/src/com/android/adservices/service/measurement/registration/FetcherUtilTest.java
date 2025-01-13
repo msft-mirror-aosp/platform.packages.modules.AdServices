@@ -78,17 +78,9 @@ public final class FetcherUtilTest extends AdServicesExtendedMockitoTestCase {
 
     @Mock private AdServicesLogger mLogger;
 
-    // felipeal: Remove
-    //    @Rule
-    //    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-    //            new AdServicesExtendedMockitoRule.Builder(this)
-    //                    .spyStatic(FlagsFactory.class)
-    //                    .setStrictness(Strictness.WARN)
-    //                    .build();
-
     @Before
     public void setup() {
-        mocker.mockGetFlagsForTesting();
+        mocker.mockGetFlags(mFakeFlags);
         when(mMockFlags.getMeasurementEnableDebugReport()).thenReturn(true);
         when(mMockFlags.getMeasurementEnableHeaderErrorDebugReport()).thenReturn(true);
     }

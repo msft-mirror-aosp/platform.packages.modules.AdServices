@@ -98,7 +98,7 @@ public final class DebugReportApiTest extends AdServicesExtendedMockitoTestCase 
     public void setup() {
         ExtendedMockito.doNothing()
                 .when(() -> VerboseDebugReportingJobService.schedule(any(), any()));
-        mocker.mockGetFlagsForTesting();
+        mocker.mockGetFlags(mFakeFlags);
         mDebugReportApi =
                 spy(
                         new DebugReportApi(

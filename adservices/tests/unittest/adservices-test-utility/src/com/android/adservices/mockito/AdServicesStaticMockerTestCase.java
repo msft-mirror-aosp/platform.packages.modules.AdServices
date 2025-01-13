@@ -89,17 +89,6 @@ public abstract class AdServicesStaticMockerTestCase<T extends AdServicesStaticM
     }
 
     @Test
-    @MockStatic(FlagsFactory.class)
-    public final void testMockGetFlagsForTesting() {
-        getMocker().mockGetFlagsForTesting();
-
-        var actual = FlagsFactory.getFlags();
-
-        expect.withMessage("FlagsFactory.getFlags()").that(actual).isNotNull();
-        expect.withMessage("FlagsFactory.getFlags()").that(actual).isInstanceOf(FakeFlags.class);
-    }
-
-    @Test
     public final void testMockGetDebugFlags_null() {
         assertThrows(NullPointerException.class, () -> getMocker().mockGetDebugFlags(null));
     }

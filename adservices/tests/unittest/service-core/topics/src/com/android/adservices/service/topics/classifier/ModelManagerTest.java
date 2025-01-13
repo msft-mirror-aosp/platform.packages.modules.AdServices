@@ -40,7 +40,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -104,7 +103,7 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
 
     @Before
     public void setUp() {
-        mocker.mockGetFlagsForTesting();
+        mocker.mockGetFlags(mFakeFlags);
     }
 
     @Test
@@ -143,10 +142,9 @@ public final class ModelManagerTest extends AdServicesExtendedMockitoTestCase {
         Map<String, ClientFile> downloadedFiles = new HashMap<>();
         downloadedFiles.put(DOWNLOADED_MODEL_FILE_ID, ClientFile.newBuilder().build());
 
-        Flags mockedFlags = mock(Flags.class);
-        doReturn(true).when(mockedFlags).getClassifierForceUseBundledFiles();
-        // Force using bundled file
-        doReturn(mockedFlags).when(FlagsFactory::getFlags);
+        // NOTE: 2 lines below are no-op, test would pass without them
+        doReturn(true).when(mMockFlags).getClassifierForceUseBundledFiles();
+        mocker.mockGetFlags(mMockFlags);
 
         mProductionModelManager =
                 new ModelManager(
