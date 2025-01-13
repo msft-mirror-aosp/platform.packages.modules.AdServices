@@ -99,40 +99,40 @@ public final class MaintenanceJobService extends JobService {
                     /* doRecord= */ true);
         }
 
-        ListenableFuture<Void> appReconciliationFuture;
+        ListenableFuture<Boolean> appReconciliationFuture;
         if (flags.getTopicsKillSwitch()) {
             LogUtil.d("Topics API is disabled, skipping Topics Job");
-            appReconciliationFuture = Futures.immediateFuture(null);
+            appReconciliationFuture = Futures.immediateFuture(true);
         } else {
             appReconciliationFuture =
-                    Futures.submit(
-                            () -> TopicsWorker.getInstance().reconcileApplicationUpdate(this),
-                            AdServicesExecutors.getBackgroundExecutor());
+                    submitRunnableAndHandleExceptions(
+                            "Failed to reconcile application update.",
+                            () -> TopicsWorker.getInstance().reconcileApplicationUpdate(this));
         }
 
-        ListenableFuture<Void> fledgeMaintenanceTasksFuture;
+        ListenableFuture<Boolean> fledgeMaintenanceTasksFuture;
         if (flags.getFledgeSelectAdsKillSwitch()) {
             LogUtil.d("Ad Selection API is disabled, skipping Ad Selection Maintenance Job");
-            fledgeMaintenanceTasksFuture = Futures.immediateFuture(null);
+            fledgeMaintenanceTasksFuture = Futures.immediateFuture(true);
         } else {
             fledgeMaintenanceTasksFuture =
-                    Futures.submit(
-                            this::doAdSelectionDataMaintenanceTasks,
-                            AdServicesExecutors.getBackgroundExecutor());
+                    submitRunnableAndHandleExceptions(
+                            "Failed to complete Ad Selection data maintenance tasks.",
+                            this::doAdSelectionDataMaintenanceTasks);
         }
 
-        ListenableFuture<Void> protectedSignalsMaintenanceTasksFuture;
+        ListenableFuture<Boolean> protectedSignalsMaintenanceTasksFuture;
         if (!flags.getProtectedSignalsCleanupEnabled()) {
             LogUtil.d("Signals cleanup is disabled, skipping maintenance job");
-            protectedSignalsMaintenanceTasksFuture = Futures.immediateFuture(null);
+            protectedSignalsMaintenanceTasksFuture = Futures.immediateFuture(true);
         } else {
             protectedSignalsMaintenanceTasksFuture =
-                    Futures.submit(
-                            this::doProtectedSignalsDataMaintenanceTasks,
-                            AdServicesExecutors.getBackgroundExecutor());
+                    submitRunnableAndHandleExceptions(
+                            "Failed to complete Protected Signals data maintenance tasks.",
+                            this::doProtectedSignalsDataMaintenanceTasks);
         }
 
-        ListenableFuture<List<Void>> futuresList =
+        ListenableFuture<List<Boolean>> futuresList =
                 Futures.allAsList(
                         fledgeMaintenanceTasksFuture,
                         protectedSignalsMaintenanceTasksFuture,
@@ -140,15 +140,22 @@ public final class MaintenanceJobService extends JobService {
 
         Futures.addCallback(
                 futuresList,
-                new FutureCallback<List<Void>>() {
+                new FutureCallback<>() {
                     @Override
-                    public void onSuccess(List<Void> result) {
+                    public void onSuccess(List<Boolean> result) {
                         boolean shouldRetry = false;
-                        AdServicesJobServiceLogger.getInstance()
-                                .recordJobFinished(
-                                        MAINTENANCE_JOB_ID, /* isSuccessful= */ true, shouldRetry);
+                        boolean isSuccessful = result.stream().allMatch(b -> b);
 
-                        LogUtil.d("PP API jobs are done!");
+                        if (isSuccessful) {
+                            LogUtil.d("PP API jobs are done!");
+                        } else {
+                            LogUtil.e(
+                                    "Failed to handle MaintenanceJobService: " + params.getJobId());
+                        }
+
+                        AdServicesJobServiceLogger.getInstance()
+                                .recordJobFinished(MAINTENANCE_JOB_ID, isSuccessful, shouldRetry);
+
                         jobFinished(params, shouldRetry);
                     }
 
@@ -179,6 +186,21 @@ public final class MaintenanceJobService extends JobService {
         AdServicesJobServiceLogger.getInstance()
                 .recordOnStopJob(params, MAINTENANCE_JOB_ID, shouldRetry);
         return shouldRetry;
+    }
+
+    private ListenableFuture<Boolean> submitRunnableAndHandleExceptions(
+            String message, Runnable runnable) {
+        return Futures.submit(
+                () -> {
+                    try {
+                        runnable.run();
+                        return true;
+                    } catch (Exception e) {
+                        LogUtil.e(e, message);
+                        return false;
+                    }
+                },
+                AdServicesExecutors.getBackgroundExecutor());
     }
 
     @VisibleForTesting
