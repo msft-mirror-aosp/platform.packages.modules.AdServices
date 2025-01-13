@@ -1,0 +1,79 @@
+enrollmentId,companyId,sdkNames,attributionSourceRegistrationUrl,attributionTriggerRegistrationUrl,attributionReportingUrl,remarketingResponseBasedRegistrationUrl,encryptionKeyUrl
+WQU8J,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://googleadservices.com,https://googleadservices.com,https://googleadservices.com,,https://googleadservices.com
+3VT6H,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.applovin.sdk,https://applovin.com,https://applovin.com,https://applovin.com,https://applovin.com,https://applovin.com
+B98AH,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.taboola.android,https://taboola.com,https://taboola.com,https://taboola.com,https://taboola.com,https://taboola.com
+R6BFT,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,tv.brid.sdk,,,,https://brid.tv,https://brid.tv
+X7W29,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.singular.sdk,https://singular.net,https://singular.net,https://singular.net,https://singular.net,https://singular.net
+KF9RT,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,,,,https://creativecdn.com,https://creativecdn.com
+YRDFA,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,org.superfine.trackingdemo,https://superfine.org,https://superfine.org,https://superfine.org,https://superfine.org,https://superfine.org
+R3CU8,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,,,,,https://dailymail.co.uk,https://dailymail.co.uk
+J7P9Q,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING,,https://weborama.fr,https://weborama.fr,https://weborama.fr,,https://weborama.fr
+67J8J,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://adjust.com,https://adjust.com,https://adjust.com,https://adjust.com,https://adjust.com
+BF6YM,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING,,https://pinterest.com,https://pinterest.com,https://pinterest.com,,https://pinterest.com
+289PD,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://dynalyst.jp,https://dynalyst.jp,https://dynalyst.jp,https://dynalyst.jp,https://dynalyst.jp
+N4Q62,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://remerge.sb,https://remerge.sb,https://remerge.sb,https://remerge.sb,https://remerge.sb
+9UDTY,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.my.target,https://mail.ru,https://mail.ru,https://mail.ru,https://mail.ru,https://mail.ru
+ZQ9R9,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.ironsource.sdk,https://ironsrc.mobi,https://ironsrc.mobi,https://ironsrc.mobi,https://ironsrc.mobi,https://ironsrc.mobi
+AE8AA,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING,,https://facebook.com,https://facebook.com,https://facebook.com,,https://facebook.com
+TKMHM,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.startapp:inapp-sdk,https://startappservice.com,https://startappservice.com,https://startappservice.com,https://startappservice.com,https://startappservice.com
+6B2TB,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,co.optable.android_sdk,https://optable.co,https://optable.co,https://optable.co,https://optable.co,https://optable.co
+KR8EJ,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.pubmatic.sdk,,,,https://pubmatic.com,https://pubmatic.com
+G4VE2,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,net.kidoz.sdk,https://kidoz.net,https://kidoz.net,https://kidoz.net,https://kidoz.net,https://kidoz.net
+4MYKT,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://appsflyer.com,https://appsflyer.com,https://appsflyer.com,https://appsflyer.com,https://appsflyer.com
+WEWGV,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.google.android.gms:play-services-ads com.google.android.gms:play-services-ads-lite com.google.ads.interactivemedia.v3 com.google.android.gms:play-services-pal com.google.android.gms:play-services-afs-native,https://doubleclick.net,https://doubleclick.net,https://doubleclick.net,https://doubleclick.net,https://doubleclick.net
+M5DW9,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://dataseat.com,https://dataseat.com,https://dataseat.com,https://dataseat.com,https://dataseat.com
+FWD4N,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,,,,https://yahoo.co.jp,https://yahoo.co.jp
+TE565,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,net.pubnative.lite.sdk,,,,https://verve.com,https://verve.com
+PYVXD,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.google.firebase:firebase-analytics,https://google-analytics.com,https://google-analytics.com,https://google-analytics.com,https://google-analytics.com,https://google-analytics.com
+FR3MW,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.unity3d.ads com.unity3d.ads.sdkruntime,https://unity3d.com,https://unity3d.com,https://unity3d.com,https://unity3d.com,https://unity3d.com
+XCBNH,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://smadexprivacysandbox.com,https://smadexprivacysandbox.com,https://smadexprivacysandbox.com,https://smadexprivacysandbox.com,https://smadexprivacysandbox.com
+RWVBQ,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://atomex.net,https://atomex.net,https://atomex.net,https://atomex.net,https://atomex.net
+Q282V,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,,,,https://creative-serving.com,https://creative-serving.com
+ARX6U,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.yandex.android:mobileads,,,,https://yandex.ru,https://yandex.ru
+N3HKH,PRIVACY_SANDBOX_API_TOPICS,com.ogury.sdk,,,,,https://presage.io
+CZ3BG,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.mobilefuse.sdk,,,,https://mobilefuse.com,https://mobilefuse.com
+NWNZQ,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING,,https://jampp.net,https://jampp.net,https://jampp.net,,https://jampp.net
+J6MJJ,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,,,,https://thesun.co.uk,https://thesun.co.uk
+RPEW4,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,,,,https://demand.supply,https://demand.supply
+MDAR2,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING,,https://trip.com,https://trip.com,https://trip.com,,https://trip.com
+J4KNU,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,,,,https://admission.net,https://admission.net
+M2XT6,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,,,,https://washingtonpost.com,https://washingtonpost.com
+FBP3P,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,,,,https://ad.gt,https://ad.gt
+ZX8UV,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.neodatagroup.sdk.exaudi,,,,https://blendee.com,https://blendee.com
+7UM4P,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://yieldmo.com,https://yieldmo.com,https://yieldmo.com,https://yieldmo.com,https://yieldmo.com
+4MCGY,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,,,,https://tncid.app,https://tncid.app
+XZP6J,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.ad_stir.develop.adstirwebviewsdk,,,,https://ad-stir.com,https://ad-stir.com
+423T5,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://gunosy.com,https://gunosy.com,https://gunosy.com,https://gunosy.com,https://gunosy.com
+XG7AT,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://adikteev.com,https://adikteev.com,https://adikteev.com,https://adikteev.com,https://adikteev.com
+FTA5F,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://mediaintelligence.de,https://mediaintelligence.de,https://mediaintelligence.de,https://mediaintelligence.de,https://mediaintelligence.de
+H9JV8,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.anythink.sdk,https://toponad.com,https://toponad.com,https://toponad.com,https://toponad.com,https://toponad.com
+G9X8G,PRIVACY_SANDBOX_API_TOPICS,com.cnx.connatixplayersdk.external,,,,,https://connatix.com
+28CUQ,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.brandio.ads,https://display.io,https://display.io,https://display.io,https://display.io,https://display.io
+G5TPR,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING,,https://linkedin.com,https://linkedin.com,https://linkedin.com,,https://linkedin.com
+VX5YX,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,net.nativo.sdk,https://postrelease.com,https://postrelease.com,https://postrelease.com,https://postrelease.com,https://postrelease.com
+B4HFV,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.inmobi.monetization:inmobi-ads-kotlin,https://inmobi.com,https://inmobi.com,https://inmobi.com,https://inmobi.com,https://inmobi.com
+K5HGK,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.adswizz.sdk,,,,https://adswizz.com,https://adswizz.com
+VNJQ4,PRIVACY_SANDBOX_API_TOPICS,com.fyber.inneractive.sdk,,,,,https://digitalturbine.com
+ptb,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.google.android.libraries.internal.sampleads,,,,https://ptb-fledge-static-5jyy5ulagq-uc.a.run.app,https://ptb-fledge-static-5jyy5ulagq-uc.a.run.app
+M9G8A,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.hyprmx.android:HyprMX-SDK,https://hyprmx.com,https://hyprmx.com,https://hyprmx.com,https://hyprmx.com,https://hyprmx.com
+3PPNA,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.nhnace.adlib,,,,https://nhnace.com,https://nhnace.com
+FUA8P,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.momento.ads,,,,https://momento.dev,https://momento.dev
+ZK7QW,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.vpon.ads,https://vpadn.com,https://vpadn.com,https://vpadn.com,https://vpadn.com,https://vpadn.com
+C5E3F,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://adsmeasurement.com,https://adsmeasurement.com,https://adsmeasurement.com,https://adsmeasurement.com,https://adsmeasurement.com
+5UTQW,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,,,,https://metro.co.uk,https://metro.co.uk
+WJXKE,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,,,,https://bluems.com,https://bluems.com
+BZ2MB,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,,,,https://relevant-digital.com,https://relevant-digital.com
+9VKC2,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,,,,https://gama.globo,https://gama.globo
+92TPZ,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.outbrain.mobile:obsdk,,,,https://outbrain.com,https://outbrain.com
+59AGN,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://appier.net,https://appier.net,https://appier.net,https://appier.net,https://appier.net
+8GNYH,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,,,,https://uinterbox.com,https://uinterbox.com
+WAZQK,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://admixer.net,https://admixer.net,https://admixer.net,https://admixer.net,https://admixer.net
+7ACAW,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://edkt.io,https://edkt.io,https://edkt.io,https://edkt.io,https://edkt.io
+GCUDR,PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,,,,https://ctnsnet.com,https://ctnsnet.com
+Z5T3R,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://ptb-ba-buyer-5jyy5ulagq-uc.a.run.app,https://ptb-ba-buyer-5jyy5ulagq-uc.a.run.app,https://ptb-ba-buyer-5jyy5ulagq-uc.a.run.app,https://ptb-ba-buyer-5jyy5ulagq-uc.a.run.app,https://ptb-ba-buyer-5jyy5ulagq-uc.a.run.app
+HJMAH,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://ptb-ba-seller-5jyy5ulagq-uc.a.run.app,https://ptb-ba-seller-5jyy5ulagq-uc.a.run.app,https://ptb-ba-seller-5jyy5ulagq-uc.a.run.app,https://ptb-ba-seller-5jyy5ulagq-uc.a.run.app,https://ptb-ba-seller-5jyy5ulagq-uc.a.run.app
+349BU,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE PRIVACY_SANDBOX_API_TOPICS,com.kakao.adfit.ads,https://daum.net,https://daum.net,https://daum.net,https://daum.net,https://daum.net
+RJ2K6,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_TOPICS,com.snap.adkit,https://snapchat.com,https://snapchat.com,https://snapchat.com,,https://snapchat.com
+KYFBB,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING,,https://tiktok.com,https://tiktok.com,https://tiktok.com,,https://tiktok.com
+37T3X,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING,,https://justtrack.io,https://justtrack.io,https://justtrack.io,,https://justtrack.io
+ER34T,PRIVACY_SANDBOX_API_ATTRIBUTION_REPORTING PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE,,https://pontiac.media,https://pontiac.media,https://pontiac.media,https://pontiac.media,https://pontiac.media
