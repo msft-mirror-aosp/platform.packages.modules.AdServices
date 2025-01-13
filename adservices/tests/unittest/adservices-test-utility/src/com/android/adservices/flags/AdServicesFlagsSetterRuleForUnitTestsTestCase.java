@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.common;
+package com.android.adservices.flags;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.service.Flags;
-import com.android.adservices.service.SetFakeFlagsFactoryFlags;
 import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassHasNoNothingAtAll;
 import com.android.adservices.shared.meta_testing.SimpleStatement;
 
@@ -66,7 +66,7 @@ abstract class AdServicesFlagsSetterRuleForUnitTestsTestCase<
 
     // TODO(b/384798806): merge with instance method once FakeFlagsFactoryTest is gone or doesn't
     // use it anymore
-    public static void assertFakeFlagsFactoryFlags(StandardSubjectBuilder expect, Flags flags) {
+    static void assertFakeFlagsFactoryFlags(StandardSubjectBuilder expect, Flags flags) {
         // TODO(b/384798806): pass R as well and assert size of changed flags is 16
         expect.withMessage("getAdSelectionBiddingTimeoutPerCaMs()")
                 .that(flags.getAdSelectionBiddingTimeoutPerCaMs())
@@ -171,7 +171,6 @@ abstract class AdServicesFlagsSetterRuleForUnitTestsTestCase<
         test.onEvaluate(() -> consumer.accept(rule, flags));
         rule.apply(test, description).evaluate();
         test.assertEvaluated();
-
     }
 
     @SetFakeFlagsFactoryFlags

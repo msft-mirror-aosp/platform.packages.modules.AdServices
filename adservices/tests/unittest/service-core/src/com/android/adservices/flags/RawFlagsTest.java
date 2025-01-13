@@ -13,11 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service;
+package com.android.adservices.flags;
 
-public final class SmartFlagsTest extends PhFlagsTest {
+import static org.junit.Assert.assertThrows;
 
-    public SmartFlagsTest() {
-        super(new SmartFlags(), /* isRaw= */ false);
+import android.provider.DeviceConfig;
+
+import com.android.adservices.service.PhFlagsTest;
+import com.android.adservices.shared.flags.DeviceConfigFlagsBackend;
+
+import org.junit.Test;
+
+public final class RawFlagsTest extends PhFlagsTest {
+
+    public RawFlagsTest() {
+        super(
+                new RawFlags(new DeviceConfigFlagsBackend(DeviceConfig.NAMESPACE_ADSERVICES)),
+                /* isRaw= */ true);
+    }
+
+    @Test
+    public void testNullConstructor() {
+        assertThrows(NullPointerException.class, () -> new RawFlags(null));
     }
 }

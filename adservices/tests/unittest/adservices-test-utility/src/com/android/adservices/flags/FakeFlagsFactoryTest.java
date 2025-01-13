@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.common;
+package com.android.adservices.flags;
 
-import static com.android.adservices.common.AdServicesFlagsSetterRuleForUnitTestsTestCase.assertFakeFlagsFactoryFlags;
+import static com.android.adservices.flags.AdServicesFlagsSetterRuleForUnitTestsTestCase.assertFakeFlagsFactoryFlags;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.service.FakeFlags;
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 

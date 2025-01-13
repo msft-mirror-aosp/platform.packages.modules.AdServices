@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service;
+package com.android.adservices.flags;
 
-import static com.android.adservices.common.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
+import static com.android.adservices.flags.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
 
-import com.android.adservices.common.AdServicesFlagsSetterRuleForUnitTests;
-import com.android.adservices.common.MissingFlagBehavior;
+import com.android.adservices.service.Flags;
 import com.android.adservices.shared.flags.FlagsBackend;
 import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.adservices.shared.testing.Identifiable;

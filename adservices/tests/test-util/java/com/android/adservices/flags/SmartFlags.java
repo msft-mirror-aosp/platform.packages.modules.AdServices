@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.android.adservices.service;
+package com.android.adservices.flags;
 
 import static android.provider.DeviceConfig.NAMESPACE_ADSERVICES;
 

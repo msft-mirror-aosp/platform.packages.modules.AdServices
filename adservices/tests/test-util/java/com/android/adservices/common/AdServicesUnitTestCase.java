@@ -20,6 +20,8 @@ import static org.mockito.Mockito.mock;
 import android.annotation.CallSuper;
 import android.content.Context;
 
+import com.android.adservices.flags.AdServicesFakeFlagsSetterRule;
+import com.android.adservices.flags.AdServicesFlagsSetterRuleForUnitTests;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
 
