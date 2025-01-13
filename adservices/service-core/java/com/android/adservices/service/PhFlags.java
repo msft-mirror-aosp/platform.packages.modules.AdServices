@@ -3520,6 +3520,13 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableUnboundedReportsWithTriggerContextId() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_UNBOUNDED_REPORTS_WITH_TRIGGER_CONTEXT_ID,
+                MEASUREMENT_ENABLE_UNBOUNDED_REPORTS_WITH_TRIGGER_CONTEXT_ID);
+    }
+
+    @Override
     public boolean getMeasurementEnableFifoDestinationsDeleteAggregateReports() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MEASUREMENT_ENABLE_FIFO_DESTINATIONS_DELETE_AGGREGATE_REPORTS,

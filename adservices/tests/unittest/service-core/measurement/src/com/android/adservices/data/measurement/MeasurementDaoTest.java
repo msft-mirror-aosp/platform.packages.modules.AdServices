@@ -3944,7 +3944,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void getNumAggregateReportsPerSource_returnsExpected() {
+    public void countNumAggregateReportsPerSource_returnsExpected() {
         List<Source> sources =
                 Arrays.asList(
                         SourceFixture.getMinimalValidSourceBuilder()
@@ -3975,7 +3975,16 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                                 WebUtil.validUrl("https://destination-2.test"),
                                 3,
                                 "source2",
+                                // This report should not be counted because it includes a trigger
+                                // context ID.
                                 AggregateReportFixture.ValidAggregateReportParams.API),
+                        generateMockAggregateReportBuilder(
+                                WebUtil.validUrl("https://destination-2.test"),
+                                33,
+                                "source2",
+                                AggregateReportFixture.ValidAggregateReportParams.API)
+                                        .setTriggerContextId("12345")
+                                        .build(),
                         generateMockAggregateReport(
                                 WebUtil.validUrl("https://destination-1.test"),
                                 4,
@@ -4006,6 +4015,9 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                             MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
                             aggregateReport.getAttributionDestination().toString());
                     values.put(MeasurementTables.AggregateReport.API, aggregateReport.getApi());
+                    values.put(
+                            MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID,
+                            aggregateReport.getTriggerContextId());
                     db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
                 };
         reports.forEach(aggregateReportConsumer);
@@ -13866,14 +13878,19 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                 .build();
     }
 
-    private AggregateReport generateMockAggregateReport(
+    private AggregateReport.Builder generateMockAggregateReportBuilder(
             String attributionDestination, int id, String sourceId, String api) {
         return new AggregateReport.Builder()
                 .setId(String.valueOf(id))
                 .setSourceId(sourceId)
                 .setAttributionDestination(Uri.parse(attributionDestination))
-                .setApi(api)
-                .build();
+                .setApi(api);
+    }
+
+    private AggregateReport generateMockAggregateReport(
+            String attributionDestination, int id, String sourceId, String api) {
+        return generateMockAggregateReportBuilder(
+                attributionDestination, id, sourceId, api).build();
     }
 
     private AggregateReport generateMockAggregateReport(
