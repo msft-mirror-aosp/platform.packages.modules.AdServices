@@ -4924,12 +4924,8 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
         doNothing().when(mMockIAdServicesManager).recordNotificationDisplayed(true);
 
         doReturn(null).when(spyConsentManager).getConsent(any());
-        doReturn(AdServicesApiConsent.GIVEN)
-                .when(spyConsentManager)
-                .getConsent(AdServicesApiType.TOPICS);
-        doReturn(AdServicesApiConsent.REVOKED)
-                .when(spyConsentManager)
-                .getConsent(AdServicesApiType.MEASUREMENTS);
+        doReturn(true).when(spyConsentManager).getConsentNullable(AdServicesApiType.TOPICS);
+        doReturn(false).when(spyConsentManager).getConsentNullable(AdServicesApiType.MEASUREMENTS);
         doReturn(true).when(spyConsentManager).wasGaUxNotificationDisplayed();
 
         final String[] dataStringArg = new String[1];

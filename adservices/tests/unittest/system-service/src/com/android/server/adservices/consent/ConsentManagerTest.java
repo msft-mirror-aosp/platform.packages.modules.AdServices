@@ -136,12 +136,21 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
     }
 
     @Test
-    public void testGetConsent_unSet() throws Exception {
+    public void testGetConsent_unset() {
         // Newly initialized ConsentManager has consent = false.
         assertThat(mConsentManager.getConsent(ConsentParcel.ALL_API).isIsGiven()).isFalse();
         assertThat(mConsentManager.getConsent(ConsentParcel.TOPICS).isIsGiven()).isFalse();
         assertThat(mConsentManager.getConsent(ConsentParcel.FLEDGE).isIsGiven()).isFalse();
         assertThat(mConsentManager.getConsent(ConsentParcel.MEASUREMENT).isIsGiven()).isFalse();
+    }
+
+    @Test
+    public void testGetConsentNullable_unset() {
+        // Newly initialized ConsentManager has consent = null for nullable getters.
+        assertThat(mConsentManager.getConsentNullable(ConsentParcel.ALL_API)).isNull();
+        assertThat(mConsentManager.getConsentNullable(ConsentParcel.TOPICS)).isNull();
+        assertThat(mConsentManager.getConsentNullable(ConsentParcel.FLEDGE)).isNull();
+        assertThat(mConsentManager.getConsentNullable(ConsentParcel.MEASUREMENT)).isNull();
     }
 
     @Test

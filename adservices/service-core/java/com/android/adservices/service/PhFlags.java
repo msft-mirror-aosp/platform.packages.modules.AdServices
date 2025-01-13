@@ -3983,6 +3983,9 @@ public final class PhFlags implements Flags {
                 isGetAdServicesCommonStatesApiEnabled());
         uxMap.put(FlagsConstants.KEY_PAS_UX_ENABLED, getPasUxEnabled());
         uxMap.put(FlagsConstants.KEY_EEA_PAS_UX_ENABLED, getEeaPasUxEnabled());
+        uxMap.put(
+                KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED,
+                getAdServicesConsentBusinessLogicMigrationEnabled());
         return uxMap;
     }
 

@@ -163,6 +163,28 @@ public final class ConsentManager {
         }
     }
 
+    /** Retrieves the nullalble consent for all PP API services. */
+    public ConsentParcel getConsentNullable(@ConsentParcel.ConsentApiType int consentApiType) {
+        LogUtil.d("ConsentManager.getConsent() is invoked for consentApiType = " + consentApiType);
+
+        mReadWriteLock.readLock().lock();
+        try {
+            Boolean consent = mDatastore.getBoolean(getConsentApiTypeKey(consentApiType));
+            if (consent == null) {
+                return null;
+            }
+            return new ConsentParcel.Builder()
+                    .setConsentApiType(consentApiType)
+                    .setIsGiven(consent)
+                    .build();
+        } catch (NullPointerException | IllegalArgumentException e) {
+            LogUtil.e(e, ERROR_MESSAGE_DATASTORE_EXCEPTION_WHILE_GET_CONTENT);
+            return ConsentParcel.createRevokedConsent(consentApiType);
+        } finally {
+            mReadWriteLock.readLock().unlock();
+        }
+    }
+
     /** Set Consent */
     public void setConsent(ConsentParcel consentParcel) throws IOException {
         mReadWriteLock.writeLock().lock();

@@ -575,6 +575,33 @@ public final class ConsentManager {
     }
 
     /**
+     * Retrieves the nullable consent per API.
+     *
+     * @param apiType apiType for which the consent should be provided
+     * @return Boolean indicating consent is given (true) or revoked (false). null if unknown.
+     */
+    @SuppressLint("MissingPermission")
+    public Boolean getConsentNullable(AdServicesApiType apiType) {
+        return executeGettersByConsentSourceOfTruth(
+                /* defaultReturn= */ null,
+                () -> mDatastore.getBoolean(apiType.toPpApiDatastoreKey()),
+                () -> {
+                    ConsentParcel parcel =
+                            mAdServicesManager.getConsent(apiType.toConsentApiType());
+                    if (parcel == null) {
+                        return null;
+                    }
+                    return parcel.isIsGiven();
+                },
+                () -> mAppSearchConsentManager.getConsentNullable(apiType.toPpApiDatastoreKey()),
+                (e) ->
+                        ErrorLogUtil.e(
+                                e,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX));
+    }
+
+    /**
      * Proxy call to {@link TopicsWorker} to get {@link ImmutableList} of {@link Topic}s which could
      * be returned to the {@link TopicsWorker} clients.
      *
@@ -1918,7 +1945,7 @@ public final class ConsentManager {
 
         try {
             switch (apiType) {
-                case MEASUREMENT -> consent = getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+                case MEASUREMENT -> consent = getConsentNullable(AdServicesApiType.MEASUREMENTS);
                 case ON_DEVICE_PERSONALIZATION, PROTECTED_APP_SIGNALS -> {
                     boolean isEuDevice =
                             DeviceRegionProvider.isEuDevice(ApplicationContextSingleton.get());
@@ -1929,11 +1956,12 @@ public final class ConsentManager {
                                     && mFlags.getPasUxEnabled()
                                     && wasPasNotificationDisplayed();
                     if (isOnboardedEeaPasUser || isOnboardedRowPasUser) {
-                        consent = getConsent(AdServicesApiType.FLEDGE).isGiven();
+                        // true since this consent is combined with toggles for final user choice.
+                        consent = true;
                     }
                 }
-                case PROTECTED_AUDIENCE -> consent = getConsent(AdServicesApiType.FLEDGE).isGiven();
-                case TOPICS -> consent = getConsent(AdServicesApiType.TOPICS).isGiven();
+                case PROTECTED_AUDIENCE -> consent = getConsentNullable(AdServicesApiType.FLEDGE);
+                case TOPICS -> consent = getConsentNullable(AdServicesApiType.TOPICS);
                 default -> consent = null;
             }
         } catch (NullPointerException e) {
