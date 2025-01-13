@@ -16,6 +16,7 @@
 
 package android.adservices.test.scenario.adservices.fledge;
 
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import android.adservices.adselection.AdSelectionOutcome;
 import android.adservices.adselection.GetAdSelectionDataOutcome;
@@ -26,6 +27,7 @@ import android.adservices.customaudience.CustomAudience;
 import android.adservices.test.scenario.adservices.fledge.utils.CustomAudienceTestFixture;
 import android.adservices.test.scenario.adservices.fledge.utils.FakeAdExchangeServer;
 import android.adservices.test.scenario.adservices.fledge.utils.SelectAdResponse;
+import android.net.Uri;
 import android.platform.test.option.StringOption;
 import android.platform.test.scenario.annotation.Scenario;
 
@@ -33,7 +35,6 @@ import com.android.adservices.service.FlagsConstants;
 
 import com.google.common.io.BaseEncoding;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -173,7 +174,12 @@ public class PtbM11RampServerAuctionSimulationTest extends ServerAuctionE2ETestB
 
         CustomAudienceTestFixture.leaveCustomAudience(customAudiences);
 
-        Assert.assertTrue(
-                adSelectionOutcome.getRenderUri().toString().contains(getAdWinnerDomain()));
+        assertWithMessage(
+                        "Ad Selection Outcome Uri: %s is not equal to the expected winning Uri: %s",
+                        adSelectionOutcome.getRenderUri(), getAdWinnerDomain())
+                .that(adSelectionOutcome.getRenderUri())
+                .isEqualTo(
+                        Uri.parse(
+                                "https://ptb-ba-buyer-5jyy5ulagq-uc.a.run.app/render/winningCA/1"));
     }
 }
