@@ -37,8 +37,8 @@ import android.os.Build;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.adservices.service.FakeFlagsFactory.SetFakeFlagsFactoryFlags;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.SetFakeFlagsFactoryFlags;
 import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.adservices.shared.testing.NameValuePair;
 

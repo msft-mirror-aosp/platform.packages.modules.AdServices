@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 The Android Open Source Project
+ * Copyright (C) 2025 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,12 @@
  */
 package com.android.adservices.service;
 
-/** Provides a {@link Flags} singleton that overrides some common values that are used in tests. */
-public final class FakeFlagsFactory {
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-    // Use the Flags that has constant values.
-    private static final Flags sSingleton =
-            FakeFlags.createFakeFlagsForFakeFlagsFactoryPurposesOnly();
-
-    /** Gets the singleton. */
-    public static Flags getFlagsForTest() {
-        return sSingleton;
-    }
-
-    private FakeFlagsFactory() {
-        throw new UnsupportedOperationException("provides only static methods");
-    }
-}
+/** Used by {@code FlagSetter} rules to provide common values that are used in tests. */
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ElementType.METHOD, ElementType.TYPE})
+public @interface SetFakeFlagsFactoryFlags {}

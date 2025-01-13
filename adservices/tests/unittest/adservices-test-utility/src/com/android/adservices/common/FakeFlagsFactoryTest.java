@@ -16,21 +16,59 @@
 package com.android.adservices.common;
 
 import static com.android.adservices.common.AdServicesFlagsSetterRuleForUnitTestsTestCase.assertFakeFlagsFactoryFlags;
+import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
+import static org.junit.Assert.assertThrows;
+
+import com.android.adservices.service.FakeFlags;
 import com.android.adservices.service.FakeFlagsFactory;
+import com.android.adservices.service.Flags;
 
 import org.junit.Test;
 
-@SuppressWarnings("deprecation")
 public final class FakeFlagsFactoryTest extends AdServicesUnitTestCase {
 
     @Test
     public void testGetFlagsForTest() {
-        var flags = FakeFlagsFactory.getFlagsForTest();
+        var flags = getSingleton();
 
-        assertWithMessage("getFlagsForTest()").that(flags).isNotNull();
         assertFakeFlagsFactoryFlags(expect, flags);
+    }
+
+    @Test
+    public void testGetFlagsForTest_isSingleton() {
+        var flags1 = getSingleton("1st getFlagsForTest() call");
+        assertFakeFlagsFactoryFlags(expect, flags1);
+
+        var flags2 = getSingleton("2nd getFlagsForTest() call");
+        expect.withMessage("flag from 2nd getFlagsForTest() call")
+                .that(flags2)
+                .isSameInstanceAs(flags1);
+    }
+
+    @Test
+    public void testGetFlagsForTest_isImmutable() {
+        FakeFlags flags = (FakeFlags) getSingleton();
+        boolean before = flags.getGlobalKillSwitch();
+
+        assertThrows(
+                UnsupportedOperationException.class,
+                () -> flags.setFlag(KEY_GLOBAL_KILL_SWITCH, Boolean.toString(!before)));
+
+        expect.withMessage("getGlobalKillSwitch() after setFlags() call that threw")
+                .that(flags.getGlobalKillSwitch())
+                .isEqualTo(before);
+    }
+
+    private static Flags getSingleton() {
+        return getSingleton("getFlagsForTest()");
+    }
+
+    private static Flags getSingleton(String message) {
+        var flags = FakeFlagsFactory.getFlagsForTest();
+        assertWithMessage(message).that(flags).isNotNull();
+        return flags;
     }
 }

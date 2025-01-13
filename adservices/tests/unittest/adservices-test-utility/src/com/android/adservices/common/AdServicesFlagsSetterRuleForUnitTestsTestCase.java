@@ -15,9 +15,8 @@
  */
 package com.android.adservices.common;
 
-import static com.android.adservices.service.FakeFlagsFactory.SetFakeFlagsFactoryFlags;
-
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.SetFakeFlagsFactoryFlags;
 import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassHasNoNothingAtAll;
 import com.android.adservices.shared.meta_testing.SimpleStatement;
 
