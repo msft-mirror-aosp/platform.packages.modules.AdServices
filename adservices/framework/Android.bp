@@ -38,9 +38,9 @@ java_sdk_library {
         "framework-sdksandbox.impl",
         "androidx.annotation_annotation",
         "error_prone_annotations",
-        "adservices_flags_lib",
     ],
     static_libs: [
+        "adservices_flags_lib",
         "adservices-shared-exceptions",
     ],
     sdk_version: "module_current",
