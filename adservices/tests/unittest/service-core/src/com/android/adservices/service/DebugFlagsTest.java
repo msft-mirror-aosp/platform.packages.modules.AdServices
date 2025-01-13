@@ -60,7 +60,7 @@ public final class DebugFlagsTest extends DebugFlagsTestCase<DebugFlags> {
     }
 
     @Override
-    protected void setDebugFlag(String name, String value) {
+    protected void setDebugFlag(DebugFlags debugFlags, String name, String value) {
         String realName = PhFlags.getSystemPropertyName(name);
         mLog.v("setDebugFlag(%s, %s): setting SystemProperty %s", name, value, realName);
         TestableSystemProperties.set(realName, "" + value);
