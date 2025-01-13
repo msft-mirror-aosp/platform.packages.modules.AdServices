@@ -27,7 +27,6 @@ import static com.android.os.adservices.AdservicesExtensionAtoms.AD_SERVICES_API
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
-import android.cts.statsdatom.lib.AtomTestUtils;
 import android.cts.statsdatom.lib.ConfigUtils;
 import android.cts.statsdatom.lib.ReportUtils;
 
@@ -49,7 +48,6 @@ import com.google.protobuf.ExtensionRegistry;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -71,6 +69,7 @@ import java.util.List;
 @SetFlagEnabled(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK)
 @EnableDebugFlag(KEY_CONSENT_MANAGER_DEBUG_MODE)
 public final class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
+    private static final int LOGGING_EVENT_WAIT_TIME_MS = 5000;
     private static final String PACKAGE = "com.android.adservices.cts";
     private static final String CLASS = "TopicsApiLogActivity";
     private static final String CLASS_NAME = "TARGETING";
@@ -102,7 +101,6 @@ public final class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
         ReportUtils.clearReports(getDevice());
     }
 
-    @Ignore("b/374761838")
     @Test
     public void testGetTopicsLog() throws Exception {
         ITestDevice device = getDevice();
@@ -140,7 +138,7 @@ public final class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
         TestDeviceHelper.startActivityWaitUntilCompletion(PACKAGE, CLASS);
 
         // Wait for the logging event to happen.
-        Thread.sleep(AtomTestUtils.WAIT_TIME_LONG);
+        Thread.sleep(LOGGING_EVENT_WAIT_TIME_MS);
     }
 
     private String findPackageName(String suffix) throws DeviceNotAvailableException {
