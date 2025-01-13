@@ -634,13 +634,19 @@ public abstract class AbstractFlagsSetterRule<T extends AbstractFlagsSetterRule<
     }
 
     // Only used by the default mFlagsSetter - other methods should call setFlag()
-    private void defaultFlagsSetterImplementation(NameValuePair flag) {
+    @Nullable
+    private NameValuePair defaultFlagsSetterImplementation(NameValuePair flag) {
         mLog.d("Setting flag: %s", flag);
         if (flag.separator == null) {
             mDeviceConfig.set(flag.name, flag.value);
         } else {
             mDeviceConfig.setWithSeparator(flag.name, flag.value, flag.separator);
         }
+        // TODO(b/340882758, 338067482): need to set a proper NameValuePairSetter (for example, by
+        // implementing remove() and returning the previous value instad of null), but for now it's
+        // fine as it's only used by unit tests of the new rules (like FlagsPreparerClassRule and
+        // DebugFlagsSetterForUnitTests)
+        return null;
     }
 
     private void resetFlags(String testName) {

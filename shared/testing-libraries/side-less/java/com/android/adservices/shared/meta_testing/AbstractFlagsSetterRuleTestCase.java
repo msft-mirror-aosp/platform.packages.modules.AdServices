@@ -61,7 +61,7 @@ import java.util.Map;
 public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSetterRule<R>>
         extends SharedSidelessTestCase {
 
-    protected final FakeFlagsSetter mFakeFlagsSetter = new FakeFlagsSetter();
+    protected final FakeNameValuePairSetter mFakeFlagsSetter = new FakeNameValuePairSetter();
     protected final FakeDeviceGateway mFakeDeviceGateway = new FakeDeviceGateway();
 
     protected final SimpleStatement mTest = new SimpleStatement();
