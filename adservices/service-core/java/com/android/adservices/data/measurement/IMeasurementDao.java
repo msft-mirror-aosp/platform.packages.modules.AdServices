@@ -613,6 +613,9 @@ public interface IMeasurementDao {
     /** Get all the records from the SourceContract and SourceDestination tables. */
     List<Source> fetchAllSourceRegistrations() throws DatastoreException;
 
+    /** Get all the records from the TriggerContract table. */
+    List<Trigger> fetchAllTriggerRegistrations() throws DatastoreException;
+
     /**
      * Insert/Update the supplied {@link KeyValueData} object
      *

@@ -16,7 +16,10 @@
 
 package com.android.adservices.service.shell.attributionreporting;
 
+import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
+import com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
 import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.Trigger;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -24,14 +27,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public final class AttributionReportingHelper {
-    private static final String ID = "_id";
-    private static final String STATUS = "status";
-    private static final String REGISTRATION_ORIGIN = "registration_origin";
-    private static final String REGISTRANT = "registrant";
-    private static final String EVENT_TIME = "event_time";
-    private static final String EXPIRY_TIME = "expiry_time";
-    private static final String SOURCE_TYPE = "source_key";
-    private static final String DEBUG_KEY = "debug_key";
+
     private static final String APP_DESTINATION = "app_destination";
     private static final String WEB_DESTINATION = "web_destination";
     private static final String ACTIVE = "active";
@@ -52,16 +48,16 @@ public final class AttributionReportingHelper {
     static JSONObject sourceToJson(Source source) throws JSONException {
         JSONObject jsonObject =
                 new JSONObject()
-                        .put(ID, source.getId())
-                        .put(STATUS, STATUS_MAP.get(source.getStatus()))
-                        .put(REGISTRATION_ORIGIN, source.getRegistrationOrigin())
-                        .put(REGISTRANT, source.getRegistrant())
-                        .put(EVENT_TIME, source.getEventTime())
-                        .put(EXPIRY_TIME, source.getExpiryTime())
-                        .put(SOURCE_TYPE, source.getSourceType().getValue());
+                        .put(SourceContract.ID, source.getId())
+                        .put(SourceContract.STATUS, STATUS_MAP.get(source.getStatus()))
+                        .put(SourceContract.REGISTRATION_ORIGIN, source.getRegistrationOrigin())
+                        .put(SourceContract.REGISTRANT, source.getRegistrant())
+                        .put(SourceContract.EVENT_TIME, source.getEventTime())
+                        .put(SourceContract.EXPIRY_TIME, source.getExpiryTime())
+                        .put(SourceContract.SOURCE_TYPE, source.getSourceType().getValue());
 
         if (source.getDebugKey() != null) {
-            jsonObject.put(DEBUG_KEY, source.getDebugKey().toString());
+            jsonObject.put(SourceContract.DEBUG_KEY, source.getDebugKey().toString());
         }
 
         if (source.hasAppDestinations()) {
@@ -70,6 +66,22 @@ public final class AttributionReportingHelper {
 
         if (source.hasWebDestinations()) {
             jsonObject.put(WEB_DESTINATION, source.getWebDestinations());
+        }
+
+        return jsonObject;
+    }
+
+    static JSONObject triggerToJson(Trigger trigger) throws JSONException {
+        JSONObject jsonObject =
+                new JSONObject()
+                        .put(TriggerContract.TRIGGER_TIME, trigger.getTriggerTime())
+                        .put(
+                                TriggerContract.ATTRIBUTION_DESTINATION,
+                                trigger.getAttributionDestination())
+                        .put(TriggerContract.REGISTRATION_ORIGIN, trigger.getRegistrationOrigin());
+
+        if (trigger.getDebugKey() != null) {
+            jsonObject.put(TriggerContract.DEBUG_KEY, trigger.getDebugKey().toString());
         }
 
         return jsonObject;

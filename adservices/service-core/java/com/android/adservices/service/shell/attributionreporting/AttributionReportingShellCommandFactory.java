@@ -55,6 +55,8 @@ public final class AttributionReportingShellCommandFactory implements ShellComma
         Set<ShellCommand> allCommands =
                 ImmutableSet.of(
                         new AttributionReportingListSourceRegistrationsCommand(
+                                datastoreManager, devSessionDataStore),
+                        new AttributionReportingListTriggerRegistrationsCommand(
                                 datastoreManager, devSessionDataStore));
         mAllCommandsMap =
                 allCommands.stream()
