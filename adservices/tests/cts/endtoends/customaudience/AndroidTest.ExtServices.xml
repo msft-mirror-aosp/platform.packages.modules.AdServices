@@ -24,7 +24,6 @@
     <!-- Needed for correctly being picked up in presubmit -->
     <option name="config-descriptor:metadata" key="mainline-param" value="com.google.android.extservices.apex" />
 
-
     <!-- Prevent test from running on Android T+ -->
     <object type="module_controller"
         class="com.android.tradefed.testtype.suite.module.MaxSdkModuleController">
@@ -36,7 +35,8 @@
         class="com.android.tradefed.testtype.suite.module.Sdk31ModuleController"/>
 
     <!-- Only run on devices containing the ExtServices module -->
-    <object type="module_controller" class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">
+    <object type="module_controller"
+        class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">
         <option name="mainline-module-package-name" value="com.google.android.extservices"/>
     </object>
 
@@ -75,10 +75,4 @@
         <option name="push"
             value="CtsSampleCustomAudienceAppLowBid.apk->/data/local/tmp/cts/install/CtsSampleCustomAudienceAppLowBid.apk" />
     </target_preparer>
-
-    <object type="module_controller"
-        class="com.android.tradefed.testtype.suite.module.MainlineTestModuleController">
-        <option name="mainline-module-package-name" value="com.google.android.adservices"/>
-    </object>
-    <option name="config-descriptor:metadata" key="mainline-param" value="com.google.android.adservices.apex" />
 </configuration>
