@@ -1,0 +1,671 @@
+{
+  "description": "A source is allowed two aggregatable reports with trigger context ID but only one without.",
+  "phflags_override": {
+    "Measurement__enable_unbounded_reports_with_trigger_context_id": "true",
+    "measurement_max_aggregate_reports_per_source": "1"
+  },
+  "input": {
+    "sources": [{
+      "registration_request": {
+        "source_type": "navigation",
+        "registrant": "example.1s1.test"
+      },
+      "responses": [{
+        "url": "https://www.ad-tech1.test",
+        "has_ad_id_permission": true,
+        "response": {
+          "Attribution-Reporting-Register-Source": {
+            "source_event_id": "1",
+            "destination": "android-app://example.2d1.test",
+            "priority": "100",
+            "expiry": "172801",
+            "debug_reporting": true,
+            "debug_key": "111",
+            "filter_data": {
+              "conversion_subdomain": [
+                "electronics.megastore"
+              ],
+              "product": [
+                "1234",
+                "234"
+              ],
+              "ctid": [
+                "id"
+              ]
+            },
+            "aggregation_keys": {
+              "campaignCounts": "0x159",
+              "geoValue": "0x5"
+            }
+          },
+          "Location": null,
+          "Attribution-Reporting-Redirect": null
+        }
+      }],
+      "timestamp": "800000000001"
+    }],
+    "triggers": [
+      // Generates a report, not limited by max aggregatable report limit and
+      // not counted towards it since a trigger context ID is provided.
+      {
+        "registration_request": {
+          "registrant": "example.2d1.test"
+        },
+        "responses": [{
+          "url": "https://www.ad-tech1.test",
+          "has_ad_id_permission": true,
+          "response": {
+            "Attribution-Reporting-Register-Trigger": {
+              "debug_reporting": true,
+              "debug_key": "222",
+              "trigger_context_id": "222",
+              "aggregatable_trigger_data": [
+                {
+                  "key_piece": "0x400",
+                  "source_keys": [
+                    "campaignCounts"
+                  ],
+                  "filters": {
+                    "product": [
+                      "1234"
+                    ],
+                    "ctid": [
+                      "id"
+                    ]
+                  },
+                  "not_filters": {
+                    "product": [
+                      "100"
+                    ]
+                  }
+                },
+                {
+                  "key_piece": "0xA80",
+                  "source_keys": [
+                    "geoValue",
+                    "nonMatch"
+                  ]
+                }
+              ],
+              "aggregatable_values": {
+                "campaignCounts": 768,
+                "geoValue": 664
+              }
+            },
+            "Location": null,
+            "Attribution-Reporting-Redirect": null
+          }
+        }],
+        "timestamp": "800000060001"
+      },
+      // Generates a report, not limited by max aggregatable report limit and
+      // not counted towards it since a trigger context ID is provided.
+      {
+        "registration_request": {
+          "registrant": "example.2d1.test"
+        },
+        "responses": [{
+          "url": "https://www.ad-tech1.test",
+          "has_ad_id_permission": true,
+          "response": {
+            "Attribution-Reporting-Register-Trigger": {
+              "debug_reporting": true,
+              "debug_key": "333",
+              "trigger_context_id": "333",
+              "aggregatable_trigger_data": [
+                {
+                  "key_piece": "0x400",
+                  "source_keys": [
+                    "campaignCounts"
+                  ],
+                  "filters": {
+                    "product": [
+                      "1234"
+                    ],
+                    "ctid": [
+                      "id"
+                    ]
+                  },
+                  "not_filters": {
+                    "product": [
+                      "100"
+                    ]
+                  }
+                },
+                {
+                  "key_piece": "0xA80",
+                  "source_keys": [
+                    "geoValue",
+                    "nonMatch"
+                  ]
+                }
+              ],
+              "aggregatable_values": {
+                "campaignCounts": 768,
+                "geoValue": 664
+              }
+            },
+            "Location": null,
+            "Attribution-Reporting-Redirect": null
+          }
+        }],
+        "timestamp": "800000120001"
+      },
+      // Generates the first and only report allowed by max aggregatable report limit.
+      {
+        "registration_request": {
+          "registrant": "example.2d1.test"
+        },
+        "responses": [{
+          "url": "https://www.ad-tech1.test",
+          "has_ad_id_permission": true,
+          "response": {
+            "Attribution-Reporting-Register-Trigger": {
+              "debug_reporting": true,
+              "debug_key": "444",
+              "aggregatable_trigger_data": [
+                {
+                  "key_piece": "0x400",
+                  "source_keys": [
+                    "campaignCounts"
+                  ],
+                  "filters": {
+                    "product": [
+                      "1234"
+                    ],
+                    "ctid": [
+                      "id"
+                    ]
+                  },
+                  "not_filters": {
+                    "product": [
+                      "100"
+                    ]
+                  }
+                },
+                {
+                  "key_piece": "0xA80",
+                  "source_keys": [
+                    "geoValue",
+                    "nonMatch"
+                  ]
+                }
+              ],
+              "aggregatable_values": {
+                "campaignCounts": 32768,
+                "geoValue": 1664
+              }
+            },
+            "Location": null,
+            "Attribution-Reporting-Redirect": null
+          }
+        }],
+        "timestamp": "800000180001"
+      },
+      // Report is disallowed since trigger context ID is not provided and max
+      // report count was reached. A verbose debug report is generated.
+      {
+        "registration_request": {
+          "registrant": "example.2d1.test"
+        },
+        "responses": [{
+          "url": "https://www.ad-tech1.test",
+          "has_ad_id_permission": true,
+          "response": {
+            "Attribution-Reporting-Register-Trigger": {
+              "debug_reporting": true,
+              "debug_key": "555",
+              "aggregatable_trigger_data": [
+                {
+                  "key_piece": "0x400",
+                  "source_keys": [
+                    "campaignCounts"
+                  ],
+                  "filters": {
+                    "product": [
+                      "1234"
+                    ],
+                    "ctid": [
+                      "id"
+                    ]
+                  },
+                  "not_filters": {
+                    "product": [
+                      "100"
+                    ]
+                  }
+                },
+                {
+                  "key_piece": "0xA80",
+                  "source_keys": [
+                    "geoValue",
+                    "nonMatch"
+                  ]
+                }
+              ],
+              "aggregatable_values": {
+                "campaignCounts": 768,
+                "geoValue": 664
+              }
+            },
+            "Location": null,
+            "Attribution-Reporting-Redirect": null
+          }
+        }],
+        "timestamp": "800000240001"
+      },
+      // Generates a fourth report, not limited by max aggregatable report limit
+      // since a trigger context ID is provided.
+      {
+        "registration_request": {
+          "registrant": "example.2d1.test"
+        },
+        "responses": [{
+          "url": "https://www.ad-tech1.test",
+          "has_ad_id_permission": true,
+          "response": {
+            "Attribution-Reporting-Register-Trigger": {
+              "debug_reporting": true,
+              "debug_key": "666",
+              "trigger_context_id": "666",
+              "aggregatable_trigger_data": [
+                {
+                  "key_piece": "0x400",
+                  "source_keys": [
+                    "campaignCounts"
+                  ],
+                  "filters": {
+                    "product": [
+                      "1234"
+                    ],
+                    "ctid": [
+                      "id"
+                    ]
+                  },
+                  "not_filters": {
+                    "product": [
+                      "100"
+                    ]
+                  }
+                },
+                {
+                  "key_piece": "0xA80",
+                  "source_keys": [
+                    "geoValue",
+                    "nonMatch"
+                  ]
+                }
+              ],
+              "aggregatable_values": {
+                "campaignCounts": 768,
+                "geoValue": 664
+              }
+            },
+            "Location": null,
+            "Attribution-Reporting-Redirect": null
+          }
+        }],
+        "timestamp": "800000300001"
+      }
+    ]
+  },
+  "output": {
+    "event_level_results": [],
+    "aggregatable_results": [
+      {
+        "report_time": "800000060001",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800000060",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x559",
+              "value": 768
+            },
+            {
+              "key": "0xa85",
+              "value": 664
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            }
+          ],
+          "source_debug_key": "111",
+          "trigger_debug_key": "222",
+          "trigger_context_id": "222"
+        }
+      },
+      {
+        "report_time": "800000120001",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800000120",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x559",
+              "value": 768
+            },
+            {
+              "key": "0xa85",
+              "value": 664
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            }
+          ],
+          "source_debug_key": "111",
+          "trigger_debug_key": "333",
+          "trigger_context_id": "333"
+        }
+      },
+      {
+        "report_time": "800000300001",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800000300",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x559",
+              "value": 768
+            },
+            {
+              "key": "0xa85",
+              "value": 664
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            }
+          ],
+          "source_debug_key": "111",
+          "trigger_debug_key": "666",
+          "trigger_context_id": "666"
+        }
+      },
+      {
+        "report_time": "800003780001",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003780",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x559",
+              "value": 32768
+            },
+            {
+              "key": "0xa85",
+              "value": 1664
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            }
+          ],
+          "source_debug_key": "111",
+          "trigger_debug_key": "444"
+        }
+      }
+    ],
+    "debug_aggregatable_results": [
+      {
+        "report_time": "800000060001",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800000060",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x559",
+              "value": 768
+            },
+            {
+              "key": "0xa85",
+              "value": 664
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            }
+          ],
+          "source_debug_key": "111",
+          "trigger_debug_key": "222",
+          "trigger_context_id": "222"
+        }
+      },
+      {
+        "report_time": "800000120001",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800000120",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x559",
+              "value": 768
+            },
+            {
+              "key": "0xa85",
+              "value": 664
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            }
+          ],
+          "source_debug_key": "111",
+          "trigger_debug_key": "333",
+          "trigger_context_id": "333"
+        }
+      },
+      {
+        "report_time": "800000180001",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800003780",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x559",
+              "value": 32768
+            },
+            {
+              "key": "0xa85",
+              "value": 1664
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            }
+          ],
+          "source_debug_key": "111",
+          "trigger_debug_key": "444"
+        }
+      },
+      {
+        "report_time": "800000300001",
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/report-aggregate-attribution",
+        "payload": {
+          "shared_info": {
+            "api": "attribution-reporting",
+            "attribution_destination": "android-app://example.2d1.test",
+            "debug_mode": "enabled",
+            "reporting_origin": "https://www.ad-tech1.test",
+            "scheduled_report_time": "800000300",
+            "version": "0.1"
+          },
+          "aggregation_coordinator_origin": "https://coordinator.test",
+          "histograms": [
+            {
+              "key": "0x559",
+              "value": 768
+            },
+            {
+              "key": "0xa85",
+              "value": 664
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            },
+            {
+              "key": "0x0",
+              "value": 0
+            }
+          ],
+          "source_debug_key": "111",
+          "trigger_debug_key": "666",
+          "trigger_context_id": "666"
+        }
+      }
+    ],
+    "verbose_debug_reports": [
+      {
+        "report_time": "800000000001",
+        "payload": [
+          {
+            "type": "source-success",
+            "body": {
+              "source_event_id": "1",
+              "attribution_destination": "android-app://example.2d1.test",
+              "source_site": "android-app://example.1s1.test",
+              "source_debug_key": "111"
+            }
+          }
+        ],
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose"
+      },
+      {
+        "report_time": "800000240001",
+        "payload": [
+          {
+            "type": "trigger-aggregate-excessive-reports",
+            "body": {
+              "attribution_destination": "android-app://example.2d1.test",
+              "trigger_debug_key": "555",
+              "limit": "1",
+              "source_debug_key": "111",
+              "source_event_id": "1",
+              "source_site": "android-app://example.1s1.test"
+            }
+          }
+        ],
+        "report_url": "https://www.ad-tech1.test/.well-known/attribution-reporting/debug/verbose"
+      }
+    ]
+  }
+}

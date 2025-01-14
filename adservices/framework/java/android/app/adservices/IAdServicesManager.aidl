@@ -30,6 +30,9 @@ interface IAdServicesManager {
      */
     ConsentParcel getConsent(in int consentApiType);
 
+    /** Return the nullable user consent */
+    ConsentParcel getConsentNullable(in int consentApiType);
+
     /**
      * Set Consent
      */

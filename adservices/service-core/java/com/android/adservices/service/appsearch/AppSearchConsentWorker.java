@@ -174,6 +174,21 @@ class AppSearchConsentWorker {
     }
 
     /**
+     * Get the consent for this user ID for this API type, as stored in AppSearch. Returns null if
+     * the database doesn't exist in AppSearch.
+     */
+    Boolean getConsentNullable(@NonNull String apiType) {
+        Objects.requireNonNull(apiType);
+        READ_WRITE_LOCK.readLock().lock();
+        try {
+            return AppSearchConsentDao.readConsentDataNullable(
+                    mGlobalSearchSession, mExecutor, mUid, apiType, mAdservicesPackageName);
+        } finally {
+            READ_WRITE_LOCK.readLock().unlock();
+        }
+    }
+
+    /**
      * Sets the consent for this user ID for this API type in AppSearch. If we do not get
      * confirmation that the write operation was successful, then we throw an exception so that user
      * does not incorrectly think that the consent is updated.

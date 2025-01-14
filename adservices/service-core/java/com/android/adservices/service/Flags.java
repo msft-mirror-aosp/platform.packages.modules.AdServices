@@ -4067,6 +4067,14 @@ public interface Flags extends ModuleSharedFlags {
         return MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
     }
 
+    /** Enable unbounded reports with trigger context id. */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_UNBOUNDED_REPORTS_WITH_TRIGGER_CONTEXT_ID = false;
+
+    /** Returns if Measurement has enabled unbounded reports with trigger context ID. */
+    default boolean getMeasurementEnableUnboundedReportsWithTriggerContextId() {
+        return MEASUREMENT_ENABLE_UNBOUNDED_REPORTS_WITH_TRIGGER_CONTEXT_ID;
+    }
+
     /** Maximum number of aggregation keys allowed during source registration. */
     int MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION = 50;
 

@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.common;
+package com.android.adservices.flags;
 
-import static com.android.adservices.common.MissingFlagBehavior.THROWS_EXCEPTION;
-import static com.android.adservices.common.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
-import static com.android.adservices.common.MissingFlagBehavior.USES_JAVA_LANGUAGE_DEFAULT;
+import static com.android.adservices.flags.MissingFlagBehavior.THROWS_EXCEPTION;
+import static com.android.adservices.flags.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
+import static com.android.adservices.flags.MissingFlagBehavior.USES_JAVA_LANGUAGE_DEFAULT;
 import static com.android.adservices.service.Flags.FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND;
@@ -29,6 +29,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.testing.Identifiable;
 
 import org.junit.Test;
 
@@ -100,6 +101,16 @@ public final class AdServicesFakeFlagsSetterRuleTest
                     expect.withMessage("clonedFlags.getAdIdCacheTtlMs() after updating source")
                             .that(snapshot.getAdIdCacheTtlMs())
                             .isEqualTo(4815162342L);
+
+                    // Make sure it's immutable
+                    assertThrows(
+                            UnsupportedOperationException.class,
+                            () ->
+                                    ((FakeFlags) snapshot)
+                                            .setFlag(FlagsConstants.KEY_AD_ID_CACHE_TTL_MS, "108"));
+                    expect.withMessage("clonedFlags.getAdIdCacheTtlMs() after trying to change it")
+                            .that(snapshot.getAdIdCacheTtlMs())
+                            .isEqualTo(4815162342L);
                 });
     }
 
@@ -107,28 +118,30 @@ public final class AdServicesFakeFlagsSetterRuleTest
     public void testToString() throws Throwable {
         onTest(
                 (rule, flags) -> {
+                    String id = ((Identifiable) flags).getId();
+                    String prefix = "FakeFlags#" + id + "{";
                     expect.withMessage("toString() right away")
                             .that(flags.toString())
-                            .isEqualTo("FakeFlags{empty}");
+                            .isEqualTo(prefix + "empty}");
 
                     rule.setFlag("dude", "sweet");
                     expect.withMessage("toString() after setting 1 flag")
                             .that(flags.toString())
-                            .isEqualTo("FakeFlags{dude=sweet}");
+                            .isEqualTo(prefix + "dude=sweet}");
                     rule.setFlag("sweet", "lord");
                     expect.withMessage("toString() after setting 2 flags")
                             .that(flags.toString())
-                            .isEqualTo("FakeFlags{dude=sweet, sweet=lord}");
+                            .isEqualTo(prefix + "dude=sweet, sweet=lord}");
                     // make sure they're sorted
                     rule.setFlag("a flag", "has a name");
                     expect.withMessage("toString() after setting 3 flags")
                             .that(flags.toString())
-                            .isEqualTo("FakeFlags{a flag=has a name, dude=sweet, sweet=lord}");
+                            .isEqualTo(prefix + "a flag=has a name, dude=sweet, sweet=lord}");
                     // update a value
                     rule.setFlag("dude", "SWEEET");
                     expect.withMessage("toString() after updating value of 1st flag")
                             .that(flags.toString())
-                            .isEqualTo("FakeFlags{a flag=has a name, dude=SWEEET, sweet=lord}");
+                            .isEqualTo(prefix + "a flag=has a name, dude=SWEEET, sweet=lord}");
                 });
     }
 

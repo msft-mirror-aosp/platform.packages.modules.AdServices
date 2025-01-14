@@ -18,7 +18,6 @@ package com.android.adservices.mockito;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -47,11 +46,6 @@ public final class AdServicesExtendedMockitoMocker extends AbstractStaticMocker
         logV("mockGetFlags(%s)", mockedFlags);
         assertSpiedOrMocked(FlagsFactory.class);
         doReturn(mockedFlags).when(FlagsFactory::getFlags);
-    }
-
-    @Override
-    public void mockGetFlagsForTesting() {
-        mockGetFlags(FakeFlagsFactory.getFlagsForTest());
     }
 
     @Override

@@ -70,7 +70,7 @@ public final class PrecomputedClassifierTest extends AdServicesExtendedMockitoTe
 
     @Before
     public void setUp() throws IOException {
-        mocker.mockGetFlagsForTesting();
+        mocker.mockGetFlags(mFakeFlags);
         doReturn(null).when(ModelManager::getDownloadedFiles);
 
         mModelManager =

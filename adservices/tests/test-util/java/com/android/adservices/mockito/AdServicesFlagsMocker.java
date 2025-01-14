@@ -16,7 +16,7 @@
 
 package com.android.adservices.mockito;
 
-import com.android.adservices.common.AdServicesFakeFlagsSetterRule;
+import com.android.adservices.flags.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.service.Flags;
 
 /**

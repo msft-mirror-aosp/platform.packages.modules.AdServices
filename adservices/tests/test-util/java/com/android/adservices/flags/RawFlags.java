@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service;
+package com.android.adservices.flags;
 
 // Need to disable checkstyle as there's no need to import 500+ constants.
 // CHECKSTYLE:OFF Generated code
@@ -23,6 +23,8 @@ import static com.android.adservices.service.FlagsConstants.*;
 import android.text.TextUtils;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.service.Flags;
+import com.android.adservices.service.PhFlags;
 import com.android.adservices.shared.common.flags.Constants;
 import com.android.adservices.shared.flags.FlagsBackend;
 
@@ -2939,6 +2941,13 @@ public class RawFlags implements Flags {
         return mBackend.getFlag(
                 KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE,
                 MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE);
+    }
+
+    @Override
+    public final boolean getMeasurementEnableUnboundedReportsWithTriggerContextId() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_ENABLE_UNBOUNDED_REPORTS_WITH_TRIGGER_CONTEXT_ID,
+                MEASUREMENT_ENABLE_UNBOUNDED_REPORTS_WITH_TRIGGER_CONTEXT_ID);
     }
 
     @Override

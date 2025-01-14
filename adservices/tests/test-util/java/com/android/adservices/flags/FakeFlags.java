@@ -13,16 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.service;
+package com.android.adservices.flags;
 
-import static com.android.adservices.common.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
+import static com.android.adservices.flags.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
 
-import com.android.adservices.common.AdServicesFlagsSetterRuleForUnitTests;
-import com.android.adservices.common.MissingFlagBehavior;
+import com.android.adservices.service.Flags;
 import com.android.adservices.shared.flags.FlagsBackend;
 import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.Identifiable;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.NameValuePair;
+
+import com.google.common.annotations.VisibleForTesting;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,69 +32,61 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-/**
- * TODO(b/384798806): this class should be package-protected and used by only by the flags-setter
- * rule, but it's currently public because the rule is located in a different package - we should
- * move all related classes to a common .something.flags package instead...
- */
-public final class FakeFlags extends RawFlags {
+// TODO(b/384798806): make it package protected once FakeFlagsFactory is moved to this package
+public final class FakeFlags extends RawFlags implements Identifiable {
 
-    private final boolean mCalledByRule;
+    private static int sNextId;
 
-    private FakeFlags(boolean calledByRule) {
-        this(new FakeFlagsBackend(), calledByRule);
+    private final String mId = String.valueOf(++sNextId);
+    private final boolean mImmutable;
+
+    private FakeFlags(boolean immutable) {
+        this(new FakeFlagsBackend(), immutable);
     }
 
-    private FakeFlags(FlagsBackend backend, boolean calledByRule) {
+    private FakeFlags(FlagsBackend backend, boolean immutable) {
         super(backend);
-        mCalledByRule = calledByRule;
+        mImmutable = immutable;
     }
 
     private FakeFlagsBackend getFakeFlagsBackend() {
         return (FakeFlagsBackend) mBackend;
     }
 
-    /** TODO(b/384798806): make it package protected. */
-    public static FakeFlags createFakeFlagsForFlagSetterRulePurposesOnly() {
-        return new FakeFlags(/* calledByRule= */ true);
+    static FakeFlags createFakeFlagsForFlagSetterRulePurposesOnly() {
+        return new FakeFlags(/* immutable= */ false);
     }
 
-    /** TODO(b/384798806): make it package protected. */
+    // TODO(b/384798806): make it package protected once FakeFlagsFactory is moved to this package
     public static FakeFlags createFakeFlagsForFakeFlagsFactoryPurposesOnly() {
-        return new FakeFlags(/* calledByRule= */ false).setFakeFlagsFactoryFlags();
+        return new FakeFlags(/* immutable= */ true).setFakeFlagsFactoryFlags();
     }
 
-    /** Should only be called by the rule */
-    public Consumer<NameValuePair> getFlagsSetter() {
-        assertCalledByRule();
+    Consumer<NameValuePair> getFlagsSetter() {
         return getFakeFlagsBackend();
     }
 
-    /** Should only be called by the rule */
-    public void setFlag(String name, String value) {
-        assertCalledByRule();
+    @VisibleForTesting
+    void setFlag(String name, String value) {
+        if (mImmutable) {
+            throw new UnsupportedOperationException(
+                    "setFlag(" + name + ", " + value + "): not supported on immutable Flags");
+        }
         getFakeFlagsBackend().setFlag(name, value);
     }
 
-    /** Should only be called by the rule */
-    public void setMissingFlagBehavior(MissingFlagBehavior behavior) {
-        assertCalledByRule();
+    void setMissingFlagBehavior(MissingFlagBehavior behavior) {
         getFakeFlagsBackend().mBehavior =
                 Objects.requireNonNull(behavior, "behavior cannot be null");
     }
 
-    /** Should only be called by the rule */
-    public MissingFlagBehavior getMissingFlagBehavior() {
-        assertCalledByRule();
-        // TODO Auto-generated method stub
+    MissingFlagBehavior getMissingFlagBehavior() {
         return getFakeFlagsBackend().mBehavior;
     }
 
-    /** Should only be called by the rule */
-    public Flags getSnapshot() {
-        assertCalledByRule();
+    Flags getSnapshot() {
         Map<String, NameValuePair> flags = getFakeFlagsBackend().mFlags;
-        return new FakeFlags(new FakeFlagsBackend(new HashMap<>(flags)), /* calledByRule= */ true);
+        return new FakeFlags(new FakeFlagsBackend(new HashMap<>(flags)), /* immutable= */ true);
     }
 
     private FakeFlags setFakeFlagsFactoryFlags() {
@@ -103,23 +97,21 @@ public final class FakeFlags extends RawFlags {
     }
 
     @Override
+    public String getId() {
+        return mId;
+    }
+
+    @Override
     public String toString() {
+        var prefix = "FakeFlags#" + mId + "{";
         var flags = getFakeFlagsBackend().mFlags;
         if (flags.isEmpty()) {
-            return "FakeFlags{empty}";
+            return prefix + "empty}";
         }
         return flags.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey()) // sort by key
                 .map(entry -> entry.getValue().toString())
-                .collect(Collectors.joining(", ", "FakeFlags{", "}"));
-    }
-
-    // TODO(b/384798806): remove this method (and callers) when stuff moved to the same package. */
-    private void assertCalledByRule() {
-        if (!mCalledByRule) {
-            throw new UnsupportedOperationException(
-                    "Can only be called when used by a flag setter rule");
-        }
+                .collect(Collectors.joining(", ", prefix, "}"));
     }
 
     private static class FakeFlagsBackend implements FlagsBackend, Consumer<NameValuePair> {

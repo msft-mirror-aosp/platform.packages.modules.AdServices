@@ -92,6 +92,15 @@ public class AppSearchConsentManager {
     }
 
     /**
+     * Get the consent for this user ID for this API type, as stored in AppSearch. Returns null if
+     * the database doesn't exist in AppSearch.
+     */
+    public Boolean getConsentNullable(@NonNull String apiType) {
+        Objects.requireNonNull(apiType);
+        return mAppSearchConsentWorker.getConsentNullable(apiType);
+    }
+
+    /**
      * Sets the consent for this user ID for this API type in AppSearch. If we do not get
      * confirmation that the write was successful, then we throw an exception so that user does not
      * incorrectly think that the consent is updated.

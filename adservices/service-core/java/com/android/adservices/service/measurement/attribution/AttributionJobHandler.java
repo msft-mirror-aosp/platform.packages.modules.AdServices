@@ -545,16 +545,8 @@ class AttributionJobHandler {
             return TriggeringStatus.DROPPED;
         }
 
-        if (measurementDao.countNumAggregateReportsPerSource(source.getId(), API)
-                >= mFlags.getMeasurementMaxAggregateReportsPerSource()) {
-            LoggerFactory.getMeasurementLogger()
-                    .d(
-                            String.format(
-                                    Locale.ENGLISH,
-                                    "Aggregate reports for source %1$s exceeds system"
-                                            + " health limit of %2$d.",
-                                    source.getId(),
-                                    mFlags.getMeasurementMaxAggregateReportsPerSource()));
+        if (!isAggregatableReportQuotaAvailable(measurementDao, source.getId(),
+                  trigger.getTriggerContextId())) {
             mDebugReportApi.scheduleTriggerDebugReport(
                     source,
                     trigger,
@@ -717,6 +709,27 @@ class AttributionJobHandler {
                                     + " parse aggregate fields.");
             return TriggeringStatus.DROPPED;
         }
+    }
+
+    private boolean isAggregatableReportQuotaAvailable(IMeasurementDao measurementDao,
+            String sourceId, @Nullable String triggerContextId) throws DatastoreException {
+        boolean restrictAggregatableReportsByCount =
+                mFlags.getMeasurementEnableUnboundedReportsWithTriggerContextId()
+                        ? triggerContextId == null
+                        : true;
+        boolean limitReached = restrictAggregatableReportsByCount
+                && measurementDao.countNumAggregateReportsPerSource(sourceId, API)
+                        >= mFlags.getMeasurementMaxAggregateReportsPerSource();
+        if (limitReached) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            String.format(
+                                    Locale.ENGLISH,
+                                    "Aggregate reports for source %1$s reached limit of %2$d.",
+                                    sourceId,
+                                    mFlags.getMeasurementMaxAggregateReportsPerSource()));
+        }
+        return !limitReached;
     }
 
     @Nullable
@@ -1570,11 +1583,6 @@ class AttributionJobHandler {
         trigger.setStatus(Trigger.Status.ATTRIBUTED);
         measurementDao.updateTriggerStatus(
                 Collections.singletonList(trigger.getId()), Trigger.Status.ATTRIBUTED);
-    }
-
-    private static void insertAttribution(Source source, Trigger trigger,
-            IMeasurementDao measurementDao) throws DatastoreException {
-        measurementDao.insertAttribution(createAttributionBuilder(source, trigger).build());
     }
 
     private static void insertAttribution(

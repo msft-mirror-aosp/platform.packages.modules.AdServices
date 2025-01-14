@@ -94,7 +94,7 @@ public final class CommonClassifierHelperTest extends AdServicesExtendedMockitoT
 
     @Before
     public void setUp() {
-        mocker.mockGetFlagsForTesting();
+        mocker.mockGetFlags(mFakeFlags);
 
         ModelManager testModelManager =
                 new ModelManager(

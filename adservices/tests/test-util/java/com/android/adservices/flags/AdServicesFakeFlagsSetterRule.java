@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.common;
+package com.android.adservices.flags;
 
-import com.android.adservices.service.FakeFlags;
 import com.android.adservices.service.Flags;
 
 import com.google.common.annotations.VisibleForTesting;

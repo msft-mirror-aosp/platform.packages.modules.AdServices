@@ -13,24 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.common;
+package com.android.adservices.flags;
 
-import static com.android.adservices.common.AdServicesFlagsSetterRuleForUnitTestsTestCase.assertFakeFlagsFactoryFlags;
+import static org.junit.Assert.assertThrows;
 
-import static com.google.common.truth.Truth.assertWithMessage;
+import android.provider.DeviceConfig;
 
-import com.android.adservices.service.FakeFlagsFactory;
+import com.android.adservices.service.PhFlagsTest;
+import com.android.adservices.shared.flags.DeviceConfigFlagsBackend;
 
 import org.junit.Test;
 
-@SuppressWarnings("deprecation")
-public final class FakeFlagsFactoryTest extends AdServicesUnitTestCase {
+public final class RawFlagsTest extends PhFlagsTest {
+
+    public RawFlagsTest() {
+        super(
+                new RawFlags(new DeviceConfigFlagsBackend(DeviceConfig.NAMESPACE_ADSERVICES)),
+                /* isRaw= */ true);
+    }
 
     @Test
-    public void testGetFlagsForTest() {
-        var flags = FakeFlagsFactory.getFlagsForTest();
-
-        assertWithMessage("getFlagsForTest()").that(flags).isNotNull();
-        assertFakeFlagsFactoryFlags(expect, flags);
+    public void testNullConstructor() {
+        assertThrows(NullPointerException.class, () -> new RawFlags(null));
     }
 }

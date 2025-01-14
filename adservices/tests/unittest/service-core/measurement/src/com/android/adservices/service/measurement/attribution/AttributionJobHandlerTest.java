@@ -50,7 +50,6 @@ import android.net.Uri;
 import android.util.Pair;
 
 import androidx.test.core.app.ApplicationProvider;
-import androidx.test.filters.FlakyTest;
 
 import com.android.adservices.LogUtil;
 import com.android.adservices.common.WebUtil;
@@ -271,6 +270,7 @@ public class AttributionJobHandlerTest {
         when(mFlags.getMeasurementMaxAggregateReportsPerSource())
                 .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE);
         when(mFlags.getMeasurementEnableBothSideDebugKeysInReports()).thenReturn(false);
+        when(mFlags.getMeasurementEnableUnboundedReportsWithTriggerContextId()).thenReturn(false);
     }
 
     @Test
@@ -695,6 +695,92 @@ public class AttributionJobHandlerTest {
                 eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.ATTRIBUTED));
         verify(mMeasurementDao, times(1)).insertEventReport(any());
         verify(mMeasurementDao, never()).insertAggregateReport(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void shouldNotAddAggIfReachedCountAndTriggerContextIdNotNullAndFlagOff_l1ReportCount()
+            throws Exception {
+        Trigger trigger =
+                getAggregateTriggerBuilder()
+                        .setTriggerContextId("test_trigger_context_id")
+                        .build();
+        Source source = getAggregateSource();
+        when(mFlags.getMeasurementEnableUnboundedReportsWithTriggerContextId()).thenReturn(false);
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.countNumAggregateReportsPerSource(eq(source.getId()), anyString()))
+                .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                        Attribution.Scope.AGGREGATE, source, trigger))
+                .thenReturn(2L);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                        Attribution.Scope.EVENT, source, trigger))
+                .thenReturn(2L);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(
+                        source.getAppDestinations(),
+                        source.getWebDestinations()));
+
+        mHandler.performPendingAttributions();
+        verify(mMeasurementDao).countNumAggregateReportsPerSource(
+                eq(source.getId()), anyString());
+        verify(mMeasurementDao, never()).getAttributionsPerRateLimitWindow(
+                Attribution.Scope.EVENT, source, trigger);
+        verify(mMeasurementDao).getAttributionsPerRateLimitWindow(
+                Attribution.Scope.AGGREGATE, source, trigger);
+        verify(mMeasurementDao).updateTriggerStatus(
+                eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.IGNORED));
+        verify(mMeasurementDao, never()).insertEventReport(any());
+        verify(mMeasurementDao, never()).insertAggregateReport(any());
+        verify(mTransaction, times(2)).begin();
+        verify(mTransaction, times(2)).end();
+    }
+
+    @Test
+    public void shouldReportAggregatableIfTriggerContextIdIsNotNull_l1AggregatableReportCount()
+            throws DatastoreException, JSONException {
+        Trigger trigger =
+                getAggregateTriggerBuilder()
+                        .setTriggerContextId("test_trigger_context_id")
+                        .build();
+        Source source = getAggregateSource();
+        when(mFlags.getMeasurementEnableUnboundedReportsWithTriggerContextId()).thenReturn(true);
+        when(mMeasurementDao.getPendingTriggerIds())
+                .thenReturn(Collections.singletonList(trigger.getId()));
+        when(mMeasurementDao.getTrigger(trigger.getId())).thenReturn(trigger);
+        List<Source> matchingSourceList = new ArrayList<>();
+        matchingSourceList.add(source);
+        when(mMeasurementDao.getMatchingActiveSources(trigger)).thenReturn(matchingSourceList);
+        when(mMeasurementDao.countNumAggregateReportsPerSource(eq(source.getId()), anyString()))
+                .thenReturn(Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                        Attribution.Scope.AGGREGATE, source, trigger))
+                .thenReturn(2L);
+        when(mMeasurementDao.getAttributionsPerRateLimitWindow(
+                        Attribution.Scope.EVENT, source, trigger))
+                .thenReturn(2L);
+        when(mMeasurementDao.getSourceDestinations(source.getId()))
+                .thenReturn(Pair.create(
+                        source.getAppDestinations(),
+                        source.getWebDestinations()));
+
+        mHandler.performPendingAttributions();
+        verify(mMeasurementDao, never()).countNumAggregateReportsPerSource(
+                eq(source.getId()), anyString());
+        verify(mMeasurementDao, never()).getAttributionsPerRateLimitWindow(
+                Attribution.Scope.EVENT, source, trigger);
+        verify(mMeasurementDao).getAttributionsPerRateLimitWindow(
+                Attribution.Scope.AGGREGATE, source, trigger);
+        verify(mMeasurementDao).updateTriggerStatus(
+                eq(Collections.singletonList(trigger.getId())), eq(Trigger.Status.ATTRIBUTED));
+        verify(mMeasurementDao, never()).insertEventReport(any());
+        verify(mMeasurementDao).insertAggregateReport(any());
         verify(mTransaction, times(2)).begin();
         verify(mTransaction, times(2)).end();
     }

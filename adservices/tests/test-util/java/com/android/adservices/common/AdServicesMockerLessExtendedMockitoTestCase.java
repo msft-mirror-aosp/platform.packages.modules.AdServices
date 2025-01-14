@@ -332,11 +332,6 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         }
 
         @Override
-        public void mockGetFlagsForTesting() {
-            mAdServicesStaticMocker.mockGetFlagsForTesting();
-        }
-
-        @Override
         public void mockGetDebugFlags(DebugFlags mockedDebugFlags) {
             mAdServicesStaticMocker.mockGetDebugFlags(mockedDebugFlags);
         }
