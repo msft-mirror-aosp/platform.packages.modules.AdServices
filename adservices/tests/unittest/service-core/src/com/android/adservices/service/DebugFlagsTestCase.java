@@ -56,13 +56,19 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import org.junit.Test;
 
 /** Base class for tests of {@link DebugFlags} implementations. */
-abstract class DebugFlagsTestCase<T extends DebugFlags> extends AdServicesExtendedMockitoTestCase {
+public abstract class DebugFlagsTestCase<T extends DebugFlags>
+        extends AdServicesExtendedMockitoTestCase {
 
     /** Creates a new instance to be used by the test. */
     protected abstract T newInstance();
 
     /** Sets the value of a debug flag. */
-    protected abstract void setDebugFlag(String name, String value);
+    protected abstract void setDebugFlag(T debugFlags, String name, String value);
+
+    @Test
+    public final void testNewInstance() {
+        assertWithMessage("newInstance()").that(newInstance()).isNotNull();
+    }
 
     @Test
     public final void testConsentNotificationDebugMode() {
@@ -202,7 +208,7 @@ abstract class DebugFlagsTestCase<T extends DebugFlags> extends AdServicesExtend
 
         boolean phOverridingValue = !defaultValue;
 
-        setDebugFlag(flagName, String.valueOf(phOverridingValue));
+        setDebugFlag(debugFlags, flagName, String.valueOf(phOverridingValue));
         assertWithMessage("after overriding")
                 .that(flaginator.getFlagValue(debugFlags))
                 .isEqualTo(phOverridingValue);
