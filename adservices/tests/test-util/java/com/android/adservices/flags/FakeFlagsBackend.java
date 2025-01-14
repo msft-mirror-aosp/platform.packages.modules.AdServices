@@ -142,10 +142,11 @@ class FakeFlagsBackend implements FlagsBackend, NameValuePairSetter {
     }
 
     @Override
-    public void set(NameValuePair flag) {
-        mLog.v("set(%s)", flag);
+    public NameValuePair set(NameValuePair flag) {
         Objects.requireNonNull(flag, "internal error: NameValuePair cannot be null");
-        mFlags.put(flag.name, flag);
+        var previous = mFlags.put(flag.name, flag);
+        mLog.v("set(%s): returning %s", flag, previous);
+        return previous;
     }
 
     void setFlag(String name, String value) {

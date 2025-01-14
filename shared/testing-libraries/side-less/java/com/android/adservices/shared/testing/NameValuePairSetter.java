@@ -18,14 +18,23 @@ package com.android.adservices.shared.testing;
 /** Abstraction used to set {@link NameValuePair} objects. */
 public interface NameValuePairSetter {
 
-    /** Just do it! */
-    void set(NameValuePair nvp);
+    /**
+     * Sets a {@code nvp}.
+     *
+     * @return previous {@code nvp} for that {@code NameValuePair#name name}.
+     */
+    @Nullable
+    NameValuePair set(NameValuePair nvp);
+
+    /** Removes the {@code nvp} with the given name. */
+    default void remove(String name) {
+        new Logger(DynamicLogger.getInstance(), NameValuePairSetter.class)
+                .w("remove(%s): not implemented by subclass, setting to null instead", name);
+        set(new NameValuePair(name, /* value= */ null));
+    }
 
     // TODO(b/373446366): for now it's only used to set, but eventually we might need to add other
     // methods like reset all, or even a more generic interface (like NameValuePairManager /
     // NameValuePairContainer). But even we add a more generic one, it might still be useful /
     // cleaner to keep this one (for example, the new interface could extend this one).
-    // Similarly, it might be useful to change set() to return a @Nulalble String representing the
-    // previous value, so it could be used in order to restore it.
-
 }

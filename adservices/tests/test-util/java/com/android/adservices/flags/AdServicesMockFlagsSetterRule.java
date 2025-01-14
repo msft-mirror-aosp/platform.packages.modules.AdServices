@@ -69,7 +69,12 @@ public final class AdServicesMockFlagsSetterRule
      * @param mockFlags mock whose expectations will be set
      */
     public AdServicesMockFlagsSetterRule(Flags mockFlags) {
-        super(mockFlags, f -> setExpectation(mockFlags, f));
+        super(
+                mockFlags,
+                f -> {
+                    setExpectation(mockFlags, f);
+                    return null;
+                });
         if (!MockitoHelper.isMock(mockFlags)) {
             throw new IllegalArgumentException("not a mock: " + mockFlags);
         }
