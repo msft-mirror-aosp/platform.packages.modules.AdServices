@@ -29,7 +29,8 @@ public final class NameValuePairAction extends AbstractAction {
     // We need mSetb because when previous value was null, we need to remove it on revert
     private boolean mSet;
 
-    protected NameValuePairAction(Logger logger, NameValuePairSetter setter, NameValuePair nvp) {
+    /** Default constructor! */
+    public NameValuePairAction(Logger logger, NameValuePairSetter setter, NameValuePair nvp) {
         super(logger);
 
         mSetter = Objects.requireNonNull(setter, "setter cannot be null");
