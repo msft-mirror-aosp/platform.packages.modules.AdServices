@@ -16,12 +16,18 @@
 
 package com.android.adservices.service.customaudience;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_CUSTOM_AUDIENCE_PER_OWNER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_OWNER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_TOTAL_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
+
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.customaudience.CustomAudience;
 import android.annotation.NonNull;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -93,12 +99,21 @@ public class CustomAudienceQuantityChecker {
         if (customAudienceStats.getPerOwnerCustomAudienceCount() == 0
                 && customAudienceStats.getTotalOwnerCount() >= mCustomAudienceMaxOwnerCount) {
             violations.add(THE_MAX_NUMBER_OF_OWNER_ALLOWED_FOR_THE_DEVICE_HAD_REACHED);
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_OWNER,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
         if (customAudienceStats.getTotalCustomAudienceCount() >= mCustomAudienceMaxCount) {
             violations.add(THE_MAX_NUMBER_OF_CUSTOM_AUDIENCE_FOR_THE_DEVICE_HAD_REACHED);
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_TOTAL_CUSTOM_AUDIENCE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
         if (customAudienceStats.getPerOwnerCustomAudienceCount() >= mCustomAudiencePerAppMaxCount) {
             violations.add(THE_MAX_NUMBER_OF_CUSTOM_AUDIENCE_FOR_THE_OWNER_HAD_REACHED);
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_CUSTOM_AUDIENCE_PER_OWNER,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
         }
         if (customAudienceStats.getPerBuyerCustomAudienceCount()
                 >= mCustomAudiencePerBuyerMaxCount) {

@@ -16,6 +16,8 @@
 
 package com.android.adservices.data.customaudience;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_DAO_QUARANTINE_TABLE_MAX_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE;
@@ -40,6 +42,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.common.CleanupUtils;
 import com.android.adservices.data.common.DecisionLogic;
 import com.android.adservices.data.enrollment.EnrollmentDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.JsVersionHelper;
 import com.android.adservices.service.customaudience.CustomAudienceUpdatableData;
@@ -207,6 +210,9 @@ public abstract class CustomAudienceDao {
             String errorMessage =
                     "Quarantine table maximum has been reached! Not persisting this entry";
             sLogger.e(errorMessage);
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_DAO_QUARANTINE_TABLE_MAX_REACHED,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
             throw new IllegalStateException(errorMessage);
         }
         persistCustomAudienceQuarantineData(dbCustomAudienceQuarantine);
