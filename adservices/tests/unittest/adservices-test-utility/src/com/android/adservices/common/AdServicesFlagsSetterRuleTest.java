@@ -16,17 +16,15 @@
 package com.android.adservices.common;
 
 import com.android.adservices.shared.testing.AndroidLogger;
-import com.android.adservices.shared.testing.NameValuePair;
+import com.android.adservices.shared.testing.NameValuePairSetter;
 import com.android.adservices.shared.testing.device.DeviceGateway;
-
-import java.util.function.Consumer;
 
 public final class AdServicesFlagsSetterRuleTest
         extends AbstractAdServicesFlagsSetterRuleTestCase<AdServicesFlagsSetterRule> {
 
     @Override
     protected AdServicesFlagsSetterRule newRule(
-            DeviceGateway deviceGateway, Consumer<NameValuePair> flagsSetter) {
+            DeviceGateway deviceGateway, NameValuePairSetter flagsSetter) {
         return new AdServicesFlagsSetterRule(AndroidLogger.getInstance(), flagsSetter);
     }
 }

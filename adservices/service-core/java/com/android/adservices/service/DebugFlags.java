@@ -51,7 +51,7 @@ import java.io.PrintWriter;
  * not changed or the feature they're guarding is disabled, so usually their default value should be
  * {@code false}.
  */
-public final class DebugFlags extends CommonDebugFlags {
+public class DebugFlags extends CommonDebugFlags {
     private static final DebugFlags sInstance = new DebugFlags();
 
     /** Default for if FLEDGE app signals CLI is enabled. */
@@ -116,7 +116,11 @@ public final class DebugFlags extends CommonDebugFlags {
         return sInstance;
     }
 
-    private DebugFlags() {}
+    // TODO(b/338067482): ideally this class should be final and this constructor private, but it's
+    // extended by FakeDebugFlags, as there's no common interface for it. We should probably
+    // refactor / rename to make it similar to Flags and PhFlags (for example, by creating a
+    // DebugFlags interface and a SystemPropertiesDebugFlagsImpl)
+    protected DebugFlags() {}
 
     public boolean getConsentNotificationDebugMode() {
         return getBoolean(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, CONSENT_NOTIFICATION_DEBUG_MODE);

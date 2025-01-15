@@ -62,7 +62,6 @@ import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultP
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.measurement.AttributionConfig;
@@ -243,7 +242,7 @@ public final class AsyncTriggerFetcherTest extends AdServicesExtendedMockitoTest
 
     @Before
     public void setup() {
-        mocker.mockGetFlags(FakeFlagsFactory.getFlagsForTest());
+        mocker.mockGetFlags(mFakeFlags);
         mDatastoreManager =
                 spy(
                         new SQLDatastoreManager(

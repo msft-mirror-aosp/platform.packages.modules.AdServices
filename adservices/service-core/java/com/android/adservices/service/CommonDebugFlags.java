@@ -51,7 +51,8 @@ public abstract class CommonDebugFlags {
                 KEY_ADSERVICES_SHELL_COMMAND_ENABLED, DEFAULT_ADSERVICES_SHELL_COMMAND_ENABLED);
     }
 
-    static boolean getBoolean(String name, boolean defaultValue) {
+    // TODO(b/338067482): ideally this method should belong to the implementation classes
+    protected boolean getBoolean(String name, boolean defaultValue) {
         return SystemProperties.getBoolean(getSystemPropertyName(name), defaultValue);
     }
 

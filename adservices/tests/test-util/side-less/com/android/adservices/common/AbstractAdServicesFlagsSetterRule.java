@@ -37,15 +37,14 @@ import com.android.adservices.shared.testing.AbstractFlagsSetterRule;
 import com.android.adservices.shared.testing.DeviceConfigHelper;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
-import com.android.adservices.shared.testing.NameValuePair;
 import com.android.adservices.shared.testing.NameValuePair.Matcher;
+import com.android.adservices.shared.testing.NameValuePairSetter;
 import com.android.adservices.shared.testing.SystemPropertiesHelper;
 
 import org.junit.runner.Description;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
-import java.util.function.Consumer;
 
 // TODO(b/294423183): add unit tests for the most relevant / less repetitive stuff (don't need to
 // test all setters / getters, for example)
@@ -101,7 +100,7 @@ public abstract class AbstractAdServicesFlagsSetterRule<
 
     // Used for testing purposes only
     protected AbstractAdServicesFlagsSetterRule(
-            RealLogger logger, Consumer<NameValuePair> flagsSetter) {
+            RealLogger logger, NameValuePairSetter flagsSetter) {
         super(logger, flagsSetter);
     }
 

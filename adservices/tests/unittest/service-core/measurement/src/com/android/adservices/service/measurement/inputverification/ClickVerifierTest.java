@@ -34,7 +34,6 @@ import android.view.VerifiedMotionEvent;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.MeasurementClickVerificationStats;
@@ -80,10 +79,7 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
         InputEvent eventOutsideRange = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
         when(mInputManager.verifyInputEvent(eventOutsideRange)).thenReturn(mVerifiedMotionEvent);
-        long registerTimestamp =
-                FakeFlagsFactory.getFlagsForTest()
-                                .getMeasurementRegistrationInputEventValidWindowMs()
-                        + 1;
+        long registerTimestamp = mFakeFlags.getMeasurementRegistrationInputEventValidWindowMs() + 1;
         assertThat(
                         mClickVerifier.isInputEventVerifiable(
                                 eventOutsideRange, registerTimestamp, SOURCE_REGISTRANT))
@@ -95,9 +91,7 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
         InputEvent eventInsideRange = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
         when(mInputManager.verifyInputEvent(eventInsideRange)).thenReturn(mVerifiedMotionEvent);
-        long registerTimestamp =
-                FakeFlagsFactory.getFlagsForTest()
-                        .getMeasurementRegistrationInputEventValidWindowMs();
+        long registerTimestamp = mFakeFlags.getMeasurementRegistrationInputEventValidWindowMs();
         when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         assertThat(
@@ -109,9 +103,7 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
     @Test
     public void testInputEventNotValidatedBySystem() {
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
-        long registerTimestamp =
-                FakeFlagsFactory.getFlagsForTest()
-                        .getMeasurementRegistrationInputEventValidWindowMs();
+        long registerTimestamp = mFakeFlags.getMeasurementRegistrationInputEventValidWindowMs();
         when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
@@ -125,9 +117,7 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
     @Test
     public void testInputEvent_verifyByInputEventFlagDisabled_Verified() {
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
-        long registerTimestamp =
-                FakeFlagsFactory.getFlagsForTest()
-                        .getMeasurementRegistrationInputEventValidWindowMs();
+        long registerTimestamp = mFakeFlags.getMeasurementRegistrationInputEventValidWindowMs();
         when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
@@ -142,9 +132,7 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
     public void testVerifiedInputEvent_underUseLimit_verified() {
         // Setup
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
-        long registerTimestamp =
-                FakeFlagsFactory.getFlagsForTest()
-                        .getMeasurementRegistrationInputEventValidWindowMs();
+        long registerTimestamp = mFakeFlags.getMeasurementRegistrationInputEventValidWindowMs();
         when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
@@ -164,9 +152,7 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
     public void testVerifiedInputEvent_overUseLimit_notVerified() {
         // Setup
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
-        long registerTimestamp =
-                FakeFlagsFactory.getFlagsForTest()
-                        .getMeasurementRegistrationInputEventValidWindowMs();
+        long registerTimestamp = mFakeFlags.getMeasurementRegistrationInputEventValidWindowMs();
         when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
@@ -189,9 +175,7 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
         InputEvent inputEvent1 = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
         InputEvent inputEvent2 = MotionEvent.obtain(10, 10, MotionEvent.ACTION_DOWN, 0, 0, 0);
         InputEvent inputEvent3 = MotionEvent.obtain(20, 20, MotionEvent.ACTION_DOWN, 0, 0, 0);
-        long registerTimestamp =
-                FakeFlagsFactory.getFlagsForTest()
-                        .getMeasurementRegistrationInputEventValidWindowMs();
+        long registerTimestamp = mFakeFlags.getMeasurementRegistrationInputEventValidWindowMs();
         when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
@@ -218,9 +202,7 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
     public void testUnverifiedInputEvent_motionEvent_underUseLimit_verified() {
         // Setup
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
-        long registerTimestamp =
-                FakeFlagsFactory.getFlagsForTest()
-                        .getMeasurementRegistrationInputEventValidWindowMs();
+        long registerTimestamp = mFakeFlags.getMeasurementRegistrationInputEventValidWindowMs();
         when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
@@ -240,9 +222,7 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
     public void testUnverifiedInputEvent_keyEvent_underUseLimit_verified() {
         // Setup
         InputEvent inputEvent = new KeyEvent(0, 0, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_1, 0);
-        long registerTimestamp =
-                FakeFlagsFactory.getFlagsForTest()
-                        .getMeasurementRegistrationInputEventValidWindowMs();
+        long registerTimestamp = mFakeFlags.getMeasurementRegistrationInputEventValidWindowMs();
         when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
@@ -262,9 +242,7 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
     public void testUnverifiedInputEvent_motionEvent_overUseLimit_notVerified() {
         // Setup
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
-        long registerTimestamp =
-                FakeFlagsFactory.getFlagsForTest()
-                        .getMeasurementRegistrationInputEventValidWindowMs();
+        long registerTimestamp = mFakeFlags.getMeasurementRegistrationInputEventValidWindowMs();
         when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
@@ -285,9 +263,7 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
     public void testCopiedUnverifiedInputEvent_overUseLimit_notVerified() {
         // Setup
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
-        long registerTimestamp =
-                FakeFlagsFactory.getFlagsForTest()
-                        .getMeasurementRegistrationInputEventValidWindowMs();
+        long registerTimestamp = mFakeFlags.getMeasurementRegistrationInputEventValidWindowMs();
         when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(false);
@@ -325,9 +301,7 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
     public void testClickDeduplicationNotEnabled_inputEventStillVerified() {
         // Setup
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
-        long registerTimestamp =
-                FakeFlagsFactory.getFlagsForTest()
-                        .getMeasurementRegistrationInputEventValidWindowMs();
+        long registerTimestamp = mFakeFlags.getMeasurementRegistrationInputEventValidWindowMs();
         when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);
@@ -351,9 +325,7 @@ public final class ClickVerifierTest extends AdServicesExtendedMockitoTestCase {
     public void testClickDeduplicationNotEnforced_inputEventStillVerified() {
         // Setup
         InputEvent inputEvent = MotionEvent.obtain(0, 0, MotionEvent.ACTION_DOWN, 0, 0, 0);
-        long registerTimestamp =
-                FakeFlagsFactory.getFlagsForTest()
-                        .getMeasurementRegistrationInputEventValidWindowMs();
+        long registerTimestamp = mFakeFlags.getMeasurementRegistrationInputEventValidWindowMs();
         when(mMockFlags.getMeasurementRegistrationInputEventValidWindowMs())
                 .thenReturn(registerTimestamp);
         when(mMockFlags.getMeasurementIsClickVerifiedByInputEvent()).thenReturn(true);

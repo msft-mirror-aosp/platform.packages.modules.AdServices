@@ -18,7 +18,7 @@ package com.android.adservices.shared.testing.flags;
 import com.android.adservices.shared.meta_testing.AbstractFlagsSetterRuleTestCase;
 import com.android.adservices.shared.testing.AbstractFlagsSetterRule;
 import com.android.adservices.shared.testing.DynamicLogger;
-import com.android.adservices.shared.testing.NameValuePair;
+import com.android.adservices.shared.testing.NameValuePairSetter;
 import com.android.adservices.shared.testing.device.DeviceGateway;
 import com.android.adservices.shared.testing.flags.AbstractFlagsSetterRuleTest.FakeFlagsSetterRule;
 
@@ -47,7 +47,7 @@ public final class AbstractFlagsSetterRuleTest
 
     @Override
     protected FakeFlagsSetterRule newRule(
-            DeviceGateway deviceGateway, Consumer<NameValuePair> flagsSetter) {
+            DeviceGateway deviceGateway, NameValuePairSetter flagsSetter) {
         return new FakeFlagsSetterRule(deviceGateway, flagsSetter);
     }
 
@@ -56,8 +56,7 @@ public final class AbstractFlagsSetterRuleTest
 
         private final DeviceGateway mDeviceGateway;
 
-        public FakeFlagsSetterRule(
-                DeviceGateway deviceGateway, Consumer<NameValuePair> flagsSetter) {
+        public FakeFlagsSetterRule(DeviceGateway deviceGateway, NameValuePairSetter flagsSetter) {
             super(DynamicLogger.getInstance(), flagsSetter);
             mDeviceGateway = deviceGateway;
         }
