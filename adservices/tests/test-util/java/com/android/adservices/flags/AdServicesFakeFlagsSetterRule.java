@@ -16,6 +16,7 @@
 package com.android.adservices.flags;
 
 import com.android.adservices.service.Flags;
+import com.android.adservices.shared.testing.flags.MissingFlagBehavior;
 
 import com.google.common.annotations.VisibleForTesting;
 

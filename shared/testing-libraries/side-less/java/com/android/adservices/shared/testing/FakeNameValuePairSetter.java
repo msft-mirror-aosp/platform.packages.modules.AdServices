@@ -13,13 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.shared.meta_testing;
-
-import com.android.adservices.shared.testing.DynamicLogger;
-import com.android.adservices.shared.testing.Logger;
-import com.android.adservices.shared.testing.NameValuePair;
-import com.android.adservices.shared.testing.NameValuePairSetter;
-import com.android.adservices.shared.testing.Nullable;
+package com.android.adservices.shared.testing;
 
 import com.google.common.collect.ImmutableList;
 
@@ -93,9 +87,9 @@ public final class FakeNameValuePairSetter implements NameValuePairSetter {
     public String toString() {
         return getClass().getSimpleName()
                 + "[mCalls="
-                + mCalls
+                + getCalls()
                 + ", mMap="
-                + mMap
+                + getAll()
                 + ", mOnSetExceptions="
                 + mOnSetExceptions
                 + ']';

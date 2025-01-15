@@ -20,14 +20,18 @@ import com.android.adservices.shared.flags.FlagsBackend;
 import com.android.adservices.shared.testing.Identifiable;
 import com.android.adservices.shared.testing.NameValuePair;
 import com.android.adservices.shared.testing.NameValuePairSetter;
+import com.android.adservices.shared.testing.flags.FakeFlagsBackend;
+import com.android.adservices.shared.testing.flags.MissingFlagBehavior;
 
 import com.google.common.annotations.VisibleForTesting;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
+// TODO(b/338067482): there's still a lot of duplication here (like methods that delegate to
+// getFakeFlagsBackend(), once AdServicesFakeDebugFlagsSetterRule is fully implemented (and tested),
+// we should refactor them.
 // TODO(b/384798806): make it package protected once FakeFlagsFactory is moved to this package
 public final class FakeFlags extends RawFlags implements Identifiable {
 
@@ -74,16 +78,15 @@ public final class FakeFlags extends RawFlags implements Identifiable {
     }
 
     void setMissingFlagBehavior(MissingFlagBehavior behavior) {
-        getFakeFlagsBackend().mBehavior =
-                Objects.requireNonNull(behavior, "behavior cannot be null");
+        getFakeFlagsBackend().setMissingFlagBehavior(behavior);
     }
 
     MissingFlagBehavior getMissingFlagBehavior() {
-        return getFakeFlagsBackend().mBehavior;
+        return getFakeFlagsBackend().getMissingFlagBehavior();
     }
 
     Flags getSnapshot() {
-        Map<String, NameValuePair> flags = getFakeFlagsBackend().getFlags();
+        Map<String, NameValuePair> flags = getFakeFlagsBackend().getSnapshot();
         return new FakeFlags(
                 new FakeFlagsBackend(TAG, new HashMap<>(flags)), /* immutable= */ true);
     }
@@ -103,7 +106,7 @@ public final class FakeFlags extends RawFlags implements Identifiable {
     @Override
     public String toString() {
         var prefix = "FakeFlags#" + mId + "{";
-        var flags = getFakeFlagsBackend().getFlags();
+        var flags = getFakeFlagsBackend().getSnapshot();
         if (flags.isEmpty()) {
             return prefix + "empty}";
         }
