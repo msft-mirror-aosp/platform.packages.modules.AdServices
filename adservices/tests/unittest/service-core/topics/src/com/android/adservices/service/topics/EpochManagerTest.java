@@ -15,6 +15,9 @@
  */
 package com.android.adservices.service.topics;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.adservices.service.topics.EpochManager.PADDED_TOP_TOPICS_STRING;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
 
@@ -35,12 +38,13 @@ import android.util.Pair;
 import com.android.adservices.MockRandom;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.DbHelper;
 import com.android.adservices.data.topics.EncryptedTopic;
 import com.android.adservices.data.topics.Topic;
 import com.android.adservices.data.topics.TopicsDao;
 import com.android.adservices.data.topics.TopicsTables;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -48,7 +52,6 @@ import com.android.adservices.service.stats.TopicsEncryptionEpochComputationRepo
 import com.android.adservices.service.topics.classifier.Classifier;
 import com.android.adservices.service.topics.classifier.ClassifierManager;
 import com.android.adservices.shared.util.Clock;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import com.google.common.collect.ImmutableList;
 
@@ -72,6 +75,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /** Unit tests for {@link com.android.adservices.service.topics.EpochManager} */
+@SetErrorLogUtilDefaultParams(throwable = Any.class)
 public final class EpochManagerTest extends AdServicesExtendedMockitoTestCase {
     @SuppressWarnings({"unused"})
     private static final String TAG = "EpochManagerTest";
@@ -863,9 +867,11 @@ public final class EpochManagerTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__TOPICS_ENCRYPTION_FAILURE,
+            times = 3)
     public void testProcessEpoch_enableEncryptedTopics_encryptionFailed() {
-        // Do nothing for ErrorLogUtil calls.
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
         // Initializes the argumentCaptor to collect topics encryption metrics.
         ArgumentCaptor<TopicsEncryptionEpochComputationReportedStats> argumentCaptor =
                 ArgumentCaptor.forClass(TopicsEncryptionEpochComputationReportedStats.class);
