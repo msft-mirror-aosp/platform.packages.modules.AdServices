@@ -142,6 +142,7 @@ import static com.android.adservices.service.Flags.ENABLE_DATABASE_SCHEMA_VERSIO
 import static com.android.adservices.service.Flags.ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.Flags.ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.Flags.ENABLE_MDD_ENCRYPTION_KEYS;
+import static com.android.adservices.service.Flags.ENABLE_PAS_COMPONENT_ADS;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_JOB_REQUIRED_NETWORK_TYPE;
 import static com.android.adservices.service.Flags.ENCRYPTION_KEY_NETWORK_CONNECT_TIMEOUT_MS;
@@ -653,6 +654,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOGGED_TOPIC;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_PAS_COMPONENT_ADS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_RB_ATRACE;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_TABLET_REGION_FIX;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_U18_APPSEARCH_MIGRATION;
@@ -6227,6 +6229,14 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS,
                 ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS,
                 Flags::getEnableCustomAudienceComponentAds);
+    }
+
+    @Test
+    public void testGetEnablePasComponentAds() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_ENABLE_PAS_COMPONENT_ADS,
+                ENABLE_PAS_COMPONENT_ADS,
+                Flags::getEnablePasComponentAds);
     }
 
     @Test

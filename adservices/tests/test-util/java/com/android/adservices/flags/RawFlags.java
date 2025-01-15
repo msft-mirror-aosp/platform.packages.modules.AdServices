@@ -2531,6 +2531,11 @@ public class RawFlags implements Flags {
     }
 
     @Override
+    public final boolean getEnablePasComponentAds() {
+        return mBackend.getFlag(KEY_ENABLE_PAS_COMPONENT_ADS, ENABLE_PAS_COMPONENT_ADS);
+    }
+
+    @Override
     public final int getMaxComponentAdsPerCustomAudience() {
         return mBackend.getFlag(
                 KEY_MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE, MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
