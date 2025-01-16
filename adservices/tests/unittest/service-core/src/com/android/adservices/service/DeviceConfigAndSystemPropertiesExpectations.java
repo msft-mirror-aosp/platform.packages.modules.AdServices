@@ -33,6 +33,7 @@ import android.util.Log;
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
+@SuppressWarnings("AvoidDeviceConfigUsage") // Helper / infra class
 final class DeviceConfigAndSystemPropertiesExpectations {
 
     private static final String TAG =
