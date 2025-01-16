@@ -996,6 +996,7 @@ public final class AsyncRegistrationQueueRunner {
                 .setRetryCount(0)
                 .setDebugKeyAllowed(asyncRegistration.getDebugKeyAllowed())
                 .setAdIdPermission(asyncRegistration.hasAdIdPermission())
+                .setPlatformAdId(asyncRegistration.getPlatformAdId())
                 .setRegistrationId(asyncRegistration.getRegistrationId())
                 .setRedirectBehavior(asyncRedirect.getRedirectBehavior())
                 .build();

@@ -89,7 +89,6 @@ public class AsyncRegistration {
                 && mRetryCount == that.mRetryCount
                 && mDebugKeyAllowed == that.mDebugKeyAllowed
                 && mAdIdPermission == that.mAdIdPermission
-                && Objects.equals(mId, that.mId)
                 && Objects.equals(mOsDestination, that.mOsDestination)
                 && Objects.equals(mWebDestination, that.mWebDestination)
                 && Objects.equals(mRegistrationUri, that.mRegistrationUri)
@@ -99,7 +98,7 @@ public class AsyncRegistration {
                 && mSourceType == that.mSourceType
                 && mType == that.mType
                 && Objects.equals(mRegistrationId, that.mRegistrationId)
-                && mPlatformAdId.equals(that.mPlatformAdId)
+                && Objects.equals(mPlatformAdId, that.mPlatformAdId)
                 && Objects.equals(mPostBody, that.mPostBody)
                 && Objects.equals(mRedirectBehavior, that.mRedirectBehavior);
     }
