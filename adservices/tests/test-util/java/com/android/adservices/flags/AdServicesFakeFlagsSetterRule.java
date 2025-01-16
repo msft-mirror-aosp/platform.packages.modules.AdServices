@@ -16,6 +16,7 @@
 package com.android.adservices.flags;
 
 import com.android.adservices.service.Flags;
+import com.android.adservices.shared.testing.flags.MissingFlagBehavior;
 
 import com.google.common.annotations.VisibleForTesting;
 
@@ -28,9 +29,10 @@ public final class AdServicesFakeFlagsSetterRule
     }
 
     private AdServicesFakeFlagsSetterRule(FakeFlags fakeFlags) {
-        super(fakeFlags, fakeFlags.getFlagsSetter());
+        super(fakeFlags, fakeFlags.getBackend());
     }
 
+    // TODO(b/338067482): change superclass to set a generic <F extends Flags>
     private FakeFlags getFakeFlags() {
         return (FakeFlags) getFlags();
     }
@@ -38,7 +40,7 @@ public final class AdServicesFakeFlagsSetterRule
     @Override
     public AdServicesFakeFlagsSetterRule setMissingFlagBehavior(MissingFlagBehavior behavior) {
         mLog.i("setMissingFlagBehavior(): from %s to %s", getMissingFlagBehavior(), behavior);
-        getFakeFlags().setMissingFlagBehavior(behavior);
+        getFakeFlags().getBackend().setMissingFlagBehavior(behavior);
         return getThis();
     }
 
@@ -53,6 +55,6 @@ public final class AdServicesFakeFlagsSetterRule
 
     @VisibleForTesting
     MissingFlagBehavior getMissingFlagBehavior() {
-        return getFakeFlags().getMissingFlagBehavior();
+        return getFakeFlags().getBackend().getMissingFlagBehavior();
     }
 }

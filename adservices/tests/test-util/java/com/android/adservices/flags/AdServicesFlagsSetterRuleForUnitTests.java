@@ -42,6 +42,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.adservices.shared.testing.NameValuePair;
 import com.android.adservices.shared.testing.NameValuePairSetter;
+import com.android.adservices.shared.testing.flags.MissingFlagBehavior;
 
 import org.junit.runner.Description;
 
@@ -99,6 +100,7 @@ public abstract class AdServicesFlagsSetterRuleForUnitTests<
         return getThis();
     }
 
+    // TODO(b/338067482): use NameValuePairSetter instead)
     /** TODO(b/384798806): make it package protected. */
     public static void setFakeFlagsFactoryFlags(BiConsumer<String, String> nameValueSetter) {
         nameValueSetter.accept(KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS, "10000");

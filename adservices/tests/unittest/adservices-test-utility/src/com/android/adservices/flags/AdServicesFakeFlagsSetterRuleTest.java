@@ -15,9 +15,6 @@
  */
 package com.android.adservices.flags;
 
-import static com.android.adservices.flags.MissingFlagBehavior.THROWS_EXCEPTION;
-import static com.android.adservices.flags.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
-import static com.android.adservices.flags.MissingFlagBehavior.USES_JAVA_LANGUAGE_DEFAULT;
 import static com.android.adservices.service.Flags.FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND;
@@ -25,6 +22,9 @@ import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.Flags.UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.shared.testing.flags.MissingFlagBehavior.THROWS_EXCEPTION;
+import static com.android.adservices.shared.testing.flags.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
+import static com.android.adservices.shared.testing.flags.MissingFlagBehavior.USES_JAVA_LANGUAGE_DEFAULT;
 
 import static org.junit.Assert.assertThrows;
 
@@ -102,11 +102,14 @@ public final class AdServicesFakeFlagsSetterRuleTest
                             .that(snapshot.getAdIdCacheTtlMs())
                             .isEqualTo(4815162342L);
 
+                    // TODO(b/338067482): change superclass to set a generic <F extends Flags> and
+                    // remove cast below (and in other places, like Identifiable)
                     // Make sure it's immutable
                     assertThrows(
                             UnsupportedOperationException.class,
                             () ->
                                     ((FakeFlags) snapshot)
+                                            .getBackend()
                                             .setFlag(FlagsConstants.KEY_AD_ID_CACHE_TTL_MS, "108"));
                     expect.withMessage("clonedFlags.getAdIdCacheTtlMs() after trying to change it")
                             .that(snapshot.getAdIdCacheTtlMs())

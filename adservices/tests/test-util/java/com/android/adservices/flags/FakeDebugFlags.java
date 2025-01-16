@@ -18,6 +18,7 @@ package com.android.adservices.flags;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.flags.FakeFlagsBackend;
 
 /** {@link DebugFlags} implementation for unit tests */
 final class FakeDebugFlags extends DebugFlags {
