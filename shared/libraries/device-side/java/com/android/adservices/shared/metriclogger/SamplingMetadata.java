@@ -22,14 +22,20 @@ package com.android.adservices.shared.metriclogger;
  * <p>This includes sampling rates so that we can upsample in the log processing pipeline.
  */
 public final class SamplingMetadata {
-
+    private final double mPerDeviceSampleRate;
     private final double mPerEventSampleRate;
 
-    public SamplingMetadata(double perEventSampleRate) {
+    public SamplingMetadata(double perDeviceSamplingRate, double perEventSampleRate) {
+        mPerDeviceSampleRate = perDeviceSamplingRate;
         mPerEventSampleRate = perEventSampleRate;
     }
 
-    /** Returns the sampling rate to use. */
+    /** Returns the per-device sampling rate to use. */
+    public double getPerDeviceSamplingRate() {
+        return mPerDeviceSampleRate;
+    }
+
+    /** Returns the per-event sampling rate to use. */
     public double getPerEventSamplingRate() {
         return mPerEventSampleRate;
     }

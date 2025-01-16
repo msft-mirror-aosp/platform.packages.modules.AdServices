@@ -30,6 +30,7 @@ import com.android.adservices.shared.util.Clock;
 import com.android.internal.annotations.GuardedBy;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.base.Supplier;
 import com.google.common.hash.Hasher;
 
 import java.nio.charset.Charset;
@@ -43,7 +44,7 @@ public final class PerDeviceLogSampler<L> implements LogSampler<L> {
 
     private final MetricId mMetricId;
     private final @Nullable PerDeviceSamplingConfig mConfig;
-    private final UniqueDeviceIdHelper mUniqueDeviceIdHelper;
+    private final Supplier<UniqueDeviceIdHelper> mUniqueDeviceIdHelper;
     private final Clock mClock;
 
     private final Object mLock = new Object();
@@ -65,7 +66,7 @@ public final class PerDeviceLogSampler<L> implements LogSampler<L> {
         this(
                 metricId,
                 config,
-                new UniqueDeviceIdHelper(context, backgroundExecutor, lightweightExecutor),
+                () -> new UniqueDeviceIdHelper(context, backgroundExecutor, lightweightExecutor),
                 Clock.getInstance());
     }
 
@@ -73,7 +74,7 @@ public final class PerDeviceLogSampler<L> implements LogSampler<L> {
     PerDeviceLogSampler(
             MetricId metricId,
             @Nullable PerDeviceSamplingConfig config,
-            UniqueDeviceIdHelper uniqueDeviceIdHelper,
+            Supplier<UniqueDeviceIdHelper> uniqueDeviceIdHelper,
             Clock clock) {
         mMetricId = metricId;
         mConfig = config;
@@ -84,7 +85,7 @@ public final class PerDeviceLogSampler<L> implements LogSampler<L> {
     private long getDeviceId() {
         long deviceId = 0;
         try {
-            return mUniqueDeviceIdHelper.getDeviceId().get();
+            return mUniqueDeviceIdHelper.get().getDeviceId().get();
         } catch (ExecutionException | InterruptedException e) {
             Log.e(TAG, "Error getting id for device selection");
         }

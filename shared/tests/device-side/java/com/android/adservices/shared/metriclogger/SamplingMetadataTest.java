@@ -24,11 +24,15 @@ public final class SamplingMetadataTest extends SharedUnitTestCase {
 
     @Test
     public void testGetPerEventSamplingRate() {
-        double sampleRate = 0.5;
-        SamplingMetadata metadata = new SamplingMetadata(sampleRate);
+        double deviceSampleRate = 0.8;
+        double eventSampleRate = 0.5;
+        SamplingMetadata metadata = new SamplingMetadata(deviceSampleRate, eventSampleRate);
 
-        expect.withMessage("sampleRate")
+        expect.withMessage("deviceSampleRate")
+                .that(metadata.getPerDeviceSamplingRate())
+                .isEqualTo(deviceSampleRate);
+        expect.withMessage("eventSampleRate")
                 .that(metadata.getPerEventSamplingRate())
-                .isEqualTo(sampleRate);
+                .isEqualTo(eventSampleRate);
     }
 }

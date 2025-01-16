@@ -47,7 +47,7 @@ public final class PerDeviceLogSamplerTest extends SharedMockitoTestCase {
     public void testShouldLog_configIsNull_alwaysLog() {
         LogSampler<ExampleStats> sampler =
                 new PerDeviceLogSampler<>(
-                        MetricId.EXAMPLE_STATS, /* config= */ null, mMockDeviceId, mClock);
+                        MetricId.EXAMPLE_STATS, /* config= */ null, () -> mMockDeviceId, mClock);
 
         expect.withMessage("shouldLog()").that(sampler.shouldLog()).isTrue();
     }
@@ -60,7 +60,8 @@ public final class PerDeviceLogSamplerTest extends SharedMockitoTestCase {
                                 .setSamplingRate(1.0)
                                 .build());
         LogSampler<ExampleStats> sampler =
-                new PerDeviceLogSampler<>(MetricId.EXAMPLE_STATS, config, mMockDeviceId, mClock);
+                new PerDeviceLogSampler<>(
+                        MetricId.EXAMPLE_STATS, config, () -> mMockDeviceId, mClock);
 
         expect.withMessage("shouldLog()").that(sampler.shouldLog()).isTrue();
     }
@@ -73,7 +74,8 @@ public final class PerDeviceLogSamplerTest extends SharedMockitoTestCase {
                                 .setSamplingRate(0)
                                 .build());
         LogSampler<ExampleStats> sampler =
-                new PerDeviceLogSampler<>(MetricId.EXAMPLE_STATS, config, mMockDeviceId, mClock);
+                new PerDeviceLogSampler<>(
+                        MetricId.EXAMPLE_STATS, config, () -> mMockDeviceId, mClock);
 
         expect.withMessage("shouldLog()").that(sampler.shouldLog()).isFalse();
     }
@@ -291,7 +293,8 @@ public final class PerDeviceLogSamplerTest extends SharedMockitoTestCase {
         setMockDeviceId(deviceId);
         PerDeviceSamplingConfig config =
                 PerDeviceSamplingConfig.createPerDeviceSamplingConfig(samplingConfigProto);
-        return new PerDeviceLogSampler<>(MetricId.EXAMPLE_STATS, config, mMockDeviceId, mClock);
+        return new PerDeviceLogSampler<>(
+                MetricId.EXAMPLE_STATS, config, () -> mMockDeviceId, mClock);
     }
 
     private String getDeviceSelectionPattern(
