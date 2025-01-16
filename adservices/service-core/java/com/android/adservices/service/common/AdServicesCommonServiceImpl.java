@@ -48,8 +48,10 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_ENTRY_POINT_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_UPDATE_AD_ID_API_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX;
 import static com.android.adservices.service.ui.constants.DebugMessages.BACK_COMPAT_FEATURE_ENABLED_MESSAGE;
 import static com.android.adservices.service.ui.constants.DebugMessages.CALLER_NOT_ALLOWED_MESSAGE;
@@ -84,6 +86,7 @@ import android.annotation.NonNull;
 import android.annotation.RequiresPermission;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Binder;
 import android.os.Build;
 import android.os.RemoteException;
@@ -93,6 +96,7 @@ import android.util.SparseIntArray;
 import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
@@ -139,6 +143,8 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     private final DebugFlags mDebugFlags;
     private final AdIdWorker mAdIdWorker;
     private final Clock mClock;
+
+    private static final LoggerFactory.Logger sLogger = LoggerFactory.getUILogger();
 
     public AdServicesCommonServiceImpl(
             Context context,
@@ -440,7 +446,7 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
         final long serviceStartTime = mClock.elapsedRealtime();
         final String packageName = param.getAppPackageName();
         final String sdkName = param.getSdkPackageName();
-        LogUtil.i(packageName);
+        int callingUid = Binder.getCallingUidOrThrow();
         boolean hasAccessAdServicesCommonStatePermission =
                 PermissionHelper.hasAccessAdServicesCommonStatePermission(mContext, packageName);
 
@@ -463,6 +469,14 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
                         if (!appCanUseGetCommonStatesService) {
                             LogUtil.e(CALLER_NOT_ALLOWED_MESSAGE);
                             resultCode = STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
+                            callback.onFailure(resultCode);
+                            return;
+                        }
+
+                        // Check whether calling package belongs to the callingUid
+                        if (!isCallingPackageBelongsToUid(packageName, callingUid)) {
+                            sLogger.v("STATUS_UNAUTHORIZED: Caller UID mismatch");
+                            resultCode = STATUS_UNAUTHORIZED;
                             callback.onFailure(resultCode);
                             return;
                         }
@@ -770,5 +784,32 @@ public class AdServicesCommonServiceImpl extends IAdServicesCommonService.Stub {
     private SharedPreferences getPrefs() {
         return mContext.getSharedPreferences(
                 ADSERVICES_STATUS_SHARED_PREFERENCE, Context.MODE_PRIVATE);
+    }
+
+    /**
+     * Check if the package name provided by the caller is one of the package of the calling uid.
+     *
+     * @param callingPackage the caller-supplied package name
+     * @param callingUid the uid get from the Binder
+     */
+    public boolean isCallingPackageBelongsToUid(String callingPackage, int callingUid) {
+        int appCallingUid = SdkRuntimeUtil.getCallingAppUid(callingUid);
+        int packageUid;
+
+        try {
+            packageUid = mContext.getPackageManager().getPackageUid(callingPackage, /* flags */ 0);
+        } catch (PackageManager.NameNotFoundException e) {
+            sLogger.e(e, callingPackage + " not found");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
+            return false;
+        }
+        if (packageUid != appCallingUid) {
+            sLogger.e(callingPackage + " does not belong to uid " + callingUid);
+            return false;
+        }
+        return true;
     }
 }
