@@ -861,7 +861,7 @@ public final class EpochManagerTest extends AdServicesExtendedMockitoTestCase {
         assertThat(stats.getLatencyOfWholeEncryptionProcessMs())
                 .isEqualTo(TEST_TOPICS_ENCRYPTION_LATENCY);
         assertThat(stats.getLatencyOfEncryptionPerTopicMs())
-                .isEqualTo(TEST_TOPICS_ENCRYPTION_LATENCY/4);
+                .isEqualTo(TEST_TOPICS_ENCRYPTION_LATENCY / 4);
         assertThat(stats.getLatencyOfPersistingEncryptedTopicsToDbMs())
                 .isEqualTo(TEST_PERSIST_ENCRYPTED_TOPICS_TO_DB_LATENCY);
     }
@@ -958,7 +958,7 @@ public final class EpochManagerTest extends AdServicesExtendedMockitoTestCase {
         assertThat(stats.getLatencyOfWholeEncryptionProcessMs())
                 .isEqualTo(TEST_TOPICS_ENCRYPTION_LATENCY);
         assertThat(stats.getLatencyOfEncryptionPerTopicMs())
-                .isEqualTo(TEST_TOPICS_ENCRYPTION_LATENCY/3);
+                .isEqualTo(TEST_TOPICS_ENCRYPTION_LATENCY / 3);
         assertThat(stats.getLatencyOfPersistingEncryptedTopicsToDbMs())
                 .isEqualTo(TEST_PERSIST_ENCRYPTED_TOPICS_TO_DB_LATENCY);
     }
