@@ -23,6 +23,7 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 import android.os.RemoteException;
+import android.os.Trace;
 import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
@@ -188,6 +189,7 @@ public final class AsyncRegistrationQueueRunner {
 
     /** Processes records in the AsyncRegistration Queue table. */
     public ProcessingResult runAsyncRegistrationQueueWorker() {
+        Trace.beginSection("AsyncRegistrationQueueRunner#runAsyncRegistrationQueueWorker");
         int recordServiceLimit = mFlags.getMeasurementMaxRegistrationsPerJobInvocation();
         int retryLimit = mFlags.getMeasurementMaxRetriesPerRegistrationRequest();
 
@@ -213,8 +215,9 @@ public final class AsyncRegistrationQueueRunner {
 
             processAsyncRecord(asyncRegistration, failedOrigins);
         }
-
-        return hasPendingRecords(retryLimit, failedOrigins);
+        ProcessingResult processingResult = hasPendingRecords(retryLimit, failedOrigins);
+        Trace.endSection();
+        return processingResult;
     }
 
     private AsyncRegistration fetchNext(int retryLimit, Set<Uri> failedOrigins) {

@@ -25,8 +25,6 @@ import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
 import static androidx.lifecycle.Lifecycle.State;
 import static androidx.test.platform.app.InstrumentationRegistry.getInstrumentation;
 
-import static com.android.sdksandbox.flags.Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT;
-
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -60,8 +58,6 @@ import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
-import android.platform.test.annotations.RequiresFlagsDisabled;
-import android.platform.test.annotations.RequiresFlagsEnabled;
 import android.platform.test.flag.junit.CheckFlagsRule;
 import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 import android.provider.DeviceConfig;
@@ -798,9 +794,7 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
      * @throws RemoteException
      */
     @Test
-    @RequiresFlagsEnabled(FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
-    public void testSandboxActivityUseSdkBasedContextIfRequiredFlagAreEnabled()
-            throws RemoteException {
+    public void testSandboxActivityUseSdkBasedContex() throws RemoteException {
         assumeTrue(SdkLevel.isAtLeastV());
 
         ICtsSdkProviderApi sdk = loadSdk();
@@ -813,29 +807,6 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
         String dataDir = actionExecutor.getDataDir();
         assertThat(dataDir).contains(SDK_NAME_1);
         assertThat(dataDir).doesNotContain(getSdkSandboxPackageName());
-    }
-
-    /**
-     * Test that the sandbox activity context is created using the sandbox App ApplicationInfo.
-     *
-     * @throws RemoteException
-     */
-    @Test
-    @RequiresFlagsDisabled(FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
-    public void testSandboxActivityUseAppBasedContextIfSdkBasedFlagIDisabled()
-            throws RemoteException {
-        assumeTrue(SdkLevel.isAtLeastV());
-
-        ICtsSdkProviderApi sdk = loadSdk();
-
-        ActivityStarter sandboxActivityStarter = new ActivityStarter();
-        IActivityActionExecutor actionExecutor = startSandboxActivity(sdk, sandboxActivityStarter);
-        assertThat(mScenario.getState()).isIn(Arrays.asList(State.CREATED, State.STARTED));
-        assertThat(sandboxActivityStarter.isActivityResumed()).isTrue();
-
-        String dataDir = actionExecutor.getDataDir();
-        assertThat(dataDir).doesNotContain(SDK_NAME_1);
-        assertThat(dataDir).contains(getSdkSandboxPackageName());
     }
 
     /**

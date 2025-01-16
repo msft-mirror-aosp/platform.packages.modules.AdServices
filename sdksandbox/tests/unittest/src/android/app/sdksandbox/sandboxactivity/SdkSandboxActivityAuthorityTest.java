@@ -36,7 +36,6 @@ import android.content.Intent;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.platform.test.annotations.RequiresFlagsEnabled;
 import android.platform.test.flag.junit.CheckFlagsRule;
 import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 
@@ -45,7 +44,6 @@ import androidx.test.platform.app.InstrumentationRegistry;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.dx.mockito.inline.extended.StaticMockitoSession;
 import com.android.modules.utils.build.SdkLevel;
-import com.android.sdksandbox.flags.Flags;
 import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 
 import org.junit.After;
@@ -116,7 +114,6 @@ public class SdkSandboxActivityAuthorityTest extends DeviceSupportedBaseTest {
     }
 
     @Test
-    @RequiresFlagsEnabled(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
     public void testSdkSandboxActivityIntent() {
         final Context context = InstrumentationRegistry.getInstrumentation().getContext();
         final String sandboxPackageName = context.getPackageManager().getSdkSandboxPackageName();
@@ -139,7 +136,6 @@ public class SdkSandboxActivityAuthorityTest extends DeviceSupportedBaseTest {
 
     /** Ensure the returned instance ActivityContextInfo has the expected fields. */
     @Test
-    @RequiresFlagsEnabled(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
     public void testGetActivityContextInfo() {
         final IBinder token = mRegistry.register(mSdkContext, mHandler);
         Intent intent = buildSandboxActivityIntent(token);
@@ -153,7 +149,6 @@ public class SdkSandboxActivityAuthorityTest extends DeviceSupportedBaseTest {
      * it.
      */
     @Test
-    @RequiresFlagsEnabled(Flags.FLAG_SANDBOX_ACTIVITY_SDK_BASED_CONTEXT)
     public void testGetSdkSandboxActivityAuthorityFailForNonRegisteredHandlers() {
         final Intent intent = buildSandboxActivityIntent(new Binder());
 

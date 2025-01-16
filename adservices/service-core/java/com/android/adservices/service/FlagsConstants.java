@@ -854,6 +854,7 @@ public final class FlagsConstants {
 
     public static final String KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS =
             "Fledge__enable_custom_audience_component_ads";
+    public static final String KEY_ENABLE_PAS_COMPONENT_ADS = "Fledge__enable_pas_component_ads";
     public static final String KEY_MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE =
             "Fledge__max_component_ads_per_custom_audience";
     public static final String KEY_COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES =

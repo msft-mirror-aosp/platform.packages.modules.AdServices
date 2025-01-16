@@ -3041,6 +3041,12 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getEnablePasComponentAds() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_ENABLE_PAS_COMPONENT_ADS, ENABLE_PAS_COMPONENT_ADS);
+    }
+
+    @Override
     public int getMaxComponentAdsPerCustomAudience() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE,

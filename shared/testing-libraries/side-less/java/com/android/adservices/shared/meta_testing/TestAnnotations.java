@@ -19,6 +19,8 @@ import com.android.adservices.shared.testing.AndroidSdk;
 import com.android.adservices.shared.testing.AndroidSdk.Level;
 import com.android.adservices.shared.testing.AndroidSdk.Range;
 import com.android.adservices.shared.testing.ScreenSize;
+import com.android.adservices.shared.testing.annotations.DisableDebugFlag;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.annotations.RequiresGoDevice;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
 import com.android.adservices.shared.testing.annotations.RequiresScreenSizeDevice;
@@ -194,6 +196,18 @@ public final class TestAnnotations {
     @AutoAnnotation
     public static SetDoubleFlag setDoubleFlag(String name, double value) {
         return new AutoAnnotation_TestAnnotations_setDoubleFlag(name, value);
+    }
+
+    /** Redundant javadoc to make checkstyle happy */
+    @AutoAnnotation
+    public static EnableDebugFlag enableDebugFlag(String value) {
+        return new AutoAnnotation_TestAnnotations_enableDebugFlag(value);
+    }
+
+    /** Redundant javadoc to make checkstyle happy */
+    @AutoAnnotation
+    public static DisableDebugFlag disableDebugFlag(String value) {
+        return new AutoAnnotation_TestAnnotations_disableDebugFlag(value);
     }
 
     // TODO(b/340882758): figure out how to use @AutoAnnotation overriding default values (separator

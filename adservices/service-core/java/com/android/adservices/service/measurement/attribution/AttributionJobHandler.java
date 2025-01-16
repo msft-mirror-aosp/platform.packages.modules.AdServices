@@ -29,6 +29,7 @@ import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Trace;
 import android.util.Pair;
 
 import androidx.annotation.Nullable;
@@ -181,6 +182,7 @@ class AttributionJobHandler {
      * @return false if there are datastore failures or pending {@link Trigger} left, true otherwise
      */
     ProcessingResult performPendingAttributions() {
+        Trace.beginSection("AttributionJobHandler#performPendingAttributions");
         Optional<List<String>> pendingTriggersOpt = mDatastoreManager
                 .runInTransactionWithResult(IMeasurementDao::getPendingTriggerIds);
         if (!pendingTriggersOpt.isPresent()) {
@@ -203,6 +205,7 @@ class AttributionJobHandler {
             }
         }
 
+        Trace.endSection();
         // Reschedule if there are unprocessed pending triggers.
         return pendingTriggers.size() > numRecordsToProcess
                 ? ProcessingResult.SUCCESS_WITH_PENDING_RECORDS
