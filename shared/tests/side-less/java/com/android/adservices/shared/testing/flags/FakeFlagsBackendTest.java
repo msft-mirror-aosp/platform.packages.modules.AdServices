@@ -26,13 +26,8 @@ import static org.junit.Assert.assertThrows;
 import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 import com.android.adservices.shared.testing.NameValuePair;
 
-import com.google.common.collect.ImmutableMap;
-
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
-
-import java.util.HashMap;
-import java.util.Map;
 
 public final class FakeFlagsBackendTest extends SharedSidelessTestCase {
 
@@ -44,37 +39,43 @@ public final class FakeFlagsBackendTest extends SharedSidelessTestCase {
     @Test
     public void testNullConstructor() {
         assertThrows(NullPointerException.class, () -> new FakeFlagsBackend(/* tagName= */ null));
-
-        assertThrows(
-                NullPointerException.class,
-                () -> new FakeFlagsBackend(/* tagName= */ null, new HashMap<>()));
-        assertThrows(
-                NullPointerException.class, () -> new FakeFlagsBackend(TAG, /* flags= */ null));
     }
 
     @Test
-    public void testGetSnapshot_defaultConstructor() {
-        ImmutableMap<String, NameValuePair> flags = mBackend.getSnapshot();
+    public void testCloneForSnapshot() {
+        var clone = mBackend.cloneForSnapshot();
 
-        assertWithMessage("getFlags()").that(flags).isNotNull();
-        expect.withMessage("getFlags()").that(flags).isEmpty();
+        assertWithMessage("cloneForSnapshot()").that(clone).isNotNull();
+        assertWithMessage("cloneForSnapshot()").that(clone).isNotSameInstanceAs(mBackend);
+        expect.withMessage("tag on cloneForSnapshot()").that(clone.getTagName()).isEqualTo(TAG);
+
+        // Make sure it's immutable
+        var thrown =
+                assertThrows(
+                        UnsupportedOperationException.class, () -> clone.setFlag("dude", "sweet"));
+        expect.withMessage("message on exception")
+                .that(thrown)
+                .hasMessageThat()
+                .isEqualTo("setFlag(dude, sweet): not supported on snapshot");
+        expect.withMessage("getFlags() on clone").that(mBackend.getFlags()).isEmpty();
+
+        // Make sure it didn't affect source
+        expect.withMessage("getFlags() on source").that(mBackend.getFlags()).isEmpty();
     }
 
     @Test
-    public void testGetSnapshot_customConstructor() {
-        Map<String, NameValuePair> flags = new HashMap<>();
-        flags.put("name", new NameValuePair("Bond", "James Bond"));
+    public void testGetFlags() {
+        var flags1 = mBackend.getFlags();
+        assertWithMessage("getFlags() on empty").that(flags1).isNotNull();
+        expect.withMessage("getFlags() on empty").that(flags1).isEmpty();
 
-        var backend = new FakeFlagsBackend(TAG, flags);
-
-        ImmutableMap<String, NameValuePair> snapshot1 = backend.getSnapshot();
-        assertWithMessage("getFlags()").that(snapshot1).isNotNull();
-        expect.withMessage("getFlags()").that(snapshot1).containsExactlyEntriesIn(flags);
-
-        flags.clear();
-        ImmutableMap<String, NameValuePair> snapshot2 = backend.getSnapshot();
-        assertWithMessage("getFlags()").that(snapshot2).isNotNull();
-        expect.withMessage("getFlags()").that(snapshot2).containsExactlyEntriesIn(snapshot1);
+        mBackend.setFlag(NAME, "of the Rose");
+        var flags2 = mBackend.getFlags();
+        assertWithMessage("getFlags() after adding").that(flags2).isNotNull();
+        expect.withMessage("getFlags() after adding").that(flags2).isNotSameInstanceAs(flags1);
+        expect.withMessage("getFlags() after adding")
+                .that(flags2)
+                .containsExactly(NAME, new NameValuePair(NAME, "of the Rose"));
     }
 
     @Test

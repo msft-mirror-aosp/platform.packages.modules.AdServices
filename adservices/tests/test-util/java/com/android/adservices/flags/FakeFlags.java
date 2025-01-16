@@ -16,86 +16,43 @@
 package com.android.adservices.flags;
 
 import com.android.adservices.service.Flags;
-import com.android.adservices.shared.flags.FlagsBackend;
 import com.android.adservices.shared.testing.Identifiable;
-import com.android.adservices.shared.testing.NameValuePair;
-import com.android.adservices.shared.testing.NameValuePairSetter;
 import com.android.adservices.shared.testing.flags.FakeFlagsBackend;
-import com.android.adservices.shared.testing.flags.MissingFlagBehavior;
 
-import com.google.common.annotations.VisibleForTesting;
-
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// TODO(b/338067482): there's still a lot of duplication here (like methods that delegate to
-// getFakeFlagsBackend(), once AdServicesFakeDebugFlagsSetterRule is fully implemented (and tested),
-// we should refactor them.
 // TODO(b/384798806): make it package protected once FakeFlagsFactory is moved to this package
-public final class FakeFlags extends RawFlags implements Identifiable {
+public final class FakeFlags extends RawFlags<FakeFlagsBackend> implements Identifiable {
 
     private static final String TAG = FakeFlags.class.getSimpleName();
 
     private static int sNextId;
 
     private final String mId = String.valueOf(++sNextId);
-    private final boolean mImmutable;
 
-    private FakeFlags(boolean immutable) {
-        this(new FakeFlagsBackend(TAG), immutable);
-    }
-
-    private FakeFlags(FlagsBackend backend, boolean immutable) {
+    private FakeFlags(FakeFlagsBackend backend) {
         super(backend);
-        mImmutable = immutable;
-    }
-
-    private FakeFlagsBackend getFakeFlagsBackend() {
-        return (FakeFlagsBackend) mBackend;
     }
 
     static FakeFlags createFakeFlagsForFlagSetterRulePurposesOnly() {
-        return new FakeFlags(/* immutable= */ false);
+        return new FakeFlags(new FakeFlagsBackend(TAG));
     }
 
     // TODO(b/384798806): make it package protected once FakeFlagsFactory is moved to this package
     public static FakeFlags createFakeFlagsForFakeFlagsFactoryPurposesOnly() {
-        return new FakeFlags(/* immutable= */ true).setFakeFlagsFactoryFlags();
+        var backend = new FakeFlagsBackend(TAG);
+        AdServicesFlagsSetterRuleForUnitTests.setFakeFlagsFactoryFlags(
+                (name, value) -> backend.setFlag(name, value));
+        return new FakeFlags(backend.cloneForSnapshot());
     }
 
-    NameValuePairSetter getFlagsSetter() {
-        return getFakeFlagsBackend();
-    }
-
-    @VisibleForTesting
-    void setFlag(String name, String value) {
-        if (mImmutable) {
-            throw new UnsupportedOperationException(
-                    "setFlag(" + name + ", " + value + "): not supported on immutable Flags");
-        }
-        getFakeFlagsBackend().setFlag(name, value);
-    }
-
-    void setMissingFlagBehavior(MissingFlagBehavior behavior) {
-        getFakeFlagsBackend().setMissingFlagBehavior(behavior);
-    }
-
-    MissingFlagBehavior getMissingFlagBehavior() {
-        return getFakeFlagsBackend().getMissingFlagBehavior();
+    FakeFlagsBackend getBackend() {
+        return mBackend;
     }
 
     Flags getSnapshot() {
-        Map<String, NameValuePair> flags = getFakeFlagsBackend().getSnapshot();
-        return new FakeFlags(
-                new FakeFlagsBackend(TAG, new HashMap<>(flags)), /* immutable= */ true);
-    }
-
-    private FakeFlags setFakeFlagsFactoryFlags() {
-        var backend = getFakeFlagsBackend();
-        AdServicesFlagsSetterRuleForUnitTests.setFakeFlagsFactoryFlags(
-                (name, value) -> backend.setFlag(name, value));
-        return this;
+        return new FakeFlags(mBackend.cloneForSnapshot());
     }
 
     @Override
@@ -106,7 +63,7 @@ public final class FakeFlags extends RawFlags implements Identifiable {
     @Override
     public String toString() {
         var prefix = "FakeFlags#" + mId + "{";
-        var flags = getFakeFlagsBackend().getSnapshot();
+        var flags = mBackend.getFlags();
         if (flags.isEmpty()) {
             return prefix + "empty}";
         }

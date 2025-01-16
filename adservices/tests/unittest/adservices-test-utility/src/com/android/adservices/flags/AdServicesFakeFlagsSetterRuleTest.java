@@ -102,11 +102,14 @@ public final class AdServicesFakeFlagsSetterRuleTest
                             .that(snapshot.getAdIdCacheTtlMs())
                             .isEqualTo(4815162342L);
 
+                    // TODO(b/338067482): change superclass to set a generic <F extends Flags> and
+                    // remove cast below (and in other places, like Identifiable)
                     // Make sure it's immutable
                     assertThrows(
                             UnsupportedOperationException.class,
                             () ->
                                     ((FakeFlags) snapshot)
+                                            .getBackend()
                                             .setFlag(FlagsConstants.KEY_AD_ID_CACHE_TTL_MS, "108"));
                     expect.withMessage("clonedFlags.getAdIdCacheTtlMs() after trying to change it")
                             .that(snapshot.getAdIdCacheTtlMs())

@@ -24,9 +24,9 @@ import com.android.adservices.shared.testing.NameValuePair;
 import com.android.adservices.shared.testing.NameValuePairSetter;
 import com.android.adservices.shared.testing.Nullable;
 
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -45,25 +45,31 @@ public final class FakeFlagsBackend implements FlagsBackend, NameValuePairSetter
      * @param tagName tag used to log messages.
      */
     public FakeFlagsBackend(String tagName) {
-        this(tagName, new HashMap<>());
+        this(new Logger(DynamicLogger.getInstance(), tagName), new LinkedHashMap<>());
     }
 
-    /**
-     * Custom constructor.
-     *
-     * @param tagName tag used to log messages.
-     * @param initialFlags initial value of the flags.
-     */
-    public FakeFlagsBackend(String tagName, Map<String, NameValuePair> initialFlags) {
-        Objects.requireNonNull(tagName, "tagName cannot be null");
-        Objects.requireNonNull(initialFlags, "flags cannot be null");
+    private FakeFlagsBackend(Logger log, Map<String, NameValuePair> flags) {
+        mFlags = flags;
+        mLog = log;
+    }
 
-        mFlags = new LinkedHashMap<>(initialFlags);
-        mLog = new Logger(DynamicLogger.getInstance(), tagName);
+    // Constructor used to create a snapshot
+    private FakeFlagsBackend(FakeFlagsBackend source) {
+        this(source.mLog, source.getFlags());
+    }
+
+    @VisibleForTesting
+    String getTagName() {
+        return mLog.getTag();
+    }
+
+    /** Gets a {@link FakeFlagsBackend} that has the same flags, but it's immutable. */
+    public FakeFlagsBackend cloneForSnapshot() {
+        return new FakeFlagsBackend(this);
     }
 
     /** Gets a snapshot of the current flags. */
-    public ImmutableMap<String, NameValuePair> getSnapshot() {
+    public ImmutableMap<String, NameValuePair> getFlags() {
         return ImmutableMap.copyOf(mFlags);
     }
 
@@ -184,6 +190,11 @@ public final class FakeFlagsBackend implements FlagsBackend, NameValuePairSetter
     /** Sets the flag to the given value, or removes it if the value is {@code null}. */
     public void setFlag(String name, @Nullable String value) {
         mLog.v("set(%s, %s)", name, value);
+        if (mFlags instanceof ImmutableMap) {
+            // we could try / catch instead, but checking is cleaner
+            throw new UnsupportedOperationException(
+                    "setFlag(" + name + ", " + value + "): not supported on snapshot");
+        }
         if (value == null) {
             mFlags.remove(name);
             return;
