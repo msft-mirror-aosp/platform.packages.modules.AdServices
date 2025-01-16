@@ -619,6 +619,9 @@ public interface IMeasurementDao {
     /** Get all the records from the EventReport table. */
     List<EventReport> fetchAllEventReports() throws DatastoreException;
 
+    /** Get all the records from the AggregateReport table. */
+    List<AggregateReport> fetchAllAggregatableReports() throws DatastoreException;
+
     /**
      * Insert/Update the supplied {@link KeyValueData} object
      *

@@ -16,12 +16,14 @@
 
 package com.android.adservices.service.shell.attributionreporting;
 
+import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.MeasurementTables.EventReportContract;
 import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -29,7 +31,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public final class AttributionReportingHelper {
-
     private static final String APP_DESTINATION = "app_destination";
     private static final String WEB_DESTINATION = "web_destination";
     private static final String ACTIVE = "active";
@@ -104,5 +105,32 @@ public final class AttributionReportingHelper {
                         eventReport.getRandomizedTriggerRate())
                 .put(RANDOMIZED, eventReport.isRandomized())
                 .put(EventReportContract.REGISTRATION_ORIGIN, eventReport.getRegistrationOrigin());
+    }
+
+    static JSONObject aggregatableReportToJson(AggregateReport aggregateReport)
+            throws JSONException {
+        return new JSONObject()
+                .put(MeasurementTables.AggregateReport.STATUS, aggregateReport.getStatus())
+                .put(
+                        MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                        aggregateReport.getAttributionDestination())
+                .put(
+                        MeasurementTables.AggregateReport.TRIGGER_TIME,
+                        aggregateReport.getTriggerTime())
+                .put(
+                        MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
+                        aggregateReport.getScheduledReportTime())
+                .put(
+                        MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN,
+                        aggregateReport.getAggregationCoordinatorOrigin())
+                .put(
+                        MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
+                        aggregateReport.getDebugCleartextPayload())
+                .put(
+                        MeasurementTables.AggregateReport.REGISTRATION_ORIGIN,
+                        aggregateReport.getRegistrationOrigin())
+                .put(
+                        MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID,
+                        aggregateReport.getTriggerContextId());
     }
 }
