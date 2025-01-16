@@ -34,7 +34,7 @@ import java.util.function.BiConsumer;
 // DeviceConfig abstractions.
 /** Base test class for {@link AdServicesFlagsSetterRuleForUnitTests} implementations. */
 abstract class AdServicesFlagsSetterRuleForUnitTestsTestCase<
-                R extends AdServicesFlagsSetterRuleForUnitTests<R>>
+                R extends AdServicesFlagsSetterRuleForUnitTests<R, F>, F extends Flags>
         extends AdServicesUnitTestCase {
 
     /** Creates a new instance of the rule. */
@@ -140,7 +140,7 @@ abstract class AdServicesFlagsSetterRuleForUnitTestsTestCase<
      * @param consumer consumer of flags instantiated by {@link #newFlags()} and a rule instantiated
      *     by {@link #newRule(Flags)} (passing that flags).
      */
-    protected void onTest(BiConsumer<R, Flags> consumer) throws Throwable {
+    protected void onTest(BiConsumer<R, F> consumer) throws Throwable {
         onTest(
                 Description.createTestDescription(AClassHasNoNothingAtAll.class, "butItHasATest"),
                 consumer);
@@ -153,7 +153,7 @@ abstract class AdServicesFlagsSetterRuleForUnitTestsTestCase<
      * @param consumer consumer of flags instantiated by {@link #newFlags()} and a rule instantiated
      *     by {@link #newRule(Flags)} (passing that flags).
      */
-    protected void onTest(Description description, BiConsumer<R, Flags> consumer) throws Throwable {
+    protected void onTest(Description description, BiConsumer<R, F> consumer) throws Throwable {
         Objects.requireNonNull(description, "description cannot be null");
         Objects.requireNonNull(consumer, "consumer cannot be null");
 
@@ -161,7 +161,7 @@ abstract class AdServicesFlagsSetterRuleForUnitTestsTestCase<
         if (rule == null) {
             throw new IllegalStateException("newRule() returned null");
         }
-        Flags flags = rule.getFlags();
+        F flags = rule.getFlags();
         if (flags == null) {
             throw new IllegalStateException("rule.getFlags() returned null");
         }

@@ -18,7 +18,7 @@ package com.android.adservices.flags;
 import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.adservices.shared.testing.NameValuePairSetter;
 
-/** {@code DebugFlagsSetterRule} that uses a fake {@code DebugFlags} implementation. */
+/** {@code DebugFlagsSetterRule} that uses a fake {@link FakeDebugFlags} implementation. */
 public final class AdServicesFakeDebugFlagsSetterRule
         extends AbstractAdServicesDebugFlagsSetterRule<AdServicesFakeDebugFlagsSetterRule> {
 

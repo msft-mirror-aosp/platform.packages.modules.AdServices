@@ -28,7 +28,8 @@ import org.junit.Test;
 
 @SuppressWarnings("deprecation")
 public final class AdServicesMockFlagsSetterRuleTest
-        extends AdServicesFlagsSetterRuleForUnitTestsTestCase<AdServicesMockFlagsSetterRule> {
+        extends AdServicesFlagsSetterRuleForUnitTestsTestCase<
+                AdServicesMockFlagsSetterRule, Flags> {
 
     @Override
     protected AdServicesMockFlagsSetterRule newRule() {

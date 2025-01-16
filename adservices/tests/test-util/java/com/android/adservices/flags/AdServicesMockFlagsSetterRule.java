@@ -59,7 +59,7 @@ import java.util.Objects;
  */
 @Deprecated
 public final class AdServicesMockFlagsSetterRule
-        extends AdServicesFlagsSetterRuleForUnitTests<AdServicesMockFlagsSetterRule> {
+        extends AdServicesFlagsSetterRuleForUnitTests<AdServicesMockFlagsSetterRule, Flags> {
 
     private static final Logger sLog =
             new Logger(AndroidLogger.getInstance(), AdServicesMockFlagsSetterRule.class);

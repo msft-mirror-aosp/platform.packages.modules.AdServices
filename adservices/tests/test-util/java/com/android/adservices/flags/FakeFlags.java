@@ -15,7 +15,6 @@
  */
 package com.android.adservices.flags;
 
-import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.Identifiable;
 import com.android.adservices.shared.testing.flags.FakeFlagsBackend;
 
@@ -51,7 +50,7 @@ public final class FakeFlags extends RawFlags<FakeFlagsBackend> implements Ident
         return mBackend;
     }
 
-    Flags getSnapshot() {
+    FakeFlags getSnapshot() {
         return new FakeFlags(mBackend.cloneForSnapshot());
     }
 

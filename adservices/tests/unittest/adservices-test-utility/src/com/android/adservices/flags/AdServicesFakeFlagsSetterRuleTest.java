@@ -29,12 +29,12 @@ import static com.android.adservices.shared.testing.flags.MissingFlagBehavior.US
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.service.FlagsConstants;
-import com.android.adservices.shared.testing.Identifiable;
 
 import org.junit.Test;
 
 public final class AdServicesFakeFlagsSetterRuleTest
-        extends AdServicesFlagsSetterRuleForUnitTestsTestCase<AdServicesFakeFlagsSetterRule> {
+        extends AdServicesFlagsSetterRuleForUnitTestsTestCase<
+                AdServicesFakeFlagsSetterRule, FakeFlags> {
 
     @Override
     protected AdServicesFakeFlagsSetterRule newRule() {
@@ -102,14 +102,10 @@ public final class AdServicesFakeFlagsSetterRuleTest
                             .that(snapshot.getAdIdCacheTtlMs())
                             .isEqualTo(4815162342L);
 
-                    // TODO(b/338067482): change superclass to set a generic <F extends Flags> and
-                    // remove cast below (and in other places, like Identifiable)
-                    // Make sure it's immutable
                     assertThrows(
                             UnsupportedOperationException.class,
                             () ->
-                                    ((FakeFlags) snapshot)
-                                            .getBackend()
+                                    snapshot.getBackend()
                                             .setFlag(FlagsConstants.KEY_AD_ID_CACHE_TTL_MS, "108"));
                     expect.withMessage("clonedFlags.getAdIdCacheTtlMs() after trying to change it")
                             .that(snapshot.getAdIdCacheTtlMs())
@@ -121,7 +117,7 @@ public final class AdServicesFakeFlagsSetterRuleTest
     public void testToString() throws Throwable {
         onTest(
                 (rule, flags) -> {
-                    String id = ((Identifiable) flags).getId();
+                    String id = flags.getId();
                     String prefix = "FakeFlags#" + id + "{";
                     expect.withMessage("toString() right away")
                             .that(flags.toString())
