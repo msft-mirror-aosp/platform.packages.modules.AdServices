@@ -17,6 +17,7 @@
 package com.android.adservices.service.shell.attributionreporting;
 
 import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.data.measurement.MeasurementTables.DebugReportContract;
 import com.android.adservices.data.measurement.MeasurementTables.EventReportContract;
 import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
@@ -24,6 +25,7 @@ import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.reporting.DebugReport;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -132,5 +134,12 @@ public final class AttributionReportingHelper {
                 .put(
                         MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID,
                         aggregateReport.getTriggerContextId());
+    }
+
+    static JSONObject debugReportToJson(DebugReport debugReport) throws JSONException {
+        return new JSONObject()
+                .put(DebugReportContract.INSERTION_TIME, debugReport.getInsertionTime())
+                .put(DebugReportContract.REGISTRATION_ORIGIN, debugReport.getRegistrationOrigin())
+                .put(DebugReportContract.TYPE, debugReport.getType());
     }
 }

@@ -3751,6 +3751,30 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
+    public List<DebugReport> fetchAllDebugReports() throws DatastoreException {
+        List<DebugReport> reports = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.DebugReportContract.TABLE,
+                                /* columns= */ null,
+                                /* selection= */ null,
+                                /* selectionArgs= */ null,
+                                /* groupBy= */ null,
+                                /* having= */ null,
+                                /* orderBy= */ null,
+                                /* limit= */ null)) {
+            while (cursor.moveToNext()) {
+                DebugReport debugReportBuilder =
+                        SqliteObjectMapper.constructDebugReportFromCursor(cursor);
+                reports.add(debugReportBuilder);
+            }
+        }
+        return reports;
+    }
+
+    @Override
     public boolean existsActiveSourcesWithDestination(Uri attributionDestination, long eventTime)
             throws DatastoreException {
         String whereStatement =
