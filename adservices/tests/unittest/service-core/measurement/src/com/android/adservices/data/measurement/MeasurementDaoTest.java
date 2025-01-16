@@ -13264,7 +13264,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         .runInTransactionWithResult(dao -> dao.fetchAllSourceRegistrations())
                         .orElseThrow();
 
-        assertNotNull(fetchedAllSourceRegistration);
+        assertThat(fetchedAllSourceRegistration).isNotNull();
         assertThat(fetchedAllSourceRegistration.size()).isEqualTo(2);
 
         assertThat(fetchedAllSourceRegistration.get(0)).isEqualTo(source1);
@@ -13303,7 +13303,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         .runInTransactionWithResult(dao -> dao.fetchAllSourceRegistrations())
                         .orElseThrow();
 
-        assertNotNull(fetchedAllSourceRegistration);
+        assertThat(fetchedAllSourceRegistration).isNotNull();
         assertThat(fetchedAllSourceRegistration.size()).isEqualTo(2);
 
         assertThat(fetchedAllSourceRegistration.get(0)).isEqualTo(source1);
@@ -13336,11 +13336,63 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         .runInTransactionWithResult(dao -> dao.fetchAllTriggerRegistrations())
                         .orElseThrow();
 
-        assertNotNull(fetchedAllTriggerRegistration);
+        assertThat(fetchedAllTriggerRegistration).isNotNull();
         assertThat(fetchedAllTriggerRegistration.size()).isEqualTo(2);
 
         assertThat(fetchedAllTriggerRegistration.get(0)).isEqualTo(trigger1);
         assertThat(fetchedAllTriggerRegistration.get(1)).isEqualTo(trigger2);
+    }
+
+    /** Test that records in EventReport Table are fetched properly. */
+    @Test
+    public void testFetchAllEventReports_pass() {
+        Source source1 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("S1")
+                        .setAttributionMode(Source.AttributionMode.FALSELY)
+                        .build();
+        insertSource(source1, source1.getId());
+        Source source2 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("S2")
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .build();
+        insertSource(source2, source2.getId());
+
+        Trigger trigger1 = TriggerFixture.getValidTriggerBuilder().setId("T1").build();
+        insertTrigger(trigger1, trigger1.getId());
+
+        EventReport eventReport1 =
+                EventReportFixture.getBaseEventReportBuild()
+                        .setId("Event1")
+                        .setSourceId("S1")
+                        .setTriggerId(null)
+                        .build();
+
+        EventReport eventReport2 =
+                EventReportFixture.getBaseEventReportBuild()
+                        .setId("Event2")
+                        .setSourceId("S2")
+                        .setTriggerId("T1")
+                        .build();
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertEventReport(eventReport1);
+                    dao.insertEventReport(eventReport2);
+                });
+
+        List<EventReport> fetchedAllEventReports =
+                mDatastoreManager
+                        .runInTransactionWithResult(dao -> dao.fetchAllEventReports())
+                        .orElseThrow();
+        ;
+
+        assertThat(fetchedAllEventReports).isNotNull();
+        assertThat(fetchedAllEventReports.size()).isEqualTo(2);
+
+        assertThat(fetchedAllEventReports.get(0)).isEqualTo(eventReport1);
+        assertThat(fetchedAllEventReports.get(1)).isEqualTo(eventReport2);
     }
 
     private Source getFirstSourceFromDb() {

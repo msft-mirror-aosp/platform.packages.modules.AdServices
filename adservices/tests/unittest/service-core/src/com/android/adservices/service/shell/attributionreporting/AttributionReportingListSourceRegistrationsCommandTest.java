@@ -253,7 +253,7 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
     }
 
     @Test
-    public void testRunListSourceRegistrations_noSourcesJSON() throws JSONException {
+    public void testRunListSourceRegistrations_emptyListSources() throws JSONException {
         doReturn(Optional.ofNullable(List.of()))
                 .when(mDatastoreManager)
                 .runInTransactionWithResult(any());
@@ -287,6 +287,7 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
                 AttributionReportingListSourceRegistrationsCommand.CMD);
     }
 
+    /** Creates a Source.Builder from JSON. Missing fields are populated with default values. */
     private static Source getSourceFromJson(JSONObject jsonObject) throws JSONException {
         Source.Builder builder =
                 new Source.Builder()
