@@ -27,14 +27,26 @@ import java.util.Objects;
 /** In-memory implementation of {@link NameValuePairContainer}. */
 public final class FakeNameValuePairContainer implements NameValuePairContainer {
 
-    // TODO(b/338067482): it might be worth to create an additional constructor that takes a custom
-    // tag (like "FakeFlags")
-    private final Logger mLog = new Logger(DynamicLogger.getInstance(), getClass());
+    private final Logger mLog;
 
     private final List<NameValuePair> mCalls = new ArrayList<>();
 
     private final Map<String, NameValuePair> mMap = new LinkedHashMap<>();
     private final Map<String, RuntimeException> mOnSetExceptions = new LinkedHashMap<>();
+
+    /** Default constructor. */
+    public FakeNameValuePairContainer() {
+        this(FakeNameValuePairContainer.class.getSimpleName());
+    }
+
+    /**
+     * Custom constructor.
+     *
+     * @param tagName name of the tag used for logging purposes
+     */
+    public FakeNameValuePairContainer(String tagName) {
+        mLog = new Logger(DynamicLogger.getInstance(), tagName);
+    }
 
     @Override
     public NameValuePair set(NameValuePair nvp) {
@@ -91,7 +103,9 @@ public final class FakeNameValuePairContainer implements NameValuePairContainer 
     @Override
     public String toString() {
         return getClass().getSimpleName()
-                + "[mCalls="
+                + "[mTag="
+                + mLog.getTag()
+                + ", mCalls="
                 + getCalls()
                 + ", mMap="
                 + getAll()

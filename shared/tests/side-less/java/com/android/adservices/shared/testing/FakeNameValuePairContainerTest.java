@@ -23,12 +23,14 @@ import org.junit.Test;
 
 public final class FakeNameValuePairContainerTest extends SharedSidelessTestCase {
 
+    private static final String TAG_NAME = "Tag me if you can";
+
     private static final String NAME1 = "The Name is";
     private static final String VALUE1 = "Bond, James Bond";
     private static final String NAME2 = "NOT, The Name isn't";
     private static final String VALUE2 = "007";
 
-    private final FakeNameValuePairContainer mContainer = new FakeNameValuePairContainer();
+    private final FakeNameValuePairContainer mContainer = new FakeNameValuePairContainer(TAG_NAME);
 
     @Test
     public void testSet_null() {

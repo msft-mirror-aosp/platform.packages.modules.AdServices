@@ -23,11 +23,19 @@ import com.android.adservices.shared.testing.flags.FakeFlagsBackend;
 /** {@link DebugFlags} implementation for unit tests */
 final class FakeDebugFlags extends DebugFlags {
 
-    private static final String TAG = FakeDebugFlags.class.getSimpleName();
+    static final String TAG = FakeDebugFlags.class.getSimpleName();
 
     private final Logger mLog = new Logger(AndroidLogger.getInstance(), TAG);
 
-    private final FakeFlagsBackend mBackend = new FakeFlagsBackend(TAG);
+    private final FakeFlagsBackend mBackend;
+
+    FakeDebugFlags() {
+        this(new FakeFlagsBackend(TAG));
+    }
+
+    FakeDebugFlags(FakeFlagsBackend backend) {
+        mBackend = backend;
+    }
 
     void set(String name, String value) {
         mBackend.setFlag(name, value);
