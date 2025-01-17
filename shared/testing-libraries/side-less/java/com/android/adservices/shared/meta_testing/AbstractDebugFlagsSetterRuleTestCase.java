@@ -21,19 +21,21 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.runner.Description.createTestDescription;
 
 import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassHasNoNothingAtAll;
-import com.android.adservices.shared.testing.FakeNameValuePairSetter;
+import com.android.adservices.shared.testing.FakeNameValuePairContainer;
 import com.android.adservices.shared.testing.NameValuePair;
-import com.android.adservices.shared.testing.NameValuePairSetter;
+import com.android.adservices.shared.testing.NameValuePairContainer;
 import com.android.adservices.shared.testing.annotations.DisableDebugFlag;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 import com.android.adservices.shared.testing.flags.AbstractDebugFlagsSetterRule;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import org.junit.Test;
 import org.junit.runner.Description;
 
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 public abstract class AbstractDebugFlagsSetterRuleTestCase<
                 R extends AbstractDebugFlagsSetterRule<R>>
@@ -48,13 +50,13 @@ public abstract class AbstractDebugFlagsSetterRuleTestCase<
     private static final String FLAG_C = "See you";
     private static final String FLAG_D = "Deed you, punk?";
 
-    private final FakeNameValuePairSetter mSetter = new FakeNameValuePairSetter();
+    private final FakeNameValuePairContainer mContainer = new FakeNameValuePairContainer();
 
-    protected abstract R newRule(NameValuePairSetter setter);
+    protected abstract R newRule(NameValuePairContainer container);
 
     @Test
     public final void testNewRule() {
-        assertWithMessage("newRule()").that(newRule(mSetter)).isNotNull();
+        assertWithMessage("newRule()").that(newRule(mContainer)).isNotNull();
     }
 
     @Test
@@ -144,22 +146,25 @@ public abstract class AbstractDebugFlagsSetterRuleTestCase<
 
     private void annotationBasedTest(Description test, NameValuePair... expectedFlagsInsideTest)
             throws Throwable {
-        var rule = newRule(mSetter);
-
+        var expectedAsMap =
+                Arrays.stream(expectedFlagsInsideTest)
+                        .collect(Collectors.toMap(nvp -> nvp.name, nvp -> nvp));
+        var rule = newRule(mContainer);
         var flagsInsideTest = runTest(rule, test);
 
         expect.withMessage("DebugFlags inside test")
                 .that(flagsInsideTest)
-                .containsExactlyElementsIn(expectedFlagsInsideTest);
-        expect.withMessage("DebugFlags after test").that(mSetter.getAll()).isEmpty();
+                .containsExactlyEntriesIn(expectedAsMap);
+        expect.withMessage("DebugFlags after test").that(mContainer.getAll()).isEmpty();
     }
 
-    private ImmutableList<NameValuePair> runTest(R rule, Description description) throws Throwable {
-        AtomicReference<ImmutableList<NameValuePair>> nvpsInsideTest =
-                new AtomicReference<ImmutableList<NameValuePair>>();
+    private ImmutableMap<String, NameValuePair> runTest(R rule, Description description)
+            throws Throwable {
+        AtomicReference<ImmutableMap<String, NameValuePair>> nvpsInsideTest =
+                new AtomicReference<ImmutableMap<String, NameValuePair>>();
         SimpleStatement test = new SimpleStatement();
 
-        test.onEvaluate(() -> nvpsInsideTest.set(mSetter.getAll()));
+        test.onEvaluate(() -> nvpsInsideTest.set(mContainer.getAll()));
         rule.apply(test, description).evaluate();
         test.assertEvaluated();
 

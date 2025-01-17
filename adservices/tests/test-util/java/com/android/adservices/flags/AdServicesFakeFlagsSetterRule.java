@@ -28,7 +28,7 @@ public final class AdServicesFakeFlagsSetterRule
     }
 
     private AdServicesFakeFlagsSetterRule(FakeFlags fakeFlags) {
-        super(fakeFlags, fakeFlags.getBackend());
+        super(fakeFlags, fakeFlags.getBackend().getContainer());
     }
 
     @Override

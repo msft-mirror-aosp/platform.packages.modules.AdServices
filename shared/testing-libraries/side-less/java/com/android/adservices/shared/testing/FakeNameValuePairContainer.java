@@ -16,6 +16,7 @@
 package com.android.adservices.shared.testing;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -23,8 +24,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class FakeNameValuePairSetter implements NameValuePairSetter {
+/** In-memory implementation of {@link NameValuePairContainer}. */
+public final class FakeNameValuePairContainer implements NameValuePairContainer {
 
+    // TODO(b/338067482): it might be worth to create an additional constructor that takes a custom
+    // tag (like "FakeFlags")
     private final Logger mLog = new Logger(DynamicLogger.getInstance(), getClass());
 
     private final List<NameValuePair> mCalls = new ArrayList<>();
@@ -35,21 +39,22 @@ public final class FakeNameValuePairSetter implements NameValuePairSetter {
     @Override
     public NameValuePair set(NameValuePair nvp) {
         Objects.requireNonNull(nvp, "nvp cannot be null");
-        var previous = mMap.get(nvp.name);
-        RuntimeException exception = mOnSetExceptions.get(nvp.name);
+        String name = nvp.name;
+        var previous = mMap.get(name);
+        RuntimeException exception = mOnSetExceptions.get(name);
         mLog.d("set(%s): previous=%s, exception=%s", nvp, previous, exception);
         if (exception != null) {
             throw exception;
         }
         mCalls.add(nvp);
-        mMap.put(nvp.name, nvp);
+        if (nvp.value == null) {
+            mLog.i("Removing %s", name);
+            mMap.remove(name);
+        } else {
+            mLog.i("Addiong %s -> %s", name, nvp);
+            mMap.put(name, nvp);
+        }
         return previous;
-    }
-
-    @Override
-    public void remove(String name) {
-        var removed = mMap.remove(name);
-        mLog.i("remove(%s): removed %s", name, removed);
     }
 
     /**
@@ -67,8 +72,8 @@ public final class FakeNameValuePairSetter implements NameValuePairSetter {
     }
 
     /** Gets all values. */
-    public ImmutableList<NameValuePair> getAll() {
-        return ImmutableList.copyOf(mMap.values());
+    public ImmutableMap<String, NameValuePair> getAll() {
+        return ImmutableMap.copyOf(mMap);
     }
 
     /** Gets all calls receive so far. */

@@ -19,22 +19,22 @@ import static com.android.adservices.shared.testing.flags.MissingFlagBehavior.US
 
 import com.android.adservices.shared.flags.FlagsBackend;
 import com.android.adservices.shared.testing.DynamicLogger;
+import com.android.adservices.shared.testing.FakeNameValuePairContainer;
+import com.android.adservices.shared.testing.ImmutableNameValuePairContainer;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.NameValuePair;
-import com.android.adservices.shared.testing.NameValuePairSetter;
+import com.android.adservices.shared.testing.NameValuePairContainer;
 import com.android.adservices.shared.testing.Nullable;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Objects;
 
 /** In-memory container for flag-related backends. */
-public final class FakeFlagsBackend implements FlagsBackend, NameValuePairSetter {
+public final class FakeFlagsBackend implements FlagsBackend {
 
-    private final Map<String, NameValuePair> mFlags;
+    private final NameValuePairContainer mContainer;
     private final Logger mLog;
 
     private MissingFlagBehavior mBehavior = USES_EXPLICIT_DEFAULT;
@@ -45,22 +45,30 @@ public final class FakeFlagsBackend implements FlagsBackend, NameValuePairSetter
      * @param tagName tag used to log messages.
      */
     public FakeFlagsBackend(String tagName) {
-        this(new Logger(DynamicLogger.getInstance(), tagName), new LinkedHashMap<>());
+        this(new Logger(DynamicLogger.getInstance(), tagName), new FakeNameValuePairContainer());
     }
 
-    private FakeFlagsBackend(Logger log, Map<String, NameValuePair> flags) {
-        mFlags = flags;
+    private FakeFlagsBackend(Logger log, NameValuePairContainer container) {
+        mContainer = container;
         mLog = log;
     }
 
     // Constructor used to create a snapshot
     private FakeFlagsBackend(FakeFlagsBackend source) {
-        this(source.mLog, source.getFlags());
+        this(source.mLog, new ImmutableNameValuePairContainer(source.mContainer.getAll()));
     }
 
     @VisibleForTesting
     String getTagName() {
         return mLog.getTag();
+    }
+
+    /**
+     * TODO(b/338067482): currently used by AdServicesFakeFlagsSetterRule constructor, we might get
+     * rid of it when in the next CL - if not, we should unit test it.
+     */
+    public NameValuePairContainer getContainer() {
+        return mContainer;
     }
 
     /** Gets a {@link FakeFlagsBackend} that has the same flags, but it's immutable. */
@@ -70,7 +78,7 @@ public final class FakeFlagsBackend implements FlagsBackend, NameValuePairSetter
 
     /** Gets a snapshot of the current flags. */
     public ImmutableMap<String, NameValuePair> getFlags() {
-        return ImmutableMap.copyOf(mFlags);
+        return mContainer.getAll();
     }
 
     /** Gets the getters behaviors when the flag is missing. */
@@ -168,37 +176,15 @@ public final class FakeFlagsBackend implements FlagsBackend, NameValuePairSetter
         }
     }
 
+    @Nullable
     private NameValuePair getFlagChecked(String name) {
         Objects.requireNonNull(name, "name cannot be null");
-        var value = mFlags.get(name);
-        return value == null ? null : value;
-    }
-
-    @Override
-    public NameValuePair set(NameValuePair flag) {
-        Objects.requireNonNull(flag, "internal error: NameValuePair cannot be null");
-        NameValuePair previous;
-        if (flag.value == null) {
-            previous = mFlags.remove(flag.name);
-        } else {
-            previous = mFlags.put(flag.name, flag);
-        }
-        mLog.v("set(%s): returning %s", flag, previous);
-        return previous;
+        return mContainer.get(name);
     }
 
     /** Sets the flag to the given value, or removes it if the value is {@code null}. */
     public void setFlag(String name, @Nullable String value) {
-        mLog.v("set(%s, %s)", name, value);
-        if (mFlags instanceof ImmutableMap) {
-            // we could try / catch instead, but checking is cleaner
-            throw new UnsupportedOperationException(
-                    "setFlag(" + name + ", " + value + "): not supported on snapshot");
-        }
-        if (value == null) {
-            mFlags.remove(name);
-            return;
-        }
-        set(new NameValuePair(name, value));
+        mLog.v("setFlag(%s, %s)", name, value);
+        mContainer.set(new NameValuePair(name, value));
     }
 }

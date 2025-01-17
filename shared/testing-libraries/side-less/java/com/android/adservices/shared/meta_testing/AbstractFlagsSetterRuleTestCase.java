@@ -33,7 +33,7 @@ import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassHasNoNothingAtAll;
 import com.android.adservices.shared.testing.AbstractFlagsSetterRule;
-import com.android.adservices.shared.testing.FakeNameValuePairSetter;
+import com.android.adservices.shared.testing.FakeNameValuePairContainer;
 import com.android.adservices.shared.testing.NameValuePair;
 import com.android.adservices.shared.testing.NameValuePairSetter;
 import com.android.adservices.shared.testing.TestFailure;
@@ -62,7 +62,7 @@ import java.util.Map;
 public abstract class AbstractFlagsSetterRuleTestCase<R extends AbstractFlagsSetterRule<R>>
         extends SharedSidelessTestCase {
 
-    protected final FakeNameValuePairSetter mFakeFlagsSetter = new FakeNameValuePairSetter();
+    protected final FakeNameValuePairContainer mFakeFlagsSetter = new FakeNameValuePairContainer();
     protected final FakeDeviceGateway mFakeDeviceGateway = new FakeDeviceGateway();
 
     protected final SimpleStatement mTest = new SimpleStatement();
