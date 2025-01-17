@@ -20,8 +20,12 @@ import org.junit.runner.Description;
 
 /** Defines a log verifier used to verify logging calls in {@link AbstractLoggingUsageRule}. */
 public interface LogVerifier {
-    /** Defines setup work before test execution. */
-    void setup();
+    /**
+     * Defines setup work before test execution.
+     *
+     * @param description test that was executed
+     */
+    void setup(Description description);
 
     /**
      * Verify logging calls are as expected after test execution. Throws {@link
