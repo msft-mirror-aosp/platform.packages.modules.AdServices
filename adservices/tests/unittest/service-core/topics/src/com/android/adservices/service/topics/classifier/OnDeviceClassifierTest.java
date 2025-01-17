@@ -58,6 +58,7 @@ import java.util.stream.Collectors;
 @SpyStatic(FlagsFactory.class)
 // TODO (b/359964245): Remove after bug is resolved.
 @SkipLoggingUsageRule(reason = "b/359964245")
+@SuppressWarnings("DoNotMockErrorLogUtilBehavior") // TODO(b/359964245)
 public final class OnDeviceClassifierTest extends AdServicesExtendedMockitoTestCase {
     private static final String TEST_LABELS_FILE_PATH = "classifier/labels_test_topics.txt";
     private static final String TEST_PRECOMPUTED_FILE_PATH =

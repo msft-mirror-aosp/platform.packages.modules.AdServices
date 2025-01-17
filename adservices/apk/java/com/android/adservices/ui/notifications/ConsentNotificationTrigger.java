@@ -122,7 +122,7 @@ public class ConsentNotificationTrigger {
 
         notificationManager.notify(NOTIFICATION_ID, notification);
         LogUtil.d("Sending broadcast about notification being displayed.");
-        context.sendBroadcast(new Intent(ACTION_ADSERVICES_NOTIFICATION_DISPLAYED));
+        sendNotificationBroadcastIntent(context);
         // TODO(b/378683120):Notification still recorded as displayed to show entry point.
         //  Change to a unified displayed bit or show entry point bit.
         recordNotificationDisplayed(context, true, consentManager);
@@ -212,6 +212,36 @@ public class ConsentNotificationTrigger {
                         + "ConsentNotificationActivity",
                 ACTION_VIEW_ADSERVICES_CONSENT_PAGE);
         return new Intent(context, ConsentNotificationActivity.class);
+    }
+
+    private static void sendNotificationBroadcastIntent(Context context) {
+        Intent intent = new Intent(ACTION_ADSERVICES_NOTIFICATION_DISPLAYED);
+        PackageManager pm = context.getPackageManager();
+        List<ResolveInfo> activities = pm.queryBroadcastReceivers(intent, 0);
+        for (ResolveInfo resolveInfo : activities) {
+            String packageName = resolveInfo.activityInfo.packageName;
+            if (PermissionHelper.hasPermission(context, packageName, MODIFY_ADSERVICES_STATE)
+                    || PermissionHelper.hasPermission(
+                            context, packageName, MODIFY_ADSERVICES_STATE_COMPAT)) {
+                LogUtil.d(
+                        "Matching Broadcast receiver found for %s action in : %s",
+                        ACTION_ADSERVICES_NOTIFICATION_DISPLAYED, packageName);
+                context.sendBroadcast(intent.setPackage(packageName));
+                return;
+            }
+            LogUtil.w(
+                    "Matching Broadcast receiver found for %s action in : %s, but it has neither "
+                            + "%s nor %s permission",
+                    ACTION_ADSERVICES_NOTIFICATION_DISPLAYED,
+                    packageName,
+                    MODIFY_ADSERVICES_STATE,
+                    MODIFY_ADSERVICES_STATE_COMPAT);
+        }
+        LogUtil.w(
+                "No explicit broadcast receiver available in system image to handle "
+                        + "%s action. Sending implicit broadcast instead.",
+                ACTION_ADSERVICES_NOTIFICATION_DISPLAYED);
+        context.sendBroadcast(intent);
     }
 
     /**

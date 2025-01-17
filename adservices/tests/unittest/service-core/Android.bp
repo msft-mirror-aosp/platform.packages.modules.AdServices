@@ -81,8 +81,7 @@ java_defaults {
     ],
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
-        // TODO(b/358643466): Readd when existing issues are fixed
-        // test: false, // TODO(b/343741206): remove when checks will run on android_test
+        test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
 
