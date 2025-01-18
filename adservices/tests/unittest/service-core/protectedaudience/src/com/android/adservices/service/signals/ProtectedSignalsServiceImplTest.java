@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_EXTENDED_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PAS_PRODUCT_METRICS_V1_ENABLED;
 import static com.android.adservices.service.common.Throttler.ApiKey.PROTECTED_SIGNAL_API_UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_SIGNALS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_FLEDGE_CONSENT_NOT_GIVEN;
@@ -62,8 +67,6 @@ import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithE
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.CallingAppUidSupplier;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.ProtectedSignalsServiceFilter;
@@ -76,6 +79,8 @@ import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsApiCalledStats;
 import com.android.adservices.service.stats.pas.UpdateSignalsProcessReportedLoggerImpl;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -97,7 +102,11 @@ import java.util.concurrent.ExecutorService;
 @SetErrorLogUtilDefaultParams(
         throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
-@SpyStatic(FlagsFactory.class)
+@SetFlagFalse(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
+@SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS)
+@SetFlagTrue(KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED)
+@SetFlagTrue(KEY_PAS_EXTENDED_METRICS_ENABLED)
+@SetFlagTrue(KEY_PAS_PRODUCT_METRICS_V1_ENABLED)
 @SpyStatic(DebugFlags.class)
 public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
@@ -126,12 +135,10 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     private ProtectedSignalsServiceImpl mProtectedSignalsService;
     private DevContext mDevContext;
     private UpdateSignalsInput mInput;
-    private Flags mLegacyFakeFlags;
     private ResultSyncCallback<ApiCallStats> logApiCallStatsCallback;
 
     @Before
     public void setup() {
-        mLegacyFakeFlags = new ProtectedSignalsServiceImplTestFlags();
         mocker.mockGetDebugFlags(mMockDebugFlags);
         logApiCallStatsCallback = mocker.mockLogApiCallStats(mAdServicesLoggerMock);
 
@@ -144,7 +151,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         mDevContextFilterMock,
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerMock,
-                        mLegacyFakeFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         mCallingAppUidSupplierMock,
                         mProtectedSignalsServiceFilterMock,
@@ -289,7 +296,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         mDevContextFilterMock,
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerMock,
-                        mLegacyFakeFlags,
+                        mFakeFlags,
                         mMockDebugFlags,
                         mCallingAppUidSupplierMock,
                         mProtectedSignalsServiceFilterMock,
@@ -616,32 +623,5 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
         assertThat(apiCallStats.getAppPackageName()).isEqualTo(packageName);
         assertThat(apiCallStats.getResultCode()).isEqualTo(resultCode);
         assertThat(apiCallStats.getLatencyMillisecond()).isAtLeast(0);
-    }
-
-    private static class ProtectedSignalsServiceImplTestFlags implements Flags {
-        @Override
-        public boolean getDisableFledgeEnrollmentCheck() {
-            return false;
-        }
-
-        @Override
-        public boolean getEnforceForegroundStatusForSignals() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeAppPackageNameLoggingEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getPasExtendedMetricsEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getPasProductMetricsV1Enabled() {
-            return true;
-        }
     }
 }
