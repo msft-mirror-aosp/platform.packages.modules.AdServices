@@ -38,9 +38,6 @@ public class FailableResultSyncCallback<R, F> extends AbstractSyncCallback
         implements IResultSyncCallback<R> {
 
     @VisibleForTesting
-    public static final String INJECT_RESULT_OR_FAILURE = "injectResult() or injectFailure()";
-
-    @VisibleForTesting
     public static final String MSG_WRONG_ERROR_RECEIVED =
             "expected error of type %s, but received %s";
 
@@ -162,6 +159,22 @@ public class FailableResultSyncCallback<R, F> extends AbstractSyncCallback
 
     protected List<R> internalAssertResultsReceived() throws InterruptedException {
         assertCalled();
+        return getResults();
+    }
+
+    /** Returns the results that were recorded even if all expected calls weren't made. */
+    public List<R> getResultsReceivedUponWaiting() {
+        try {
+            assertCalled();
+        } catch (Exception e) {
+            // Goal is to return whatever results that have been recorded even if the
+            // CountdownLatch times out for example.
+            logV(
+                    "assertCalled() resulted in an exception with message [%s] which will be"
+                            + " ignored to return the results that were recorded.",
+                    e.getMessage());
+        }
+
         return getResults();
     }
 

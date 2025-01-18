@@ -45,14 +45,18 @@ import static com.android.adservices.service.FlagsConstants.KEY_IS_BACK_COMPACT_
 import static com.android.adservices.service.FlagsConstants.KEY_IS_GET_ADSERVICES_COMMON_STATES_API_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_UI_EEA_COUNTRIES;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IAPC_UPDATE_AD_ID_API_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__AD_ID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.service.ui.ux.collection.PrivacySandboxUxCollection.GA_UX;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static com.google.common.truth.Truth.assertThat;
+import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
@@ -61,7 +65,6 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.when;
@@ -91,6 +94,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.os.Binder;
 import android.os.RemoteException;
 import android.telephony.TelephonyManager;
 import android.util.SparseIntArray;
@@ -132,6 +136,8 @@ import org.mockito.Mockito;
 
 import java.util.List;
 
+@SpyStatic(SdkRuntimeUtil.class)
+@SpyStatic(Binder.class)
 @SpyStatic(AdServicesBackCompatInit.class)
 @SpyStatic(ConsentNotificationJobService.class)
 @SpyStatic(ConsentManager.class)
@@ -180,7 +186,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
     private AdServicesBackCompatInit mSpyBackCompatInit;
 
     @Before
-    public void setup() {
+    public void setup() throws Exception {
         mCommonService =
                 new AdServicesCommonServiceImpl(
                         mMockContext,
@@ -215,13 +221,16 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
         doReturn(true).when(mEditor).commit();
         doReturn(true).when(mSharedPreferences).contains(anyString());
 
-        ExtendedMockito.doReturn(mConsentManager).when(ConsentManager::getInstance);
+        doReturn(mConsentManager).when(ConsentManager::getInstance);
 
         doReturn("pl").when(mTelephonyManager).getSimCountryIso();
         doReturn(true).when(mPackageManager).hasSystemFeature(anyString());
         doReturn(mPackageManager).when(mMockContext).getPackageManager();
         doReturn(mTelephonyManager).when(mMockContext).getSystemService(TelephonyManager.class);
         doReturn(true).when(mUxStatesManager).isEnrolledUser(mMockContext);
+        doReturn(1000).when(Binder::getCallingUidOrThrow);
+        doReturn(1000).when(() -> SdkRuntimeUtil.getCallingAppUid(anyInt()));
+        doReturn(1000).when(mPackageManager).getPackageUid(anyString(), anyInt());
     }
 
     // For the old entry point logic, we only check the UX flag and user enrollment is irrelevant.
@@ -1547,6 +1556,35 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 () -> new UpdateAdServicesModuleStatesParams.Builder().setModuleState(1, 3));
         assertThrows(IllegalArgumentException.class, () -> new AdServicesModuleUserChoice(6, 2));
         assertThrows(IllegalArgumentException.class, () -> new AdServicesModuleUserChoice(5, 4));
+    }
+
+    @Test
+    public void testIsCallingPackageBelongsToUid() throws Exception {
+        assertWithMessage("should return true for id match")
+                .that(mCommonService.isCallingPackageBelongsToUid("test", 1000))
+                .isTrue();
+    }
+
+    @Test
+    public void testIsCallingPackageBelongsToUid_idMismatch() throws Exception {
+        ExtendedMockito.doReturn(1001).when(() -> SdkRuntimeUtil.getCallingAppUid(anyInt()));
+        assertWithMessage("should return false for id mismatch")
+                .that(mCommonService.isCallingPackageBelongsToUid("test", 1000))
+                .isFalse();
+    }
+
+    @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = PackageManager.NameNotFoundException.class,
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PACKAGE_NAME_NOT_FOUND_EXCEPTION,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
+    public void testIsCallingPackageBelongsToUid_packageNotExist() throws Exception {
+        doThrow(new PackageManager.NameNotFoundException())
+                .when(mPackageManager)
+                .getPackageUid(anyString(), anyInt());
+        assertWithMessage("package name not found should return false")
+                .that(mCommonService.isCallingPackageBelongsToUid("test", 1000))
+                .isFalse();
     }
 
     private IsAdServicesEnabledResult getStatusResult() throws Exception {

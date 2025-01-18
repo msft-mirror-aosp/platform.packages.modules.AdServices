@@ -15,9 +15,9 @@
  */
 package com.android.adservices.flags;
 
-import static com.android.adservices.flags.MissingFlagBehavior.THROWS_EXCEPTION;
-import static com.android.adservices.flags.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
-import static com.android.adservices.flags.MissingFlagBehavior.USES_JAVA_LANGUAGE_DEFAULT;
+import static com.android.adservices.shared.testing.flags.MissingFlagBehavior.THROWS_EXCEPTION;
+import static com.android.adservices.shared.testing.flags.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
+import static com.android.adservices.shared.testing.flags.MissingFlagBehavior.USES_JAVA_LANGUAGE_DEFAULT;
 
 import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -28,7 +28,8 @@ import org.junit.Test;
 
 @SuppressWarnings("deprecation")
 public final class AdServicesMockFlagsSetterRuleTest
-        extends AdServicesFlagsSetterRuleForUnitTestsTestCase<AdServicesMockFlagsSetterRule> {
+        extends AdServicesFlagsSetterRuleForUnitTestsTestCase<
+                AdServicesMockFlagsSetterRule, Flags> {
 
     @Override
     protected AdServicesMockFlagsSetterRule newRule() {

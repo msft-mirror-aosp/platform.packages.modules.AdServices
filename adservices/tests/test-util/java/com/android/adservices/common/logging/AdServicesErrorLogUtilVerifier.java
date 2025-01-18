@@ -16,18 +16,13 @@
 
 package com.android.adservices.common.logging;
 
-import static com.android.adservices.common.logging.ErrorLogUtilCall.None;
 import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall.ANNOTATION_NAME;
-import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
-
-import static org.mockito.ArgumentMatchers.anyInt;
 
 import android.util.Log;
 
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCalls;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.shared.testing.AbstractLogVerifier;
 import com.android.adservices.shared.testing.TestHelper;
 
@@ -43,29 +38,53 @@ import java.util.stream.Collectors;
 
 /**
  * Log verifier for scanning usage of {@code ErrorLogUtil.e(int, int)} invocations. Use {@link
- * ExpectErrorLogUtilCall} to verify logging calls.
- *
- * <p>NOTE: This only verifies sync logging calls. For background logging calls, use {@link
- * ErrorLogUtilSyncCallback}.
+ * ExpectErrorLogUtilCall} to verify both background and non-background logging calls.
  */
 public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<ErrorLogUtilCall> {
+    private ErrorLogUtilSyncCallback mErrorLogUtilSyncCallback;
+    private Set<ErrorLogUtilCall> mExpectedLogCallsCache;
+
     @Override
-    protected void mockLogCalls() {
-        // Mock ErrorLogUtil.e(int, int) calls and capture logging arguments.
-        doAnswer(
-                        invocation -> {
-                            recordActualCall(
-                                    new ErrorLogUtilCall(
-                                            None.class,
-                                            invocation.getArgument(0),
-                                            invocation.getArgument(1)));
-                            return null;
-                        })
-                .when(() -> ErrorLogUtil.e(anyInt(), anyInt()));
+    protected void mockLogCalls(Description description) {
+        // Configure the sync callback to await for expected number of calls to be made before
+        // verification. Note: default timeout is set to 5 seconds before the test fails.
+        mErrorLogUtilSyncCallback =
+                ErrorLogUtilSyncCallback.mockErrorLogUtilWithoutThrowable(
+                        getTotalExpectedLogCalls(description));
     }
 
     @Override
     public Set<ErrorLogUtilCall> getExpectedLogCalls(Description description) {
+        if (mExpectedLogCallsCache == null) {
+            // Parsing the expected calls is required at least twice: once for configuring the
+            // number of calls for the sync callback and once in the verification step after
+            // test execution. Expected log calls are cached so it's parsed only once.
+            mExpectedLogCallsCache = parseExpectedLogCalls(description);
+        }
+        return mExpectedLogCallsCache;
+    }
+
+    @Override
+    public Set<ErrorLogUtilCall> getActualLogCalls() {
+        if (mErrorLogUtilSyncCallback == null) {
+            throw new IllegalStateException(
+                    "mErrorLogUtilSyncCallback is null, which indicates mocking isn't done prior "
+                            + "to fetching the actual log calls.");
+        }
+
+        return dedupeCalls(mErrorLogUtilSyncCallback.getResultsReceivedUponWaiting());
+    }
+
+    @Override
+    public String getResolutionMessage() {
+        return "Please make sure to use @"
+                + ANNOTATION_NAME
+                + "(..) "
+                + "over test method to denote "
+                + "all expected ErrorLogUtil.e(int, int) calls.";
+    }
+
+    private Set<ErrorLogUtilCall> parseExpectedLogCalls(Description description) {
         List<ExpectErrorLogUtilCall> annotations = getAnnotations(description);
         SetErrorLogUtilDefaultParams defaultParams =
                 TestHelper.getAnnotationFromTypesOnly(
@@ -93,15 +112,6 @@ public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<Er
         return expectedCalls;
     }
 
-    @Override
-    public String getResolutionMessage() {
-        return "Please make sure to use @"
-                + ANNOTATION_NAME
-                + "(..) "
-                + "over test method to denote "
-                + "all expected ErrorLogUtil.e(int, int) calls.";
-    }
-
     private List<ExpectErrorLogUtilCall> getAnnotations(Description description) {
         // Scan for multiple annotation container
         ExpectErrorLogUtilCalls multiple = description.getAnnotation(ExpectErrorLogUtilCalls.class);
@@ -112,5 +122,9 @@ public final class AdServicesErrorLogUtilVerifier extends AbstractLogVerifier<Er
         // Scan for single annotation
         ExpectErrorLogUtilCall single = description.getAnnotation(ExpectErrorLogUtilCall.class);
         return single == null ? ImmutableList.of() : ImmutableList.of(single);
+    }
+
+    private int getTotalExpectedLogCalls(Description description) {
+        return getExpectedLogCalls(description).stream().mapToInt(call -> call.mTimes).sum();
     }
 }

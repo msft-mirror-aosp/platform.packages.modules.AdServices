@@ -47,6 +47,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.NameValuePair;
+import com.android.adservices.shared.testing.flags.MissingFlagBehavior;
 import com.android.adservices.shared.testing.mockito.MockitoHelper;
 
 import org.mockito.stubbing.Answer;
@@ -58,7 +59,7 @@ import java.util.Objects;
  */
 @Deprecated
 public final class AdServicesMockFlagsSetterRule
-        extends AdServicesFlagsSetterRuleForUnitTests<AdServicesMockFlagsSetterRule> {
+        extends AdServicesFlagsSetterRuleForUnitTests<AdServicesMockFlagsSetterRule, Flags> {
 
     private static final Logger sLog =
             new Logger(AndroidLogger.getInstance(), AdServicesMockFlagsSetterRule.class);

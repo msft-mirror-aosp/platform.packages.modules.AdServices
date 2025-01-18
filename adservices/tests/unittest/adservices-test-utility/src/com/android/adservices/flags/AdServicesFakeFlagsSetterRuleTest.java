@@ -15,9 +15,6 @@
  */
 package com.android.adservices.flags;
 
-import static com.android.adservices.flags.MissingFlagBehavior.THROWS_EXCEPTION;
-import static com.android.adservices.flags.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
-import static com.android.adservices.flags.MissingFlagBehavior.USES_JAVA_LANGUAGE_DEFAULT;
 import static com.android.adservices.service.Flags.FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS;
 import static com.android.adservices.service.Flags.GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_REGISTER_WEB_TRIGGER_REQUEST_PERMITS_PER_SECOND;
@@ -25,16 +22,19 @@ import static com.android.adservices.service.Flags.TOPICS_EPOCH_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC;
 import static com.android.adservices.service.Flags.UI_OTA_STRINGS_MANIFEST_FILE_URL;
 import static com.android.adservices.service.FlagsConstants.KEY_TOPICS_EPOCH_JOB_PERIOD_MS;
+import static com.android.adservices.shared.testing.flags.MissingFlagBehavior.THROWS_EXCEPTION;
+import static com.android.adservices.shared.testing.flags.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
+import static com.android.adservices.shared.testing.flags.MissingFlagBehavior.USES_JAVA_LANGUAGE_DEFAULT;
 
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.service.FlagsConstants;
-import com.android.adservices.shared.testing.Identifiable;
 
 import org.junit.Test;
 
 public final class AdServicesFakeFlagsSetterRuleTest
-        extends AdServicesFlagsSetterRuleForUnitTestsTestCase<AdServicesFakeFlagsSetterRule> {
+        extends AdServicesFlagsSetterRuleForUnitTestsTestCase<
+                AdServicesFakeFlagsSetterRule, FakeFlags> {
 
     @Override
     protected AdServicesFakeFlagsSetterRule newRule() {
@@ -102,11 +102,10 @@ public final class AdServicesFakeFlagsSetterRuleTest
                             .that(snapshot.getAdIdCacheTtlMs())
                             .isEqualTo(4815162342L);
 
-                    // Make sure it's immutable
                     assertThrows(
                             UnsupportedOperationException.class,
                             () ->
-                                    ((FakeFlags) snapshot)
+                                    snapshot.getBackend()
                                             .setFlag(FlagsConstants.KEY_AD_ID_CACHE_TTL_MS, "108"));
                     expect.withMessage("clonedFlags.getAdIdCacheTtlMs() after trying to change it")
                             .that(snapshot.getAdIdCacheTtlMs())
@@ -118,7 +117,7 @@ public final class AdServicesFakeFlagsSetterRuleTest
     public void testToString() throws Throwable {
         onTest(
                 (rule, flags) -> {
-                    String id = ((Identifiable) flags).getId();
+                    String id = flags.getId();
                     String prefix = "FakeFlags#" + id + "{";
                     expect.withMessage("toString() right away")
                             .that(flags.toString())

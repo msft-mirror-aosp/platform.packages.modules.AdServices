@@ -53,12 +53,14 @@ import java.util.stream.Collectors;
  * its methods are divided in 2 "blocks": non-final (which will be overridden by {@link PhFlags} to
  * provide additional logic) and final. So, when you're adding a new flag, make sure to add it to
  * the bottom of the proper block.
+ *
+ * @param <FB> flags backend type
  */
-public class RawFlags implements Flags {
+public class RawFlags<FB extends FlagsBackend> implements Flags {
 
-    protected final FlagsBackend mBackend;
+    protected final FB mBackend;
 
-    public RawFlags(FlagsBackend backend) {
+    public RawFlags(FB backend) {
         mBackend = Objects.requireNonNull(backend, "backend cannot be null");
     }
 

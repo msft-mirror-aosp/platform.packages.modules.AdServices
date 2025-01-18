@@ -13,41 +13,74 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.flags;
+package com.android.adservices.shared.testing.flags;
 
-import static com.android.adservices.flags.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
+import static com.android.adservices.shared.testing.flags.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
 
 import com.android.adservices.shared.flags.FlagsBackend;
-import com.android.adservices.shared.testing.AndroidLogger;
+import com.android.adservices.shared.testing.DynamicLogger;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.NameValuePair;
 import com.android.adservices.shared.testing.NameValuePairSetter;
+import com.android.adservices.shared.testing.Nullable;
 
-import java.util.HashMap;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.collect.ImmutableMap;
+
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
 /** In-memory container for flag-related backends. */
-class FakeFlagsBackend implements FlagsBackend, NameValuePairSetter {
+public final class FakeFlagsBackend implements FlagsBackend, NameValuePairSetter {
 
     private final Map<String, NameValuePair> mFlags;
-
     private final Logger mLog;
 
-    MissingFlagBehavior mBehavior = USES_EXPLICIT_DEFAULT;
+    private MissingFlagBehavior mBehavior = USES_EXPLICIT_DEFAULT;
 
-    FakeFlagsBackend(String tagName) {
-        this(tagName, new HashMap<>());
+    /**
+     * Default constructor.
+     *
+     * @param tagName tag used to log messages.
+     */
+    public FakeFlagsBackend(String tagName) {
+        this(new Logger(DynamicLogger.getInstance(), tagName), new LinkedHashMap<>());
     }
 
-    FakeFlagsBackend(String tagName, Map<String, NameValuePair> flags) {
-        Objects.requireNonNull(tagName, "tagName cannot be null");
-        mLog = new Logger(AndroidLogger.getInstance(), tagName);
-        mFlags = Objects.requireNonNull(flags, "flags cannot be null");
+    private FakeFlagsBackend(Logger log, Map<String, NameValuePair> flags) {
+        mFlags = flags;
+        mLog = log;
     }
 
-    Map<String, NameValuePair> getFlags() {
-        return mFlags;
+    // Constructor used to create a snapshot
+    private FakeFlagsBackend(FakeFlagsBackend source) {
+        this(source.mLog, source.getFlags());
+    }
+
+    @VisibleForTesting
+    String getTagName() {
+        return mLog.getTag();
+    }
+
+    /** Gets a {@link FakeFlagsBackend} that has the same flags, but it's immutable. */
+    public FakeFlagsBackend cloneForSnapshot() {
+        return new FakeFlagsBackend(this);
+    }
+
+    /** Gets a snapshot of the current flags. */
+    public ImmutableMap<String, NameValuePair> getFlags() {
+        return ImmutableMap.copyOf(mFlags);
+    }
+
+    /** Gets the getters behaviors when the flag is missing. */
+    public MissingFlagBehavior getMissingFlagBehavior() {
+        return mBehavior;
+    }
+
+    /** Sets the getters behaviors when the flag is missing. */
+    public void setMissingFlagBehavior(MissingFlagBehavior behavior) {
+        mBehavior = Objects.requireNonNull(behavior, "behavior cannot be null");
     }
 
     @Override
@@ -144,12 +177,28 @@ class FakeFlagsBackend implements FlagsBackend, NameValuePairSetter {
     @Override
     public NameValuePair set(NameValuePair flag) {
         Objects.requireNonNull(flag, "internal error: NameValuePair cannot be null");
-        var previous = mFlags.put(flag.name, flag);
+        NameValuePair previous;
+        if (flag.value == null) {
+            previous = mFlags.remove(flag.name);
+        } else {
+            previous = mFlags.put(flag.name, flag);
+        }
         mLog.v("set(%s): returning %s", flag, previous);
         return previous;
     }
 
-    void setFlag(String name, String value) {
+    /** Sets the flag to the given value, or removes it if the value is {@code null}. */
+    public void setFlag(String name, @Nullable String value) {
+        mLog.v("set(%s, %s)", name, value);
+        if (mFlags instanceof ImmutableMap) {
+            // we could try / catch instead, but checking is cleaner
+            throw new UnsupportedOperationException(
+                    "setFlag(" + name + ", " + value + "): not supported on snapshot");
+        }
+        if (value == null) {
+            mFlags.remove(name);
+            return;
+        }
         set(new NameValuePair(name, value));
     }
 }

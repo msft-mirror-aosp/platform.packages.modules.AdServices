@@ -15,44 +15,40 @@
  */
 package com.android.adservices.flags;
 
-import com.android.adservices.service.Flags;
+import com.android.adservices.shared.testing.flags.MissingFlagBehavior;
 
 import com.google.common.annotations.VisibleForTesting;
 
 /** {@code FlagsSetterRule} that uses a fake flags implementation. */
 public final class AdServicesFakeFlagsSetterRule
-        extends AdServicesFlagsSetterRuleForUnitTests<AdServicesFakeFlagsSetterRule> {
+        extends AdServicesFlagsSetterRuleForUnitTests<AdServicesFakeFlagsSetterRule, FakeFlags> {
 
     public AdServicesFakeFlagsSetterRule() {
         this(FakeFlags.createFakeFlagsForFlagSetterRulePurposesOnly());
     }
 
     private AdServicesFakeFlagsSetterRule(FakeFlags fakeFlags) {
-        super(fakeFlags, fakeFlags.getFlagsSetter());
-    }
-
-    private FakeFlags getFakeFlags() {
-        return (FakeFlags) getFlags();
+        super(fakeFlags, fakeFlags.getBackend());
     }
 
     @Override
     public AdServicesFakeFlagsSetterRule setMissingFlagBehavior(MissingFlagBehavior behavior) {
         mLog.i("setMissingFlagBehavior(): from %s to %s", getMissingFlagBehavior(), behavior);
-        getFakeFlags().setMissingFlagBehavior(behavior);
+        mFlags.getBackend().setMissingFlagBehavior(behavior);
         return getThis();
     }
 
     @Override
-    public Flags getFlagsSnapshot() {
+    public FakeFlags getFlagsSnapshot() {
         mLog.i("getFlagsSnapshot(): clonning %s", getFlags());
         if (!isRunning()) {
             throw new IllegalStateException("getFlagsSnapshot() can only be called inside a test");
         }
-        return getFakeFlags().getSnapshot();
+        return mFlags.getSnapshot();
     }
 
     @VisibleForTesting
     MissingFlagBehavior getMissingFlagBehavior() {
-        return getFakeFlags().getMissingFlagBehavior();
+        return mFlags.getBackend().getMissingFlagBehavior();
     }
 }

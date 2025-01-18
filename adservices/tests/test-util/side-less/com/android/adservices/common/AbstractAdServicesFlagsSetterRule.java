@@ -59,8 +59,8 @@ import java.util.Arrays;
 // easier to transition the test to an annotated-base approach.                                   //
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 public abstract class AbstractAdServicesFlagsSetterRule<
-                T extends AbstractAdServicesFlagsSetterRule<T>>
-        extends AbstractFlagsSetterRule<T> {
+                R extends AbstractAdServicesFlagsSetterRule<R>>
+        extends AbstractFlagsSetterRule<R> {
 
     // TODO(b/295321663): move these constants (and those from LogFactory) to AdServicesCommon
     protected static final String LOGCAT_TAG_ADSERVICES = "adservices";
@@ -174,11 +174,11 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * <p>NOTE: it's usually cleaner to use an annotation instead ({@link DisableGlobalKillSwitch}
      * in this case), unless the test need to dynamically change the flags after it started.
      */
-    public final T setGlobalKillSwitch(boolean value) {
+    public final R setGlobalKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_GLOBAL_KILL_SWITCH, value);
     }
 
-    final T enableAllApis() {
+    final R enableAllApis() {
         return setAllLogcatTags()
                 .setGlobalKillSwitch(false)
                 .setTopicsKillSwitch(false)
@@ -192,24 +192,24 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     /**
      * Overrides flag used by {@link com.android.adservices.service.PhFlags#getAdServicesEnabled}.
      */
-    public final T setAdServicesEnabled(boolean value) {
+    public final R setAdServicesEnabled(boolean value) {
         return setFlag(FlagsConstants.KEY_ADSERVICES_ENABLED, value);
     }
 
     /** Overrides the flag that sets the Topics kill switch. */
-    public final T setTopicsKillSwitch(boolean value) {
+    public final R setTopicsKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_TOPICS_KILL_SWITCH, value);
     }
 
     /** Overrides the flag that sets the Topics Device Classifier kill switch. */
-    public final T setTopicsOnDeviceClassifierKillSwitch(boolean value) {
+    public final R setTopicsOnDeviceClassifierKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH, value);
     }
 
     /**
      * Overrides flag used by {@link com.android.adservices.service.PhFlags#getEnableBackCompat()}.
      */
-    public final T setEnableBackCompat(boolean value) {
+    public final R setEnableBackCompat(boolean value) {
         return setFlag(FlagsConstants.KEY_ENABLE_BACK_COMPAT, value);
     }
 
@@ -217,7 +217,7 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getMeasurementRollbackDeletionAppSearchKillSwitch()}.
      */
-    public final T setMeasurementRollbackDeletionAppSearchKillSwitch(boolean value) {
+    public final R setMeasurementRollbackDeletionAppSearchKillSwitch(boolean value) {
         return setFlag(
                 FlagsConstants.KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH, value);
     }
@@ -228,11 +228,11 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * <p>NOTE: it's usually cleaner to use an annotation instead ({@link SetPpapiAppAllowList} in
      * this case), unless the test need to dynamically change the flags after it started.
      */
-    public final T setPpapiAppAllowList(String... value) {
+    public final R setPpapiAppAllowList(String... value) {
         return setPpapiAppAllowList(value, DONT_USE_TEST_PACKAGE_AS_DEFAULT);
     }
 
-    private T setPpapiAppAllowList(String[] value, boolean useTestPackageAsDefault) {
+    private R setPpapiAppAllowList(String[] value, boolean useTestPackageAsDefault) {
         mLog.d(
                 "setPpapiAppAllowList(useTestPackageAsDefault=%b): %s",
                 useTestPackageAsDefault, Arrays.toString(value));
@@ -247,11 +247,11 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * <p>NOTE: it's usually cleaner to use an annotation instead ({@link SetMsmtApiAppAllowList} in
      * this case), unless the test need to dynamically change the flags after it started.
      */
-    public final T setMsmtApiAppAllowList(String... value) {
+    public final R setMsmtApiAppAllowList(String... value) {
         return setMsmtApiAppAllowList(value, DONT_USE_TEST_PACKAGE_AS_DEFAULT);
     }
 
-    private T setMsmtApiAppAllowList(String[] value, boolean useTestPackageAsDefault) {
+    private R setMsmtApiAppAllowList(String[] value, boolean useTestPackageAsDefault) {
         mLog.d(
                 "setMsmtApiAppAllowList(useTestPackageAsDefault=%b): %s",
                 useTestPackageAsDefault, Arrays.toString(value));
@@ -267,11 +267,11 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * SetMsmtWebContextClientAppAllowList} in this case), unless the test need to dynamically
      * change the flags after it started.
      */
-    public final T setMsmtWebContextClientAllowList(String... value) {
+    public final R setMsmtWebContextClientAllowList(String... value) {
         return setMsmtWebContextClientAllowList(value, DONT_USE_TEST_PACKAGE_AS_DEFAULT);
     }
 
-    private T setMsmtWebContextClientAllowList(String[] value, boolean useTestPackageAsDefault) {
+    private R setMsmtWebContextClientAllowList(String[] value, boolean useTestPackageAsDefault) {
         mLog.d(
                 "setMsmtWebContextClientAllowList(useTestPackageAsDefault=%b): %s",
                 useTestPackageAsDefault, Arrays.toString(value));
@@ -283,14 +283,14 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * Overrides flag used by {@link
      * com.android.adservices.service.PhFlags#getMddBackgroundTaskKillSwitch()}.
      */
-    public final T setMddBackgroundTaskKillSwitch(boolean value) {
+    public final R setMddBackgroundTaskKillSwitch(boolean value) {
         return setFlag(FlagsConstants.KEY_MDD_BACKGROUND_TASK_KILL_SWITCH, value);
     }
 
     /**
      * Overrides flag used by {@link com.android.adservices.service.PhFlags#getPasAppAllowList()}.
      */
-    public final T setPasAppAllowList(String... value) {
+    public final R setPasAppAllowList(String... value) {
         mLog.d("setPasAppAllowList(%s)", Arrays.toString(value));
         return setAllowListFlag(
                 FlagsConstants.KEY_PAS_APP_ALLOW_LIST, value, USE_TEST_PACKAGE_AS_DEFAULT);
@@ -309,7 +309,7 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * <p>NOTE: it's usually cleaner to use an annotation instead ({@link SetCompatModeFlags} in
      * this case), unless the test need to dynamically change the flags after it started.
      */
-    public T setCompatModeFlags() {
+    public R setCompatModeFlags() {
         return runOrCache(
                 "setCompatModeFlags()",
                 () -> {
@@ -356,7 +356,7 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * <p>NOTE: it's usually cleaner to use an annotation instead ({@link SetDefaultLogcatTags} in
      * this case), unless the test need to dynamically change the flags after it started.
      */
-    public T setDefaultLogcatTags() {
+    public R setDefaultLogcatTags() {
         setInfraLogcatTags();
         setLogcatTag(LOGCAT_TAG_ADSERVICES, LogLevel.VERBOSE);
         setLogcatTag(LOGCAT_TAG_SHARED, LogLevel.VERBOSE);
@@ -373,7 +373,7 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * <p>NOTE: it's usually cleaner to use an annotation instead ({@link SetAllLogcatTags} in this
      * case), unless the test need to dynamically change the flags after it started.
      */
-    public T setAllLogcatTags() {
+    public R setAllLogcatTags() {
         setDefaultLogcatTags();
         setLogcatTag(LOGCAT_TAG_TOPICS, LogLevel.VERBOSE);
         setLogcatTag(LOGCAT_TAG_FLEDGE, LogLevel.VERBOSE);
@@ -391,7 +391,7 @@ public abstract class AbstractAdServicesFlagsSetterRule<
      * <p>This method is usually set automatically by the factory methods, but should be set again
      * (on host-side tests) after reboot.
      */
-    public T setMeasurementTags() {
+    public R setMeasurementTags() {
         setLogcatTag(LOGCAT_TAG_MEASUREMENT, LogLevel.VERBOSE);
         return getThis();
     }
@@ -402,7 +402,7 @@ public abstract class AbstractAdServicesFlagsSetterRule<
     // make it easier to transition the test to an annotated-base approach.                       //
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
-    private T setAllowListFlag(String name, String[] values, boolean useTestPackageAsDefault) {
+    private R setAllowListFlag(String name, String[] values, boolean useTestPackageAsDefault) {
         if (values.length == 0 && useTestPackageAsDefault) {
             String testPkg = getTestPackageName();
             mLog.d(

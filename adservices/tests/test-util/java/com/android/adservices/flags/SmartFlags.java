@@ -45,7 +45,7 @@ import com.android.modules.utils.build.SdkLevel;
  * that new "smart" flags added on PhFlags are added here as well, which would make it simpler to
  * merge them (or use a different solution) in the future.
  */
-public final class SmartFlags extends RawFlags {
+public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
 
     // NOTE: since it's not used in production yet, we don't need a getInstance() factory method
     @VisibleForTesting

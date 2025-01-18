@@ -3677,6 +3677,30 @@ class MeasurementDao implements IMeasurementDao {
         return registrations;
     }
 
+    /** Fetch all Trigger Registrations */
+    @Override
+    public List<Trigger> fetchAllTriggerRegistrations() throws DatastoreException {
+        List<Trigger> registrations = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                TriggerContract.TABLE,
+                                /* columns= */ null,
+                                /* selection= */ null,
+                                /* selectionArgs= */ null,
+                                /* groupBy= */ null,
+                                /* having= */ null,
+                                /* orderBy= */ TriggerContract.TRIGGER_TIME,
+                                /* limit= */ null)) {
+            while (cursor.moveToNext()) {
+                Trigger triggerBuilder = SqliteObjectMapper.constructTriggerFromCursor(cursor);
+                registrations.add(triggerBuilder);
+            }
+        }
+        return registrations;
+    }
+
     @Override
     public boolean existsActiveSourcesWithDestination(Uri attributionDestination, long eventTime)
             throws DatastoreException {

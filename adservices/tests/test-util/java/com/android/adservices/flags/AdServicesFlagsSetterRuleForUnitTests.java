@@ -42,6 +42,7 @@ import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.adservices.shared.testing.NameValuePair;
 import com.android.adservices.shared.testing.NameValuePairSetter;
+import com.android.adservices.shared.testing.flags.MissingFlagBehavior;
 
 import org.junit.runner.Description;
 
@@ -58,12 +59,12 @@ import java.util.function.BiConsumer;
  * @param <F> type of flags implementation used by the rule.
  */
 public abstract class AdServicesFlagsSetterRuleForUnitTests<
-                R extends AdServicesFlagsSetterRuleForUnitTests<R>>
+                R extends AdServicesFlagsSetterRuleForUnitTests<R, F>, F extends Flags>
         extends AbstractAdServicesFlagsSetterRule<R> {
 
-    protected final Flags mFlags;
+    protected final F mFlags;
 
-    protected AdServicesFlagsSetterRuleForUnitTests(Flags flags, NameValuePairSetter flagsSetter) {
+    protected AdServicesFlagsSetterRuleForUnitTests(F flags, NameValuePairSetter flagsSetter) {
         super(AndroidLogger.getInstance(), flagsSetter);
         mFlags = Objects.requireNonNull(flags, "flags cannot be null");
         mLog.d("Constructed for %s", flags);
@@ -74,7 +75,7 @@ public abstract class AdServicesFlagsSetterRuleForUnitTests<
      *
      * <p>Typically used by test classes to pass to the object under test.
      */
-    public final Flags getFlags() {
+    public final F getFlags() {
         return mFlags;
     }
 
@@ -84,7 +85,7 @@ public abstract class AdServicesFlagsSetterRuleForUnitTests<
      *
      * @throws IllegalStateException if called before the test started
      */
-    public abstract Flags getFlagsSnapshot();
+    public abstract F getFlagsSnapshot();
 
     // NOTE: currently is only used by unit tests, but it might be worth to move to superclass so
     // it can be used by CTS tests as well
@@ -99,6 +100,7 @@ public abstract class AdServicesFlagsSetterRuleForUnitTests<
         return getThis();
     }
 
+    // TODO(b/338067482): use NameValuePairSetter instead)
     /** TODO(b/384798806): make it package protected. */
     public static void setFakeFlagsFactoryFlags(BiConsumer<String, String> nameValueSetter) {
         nameValueSetter.accept(KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS, "10000");

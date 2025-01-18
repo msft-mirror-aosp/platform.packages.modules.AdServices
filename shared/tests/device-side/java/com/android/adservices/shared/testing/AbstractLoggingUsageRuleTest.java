@@ -99,7 +99,7 @@ public final class AbstractLoggingUsageRuleTest extends SharedExtendedMockitoTes
 
         assertThrows(RuntimeException.class, () -> rule.evaluate(mBaseStatement, mDescription));
 
-        verify(mLogVerifier1).setup();
+        verify(mLogVerifier1).setup(mDescription);
         verifyNoMoreInteractions(mLogVerifier1);
     }
 
@@ -114,8 +114,8 @@ public final class AbstractLoggingUsageRuleTest extends SharedExtendedMockitoTes
                 IllegalArgumentException.class, () -> rule.evaluate(mBaseStatement, mDescription));
 
         // Ensure setup work is done by log verifiers
-        verify(mLogVerifier1).setup();
-        verify(mLogVerifier2).setup();
+        verify(mLogVerifier1).setup(mDescription);
+        verify(mLogVerifier2).setup(mDescription);
 
         // Ensure test has been evaluated
         mBaseStatement.assertEvaluated();
@@ -135,8 +135,8 @@ public final class AbstractLoggingUsageRuleTest extends SharedExtendedMockitoTes
         rule.evaluate(mBaseStatement, mDescription);
 
         // Ensure setup work is done by log verifiers
-        verify(mLogVerifier1).setup();
-        verify(mLogVerifier2).setup();
+        verify(mLogVerifier1).setup(mDescription);
+        verify(mLogVerifier2).setup(mDescription);
 
         // Ensure test has been evaluated
         mBaseStatement.assertEvaluated();

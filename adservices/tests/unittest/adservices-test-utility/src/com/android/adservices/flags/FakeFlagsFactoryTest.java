@@ -55,7 +55,9 @@ public final class FakeFlagsFactoryTest extends AdServicesUnitTestCase {
 
         assertThrows(
                 UnsupportedOperationException.class,
-                () -> flags.setFlag(KEY_GLOBAL_KILL_SWITCH, Boolean.toString(!before)));
+                () ->
+                        flags.getBackend()
+                                .setFlag(KEY_GLOBAL_KILL_SWITCH, Boolean.toString(!before)));
 
         expect.withMessage("getGlobalKillSwitch() after setFlags() call that threw")
                 .that(flags.getGlobalKillSwitch())

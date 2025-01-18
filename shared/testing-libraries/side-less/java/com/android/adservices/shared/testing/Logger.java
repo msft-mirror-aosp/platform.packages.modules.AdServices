@@ -31,8 +31,8 @@ public final class Logger {
     }
 
     public Logger(RealLogger realLogger, String tag) {
-        mRealLogger = Objects.requireNonNull(realLogger);
-        mTag = Objects.requireNonNull(tag);
+        mRealLogger = Objects.requireNonNull(realLogger, "realLogger cannot be null");
+        mTag = Objects.requireNonNull(tag, "tag cannot be null");
     }
 
     public String getTag() {

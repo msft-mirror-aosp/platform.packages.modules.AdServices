@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.runner.Description.createTestDescription;
 
 import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassHasNoNothingAtAll;
+import com.android.adservices.shared.testing.FakeNameValuePairSetter;
 import com.android.adservices.shared.testing.NameValuePair;
 import com.android.adservices.shared.testing.NameValuePairSetter;
 import com.android.adservices.shared.testing.annotations.DisableDebugFlag;

@@ -62,6 +62,7 @@ import android.net.Uri;
 import android.util.Pair;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
@@ -8528,6 +8529,59 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         maybeInsertSourceDestinations(db, source, sourceId);
     }
 
+    private static Long getNullableUnsignedLong(@Nullable UnsignedLong ulong) {
+        return Optional.ofNullable(ulong).map(UnsignedLong::getValue).orElse(null);
+    }
+
+    private static void insertTrigger(Trigger trigger, String triggerId) {
+        SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put(TriggerContract.ID, triggerId);
+        values.put(
+                TriggerContract.ATTRIBUTION_DESTINATION,
+                trigger.getAttributionDestination().toString());
+        values.put(TriggerContract.DESTINATION_TYPE, trigger.getDestinationType());
+        values.put(TriggerContract.TRIGGER_TIME, trigger.getTriggerTime());
+        values.put(TriggerContract.EVENT_TRIGGERS, trigger.getEventTriggers());
+        values.put(TriggerContract.STATUS, Trigger.Status.PENDING);
+        values.put(TriggerContract.ENROLLMENT_ID, trigger.getEnrollmentId());
+        values.put(TriggerContract.REGISTRANT, trigger.getRegistrant().toString());
+        values.put(TriggerContract.AGGREGATE_TRIGGER_DATA, trigger.getAggregateTriggerData());
+        values.put(TriggerContract.AGGREGATE_VALUES, trigger.getAggregateValuesString());
+        values.put(
+                TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS,
+                trigger.getAggregateDeduplicationKeys());
+        values.put(TriggerContract.FILTERS, trigger.getFilters());
+        values.put(TriggerContract.NOT_FILTERS, trigger.getNotFilters());
+        values.put(TriggerContract.DEBUG_KEY, getNullableUnsignedLong(trigger.getDebugKey()));
+        values.put(TriggerContract.DEBUG_REPORTING, trigger.isDebugReporting());
+        values.put(TriggerContract.AD_ID_PERMISSION, trigger.hasAdIdPermission());
+        values.put(TriggerContract.AR_DEBUG_PERMISSION, trigger.hasArDebugPermission());
+        values.put(TriggerContract.ATTRIBUTION_CONFIG, trigger.getAttributionConfig());
+        values.put(TriggerContract.X_NETWORK_KEY_MAPPING, trigger.getAdtechKeyMapping());
+        values.put(TriggerContract.DEBUG_JOIN_KEY, trigger.getDebugJoinKey());
+        values.put(TriggerContract.PLATFORM_AD_ID, trigger.getPlatformAdId());
+        values.put(TriggerContract.DEBUG_AD_ID, trigger.getDebugAdId());
+        values.put(TriggerContract.REGISTRATION_ORIGIN, trigger.getRegistrationOrigin().toString());
+        values.put(
+                TriggerContract.AGGREGATION_COORDINATOR_ORIGIN,
+                getNullableUriString((List<Uri>) trigger.getAggregationCoordinatorOrigin()));
+        values.put(
+                TriggerContract.AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG,
+                trigger.getAggregatableSourceRegistrationTimeConfig().name());
+        values.put(TriggerContract.TRIGGER_CONTEXT_ID, trigger.getTriggerContextId());
+        values.put(TriggerContract.ATTRIBUTION_SCOPES, trigger.getAttributionScopesString());
+        values.put(
+                TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES,
+                trigger.getAggregatableFilteringIdMaxBytes());
+        values.put(
+                TriggerContract.AGGREGATE_DEBUG_REPORTING,
+                trigger.getAggregateDebugReportingString());
+        values.put(TriggerContract.NAMED_BUDGETS, trigger.getNamedBudgetsString());
+        long row = db.insert(TriggerContract.TABLE, null, values);
+        assertThat(row).isNotEqualTo(-1);
+    }
+
     private static String getNullableUriString(List<Uri> uriList) {
         return Optional.ofNullable(uriList).map(uris -> uris.get(0).toString()).orElse(null);
     }
@@ -13254,6 +13308,39 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
 
         assertThat(fetchedAllSourceRegistration.get(0)).isEqualTo(source1);
         assertThat(fetchedAllSourceRegistration.get(1)).isEqualTo(source2);
+    }
+
+    /** Test that records in TriggerContract Table are fetched properly. */
+    @Test
+    public void testFetchAllTriggerRegistrations_pass() {
+        Trigger trigger1 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("trigger1")
+                        .setTriggerTime(TriggerFixture.ValidTriggerParams.TRIGGER_TIME)
+                        .setDebugKey(TriggerFixture.ValidTriggerParams.DEBUG_KEY)
+                        .build();
+
+        insertTrigger(trigger1, "trigger1");
+
+        Trigger trigger2 =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("trigger2")
+                        .setTriggerTime(TriggerFixture.ValidTriggerParams.TRIGGER_TIME)
+                        .setDebugKey(TriggerFixture.ValidTriggerParams.DEBUG_KEY)
+                        .build();
+
+        insertTrigger(trigger2, "trigger2");
+
+        List<Trigger> fetchedAllTriggerRegistration =
+                mDatastoreManager
+                        .runInTransactionWithResult(dao -> dao.fetchAllTriggerRegistrations())
+                        .orElseThrow();
+
+        assertNotNull(fetchedAllTriggerRegistration);
+        assertThat(fetchedAllTriggerRegistration.size()).isEqualTo(2);
+
+        assertThat(fetchedAllTriggerRegistration.get(0)).isEqualTo(trigger1);
+        assertThat(fetchedAllTriggerRegistration.get(1)).isEqualTo(trigger2);
     }
 
     private Source getFirstSourceFromDb() {

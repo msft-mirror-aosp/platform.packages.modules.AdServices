@@ -17,7 +17,6 @@ package com.android.adservices.shared.testing;
 
 import static org.junit.Assert.assertThrows;
 
-import com.android.adservices.shared.meta_testing.FakeNameValuePairSetter;
 import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 
 import org.junit.Test;

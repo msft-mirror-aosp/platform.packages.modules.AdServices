@@ -571,6 +571,7 @@ public final class MeasurementDataDeleterTest extends AdServicesExtendedMockitoT
 
         Pair<List<String>, List<String>> triggerIdsUninstall =
                 new Pair<>(Arrays.asList(trigger1.getId()), Arrays.asList(trigger2.getId()));
+        Set<String> triggerIdsMutable = new HashSet<>(triggerIdsUninstall.first);
 
         when(mMeasurementDao.fetchMatchingSourcesUninstall(packageName, 0))
                 .thenReturn(sourceIdsUninstall);
@@ -589,7 +590,8 @@ public final class MeasurementDataDeleterTest extends AdServicesExtendedMockitoT
         Truth.assertThat(result).isTrue();
 
         verify(mMeasurementDao).deleteSources(sourceIdsUninstall.first);
-        verify(mMeasurementDao).deleteTriggers(triggerIdsUninstall.first);
+
+        verify(mMeasurementDao).deleteTriggers(triggerIdsMutable);
 
         verify(mMeasurementDao)
                 .updateSourceStatus(sourceIdsUninstall.second, Source.Status.MARKED_TO_DELETE);

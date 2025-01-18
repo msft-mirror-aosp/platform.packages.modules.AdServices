@@ -864,6 +864,8 @@ public abstract class E2EAbstractTest extends AdServicesUnitTestCase {
                 // Report time can vary across implementations so cannot be included in the hash;
                 // they should be similarly ordered, however, so we can use them to sort.
                 Comparator.comparing(E2EAbstractTest::reportTimeFrom)
+                        .thenComparing(
+                                obj -> obj.optString(TestFormatJsonMapping.REPORT_TO_KEY, ""))
                         .thenComparing(obj -> hashForEventReportObject(outputType, obj)));
     }
 

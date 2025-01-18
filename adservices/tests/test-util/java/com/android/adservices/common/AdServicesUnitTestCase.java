@@ -54,7 +54,7 @@ public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
             new ApplicationContextSingletonRule(/* restoreAfter= */ false);
 
     @Rule(order = 6)
-    public final AdServicesFlagsSetterRuleForUnitTests<?> flags = newFlagsRule();
+    public final AdServicesFlagsSetterRuleForUnitTests<?, ? extends Flags> flags = newFlagsRule();
 
     /**
      * Reference to the application context of this test's instrumentation package (as defined by
@@ -73,7 +73,7 @@ public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
      * <p>Returns a new {@link AdServicesFakeFlagsSetterRule} by default, should be overridden by
      * tests that want to use {@code AdServicesMockFlagsSetterRule} instead.
      */
-    protected AdServicesFlagsSetterRuleForUnitTests<?> newFlagsRule() {
+    protected AdServicesFlagsSetterRuleForUnitTests<?, ? extends Flags> newFlagsRule() {
         return new AdServicesFakeFlagsSetterRule();
     }
 

@@ -23,6 +23,7 @@ import org.junit.runner.Description;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -36,22 +37,17 @@ import java.util.stream.Collectors;
 public abstract class AbstractLogVerifier<T extends LogCall> implements LogVerifier {
     protected final String mTag = getClass().getSimpleName();
 
-    // Key is the LogCall object, value is the source of truth for times; we do not keep track of
-    // the times value in the LogCall object itself because we would like to group together all
-    // identical log call invocations, irrespective of number of times they have been invoked.
-    private final Map<T, Integer> mActualCalls = new LinkedHashMap<>();
-
     @Override
-    public void setup() {
-        mockLogCalls();
+    public void setup(Description description) {
+        mockLogCalls(description);
     }
 
     @Override
     public void verify(Description description) {
         // Obtain expected log call entries from subclass.
         Set<T> expectedCalls = getExpectedLogCalls(description);
-        // Extract actual log calls entries from map that was built through mocking log calls.
-        Set<T> actualCalls = getActualCalls();
+        // Obtain actual log call entries from subclass.
+        Set<T> actualCalls = getActualLogCalls();
 
         verifyCalls(expectedCalls, actualCalls);
     }
@@ -59,31 +55,26 @@ public abstract class AbstractLogVerifier<T extends LogCall> implements LogVerif
     /**
      * Mocks relevant calls in order to store metadata of log calls that were actually made.
      * Subclasses are expected to call recordActualCall to store actual calls.
+     *
+     * @param description test that was executed
      */
-    protected abstract void mockLogCalls();
+    protected abstract void mockLogCalls(Description description);
 
     /**
      * Return a set of {@link LogCall} to be verified.
      *
-     * @param description test that was executed.
+     * @param description test that was executed
      */
     protected abstract Set<T> getExpectedLogCalls(Description description);
+
+    /** Return a set of {@link LogCall} that were invoked. */
+    protected abstract Set<T> getActualLogCalls();
 
     /**
      * Returns relevant message providing information on how to use appropriate annotations when
      * test fails due to mismatch of expected and actual log calls.
      */
     protected abstract String getResolutionMessage();
-
-    /**
-     * Subclasses are expected to use this method to record actual log call. Assumes only a single
-     * call is being recorded at once.
-     *
-     * @param actualCall Actual call to be recorded
-     */
-    public void recordActualCall(T actualCall) {
-        mActualCalls.put(actualCall, mActualCalls.getOrDefault(actualCall, 0) + 1);
-    }
 
     /**
      * Ensures log call parameter is > 0 for a given annotation type. Throws exception otherwise.
@@ -103,6 +94,28 @@ public abstract class AbstractLogVerifier<T extends LogCall> implements LogVerif
         if (times < 0) {
             throw new IllegalArgumentException("Detected @" + annotation + " with times < 0!");
         }
+    }
+
+    /**
+     * Returns a set of deduped log calls by updating the {@code mTimes} field of the duplicated log
+     * call object.
+     *
+     * @param calls list of raw calls where each entry is assumed to represent exactly 1 call as
+     *     represented by the {@code mTimes} field.
+     */
+    public Set<T> dedupeCalls(List<T> calls) {
+        // Updating the mTimes field of a LogCall object is not expected to change the hash as
+        // mTimes isn't supposed to be factored into the equals / hash definition by design.
+        Map<T, T> frequencyMap = new LinkedHashMap<>();
+        for (T call : calls) {
+            if (!frequencyMap.containsKey(call)) {
+                frequencyMap.put(call, call);
+            } else {
+                frequencyMap.get(call).mTimes++;
+            }
+        }
+
+        return new LinkedHashSet<>(frequencyMap.values());
     }
 
     /**
@@ -195,17 +208,6 @@ public abstract class AbstractLogVerifier<T extends LogCall> implements LogVerif
 
     private String callsToStr(Set<T> calls) {
         return calls.stream().map(call -> "\n\t" + call).reduce("", (a, b) -> a + b);
-    }
-
-    private Set<T> getActualCalls() {
-        // At this point, the map of actual calls will no longer be updated. Therefore, it's safe
-        // // to alter the times field in the actual LogCall objects and retrieve all keys.
-        mActualCalls
-                .keySet()
-                .forEach(actualLogCall -> actualLogCall.mTimes = mActualCalls.get(actualLogCall));
-
-        // Create new set to rehash
-        return new LinkedHashSet<>(mActualCalls.keySet());
     }
 
     private String constructErrorMessage(Set<T> expectedCalls, Set<T> actualCalls) {

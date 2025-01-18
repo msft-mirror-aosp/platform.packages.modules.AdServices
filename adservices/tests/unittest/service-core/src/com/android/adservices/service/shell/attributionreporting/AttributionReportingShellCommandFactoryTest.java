@@ -54,6 +54,14 @@ public final class AttributionReportingShellCommandFactoryTest extends AdService
     }
 
     @Test
+    public void testGetShellCommand_listTriggerRegistrationsCmd() {
+        ShellCommand shellCommand =
+                mFactory.getShellCommand(AttributionReportingListTriggerRegistrationsCommand.CMD);
+        assertThat(shellCommand)
+                .isInstanceOf(AttributionReportingListTriggerRegistrationsCommand.class);
+    }
+
+    @Test
     public void testGetShellCommand_nullCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand(null);
         assertThat(shellCommand).isNull();
@@ -66,7 +74,7 @@ public final class AttributionReportingShellCommandFactoryTest extends AdService
     }
 
     @Test
-    public void testGetShellCommand_invalidCmd() {
+    public void testGetAttributionReportingListSourceRegistrationsCommand_invalidCmd() {
         mFactory =
                 new AttributionReportingShellCommandFactory(
                         ATTRIBUTION_REPORTING_CLI_DISABLED,
@@ -74,6 +82,18 @@ public final class AttributionReportingShellCommandFactoryTest extends AdService
                         mDevSessionDataStore);
         ShellCommand shellCommand =
                 mFactory.getShellCommand(AttributionReportingListSourceRegistrationsCommand.CMD);
+        assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
+    }
+
+    @Test
+    public void testGetAttributionReportingListTriggerRegistrationsCommand_invalidCmd() {
+        mFactory =
+                new AttributionReportingShellCommandFactory(
+                        ATTRIBUTION_REPORTING_CLI_DISABLED,
+                        mDatastoreManager,
+                        mDevSessionDataStore);
+        ShellCommand shellCommand =
+                mFactory.getShellCommand(AttributionReportingListTriggerRegistrationsCommand.CMD);
         assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
     }
 
@@ -105,6 +125,8 @@ public final class AttributionReportingShellCommandFactoryTest extends AdService
 
         assertThat(Sets.newHashSet(mFactory.getAllCommandsHelp()))
                 .containsExactlyElementsIn(
-                        Sets.newHashSet(AttributionReportingListSourceRegistrationsCommand.HELP));
+                        Sets.newHashSet(
+                                AttributionReportingListSourceRegistrationsCommand.HELP,
+                                AttributionReportingListTriggerRegistrationsCommand.HELP));
     }
 }

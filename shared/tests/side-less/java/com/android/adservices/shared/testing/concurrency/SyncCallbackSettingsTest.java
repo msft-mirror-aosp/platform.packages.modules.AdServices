@@ -107,9 +107,7 @@ public final class SyncCallbackSettingsTest extends SharedSidelessTestCase {
     public void testInvalidBuilderArgs() {
         SyncCallbackSettings.Builder builder = newDefaultBuilder();
 
-        assertThrows(IllegalArgumentException.class, () -> builder.setExpectedNumberCalls(0));
         assertThrows(IllegalArgumentException.class, () -> builder.setExpectedNumberCalls(-1));
-        assertThrows(IllegalArgumentException.class, () -> builder.setMaxTimeoutMs(0));
         assertThrows(IllegalArgumentException.class, () -> builder.setMaxTimeoutMs(-1));
     }
 

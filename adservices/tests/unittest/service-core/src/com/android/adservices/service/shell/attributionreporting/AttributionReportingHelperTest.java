@@ -17,25 +17,20 @@
 package com.android.adservices.service.shell.attributionreporting;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
+import com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
+import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.TriggerFixture;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
 public final class AttributionReportingHelperTest extends AdServicesUnitTestCase {
-    private static final String ID = "_id";
-    private static final String STATUS = "status";
-    private static final String REGISTRATION_ORIGIN = "registration_origin";
-    private static final String REGISTRANT = "registrant";
-    private static final String EVENT_TIME = "event_time";
-    private static final String EXPIRY_TIME = "expiry_time";
-    private static final String SOURCE_TYPE = "source_key";
-    private static final String DEBUG_KEY = "debug_key";
     private static final String APP_DESTINATION = "app_destination";
     private static final String WEB_DESTINATION = "web_destination";
-
     @Test
     public void testSourceToJson_happyPath() throws JSONException {
         Source source =
@@ -44,10 +39,14 @@ public final class AttributionReportingHelperTest extends AdServicesUnitTestCase
                         .build();
         JSONObject jsonObject = AttributionReportingHelper.sourceToJson(source);
 
-        expect.withMessage("ID").that(jsonObject.getString(ID)).isEqualTo(source.getId());
-        expect.withMessage("STATUS").that(jsonObject.getString(STATUS)).isEqualTo("active");
+        expect.withMessage("ID")
+                .that(jsonObject.getString(SourceContract.ID))
+                .isEqualTo(source.getId());
+        expect.withMessage("STATUS")
+                .that(jsonObject.getString(SourceContract.STATUS))
+                .isEqualTo("active");
         expect.withMessage("REGISTRATION_ORIGIN")
-                .that(jsonObject.getString(REGISTRATION_ORIGIN))
+                .that(jsonObject.getString(SourceContract.REGISTRATION_ORIGIN))
                 .isEqualTo(source.getRegistrationOrigin().toString());
 
         expect.withMessage("APP_DESTINATION")
@@ -58,21 +57,48 @@ public final class AttributionReportingHelperTest extends AdServicesUnitTestCase
                 .isEqualTo(source.getWebDestinations().toString());
 
         expect.withMessage("REGISTRANT")
-                .that(jsonObject.getString(REGISTRANT))
+                .that(jsonObject.getString(SourceContract.REGISTRANT))
                 .isEqualTo(source.getRegistrant().toString());
         expect.withMessage("EVENT_TIME")
-                .that(jsonObject.getLong(EVENT_TIME))
+                .that(jsonObject.getLong(SourceContract.EVENT_TIME))
                 .isEqualTo(source.getEventTime());
         expect.withMessage("EXPIRY_TIME")
-                .that(jsonObject.getLong(EXPIRY_TIME))
+                .that(jsonObject.getLong(SourceContract.EXPIRY_TIME))
                 .isEqualTo(source.getExpiryTime());
         expect.withMessage("SOURCE_TYPE")
-                .that(jsonObject.getString(SOURCE_TYPE))
+                .that(jsonObject.getString(SourceContract.SOURCE_TYPE))
                 .isEqualTo(source.getSourceType().getValue());
 
-        String debugKeyString = jsonObject.getString(DEBUG_KEY);
+        String debugKeyString = jsonObject.getString(SourceContract.DEBUG_KEY);
         expect.withMessage("DEBUG_KEY")
                 .that(debugKeyString)
                 .isEqualTo(source.getDebugKey().toString());
+    }
+
+    @Test
+    public void testTriggerToJson_happyPath() throws JSONException {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setTriggerTime(TriggerFixture.ValidTriggerParams.TRIGGER_TIME)
+                        .setDebugKey(TriggerFixture.ValidTriggerParams.DEBUG_KEY)
+                        .build();
+        JSONObject jsonObject = AttributionReportingHelper.triggerToJson(trigger);
+
+        expect.withMessage("TRIGGER_TIME")
+                .that(jsonObject.getLong(TriggerContract.TRIGGER_TIME))
+                .isEqualTo(trigger.getTriggerTime());
+        expect.withMessage("ATTRIBUTION_DESTINATION")
+                .that(jsonObject.getString(TriggerContract.ATTRIBUTION_DESTINATION))
+                .isEqualTo(trigger.getAttributionDestination().toString());
+        expect.withMessage("REGISTRATION_ORIGIN")
+                .that(jsonObject.getString(TriggerContract.REGISTRATION_ORIGIN))
+                .isEqualTo(trigger.getRegistrationOrigin().toString());
+        expect.withMessage("TRIGGER_TIME")
+                .that(jsonObject.getLong(TriggerContract.TRIGGER_TIME))
+                .isEqualTo(trigger.getTriggerTime());
+        String debugKeyString = jsonObject.getString(TriggerContract.DEBUG_KEY);
+        expect.withMessage("DEBUG_KEY")
+                .that(debugKeyString)
+                .isEqualTo(trigger.getDebugKey().toString());
     }
 }
