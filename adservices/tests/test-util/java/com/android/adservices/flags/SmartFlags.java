@@ -16,12 +16,12 @@
 
 package com.android.adservices.flags;
 
+// Need to disable checkstyle as there's no need to import 500+ constants.
+// CHECKSTYLE:OFF Generated code
 import static android.provider.DeviceConfig.NAMESPACE_ADSERVICES;
 
-//Need to disable checkstyle as there's no need to import 500+ constants.
-//CHECKSTYLE:OFF Generated code
 import static com.android.adservices.service.FlagsConstants.*;
-//CHECKSTYLE:ON
+// CHECKSTYLE:ON
 import static com.android.adservices.shared.common.flags.Constants.MAX_PERCENTAGE;
 
 import static java.lang.Float.parseFloat;
@@ -35,12 +35,12 @@ import com.android.adservices.shared.flags.DeviceConfigFlagsBackend;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.modules.utils.build.SdkLevel;
 
-//TODO(b/386415138): this class is should be moved to service-core, but currently it's only used by
-//tests
+// TODO(b/391406689): this class is should be moved to service-core, but currently it's only used by
+// tests
 /**
  * Flags Implementation that adds extra logic to some getters (hence the "smart" name).
  *
- * TODO(b/386415138): this class was copied from PhFlags before it was reverted to be standalone
+ * <p>TODO(b/391406689): this class was copied from PhFlags before it was reverted to be standalone
  * and is not currently used in production - it's only used to make sure (through SmartFlagsTest)
  * that new "smart" flags added on PhFlags are added here as well, which would make it simpler to
  * merge them (or use a different solution) in the future.
@@ -55,7 +55,8 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
 
     @Override
     public long getTopicsEpochJobPeriodMs() {
-        long topicsEpochJobPeriodMs = super.getTopicsEpochJobPeriodMs();
+        long topicsEpochJobPeriodMs =
+                mBackend.getFlag(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, TOPICS_EPOCH_JOB_PERIOD_MS);
         if (topicsEpochJobPeriodMs <= 0) {
             throw new IllegalArgumentException("topicsEpochJobPeriodMs should > 0");
         }
@@ -69,7 +70,7 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         long topicsEpochJobFlexMs =
                 SystemProperties.getLong(
                         getSystemPropertyName(KEY_TOPICS_EPOCH_JOB_FLEX_MS),
-                        super.getTopicsEpochJobFlexMs());
+                        mBackend.getFlag(KEY_TOPICS_EPOCH_JOB_FLEX_MS, TOPICS_EPOCH_JOB_FLEX_MS));
         if (topicsEpochJobFlexMs <= 0) {
             throw new IllegalArgumentException("topicsEpochJobFlexMs should > 0");
         }
@@ -83,7 +84,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         int topicsPercentageForRandomTopic =
                 SystemProperties.getInt(
                         getSystemPropertyName(KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC),
-                        super.getTopicsPercentageForRandomTopic());
+                        mBackend.getFlag(
+                                KEY_TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC,
+                                TOPICS_PERCENTAGE_FOR_RANDOM_TOPIC));
         if (topicsPercentageForRandomTopic < 0 || topicsPercentageForRandomTopic > MAX_PERCENTAGE) {
             throw new IllegalArgumentException(
                     "topicsPercentageForRandomTopic should be between 0 and 100");
@@ -93,7 +96,8 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
 
     @Override
     public int getTopicsNumberOfTopTopics() {
-        int topicsNumberOfTopTopics = super.getTopicsNumberOfTopTopics();
+        int topicsNumberOfTopTopics =
+                mBackend.getFlag(KEY_TOPICS_NUMBER_OF_TOP_TOPICS, TOPICS_NUMBER_OF_TOP_TOPICS);
         if (topicsNumberOfTopTopics < 0) {
             throw new IllegalArgumentException("topicsNumberOfTopTopics should >= 0");
         }
@@ -103,7 +107,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
 
     @Override
     public int getTopicsNumberOfRandomTopics() {
-        int topicsNumberOfTopTopics = super.getTopicsNumberOfRandomTopics();
+        int topicsNumberOfTopTopics =
+                mBackend.getFlag(
+                        KEY_TOPICS_NUMBER_OF_RANDOM_TOPICS, TOPICS_NUMBER_OF_RANDOM_TOPICS);
         if (topicsNumberOfTopTopics < 0) {
             throw new IllegalArgumentException("topicsNumberOfTopTopics should >= 0");
         }
@@ -113,7 +119,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
 
     @Override
     public int getTopicsNumberOfLookBackEpochs() {
-        int topicsNumberOfLookBackEpochs = super.getTopicsNumberOfLookBackEpochs();
+        int topicsNumberOfLookBackEpochs =
+                mBackend.getFlag(
+                        KEY_TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS, TOPICS_NUMBER_OF_LOOK_BACK_EPOCHS);
         if (topicsNumberOfLookBackEpochs < 1) {
             throw new IllegalArgumentException("topicsNumberOfLookBackEpochs should  >= 1");
         }
@@ -124,7 +132,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     @Override
     public float getTopicsPrivacyBudgetForTopicIdDistribution() {
         float topicsPrivacyBudgetForTopicIdDistribution =
-                super.getTopicsPrivacyBudgetForTopicIdDistribution();
+                mBackend.getFlag(
+                        KEY_TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION,
+                        TOPICS_PRIVACY_BUDGET_FOR_TOPIC_ID_DISTRIBUTION);
 
         if (topicsPrivacyBudgetForTopicIdDistribution <= 0) {
             throw new IllegalArgumentException(
@@ -139,7 +149,8 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public int getClassifierType() {
         return SystemProperties.getInt(
-                getSystemPropertyName(KEY_CLASSIFIER_TYPE), super.getClassifierType());
+                getSystemPropertyName(KEY_CLASSIFIER_TYPE),
+                mBackend.getFlag(KEY_CLASSIFIER_TYPE, DEFAULT_CLASSIFIER_TYPE));
     }
 
     @Override
@@ -148,37 +159,53 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     public int getClassifierNumberOfTopLabels() {
         return SystemProperties.getInt(
                 getSystemPropertyName(KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS),
-                super.getClassifierNumberOfTopLabels());
+                mBackend.getFlag(
+                        KEY_CLASSIFIER_NUMBER_OF_TOP_LABELS, CLASSIFIER_NUMBER_OF_TOP_LABELS));
     }
 
     @Override
     public boolean getTopicsCobaltLoggingEnabled() {
-        return getCobaltLoggingEnabled() && super.getTopicsCobaltLoggingEnabled();
+        return getCobaltLoggingEnabled()
+                && mBackend.getFlag(
+                        KEY_TOPICS_COBALT_LOGGING_ENABLED, TOPICS_COBALT_LOGGING_ENABLED);
     }
 
     @Override
     public boolean getMsmtRegistrationCobaltLoggingEnabled() {
-        return getCobaltLoggingEnabled() && super.getMsmtRegistrationCobaltLoggingEnabled();
+        return getCobaltLoggingEnabled()
+                && mBackend.getFlag(
+                        KEY_MSMT_REGISTRATION_COBALT_LOGGING_ENABLED,
+                        MSMT_REGISTRATION_COBALT_LOGGING_ENABLED);
     }
 
     @Override
     public boolean getMsmtAttributionCobaltLoggingEnabled() {
-        return getCobaltLoggingEnabled() && super.getMsmtAttributionCobaltLoggingEnabled();
+        return getCobaltLoggingEnabled()
+                && mBackend.getFlag(
+                        KEY_MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED,
+                        MSMT_ATTRIBUTION_COBALT_LOGGING_ENABLED);
     }
 
     @Override
     public boolean getMsmtReportingCobaltLoggingEnabled() {
-        return getCobaltLoggingEnabled() && super.getMsmtReportingCobaltLoggingEnabled();
+        return getCobaltLoggingEnabled()
+                && mBackend.getFlag(
+                        KEY_MSMT_REPORTING_COBALT_LOGGING_ENABLED,
+                        MSMT_REPORTING_COBALT_LOGGING_ENABLED);
     }
 
     @Override
     public boolean getAppNameApiErrorCobaltLoggingEnabled() {
-        return getCobaltLoggingEnabled() && super.getAppNameApiErrorCobaltLoggingEnabled();
+        return getCobaltLoggingEnabled()
+                && mBackend.getFlag(
+                        KEY_APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED,
+                        APP_NAME_API_ERROR_COBALT_LOGGING_ENABLED);
     }
 
     @Override
     public long getCobaltLoggingJobPeriodMs() {
-        long cobaltLoggingJobPeriodMs = super.getCobaltLoggingJobPeriodMs();
+        long cobaltLoggingJobPeriodMs =
+                mBackend.getFlag(KEY_COBALT_LOGGING_JOB_PERIOD_MS, COBALT_LOGGING_JOB_PERIOD_MS);
         if (cobaltLoggingJobPeriodMs < 0) {
             throw new IllegalArgumentException(
                     String.format(
@@ -190,7 +217,10 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
 
     @Override
     public long getCobaltUploadServiceUnbindDelayMs() {
-        long cobaltUploadServiceUnbindDelayMs = super.getCobaltUploadServiceUnbindDelayMs();
+        long cobaltUploadServiceUnbindDelayMs =
+                mBackend.getFlag(
+                        KEY_COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS,
+                        COBALT_UPLOAD_SERVICE_UNBIND_DELAY_MS);
         if (cobaltUploadServiceUnbindDelayMs < 0) {
             throw new IllegalArgumentException(
                     String.format(
@@ -208,7 +238,7 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return !getGlobalKillSwitch()
                 && SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_COBALT_LOGGING_ENABLED),
-                        super.getCobaltLoggingEnabled());
+                        mBackend.getFlag(KEY_COBALT_LOGGING_ENABLED, COBALT_LOGGING_ENABLED));
     }
 
     @Override
@@ -220,7 +250,7 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         long maintenanceJobPeriodMs =
                 SystemProperties.getLong(
                         getSystemPropertyName(KEY_MAINTENANCE_JOB_PERIOD_MS),
-                        super.getMaintenanceJobPeriodMs());
+                        mBackend.getFlag(KEY_MAINTENANCE_JOB_PERIOD_MS, MAINTENANCE_JOB_PERIOD_MS));
         if (maintenanceJobPeriodMs < 0) {
             throw new IllegalArgumentException("maintenanceJobPeriodMs should  >= 0");
         }
@@ -236,7 +266,7 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         long maintenanceJobFlexMs =
                 SystemProperties.getLong(
                         getSystemPropertyName(KEY_MAINTENANCE_JOB_FLEX_MS),
-                        super.getMaintenanceJobFlexMs());
+                        mBackend.getFlag(KEY_MAINTENANCE_JOB_FLEX_MS, MAINTENANCE_JOB_FLEX_MS));
 
         if (maintenanceJobFlexMs <= 0) {
             throw new IllegalArgumentException("maintenanceJobFlexMs should  > 0");
@@ -257,7 +287,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     @Override
     public boolean getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
         return getFledgeScheduleCustomAudienceUpdateEnabled()
-                && super.getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests();
+                && mBackend.getFlag(
+                        KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS,
+                        FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS);
     }
 
     @Override
@@ -266,7 +298,8 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     public boolean getGlobalKillSwitch() {
         return SdkLevel.isAtLeastT()
                 ? SystemProperties.getBoolean(
-                        getSystemPropertyName(KEY_GLOBAL_KILL_SWITCH), super.getGlobalKillSwitch())
+                        getSystemPropertyName(KEY_GLOBAL_KILL_SWITCH),
+                        mBackend.getFlag(KEY_GLOBAL_KILL_SWITCH, GLOBAL_KILL_SWITCH))
                 : !getEnableBackCompat();
     }
 
@@ -293,7 +326,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH),
-                        super.getMeasurementApiDeleteRegistrationsKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH,
+                                MEASUREMENT_API_DELETE_REGISTRATIONS_KILL_SWITCH));
     }
 
     @Override
@@ -303,7 +338,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_API_STATUS_KILL_SWITCH),
-                        super.getMeasurementApiStatusKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_API_STATUS_KILL_SWITCH,
+                                MEASUREMENT_API_STATUS_KILL_SWITCH));
     }
 
     @Override
@@ -313,7 +350,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH),
-                        super.getMeasurementApiRegisterSourceKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH,
+                                MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH));
     }
 
     @Override
@@ -323,7 +362,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH),
-                        super.getMeasurementApiRegisterTriggerKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH,
+                                MEASUREMENT_API_REGISTER_TRIGGER_KILL_SWITCH));
     }
 
     @Override
@@ -334,7 +375,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH),
-                        super.getMeasurementApiRegisterWebSourceKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH,
+                                MEASUREMENT_API_REGISTER_WEB_SOURCE_KILL_SWITCH));
     }
 
     @Override
@@ -345,7 +388,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH),
-                        super.getMeasurementApiRegisterSourcesKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH,
+                                MEASUREMENT_API_REGISTER_SOURCES_KILL_SWITCH));
     }
 
     @Override
@@ -356,7 +401,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH),
-                        super.getMeasurementApiRegisterWebTriggerKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH,
+                                MEASUREMENT_API_REGISTER_WEB_TRIGGER_KILL_SWITCH));
     }
 
     @Override
@@ -368,7 +415,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
-                        super.getMeasurementJobAggregateFallbackReportingKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH,
+                                MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH));
     }
 
     @Override
@@ -379,7 +428,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH),
-                        super.getMeasurementJobAggregateReportingKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH,
+                                MEASUREMENT_JOB_AGGREGATE_REPORTING_KILL_SWITCH));
     }
 
     @Override
@@ -388,7 +439,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
 
     public boolean getMeasurementJobImmediateAggregateReportingKillSwitch() {
         return !getMeasurementEnabled()
-                || super.getMeasurementJobImmediateAggregateReportingKillSwitch();
+                || mBackend.getFlag(
+                        KEY_MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH,
+                        MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH);
     }
 
     @Override
@@ -398,7 +451,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH),
-                        super.getMeasurementJobAttributionKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH,
+                                MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH));
     }
 
     @Override
@@ -408,7 +463,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH),
-                        super.getMeasurementJobDeleteExpiredKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH,
+                                MEASUREMENT_JOB_DELETE_EXPIRED_KILL_SWITCH));
     }
 
     @Override
@@ -418,7 +475,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH),
-                        super.getMeasurementJobDeleteUninstalledKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH,
+                                MEASUREMENT_JOB_DELETE_UNINSTALLED_KILL_SWITCH));
     }
 
     @Override
@@ -430,7 +489,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
-                        super.getMeasurementJobEventFallbackReportingKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH,
+                                MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH));
     }
 
     @Override
@@ -440,7 +501,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH),
-                        super.getMeasurementJobEventReportingKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH,
+                                MEASUREMENT_JOB_EVENT_REPORTING_KILL_SWITCH));
     }
 
     @Override
@@ -452,7 +515,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
-                        super.getAsyncRegistrationJobQueueKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH,
+                                MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH));
     }
 
     @Override
@@ -463,7 +528,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
-                        super.getAsyncRegistrationFallbackJobKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH,
+                                MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH));
     }
 
     @Override
@@ -475,7 +542,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(flagName),
-                        super.getMeasurementReceiverInstallAttributionKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH,
+                                MEASUREMENT_RECEIVER_INSTALL_ATTRIBUTION_KILL_SWITCH));
     }
 
     @Override
@@ -486,7 +555,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH),
-                        super.getMeasurementReceiverDeletePackagesKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH,
+                                MEASUREMENT_RECEIVER_DELETE_PACKAGES_KILL_SWITCH));
     }
 
     @Override
@@ -497,7 +568,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH),
-                        super.getMeasurementRollbackDeletionKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH,
+                                MEASUREMENT_ROLLBACK_DELETION_KILL_SWITCH));
     }
 
     @Override
@@ -509,7 +582,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH),
-                        super.getMeasurementRollbackDeletionAppSearchKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH,
+                                MEASUREMENT_ROLLBACK_DELETION_APP_SEARCH_KILL_SWITCH));
     }
 
     @Override
@@ -518,7 +593,8 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     public boolean getAdIdKillSwitch() {
         // Ignore Global Killswitch for adid.
         return SystemProperties.getBoolean(
-                getSystemPropertyName(KEY_ADID_KILL_SWITCH), super.getAdIdKillSwitch());
+                getSystemPropertyName(KEY_ADID_KILL_SWITCH),
+                mBackend.getFlag(KEY_ADID_KILL_SWITCH, ADID_KILL_SWITCH));
     }
 
     // APPSETID Killswitch.
@@ -529,7 +605,8 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     public boolean getAppSetIdKillSwitch() {
         // Ignore Global Killswitch for appsetid.
         return SystemProperties.getBoolean(
-                getSystemPropertyName(KEY_APPSETID_KILL_SWITCH), super.getAppSetIdKillSwitch());
+                getSystemPropertyName(KEY_APPSETID_KILL_SWITCH),
+                mBackend.getFlag(KEY_APPSETID_KILL_SWITCH, APPSETID_KILL_SWITCH));
     }
 
     // TOPICS Killswitches
@@ -540,7 +617,8 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         // We check the Global Killswitch first. As a result, it overrides all other killswitches.
         return getGlobalKillSwitch()
                 || SystemProperties.getBoolean(
-                        getSystemPropertyName(KEY_TOPICS_KILL_SWITCH), super.getTopicsKillSwitch());
+                        getSystemPropertyName(KEY_TOPICS_KILL_SWITCH),
+                        mBackend.getFlag(KEY_TOPICS_KILL_SWITCH, TOPICS_KILL_SWITCH));
     }
 
     @Override
@@ -551,7 +629,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         // classifier to precomputed classifier in case of fatal ML model crashes in Topics.
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH),
-                super.getTopicsOnDeviceClassifierKillSwitch());
+                mBackend.getFlag(
+                        KEY_TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH,
+                        TOPICS_ON_DEVICE_CLASSIFIER_KILL_SWITCH));
     }
 
     // MDD Killswitches
@@ -563,7 +643,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getGlobalKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MDD_BACKGROUND_TASK_KILL_SWITCH),
-                        super.getMddBackgroundTaskKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MDD_BACKGROUND_TASK_KILL_SWITCH,
+                                MDD_BACKGROUND_TASK_KILL_SWITCH));
     }
 
     // TODO(b/326254556): ideally it should be removed and the logic moved to getBillEnabled(), but
@@ -576,7 +658,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getGlobalKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MDD_LOGGER_KILL_SWITCH),
-                        super.getMddBackgroundTaskKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MDD_BACKGROUND_TASK_KILL_SWITCH,
+                                MDD_BACKGROUND_TASK_KILL_SWITCH));
     }
 
     @Override
@@ -597,7 +681,8 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getGlobalKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_FLEDGE_SELECT_ADS_KILL_SWITCH),
-                        super.getFledgeSelectAdsKillSwitch());
+                        mBackend.getFlag(
+                                KEY_FLEDGE_SELECT_ADS_KILL_SWITCH, FLEDGE_SELECT_ADS_KILL_SWITCH));
     }
 
     @Override
@@ -608,7 +693,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getGlobalKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH),
-                        super.getFledgeCustomAudienceServiceKillSwitch());
+                        mBackend.getFlag(
+                                KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH,
+                                FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH));
     }
 
     @Override
@@ -620,7 +707,7 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
                 ? false
                 : SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_PROTECTED_SIGNALS_ENABLED),
-                        super.getProtectedSignalsEnabled());
+                        mBackend.getFlag(KEY_PROTECTED_SIGNALS_ENABLED, PROTECTED_SIGNALS_ENABLED));
     }
 
     @Override
@@ -630,7 +717,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getFledgeSelectAdsKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH),
-                        super.getFledgeAuctionServerKillSwitch());
+                        mBackend.getFlag(
+                                KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH,
+                                FLEDGE_AUCTION_SERVER_KILL_SWITCH));
     }
 
     @Override
@@ -640,7 +729,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getFledgeSelectAdsKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH),
-                        super.getFledgeOnDeviceAuctionKillSwitch());
+                        mBackend.getFlag(
+                                KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH,
+                                FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH));
     }
 
     @Override
@@ -651,7 +742,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getGlobalKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH),
-                        super.getEncryptionKeyNewEnrollmentFetchKillSwitch());
+                        mBackend.getFlag(
+                                KEY_ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH,
+                                ENCRYPTION_KEY_NEW_ENROLLMENT_FETCH_KILL_SWITCH));
     }
 
     @Override
@@ -662,7 +755,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getGlobalKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH),
-                        super.getEncryptionKeyPeriodicFetchKillSwitch());
+                        mBackend.getFlag(
+                                KEY_ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH,
+                                ENCRYPTION_KEY_PERIODIC_FETCH_KILL_SWITCH));
     }
 
     // Encryption key related flags.
@@ -839,7 +934,8 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     public String getUiOtaStringsManifestFileUrl() {
         return SystemProperties.get(
                 getSystemPropertyName(KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL),
-                super.getUiOtaStringsManifestFileUrl());
+                mBackend.getFlag(
+                        KEY_UI_OTA_STRINGS_MANIFEST_FILE_URL, UI_OTA_STRINGS_MANIFEST_FILE_URL));
     }
 
     @Override
@@ -851,7 +947,8 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         }
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_UI_OTA_STRINGS_FEATURE_ENABLED),
-                super.getUiOtaStringsFeatureEnabled());
+                mBackend.getFlag(
+                        KEY_UI_OTA_STRINGS_FEATURE_ENABLED, UI_OTA_STRINGS_FEATURE_ENABLED));
     }
 
     @Override
@@ -860,7 +957,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     public String getUiOtaResourcesManifestFileUrl() {
         return SystemProperties.get(
                 getSystemPropertyName(KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL),
-                super.getUiOtaResourcesManifestFileUrl());
+                mBackend.getFlag(
+                        KEY_UI_OTA_RESOURCES_MANIFEST_FILE_URL,
+                        UI_OTA_RESOURCES_MANIFEST_FILE_URL));
     }
 
     @Override
@@ -872,7 +971,8 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         }
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_UI_OTA_RESOURCES_FEATURE_ENABLED),
-                super.getUiOtaResourcesFeatureEnabled());
+                mBackend.getFlag(
+                        KEY_UI_OTA_RESOURCES_FEATURE_ENABLED, UI_OTA_RESOURCES_FEATURE_ENABLED));
     }
 
     @Override
@@ -881,12 +981,15 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         if (getGlobalKillSwitch()) {
             return false;
         }
-        return super.getAdServicesEnabled();
+        return mBackend.getFlag(KEY_ADSERVICES_ENABLED, ADSERVICES_ENABLED);
     }
 
     @Override
     public int getNumberOfEpochsToKeepInHistory() {
-        int numberOfEpochsToKeepInHistory = super.getNumberOfEpochsToKeepInHistory();
+        int numberOfEpochsToKeepInHistory =
+                mBackend.getFlag(
+                        KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY,
+                        NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY);
 
         if (numberOfEpochsToKeepInHistory < 1) {
             throw new IllegalArgumentException("numberOfEpochsToKeepInHistory should  >= 0");
@@ -898,25 +1001,33 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     @Override
     public boolean getFledgeAuctionServerEnabledForReportImpression() {
         return getFledgeAuctionServerEnabled()
-                && super.getFledgeAuctionServerEnabledForReportImpression();
+                && mBackend.getFlag(
+                        KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION,
+                        FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION);
     }
 
     @Override
     public boolean getFledgeAuctionServerEnabledForReportEvent() {
         return getFledgeAuctionServerEnabled()
-                && super.getFledgeAuctionServerEnabledForReportEvent();
+                && mBackend.getFlag(
+                        KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT,
+                        FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT);
     }
 
     @Override
     public boolean getFledgeAuctionServerEnabledForUpdateHistogram() {
         return getFledgeAuctionServerEnabled()
-                && super.getFledgeAuctionServerEnabledForUpdateHistogram();
+                && mBackend.getFlag(
+                        KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM,
+                        FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM);
     }
 
     @Override
     public boolean getFledgeAuctionServerEnabledForSelectAdsMediation() {
         return getFledgeAuctionServerEnabled()
-                && super.getFledgeAuctionServerEnabledForSelectAdsMediation();
+                && mBackend.getFlag(
+                        KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION,
+                        FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION);
     }
 
     @Override
@@ -925,7 +1036,8 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     public boolean isDisableTopicsEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK),
-                super.isDisableTopicsEnrollmentCheck());
+                mBackend.getFlag(
+                        KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, DISABLE_TOPICS_ENROLLMENT_CHECK));
     }
 
     @Override
@@ -934,7 +1046,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     public boolean isDisableMeasurementEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK),
-                super.isDisableMeasurementEnrollmentCheck());
+                mBackend.getFlag(
+                        KEY_DISABLE_MEASUREMENT_ENROLLMENT_CHECK,
+                        DISABLE_MEASUREMENT_ENROLLMENT_CHECK));
     }
 
     @Override
@@ -943,7 +1057,8 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     public boolean getDisableFledgeEnrollmentCheck() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK),
-                super.getDisableFledgeEnrollmentCheck());
+                mBackend.getFlag(
+                        KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK, DISABLE_FLEDGE_ENROLLMENT_CHECK));
     }
 
     @Override
@@ -953,7 +1068,8 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     public boolean getEnforceForegroundStatusForTopics() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_ENFORCE_FOREGROUND_STATUS_TOPICS),
-                super.getEnforceForegroundStatusForTopics());
+                mBackend.getFlag(
+                        KEY_ENFORCE_FOREGROUND_STATUS_TOPICS, ENFORCE_FOREGROUND_STATUS_TOPICS));
     }
 
     @Override
@@ -962,7 +1078,8 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     public boolean getEnforceForegroundStatusForSignals() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS),
-                super.getEnforceForegroundStatusForSignals());
+                mBackend.getFlag(
+                        KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS, ENFORCE_FOREGROUND_STATUS_SIGNALS));
     }
 
     @Override
@@ -971,7 +1088,8 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     public boolean getEnforceForegroundStatusForAdId() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_ENFORCE_FOREGROUND_STATUS_ADID),
-                super.getEnforceForegroundStatusForAdId());
+                mBackend.getFlag(
+                        KEY_ENFORCE_FOREGROUND_STATUS_ADID, ENFORCE_FOREGROUND_STATUS_ADID));
     }
 
     @Override
@@ -980,31 +1098,43 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     public boolean getEnforceForegroundStatusForAppSetId() {
         return SystemProperties.getBoolean(
                 getSystemPropertyName(KEY_ENFORCE_FOREGROUND_STATUS_APPSETID),
-                super.getEnforceForegroundStatusForAppSetId());
+                mBackend.getFlag(
+                        KEY_ENFORCE_FOREGROUND_STATUS_APPSETID,
+                        ENFORCE_FOREGROUND_STATUS_APPSETID));
     }
 
     @Override
     public boolean getFledgeBeaconReportingMetricsEnabled() {
-        return getFledgeRegisterAdBeaconEnabled() && super.getFledgeBeaconReportingMetricsEnabled();
+        return getFledgeRegisterAdBeaconEnabled()
+                && mBackend.getFlag(
+                        KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED,
+                        FLEDGE_BEACON_REPORTING_METRICS_ENABLED);
     }
 
     @Override
     public boolean getFledgeAuctionServerApiUsageMetricsEnabled() {
         return getFledgeAuctionServerEnabled()
-                && super.getFledgeAuctionServerApiUsageMetricsEnabled();
+                && mBackend.getFlag(
+                        KEY_FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED,
+                        FLEDGE_AUCTION_SERVER_API_USAGE_METRICS_ENABLED);
     }
 
     @Override
     public boolean getFledgeAuctionServerKeyFetchMetricsEnabled() {
         return getFledgeAuctionServerEnabled()
-                && super.getFledgeAuctionServerKeyFetchMetricsEnabled();
+                && mBackend.getFlag(
+                        KEY_FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED,
+                        FLEDGE_AUCTION_SERVER_KEY_FETCH_METRICS_ENABLED);
     }
 
     @Override
     @SuppressWarnings("InlinedApi")
     public boolean isBackCompatActivityFeatureEnabled() {
         // Check if enable Back compat is true first and then check flag value
-        return getEnableBackCompat() && super.isBackCompatActivityFeatureEnabled();
+        return getEnableBackCompat()
+                && mBackend.getFlag(
+                        KEY_IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED,
+                        IS_BACK_COMPACT_ACTIVITY_FEATURE_ENABLED);
     }
 
     @Override
@@ -1012,7 +1142,8 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean getGaUxFeatureEnabled() {
         return SystemProperties.getBoolean(
-                getSystemPropertyName(KEY_GA_UX_FEATURE_ENABLED), super.getGaUxFeatureEnabled());
+                getSystemPropertyName(KEY_GA_UX_FEATURE_ENABLED),
+                mBackend.getFlag(KEY_GA_UX_FEATURE_ENABLED, GA_UX_FEATURE_ENABLED));
     }
 
     @Override
@@ -1023,19 +1154,23 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
     @Override
     public boolean getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled() {
         return getFledgeMeasurementReportAndRegisterEventApiEnabled()
-                && super.getFledgeMeasurementReportAndRegisterEventApiFallbackEnabled();
+                && mBackend.getFlag(
+                        KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED,
+                        FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_FALLBACK_ENABLED);
     }
 
     @Override
     public boolean getEnableBackCompat() {
         // If SDK is T+, the value should always be false
         // Check the flag value for S Minus
-        return !SdkLevel.isAtLeastT() && super.getEnableBackCompat();
+        return !SdkLevel.isAtLeastT()
+                && mBackend.getFlag(KEY_ENABLE_BACK_COMPAT, ENABLE_BACK_COMPAT);
     }
 
     @Override
     public boolean getU18UxEnabled() {
-        return getEnableAdServicesSystemApi() && super.getU18UxEnabled();
+        return getEnableAdServicesSystemApi()
+                && mBackend.getFlag(KEY_U18_UX_ENABLED, DEFAULT_U18_UX_ENABLED);
     }
 
     @Override
@@ -1046,9 +1181,11 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
                 return true;
             }
             // ROW devices
-            return super.getPasUxEnabled();
+            return mBackend.getFlag(KEY_PAS_UX_ENABLED, DEFAULT_PAS_UX_ENABLED);
         }
-        return isEeaDeviceFeatureEnabled() && !isEeaDevice() && super.getPasUxEnabled();
+        return isEeaDeviceFeatureEnabled()
+                && !isEeaDevice()
+                && mBackend.getFlag(KEY_PAS_UX_ENABLED, DEFAULT_PAS_UX_ENABLED);
     }
 
     @Override
@@ -1059,7 +1196,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH),
-                        super.getMeasurementDebugReportingFallbackJobKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
+                                MEASUREMENT_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH));
     }
 
     @Override
@@ -1070,7 +1209,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH),
-                        super.getMeasurementVerboseDebugReportingFallbackJobKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH,
+                                MEASUREMENT_VERBOSE_DEBUG_REPORTING_FALLBACK_JOB_KILL_SWITCH));
     }
 
     @Override
@@ -1080,7 +1221,9 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
         return getLegacyMeasurementKillSwitch()
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH),
-                        super.getMeasurementJobDebugReportingKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH,
+                                MEASUREMENT_JOB_DEBUG_REPORTING_KILL_SWITCH));
     }
 
     @Override
@@ -1091,17 +1234,25 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
                 || SystemProperties.getBoolean(
                         getSystemPropertyName(
                                 KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH),
-                        super.getMeasurementJobVerboseDebugReportingKillSwitch());
+                        mBackend.getFlag(
+                                KEY_MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH,
+                                MEASUREMENT_JOB_VERBOSE_DEBUG_REPORTING_KILL_SWITCH));
     }
 
     @Override
     public boolean getMeasurementReportingJobServiceEnabled() {
-        return getMeasurementEnabled() && super.getMeasurementReportingJobServiceEnabled();
+        return getMeasurementEnabled()
+                && mBackend.getFlag(
+                        KEY_MEASUREMENT_REPORTING_JOB_SERVICE_ENABLED,
+                        MEASUREMENT_REPORTING_JOB_ENABLED);
     }
 
     @Override
     public int getBackgroundJobSamplingLoggingRate() {
-        int loggingRatio = super.getBackgroundJobSamplingLoggingRate();
+        int loggingRatio =
+                mBackend.getFlag(
+                        KEY_BACKGROUND_JOB_SAMPLING_LOGGING_RATE,
+                        DEFAULT_BACKGROUND_JOB_SAMPLING_LOGGING_RATE);
 
         // TODO(b/323187832): Calling JobServiceConstants.MAX_PERCENTAGE meets dependency error.
         if (loggingRatio < 0 || loggingRatio > MAX_PERCENTAGE) {
@@ -1114,36 +1265,50 @@ public final class SmartFlags extends RawFlags<DeviceConfigFlagsBackend> {
 
     @Override
     public boolean getFledgeKAnonSignJoinFeatureEnabled() {
-        return getFledgeAuctionServerEnabled() && super.getFledgeKAnonSignJoinFeatureEnabled();
+        return getFledgeAuctionServerEnabled()
+                && mBackend.getFlag(
+                        KEY_FLEDGE_ENABLE_KANON_SIGN_JOIN_FEATURE,
+                        FLEDGE_DEFAULT_KANON_SIGN_JOIN_FEATURE_ENABLED);
     }
 
     @Override
     public boolean getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled() {
         return getFledgeKAnonSignJoinFeatureEnabled()
-                && super.getFledgeKAnonSignJoinFeatureOnDeviceAuctionEnabled();
+                && mBackend.getFlag(
+                        KEY_FLEDGE_ENABLE_KANON_ON_DEVICE_AUCTION_FEATURE,
+                        FLEDGE_DEFAULT_KANON_FEATURE_ON_DEVICE_AUCTION_ENABLED);
     }
 
     @Override
     public boolean getFledgeKAnonSignJoinFeatureAuctionServerEnabled() {
         return getFledgeKAnonSignJoinFeatureEnabled()
-                && super.getFledgeKAnonSignJoinFeatureAuctionServerEnabled();
+                && mBackend.getFlag(
+                        KEY_FLEDGE_ENABLE_KANON_AUCTION_SERVER_FEATURE,
+                        FLEDGE_DEFAULT_KANON_FEATURE_AUCTION_SERVER_ENABLED);
     }
 
     @Override
     public boolean getFledgeKAnonBackgroundProcessEnabled() {
         return getFledgeKAnonSignJoinFeatureEnabled()
-                && super.getFledgeKAnonBackgroundProcessEnabled();
+                && mBackend.getFlag(
+                        KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED,
+                        FLEDGE_DEFAULT_KANON_BACKGROUND_PROCESS_ENABLED);
     }
 
     @Override
     public boolean getFledgeKAnonLoggingEnabled() {
-        return getFledgeKAnonSignJoinFeatureEnabled() && super.getFledgeKAnonLoggingEnabled();
+        return getFledgeKAnonSignJoinFeatureEnabled()
+                && mBackend.getFlag(
+                        KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED,
+                        FLEDGE_DEFAULT_KANON_SIGN_JOIN_LOGGING_ENABLED);
     }
 
     @Override
     public boolean getFledgeKAnonKeyAttestationEnabled() {
         return getFledgeKAnonSignJoinFeatureEnabled()
-                && super.getFledgeKAnonKeyAttestationEnabled();
+                && mBackend.getFlag(
+                        KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED,
+                        FLEDGE_DEFAULT_KANON_KEY_ATTESTATION_ENABLED);
     }
 
     // Do NOT add Flag / @Override methods below - it should only contain helpers
