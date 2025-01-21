@@ -16,6 +16,7 @@
 
 package com.android.adservices.tests.enrollmentctsroot;
 
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_AD_SERVICES_SYSTEM_API;
 
@@ -27,4 +28,5 @@ import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 @SetAllLogcatTags
 @SetFlagEnabled(KEY_ADSERVICES_ENABLED)
 @SetFlagEnabled(KEY_ENABLE_AD_SERVICES_SYSTEM_API)
+@SetFlagEnabled(KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED)
 interface EnrollmentCtsRootTestFlags {}
