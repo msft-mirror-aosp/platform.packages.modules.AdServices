@@ -23,7 +23,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
-import static com.android.adservices.common.logging.ErrorLogUtilSyncCallback.mockErrorLogUtilWithoutThrowable;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_CREATE_ASSET_FILE_DESCRIPTOR_ERROR;
@@ -74,7 +74,6 @@ import android.os.RemoteException;
 import androidx.room.Room;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.ErrorLogUtilSyncCallback;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
@@ -111,7 +110,6 @@ import com.android.adservices.service.stats.AdsRelevanceExecutionLoggerFactory;
 import com.android.adservices.service.stats.ApiCallStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 import com.android.adservices.service.stats.GetAdSelectionDataBuyerInputGeneratedStats;
-import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -149,7 +147,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 @MockStatic(PackageManagerCompatUtils.class)
 @SpyStatic(AssetFileDescriptorUtil.class)
 @SetErrorLogUtilDefaultParams(
-        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA)
 public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLER_UID = Process.myUid();
@@ -944,8 +942,9 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     }
 
     @Test
-    @SkipLoggingUsageRule(
-            reason = "Using ErrorLogUtilSyncCallback as logging happens in background.")
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_INVALID_ARGUMENT)
     public void testRunner_getAdSelectionData_multiCloudFlagOn_invalidCoordinator_throwsError()
             throws Exception {
 
@@ -966,20 +965,11 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         .setCoordinatorOriginUri(Uri.parse("random-url"))
                         .build();
 
-        ErrorLogUtilSyncCallback errorLogUtilWithoutThrowableCallback =
-                mockErrorLogUtilWithoutThrowable();
-
         GetAdSelectionDataTestCallback callback =
                 invokeGetAdSelectionData(mGetAdSelectionDataRunner, inputParams);
 
-        errorLogUtilWithoutThrowableCallback.assertReceived(
-                expect,
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__GET_AD_SELECTION_DATA_RUNNER_NOTIFY_FAILURE_INVALID_ARGUMENT,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA);
-
         Assert.assertFalse("Call should not have succeeded", callback.mIsSuccess);
         Assert.assertEquals(STATUS_INVALID_ARGUMENT, callback.mFledgeErrorResponse.getStatusCode());
-
     }
 
     @Test
