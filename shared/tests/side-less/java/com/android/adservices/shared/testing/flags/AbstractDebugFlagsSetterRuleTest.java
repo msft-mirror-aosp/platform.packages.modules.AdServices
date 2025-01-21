@@ -17,6 +17,7 @@ package com.android.adservices.shared.testing.flags;
 
 import com.android.adservices.shared.meta_testing.AbstractDebugFlagsSetterRuleTestCase;
 import com.android.adservices.shared.testing.DynamicLogger;
+import com.android.adservices.shared.testing.NameValuePairContainer;
 import com.android.adservices.shared.testing.NameValuePairSetter;
 import com.android.adservices.shared.testing.flags.AbstractDebugFlagsSetterRuleTest.FakeDebugFlagsSetterRuleRule;
 
@@ -41,8 +42,8 @@ public final class AbstractDebugFlagsSetterRuleTest
         extends AbstractDebugFlagsSetterRuleTestCase<FakeDebugFlagsSetterRuleRule> {
 
     @Override
-    protected FakeDebugFlagsSetterRuleRule newRule(NameValuePairSetter setter) {
-        return new FakeDebugFlagsSetterRuleRule(setter);
+    protected FakeDebugFlagsSetterRuleRule newRule(NameValuePairContainer container) {
+        return new FakeDebugFlagsSetterRuleRule(container);
     }
 
     public static final class FakeDebugFlagsSetterRuleRule
