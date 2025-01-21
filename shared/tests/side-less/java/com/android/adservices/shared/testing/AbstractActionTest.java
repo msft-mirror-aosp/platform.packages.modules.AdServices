@@ -136,6 +136,16 @@ public final class AbstractActionTest extends SharedSidelessTestCase {
                 .isEqualTo(0);
     }
 
+    @Test
+    public void toStringForTestFailure() {
+        ConcreteAction action = new ConcreteAction(mLog);
+
+        // By default it's the same as toString()
+        expect.withMessage("toStringForTestFailure")
+                .that(action.toStringForTestFailure())
+                .isEqualTo(action.toString());
+    }
+
     private static final class ConcreteAction extends AbstractAction {
         public boolean onExecuteResult = true;
         public int numberOnExecuteCalls;

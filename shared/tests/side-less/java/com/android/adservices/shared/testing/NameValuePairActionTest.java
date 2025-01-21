@@ -21,6 +21,8 @@ import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
 
 import org.junit.Test;
 
+import java.util.Locale;
+
 public final class NameValuePairActionTest extends SharedSidelessTestCase {
 
     private static final String NAME = "The Name is";
@@ -216,5 +218,33 @@ public final class NameValuePairActionTest extends SharedSidelessTestCase {
                                 + ", previousNvp="
                                 + previousNvp
                                 + ", set=true]");
+    }
+
+    @Test
+    public void toStringForTestFailure_previousNull() {
+        var nvp = new NameValuePair(NAME, "Bond, James Bond");
+        var action = new NameValuePairAction(mFakeLogger, mSetter, nvp);
+
+        expect.withMessage("toStringForTestFailure")
+                .that(action.toStringForTestFailure())
+                .isEqualTo(
+                        String.format(
+                                Locale.ENGLISH, "%s=Bond, James Bond (not set before)", NAME));
+    }
+
+    @Test
+    public void toStringForTestFailure_previousSet() throws Exception {
+        NameValuePair previousNvp = new NameValuePair(NAME, "Slim Shade");
+        mSetter.set(previousNvp);
+        var nvp = new NameValuePair(NAME, "Bond, James Bond");
+        var action = new NameValuePairAction(mFakeLogger, mSetter, nvp);
+
+        action.execute();
+
+        expect.withMessage("toStringForTestFailure")
+                .that(action.toStringForTestFailure())
+                .isEqualTo(
+                        String.format(
+                                Locale.ENGLISH, "%s=Bond, James Bond (before: Slim Shade)", NAME));
     }
 }

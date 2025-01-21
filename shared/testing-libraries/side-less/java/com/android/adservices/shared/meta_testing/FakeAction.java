@@ -17,6 +17,7 @@ package com.android.adservices.shared.meta_testing;
 
 import com.android.adservices.shared.testing.Action;
 import com.android.adservices.shared.testing.DynamicLogger;
+import com.android.adservices.shared.testing.Identifiable;
 import com.android.adservices.shared.testing.Logger;
 import com.android.adservices.shared.testing.Nullable;
 
@@ -24,7 +25,11 @@ import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /** Fake action! */
-public final class FakeAction implements Action {
+public final class FakeAction implements Action, Identifiable {
+
+    private static int sNextId;
+
+    protected final String mId = String.valueOf(++sNextId);
 
     @Nullable private final String mName;
     @Nullable private final AtomicInteger mExecutionOrderCounter;
@@ -192,12 +197,17 @@ public final class FakeAction implements Action {
     }
 
     @Override
+    public String getId() {
+        return mId;
+    }
+
+    @Override
     public String toString() {
-        StringBuilder string = new StringBuilder("FakeAction[");
+        StringBuilder string = new StringBuilder("FakeAction[id=").append(mId);
         if (mName != null) {
-            string.append("name=").append(mName).append(", ");
+            string.append(", name=").append(mName);
         }
-        string.append("mExecuted=")
+        string.append(", mExecuted=")
                 .append(isExecuted())
                 .append(", mNumberTimesExecuteCalled=")
                 .append(mNumberTimesExecuteCalled.get())
@@ -223,5 +233,10 @@ public final class FakeAction implements Action {
             string.append(", mOnResetException=").append(mOnResetException);
         }
         return string.append(']').toString();
+    }
+
+    @Override
+    public String toStringForTestFailure() {
+        return "FakeAction#" + getId();
     }
 }
