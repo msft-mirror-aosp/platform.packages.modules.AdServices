@@ -90,7 +90,7 @@ public class AggregateDebugReportApi {
                             .map(AggregateDebugReporting::getAggregateDebugReportDataList)
                             .orElse(null);
 
-            if (debugDataList == null) {
+            if (debugDataList == null || debugDataList.isEmpty()) {
                 return;
             }
 
@@ -220,7 +220,7 @@ public class AggregateDebugReportApi {
                     Optional.ofNullable(triggerAdr)
                             .map(AggregateDebugReporting::getAggregateDebugReportDataList)
                             .orElse(null);
-            if (triggerDebugDataList == null) {
+            if (triggerDebugDataList == null || triggerDebugDataList.isEmpty()) {
                 return;
             }
 
@@ -356,17 +356,16 @@ public class AggregateDebugReportApi {
         }
 
         try {
-            if (trigger.getAggregateDebugReportingObject() == null
-                    || trigger.getAggregateDebugReportingObject().getAggregateDebugReportDataList()
-                            == null) {
+            AggregateDebugReporting triggerAdr = trigger.getAggregateDebugReportingObject();
+            if (triggerAdr == null
+                    || triggerAdr.getAggregateDebugReportDataList() == null
+                    || triggerAdr.getAggregateDebugReportDataList().isEmpty()) {
                 return;
             }
             DebugReportApi.Type type = DebugReportApi.Type.TRIGGER_NO_MATCHING_SOURCE;
             Optional<AggregateDebugReportData> firstMatchingAggregateReportData =
                     getFirstMatchingAggregateReportData(
-                            trigger.getAggregateDebugReportingObject()
-                                    .getAggregateDebugReportDataList(),
-                            type);
+                            triggerAdr.getAggregateDebugReportDataList(), type);
             if (firstMatchingAggregateReportData.isEmpty()) {
                 LoggerFactory.getMeasurementLogger()
                         .d("No matching debug data to generate aggregate debug report.");

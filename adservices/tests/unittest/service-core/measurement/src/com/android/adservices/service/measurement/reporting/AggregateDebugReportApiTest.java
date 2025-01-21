@@ -85,6 +85,9 @@ public class AggregateDebugReportApiTest {
                     + "{\"types\":"
                     + " [\"source-channel-capacity-limit\"],\"key_piece\":"
                     + " \"0x222\",\"value\": 222}]}";
+
+    private static final String AGGREGATE_DEBUG_REPORT_STRING_3 =
+            "{\"budget\":1024,\"key_piece\":\"0x100\",\"debug_data\":[]}";
     private static final Uri BASE_WEB_DESTINATION = Uri.parse("https://destination.com");
     private static final Uri FULL_WEB_DESTINATION = Uri.parse("https://destination.com/path");
     private static final Uri AGGREGATION_COORDINATOR_ORIGIN =
@@ -1473,6 +1476,76 @@ public class AggregateDebugReportApiTest {
                         extractBaseUri(source.getRegistrationOrigin()).get());
         verify(mMeasurementDao).insertAggregateDebugReportRecord(eq(expectedRecord));
         verify(mMeasurementDao, never()).updateSourceAggregateDebugContributions(source);
+    }
+
+    @Test
+    public void scheduleSourceRegistrationDebugReport_emptyDebugData_noReportGenerated()
+            throws DatastoreException, JSONException {
+        Source source =
+                SourceFixture.getValidSourceBuilder()
+                        .setAggregateDebugReportingString(AGGREGATE_DEBUG_REPORT_STRING_3)
+                        .build();
+
+        // Execution
+        mAggregateDebugReportApi.scheduleSourceRegistrationDebugReport(
+                source, Set.of(DebugReportApi.Type.SOURCE_REPORTING_ORIGIN_LIMIT), mMeasurementDao);
+
+        // Verification
+        verify(mMeasurementDao, never()).insertAggregateReport(any());
+        verify(mMeasurementDao, never()).insertAggregateDebugReportRecord(any());
+        verify(mMeasurementDao, never()).updateSourceAggregateDebugContributions(any());
+    }
+
+    @Test
+    public void scheduleTriggerAttributionError_emptyDebugData_noReportGenerated()
+            throws DatastoreException, JSONException {
+        // Setup
+        Source source = SourceFixture.getValidSource();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setAttributionDestination(FULL_WEB_DESTINATION)
+                        .setAggregateDebugReportingString(AGGREGATE_DEBUG_REPORT_STRING_3)
+                        .setIsDebugReporting(true)
+                        .setArDebugPermission(true)
+                        .build();
+
+        // Execution
+        mAggregateDebugReportApi.scheduleTriggerAttributionErrorWithSourceDebugReport(
+                source,
+                trigger,
+                Collections.singletonList(
+                        DebugReportApi.Type.TRIGGER_AGGREGATE_REPORT_WINDOW_PASSED),
+                mMeasurementDao);
+
+        // Verification
+        verify(mMeasurementDao, never()).insertAggregateReport(any());
+        verify(mMeasurementDao, never()).insertAggregateDebugReportRecord(any());
+        verify(mMeasurementDao, never()).updateSourceAggregateDebugContributions(any());
+    }
+
+    @Test
+    public void scheduleTriggerNoMatchingSourceDebugReport_emptyDebugData_noReportGenerated()
+            throws DatastoreException, JSONException {
+        // Setup
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setDestinationType(EventSurfaceType.WEB)
+                        .setAttributionDestination(FULL_WEB_DESTINATION)
+                        .setAggregateDebugReportingString(AGGREGATE_DEBUG_REPORT_STRING_3)
+                        .setIsDebugReporting(true)
+                        .setArDebugPermission(true)
+                        .build();
+        when(mFlags.getMeasurementEnableAggregateDebugReporting()).thenReturn(true);
+
+        // Execution
+        mAggregateDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
+                trigger, mMeasurementDao);
+
+        // Verification
+        verify(mMeasurementDao, never()).insertAggregateReport(any());
+        verify(mMeasurementDao, never()).insertAggregateDebugReportRecord(any());
+        verify(mMeasurementDao, never()).updateSourceAggregateDebugContributions(any());
     }
 
     private AggregateReport.Builder createAggregateReportBuilder(
