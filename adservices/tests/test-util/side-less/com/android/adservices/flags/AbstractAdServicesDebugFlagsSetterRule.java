@@ -16,16 +16,34 @@
 package com.android.adservices.flags;
 
 import com.android.adservices.shared.testing.Logger.RealLogger;
+import com.android.adservices.shared.testing.NameValuePair;
 import com.android.adservices.shared.testing.NameValuePairSetter;
 import com.android.adservices.shared.testing.flags.AbstractDebugFlagsSetterRule;
 
-/** Base class for AdServices-specific rules - will be extended by CTS and Unit Test rules. */
+/**
+ * Base class for AdServices-specific rules - will be extended by CTS and Unit Test rules.
+ *
+ * @param <R> concrete rule class
+ * @param <DF> {@code DebugFlags} implementation class (only available on device-side tests)
+ */
 abstract class AbstractAdServicesDebugFlagsSetterRule<
-                R extends AbstractAdServicesDebugFlagsSetterRule<R>>
+                R extends AbstractAdServicesDebugFlagsSetterRule<R, DF>, DF>
         extends AbstractDebugFlagsSetterRule<R> {
 
     protected AbstractAdServicesDebugFlagsSetterRule(
             RealLogger logger, NameValuePairSetter setter) {
         super(logger, setter);
+    }
+
+    /**
+     * Gets the {@code DebugFlags} object associated managed by the rule.
+     *
+     * @throws UnsupportedOperationException on host-side tests.
+     */
+    public abstract DF getDebugFlags();
+
+    /** Sets the value of a {@code DebugFlag} */
+    public final void setDebugFlag(String name, boolean value) {
+        mSetter.set(new NameValuePair(name, Boolean.toString(value)));
     }
 }

@@ -15,8 +15,29 @@
  */
 package com.android.adservices.flags;
 
+import static org.junit.Assert.assertThrows;
+
 import com.android.adservices.shared.meta_testing.AbstractDebugFlagsSetterRuleTestCase;
 
+import org.junit.Test;
+
 abstract class AbstractAdServicesDebugFlagsSetterRuleTestCase<
-                R extends AbstractAdServicesDebugFlagsSetterRule<R>>
-        extends AbstractDebugFlagsSetterRuleTestCase<R> {}
+                R extends AbstractAdServicesDebugFlagsSetterRule<R, DF>, DF>
+        extends AbstractDebugFlagsSetterRuleTestCase<R> {
+
+    private final boolean mSupportsDebugFlags;
+
+    protected AbstractAdServicesDebugFlagsSetterRuleTestCase(boolean supportsDebugFlags) {
+        mSupportsDebugFlags = supportsDebugFlags;
+    }
+
+    @Test
+    public final void testGetDebugFlags() {
+        R rule = newRule();
+        if (mSupportsDebugFlags) {
+            expect.withMessage("getDebugFlags()").that(rule.getDebugFlags()).isNotNull();
+            return;
+        }
+        assertThrows(UnsupportedOperationException.class, () -> rule.getDebugFlags());
+    }
+}

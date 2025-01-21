@@ -16,13 +16,40 @@
 package com.android.adservices.flags;
 
 import com.android.adservices.shared.testing.AndroidLogger;
-import com.android.adservices.shared.testing.NameValuePairSetter;
+import com.android.adservices.shared.testing.FakeNameValuePairContainer;
+import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.NameValuePairContainer;
+import com.android.adservices.shared.testing.flags.FakeFlagsBackend;
+
+import com.google.common.annotations.VisibleForTesting;
 
 /** {@code DebugFlagsSetterRule} that uses a fake {@link FakeDebugFlags} implementation. */
 public final class AdServicesFakeDebugFlagsSetterRule
-        extends AbstractAdServicesDebugFlagsSetterRule<AdServicesFakeDebugFlagsSetterRule> {
+        extends AbstractAdServicesDebugFlagsSetterRule<
+                AdServicesFakeDebugFlagsSetterRule, FakeDebugFlags> {
 
-    protected AdServicesFakeDebugFlagsSetterRule(NameValuePairSetter setter) {
-        super(AndroidLogger.getInstance(), setter);
+    private static final Logger sLogger =
+            new Logger(AndroidLogger.getInstance(), AdServicesFakeDebugFlagsSetterRule.class);
+
+    private final FakeDebugFlags mDebugFlags;
+
+    public AdServicesFakeDebugFlagsSetterRule() {
+        this(new FakeNameValuePairContainer(FakeDebugFlags.TAG));
+    }
+
+    @VisibleForTesting
+    protected AdServicesFakeDebugFlagsSetterRule(NameValuePairContainer container) {
+        this(new FakeDebugFlags(new FakeFlagsBackend(sLogger, container)), container);
+    }
+
+    private AdServicesFakeDebugFlagsSetterRule(
+            FakeDebugFlags debugFlags, NameValuePairContainer container) {
+        super(AndroidLogger.getInstance(), container);
+        mDebugFlags = debugFlags;
+    }
+
+    @Override
+    public FakeDebugFlags getDebugFlags() {
+        return mDebugFlags;
     }
 }

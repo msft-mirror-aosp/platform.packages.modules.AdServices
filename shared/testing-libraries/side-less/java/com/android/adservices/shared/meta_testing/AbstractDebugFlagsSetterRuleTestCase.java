@@ -15,7 +15,6 @@
  */
 package com.android.adservices.shared.meta_testing;
 
-import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.runner.Description.createTestDescription;
@@ -54,9 +53,12 @@ public abstract class AbstractDebugFlagsSetterRuleTestCase<
 
     protected abstract R newRule(NameValuePairContainer container);
 
-    @Test
-    public final void testNewRule() {
-        assertWithMessage("newRule()").that(newRule(mContainer)).isNotNull();
+    protected final R newRule() {
+        R rule = newRule(mContainer);
+        if (rule == null) {
+            throw new IllegalStateException("newRule(...) returned null");
+        }
+        return rule;
     }
 
     @Test
@@ -149,7 +151,7 @@ public abstract class AbstractDebugFlagsSetterRuleTestCase<
         var expectedAsMap =
                 Arrays.stream(expectedFlagsInsideTest)
                         .collect(Collectors.toMap(nvp -> nvp.name, nvp -> nvp));
-        var rule = newRule(mContainer);
+        var rule = newRule();
         var flagsInsideTest = runTest(rule, test);
 
         expect.withMessage("DebugFlags inside test")

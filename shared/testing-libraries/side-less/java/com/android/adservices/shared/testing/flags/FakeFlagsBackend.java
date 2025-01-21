@@ -45,12 +45,20 @@ public final class FakeFlagsBackend implements FlagsBackend {
      * @param tagName tag used to log messages.
      */
     public FakeFlagsBackend(String tagName) {
-        this(new Logger(DynamicLogger.getInstance(), tagName), new FakeNameValuePairContainer());
+        this(
+                new Logger(DynamicLogger.getInstance(), tagName),
+                new FakeNameValuePairContainer(tagName));
     }
 
-    private FakeFlagsBackend(Logger log, NameValuePairContainer container) {
-        mContainer = container;
-        mLog = log;
+    /**
+     * Custom constructor.
+     *
+     * @param logger used to log messages.
+     * @param container used to manage the flags.
+     */
+    public FakeFlagsBackend(Logger logger, NameValuePairContainer container) {
+        mContainer = Objects.requireNonNull(container, "container cannot be null");
+        mLog = Objects.requireNonNull(logger, "logger cannot be null");
     }
 
     // Constructor used to create a snapshot
@@ -63,10 +71,9 @@ public final class FakeFlagsBackend implements FlagsBackend {
         return mLog.getTag();
     }
 
-    /**
-     * TODO(b/338067482): currently used by AdServicesFakeFlagsSetterRule constructor, we might get
-     * rid of it when in the next CL - if not, we should unit test it.
-     */
+    // TODO(b/373446366): ideally it should be @Visible for testing, but it's used by
+    // AdServicesFakeFlagsSetterRule's constructor and it would require changing too many classes to
+    // encapsulate that, so it's not worth the effort (at least not for now)
     public NameValuePairContainer getContainer() {
         return mContainer;
     }

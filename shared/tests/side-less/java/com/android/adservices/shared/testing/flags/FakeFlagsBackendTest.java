@@ -24,6 +24,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
+import com.android.adservices.shared.testing.FakeNameValuePairContainer;
 import com.android.adservices.shared.testing.NameValuePair;
 
 import org.junit.Test;
@@ -36,11 +37,35 @@ public final class FakeFlagsBackendTest extends SharedSidelessTestCase {
     private static final String VALUE = "of the Rose";
     private static final String ANOTHER_VALUE = "An NVP has not";
 
+    private final FakeNameValuePairContainer mContainer = new FakeNameValuePairContainer();
     private final FakeFlagsBackend mBackend = new FakeFlagsBackend(TAG);
 
     @Test
-    public void testNullConstructor() {
+    public void testDefaultConstructor_null() {
         assertThrows(NullPointerException.class, () -> new FakeFlagsBackend(/* tagName= */ null));
+    }
+
+    @Test
+    public void testCustomConstructor_null() {
+        assertThrows(
+                NullPointerException.class,
+                () -> new FakeFlagsBackend(/* logger= */ null, mContainer));
+        assertThrows(
+                NullPointerException.class,
+                () -> new FakeFlagsBackend(mLog, /* container= */ null));
+    }
+
+    @Test
+    public void testCustomConstructor() {
+        // NOTE: we could add tests to check the same behavior when using the custom constructor
+        // (for example, using parameterized tests), but it would be an overkill, so we're being
+        // pragmatic and just making some basic assertions
+        FakeFlagsBackend backend = new FakeFlagsBackend(mLog, mContainer);
+
+        expect.withMessage("getContainer()")
+                .that(backend.getContainer())
+                .isSameInstanceAs(mContainer);
+        expect.withMessage("getTagName()()").that(backend.getTagName()).isEqualTo(mLog.getTag());
     }
 
     @Test
