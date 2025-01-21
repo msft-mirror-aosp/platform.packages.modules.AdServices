@@ -20,7 +20,7 @@ package com.android.adservices.flags;
 import static com.android.adservices.service.FlagsConstants.*;
 // CHECKSTYLE:ON
 
-import com.android.adservices.shared.flags.FlagsBackend;
+import com.android.adservices.shared.testing.flags.TestableFlagsBackend;
 
 // NOTE: in theory we could merge it with FakeFlags, but they're split because in the long term
 // this class should be gone (if no flags add extra validation) or auto-generated, while FakeFlags
@@ -31,10 +31,16 @@ import com.android.adservices.shared.flags.FlagsBackend;
  *
  * @param <FB> flags backend
  */
-class RawFlagsForTests<FB extends FlagsBackend> extends RawFlags<FB> {
+class RawFlagsForTests<FB extends TestableFlagsBackend> extends RawFlags<FB>
+        implements TestableFlags {
 
     RawFlagsForTests(FB backend) {
         super(backend);
+    }
+
+    @Override
+    public final FB getBackend() {
+        return mBackend;
     }
 
     @Override

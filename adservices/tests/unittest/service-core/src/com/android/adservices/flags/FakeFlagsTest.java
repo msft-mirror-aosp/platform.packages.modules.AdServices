@@ -15,25 +15,12 @@
  */
 package com.android.adservices.flags;
 
-import static org.junit.Assert.assertThrows;
-
 import com.android.adservices.service.PhFlagsTest;
-import com.android.adservices.shared.testing.flags.FakeFlagsBackend;
 
-import org.junit.Test;
+public final class FakeFlagsTest extends PhFlagsTest {
 
-public final class RawFlagsForTestsTest extends PhFlagsTest {
-
-    public RawFlagsForTestsTest() {
-        super(
-                new RawFlagsForTests<FakeFlagsBackend>(
-                        new FakeFlagsBackend(RawFlagsForTestsTest.class)),
-                /* isRaw= */ true);
-    }
-
-    @Test
-    public void testNullConstructor() {
-        assertThrows(
-                NullPointerException.class, () -> new RawFlagsForTests<FakeFlagsBackend>(null));
+    @SuppressWarnings("VisibleForTests") // TODO(b/343741206): Remove suppress warning once fixed.
+    public FakeFlagsTest() {
+        super(FakeFlags.createFakeFlagsForFakeFlagsTestPurposesOnly(), /* isRaw= */ true);
     }
 }

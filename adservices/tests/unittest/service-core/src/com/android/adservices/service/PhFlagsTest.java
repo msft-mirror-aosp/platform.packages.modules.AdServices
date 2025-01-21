@@ -16,8 +16,6 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.common.DeviceConfigUtil.setAdservicesFlag;
-import static com.android.adservices.service.DeviceConfigAndSystemPropertiesExpectations.mockGetAdServicesFlag;
 import static com.android.adservices.service.Flags.ADID_KILL_SWITCH;
 import static com.android.adservices.service.Flags.ADID_REQUEST_PERMITS_PER_SECOND;
 import static com.android.adservices.service.Flags.ADSERVICES_APK_SHA_CERTIFICATE;
@@ -1171,8 +1169,10 @@ import static org.junit.Assume.assumeFalse;
 import android.provider.DeviceConfig;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.flags.TestableFlags;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.fixture.TestableSystemProperties;
+import com.android.adservices.shared.testing.flags.TestableFlagsBackend;
 import com.android.modules.utils.build.SdkLevel;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 import com.android.modules.utils.testing.TestableDeviceConfig;
@@ -1202,8 +1202,21 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     }
 
     protected PhFlagsTest(Flags flags, boolean isRaw) {
+        this(
+                flags,
+                (flags instanceof TestableFlags)
+                        ? ((TestableFlags) flags).getBackend()
+                        : DeviceConfigAndSystemPropertiesExpectations.getFlagsBackendForTests(),
+                isRaw);
+    }
+
+    private PhFlagsTest(Flags flags, TestableFlagsBackend backend, boolean isRaw) {
         mPhFlags = Objects.requireNonNull(flags, "flags cannot be null");
-        mFlagsTestHelper = new PhFlagsTestHelper(flags, isRaw, expect);
+        if (backend == null) {
+            // should never happen, but better fail fast...
+            throw new IllegalStateException("null TestableFlagsBackend");
+        }
+        mFlagsTestHelper = new PhFlagsTestHelper(flags, backend, isRaw, expect);
         mMsmtKillSwitchGuard = value -> mFlagsTestHelper.setMsmtKillSwitch(!value);
         mIsRaw = isRaw;
     }
@@ -2994,6 +3007,13 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 .that(mPhFlags.getMeasurementEnabled())
                 .isEqualTo(expectedDefaultValue);
 
+        if (mIsRaw) {
+            // TODO(b/384798806): shouldn't need to check mIsRaw, test should call mFlagsTestHelper
+            mLog.d(
+                    "testGetFledgeAuctionServerPayloadBucketSizes(): skipping override part on raw"
+                            + " flags");
+            return;
+        }
         // Now overriding with the value from PH.
         setMeasurementKillSwitch(phOverridingKsValue);
 
@@ -3798,6 +3818,14 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_FLEDGE_AUCTION_SERVER_PAYLOAD_BUCKET_SIZES,
                 phOverridingValue.stream().map(Object::toString).collect(Collectors.joining(",")),
                 /* makeDefault */ false);
+
+        // TODO(b/384798806): need to refactor this method to use mFlagsTestHelper instead
+        if (mIsRaw) {
+            mLog.d(
+                    "testGetFledgeAuctionServerPayloadBucketSizes(): skipping override part on"
+                            + " FakeFlags");
+            return;
+        }
 
         assertThat(mPhFlags.getFledgeAuctionServerPayloadBucketSizes())
                 .isEqualTo(phOverridingValue);
@@ -6294,7 +6322,7 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
     private void setMeasurementKillSwitch(boolean value) {
-        setAdservicesFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
+        mFlagsTestHelper.setAdservicesFlag(KEY_MEASUREMENT_KILL_SWITCH, value);
     }
 
     private void overrideGlobalKillSwitch(boolean phOverridingValue) {
@@ -6347,6 +6375,16 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
 
     private void skipOnRawFlags() {
         assumeFalse("Skipping on raw flags", mIsRaw);
+    }
+
+    // NOTE: it would be cleaner to inline methods above and call mFlagsTestHelper directly, but for
+    // now we're trying to minimize the changes
+    private void mockGetAdServicesFlag(String name, boolean value) {
+        mFlagsTestHelper.mockGetAdServicesFlag(name, value);
+    }
+
+    private void mockGetAdServicesFlag(String name, String value) {
+        mFlagsTestHelper.mockGetAdServicesFlag(name, value);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
