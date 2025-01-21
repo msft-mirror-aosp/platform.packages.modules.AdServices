@@ -166,7 +166,6 @@ import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
-import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
@@ -232,7 +231,6 @@ import java.util.stream.Collectors;
 @MockStatic(ConsentManager.class)
 @MockStatic(AppImportanceFilter.class)
 @MockStatic(FlagsFactory.class)
-@SkipLoggingUsageRule(reason = "b/355696393")
 @SetIntegerFlag(name = KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS, value = 100)
 @SetFlagTrue(KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED)
 @SetFlagFalse(KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED)

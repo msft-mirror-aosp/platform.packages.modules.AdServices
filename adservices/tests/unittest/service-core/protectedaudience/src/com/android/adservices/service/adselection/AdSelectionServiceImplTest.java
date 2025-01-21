@@ -185,7 +185,6 @@ import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.FetchProcessLogger;
-import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
@@ -261,7 +260,6 @@ import java.util.concurrent.TimeUnit;
         name = KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS,
         value = EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS)
 @SetFlagFalse(KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES)
-@SkipLoggingUsageRule(reason = "b/355696393")
 public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
