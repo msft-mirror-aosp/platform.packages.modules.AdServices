@@ -765,7 +765,7 @@ public final class AdSelectionE2ETest extends AdServicesExtendedMockitoTestCase 
     public void setUp() throws Exception {
         mocker.mockGetFlags(mFakeFlags);
         mocker.mockGetDebugFlags(mMockDebugFlags);
-        mocker.mockGetConsentNotificationDebugMode(false);
+        mockGetConsentNotificationDebugMode(false);
 
         mAdSelectionEntryDaoSpy =
                 Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDatabase.class)

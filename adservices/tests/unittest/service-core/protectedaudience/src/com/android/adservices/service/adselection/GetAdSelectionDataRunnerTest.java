@@ -215,7 +215,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     public void setup() throws Exception {
         mLegacyFakeFlags = new GetAdSelectionDataRunnerTestFlags();
         mocker.mockGetDebugFlags(mMockDebugFlags);
-        mocker.mockGetConsentNotificationDebugMode(false);
+        mockGetConsentNotificationDebugMode(false);
         mMultiCloudSupportStrategyFlagOff =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock);
         mMultiCloudSupportStrategyFlagOn =
@@ -325,7 +325,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     @Test
     public void testRunner_getAdSelectionData_returnsSuccessWithUXNotificationEnforcementDisabled()
             throws Exception {
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
 
         mocker.mockGetFlags(mLegacyFakeFlags);
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))

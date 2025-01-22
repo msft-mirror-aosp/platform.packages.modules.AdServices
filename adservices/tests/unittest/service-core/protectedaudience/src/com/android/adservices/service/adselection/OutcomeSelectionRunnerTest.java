@@ -276,7 +276,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testRunOutcomeSelectionRevokedUserConsentEmptyResult_UXNotificationNotEnforced() {
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
 
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilter)

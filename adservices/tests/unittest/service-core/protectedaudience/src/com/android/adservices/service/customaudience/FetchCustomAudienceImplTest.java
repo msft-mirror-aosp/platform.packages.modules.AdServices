@@ -216,7 +216,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
 
         mocker.mockGetDebugFlags(mMockDebugFlags);
-        mocker.mockGetConsentNotificationDebugMode(false);
+        mockGetConsentNotificationDebugMode(false);
         mEnforceNotificationShown = !mMockDebugFlags.getConsentNotificationDebugMode();
         mFetchCustomAudienceFlags = new FetchCustomAudienceFlags();
 
@@ -516,7 +516,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
 
     @Test
     public void testImpl_revokedConsent_failsSilentlyUXNotificationDisabled() throws Exception {
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
         mEnforceNotificationShown = !mMockDebugFlags.getConsentNotificationDebugMode();
         mFetchCustomAudienceImpl = getImplWithFlags(mFetchCustomAudienceFlags);
 

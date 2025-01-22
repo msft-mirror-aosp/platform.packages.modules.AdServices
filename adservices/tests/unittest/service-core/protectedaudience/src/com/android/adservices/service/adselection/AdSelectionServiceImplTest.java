@@ -389,7 +389,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void setUp() {
         mocker.mockGetFlags(mFakeFlags);
         mocker.mockGetDebugFlags(mMockDebugFlags);
-        mocker.mockGetConsentNotificationDebugMode(false);
+        mockGetConsentNotificationDebugMode(false);
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
@@ -591,7 +591,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testReportImpressionSuccessWithUXNotificationNotEnforced() throws Exception {
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
 
         Uri sellerReportingUri = mMockWebServerRule.uriForPath(mSellerReportingPath);
         Uri buyerReportingUri = mMockWebServerRule.uriForPath(mBuyerReportingPath);
@@ -10315,7 +10315,7 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
     public void
             testReportImpressionSuccess_callsServerAuctionForImpressionReporterIsOnWithUXNotificationEnforcementDisabled()
                     throws Exception {
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
         AdSelectionConfig adSelectionConfig = mAdSelectionConfigBuilder.build();
 
         mockCreateDevContextForDevOptionsDisabled();

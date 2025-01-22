@@ -382,7 +382,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
     @Before
     public void setUp() {
         mocker.mockGetDebugFlags(mMockDebugFlags);
-        mocker.mockGetConsentNotificationDebugMode(false);
+        mockGetConsentNotificationDebugMode(false);
         // Initializing up here so object is spied
         mAdSelectionEntryDaoSpy =
                 spy(
@@ -583,7 +583,7 @@ public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMocki
 
     @Test
     public void testRunAdSelectionSuccessWithUXNotificationEnforcementDisabled() throws Exception {
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
 
         doReturn(mFakeFlags).when(FlagsFactory::getFlags);
 

@@ -186,7 +186,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     public void setup() throws Exception {
         mLegacyFlags = FakeFlagsFactory.getFlagsForTest();
         mocker.mockGetDebugFlags(mMockDebugFlags);
-        mocker.mockGetConsentNotificationDebugMode(false);
+        mockGetConsentNotificationDebugMode(false);
         mMaxRegisteredAdBeaconsPerDestination =
                 mLegacyFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
         mMaxRegisteredAdBeaconsTotalCount =
@@ -325,7 +325,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     public void
             testImplSuccessfullyReportsRegisteredInteractionsWithUXNotificationEnforcementDisabled()
                     throws Exception {
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
         mEventReporter =
                 new ReportEventImpl(
                         mAdSelectionEntryDao,
