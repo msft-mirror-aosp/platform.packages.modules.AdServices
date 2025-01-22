@@ -272,6 +272,9 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                             "true"),
                     entry(
                             FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS,
+                            "true"),
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_ENABLE_UNBOUNDED_REPORTS_WITH_TRIGGER_CONTEXT_ID,
                             "true"));
 
     @Parameterized.Parameters(name = "{3}")
