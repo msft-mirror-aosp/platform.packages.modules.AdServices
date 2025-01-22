@@ -35,11 +35,9 @@ import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.AdServicesDebugFlagsMocker;
 import com.android.adservices.mockito.AdServicesExtendedMockitoMocker;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.AdServicesFlagsMocker;
-import com.android.adservices.mockito.AdServicesMockitoDebugFlagsMocker;
 import com.android.adservices.mockito.AdServicesMockitoFlagsMocker;
 import com.android.adservices.mockito.AdServicesMockitoMocker;
 import com.android.adservices.mockito.AdServicesPragmaticMocker;
@@ -163,9 +161,9 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
     }
 
     /**
-     * @deprecated TODO(b/338067482): temporary method, ideally it should be inlined or replaced by
-     * @EnableDebugFlag / @DisableDebugFlag; if not, then it should be unit tested (on
-     * AdServicesExtendedMockitoTestCaseTest)
+     * @deprecated TODO(b/338067482): temporary method, ideally it should be inlined or replaced
+     *     by @EnableDebugFlag / @DisableDebugFlag; if not, then it should be unit tested (on
+     *     AdServicesExtendedMockitoTestCaseTest)
      */
     @Deprecated
     protected void mockGetConsentNotificationDebugMode(boolean mode) {
@@ -183,7 +181,6 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
                     AndroidStaticMocker,
                     AdServicesPragmaticMocker,
                     AdServicesFlagsMocker,
-                    AdServicesDebugFlagsMocker,
                     AdServicesStaticMocker,
                     SharedMocker {
 
@@ -191,11 +188,10 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         private final SharedMocker mSharedMocker = new SharedMockitoMocker();
         private final AdServicesPragmaticMocker mAdServicesMocker = new AdServicesMockitoMocker();
         @Nullable private final AdServicesFlagsMocker mAdServicesFlagsMocker;
-        @Nullable private final AdServicesDebugFlagsMocker mAdServicesDebugFlagsMocker;
         @Nullable private final AndroidStaticMocker mAndroidStaticMocker;
         @Nullable private final AdServicesStaticMocker mAdServicesStaticMocker;
 
-        protected InternalMocker(StaticClassChecker checker, Flags flags, DebugFlags debugFlags) {
+        protected InternalMocker(StaticClassChecker checker, Flags flags) {
             if (checker != null) {
                 mAndroidStaticMocker = new AndroidExtendedMockitoMocker(checker);
                 mAdServicesStaticMocker = new AdServicesExtendedMockitoMocker(checker);
@@ -204,8 +200,6 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
                 mAdServicesStaticMocker = null;
             }
             mAdServicesFlagsMocker = flags != null ? new AdServicesMockitoFlagsMocker(flags) : null;
-            mAdServicesDebugFlagsMocker =
-                    debugFlags != null ? new AdServicesMockitoDebugFlagsMocker(debugFlags) : null;
         }
 
         // AndroidMocker methods
@@ -320,12 +314,6 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         @Override
         public void mockAllCobaltLoggingFlags(boolean enabled) {
             mAdServicesFlagsMocker.mockAllCobaltLoggingFlags(enabled);
-        }
-
-        // AdServicesDebugFlagsMocker methods
-        @Override
-        public void mockGetConsentNotificationDebugMode(boolean value) {
-            mAdServicesDebugFlagsMocker.mockGetConsentNotificationDebugMode(value);
         }
 
         // AdServicesStaticMocker methods
