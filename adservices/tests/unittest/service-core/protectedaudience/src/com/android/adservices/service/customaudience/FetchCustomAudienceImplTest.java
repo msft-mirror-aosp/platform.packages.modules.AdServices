@@ -215,9 +215,9 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
                         .setExpirationTime(VALID_EXPIRATION_TIME)
                         .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS);
 
-        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
         mockGetConsentNotificationDebugMode(false);
-        mEnforceNotificationShown = !mMockDebugFlags.getConsentNotificationDebugMode();
+        mEnforceNotificationShown = !mFakeDebugFlags.getConsentNotificationDebugMode();
         mFetchCustomAudienceFlags = new FetchCustomAudienceFlags();
 
         mAdFilteringFeatureFactory =
@@ -517,7 +517,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     @Test
     public void testImpl_revokedConsent_failsSilentlyUXNotificationDisabled() throws Exception {
         mockGetConsentNotificationDebugMode(true);
-        mEnforceNotificationShown = !mMockDebugFlags.getConsentNotificationDebugMode();
+        mEnforceNotificationShown = !mFakeDebugFlags.getConsentNotificationDebugMode();
         mFetchCustomAudienceImpl = getImplWithFlags(mFetchCustomAudienceFlags);
 
         doThrow(new ConsentManager.RevokedConsentException())
@@ -1704,7 +1704,7 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     private FetchCustomAudienceImpl getImplWithFlags(Flags flags) {
         return new FetchCustomAudienceImpl(
                 flags,
-                mMockDebugFlags,
+                mFakeDebugFlags,
                 CLOCK,
                 mAdServicesLoggerMock,
                 DIRECT_EXECUTOR,

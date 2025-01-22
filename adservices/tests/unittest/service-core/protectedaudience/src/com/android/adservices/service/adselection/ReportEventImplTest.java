@@ -185,7 +185,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     @Before
     public void setup() throws Exception {
         mLegacyFlags = FakeFlagsFactory.getFlagsForTest();
-        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
         mockGetConsentNotificationDebugMode(false);
         mMaxRegisteredAdBeaconsPerDestination =
                 mLegacyFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
@@ -206,7 +206,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mLegacyFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
@@ -334,7 +334,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mLegacyFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
@@ -742,7 +742,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mLegacyFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
@@ -830,7 +830,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mLegacyFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
@@ -1349,7 +1349,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         flags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
@@ -1485,7 +1485,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         flags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
@@ -1573,7 +1573,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         flags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,

@@ -16,6 +16,7 @@
 package com.android.adservices.common;
 
 import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.Mode.CLEAR_AFTER_TEST_CLASS;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -161,10 +162,17 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         checkProhibitedMockitoFields(AdServicesMockerLessExtendedMockitoTestCase.class, this);
     }
 
-    // TODO(b/338067482): temporary method, will be replaced by debugFlags.setFlag()
+    /**
+     * @deprecated TODO(b/338067482): temporary method, ideally it should be inlined or replaced by
+     * @EnableDebugFlag / @DisableDebugFlag; if not, then it should be unit tested (on
+     * AdServicesExtendedMockitoTestCaseTest)
+     */
+    @Deprecated
     protected void mockGetConsentNotificationDebugMode(boolean mode) {
-        mLog.v("mockGetConsentNotificationDebugMode(%b): delegating to mocker (%s)", mode, mocker);
-        mocker.mockGetConsentNotificationDebugMode(mode);
+        mLog.v(
+                "mockGetConsentNotificationDebugMode(%b): delegating to debugFlags rule (%s)",
+                mode, debugFlags);
+        debugFlags.setDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, mode);
     }
 
     private static final String REASON_SESSION_MANAGED_BY_RULE =

@@ -410,7 +410,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
-        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
         mockGetConsentNotificationDebugMode(false);
 
         mAdServicesLoggerMock = ExtendedMockito.mock(AdServicesLoggerImpl.class);
@@ -1960,7 +1960,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2184,7 +2184,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2285,7 +2285,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -2466,7 +2466,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3048,7 +3048,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3151,7 +3151,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         mContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -4081,7 +4081,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                 mContext,
                 mAdServicesLoggerMock,
                 mFakeFlags,
-                mMockDebugFlags,
+                mFakeDebugFlags,
                 CallingAppUidSupplierProcessImpl.create(),
                 mFledgeAuthorizationFilterMock,
                 mAdSelectionServiceFilterMock,
@@ -4173,7 +4173,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                 mContext,
                 mAdServicesLoggerMock,
                 flags,
-                mMockDebugFlags,
+                mFakeDebugFlags,
                 CallingAppUidSupplierProcessImpl.create(),
                 mFledgeAuthorizationFilterMock,
                 mAdSelectionServiceFilterMock,
@@ -4277,7 +4277,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                 mContext,
                 mAdServicesLoggerMock,
                 mFakeFlags,
-                mMockDebugFlags,
+                mFakeDebugFlags,
                 CallingAppUidSupplierProcessImpl.create(),
                 mFledgeAuthorizationFilterMock,
                 mAdSelectionServiceFilterMock,
@@ -4311,7 +4311,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                 mContext,
                 mAdServicesLoggerMock,
                 flags,
-                mMockDebugFlags,
+                mFakeDebugFlags,
                 CallingAppUidSupplierProcessImpl.create(),
                 mFledgeAuthorizationFilterMock,
                 mAdSelectionServiceFilterMock,

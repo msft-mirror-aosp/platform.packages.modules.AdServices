@@ -153,7 +153,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                                 AdSelectionDatabase.class)
                         .build()
                         .adSelectionEntryDao();
-        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
         mOutcomeSelectionRunner =
                 new OutcomeSelectionRunner(
                         CALLER_UID,
@@ -165,7 +165,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                         mAdServicesLoggerMock,
                         mContext,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilter,
                         DevContext.createForDevOptionsDisabled(),
                         false);
@@ -317,7 +317,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                         mAdServicesLoggerMock,
                         mContext,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilter,
                         DevContext.createForDevOptionsDisabled(),
                         false);
@@ -395,7 +395,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                         mAdServicesLoggerMock,
                         mContext,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilter,
                         DevContext.createForDevOptionsDisabled(),
                         false);

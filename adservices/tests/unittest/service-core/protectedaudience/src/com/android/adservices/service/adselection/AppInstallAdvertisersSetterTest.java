@@ -103,14 +103,14 @@ public class AppInstallAdvertisersSetterTest extends AdServicesExtendedMockitoTe
 
     @Before
     public void setup() {
-        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
         mAppInstallAdvertisersSetter =
                 new AppInstallAdvertisersSetter(
                         mAppInstallDaoMock,
                         mExecutorService,
                         mAdServicesLogger,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilter,
                         mConsentManager,
                         UID,
@@ -151,7 +151,7 @@ public class AppInstallAdvertisersSetterTest extends AdServicesExtendedMockitoTe
                         mExecutorService,
                         mAdServicesLogger,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilter,
                         mConsentManager,
                         UID,
@@ -189,7 +189,7 @@ public class AppInstallAdvertisersSetterTest extends AdServicesExtendedMockitoTe
                         mExecutorService,
                         mAdServicesLogger,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilter,
                         mConsentManager,
                         UID,
