@@ -36,10 +36,4 @@ public final class AdServicesMockitoDebugFlagsMocker extends AbstractMocker
         logV("mockGetConsentNotificationDebugMode(%b)", value);
         when(mDebugFlags.getConsentNotificationDebugMode()).thenReturn(value);
     }
-
-    @Override
-    public void mockGetDeveloperSessionFeatureEnabled(boolean value) {
-        logV("mockGetDeveloperSessionFeatureEnabled(%b)", value);
-        when(mDebugFlags.getDeveloperSessionFeatureEnabled()).thenReturn(value);
-    }
 }

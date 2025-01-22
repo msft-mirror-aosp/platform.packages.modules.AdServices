@@ -314,11 +314,6 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
             mAdServicesFlagsMocker.mockAllCobaltLoggingFlags(enabled);
         }
 
-        @Override
-        public void mockGetDeveloperSessionFeatureEnabled(boolean value) {
-            mAdServicesDebugFlagsMocker.mockGetDeveloperSessionFeatureEnabled(value);
-        }
-
         // AdServicesDebugFlagsMocker methods
         @Override
         public void mockGetConsentNotificationDebugMode(boolean value) {
