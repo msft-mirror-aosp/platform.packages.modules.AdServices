@@ -3604,4 +3604,18 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     public boolean getEnableLogSamplingInfra() {
         return mBackend.getFlag(KEY_ENABLE_LOG_SAMPLING_INFRA, DEFAULT_ENABLE_LOG_SAMPLING_INFRA);
     }
+
+    @Override
+    public boolean getMeasurementEnableAdIdsPerDevicePerWindow() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW,
+                DEFAULT_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW);
+    }
+
+    @Override
+    public long getMeasurementAdIdsPerDevicePerWindowPeriodMs() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS,
+                DEFAULT_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS);
+    }
 }
