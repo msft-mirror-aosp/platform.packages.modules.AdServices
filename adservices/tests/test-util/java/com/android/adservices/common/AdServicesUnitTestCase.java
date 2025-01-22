@@ -20,8 +20,10 @@ import static org.mockito.Mockito.mock;
 import android.annotation.CallSuper;
 import android.content.Context;
 
+import com.android.adservices.flags.AdServicesFakeDebugFlagsSetterRule;
 import com.android.adservices.flags.AdServicesFakeFlagsSetterRule;
 import com.android.adservices.flags.AdServicesFlagsSetterRuleForUnitTests;
+import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.testing.common.ApplicationContextSingletonRule;
 
@@ -49,12 +51,19 @@ public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
 
     private static final String FAKE_FLAGS_MSG = "should use mFakeFlags and flags rule insteads";
 
+    private static final String FAKE_DEBUG_FLAGS_MSG =
+            "should use mFakeDebugFlags and debugFlags rule insteads";
+
     @Rule(order = 5)
     public final ApplicationContextSingletonRule appContext =
             new ApplicationContextSingletonRule(/* restoreAfter= */ false);
 
     @Rule(order = 6)
     public final AdServicesFlagsSetterRuleForUnitTests<?, ? extends Flags> flags = newFlagsRule();
+
+    @Rule(order = 7)
+    public final AdServicesFakeDebugFlagsSetterRule debugFlags =
+            new AdServicesFakeDebugFlagsSetterRule();
 
     /**
      * Reference to the application context of this test's instrumentation package (as defined by
@@ -66,6 +75,9 @@ public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
 
     /** Stubbed {@link Flags} implementation that can be set by {@code flags}. */
     protected final Flags mFakeFlags = flags.getFlags();
+
+    /** Stubbed {@link DebugFlags} implementation that can be set by {@code debugFlags}. */
+    protected final DebugFlags mFakeDebugFlags = debugFlags.getDebugFlags();
 
     /**
      * Creates the rule that will be referenced as {@code flags}.
@@ -89,7 +101,9 @@ public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
                 "appContext",
                 "flags",
                 "mMockFlags",
-                "mFakeFlags");
+                "mFakeFlags",
+                "debugFlags",
+                "mFakeDebugFlags");
         assertTestClassHasNoSuchField("APPLICATION_CONTEXT", APP_CONTEXT_MSG);
         assertTestClassHasNoSuchField("mApplicationContext", APP_CONTEXT_MSG);
         assertTestClassHasNoSuchField("FLAGS", FAKE_FLAGS_MSG);
@@ -99,5 +113,7 @@ public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
         // We'll need to fix these test first (for example, some of them also set DebugFlags, which
         // is not supported by AdServicesFakeFlagsSetterRule and won't be, as we should have a
         // separate rule for DebugFlags / SystemProperties)
+        assertTestClassHasNoSuchField("mDebugFlags", FAKE_DEBUG_FLAGS_MSG);
+        // TODO(b/338067482): add mMockDebugFlags as well
     }
 }

@@ -29,7 +29,7 @@ public final class FakeAction implements Action, Identifiable {
 
     private static int sNextId;
 
-    protected final String mId = String.valueOf(++sNextId);
+    private final String mId = String.valueOf(++sNextId);
 
     @Nullable private final String mName;
     @Nullable private final AtomicInteger mExecutionOrderCounter;
