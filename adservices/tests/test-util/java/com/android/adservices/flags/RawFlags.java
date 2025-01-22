@@ -3599,4 +3599,9 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
                 KEY_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK,
                 DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK);
     }
+
+    @Override
+    public boolean getEnableLogSamplingInfra() {
+        return mBackend.getFlag(KEY_ENABLE_LOG_SAMPLING_INFRA, DEFAULT_ENABLE_LOG_SAMPLING_INFRA);
+    }
 }

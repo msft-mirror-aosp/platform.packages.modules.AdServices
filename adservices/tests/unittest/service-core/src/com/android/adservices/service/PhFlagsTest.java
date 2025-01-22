@@ -73,6 +73,7 @@ import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ATOMIC_FILE_DA
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_BACK_COMPAT_INIT;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_CONSENT_MANAGER_V2;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_ENROLLMENT_CONFIG_V3_DB;
+import static com.android.adservices.service.Flags.DEFAULT_ENABLE_LOG_SAMPLING_INFRA;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_PACKAGE_DENY_BG_JOB;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_MDD_DOWNLOAD;
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_PACKAGE_DENY_JOB_ON_PACKAGE_ADD;
@@ -654,6 +655,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_DATABASE_SCHEMA_VERSION_9;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOGGED_TOPIC;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOG_SAMPLING_INFRA;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_MDD_ENCRYPTION_KEYS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_PAS_COMPONENT_ADS;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_RB_ATRACE;
@@ -6277,6 +6279,14 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST,
                 DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST,
                 Flags::getEnableMsmtRegisterSourcePackageDenyList);
+    }
+
+    @Test
+    public void testGetEnableLogSamplingInfra() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_ENABLE_LOG_SAMPLING_INFRA,
+                DEFAULT_ENABLE_LOG_SAMPLING_INFRA,
+                Flags::getEnableLogSamplingInfra);
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////
