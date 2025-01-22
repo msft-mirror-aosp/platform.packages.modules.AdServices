@@ -19,6 +19,7 @@ package com.android.adservices.service.measurement;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_DENY_LIST;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_UID_MISMATCH;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_KILLSWITCH_ENABLED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PERMISSION_NOT_REQUESTED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
@@ -73,6 +74,7 @@ import android.adservices.measurement.WebTriggerParams;
 import android.adservices.measurement.WebTriggerRegistrationRequest;
 import android.adservices.measurement.WebTriggerRegistrationRequestInternal;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Binder;
 import android.os.RemoteException;
@@ -161,6 +163,7 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final int TIMEOUT = 5_000;
     private static final Uri WEB_DESTINATION = WebUtil.validUri("https://web-destination-uri.test");
+    private static final int CALLING_UID = 1;
     @Mock private AdServicesLogger mMockAdServicesLogger;
     @Mock private AppImportanceFilter mMockAppImportanceFilter;
     @Mock private ConsentManager mMockConsentManager;
@@ -171,6 +174,7 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
 
     private MeasurementServiceImpl mMeasurementServiceImpl;
     private Map<Integer, Boolean> mKillSwitchSnapshot;
+    @Mock private PackageManager mMockPackageManager;
 
     @Before
     public void setUp() {
@@ -455,6 +459,14 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    public void testRegisterSource_failureByPackageNameUidMismatch() throws Exception {
+        runWithMocks(
+                Api.REGISTER_SOURCE,
+                new AccessDenier().deniedByPackageName(),
+                () -> registerSourceAndAssertFailure(STATUS_CALLER_NOT_ALLOWED_UID_MISMATCH));
+    }
+
+    @Test
     public void testRegisterTrigger_success() throws Exception {
         runWithMocks(
                 Api.REGISTER_TRIGGER, new AccessDenier(), this::registerTriggerAndAssertSuccess);
@@ -647,6 +659,14 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    public void testRegisterTrigger_failureByPackageNameUidMismatch() throws Exception {
+        runWithMocks(
+                Api.REGISTER_TRIGGER,
+                new AccessDenier().deniedByPackageName(),
+                () -> registerTriggerAndAssertFailure(STATUS_CALLER_NOT_ALLOWED_UID_MISMATCH));
+    }
+
+    @Test
     public void testRegister_invalidRequest_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -826,6 +846,14 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
                 Api.DELETE_REGISTRATIONS,
                 new AccessDenier().deniedByForegroundEnforcement(),
                 () -> deleteRegistrationsAndAssertFailure(STATUS_BACKGROUND_CALLER));
+    }
+
+    @Test
+    public void testDeleteRegistrations_failureByPackageNameUidMismatch() throws Exception {
+        runWithMocks(
+                Api.DELETE_REGISTRATIONS,
+                new AccessDenier().deniedByPackageName(),
+                () -> deleteRegistrationsAndAssertFailure(STATUS_CALLER_NOT_ALLOWED_UID_MISMATCH));
     }
 
     @Test
@@ -1097,6 +1125,14 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    public void testGetMeasurementApiStatus_failureByPackageNameUidMismatch() throws Exception {
+        runWithMocks(
+                Api.STATUS,
+                new AccessDenier().deniedByPackageName(),
+                this::getMeasurementApiStatusAndAssertFailure);
+    }
+
+    @Test
     public void testGetMeasurementApiStatus_invalidRequest_throwException() {
         assertThrows(
                 NullPointerException.class,
@@ -1289,6 +1325,17 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    public void testRegisterWebSource_packageNameUidMismatch_failureByUidMismatch()
+            throws Exception {
+        runWithMocks(
+                Api.REGISTER_WEB_SOURCE,
+                new AccessDenier().deniedByPackageName(),
+                () -> {
+                    registerWebSourceAndAssertFailure(STATUS_CALLER_NOT_ALLOWED_UID_MISMATCH);
+                });
+    }
+
+    @Test
     public void registerSources_success() throws Exception {
         runWithMocks(
                 Api.REGISTER_SOURCES, new AccessDenier(), this::registerSourcesAndAssertSuccess);
@@ -1347,6 +1394,16 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
                     // Flip kill switch.
                     when(mMockFlags.getMeasurementApiRegisterSourcesKillSwitch()).thenReturn(false);
                     registerSourcesAndAssertSuccess();
+                });
+    }
+
+    @Test
+    public void testRegisterSources_packageNameUidMismatch_failureByUidMismatch() throws Exception {
+        runWithMocks(
+                Api.REGISTER_SOURCES,
+                new AccessDenier().deniedByPackageName(),
+                () -> {
+                    registerSourcesAndAssertFailure(STATUS_CALLER_NOT_ALLOWED_UID_MISMATCH);
                 });
     }
 
@@ -1691,6 +1748,17 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
                     when(mMockFlags.getMeasurementApiRegisterWebTriggerKillSwitch())
                             .thenReturn(false);
                     registerWebTriggerAndAssertSuccess();
+                });
+    }
+
+    @Test
+    public void testRegisterWebTrigger_packageNameUidMismatch_failureByUidMismatch()
+            throws Exception {
+        runWithMocks(
+                Api.REGISTER_WEB_TRIGGER,
+                new AccessDenier().deniedByPackageName(),
+                () -> {
+                    registerWebTriggerAndAssertFailure(STATUS_CALLER_NOT_ALLOWED_UID_MISMATCH);
                 });
     }
 
@@ -2086,36 +2154,37 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
             final AccessDenier accessDenier,
             final TestUtils.RunnableWithThrow execute)
             throws Exception {
-            // Flags
-            ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        // Flags
+        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        when(mMockFlags.getMeasurementEnablePackageNameUidCheck()).thenReturn(true);
 
-            // Binder
-            ExtendedMockito.doReturn(1).when(Binder::getCallingUidOrThrow);
-            switch (api) {
-                case DELETE_REGISTRATIONS:
-                    mockDeleteRegistrationsApi(accessDenier);
-                    break;
-                case REGISTER_SOURCE:
-                    mockRegisterSourceApi(accessDenier);
-                    break;
-                case REGISTER_TRIGGER:
-                    mockRegisterTriggerApi(accessDenier);
-                    break;
-                case REGISTER_WEB_SOURCE:
-                    mockRegisterWebSourceApi(accessDenier);
-                    break;
-                case REGISTER_WEB_TRIGGER:
-                    mockRegisterWebTriggerApi(accessDenier);
-                    break;
-                case STATUS:
-                    mockStatusApi(accessDenier);
-                    break;
-                case REGISTER_SOURCES:
-                    mockRegisterSourcesApi(accessDenier);
-                    break;
-                default:
-                    break;
-            }
+        // Binder
+        ExtendedMockito.doReturn(1).when(Binder::getCallingUidOrThrow);
+        switch (api) {
+            case DELETE_REGISTRATIONS:
+                mockDeleteRegistrationsApi(accessDenier);
+                break;
+            case REGISTER_SOURCE:
+                mockRegisterSourceApi(accessDenier);
+                break;
+            case REGISTER_TRIGGER:
+                mockRegisterTriggerApi(accessDenier);
+                break;
+            case REGISTER_WEB_SOURCE:
+                mockRegisterWebSourceApi(accessDenier);
+                break;
+            case REGISTER_WEB_TRIGGER:
+                mockRegisterWebTriggerApi(accessDenier);
+                break;
+            case STATUS:
+                mockStatusApi(accessDenier);
+                break;
+            case REGISTER_SOURCES:
+                mockRegisterSourcesApi(accessDenier);
+                break;
+            default:
+                break;
+        }
 
         mockJobSchedulers();
             mMeasurementServiceImpl = createServiceWithMocks();
@@ -2164,7 +2233,8 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
      *
      * @param accessDenier describes if API is allowed or denied by any barrier
      */
-    private void mockDeleteRegistrationsApi(AccessDenier accessDenier) {
+    private void mockDeleteRegistrationsApi(AccessDenier accessDenier)
+            throws PackageManager.NameNotFoundException {
         // Throttler
         updateThrottlerDenied(accessDenier.mByThrottler);
 
@@ -2192,6 +2262,9 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
         // App Package Resolver Web Context Client App
         updateAppPackageResolverWebAppDenied(accessDenier.mByAppPackageWebContextClientApp);
 
+        // Package Name Uid Check Resolver
+        updatePackageNameUidCheckResolver(accessDenier.mByPackageName);
+
         // Results
         when(mMockMeasurementImpl.deleteRegistrations(any(DeletionParam.class)))
                 .thenReturn(STATUS_SUCCESS);
@@ -2204,7 +2277,8 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
      *
      * @param accessDenier describes if API is allowed or denied by any barrier
      */
-    private void mockRegisterSourceApi(AccessDenier accessDenier) {
+    private void mockRegisterSourceApi(AccessDenier accessDenier)
+            throws PackageManager.NameNotFoundException {
         // Throttler
         updateThrottlerDenied(accessDenier.mByThrottler);
 
@@ -2240,6 +2314,9 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
         // PermissionHelper
         updateAttributionPermissionDenied(accessDenier.mByAttributionPermission);
 
+        // Package Name Uid Check Resolver
+        updatePackageNameUidCheckResolver(accessDenier.mByPackageName);
+
         // Package Deny List
         if (accessDenier.mByPackageDenyList) {
             when(mMockFlags.getEnableMsmtRegisterSourcePackageDenyList()).thenReturn(true);
@@ -2261,7 +2338,8 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
      *
      * @param accessDenier describes if API is allowed or denied by any barrier
      */
-    private void mockRegisterSourcesApi(AccessDenier accessDenier) {
+    private void mockRegisterSourcesApi(AccessDenier accessDenier)
+            throws PackageManager.NameNotFoundException {
         // Throttler
         updateThrottlerDenied(accessDenier.mByThrottler);
 
@@ -2297,6 +2375,9 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
         // PermissionHelper
         updateAttributionPermissionDenied(accessDenier.mByAttributionPermission);
 
+        // Package Name Uid Check Resolver
+        updatePackageNameUidCheckResolver(accessDenier.mByPackageName);
+
         // Package Deny List
         if (accessDenier.mByPackageDenyList) {
             when(mMockFlags.getEnableMsmtRegisterSourcePackageDenyList()).thenReturn(true);
@@ -2319,7 +2400,8 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
      *
      * @param accessDenier describes if API is allowed or denied by any barrier
      */
-    private void mockRegisterTriggerApi(AccessDenier accessDenier) {
+    private void mockRegisterTriggerApi(AccessDenier accessDenier)
+            throws PackageManager.NameNotFoundException {
         // Throttler
         updateThrottlerDenied(accessDenier.mByThrottler);
 
@@ -2355,6 +2437,9 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
         // PermissionHelper
         updateAttributionPermissionDenied(accessDenier.mByAttributionPermission);
 
+        // Package Name Uid Check Resolver
+        updatePackageNameUidCheckResolver(accessDenier.mByPackageName);
+
         // Results
         when(mMockMeasurementImpl.register(any(RegistrationRequest.class), anyBoolean(), anyLong()))
                 .thenReturn(STATUS_SUCCESS);
@@ -2367,7 +2452,8 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
      *
      * @param accessDenier describes if API is allowed or denied by any barrier
      */
-    private void mockRegisterWebSourceApi(AccessDenier accessDenier) {
+    private void mockRegisterWebSourceApi(AccessDenier accessDenier)
+            throws PackageManager.NameNotFoundException {
         // Throttler
         updateThrottlerDenied(accessDenier.mByThrottler);
 
@@ -2407,6 +2493,9 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
         // PermissionHelper
         updateAttributionPermissionDenied(accessDenier.mByAttributionPermission);
 
+        // Package Name Uid Check Resolver
+        updatePackageNameUidCheckResolver(accessDenier.mByPackageName);
+
         // Results
         when(mMockMeasurementImpl.registerWebSource(
                         any(WebSourceRegistrationRequestInternal.class), anyBoolean(), anyLong()))
@@ -2420,7 +2509,8 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
      *
      * @param accessDenier describes if API is allowed or denied by any barrier
      */
-    private void mockRegisterWebTriggerApi(AccessDenier accessDenier) {
+    private void mockRegisterWebTriggerApi(AccessDenier accessDenier)
+            throws PackageManager.NameNotFoundException {
         // Throttler
         updateThrottlerDenied(accessDenier.mByThrottler);
 
@@ -2457,6 +2547,9 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
         // PermissionHelper
         updateAttributionPermissionDenied(accessDenier.mByAttributionPermission);
 
+        // Package Name Uid Check Resolver
+        updatePackageNameUidCheckResolver(accessDenier.mByPackageName);
+
         // Results
         when(mMockMeasurementImpl.registerWebTrigger(
                         any(WebTriggerRegistrationRequestInternal.class), anyBoolean(), anyLong()))
@@ -2470,7 +2563,8 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
      *
      * @param accessDenier describes if API is allowed or denied by any barrier
      */
-    private void mockStatusApi(AccessDenier accessDenier) {
+    private void mockStatusApi(AccessDenier accessDenier)
+            throws PackageManager.NameNotFoundException {
         // Access Resolvers
         // Kill Switch Resolver
         final boolean killSwitchEnabled = accessDenier.mByKillSwitch;
@@ -2496,6 +2590,9 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
 
         // Consent Resolver
         updateConsentDenied(accessDenier.mByConsent);
+
+        // Package Name Uid Check Resolver
+        updatePackageNameUidCheckResolver(accessDenier.mByPackageName);
     }
 
     private void doThrowExceptionCallerNotInForeground() {
@@ -2552,6 +2649,13 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
         when(mMockThrottler.tryAcquire(any(), any())).thenReturn(canAcquire);
     }
 
+    private void updatePackageNameUidCheckResolver(boolean denied)
+            throws PackageManager.NameNotFoundException {
+        when(mMockPackageManager.getPackageUid(anyString(), anyInt()))
+                .thenReturn(denied ? (CALLING_UID + 1) : CALLING_UID);
+        when(mMockContext.getPackageManager()).thenReturn(mMockPackageManager);
+    }
+
     private void assertJobsScheduled() {
         ExtendedMockito.verify(
                 () -> AggregateReportingJobService.scheduleIfNeeded(any(), anyBoolean()), times(1));
@@ -2598,6 +2702,7 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
         private boolean mByThrottler;
         private boolean mByDevContext;
         private boolean mByPackageDenyList;
+        private boolean mByPackageName;
 
         private AccessDenier deniedByDevContext() {
             mByDevContext = true;
@@ -2646,6 +2751,11 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
 
         private AccessDenier deniedByPackageDenyList() {
             mByPackageDenyList = true;
+            return this;
+        }
+
+        private AccessDenier deniedByPackageName() {
+            mByPackageName = true;
             return this;
         }
     }

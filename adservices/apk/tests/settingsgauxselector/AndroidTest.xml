@@ -15,16 +15,18 @@
   ~ limitations under the License.
   -->
 <configuration description="Config for Ad Services Settings app GA UX Selector test cases">
-    <option name="test-tag" value="AdServicesApkUISettingsGaUXSelectorTests" />
-    <option name="config-descriptor:metadata" key="parameter" value="not_secondary_user" />
+    <option name="test-tag" value="AdServicesApkUISettingsGaUXSelectorTests"/>
+    <option name="config-descriptor:metadata" key="parameter" value="not_secondary_user"/>
+    <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi"/>
+
     <!-- disable device config sync during test -->
-    <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
-    <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
+    <option name="run-command" value="device_config set_sync_disabled_for_tests persistent"/>
+    <option name="teardown-command" value="device_config set_sync_disabled_for_tests none"/>
 
     <metrics_collector class="com.android.tradefed.device.metric.FilePullerLogCollector">
-        <option name="directory-keys" value="/sdcard/Documents/adservices-tests" />
-        <option name="clean-up" value="false" />
-        <option name="collect-on-run-ended-only" value="true" />
+        <option name="directory-keys" value="/sdcard/Documents/adservices-tests"/>
+        <option name="clean-up" value="false"/>
+        <option name="collect-on-run-ended-only" value="true"/>
     </metrics_collector>
 
     <target_preparer class="com.android.tradefed.targetprep.suite.SuiteApkInstaller">

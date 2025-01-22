@@ -36,6 +36,7 @@ public class CachedFlags {
     private final boolean mEnforceForegroundStatusForMeasurementDeleteRegistrations;
     private final boolean mEnforceForegroundStatusForMeasurementStatus;
     private final boolean mEnableApiStatusAllowListCheck;
+    private final boolean mMeasurementEnablePackageNameUidCheck;
     private final String mApiAppAllowList;
     private final String mApiAppBlockList;
     private final String mWebContextClientAppAllowList;
@@ -73,6 +74,7 @@ public class CachedFlags {
         mEnableApiStatusAllowListCheck = flags.getMsmtEnableApiStatusAllowListCheck();
         mEnableMsmtRegisterSourcePackageDenyList =
                 flags.getEnableMsmtRegisterSourcePackageDenyList();
+        mMeasurementEnablePackageNameUidCheck = flags.getMeasurementEnablePackageNameUidCheck();
     }
 
     public boolean getMeasurementApiRegisterSourceKillSwitch() {
@@ -187,5 +189,11 @@ public class CachedFlags {
         return mEnableSessionStableKillSwitches
                 ? mEnableMsmtRegisterSourcePackageDenyList
                 : mFlags.getEnableMsmtRegisterSourcePackageDenyList();
+    }
+
+    public boolean getMeasurementEnablePackageNameUidCheck() {
+        return mEnableSessionStableKillSwitches
+                ? mMeasurementEnablePackageNameUidCheck
+                : mFlags.getMeasurementEnablePackageNameUidCheck();
     }
 }

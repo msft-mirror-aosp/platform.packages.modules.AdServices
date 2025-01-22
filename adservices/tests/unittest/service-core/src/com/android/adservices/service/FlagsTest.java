@@ -25,6 +25,7 @@ import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST;
 import static com.android.adservices.service.Flags.DEFAULT_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
@@ -1093,6 +1094,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnablePackageNameUidCheck() {
+        testFlag(
+                "getMeasurementEnablePackageNameUidCheck",
+                DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK,
+                Flags::getMeasurementEnablePackageNameUidCheck);
+    }
+
+    @Test
     public void testGetFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
         testFeatureFlag(
                 "FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS",
@@ -1247,6 +1256,12 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     // Internal helpers and tests - do not add new tests for flags following this point.          //
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /* NOTE: to enable this test locally, run:
+
+    find $ANDROID_BUILD_TOP/packages/modules/AdServices/shared/libraries/device-side/java/com/android/adservices/shared/common/flags/  -type f -iname "*.java" -exec sed -i.bak 's/SOURCE/RUNTIME/g' "{}" + && rm -rf `find $ANDROID_BUILD_TOP/packages/modules/AdServices/shared/libraries/device-side/java/com/android/adservices/shared/common/flags/ -name *.java.bak|xargs`
+
+    */
+
     @Test
     public void testAllFlagsAreProperlyAnnotated() throws Exception {
         requireFlagAnnotationsRuntimeRetention();
@@ -1267,7 +1282,9 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 fieldsMissingAnnotation.add(name);
             }
         }
-        expect.withMessage("fields missing @FeatureFlag or @ConfigFlag annotation")
+        expect.withMessage(
+                        "%s (out of %s) fields missing @FeatureFlag or @ConfigFlag annotation",
+                        fieldsMissingAnnotation.size(), allFields.size())
                 .that(fieldsMissingAnnotation)
                 .isEmpty();
     }

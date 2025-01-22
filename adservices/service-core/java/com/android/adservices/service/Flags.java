@@ -6094,11 +6094,21 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENABLE_RB_ATRACE;
     }
 
-    boolean DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST = false;
+    @FeatureFlag boolean DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST = false;
 
     /** Returns if the use of package deny list in msmt register source api */
     default boolean getEnableMsmtRegisterSourcePackageDenyList() {
         return DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST;
+    }
+
+    @FeatureFlag boolean DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK = true;
+
+    /**
+     * Feature flag to check that the package name from the request belongs to the calling package's
+     * uid.
+     */
+    default boolean getMeasurementEnablePackageNameUidCheck() {
+        return DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

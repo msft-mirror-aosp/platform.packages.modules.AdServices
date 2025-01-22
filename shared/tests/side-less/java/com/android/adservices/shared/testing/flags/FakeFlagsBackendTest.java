@@ -24,6 +24,7 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.meta_testing.SharedSidelessTestCase;
+import com.android.adservices.shared.testing.FakeNameValuePairContainer;
 import com.android.adservices.shared.testing.NameValuePair;
 
 import org.junit.Test;
@@ -33,21 +34,54 @@ public final class FakeFlagsBackendTest extends SharedSidelessTestCase {
 
     private static final String TAG = FakeFlagsBackendTest.class.getSimpleName();
     private static final String NAME = "A Flag Has No Name";
+    private static final String VALUE = "of the Rose";
+    private static final String ANOTHER_VALUE = "An NVP has not";
 
+    private final FakeNameValuePairContainer mContainer = new FakeNameValuePairContainer();
     private final FakeFlagsBackend mBackend = new FakeFlagsBackend(TAG);
 
     @Test
-    public void testNullConstructor() {
+    public void testDefaultConstructor_null() {
         assertThrows(NullPointerException.class, () -> new FakeFlagsBackend(/* tagName= */ null));
     }
 
     @Test
+    public void testCustomConstructor_null() {
+        assertThrows(
+                NullPointerException.class,
+                () -> new FakeFlagsBackend(/* logger= */ null, mContainer));
+        assertThrows(
+                NullPointerException.class,
+                () -> new FakeFlagsBackend(mLog, /* container= */ null));
+    }
+
+    @Test
+    public void testCustomConstructor() {
+        // NOTE: we could add tests to check the same behavior when using the custom constructor
+        // (for example, using parameterized tests), but it would be an overkill, so we're being
+        // pragmatic and just making some basic assertions
+        FakeFlagsBackend backend = new FakeFlagsBackend(mLog, mContainer);
+
+        expect.withMessage("getContainer()")
+                .that(backend.getContainer())
+                .isSameInstanceAs(mContainer);
+        expect.withMessage("getTagName()()").that(backend.getTagName()).isEqualTo(mLog.getTag());
+    }
+
+    @Test
     public void testCloneForSnapshot() {
+        NameValuePair nvp = new NameValuePair(NAME, VALUE);
+        mBackend.setFlag(NAME, VALUE);
+
         var clone = mBackend.cloneForSnapshot();
 
         assertWithMessage("cloneForSnapshot()").that(clone).isNotNull();
         assertWithMessage("cloneForSnapshot()").that(clone).isNotSameInstanceAs(mBackend);
         expect.withMessage("tag on cloneForSnapshot()").that(clone.getTagName()).isEqualTo(TAG);
+        assertWithMessage("clone.getFlags()").that(clone.getFlags()).containsExactly(NAME, nvp);
+        assertWithMessage("clone.getFlag(%s)", NAME)
+                .that(clone.getFlag(NAME, ANOTHER_VALUE))
+                .isEqualTo(VALUE);
 
         // Make sure it's immutable
         var thrown =
@@ -56,11 +90,24 @@ public final class FakeFlagsBackendTest extends SharedSidelessTestCase {
         expect.withMessage("message on exception")
                 .that(thrown)
                 .hasMessageThat()
-                .isEqualTo("setFlag(dude, sweet): not supported on snapshot");
-        expect.withMessage("getFlags() on clone").that(mBackend.getFlags()).isEmpty();
+                .contains("dude=sweet");
+        expect.withMessage("getFlags() on clone")
+                .that(mBackend.getFlags())
+                .containsExactly(NAME, nvp);
 
         // Make sure it didn't affect source
-        expect.withMessage("getFlags() on source").that(mBackend.getFlags()).isEmpty();
+        expect.withMessage("getFlags() on source")
+                .that(mBackend.getFlags())
+                .containsExactly(NAME, nvp);
+
+        // Make sure changes in the source don't affect it neither
+        mBackend.setFlag("dude", "sweet");
+        assertWithMessage("clone.getFlags() after changing source")
+                .that(clone.getFlags())
+                .containsExactly(NAME, nvp);
+        assertWithMessage("clone.getFlag(%s) after changing source", NAME)
+                .that(clone.getFlag(NAME, ANOTHER_VALUE))
+                .isEqualTo(VALUE);
     }
 
     @Test
@@ -69,13 +116,13 @@ public final class FakeFlagsBackendTest extends SharedSidelessTestCase {
         assertWithMessage("getFlags() on empty").that(flags1).isNotNull();
         expect.withMessage("getFlags() on empty").that(flags1).isEmpty();
 
-        mBackend.setFlag(NAME, "of the Rose");
+        mBackend.setFlag(NAME, VALUE);
         var flags2 = mBackend.getFlags();
         assertWithMessage("getFlags() after adding").that(flags2).isNotNull();
         expect.withMessage("getFlags() after adding").that(flags2).isNotSameInstanceAs(flags1);
         expect.withMessage("getFlags() after adding")
                 .that(flags2)
-                .containsExactly(NAME, new NameValuePair(NAME, "of the Rose"));
+                .containsExactly(NAME, new NameValuePair(NAME, VALUE));
     }
 
     @Test
@@ -220,32 +267,6 @@ public final class FakeFlagsBackendTest extends SharedSidelessTestCase {
         assertWithMessage("get() after setFlag(null)")
                 .that(mBackend.getFlag(NAME, 666F))
                 .isEqualTo(666F);
-    }
-
-    @Test
-    public void testSet_nameValuePair_null() {
-        assertThrows(NullPointerException.class, () -> mBackend.set(null));
-    }
-
-    @Test
-    public void testSet_nameValuePair() {
-        NameValuePair nvp = new NameValuePair(NAME, "Bond, James Bond");
-
-        var firstPrevious = mBackend.set(nvp);
-
-        expect.withMessage("get() after set()")
-                .that(mBackend.getFlag(NAME, "Y U NO IGNORE ME?"))
-                .isEqualTo("Bond, James Bond");
-        expect.withMessage("result of set(nvp)").that(firstPrevious).isNull();
-
-        var secondPrevious = mBackend.set(new NameValuePair(NAME, null));
-
-        assertWithMessage("get() after setFlag(null)")
-                .that(mBackend.getFlag(NAME, "I'm not set, therefore I am"))
-                .isEqualTo("I'm not set, therefore I am");
-        expect.withMessage("result of set(nvp with null value)")
-                .that(secondPrevious)
-                .isEqualTo(nvp);
     }
 
     private void assertThrowsNotSet(String what, ThrowingRunnable r) {

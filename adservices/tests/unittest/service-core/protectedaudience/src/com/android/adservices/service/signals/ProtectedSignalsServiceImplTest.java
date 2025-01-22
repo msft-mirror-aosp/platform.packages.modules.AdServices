@@ -49,6 +49,7 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdServicesPermissions;
@@ -167,10 +168,10 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
         when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(URI),
                         eq(PACKAGE),
-                        eq(false),
-                        eq(true),
-                        eq(false),
-                        eq(true),
+                        /* disableEnrollmentCheck= */ eq(false),
+                        /* enforceForeground= */ eq(true),
+                        /* enforceConsent= */ eq(false),
+                        /* enforceNotificationShown= */ eq(true),
                         eq(UID),
                         eq(API_NAME),
                         eq(PROTECTED_SIGNAL_API_UPDATE_SIGNALS),
@@ -613,6 +614,29 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
         verify(
                 () -> PeriodicEncodingJobService.scheduleIfNeeded(any(), any(), eq(false)),
                 times(1));
+    }
+
+    @SetFlagTrue(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
+    @Test
+    public void testUpdateSignals_disableFledgeEnrollmentCheck_doesNotCheckEnrollment()
+            throws Exception {
+        when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
+                        eq(URI),
+                        eq(PACKAGE),
+                        /* disableEnrollmentCheck= */ eq(true),
+                        /* enforceForeground= */ eq(true),
+                        /* enforceConsent= */ eq(false),
+                        /* enforceNotificationShown= */ eq(true),
+                        eq(UID),
+                        eq(API_NAME),
+                        eq(PROTECTED_SIGNAL_API_UPDATE_SIGNALS),
+                        eq(mDevContext)))
+                .thenReturn(ADTECH);
+
+        mProtectedSignalsService.updateSignals(mInput, mUpdateSignalsCallbackMock);
+
+        verify(mUpdateSignalsCallbackMock).onSuccess();
+        verifyZeroInteractions(mEnrollmentDaoMock);
     }
 
     private void verifyUpdateSignalsApiUsageLog(int resultCode, String packageName)

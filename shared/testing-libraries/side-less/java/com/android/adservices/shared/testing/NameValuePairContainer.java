@@ -15,14 +15,16 @@
  */
 package com.android.adservices.shared.testing;
 
-/** Abstraction used to set {@link NameValuePair} objects. */
-public interface NameValuePairSetter {
+import com.google.common.collect.ImmutableMap;
 
-    /**
-     * Sets a {@code nvp}, or remove it if its {@link NameValuePair#value value} is {@code null}.
-     *
-     * @return previous {@code nvp} for that {@code NameValuePair#name name}.
-     */
+// TODO(b/373446366): it might be worth to merge it with NameValuePairSetter (and having just one)
+/** Abstraction used to manage{@link NameValuePair} objects. */
+public interface NameValuePairContainer extends NameValuePairSetter {
+
+    /** Gets all values. */
+    ImmutableMap<String, NameValuePair> getAll();
+
+    /** Gets the NVP for the given name. */
     @Nullable
-    NameValuePair set(NameValuePair nvp);
+    NameValuePair get(String name);
 }

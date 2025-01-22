@@ -25,7 +25,7 @@ public final class NameValuePairActionTest extends SharedSidelessTestCase {
 
     private static final String NAME = "The Name is";
 
-    private final FakeNameValuePairSetter mSetter = new FakeNameValuePairSetter();
+    private final FakeNameValuePairContainer mSetter = new FakeNameValuePairContainer();
 
     @Test
     public void testConstructor_null() {
@@ -76,7 +76,7 @@ public final class NameValuePairActionTest extends SharedSidelessTestCase {
         expect.withMessage("execute()").that(result).isFalse();
         expect.withMessage("setter.getAll() after execute")
                 .that(mSetter.getAll())
-                .containsExactly(nvp);
+                .containsExactly(NAME, nvp);
 
         action.revert();
         expect.withMessage("setter.get(%s) after revert", NAME)
@@ -84,7 +84,7 @@ public final class NameValuePairActionTest extends SharedSidelessTestCase {
                 .isEqualTo(nvp);
         expect.withMessage("setter.getAll() after revert")
                 .that(mSetter.getAll())
-                .containsExactly(nvp);
+                .containsExactly(NAME, nvp);
     }
 
     @Test
@@ -96,7 +96,7 @@ public final class NameValuePairActionTest extends SharedSidelessTestCase {
         expect.withMessage("execute()").that(result).isTrue();
         expect.withMessage("setter.getAll() after execute")
                 .that(mSetter.getAll())
-                .containsExactly(nvp);
+                .containsExactly(NAME, nvp);
 
         action.revert();
         expect.withMessage("setter.get(%s) after revert", NAME).that(mSetter.get(NAME)).isNull();
@@ -113,11 +113,13 @@ public final class NameValuePairActionTest extends SharedSidelessTestCase {
         var result = action.execute();
         expect.withMessage("execute()").that(result).isTrue();
         expect.withMessage("value after execute").that(mSetter.get(NAME)).isEqualTo(nvp);
-        expect.withMessage("setter.getAll()").that(mSetter.getAll()).containsExactly(nvp);
+        expect.withMessage("setter.getAll()").that(mSetter.getAll()).containsExactly(NAME, nvp);
 
         action.revert();
         expect.withMessage("value after revert ").that(mSetter.get(NAME)).isEqualTo(previousNvp);
-        expect.withMessage("setter.getAll()").that(mSetter.getAll()).containsExactly(previousNvp);
+        expect.withMessage("setter.getAll()")
+                .that(mSetter.getAll())
+                .containsExactly(NAME, previousNvp);
     }
 
     @Test

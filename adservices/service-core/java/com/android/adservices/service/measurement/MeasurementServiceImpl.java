@@ -79,6 +79,7 @@ import com.android.adservices.service.measurement.access.ForegroundEnforcementAc
 import com.android.adservices.service.measurement.access.IAccessResolver;
 import com.android.adservices.service.measurement.access.KillSwitchAccessResolver;
 import com.android.adservices.service.measurement.access.PackageDenyAccessResolver;
+import com.android.adservices.service.measurement.access.PackageNameUidCheckAccessResolver;
 import com.android.adservices.service.measurement.access.PermissionAccessResolver;
 import com.android.adservices.service.measurement.access.UserConsentAccessResolver;
 import com.android.adservices.service.measurement.attribution.AttributionFallbackJobService;
@@ -227,6 +228,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             mAppImportanceFilter,
                                             getRegisterSourceOrTriggerEnforcementForegroundStatus(
                                                     request, mFlags)),
+                                    new PackageNameUidCheckAccessResolver(
+                                            request.getAppPackageName(),
+                                            callerUid,
+                                            mFlags.getMeasurementEnablePackageNameUidCheck()),
                                     new AppPackageAccessResolver(
                                             mFlags.getMsmtApiAppAllowList(),
                                             mFlags.getMsmtApiAppBlockList(),
@@ -304,6 +309,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             callerUid,
                                             mAppImportanceFilter,
                                             enforceForeground),
+                                    new PackageNameUidCheckAccessResolver(
+                                            request.getAppPackageName(),
+                                            callerUid,
+                                            mFlags.getMeasurementEnablePackageNameUidCheck()),
                                     new AppPackageAccessResolver(
                                             mFlags.getMsmtApiAppAllowList(),
                                             mFlags.getMsmtApiAppBlockList(),
@@ -370,6 +379,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             callerUid,
                                             mAppImportanceFilter,
                                             foregroundEnforcementSupplier),
+                                    new PackageNameUidCheckAccessResolver(
+                                            request.getAppPackageName(),
+                                            callerUid,
+                                            mFlags.getMeasurementEnablePackageNameUidCheck()),
                                     new AppPackageAccessResolver(
                                             mFlags.getMsmtApiAppAllowList(),
                                             mFlags.getMsmtApiAppBlockList(),
@@ -440,6 +453,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             callerUid,
                                             mAppImportanceFilter,
                                             enforceForeground),
+                                    new PackageNameUidCheckAccessResolver(
+                                            request.getAppPackageName(),
+                                            callerUid,
+                                            mFlags.getMeasurementEnablePackageNameUidCheck()),
                                     new AppPackageAccessResolver(
                                             mFlags.getMsmtApiAppAllowList(),
                                             mFlags.getMsmtApiAppBlockList(),
@@ -504,6 +521,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             callerUid,
                                             mAppImportanceFilter,
                                             enforceForeground),
+                                    new PackageNameUidCheckAccessResolver(
+                                            request.getAppPackageName(),
+                                            callerUid,
+                                            mFlags.getMeasurementEnablePackageNameUidCheck()),
                                     new AppPackageAccessResolver(
                                             mFlags.getMsmtApiAppAllowList(),
                                             mFlags.getMsmtApiAppBlockList(),
@@ -557,6 +578,8 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                         final Supplier<Boolean> enforceForeground =
                                 mFlags::getEnforceForegroundStatusForMeasurementStatus;
                         List<IAccessResolver> accessResolvers;
+                        boolean enablePackageNameUidCheck =
+                                mFlags.getMeasurementEnablePackageNameUidCheck();
                         if (mFlags.getMsmtEnableApiStatusAllowListCheck()) {
                             if (!AllowLists.isPackageAllowListed(
                                     mFlags.getWebContextClientAppAllowList(),
@@ -570,6 +593,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                             new KillSwitchAccessResolver(
                                                     mFlags::getMeasurementApiStatusKillSwitch),
                                             new UserConsentAccessResolver(mConsentManager),
+                                            new PackageNameUidCheckAccessResolver(
+                                                    statusParam.getAppPackageName(),
+                                                    callerUid,
+                                                    enablePackageNameUidCheck),
                                             new ForegroundEnforcementAccessResolver(
                                                     apiNameId,
                                                     callerUid,
@@ -588,6 +615,10 @@ public class MeasurementServiceImpl extends IMeasurementService.Stub {
                                                     callerUid,
                                                     mAppImportanceFilter,
                                                     enforceForeground),
+                                            new PackageNameUidCheckAccessResolver(
+                                                    statusParam.getAppPackageName(),
+                                                    callerUid,
+                                                    enablePackageNameUidCheck),
                                             new AppPackageAccessResolver(
                                                     mFlags.getMsmtApiAppAllowList(),
                                                     mFlags.getMsmtApiAppBlockList(),

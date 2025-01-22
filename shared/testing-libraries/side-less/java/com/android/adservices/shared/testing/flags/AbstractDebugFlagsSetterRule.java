@@ -49,7 +49,7 @@ import java.util.Objects;
 public abstract class AbstractDebugFlagsSetterRule<R extends AbstractDebugFlagsSetterRule<R>>
         extends ActionBasedRule<R> {
 
-    private final NameValuePairSetter mSetter;
+    protected final NameValuePairSetter mSetter;
 
     protected AbstractDebugFlagsSetterRule(RealLogger logger, NameValuePairSetter setter) {
         super(logger);

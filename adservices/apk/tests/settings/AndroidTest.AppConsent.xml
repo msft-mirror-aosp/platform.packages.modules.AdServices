@@ -17,6 +17,7 @@
 <configuration description="Config for Ad Services Settings App test cases">
     <option name="test-tag" value="AdServicesApkUITestsAppConsent" />
     <option name="config-descriptor:metadata" key="parameter" value="not_secondary_user" />
+    <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi"/>
 
     <metrics_collector class="com.android.tradefed.device.metric.FilePullerLogCollector">
         <option name="directory-keys" value="/sdcard/Documents/adservices-tests" />

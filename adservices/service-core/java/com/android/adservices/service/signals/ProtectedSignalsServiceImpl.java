@@ -350,12 +350,14 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
         try {
             try {
                 AdTechIdentifier buyer;
+                boolean shouldDisableFledgeEnrollmentCheck =
+                        mFlags.getDisableFledgeEnrollmentCheck();
                 try {
                     buyer =
                             mProtectedSignalsServiceFilter.filterRequestAndExtractIdentifier(
                                     input.getUpdateUri(),
                                     input.getCallerPackageName(),
-                                    mFlags.getDisableFledgeEnrollmentCheck(),
+                                    shouldDisableFledgeEnrollmentCheck,
                                     mFlags.getEnforceForegroundStatusForSignals(),
                                     // TODO (b/327187357): Move per-API/per-app consent into the
                                     //  filter
@@ -370,7 +372,11 @@ public class ProtectedSignalsServiceImpl extends IProtectedSignalsService.Stub {
                     throw new FilterException(t);
                 }
 
-                if (jsonProcessingStatsBuilder != null) {
+                // If the enrollment check has been disabled, it's likely that the API is under
+                // test, in which case the buyer probably won't be enrolled, so skip ad tech ID
+                // logging to avoid checking the enrollment DB unnecessarily and generating false
+                // misses in enrollment telemetry
+                if (jsonProcessingStatsBuilder != null && !shouldDisableFledgeEnrollmentCheck) {
                     /* You could save a DB call by building this into the filter, but it would
                      * make the code pretty complicated and be difficult to flag.
                      */

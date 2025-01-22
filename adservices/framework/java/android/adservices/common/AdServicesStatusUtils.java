@@ -262,8 +262,14 @@ public final class AdServicesStatusUtils {
     /** This error occurs when dev session state is unable to be read. */
     public static final int STATUS_DEV_SESSION_FAILURE = 33;
 
-    /** This error occurs when dev session state is unable to be read. */
+    /** This error occurs when the caller is in the deny list. */
     public static final int STATUS_CALLER_NOT_ALLOWED_DENY_LIST = 34;
+
+    /**
+     * This error occurs when the package name associated to the calling UID does not match the
+     * package name from the request.
+     */
+    public static final int STATUS_CALLER_NOT_ALLOWED_UID_MISMATCH = 35;
 
     /** The error message to be returned along with {@link LimitExceededException}. */
     public static final String RATE_LIMIT_REACHED_ERROR_MESSAGE = "API rate limit exceeded.";

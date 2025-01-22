@@ -513,6 +513,8 @@ public final class FlagsConstants {
             "measurement_default_destination_limit_algorithm";
     public static final String KEY_MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD =
             "measurement_enable_destination_limit_algorithm_field";
+    public static final String KEY_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK =
+            "Measurement__enable_package_name_uid_check";
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
@@ -1744,7 +1746,7 @@ public final class FlagsConstants {
     /** Key to enable the AdServices latency metrics {@code RbATrace}. */
     public static final String KEY_ENABLE_RB_ATRACE = "enable_rb_atrace";
 
-    /** Key to enable prod debug feature in server auctions */
+    /** Key to enable the package deny list for source registration */
     public static final String KEY_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST =
             "Measurement__enable_register_source_package_deny_list";
 }

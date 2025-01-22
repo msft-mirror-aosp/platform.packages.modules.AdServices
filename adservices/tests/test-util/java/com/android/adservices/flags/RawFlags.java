@@ -4362,4 +4362,11 @@ public class RawFlags<FB extends FlagsBackend> implements Flags {
                 KEY_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST,
                 DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST);
     }
+
+    @Override
+    public boolean getMeasurementEnablePackageNameUidCheck() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK,
+                DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK);
+    }
 }

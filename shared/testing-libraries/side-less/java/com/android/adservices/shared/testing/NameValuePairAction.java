@@ -71,7 +71,7 @@ public final class NameValuePairAction extends AbstractAction {
             throw new IllegalStateException("should not have been called when it didn't change");
         }
         if (mPreviousNvp == null) {
-            mSetter.remove(mNvp.name);
+            mSetter.set(new NameValuePair(mNvp.name, null));
             return;
         }
         mSetter.set(mPreviousNvp);

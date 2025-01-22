@@ -15,13 +15,14 @@
  */
 package com.android.adservices.flags;
 
-import com.android.adservices.shared.testing.NameValuePairSetter;
+import com.android.adservices.shared.testing.NameValuePairContainer;
 
 public final class AdServicesFakeDebugFlagsSetterRuleTest
-        extends AbstractAdServicesDebugFlagsSetterRuleTestCase<AdServicesFakeDebugFlagsSetterRule> {
+        extends AdServicesDeviceSideDebugFlagsSetterRuleTestCase<
+                AdServicesFakeDebugFlagsSetterRule, FakeDebugFlags> {
 
     @Override
-    protected AdServicesFakeDebugFlagsSetterRule newRule(NameValuePairSetter setter) {
-        return new AdServicesFakeDebugFlagsSetterRule(setter);
+    protected AdServicesFakeDebugFlagsSetterRule newRule(NameValuePairContainer container) {
+        return new AdServicesFakeDebugFlagsSetterRule(container);
     }
 }

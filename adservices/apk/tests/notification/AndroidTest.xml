@@ -20,6 +20,7 @@
     <!-- disable device config sync during test -->
     <option name="run-command" value="device_config set_sync_disabled_for_tests persistent" />
     <option name="teardown-command" value="device_config set_sync_disabled_for_tests none" />
+    <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi"/>
 
     <metrics_collector class="com.android.tradefed.device.metric.FilePullerLogCollector">
         <option name="directory-keys" value="/sdcard/Documents/adservices-tests" />
