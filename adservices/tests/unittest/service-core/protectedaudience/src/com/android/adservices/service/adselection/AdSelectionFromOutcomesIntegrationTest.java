@@ -164,7 +164,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 @SetFlagTrue(KEY_FLEDGE_SELECT_ADS_FROM_OUTCOMES_API_METRICS_ENABLED)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(DebugFlags.class)
-public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMockitoTestCase {
+public final class AdSelectionFromOutcomesIntegrationTest
+        extends AdServicesExtendedMockitoTestCase {
     private static final int CALLER_UID = Process.myUid();
     private static final String SELECTION_PICK_HIGHEST_LOGIC_JS_PATH = "/selectionPickHighestJS/";
     private static final String SELECTION_PICK_NONE_LOGIC_JS_PATH = "/selectionPickNoneJS/";
@@ -423,7 +424,7 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                         AdSelectionSignals.EMPTY,
                         mMockWebServerRule.uriForPath(selectionLogicPath));
 
-        AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
+        AdSelectionFromOutcomesIntegrationTest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);
 
         assertThat(resultsCallback.mIsSuccess).isTrue();
@@ -511,7 +512,7 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED,
                         mAuctionServerDebugConfigurationGenerator);
 
-        AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
+        AdSelectionFromOutcomesIntegrationTest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(adSelectionService, config, CALLER_PACKAGE_NAME);
 
         assertThat(resultsCallback.mIsSuccess).isTrue();
@@ -594,7 +595,7 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                         CONSOLE_MESSAGE_IN_LOGS_ENABLED,
                         mAuctionServerDebugConfigurationGenerator);
 
-        AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
+        AdSelectionFromOutcomesIntegrationTest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);
 
         assertThat(resultsCallback.mIsSuccess).isTrue();
@@ -646,7 +647,7 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                                 String.format(BID_FLOOR_SELECTION_SIGNAL_TEMPLATE, 9)),
                         mMockWebServerRule.uriForPath(selectionLogicPath));
 
-        AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
+        AdSelectionFromOutcomesIntegrationTest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);
 
         assertThat(resultsCallback.mIsSuccess).isTrue();
@@ -705,7 +706,7 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                                 String.format(BID_FLOOR_SELECTION_SIGNAL_TEMPLATE, 9)),
                         prebuiltUri);
 
-        AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
+        AdSelectionFromOutcomesIntegrationTest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);
 
         assertThat(resultsCallback.mIsSuccess).isTrue();
@@ -754,7 +755,7 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                                 String.format(BID_FLOOR_SELECTION_SIGNAL_TEMPLATE, 11)),
                         mMockWebServerRule.uriForPath(selectionLogicPath));
 
-        AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
+        AdSelectionFromOutcomesIntegrationTest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);
 
         assertThat(resultsCallback.mIsSuccess).isTrue();
@@ -804,7 +805,7 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                         AdSelectionSignals.EMPTY,
                         mMockWebServerRule.uriForPath(selectionLogicPath));
 
-        AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
+        AdSelectionFromOutcomesIntegrationTest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);
 
         assertThat(resultsCallback.mIsSuccess).isTrue();
@@ -850,7 +851,7 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                         AdSelectionSignals.EMPTY,
                         mMockWebServerRule.uriForPath(selectionLogicPath));
 
-        AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
+        AdSelectionFromOutcomesIntegrationTest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);
 
         assertThat(resultsCallback.mIsSuccess).isFalse();
@@ -879,7 +880,7 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                         AdSelectionSignals.EMPTY,
                         mMockWebServerRule.uriForPath(selectionLogicPath));
 
-        AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
+        AdSelectionFromOutcomesIntegrationTest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);
 
         assertThat(resultsCallback.mIsSuccess).isFalse();
@@ -917,7 +918,7 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                         Collections.singletonList(AD_SELECTION_ID_1),
                         AdSelectionSignals.EMPTY,
                         prebuiltUri);
-        AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback resultsCallback =
+        AdSelectionFromOutcomesIntegrationTest.AdSelectionFromOutcomesTestCallback resultsCallback =
                 invokeSelectAdsFromOutcomes(mAdSelectionService, config, CALLER_PACKAGE_NAME);
 
         assertThat(resultsCallback.mIsSuccess).isFalse();
@@ -944,7 +945,7 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
         assertThat(stats.getExecutionResultCode()).isEqualTo(JS_RUN_STATUS_UNSET);
     }
 
-    private AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback
+    private AdSelectionFromOutcomesIntegrationTest.AdSelectionFromOutcomesTestCallback
             invokeSelectAdsFromOutcomes(
                     AdSelectionService adSelectionService,
                     AdSelectionFromOutcomesConfig adSelectionFromOutcomesConfig,
@@ -952,9 +953,10 @@ public final class AdSelectionFromOutcomesE2ETest extends AdServicesExtendedMock
                     throws InterruptedException, RemoteException {
 
         CountDownLatch countdownLatch = new CountDownLatch(1);
-        AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback adSelectionTestCallback =
-                new AdSelectionFromOutcomesE2ETest.AdSelectionFromOutcomesTestCallback(
-                        countdownLatch);
+        AdSelectionFromOutcomesIntegrationTest.AdSelectionFromOutcomesTestCallback
+                adSelectionTestCallback =
+                        new AdSelectionFromOutcomesIntegrationTest
+                                .AdSelectionFromOutcomesTestCallback(countdownLatch);
 
         AdSelectionFromOutcomesInput input =
                 new AdSelectionFromOutcomesInput.Builder()

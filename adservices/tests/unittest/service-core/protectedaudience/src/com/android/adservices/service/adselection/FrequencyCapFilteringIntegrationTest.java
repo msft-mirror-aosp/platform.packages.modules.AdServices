@@ -78,7 +78,7 @@ import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
-import com.android.adservices.service.adselection.AdSelectionE2ETest.AdSelectionTestCallback;
+import com.android.adservices.service.adselection.OnDeviceAdSelectionIntegrationTest.AdSelectionTestCallback;
 import com.android.adservices.service.adselection.UpdateAdCounterHistogramWorkerTest.UpdateAdCounterHistogramTestCallback;
 import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
@@ -130,7 +130,7 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @SetFlagFalse(KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH)
 @SetFlagTrue(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
-public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockitoTestCase {
+public final class FrequencyCapFilteringIntegrationTest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLBACK_WAIT_MS = 500;
     private static final int SELECT_ADS_CALLBACK_WAIT_MS = 10_000;
     private static final long AD_SELECTION_ID_BUYER_1 = 20;
@@ -366,13 +366,16 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         Futures.immediateFuture(
                                 AdServicesHttpClientResponse.builder()
                                         .setResponseBody(
-                                                AdSelectionE2ETest.READ_BID_FROM_AD_METADATA_JS)
+                                                OnDeviceAdSelectionIntegrationTest
+                                                        .READ_BID_FROM_AD_METADATA_JS)
                                         .build()))
                 .doReturn(
                         // Scoring logic
                         Futures.immediateFuture(
                                 AdServicesHttpClientResponse.builder()
-                                        .setResponseBody(AdSelectionE2ETest.USE_BID_AS_SCORE_JS)
+                                        .setResponseBody(
+                                                OnDeviceAdSelectionIntegrationTest
+                                                        .USE_BID_AS_SCORE_JS)
                                         .build()))
                 .when(mAdServicesHttpsClientMock)
                 .fetchPayloadWithLogging(

@@ -179,7 +179,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 @SetFlagTrue(KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED)
 // TODO (b/384952360): refine CEL related verifications later
 @SkipLoggingUsageRule(reason = "b/384952360")
-public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMockitoTestCase {
+public final class ReportAndRegisterEventIntegrationTest extends AdServicesExtendedMockitoTestCase {
     private final DevContext mDevContext = DevContext.createForDevOptionsDisabled();
 
     @Spy
