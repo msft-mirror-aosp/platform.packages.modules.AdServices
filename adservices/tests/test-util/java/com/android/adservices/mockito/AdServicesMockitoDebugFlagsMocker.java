@@ -32,12 +32,6 @@ public final class AdServicesMockitoDebugFlagsMocker extends AbstractMocker
     }
 
     @Override
-    public void mockGetConsentManagerDebugMode(boolean value) {
-        logV("mockGetConsentManagerDebugMode(%b)", value);
-        when(mDebugFlags.getConsentManagerDebugMode()).thenReturn(value);
-    }
-
-    @Override
     public void mockGetConsentNotificationDebugMode(boolean value) {
         logV("mockGetConsentNotificationDebugMode(%b)", value);
         when(mDebugFlags.getConsentNotificationDebugMode()).thenReturn(value);

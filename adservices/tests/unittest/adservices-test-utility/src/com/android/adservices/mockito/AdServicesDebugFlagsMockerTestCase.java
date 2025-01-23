@@ -53,15 +53,6 @@ public abstract class AdServicesDebugFlagsMockerTestCase<T extends AdServicesDeb
     }
 
     @Test
-    public final void testMockGetConsentManagerDebugMode() {
-        getMocker().mockGetConsentManagerDebugMode(true);
-
-        boolean result = mMockDebugFlags.getConsentManagerDebugMode();
-
-        expect.withMessage("flags.mockGetConsentManagerDebugMode()").that(result).isTrue();
-    }
-
-    @Test
     public final void testMockGetConsentNotificationDebugMode() {
         getMocker().mockGetConsentNotificationDebugMode(true);
 
