@@ -144,7 +144,7 @@ public class AppInstallAdvertisersSetterTest extends AdServicesExtendedMockitoTe
     @Test
     public void testSetAppInstallAdvertisersSuccessWithUxNotificationEnforcementDisabled()
             throws Exception {
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
         AppInstallAdvertisersSetter appInstallAdvertisersSetter =
                 new AppInstallAdvertisersSetter(
                         mAppInstallDaoMock,

@@ -2008,7 +2008,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_NOTIFY_EMPTY_SUCCESS_SILENT_CONSENT_FAILURE)
     public void testRunner_revokedUserConsent_returnsEmptyResult_UXNotificationEnforcementDisabled()
             throws InterruptedException {
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
         mocker.mockGetFlags(mLegacyFakeFlags);
 
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))

@@ -152,7 +152,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     @Before
     public void setup() throws Exception {
-        mocker.mockGetConsentNotificationDebugMode(false);
+        mockGetConsentNotificationDebugMode(false);
         mocker.mockGetFlags(mFlagsWithAllCheckEnabled);
         mService =
                 new CustomAudienceServiceImpl(
@@ -255,7 +255,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
             throws RemoteException {
         CustomAudienceServiceFilter customAudienceServiceFilterMock =
                 Mockito.mock(CustomAudienceServiceFilter.class);
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
 
         CustomAudienceServiceImpl service =
                 new CustomAudienceServiceImpl(
@@ -843,7 +843,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
             throws RemoteException {
         CustomAudienceServiceFilter customAudienceServiceFilterMock =
                 Mockito.mock(CustomAudienceServiceFilter.class);
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
 
         CustomAudienceServiceImpl service =
                 new CustomAudienceServiceImpl(

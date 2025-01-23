@@ -253,7 +253,7 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
         mLegacyFakeFlags = new AdSelectionFailureE2ETestFlags();
         mocker.mockGetFlags(mLegacyFakeFlags);
         mocker.mockGetDebugFlags(mMockDebugFlags);
-        mocker.mockGetConsentNotificationDebugMode(false);
+        mockGetConsentNotificationDebugMode(false);
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDatabase.class)
                         .build()

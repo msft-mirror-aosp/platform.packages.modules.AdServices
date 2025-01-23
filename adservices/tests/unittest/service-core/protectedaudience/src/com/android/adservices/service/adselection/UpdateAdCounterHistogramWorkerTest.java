@@ -141,7 +141,7 @@ public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockit
         CountDownLatch callbackLatch = new CountDownLatch(1);
         UpdateAdCounterHistogramTestCallback callback =
                 new UpdateAdCounterHistogramTestCallback(callbackLatch);
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
 
         UpdateAdCounterHistogramWorker updateAdCounterHistogramWorker =
                 new UpdateAdCounterHistogramWorker(

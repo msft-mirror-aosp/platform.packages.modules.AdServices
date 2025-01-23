@@ -161,6 +161,12 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         checkProhibitedMockitoFields(AdServicesMockerLessExtendedMockitoTestCase.class, this);
     }
 
+    // TODO(b/338067482): temporary method, will be replaced by debugFlags.setFlag()
+    protected void mockGetConsentNotificationDebugMode(boolean mode) {
+        mLog.v("mockGetConsentNotificationDebugMode(%b): delegating to mocker (%s)", mode, mocker);
+        mocker.mockGetConsentNotificationDebugMode(mode);
+    }
+
     private static final String REASON_SESSION_MANAGED_BY_RULE =
             "mockito session is automatically managed by a @Rule";
 

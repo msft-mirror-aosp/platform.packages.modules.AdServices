@@ -301,7 +301,7 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
         when(mConsentManagerMock.isPasConsentGiven()).thenReturn(true);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(false);
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
         when(mMockFlags.getDisableFledgeEnrollmentCheck()).thenReturn(true);
         when(mMockFlags.getPasAppAllowList()).thenReturn("*");
         when(mMockFlags.getPpapiAppAllowList()).thenReturn("*");
