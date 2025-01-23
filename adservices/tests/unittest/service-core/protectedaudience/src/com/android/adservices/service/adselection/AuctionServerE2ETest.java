@@ -233,7 +233,6 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
@@ -518,6 +517,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         mAppInstallDao,
                         mFrequencyCapDaoSpy,
                         mProtectedSignalsDao,
+                        mEncodedPayloadDaoSpy,
                         mDatastoreManager);
     }
 
@@ -1818,6 +1818,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                                 .build());
         assertThat(mCustomAudienceDaoSpy.getCustomAudienceCount()).isEqualTo(0);
         assertThat(mProtectedSignalsDao.getSignalsByBuyer(WINNER_BUYER)).isEmpty();
+        assertThat(mEncodedPayloadDaoSpy.doesEncodedPayloadExist(WINNER_BUYER)).isFalse();
         assertThat(callback.mIsSuccess).isTrue();
         mDevSessionHelper.endDevSession();
     }
@@ -1840,6 +1841,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                                 .build());
         assertThat(mCustomAudienceDaoSpy.getCustomAudienceCount()).isEqualTo(0);
         assertThat(mProtectedSignalsDao.getSignalsByBuyer(WINNER_BUYER)).isEmpty();
+        assertThat(mEncodedPayloadDaoSpy.doesEncodedPayloadExist(WINNER_BUYER)).isFalse();
         assertThat(callback.mIsSuccess).isTrue();
         mDevSessionHelper.endDevSession();
     }

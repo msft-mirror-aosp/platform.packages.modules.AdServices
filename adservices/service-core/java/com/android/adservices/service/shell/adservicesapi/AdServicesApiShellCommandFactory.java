@@ -91,6 +91,7 @@ public final class AdServicesApiShellCommandFactory implements ShellCommandFacto
                                                 FlagsFactory.getFlags())
                                         .getFrequencyCapDataClearer(),
                                 ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
+                                ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
                                 datastoreManager,
                                 AdServicesExecutors.getBackgroundExecutor()),
                         DevSessionDataStoreFactory.get(),
