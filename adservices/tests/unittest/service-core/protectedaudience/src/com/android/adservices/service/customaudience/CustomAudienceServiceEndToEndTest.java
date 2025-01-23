@@ -125,6 +125,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.MeasurementDbHelper;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
+import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
@@ -354,6 +355,10 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                 Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
                         .build()
                         .protectedSignalsDao();
+        EncodedPayloadDao encodedPayloadDao =
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
+                        .build()
+                        .getEncodedPayloadDao();
 
         mMeasurementDatastoreManager =
                 new SQLDatastoreManager(
@@ -366,6 +371,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAppInstallDao,
                         mFrequencyCapDao,
                         protectedSignalsDao,
+                        encodedPayloadDao,
                         mMeasurementDatastoreManager);
 
         mCustomAudienceValidator =
