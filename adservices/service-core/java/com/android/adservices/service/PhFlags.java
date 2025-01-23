@@ -3914,6 +3914,20 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableAdIdsPerDevicePerWindow() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW,
+                DEFAULT_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW);
+    }
+
+    @Override
+    public long getMeasurementAdIdsPerDevicePerWindowPeriodMs() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS,
+                DEFAULT_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS);
+    }
+
+    @Override
     public boolean getNotificationDismissedOnClick() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK,
