@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package com.android.adservices.shared.proto;
+option java_multiple_files = true;
+option java_package = "com.android.adservices.shared.proto";
+
+// Stores the a unique device id which is used for device-level sampling
+message DeviceSelectionId {
+  // Unique id used to select devices
+  optional int64 selection_id = 1;
+}
