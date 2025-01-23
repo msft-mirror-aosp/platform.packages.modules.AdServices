@@ -16,8 +16,6 @@
 
 package com.android.adservices.service;
 
-import static com.android.adservices.common.DeviceConfigUtil.setAdservicesFlag;
-import static com.android.adservices.service.DeviceConfigAndSystemPropertiesExpectations.mockGetAdServicesFlag;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_BACK_COMPAT;
 import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
@@ -31,6 +29,7 @@ import androidx.annotation.Nullable;
 import com.android.adservices.service.fixture.TestableSystemProperties;
 import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.adservices.shared.testing.Logger;
+import com.android.adservices.shared.testing.flags.TestableFlagsBackend;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.truth.Expect;
@@ -46,14 +45,16 @@ public final class PhFlagsTestHelper {
     private final FlagGuard mGlobalKillSwitchGuard = value -> setGlobalKillSwitch(!value);
 
     private final Flags mPhFlags;
+    private final TestableFlagsBackend mBackend;
     private final boolean mIsRaw;
     private final Expect mExpect;
 
-    public PhFlagsTestHelper(Flags flags, boolean isRaw, Expect expect) {
-        mLog.i("PhFlagsTestHelper(flags=%s, isRaw=%b)", flags, isRaw);
-        mPhFlags = Objects.requireNonNull(flags);
+    PhFlagsTestHelper(Flags flags, TestableFlagsBackend backend, boolean isRaw, Expect expect) {
+        mLog.i("PhFlagsTestHelper(flags=%s, backend=%s, isRaw=%b)", flags, backend, isRaw);
+        mPhFlags = Objects.requireNonNull(flags, "flags cannot be null");
+        mBackend = Objects.requireNonNull(backend, "backend cannot be null");
         mIsRaw = isRaw;
-        mExpect = Objects.requireNonNull(expect);
+        mExpect = Objects.requireNonNull(expect, "expect cannot be null");
     }
 
     /** Tests a featureFlag (DeviceConfig FeatureFlag) guarded by a {@code guard}. */
@@ -617,5 +618,28 @@ public final class PhFlagsTestHelper {
     private void setSystemProperty(String name, String value) {
         mLog.d("setSystemProperty(): %s=%s", name, value);
         TestableSystemProperties.set(PhFlags.getSystemPropertyName(name), "" + value);
+    }
+
+    // NOTE: it would be cleaner to inline methods below and call mBackend directly, but for now
+    // we're trying to minimize the changes
+
+    void setAdservicesFlag(String name, String value) {
+        mLog.d("setAdservicesFlag(%s, %s): delegating to %s", name, value, mBackend);
+        mBackend.setFlag(name, value);
+    }
+
+    void setAdservicesFlag(String name, boolean value) {
+        mLog.d("setAdservicesFlag(%s, %b): delegating to %s", name, value, mBackend);
+        mBackend.setFlag(name, value);
+    }
+
+    void mockGetAdServicesFlag(String name, String value) {
+        mLog.d("mockGetAdServicesFlag(%s, %s): delegating to %s", name, value, mBackend);
+        mBackend.setFlag(name, value);
+    }
+
+    void mockGetAdServicesFlag(String name, boolean value) {
+        mLog.d("mockGetAdServicesFlag(%s, %b): delegating to %s", name, value, mBackend);
+        mBackend.setFlag(name, value);
     }
 }

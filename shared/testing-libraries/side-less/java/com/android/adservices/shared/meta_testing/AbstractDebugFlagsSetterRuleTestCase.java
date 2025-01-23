@@ -146,6 +146,7 @@ public abstract class AbstractDebugFlagsSetterRuleTestCase<
                 new NameValuePair(FLAG_D, FALSE));
     }
 
+    @SuppressWarnings("VisibleForTests") // TODO(b/343741206): Remove suppress warning once fixed.
     @Test
     public final void testGetTestFailureHeader() {
         R rule = newRule();
