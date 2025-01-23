@@ -57,7 +57,6 @@ import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionSource;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
-import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig;
 import com.android.adservices.service.measurement.aggregation.AggregateAttributionData;
 import com.android.adservices.service.measurement.aggregation.AggregateDebugReporting;
 import com.android.adservices.service.measurement.aggregation.AggregateDeduplicationKey;
@@ -246,9 +245,12 @@ class AttributionJobHandler {
                         return;
                     }
 
+                    boolean triggerHasEventData;
+                    boolean triggerHasAggregatableData;
                     try {
-                        if (!getTriggerHasAggregatableData(trigger)
-                                && trigger.parseEventTriggers(mFlags).isEmpty()) {
+                        triggerHasAggregatableData = trigger.hasAggregatableData(mFlags);
+                        triggerHasEventData = !trigger.parseEventTriggers(mFlags).isEmpty();
+                        if (!triggerHasAggregatableData && !triggerHasEventData) {
                             ignoreTrigger(trigger, measurementDao);
                             setAndLogAttributionStatus(
                                     attributionStatus,
@@ -395,11 +397,21 @@ class AttributionJobHandler {
                     List<DebugReportApi.Type> adrTypes = new ArrayList<>();
                     TriggeringStatus aggregateTriggeringStatus =
                             maybeGenerateAggregateReport(
-                                    source, trigger, measurementDao, attributionStatus, adrTypes);
+                                    source,
+                                    trigger,
+                                    measurementDao,
+                                    attributionStatus,
+                                    adrTypes,
+                                    triggerHasAggregatableData);
 
                     TriggeringStatus eventTriggeringStatus =
                             maybeGenerateEventReport(
-                                    source, trigger, measurementDao, attributionStatus, adrTypes);
+                                    source,
+                                    trigger,
+                                    measurementDao,
+                                    attributionStatus,
+                                    adrTypes,
+                                    triggerHasEventData);
 
                     if (aggregateTriggeringStatus == TriggeringStatus.DROPPED) {
                         generateNullAggregateReportForNonAttributedTrigger(
@@ -460,24 +472,6 @@ class AttributionJobHandler {
         }
     }
 
-    private boolean getTriggerHasAggregatableData(Trigger trigger) throws JSONException {
-        Optional<AggregatableAttributionTrigger> aggregatableAttributionTriggerOpt =
-                trigger.getAggregatableAttributionTrigger(mFlags);
-        if (aggregatableAttributionTriggerOpt.isEmpty()) {
-            return false;
-        }
-
-        AggregatableAttributionTrigger aggregatableAttributionTrigger =
-                aggregatableAttributionTriggerOpt.get();
-        for (AggregatableValuesConfig aggValuesConfig :
-                aggregatableAttributionTrigger.getValueConfigs()) {
-            if (!aggValuesConfig.getValues().isEmpty()) {
-                return true;
-            }
-        }
-        return !aggregatableAttributionTrigger.getTriggerData().isEmpty();
-    }
-
     private boolean shouldAttributionBeBlockedByRateLimits(
             Source source, Trigger trigger, IMeasurementDao measurementDao)
             throws DatastoreException {
@@ -496,8 +490,13 @@ class AttributionJobHandler {
             Trigger trigger,
             IMeasurementDao measurementDao,
             AttributionStatus attributionStatus,
-            List<DebugReportApi.Type> adrTypesToGenerate)
+            List<DebugReportApi.Type> adrTypesToGenerate,
+            boolean triggerHasAggregatableData)
             throws DatastoreException {
+        if (!triggerHasAggregatableData) {
+            return TriggeringStatus.DROPPED;
+        }
+
         long attributionCount =
                 measurementDao.getAttributionsPerRateLimitWindow(
                         Attribution.Scope.AGGREGATE, source, trigger);
@@ -750,7 +749,7 @@ class AttributionJobHandler {
             IMeasurementDao measurementDao, Trigger trigger, AttributionStatus attributionStatus)
             throws DatastoreException {
         try {
-            if (!getTriggerHasAggregatableData(trigger)) {
+            if (!trigger.hasAggregatableData(mFlags)) {
                 return;
             }
             if (Trigger.SourceRegistrationTimeConfig.EXCLUDE.equals(
@@ -1025,8 +1024,13 @@ class AttributionJobHandler {
             Trigger trigger,
             IMeasurementDao measurementDao,
             AttributionStatus attributionStatus,
-            List<DebugReportApi.Type> adrTypes)
+            List<DebugReportApi.Type> adrTypes,
+            boolean triggerHasEventData)
             throws DatastoreException {
+        if (!triggerHasEventData) {
+            return TriggeringStatus.DROPPED;
+        }
+
         if (source.getParentId() != null) {
             LoggerFactory.getMeasurementLogger()
                     .d("Event report generation skipped because it's a derived source.");
