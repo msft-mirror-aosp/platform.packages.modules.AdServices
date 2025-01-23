@@ -99,6 +99,12 @@ public final class AdServicesMockFlagsSetterRule
         throw new UnsupportedOperationException("cannot clone mock flags");
     }
 
+    @Override
+    public void onGetFlagThrows(String name, String reason) {
+        throw new UnsupportedOperationException(
+                "onGetFlagThrows(" + name + ", " + reason + ": cannot do that");
+    }
+
     private static Answer<Boolean> answerBoolean(NameValuePair flag) {
         return inv -> {
             boolean result = Boolean.valueOf(flag.value);

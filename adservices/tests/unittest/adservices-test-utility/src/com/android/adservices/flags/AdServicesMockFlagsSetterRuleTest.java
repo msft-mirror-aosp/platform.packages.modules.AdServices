@@ -70,6 +70,14 @@ public final class AdServicesMockFlagsSetterRuleTest
     }
 
     @Test
+    public void testOnGetFlagThrows() {
+        var rule = newRule();
+
+        assertThrows(
+                UnsupportedOperationException.class, () -> rule.onGetFlagThrows("DUDE", "SWEET"));
+    }
+
+    @Test
     public void testToString() {
         var rule = newRule();
         var flags = rule.getFlags();
