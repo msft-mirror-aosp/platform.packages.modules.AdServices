@@ -16,6 +16,8 @@
 
 package com.android.server.sdksandbox;
 
+import static com.android.server.sdksandbox.SdkSandboxSettingsListener.PROPERTY_ENABLE_HSUM_SUPPORT_FOR_SDK_STORAGE;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import android.Manifest;
@@ -27,7 +29,6 @@ import android.util.ArrayMap;
 
 import androidx.test.platform.app.InstrumentationRegistry;
 
-import com.android.server.sdksandbox.DeviceSupportedBaseTest;
 import com.android.server.sdksandbox.proto.Services;
 
 import org.junit.After;
@@ -171,6 +172,17 @@ public class SdkSandboxSettingsListenerUnitTest extends DeviceSupportedBaseTest 
                 /*packageName=*/ "packageName.test.34",
                 /*componentClassName=*/ "componentClassName.test.34",
                 /*componentPackageName=*/ "componentPackageName.test.34");
+    }
+
+    @Test
+    public void testEnableHsumSupportForSdkStorage() {
+        assertThat(mSdkSandboxSettingsListener.getEnableHsumSupportForSdkStorage()).isTrue();
+
+        setDeviceConfigProperty(PROPERTY_ENABLE_HSUM_SUPPORT_FOR_SDK_STORAGE, "true");
+        assertThat(mSdkSandboxSettingsListener.getEnableHsumSupportForSdkStorage()).isTrue();
+
+        setDeviceConfigProperty(PROPERTY_ENABLE_HSUM_SUPPORT_FOR_SDK_STORAGE, "false");
+        assertThat(mSdkSandboxSettingsListener.getEnableHsumSupportForSdkStorage()).isFalse();
     }
 
     private void verifyAllowlistEntryContents(

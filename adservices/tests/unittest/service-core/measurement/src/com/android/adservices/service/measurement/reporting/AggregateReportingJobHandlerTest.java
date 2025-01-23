@@ -111,7 +111,7 @@ public class AggregateReportingJobHandlerTest {
     private static final String SOURCE_ID = "source-id";
     private static final String TRIGGER_ID = "trigger-id";
     private static final String AGGREGATE_REPORT_ID = "aggregateReportId";
-    private static final String API_ATTRIBUTION_REPORTING_DEUB = "attribution-reporting-debug";
+    private static final String API_ATTRIBUTION_REPORTING_DEBUG = "attribution-reporting-debug";
     private static final String CLEARTEXT_PAYLOAD =
             "{\"operation\":\"histogram\",\"data\":[{\"bucket\":\"1\",\"value\":2}]}";
 
@@ -1042,6 +1042,53 @@ public class AggregateReportingJobHandlerTest {
     }
 
     @Test
+    public void testPerformScheduledPendingReports_LogSuccessfulAdrDelivery()
+            throws DatastoreException, IOException, JSONException {
+        AggregateReport aggregateReport1 =
+                new AggregateReport.Builder()
+                        .setId(AGGREGATE_REPORT_ID)
+                        .setStatus(AggregateReport.Status.PENDING)
+                        .setScheduledReportTime(1000L)
+                        .setEnrollmentId(ENROLLMENT_ID)
+                        .setRegistrationOrigin(REPORTING_URI)
+                        .setAggregationCoordinatorOrigin(COORDINATOR_ORIGIN)
+                        .setApi(API_ATTRIBUTION_REPORTING_DEBUG)
+                        .build();
+        JSONObject aggregateReportBody1 = createASampleAggregateReportBody(aggregateReport1);
+
+        when(mMeasurementDao.getPendingAggregateReportIdsByCoordinatorInWindow(1000, 1100))
+                .thenReturn(
+                        Map.of(COORDINATOR_ORIGIN.toString(), List.of(aggregateReport1.getId())));
+        when(mMeasurementDao.getAggregateReport(aggregateReport1.getId()))
+                .thenReturn(aggregateReport1);
+        doReturn(HttpURLConnection.HTTP_OK)
+                .when(mSpyAggregateReportingJobHandler)
+                .makeHttpPostRequest(eq(REPORTING_URI), any(), eq(null), anyString());
+        doReturn(aggregateReportBody1)
+                .when(mSpyAggregateReportingJobHandler)
+                .createReportJsonPayload(
+                        aggregateReport1, REPORTING_URI, AggregateCryptoFixture.getKey());
+
+        assertTrue(
+                mSpyAggregateReportingJobHandler.performScheduledPendingReportsInWindow(
+                        1000, 1100));
+        ArgumentCaptor<MeasurementReportsStats> statusArg =
+                ArgumentCaptor.forClass(MeasurementReportsStats.class);
+        verify(mLogger).logMeasurementReports(statusArg.capture(), eq(ENROLLMENT_ID));
+        MeasurementReportsStats measurementReportsStats = statusArg.getValue();
+        assertEquals(
+                measurementReportsStats.getType(),
+                ReportingStatus.ReportType.AGGREGATE_DEBUG_REPORT.getValue());
+        assertEquals(
+                measurementReportsStats.getResultCode(),
+                ReportingStatus.UploadStatus.SUCCESS.getValue());
+        assertEquals(
+                measurementReportsStats.getFailureType(),
+                ReportingStatus.FailureStatus.UNKNOWN.getValue());
+        verify(mMeasurementDao, never()).incrementAndGetReportingRetryCount(any(), any());
+    }
+
+    @Test
     public void testPerformScheduledPendingReports_LogFakeReport()
             throws DatastoreException, IOException, JSONException {
         AggregateReport aggregateReport1 =
@@ -1770,7 +1817,7 @@ public class AggregateReportingJobHandlerTest {
         // Setup
         AggregateReport build =
                 AggregateReportFixture.getValidAggregateReportBuilder()
-                        .setApi(API_ATTRIBUTION_REPORTING_DEUB)
+                        .setApi(API_ATTRIBUTION_REPORTING_DEBUG)
                         .build();
 
         // Execution

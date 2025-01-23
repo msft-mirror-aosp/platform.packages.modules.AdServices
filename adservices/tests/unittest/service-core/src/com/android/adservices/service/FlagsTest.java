@@ -23,6 +23,7 @@ import static com.android.adservices.service.Flags.COMPONENT_AD_RENDER_ID_MAX_LE
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_TTL_MS;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.Flags.DEFAULT_ENABLE_LOG_SAMPLING_INFRA;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK;
@@ -1376,6 +1377,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getEnableMsmtRegisterSourcePackageDenyList",
                 DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST,
                 Flags::getEnableMsmtRegisterSourcePackageDenyList);
+    }
+
+    @Test
+    public void testGetEnableLogSamplingInfra() {
+        testFlag(
+                "getEnableLogSamplingInfra",
+                DEFAULT_ENABLE_LOG_SAMPLING_INFRA,
+                Flags::getEnableLogSamplingInfra);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {

@@ -18,11 +18,13 @@ package com.android.adservices.flags;
 import com.android.adservices.shared.testing.Identifiable;
 import com.android.adservices.shared.testing.flags.FakeFlagsBackend;
 
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.Map;
 import java.util.stream.Collectors;
 
 // TODO(b/384798806): make it package protected once FakeFlagsFactory is moved to this package
-public final class FakeFlags extends RawFlags<FakeFlagsBackend> implements Identifiable {
+public final class FakeFlags extends RawFlagsForTests<FakeFlagsBackend> implements Identifiable {
 
     private static final String TAG = FakeFlags.class.getSimpleName();
 
@@ -36,6 +38,13 @@ public final class FakeFlags extends RawFlags<FakeFlagsBackend> implements Ident
 
     static FakeFlags createFakeFlagsForFlagSetterRulePurposesOnly() {
         return new FakeFlags(new FakeFlagsBackend(TAG));
+    }
+
+    @VisibleForTesting
+    static FakeFlags createFakeFlagsForFakeFlagsTestPurposesOnly() {
+        // In theory test could call createFakeFlagsForFlagSetterRulePurposesOnly() directly, but it
+        // doesn't hurt to offer a proper method...
+        return createFakeFlagsForFlagSetterRulePurposesOnly();
     }
 
     // TODO(b/384798806): make it package protected once FakeFlagsFactory is moved to this package

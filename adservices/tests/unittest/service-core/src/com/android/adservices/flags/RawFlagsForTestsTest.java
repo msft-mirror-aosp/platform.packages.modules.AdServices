@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 The Android Open Source Project
+ * Copyright (C) 2025 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,16 +24,18 @@ import com.android.adservices.shared.flags.DeviceConfigFlagsBackend;
 
 import org.junit.Test;
 
-public final class RawFlagsTest extends PhFlagsTest {
+public final class RawFlagsForTestsTest extends PhFlagsTest {
 
-    public RawFlagsTest() {
+    public RawFlagsForTestsTest() {
         super(
-                new RawFlags(new DeviceConfigFlagsBackend(DeviceConfig.NAMESPACE_ADSERVICES)),
+                new RawFlagsForTests<DeviceConfigFlagsBackend>(
+                        new DeviceConfigFlagsBackend(DeviceConfig.NAMESPACE_ADSERVICES)) {},
                 /* isRaw= */ true);
     }
 
     @Test
     public void testNullConstructor() {
-        assertThrows(NullPointerException.class, () -> new RawFlags(null));
-    }
-}
+        assertThrows(
+                NullPointerException.class,
+                () -> new RawFlagsForTests<DeviceConfigFlagsBackend>(null));
+    }}

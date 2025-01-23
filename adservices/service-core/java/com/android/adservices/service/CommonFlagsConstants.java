@@ -40,12 +40,12 @@ public final class CommonFlagsConstants {
 
     /** Key to enable the Process-Stable flags framework. */
     public static final String KEY_ENABLE_PROCESS_STABLE_FLAGS =
-            "CommonInfra__enable_process_stable_flags";
+            "ProcessStable__enable_process_stable_flags";
 
     /** Default state if the logging for Process-Stable flags framework is enabled. */
     public static final boolean DEFAULT_ENABLE_PROCESS_STABLE_FLAGS_LOGGING = false;
 
     /** Key to enable the logging for Process-Stable flags framework. */
     public static final String KEY_ENABLE_PROCESS_STABLE_FLAGS_LOGGING =
-            "CommonInfra__enable_process_stable_flags_logging";
+            "ProcessStable__enable_process_stable_flags_logging";
 }

@@ -64,9 +64,9 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Topics Epoch Job Flex. Note the minimum value system allows is 5 minutes
-     * or 5% of background job interval time, whichever is greater.
-     * Topics epoch job interval time is 7 days, so the minimum flex time should be 8.4 hours.
+     * Topics Epoch Job Flex. Note the minimum value system allows is 5 minutes or 5% of background
+     * job interval time, whichever is greater. Topics epoch job interval time is 7 days, so the
+     * minimum flex time should be 8.4 hours.
      */
     @ConfigFlag long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 9 hours.
 
@@ -211,8 +211,8 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Flag to enable cleaning Topics database when the settings of Topics epoch job
-     * is changed from server side.
+     * Flag to enable cleaning Topics database when the settings of Topics epoch job is changed from
+     * server side.
      */
     @FeatureFlag boolean TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED = false;
 
@@ -6109,6 +6109,14 @@ public interface Flags extends ModuleSharedFlags {
      */
     default boolean getMeasurementEnablePackageNameUidCheck() {
         return DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK;
+    }
+
+    /** Feature flag to enable log sampling infra. */
+    @FeatureFlag boolean DEFAULT_ENABLE_LOG_SAMPLING_INFRA = false;
+
+    /** Returns if log sampling infra is enabled. */
+    default boolean getEnableLogSamplingInfra() {
+        return DEFAULT_ENABLE_LOG_SAMPLING_INFRA;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

@@ -219,6 +219,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private static final String WEBVIEW_SAFE_MODE_CONTENT_PROVIDER = "SafeModeContentProvider";
 
+    private final Object mPackageAddedBroadcastReceiverLock = new Object();
+
+    // TODO(b/390624441): Needed to handle when flag value changes for
+    // getEnableHsumSupportForSdkStorage() flag. Remove during clean up.
+    @GuardedBy("mPackageAddedBroadcastReceiverLock")
+    private BroadcastReceiver mPackageAddedBroadcastReceiver;
+
     // If AdServices register itself as binder service, dump() will ignore the --AdServices option
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     static final String DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_AD_SERVICES_ITSELF =
@@ -351,9 +358,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         handlerThread.start();
         mHandler = new Handler(handlerThread.getLooper());
 
+        mSdkSandboxSettingsListener = new SdkSandboxSettingsListener(mContext, this);
         registerBroadcastReceivers();
 
-        mSdkSandboxSettingsListener = new SdkSandboxSettingsListener(mContext, this);
         mSdkSandboxPulledAtoms.initialize(mContext);
 
         if (SdkLevel.isAtLeastU()) {
@@ -366,7 +373,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         registerVerifierBroadcastReceiver();
     }
 
-    private void registerPackageUpdateBroadcastReceiver() {
+    // TODO(b/390624441): Make method private again during clean up.
+    void registerPackageUpdateBroadcastReceiver() {
         // Register for package addition and update
         IntentFilter packageAddedIntentFilter = new IntentFilter();
         packageAddedIntentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
@@ -393,11 +401,30 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         }
                     }
                 };
-        mContext.registerReceiver(
-                packageAddedIntentReceiver,
-                packageAddedIntentFilter,
-                /*broadcastPermission=*/ null,
-                mHandler);
+
+        synchronized (mPackageAddedBroadcastReceiverLock) {
+            // First unregister any existing receiver
+            if (mPackageAddedBroadcastReceiver != null) {
+                mContext.unregisterReceiver(mPackageAddedBroadcastReceiver);
+            }
+
+            if (mSdkSandboxSettingsListener.getEnableHsumSupportForSdkStorage()) {
+                mContext.registerReceiverForAllUsers(
+                        packageAddedIntentReceiver,
+                        packageAddedIntentFilter,
+                        /* broadcastPermission= */ null,
+                        mHandler,
+                        Context.RECEIVER_EXPORTED);
+            } else {
+                mContext.registerReceiver(
+                        packageAddedIntentReceiver,
+                        packageAddedIntentFilter,
+                        /* broadcastPermission= */ null,
+                        mHandler);
+            }
+
+            mPackageAddedBroadcastReceiver = packageAddedIntentReceiver;
+        }
     }
 
     private void invalidateCachePostW(int appUid) {
