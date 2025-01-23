@@ -16,6 +16,12 @@
 
 package com.android.adservices.service.customaudience;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SKIPPED;
 import static com.android.adservices.shared.spe.JobServiceConstants.SCHEDULING_RESULT_CODE_SUCCESSFUL;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_BACKGROUND_FETCH_JOB;
@@ -45,7 +51,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 
 import com.android.adservices.common.AdServicesJobServiceTestCase;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.ServiceCompatUtils;
 import com.android.adservices.service.consent.AdServicesApiConsent;
@@ -89,11 +94,6 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     @Spy
     private final BackgroundFetchJobService mBgFJobServiceSpy = new BackgroundFetchJobService();
 
-    private final Flags mFlagsWithEnabledBgFGaUxDisabled = new FlagsWithEnabledBgFGaUxDisabled();
-    private final Flags mFlagsWithDisabledBgF = new FlagsWithDisabledBgF();
-    private final Flags mFlagsWithCustomAudienceServiceKillSwitchOn = new FlagsWithKillSwitchOn();
-    private final Flags mFlagsWithCustomAudienceServiceKillSwitchOff = new FlagsWithKillSwitchOff();
-
     @Mock private BackgroundFetchWorker mBgFWorkerMock;
     @Mock private JobParameters mJobParametersMock;
     @Mock private ConsentManager mConsentManagerMock;
@@ -105,6 +105,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         assertNull(
                 "Job already scheduled before setup!",
                 JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
+        mocker.mockGetFlags(mFakeFlags);
     }
 
     @After
@@ -114,11 +115,10 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
 
     @Test
     public void testOnStartJobFlagDisabled_withLogging() throws Exception {
-        Flags mFlagsWithDisabledBgF = new FlagsWithDisabledBgF();
-        mocker.mockGetFlags(mFlagsWithDisabledBgF);
+        setFlagsWithDisabledBgF();
 
         AdServicesJobServiceLogger logger =
-                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mFlagsWithDisabledBgF);
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mFakeFlags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -130,7 +130,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
 
     @Test
     public void testOnStartJobConsentRevokedGaUxDisabled() throws Exception {
-        doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
+        setFlagsWithEnabledBgFGaUxDisabled();
         doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.REVOKED)
                 .when(mConsentManagerMock)
@@ -158,11 +158,10 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
 
     @Test
     public void testOnStartJobConsentRevokedGaUxEnabled_withLogging() throws Exception {
-        FlagsWithEnabledBgFGaUxEnabled flags = new FlagsWithEnabledBgFGaUxEnabled();
-        mocker.mockGetFlags(flags);
+        setFlagsWithEnabledBgFGaUxEnabled();
 
         AdServicesJobServiceLogger logger =
-                mocker.mockNoOpAdServicesJobServiceLogger(mContext, flags);
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mFakeFlags);
         JobServiceLoggingCallback callback = syncLogExecutionStats(logger);
 
         testOnStartJobConsentRevokedGaUxEnabled();
@@ -173,7 +172,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
 
     @Test
     public void testOnStartJobCustomAudienceKillSwitchOn() throws Exception {
-        doReturn(mFlagsWithCustomAudienceServiceKillSwitchOn).when(FlagsFactory::getFlags);
+        setFlagsWithKillSwitchOn();
         doReturn(JOB_SCHEDULER).when(mBgFJobServiceSpy).getSystemService(JobScheduler.class);
         doNothing().when(mBgFJobServiceSpy).jobFinished(mJobParametersMock, false);
 
@@ -198,12 +197,10 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     @Test
     public void testOnStartJobUpdateSuccess_withLogging()
             throws Exception {
-        Flags flagsWithEnabledBgFGaUxDisabled = new FlagsWithEnabledBgFGaUxDisabled();
-        mocker.mockGetFlags(flagsWithEnabledBgFGaUxDisabled);
+        setFlagsWithEnabledBgFGaUxDisabled();
 
         AdServicesJobServiceLogger logger =
-                mocker.mockNoOpAdServicesJobServiceLogger(
-                        mContext, flagsWithEnabledBgFGaUxDisabled);
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mFakeFlags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -214,12 +211,10 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
 
     @Test
     public void testOnStartJobUpdateTimeoutHandled_withLogging() throws Exception {
-        Flags flagsWithEnabledBgFGaUxDisabled = new FlagsWithEnabledBgFGaUxDisabled();
-        mocker.mockGetFlags(flagsWithEnabledBgFGaUxDisabled);
+        setFlagsWithEnabledBgFGaUxDisabled();
 
         AdServicesJobServiceLogger logger =
-                mocker.mockNoOpAdServicesJobServiceLogger(
-                        mContext, flagsWithEnabledBgFGaUxDisabled);
+                mocker.mockNoOpAdServicesJobServiceLogger(mContext, mFakeFlags);
         JobServiceLoggingCallback onStartJobCallback = syncPersistJobExecutionData(logger);
         JobServiceLoggingCallback onJobDoneCallback = syncLogExecutionStats(logger);
 
@@ -232,7 +227,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     public void testOnStartJobUpdateInterruptedHandled() throws Exception {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
+        setFlagsWithEnabledBgFGaUxDisabled();
         doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
@@ -264,7 +259,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
     public void testOnStartJobUpdateExecutionExceptionHandled() throws Exception {
         CountDownLatch jobFinishedCountDown = new CountDownLatch(1);
 
-        doReturn(mFlagsWithEnabledBgFGaUxDisabled).when(FlagsFactory::getFlags);
+        setFlagsWithEnabledBgFGaUxDisabled();
         doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
@@ -306,7 +301,8 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
 
     @Test
     public void testScheduleIfNeededFlagDisabled() {
-        assertThat(BackgroundFetchJobService.scheduleIfNeeded(mFlagsWithDisabledBgF, false))
+        setFlagsWithDisabledBgF();
+        assertThat(BackgroundFetchJobService.scheduleIfNeeded(mFakeFlags, false))
                 .isEqualTo(SCHEDULING_RESULT_CODE_SKIPPED);
 
         verify(() -> BackgroundFetchJobService.schedule(any(), any()), never());
@@ -315,9 +311,8 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
 
     @Test
     public void testScheduleIfNeededSuccess() {
-        assertThat(
-                        BackgroundFetchJobService.scheduleIfNeeded(
-                                mFlagsWithEnabledBgFGaUxDisabled, false))
+        setFlagsWithEnabledBgFGaUxDisabled();
+        assertThat(BackgroundFetchJobService.scheduleIfNeeded(mFakeFlags, false))
                 .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
 
         verify(() -> BackgroundFetchJobService.schedule(any(), any()));
@@ -326,6 +321,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
 
     @Test
     public void testScheduleIfNeededSkippedAlreadyScheduled() {
+        setFlagsWithEnabledBgFGaUxDisabled();
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
@@ -335,9 +331,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         JOB_SCHEDULER.schedule(existingJobInfo);
         assertNotNull(JOB_SCHEDULER.getPendingJob(FLEDGE_BACKGROUND_FETCH_JOB_ID));
 
-        assertThat(
-                        BackgroundFetchJobService.scheduleIfNeeded(
-                                mFlagsWithEnabledBgFGaUxDisabled, false))
+        assertThat(BackgroundFetchJobService.scheduleIfNeeded(mFakeFlags, false))
                 .isEqualTo(SCHEDULING_RESULT_CODE_SKIPPED);
 
         verify(() -> BackgroundFetchJobService.schedule(any(), any()), never());
@@ -346,6 +340,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
 
     @Test
     public void testScheduleIfNeededForceSuccess() {
+        setFlagsWithEnabledBgFGaUxDisabled();
         JobInfo existingJobInfo =
                 new JobInfo.Builder(
                                 FLEDGE_BACKGROUND_FETCH_JOB_ID,
@@ -357,9 +352,7 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
 
         doNothing().when(() -> BackgroundFetchJobService.schedule(any(), any()));
 
-        assertThat(
-                        BackgroundFetchJobService.scheduleIfNeeded(
-                                mFlagsWithEnabledBgFGaUxDisabled, true))
+        assertThat(BackgroundFetchJobService.scheduleIfNeeded(mFakeFlags, true))
                 .isEqualTo(SCHEDULING_RESULT_CODE_SUCCESSFUL);
 
         verify(() -> BackgroundFetchJobService.schedule(any(), any()));
@@ -368,14 +361,15 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
 
     @Test
     public void testScheduleFlagDisabled() {
-        BackgroundFetchJobService.schedule(mContext, mFlagsWithDisabledBgF);
+        setFlagsWithDisabledBgF();
+        BackgroundFetchJobService.schedule(mContext, mFakeFlags);
 
         verifyNoMoreInteractions(staticMockMarker(BackgroundFetchWorker.class));
     }
 
     @Test
     public void testOnStartJobCustomAudienceKillSwitchOff() throws Exception {
-        mocker.mockGetFlags(mFlagsWithCustomAudienceServiceKillSwitchOff);
+        setFlagsWithKillSwitchOff();
         doReturn(mConsentManagerMock).when(ConsentManager::getInstance);
         doReturn(AdServicesApiConsent.GIVEN)
                 .when(mConsentManagerMock)
@@ -554,134 +548,55 @@ public final class BackgroundFetchJobServiceTest extends AdServicesJobServiceTes
         verify(mBgFWorkerMock).stopWork();
     }
 
-    private static class FlagsWithEnabledBgFGaUxDisabled implements Flags {
-        @Override
-        public boolean getFledgeBackgroundFetchEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getGaUxFeatureEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean getGlobalKillSwitch() {
-            return false;
-        }
-
+    private void setFlagsWithEnabledBgFGaUxDisabled() {
+        flags.setFlag(KEY_FLEDGE_BACKGROUND_FETCH_ENABLED, true);
+        flags.setFlag(KEY_GA_UX_FEATURE_ENABLED, false);
+        flags.setGlobalKillSwitch(false);
         // By default, do not use SPE.
-        @Override
-        public boolean getSpeOnBackgroundFetchJobEnabled() {
-            return false;
-        }
+        flags.setFlag(KEY_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED, false);
     }
 
-    private static class FlagsWithEnabledBgFGaUxEnabled implements Flags {
-        @Override
-        public boolean getFledgeBackgroundFetchEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getGaUxFeatureEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getGlobalKillSwitch() {
-            return false;
-        }
-
+    private void setFlagsWithEnabledBgFGaUxEnabled() {
+        flags.setFlag(KEY_FLEDGE_BACKGROUND_FETCH_ENABLED, true);
+        flags.setFlag(KEY_GA_UX_FEATURE_ENABLED, true);
+        flags.setGlobalKillSwitch(false);
         // By default, do not use SPE.
-        @Override
-        public boolean getSpeOnBackgroundFetchJobEnabled() {
-            return false;
-        }
+        flags.setFlag(KEY_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED, false);
     }
 
-    private static class FlagsWithDisabledBgF implements Flags {
-        @Override
-        public boolean getFledgeBackgroundFetchEnabled() {
-            return false;
-        }
-
-        @Override
-        public long getFledgeBackgroundFetchJobPeriodMs() {
-            throw new IllegalStateException("This configured value should not be called");
-        }
-
-        @Override
-        public long getFledgeBackgroundFetchJobFlexMs() {
-            throw new IllegalStateException("This configured value should not be called");
-        }
-
-        @Override
-        public boolean getGlobalKillSwitch() {
-            return false;
-        }
-
+    private void setFlagsWithDisabledBgF() {
+        flags.setFlag(KEY_FLEDGE_BACKGROUND_FETCH_ENABLED, false);
+        String reason = "This configured value should not be called";
+        flags.onGetFlagThrows(KEY_FLEDGE_BACKGROUND_FETCH_JOB_PERIOD_MS, reason);
+        flags.onGetFlagThrows(KEY_FLEDGE_BACKGROUND_FETCH_JOB_FLEX_MS, reason);
+        flags.setGlobalKillSwitch(false);
         // By default, do not use SPE.
-        @Override
-        public boolean getSpeOnBackgroundFetchJobEnabled() {
-            return false;
-        }
+        flags.setFlag(KEY_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED, false);
     }
 
-    private static class FlagsWithKillSwitchOn implements Flags {
-
-        @Override
-        public boolean getFledgeCustomAudienceServiceKillSwitch() {
-            return true;
-        }
-
+    private void setFlagsWithKillSwitchOn() {
+        flags.setFlag(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, true);
         // For testing the corner case where the BgF is enabled but overall Custom Audience Service
         // kill switch is on
-        @Override
-        public boolean getFledgeBackgroundFetchEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getGlobalKillSwitch() {
-            return false;
-        }
-
+        flags.setFlag(KEY_FLEDGE_BACKGROUND_FETCH_ENABLED, true);
+        flags.setGlobalKillSwitch(false);
         // By default, do not use SPE.
-        @Override
-        public boolean getSpeOnBackgroundFetchJobEnabled() {
-            return false;
-        }
+        flags.setFlag(KEY_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED, false);
     }
 
-    private static class FlagsWithKillSwitchOff implements Flags {
-
-        @Override
-        public boolean getFledgeCustomAudienceServiceKillSwitch() {
-            return false;
-        }
-
-        @Override
-        public boolean getFledgeBackgroundFetchEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getGlobalKillSwitch() {
-            return false;
-        }
-
-        // By default, do not use SPE.
-        @Override
-        public boolean getSpeOnBackgroundFetchJobEnabled() {
-            return false;
-        }
+    private void setFlagsWithKillSwitchOff(boolean speOnBackgroundFetchJobEnabled) {
+        flags.setFlag(KEY_FLEDGE_CUSTOM_AUDIENCE_SERVICE_KILL_SWITCH, false);
+        flags.setFlag(KEY_FLEDGE_BACKGROUND_FETCH_ENABLED, true);
+        flags.setGlobalKillSwitch(false);
+        flags.setFlag(KEY_SPE_ON_BACKGROUND_FETCH_JOB_ENABLED, speOnBackgroundFetchJobEnabled);
     }
 
-    private static class FlagsWithKillSwitchOffSpeEnabled extends FlagsWithKillSwitchOff {
-        @Override
-        public boolean getSpeOnBackgroundFetchJobEnabled() {
-            return true;
-        }
+    private void setFlagsWithKillSwitchOff() {
+        // By default, do not use SPE.
+        setFlagsWithKillSwitchOff(/* speOnBackgroundFetchJobEnabled= */ false);
+    }
+
+    private void setFlagsWithKillSwitchOffSpeEnabled() {
+        setFlagsWithKillSwitchOff(/* speOnBackgroundFetchJobEnabled= */ true);
     }
 }
