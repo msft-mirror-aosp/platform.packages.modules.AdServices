@@ -16,6 +16,12 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_PER_BUYER_EVENT_COUNT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__UPDATE_AD_COUNTER_HISTOGRAM;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
@@ -73,7 +79,6 @@ import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.AdSelectionE2ETest.AdSelectionTestCallback;
-import com.android.adservices.service.adselection.UpdateAdCounterHistogramWorkerTest.FlagsOverridingAdFiltering;
 import com.android.adservices.service.adselection.UpdateAdCounterHistogramWorkerTest.UpdateAdCounterHistogramTestCallback;
 import com.android.adservices.service.adselection.debug.AuctionServerDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
@@ -96,6 +101,9 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.FetchProcessLogger;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.adservices.shared.util.Clock;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
@@ -120,6 +128,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 @SpyStatic(FlagsFactory.class)
+@SetFlagFalse(KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH)
+@SetFlagTrue(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
 public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLBACK_WAIT_MS = 500;
     private static final int SELECT_ADS_CALLBACK_WAIT_MS = 10_000;
@@ -242,8 +252,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                                 .build()
                                 .frequencyCapDao());
 
-        Flags flagsEnablingAdFiltering = new FlagsOverridingAdFiltering(true);
-        doReturn(flagsEnablingAdFiltering).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         mEncryptionKeyDao = EncryptionKeyDao.getInstance();
         mEnrollmentDao = EnrollmentDao.getInstance();
@@ -258,12 +267,11 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                                 new EnrollmentDao(
                                         mSpyContext,
                                         DbTestUtil.getSharedDbHelperForTest(),
-                                        flagsEnablingAdFiltering),
+                                        mFakeFlags),
                                 mAdServicesLoggerMock));
 
         mAdFilteringFeatureFactory =
-                new AdFilteringFeatureFactory(
-                        mAppInstallDao, mFrequencyCapDaoSpy, flagsEnablingAdFiltering);
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, mFakeFlags);
 
         mRetryStrategyFactory = RetryStrategyFactory.createInstanceForTesting();
         ConsentedDebugConfigurationDao consentedDebugConfigurationDao =
@@ -299,7 +307,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsEnablingAdFiltering,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -322,9 +330,6 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                                 CommonFixture.VALID_BUYER_1,
                                 CommonFixture.TEST_PACKAGE_NAME)
                         .build();
-
-        // Required stub for Custom Audience DB persistence
-        mocker.mockGetFlags(flagsEnablingAdFiltering);
 
         // Required stub for Ad Selection call
         doReturn(DevContext.createForDevOptionsDisabled())
@@ -375,7 +380,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testUpdateHistogramMissingAdSelectionDoesNothing() throws InterruptedException {
+    public void testUpdateHistogramMissingAdSelectionDoesNothing() throws Exception {
         UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
 
         assertWithMessage("Callback failed, was: %s", callback).that(callback.mIsSuccess).isTrue();
@@ -384,7 +389,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testUpdateHistogramForAdSelectionAddsHistogramEvents() throws InterruptedException {
+    public void testUpdateHistogramForAdSelectionAddsHistogramEvents() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(EXISTING_PREVIOUS_AD_SELECTION_BUYER_1);
 
         UpdateAdCounterHistogramTestCallback callback = callUpdateAdCounterHistogram(mInputParams);
@@ -407,7 +412,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
 
     @Test
     public void testUpdateHistogramForAdSelectionFromOtherAppDoesNotAddHistogramEvents()
-            throws InterruptedException {
+            throws Exception {
         // Bypass the permission check since it's enforced before the package name check
         doNothing()
                 .when(mFledgeAuthorizationFilterSpy)
@@ -444,12 +449,10 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testUpdateHistogramDisabledFeatureFlagNotifiesError() throws InterruptedException {
-        Flags flagsWithDisabledAdFiltering = new FlagsOverridingAdFiltering(false);
-
+    @SetFlagFalse(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
+    public void testUpdateHistogramDisabledFeatureFlagNotifiesError() throws Exception {
         mAdFilteringFeatureFactory =
-                new AdFilteringFeatureFactory(
-                        mAppInstallDao, mFrequencyCapDaoSpy, flagsWithDisabledAdFiltering);
+                new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDaoSpy, mFakeFlags);
 
         mAdSelectionServiceImpl =
                 new AdSelectionServiceImpl(
@@ -467,7 +470,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        flagsWithDisabledAdFiltering,
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -493,7 +496,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testUpdateHistogramExceedingRateLimitNotifiesError() throws InterruptedException {
+    public void testUpdateHistogramExceedingRateLimitNotifiesError() throws Exception {
         class FlagsWithLowRateLimit implements Flags {
             @Override
             public boolean getFledgeFrequencyCapFilteringEnabled() {
@@ -746,27 +749,14 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     }
 
     @Test
+    @SetIntegerFlag(
+            name = KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_TOTAL_EVENT_COUNT,
+            value = 5)
+    @SetIntegerFlag(name = KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_TOTAL_EVENT_COUNT, value = 1)
     public void testUpdateHistogramBeyondMaxTotalEventCountDoesNotFilterAds() throws Exception {
         // The JS Sandbox availability depends on an external component (the system webview) being
         // higher than a certain minimum version.
         Assume.assumeTrue(WebViewSupportUtil.isJSSandboxAvailable(mContext));
-
-        class FlagsWithLowEventCounts extends FlagsOverridingAdFiltering implements Flags {
-            @Override
-            public boolean getFledgeFrequencyCapFilteringEnabled() {
-                return true;
-            }
-
-            @Override
-            public int getFledgeAdCounterHistogramAbsoluteMaxTotalEventCount() {
-                return 5;
-            }
-
-            @Override
-            public int getFledgeAdCounterHistogramLowerMaxTotalEventCount() {
-                return 1;
-            }
-        }
 
         mAdSelectionServiceImpl =
                 new AdSelectionServiceImpl(
@@ -784,7 +774,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        new FlagsWithLowEventCounts(),
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
@@ -859,29 +849,17 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
     }
 
     @Test
+    @SetIntegerFlag(
+            name = KEY_FLEDGE_AD_COUNTER_HISTOGRAM_ABSOLUTE_MAX_PER_BUYER_EVENT_COUNT,
+            value = 5)
+    @SetIntegerFlag(
+            name = KEY_FLEDGE_AD_COUNTER_HISTOGRAM_LOWER_MAX_PER_BUYER_EVENT_COUNT,
+            value = 1)
     public void testUpdateHistogramBeyondMaxPerBuyerEventCountDoesNotFilterAds() throws Exception {
         // The JS Sandbox availability depends on an external component (the system webview) being
         // higher than a certain minimum version.
         Assume.assumeTrue(
                 "JS Sandbox is not available", WebViewSupportUtil.isJSSandboxAvailable(mContext));
-
-        final class FlagsWithLowPerBuyerEventCounts extends FlagsOverridingAdFiltering
-                implements Flags {
-            @Override
-            public boolean getFledgeFrequencyCapFilteringEnabled() {
-                return true;
-            }
-
-            @Override
-            public int getFledgeAdCounterHistogramAbsoluteMaxPerBuyerEventCount() {
-                return 5;
-            }
-
-            @Override
-            public int getFledgeAdCounterHistogramLowerMaxPerBuyerEventCount() {
-                return 1;
-            }
-        }
 
         mAdSelectionServiceImpl =
                 new AdSelectionServiceImpl(
@@ -899,7 +877,7 @@ public final class FrequencyCapFilteringE2ETest extends AdServicesExtendedMockit
                         mScheduledExecutor,
                         mSpyContext,
                         mAdServicesLoggerMock,
-                        new FlagsWithLowPerBuyerEventCounts(),
+                        mFakeFlags,
                         mMockDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterSpy,
