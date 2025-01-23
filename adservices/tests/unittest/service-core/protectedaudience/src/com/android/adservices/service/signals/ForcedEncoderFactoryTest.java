@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.Flags.FLEDGE_FORCED_ENCODING_AFTER_SIGNALS_UPDATE_COOLDOWN_SECONDS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -23,7 +24,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.google.common.truth.Truth.assertThat;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -33,7 +33,7 @@ import com.android.modules.utils.testing.ExtendedMockitoRule;
 import org.junit.Test;
 
 @SetErrorLogUtilDefaultParams(
-        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
 @ExtendedMockitoRule.MockStatic(FlagsFactory.class)

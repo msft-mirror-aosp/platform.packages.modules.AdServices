@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.common;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_AD_SELECTION_DATA;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
@@ -42,7 +43,6 @@ import android.adservices.common.CommonFixture;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
-import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.ConsentManager;
@@ -52,8 +52,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-@SetErrorLogUtilDefaultParams(
-        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class)
+@SetErrorLogUtilDefaultParams(throwable = Any.class)
 public class FledgeConsentFilterTest extends AdServicesExtendedMockitoTestCase {
     @Mock private ConsentManager mConsentManagerMock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;

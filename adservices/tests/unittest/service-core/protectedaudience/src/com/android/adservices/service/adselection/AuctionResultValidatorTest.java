@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.common.CommonFixture.VALID_WINNING_SELLER_2;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.adselection.AuctionResultValidator.BUYER_EMPTY;
 import static com.android.adservices.service.adselection.AuctionResultValidator.BUYER_ENROLLMENT;
 import static com.android.adservices.service.adselection.AuctionResultValidator.NEGATIVE_BID;
@@ -53,7 +54,7 @@ import java.util.Collection;
 import java.util.Locale;
 
 @SetErrorLogUtilDefaultParams(
-        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE)
 public class AuctionResultValidatorTest extends AdServicesExtendedMockitoTestCase {
     private static final AdTechIdentifier WINNER_BUYER = CommonFixture.VALID_BUYER_1;
