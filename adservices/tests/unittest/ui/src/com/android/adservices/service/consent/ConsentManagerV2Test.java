@@ -2958,7 +2958,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                         mAppSearchConsentManagerMock,
                         mUserProfileIdManagerMock,
                         mMockFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         Flags.PPAPI_ONLY,
                         true);
 
@@ -3325,7 +3325,7 @@ public final class ConsentManagerV2Test extends AdServicesExtendedMockitoTestCas
                 mAppSearchConsentManagerMock,
                 mUserProfileIdManagerMock,
                 mMockFlags,
-                mMockDebugFlags,
+                mFakeDebugFlags,
                 consentSourceOfTruth,
                 true);
     }

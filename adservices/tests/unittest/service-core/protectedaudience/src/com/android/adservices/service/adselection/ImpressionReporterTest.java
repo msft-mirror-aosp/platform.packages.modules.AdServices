@@ -552,7 +552,7 @@ public final class ImpressionReporterTest extends AdServicesExtendedMockitoTestC
                 DevContext.createForDevOptionsDisabled(),
                 mMockAdServicesLogger,
                 mFakeFlags,
-                mMockDebugFlags,
+                mFakeDebugFlags,
                 mMockAdSelectionServiceFilter,
                 mMockFledgeAuthorizationFilter,
                 new FrequencyCapAdDataValidatorNoOpImpl(),

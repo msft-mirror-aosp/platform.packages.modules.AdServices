@@ -269,7 +269,7 @@ public final class AdSelectionFromOutcomesIntegrationTest
     public void setUp() throws Exception {
         doReturn(mFakeFlags).when(FlagsFactory::getFlags);
         mocker.mockGetFlags(mFakeFlags);
-        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
 
         mAdSelectionEntryDaoSpy =
                 spy(
@@ -346,7 +346,7 @@ public final class AdSelectionFromOutcomesIntegrationTest
                         mSpyContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
@@ -497,7 +497,7 @@ public final class AdSelectionFromOutcomesIntegrationTest
                         mSpyContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,
@@ -580,7 +580,7 @@ public final class AdSelectionFromOutcomesIntegrationTest
                         mSpyContext,
                         mAdServicesLoggerMock,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mAdSelectionServiceFilter,

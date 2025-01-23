@@ -1544,7 +1544,7 @@ public final class ReportAndRegisterEventFallbackImplTest
                 mBackgroundExecutorService,
                 mAdServicesLoggerMock,
                 flags,
-                mMockDebugFlags,
+                mFakeDebugFlags,
                 mAdSelectionServiceFilterMock,
                 MY_UID,
                 mFledgeAuthorizationFilterMock,

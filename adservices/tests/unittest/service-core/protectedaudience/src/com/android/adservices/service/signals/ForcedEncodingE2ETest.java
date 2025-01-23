@@ -346,7 +346,7 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
                         AdServicesExecutors.getBackgroundExecutor(),
                         mAdServicesLoggerImplMock,
                         mLegacyFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mProtectedSignalsServiceFilter,
                         mEnrollmentDao,

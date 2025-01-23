@@ -424,7 +424,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -518,7 +518,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -1418,7 +1418,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -4846,7 +4846,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mAdServicesLoggerMock,
                                 mAppImportanceFilter,
                                 flagsWithLowRateLimit,
-                                mMockDebugFlags,
+                                mFakeDebugFlags,
                                 CallingAppUidSupplierProcessImpl.create(),
                                 new CustomAudienceServiceFilter(
                                         mContext,
@@ -5030,7 +5030,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         flags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -5212,7 +5212,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         flags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,

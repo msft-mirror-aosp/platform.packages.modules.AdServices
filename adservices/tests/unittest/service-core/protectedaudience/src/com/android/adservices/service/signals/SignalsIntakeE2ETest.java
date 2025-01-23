@@ -327,7 +327,7 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
                         AdServicesExecutors.getBackgroundExecutor(),
                         mAdServicesLoggerMock,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mProtectedSignalsServiceFilter,
                         mEnrollmentDao,

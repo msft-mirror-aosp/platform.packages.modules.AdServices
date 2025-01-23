@@ -21,7 +21,6 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.mock;
 
 import android.annotation.CallSuper;
 import android.annotation.Nullable;
@@ -85,8 +84,6 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
 
     @Mock protected Context mMockContext;
 
-    protected final DebugFlags mMockDebugFlags = mock(DebugFlags.class);
-
     /** Spy the {@link AdServicesUnitTestCase#mContext} */
     @Spy protected final Context mSpyContext = mContext;
 
@@ -115,7 +112,7 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
             AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     /** Provides common expectations. */
-    public final M mocker = newMocker(extendedMockito, mMockFlags, mMockDebugFlags);
+    public final M mocker = newMocker(extendedMockito, mMockFlags);
 
     /**
      * Gets the {@link AdServicesExtendedMockitoRule} that will be set as the {@code
@@ -136,8 +133,7 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
     }
 
     /** Returns the object that will be referenced by {@code mocker}. */
-    protected abstract M newMocker(
-            AdServicesExtendedMockitoRule rule, Flags mockFlags, DebugFlags mockDebugFlags);
+    protected abstract M newMocker(AdServicesExtendedMockitoRule rule, Flags mockFlags);
 
     /**
      * Creates a new {@link AdServicesExtendedMockitoRule.Builder} with the default properties.

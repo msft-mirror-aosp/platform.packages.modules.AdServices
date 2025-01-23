@@ -3098,7 +3098,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                         mUserProfileIdManagerMock,
                         mUxStatesDaoMock,
                         mMockFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         Flags.PPAPI_ONLY,
                         true);
         doNothing().when(mBlockedTopicsManagerMock).blockTopic(any());
@@ -3592,7 +3592,7 @@ public final class ConsentManagerTest extends AdServicesExtendedMockitoTestCase 
                 mUserProfileIdManagerMock,
                 mUxStatesDaoMock,
                 mMockFlags,
-                mMockDebugFlags,
+                mFakeDebugFlags,
                 consentSourceOfTruth,
                 true);
     }

@@ -994,7 +994,7 @@ public final class ReportAndRegisterEventIntegrationTest extends AdServicesExten
                 mContext,
                 mAdServicesLoggerMock,
                 flags,
-                mMockDebugFlags,
+                mFakeDebugFlags,
                 CallingAppUidSupplierProcessImpl.create(),
                 mFledgeAuthorizationFilterMock,
                 mAdSelectionServiceFilterMock,

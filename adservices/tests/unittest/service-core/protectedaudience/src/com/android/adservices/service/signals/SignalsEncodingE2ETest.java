@@ -286,7 +286,7 @@ public final class SignalsEncodingE2ETest extends AdServicesExtendedMockitoTestC
                         AdServicesExecutors.getBackgroundExecutor(),
                         mAdServicesLoggerImplMock,
                         mFlagsWithProtectedSignalsAndEncodingEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mProtectedSignalsServiceFilter,
                         mEnrollmentDao,

@@ -191,7 +191,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new AdServicesCommonServiceImpl(
                         mMockContext,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mUxEngine,
                         mUxStatesManager,
                         mMockAdIdWorker,
@@ -199,7 +199,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                         mClock);
         mLogApiCallStatsCallback = mocker.mockLogApiCallStats(mAdServicesLogger);
         mocker.mockGetFlags(mFakeFlags);
-        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
 
         ExtendedMockito.doNothing()
                 .when(() -> BackgroundJobsManager.scheduleAllBackgroundJobs(any(Context.class)));
@@ -243,7 +243,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new AdServicesCommonServiceImpl(
                         mMockContext,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mUxEngine,
                         mUxStatesManager,
                         mMockAdIdWorker,
@@ -267,7 +267,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new AdServicesCommonServiceImpl(
                         mMockContext,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mUxEngine,
                         mUxStatesManager,
                         mMockAdIdWorker,
@@ -285,7 +285,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new AdServicesCommonServiceImpl(
                         mMockContext,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mUxEngine,
                         mUxStatesManager,
                         mMockAdIdWorker,
@@ -311,7 +311,7 @@ public final class AdServicesCommonServiceImplTest extends AdServicesExtendedMoc
                 new AdServicesCommonServiceImpl(
                         mMockContext,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mUxEngine,
                         mUxStatesManager,
                         mMockAdIdWorker,
