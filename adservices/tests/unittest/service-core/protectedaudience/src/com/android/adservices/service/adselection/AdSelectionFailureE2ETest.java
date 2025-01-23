@@ -252,7 +252,7 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
                 WebViewSupportUtil.isJSSandboxAvailable(mContext));
         mLegacyFakeFlags = new AdSelectionFailureE2ETestFlags();
         mocker.mockGetFlags(mLegacyFakeFlags);
-        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
         mockGetConsentNotificationDebugMode(false);
         mAdSelectionEntryDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, AdSelectionDatabase.class)
@@ -440,7 +440,7 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
                         mSpyContext,
                         mAdServicesLogger,
                         mLegacyFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mMockAdSelectionServiceFilter,
@@ -531,7 +531,7 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
                         mContext,
                         mAdServicesLogger,
                         mLegacyFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilter,
                         mMockAdSelectionServiceFilter,

@@ -57,7 +57,7 @@ public abstract class AdServicesExtendedMockitoTestCase
     public static final class Mocker
             extends AdServicesMockerLessExtendedMockitoTestCase.InternalMocker {
         private Mocker(StaticClassChecker checker, Flags flags, DebugFlags mockDebugFlags) {
-            super(checker, flags, mockDebugFlags);
+            super(checker, flags);
         }
 
         // Factory methods below are used by AdServicesExtendedMockitoTestCaseXYZMockerTest - there
@@ -93,14 +93,6 @@ public abstract class AdServicesExtendedMockitoTestCase
                     /* checker= */ null,
                     Objects.requireNonNull(flags, "flags cannot be null"),
                     /* mockDebugFlags= */ null);
-        }
-
-        @VisibleForTesting
-        static Mocker forAdServicesDebugFlagsMockerTests(DebugFlags debugFlags) {
-            return new Mocker(
-                    /* checker= */ null,
-                    /* flags= */ null,
-                    Objects.requireNonNull(debugFlags, "DebugFlags cannot be null"));
         }
 
         @VisibleForTesting

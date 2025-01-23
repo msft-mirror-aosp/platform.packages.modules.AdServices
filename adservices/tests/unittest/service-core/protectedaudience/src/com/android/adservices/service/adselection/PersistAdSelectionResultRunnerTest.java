@@ -533,7 +533,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     @Before
     public void setup() throws InvalidKeySpecException, UnsupportedHpkeAlgorithmException {
         mLegacyFakeFlags = new PersistAdSelectionResultRunnerTestFlags();
-        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mScheduledExecutor = AdServicesExecutors.getScheduler();
@@ -599,7 +599,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mLegacyFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -749,7 +749,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithWinningSellerOutcomeInAdSelectionOutcomeDisabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -818,7 +818,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithWinningSellerOutcomeInAdSelectionOutcomeDisabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -881,7 +881,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithWinningSellerInOutcomeEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -953,7 +953,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithWinningSellerInOutcomeEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -1020,7 +1020,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithWinningSellerInOutcomeEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -1065,7 +1065,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithWinningSellerInOutcomeEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -1111,7 +1111,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithWinningSellerInOutcomeEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -1608,7 +1608,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mLegacyFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -1707,7 +1707,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mLegacyFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -1894,7 +1894,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mLegacyFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2049,7 +2049,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mLegacyFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2262,7 +2262,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mLegacyFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2392,7 +2392,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mLegacyFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2431,7 +2431,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithKAnonDisabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2479,7 +2479,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithKAnonEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2521,7 +2521,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithKAnonEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2565,7 +2565,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithKAnonEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2630,7 +2630,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithComponentSellerReportingEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2726,7 +2726,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithComponentSellerReportingEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2789,7 +2789,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithComponentSellerReportingEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2844,7 +2844,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithComponentSellerReportingEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -2928,7 +2928,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         flagsWithComponentSellerReportingEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
@@ -3055,7 +3055,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdCounterHistogramUpdaterSpy,
                         mAuctionResultValidator,
                         mLegacyFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerSpy,
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);

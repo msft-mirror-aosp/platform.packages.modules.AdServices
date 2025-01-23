@@ -19,6 +19,8 @@ package com.android.adservices.service.measurement.access;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFIED_DEBUG_MODE;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -29,11 +31,14 @@ import android.adservices.common.AdServicesStatusUtils;
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.measurement.CachedFlags;
+import com.android.adservices.shared.testing.annotations.DisableDebugFlag;
+import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
+@DisableDebugFlag(KEY_CONSENT_NOTIFIED_DEBUG_MODE)
 public final class ConsentNotifiedAccessResolverTest extends AdServicesMockitoTestCase {
     @Mock private ConsentManager mConsentManager;
     @Mock private UserConsentAccessResolver mUserConsentAccessResolver;
@@ -46,9 +51,8 @@ public final class ConsentNotifiedAccessResolverTest extends AdServicesMockitoTe
                 new ConsentNotifiedAccessResolver(
                         mConsentManager,
                         new CachedFlags(mMockFlags),
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mUserConsentAccessResolver);
-        doReturn(false).when(mMockDebugFlags).getConsentNotifiedDebugMode();
         doReturn(new AccessInfo(false, STATUS_USER_CONSENT_NOTIFICATION_NOT_DISPLAYED_YET))
                 .when(mUserConsentAccessResolver)
                 .getAccessInfo(mMockContext);
@@ -83,11 +87,8 @@ public final class ConsentNotifiedAccessResolverTest extends AdServicesMockitoTe
     }
 
     @Test
+    @EnableDebugFlag(KEY_CONSENT_NOTIFIED_DEBUG_MODE)
     public void isAllowed_returnsTrueInDebugMode() {
-        // Setup
-        doReturn(true).when(mMockDebugFlags).getConsentNotifiedDebugMode();
-
-        // Assertion
         assertTrue(mConsentNotifiedAccessResolver.getAccessInfo(mMockContext).isAllowedAccess());
     }
 

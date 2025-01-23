@@ -104,7 +104,7 @@ public final class ConsentNotificationJobServiceTest extends AdServicesJobServic
     public void setup() {
         doReturn(mPackageManager).when(mConsentNotificationJobService).getPackageManager();
         mocker.mockGetFlags(mMockFlags);
-        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
         when(mPersistableBundle.getBoolean(eq(IS_V2_NOTIFICATION), anyBoolean())).thenReturn(false);
         when(mMockFlags.getConsentNotificationIntervalEndMs()).thenReturn(mIntervalEndMs);
         when(mMockFlags.getConsentNotificationIntervalBeginMs()).thenReturn(mIntervalBeginMs);

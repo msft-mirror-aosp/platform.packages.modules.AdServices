@@ -89,7 +89,7 @@ public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockit
 
     @Before
     public void setup() {
-        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
         mUpdateWorker =
                 new UpdateAdCounterHistogramWorker(
                         mHistogramUpdaterMock,
@@ -97,7 +97,7 @@ public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockit
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                         mAdServicesLoggerMock,
                         new FlagsOverridingAdFiltering(true),
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mServiceFilterMock,
                         mConsentManagerMock,
                         CALLER_UID,
@@ -150,7 +150,7 @@ public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockit
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                         mAdServicesLoggerMock,
                         new FlagsOverridingAdFiltering(true),
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mServiceFilterMock,
                         mConsentManagerMock,
                         CALLER_UID,
@@ -228,7 +228,7 @@ public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockit
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                         mAdServicesLoggerMock,
                         new FlagsOverridingAdFiltering(false),
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mServiceFilterMock,
                         mConsentManagerMock,
                         CALLER_UID,
