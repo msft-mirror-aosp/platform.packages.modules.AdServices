@@ -43,4 +43,11 @@ public class UiConstants {
         BETA_UX,
         U18_UX,
     }
+
+    public enum NotificationMode {
+        REGULAR,
+        LIMITED,
+        UPDATED_FIRST_TIME,
+        UPDATED_RENOTIFY,
+    }
 }
