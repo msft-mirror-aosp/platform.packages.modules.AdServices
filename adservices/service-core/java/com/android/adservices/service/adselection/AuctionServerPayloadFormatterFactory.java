@@ -16,11 +16,15 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_PARSING_RESPONSE_DATA_COMPRESSION_NOT_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
+
 import android.adservices.adselection.SellerConfiguration;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.internal.annotations.VisibleForTesting;
 import com.android.internal.util.Preconditions;
@@ -90,6 +94,11 @@ public class AuctionServerPayloadFormatterFactory {
                         AuctionServerPayloadExtractor.class.getName(),
                         version);
         sLogger.e(errMsg);
-        throw new IllegalArgumentException(errMsg);
+        IllegalArgumentException exception = new IllegalArgumentException(errMsg);
+        ErrorLogUtil.e(
+                exception,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_PARSING_RESPONSE_DATA_COMPRESSION_NOT_FOUND,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
+        throw exception;
     }
 }

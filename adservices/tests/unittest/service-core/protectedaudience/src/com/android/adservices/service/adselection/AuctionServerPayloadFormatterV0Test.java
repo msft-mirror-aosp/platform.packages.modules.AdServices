@@ -29,9 +29,13 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.exceptions.UnsupportedPayloadSizeException;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -41,7 +45,8 @@ import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
-public class AuctionServerPayloadFormatterV0Test {
+@MockStatic(FlagsFactory.class)
+public final class AuctionServerPayloadFormatterV0Test extends AdServicesExtendedMockitoTestCase {
     private static final int VALID_COMPRESSOR_VERSION = 0;
     private static final byte EXPECTED_META_INFO_BYTE =
             0; // both formatter and compressor versions are 0
@@ -61,6 +66,7 @@ public class AuctionServerPayloadFormatterV0Test {
 
     @Before
     public void setup() {
+        mocker.mockGetFlags(mFakeFlags);
         mAdServicesLoggerSpy = Mockito.spy(AdServicesLoggerImpl.getInstance());
         mAuctionServerPayloadFormatterV0 =
                 new AuctionServerPayloadFormatterV0(
