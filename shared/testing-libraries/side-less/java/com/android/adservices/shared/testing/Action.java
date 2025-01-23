@@ -54,4 +54,12 @@ public interface Action {
      * @throws IllegalStateException if not executed and reverted yet.
      */
     void reset();
+
+    /**
+     * Gets a simpler representation of the action so it can be added as extra info into a {@link
+     * TestFailure}.
+     *
+     * <p>Typically, it will contain the action itself and its previous state.
+     */
+    String toStringForTestFailure();
 }

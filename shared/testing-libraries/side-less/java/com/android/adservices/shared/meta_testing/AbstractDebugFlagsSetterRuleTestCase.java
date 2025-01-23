@@ -146,6 +146,18 @@ public abstract class AbstractDebugFlagsSetterRuleTestCase<
                 new NameValuePair(FLAG_D, FALSE));
     }
 
+    @Test
+    public final void testGetTestFailureHeader() {
+        R rule = newRule();
+
+        expect.withMessage("getTestFailureHeader(1)")
+                .that(rule.getTestFailureHeader(1))
+                .isEqualTo("Test set 1 DebugFlag");
+        expect.withMessage("getTestFailureHeader(42)")
+                .that(rule.getTestFailureHeader(42))
+                .isEqualTo("Test set 42 DebugFlags");
+    }
+
     private void annotationBasedTest(Description test, NameValuePair... expectedFlagsInsideTest)
             throws Throwable {
         var expectedAsMap =

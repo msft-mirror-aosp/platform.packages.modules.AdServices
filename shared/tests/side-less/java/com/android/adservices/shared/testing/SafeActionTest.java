@@ -130,6 +130,22 @@ public final class SafeActionTest extends SharedSidelessTestCase {
                 .isEqualTo("SafeAction[Action Jackson]");
     }
 
+    @Test
+    public void test_toStringForTestFailure() {
+        CustomStringAction action = new CustomStringAction();
+
+        action.mStringForTestFailure = "Action[Jackson]";
+        expect.withMessage("toString()")
+                .that(new SafeAction(mLog, action).toStringForTestFailure())
+                .isEqualTo("SafeAction[Jackson]");
+
+        action.mStringForTestFailure = "Action Jackson";
+
+        expect.withMessage("toStringForTestFailure()")
+                .that(new SafeAction(mLog, action).toStringForTestFailure())
+                .isEqualTo("SafeAction[Action Jackson]");
+    }
+
     private void expectErrorLogged(String method) {
         ImmutableList<LogEntry> logEntries = mFakeRealLogger.getEntries();
         assertWithMessage("log entries").that(logEntries).hasSize(1);
@@ -144,6 +160,7 @@ public final class SafeActionTest extends SharedSidelessTestCase {
     private static final class CustomStringAction implements Action {
 
         private String mString;
+        private String mStringForTestFailure;
 
         @Override
         public boolean execute() throws Exception {
@@ -173,6 +190,11 @@ public final class SafeActionTest extends SharedSidelessTestCase {
         @Override
         public String toString() {
             return mString;
+        }
+
+        @Override
+        public String toStringForTestFailure() {
+            return mStringForTestFailure;
         }
     }
 }
