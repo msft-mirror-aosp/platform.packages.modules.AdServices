@@ -8508,6 +8508,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         values.put(SourceContract.SHARED_FILTER_DATA_KEYS, source.getSharedFilterDataKeys());
         values.put(SourceContract.AGGREGATE_CONTRIBUTIONS, source.getAggregateContributions());
         values.put(SourceContract.DEBUG_REPORTING, source.isDebugReporting());
+        values.put(SourceContract.DEBUG_AD_ID, source.getDebugAdId());
         values.put(SourceContract.INSTALL_TIME, source.getInstallTime());
         values.put(SourceContract.REGISTRATION_ID, source.getRegistrationId());
         values.put(SourceContract.SHARED_AGGREGATION_KEYS, source.getSharedAggregationKeys());
@@ -10713,6 +10714,115 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                                         1,
                                         dao.countDistinctDebugAdIdsUsedByEnrollment(
                                                 "enrollment-id-1"))));
+    }
+
+    @Test
+    public void countDistinctDebugAdIdsUsedByEnrollmentWithinWindow() {
+        // Setup
+        long startTime = System.currentTimeMillis();
+        long endTime = System.currentTimeMillis() + DAYS.toMillis(7);
+        Source.Builder webSourceBuilder =
+                SourceFixture.getValidSourceBuilder().setPublisherType(EventSurfaceType.WEB);
+        Trigger.Builder webTriggerBuilder =
+                TriggerFixture.getValidTriggerBuilder().setDestinationType(EventSurfaceType.WEB);
+
+        // Not counted as debug ad id is null
+        insertSource(webSourceBuilder.setDebugAdId(null).setEventTime(startTime).build(), "s1");
+        insertTrigger(webTriggerBuilder.setDebugAdId(null).setTriggerTime(startTime).build(), "t1");
+
+        // Not counted as they are outside the window
+        insertSource(
+                webSourceBuilder.setDebugAdId("debug_ad_id_s2").setEventTime(startTime - 1).build(),
+                "s2");
+        insertTrigger(
+                webTriggerBuilder
+                        .setDebugAdId("debug_ad_id_t2")
+                        .setTriggerTime(startTime - 1)
+                        .build(),
+                "t2");
+
+        // count = 2
+        insertSource(
+                webSourceBuilder.setDebugAdId("debug_ad_id_s3").setEventTime(startTime).build(),
+                "s3");
+        insertTrigger(
+                webTriggerBuilder.setDebugAdId("debug_ad_id_t3").setTriggerTime(startTime).build(),
+                "t3");
+
+        // count = 4
+        insertSource(
+                webSourceBuilder
+                        .setDebugAdId("debug_ad_id_s4")
+                        .setEventTime(startTime + DAYS.toMillis(2))
+                        .build(),
+                "s4");
+        insertTrigger(
+                webTriggerBuilder
+                        .setDebugAdId("debug_ad_id_t4")
+                        .setTriggerTime(startTime + DAYS.toMillis(2))
+                        .build(),
+                "t4");
+
+        // count = 5; they share a common debug_ad_id value
+        insertSource(
+                webSourceBuilder.setDebugAdId("debug_ad_id_s5").setEventTime(endTime - 1).build(),
+                "s5");
+        insertTrigger(
+                webTriggerBuilder
+                        .setDebugAdId("debug_ad_id_s5")
+                        .setTriggerTime(endTime - 1)
+                        .build(),
+                "t5");
+
+        // Not counted as they fall outside the window
+        insertSource(
+                webSourceBuilder.setDebugAdId("debug_ad_id_s6").setEventTime(endTime).build(),
+                "s6");
+        insertTrigger(
+                webTriggerBuilder.setDebugAdId("debug_ad_id_s6").setTriggerTime(endTime).build(),
+                "t6");
+
+        // Not counted as they belong to a different enrollment
+        insertSource(
+                webSourceBuilder
+                        .setDebugAdId("debug_ad_id_s7")
+                        .setEventTime(startTime + DAYS.toMillis(2))
+                        .setEnrollmentId("otherEnrollment")
+                        .build(),
+                "s7");
+        insertTrigger(
+                webTriggerBuilder
+                        .setDebugAdId("debug_ad_id_s7")
+                        .setTriggerTime(startTime + DAYS.toMillis(2))
+                        .setEnrollmentId("otherEnrollment")
+                        .build(),
+                "t7");
+
+        // Not counted as they have the excluded debug AdId
+        insertSource(
+                webSourceBuilder
+                        .setDebugAdId("debug_ad_id_s8")
+                        .setEventTime(startTime + DAYS.toMillis(2))
+                        .build(),
+                "s8");
+        insertTrigger(
+                webTriggerBuilder
+                        .setDebugAdId("debug_ad_id_s8")
+                        .setTriggerTime(startTime + DAYS.toMillis(2))
+                        .build(),
+                "t8");
+
+        // Assertion
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        dao ->
+                                assertEquals(
+                                        5,
+                                        dao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                                                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                                startTime,
+                                                endTime,
+                                                "debug_ad_id_s8"))));
     }
 
     @Test
