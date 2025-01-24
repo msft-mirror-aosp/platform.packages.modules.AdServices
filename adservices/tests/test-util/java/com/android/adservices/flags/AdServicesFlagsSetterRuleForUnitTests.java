@@ -100,6 +100,12 @@ public abstract class AdServicesFlagsSetterRuleForUnitTests<
         return getThis();
     }
 
+    /**
+     * Configures the flag to throw an {@link UnsupportedOperationException} with the given {@code
+     * reason} when the flag with the given {@code name} is called.
+     */
+    public abstract void onGetFlagThrows(String name, String reason);
+
     // TODO(b/338067482): use NameValuePairSetter instead)
     /** TODO(b/384798806): make it package protected. */
     public static void setFakeFlagsFactoryFlags(BiConsumer<String, String> nameValueSetter) {

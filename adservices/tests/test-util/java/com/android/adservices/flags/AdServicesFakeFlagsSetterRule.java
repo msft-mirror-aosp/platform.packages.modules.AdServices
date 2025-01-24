@@ -47,6 +47,11 @@ public final class AdServicesFakeFlagsSetterRule
         return mFlags.getSnapshot();
     }
 
+    @Override
+    public void onGetFlagThrows(String name, String reason) {
+        getFlags().getBackend().onGetFlagThrows(name, reason);
+    }
+
     @VisibleForTesting
     MissingFlagBehavior getMissingFlagBehavior() {
         return mFlags.getBackend().getMissingFlagBehavior();

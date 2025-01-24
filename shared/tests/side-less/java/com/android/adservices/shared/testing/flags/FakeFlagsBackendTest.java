@@ -30,12 +30,16 @@ import com.android.adservices.shared.testing.NameValuePair;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 
+import java.util.Locale;
+
 public final class FakeFlagsBackendTest extends SharedSidelessTestCase {
 
     private static final String TAG = FakeFlagsBackendTest.class.getSimpleName();
     private static final String NAME = "A Flag Has No Name";
+    private static final String ANOTHER_NAME = "No Name a Flag has not";
     private static final String VALUE = "of the Rose";
     private static final String ANOTHER_VALUE = "An NVP has not";
+    private static final String FAILURE_REASON = "Because I said so";
 
     private final FakeNameValuePairContainer mContainer = new FakeNameValuePairContainer();
     private final FakeFlagsBackend mBackend = new FakeFlagsBackend(TAG);
@@ -338,6 +342,44 @@ public final class FakeFlagsBackendTest extends SharedSidelessTestCase {
         assertWithMessage("get() after setFlag(null)")
                 .that(mBackend.getFlag(NAME, 666F))
                 .isEqualTo(666F);
+    }
+
+    @Test
+    public void testOnGetFlagThrows_null() {
+        assertThrows(
+                NullPointerException.class,
+                () -> mBackend.onGetFlagThrows(NAME, /* reason= */ null));
+        assertThrows(
+                NullPointerException.class,
+                () -> mBackend.onGetFlagThrows(/* name= */ null, FAILURE_REASON));
+    }
+
+    @Test
+    public void testOnGetFlagThrows() {
+        // Check before, just in case
+        expect.withMessage("getFlag(%s) before", NAME).that(mBackend.getFlag(NAME, "")).isEmpty();
+        expect.withMessage("getFlag(%s) before", ANOTHER_NAME)
+                .that(mBackend.getFlag(ANOTHER_NAME, ""))
+                .isEmpty();
+
+        mBackend.onGetFlagThrows(NAME, FAILURE_REASON);
+
+        var thrown =
+                assertThrows(UnsupportedOperationException.class, () -> mBackend.getFlag(NAME, ""));
+
+        expect.withMessage("message exception")
+                .that(thrown)
+                .hasMessageThat()
+                .isEqualTo(
+                        String.format(
+                                Locale.ENGLISH,
+                                TestableFlagsBackend.UNSUPPORTED_TEMPLATE,
+                                NAME,
+                                FAILURE_REASON));
+        // Make sure others are not impacted
+        expect.withMessage("getFlag(%s) before", ANOTHER_NAME)
+                .that(mBackend.getFlag(ANOTHER_NAME, ""))
+                .isEmpty();
     }
 
     private void assertThrowsNotSet(String what, ThrowingRunnable r) {

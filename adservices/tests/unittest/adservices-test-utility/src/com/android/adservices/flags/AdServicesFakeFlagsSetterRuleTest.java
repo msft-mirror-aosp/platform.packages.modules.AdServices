@@ -29,8 +29,11 @@ import static com.android.adservices.shared.testing.flags.MissingFlagBehavior.US
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.testing.flags.TestableFlagsBackend;
 
 import org.junit.Test;
+
+import java.util.Locale;
 
 public final class AdServicesFakeFlagsSetterRuleTest
         extends AdServicesFlagsSetterRuleForUnitTestsTestCase<
@@ -259,5 +262,28 @@ public final class AdServicesFakeFlagsSetterRuleTest
         rule.setMissingFlagBehavior(USES_EXPLICIT_DEFAULT);
         testSetMissingFlagBehaviorDefaultBehavior(
                 rule, "after calling setMockingMode(USES_EXPLICIT_DEFAULT)");
+    }
+
+    @Test
+    public void testOnGetFlagThrows() {
+        var rule = newRule();
+        var flags = rule.getFlags();
+        var reason = "Because I said so";
+
+        rule.onGetFlagThrows(KEY_TOPICS_EPOCH_JOB_PERIOD_MS, reason);
+
+        var thrown =
+                assertThrows(
+                        UnsupportedOperationException.class,
+                        () -> flags.getTopicsEpochJobPeriodMs());
+        expect.withMessage("message exception")
+                .that(thrown)
+                .hasMessageThat()
+                .isEqualTo(
+                        String.format(
+                                Locale.ENGLISH,
+                                TestableFlagsBackend.UNSUPPORTED_TEMPLATE,
+                                KEY_TOPICS_EPOCH_JOB_PERIOD_MS,
+                                reason));
     }
 }
