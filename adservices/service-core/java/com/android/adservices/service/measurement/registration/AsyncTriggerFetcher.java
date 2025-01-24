@@ -73,6 +73,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Download and decode Trigger registration.
@@ -130,6 +131,7 @@ public class AsyncTriggerFetcher {
         LoggerFactory.getMeasurementLogger()
                 .d("Trigger ArDebug permission enabled %b", arDebugPermission);
         Trigger.Builder builder = new Trigger.Builder();
+        builder.setId(UUID.randomUUID().toString());
         builder.setEnrollmentId(enrollmentId);
         builder.setAttributionDestination(
                 getAttributionDestination(

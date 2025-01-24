@@ -125,7 +125,7 @@ class MeasurementDao implements IMeasurementDao {
         }
 
         ContentValues values = new ContentValues();
-        values.put(TriggerContract.ID, UUID.randomUUID().toString());
+        values.put(TriggerContract.ID, trigger.getId());
         values.put(
                 TriggerContract.ATTRIBUTION_DESTINATION,
                 trigger.getAttributionDestination().toString());
