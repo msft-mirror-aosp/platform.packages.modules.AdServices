@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.signals.SignalsFixture.DEV_CONTEXT;
 import static com.android.adservices.service.signals.UpdatesDownloader.PACKAGE_NAME_HEADER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_CONVERTING_UPDATE_SIGNALS_RESPONSE_TO_JSON_ERROR;
@@ -53,7 +54,7 @@ import java.util.concurrent.ExecutionException;
 
 @RunWith(MockitoJUnitRunner.class)
 @SetErrorLogUtilDefaultParams(
-        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
 @RequiresSdkLevelAtLeastT(reason = "PAS is only supported on T+")
 public class UpdatesDownloaderTest extends AdServicesExtendedMockitoTestCase {

@@ -41,12 +41,18 @@ public final class FakeFlagsBackendTest extends SharedSidelessTestCase {
     private final FakeFlagsBackend mBackend = new FakeFlagsBackend(TAG);
 
     @Test
-    public void testDefaultConstructor_null() {
-        assertThrows(NullPointerException.class, () -> new FakeFlagsBackend(/* tagName= */ null));
-    }
+    public void testConstructor_null() {
+        // String tagName
+        assertThrows(
+                NullPointerException.class,
+                () -> new FakeFlagsBackend((String) /* tagName= */ null));
 
-    @Test
-    public void testCustomConstructor_null() {
+        // Class<?> class
+        assertThrows(
+                NullPointerException.class,
+                () -> new FakeFlagsBackend((Class<?>) /* clazz= */ null));
+
+        // Logger logger, NameValuePairContainer container) {
         assertThrows(
                 NullPointerException.class,
                 () -> new FakeFlagsBackend(/* logger= */ null, mContainer));
@@ -66,6 +72,17 @@ public final class FakeFlagsBackendTest extends SharedSidelessTestCase {
                 .that(backend.getContainer())
                 .isSameInstanceAs(mContainer);
         expect.withMessage("getTagName()()").that(backend.getTagName()).isEqualTo(mLog.getTag());
+    }
+
+    @Test
+    public void testGetTagName() {
+        var backend1 = new FakeFlagsBackend("D'OH!");
+        expect.withMessage("getTagName()").that(backend1.getTagName()).isEqualTo("D'OH!");
+
+        var backend2 = new FakeFlagsBackend(FakeFlagsBackendTest.class);
+        expect.withMessage("getTagName()")
+                .that(backend2.getTagName())
+                .isEqualTo("FakeFlagsBackendTest");
     }
 
     @Test
@@ -203,6 +220,20 @@ public final class FakeFlagsBackendTest extends SharedSidelessTestCase {
 
     @Test
     public void testSet_boolean() {
+        mBackend.setFlag(NAME, false);
+
+        assertWithMessage("get() after setFlag()")
+                .that(mBackend.getFlag(NAME, true))
+                .isEqualTo(false);
+
+        mBackend.setFlag(NAME, null);
+        assertWithMessage("get() after setFlag(null)")
+                .that(mBackend.getFlag(NAME, true))
+                .isEqualTo(true);
+    }
+
+    @Test
+    public void testSet_booleanAsString() {
         mBackend.setFlag(NAME, "false");
 
         assertWithMessage("get() after setFlag()")
@@ -231,6 +262,18 @@ public final class FakeFlagsBackendTest extends SharedSidelessTestCase {
 
     @Test
     public void testSet_int() {
+        mBackend.setFlag(NAME, 42);
+
+        assertWithMessage("get() after setFlag()").that(mBackend.getFlag(NAME, 666)).isEqualTo(42);
+
+        mBackend.setFlag(NAME, null);
+        assertWithMessage("get() after setFlag(null)")
+                .that(mBackend.getFlag(NAME, 666))
+                .isEqualTo(666);
+    }
+
+    @Test
+    public void testSet_intAsString() {
         mBackend.setFlag(NAME, "42");
 
         assertWithMessage("get() after setFlag()").that(mBackend.getFlag(NAME, 666)).isEqualTo(42);
@@ -243,6 +286,20 @@ public final class FakeFlagsBackendTest extends SharedSidelessTestCase {
 
     @Test
     public void testSet_long() {
+        mBackend.setFlag(NAME, 4815162342L);
+
+        assertWithMessage("get() after setFlag()")
+                .that(mBackend.getFlag(NAME, 666L))
+                .isEqualTo(4815162342L);
+
+        mBackend.setFlag(NAME, null);
+        assertWithMessage("get() after setFlag(null)")
+                .that(mBackend.getFlag(NAME, 666))
+                .isEqualTo(666L);
+    }
+
+    @Test
+    public void testSet_longAsString() {
         mBackend.setFlag(NAME, "4815162342");
 
         assertWithMessage("get() after setFlag()")
@@ -257,6 +314,20 @@ public final class FakeFlagsBackendTest extends SharedSidelessTestCase {
 
     @Test
     public void testSet_float() {
+        mBackend.setFlag(NAME, 108.666F);
+
+        assertWithMessage("get() after setFlag()")
+                .that(mBackend.getFlag(NAME, 666F))
+                .isEqualTo(108.666F);
+
+        mBackend.setFlag(NAME, null);
+        assertWithMessage("get() after setFlag(null)")
+                .that(mBackend.getFlag(NAME, 666F))
+                .isEqualTo(666F);
+    }
+
+    @Test
+    public void testSet_floatAsString() {
         mBackend.setFlag(NAME, "108.666");
 
         assertWithMessage("get() after setFlag()")

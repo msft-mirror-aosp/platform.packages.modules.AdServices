@@ -47,7 +47,7 @@ public abstract class AdServicesJobTestCase
 
         @VisibleForTesting
         Mocker(StaticClassChecker checker, Flags mockFlags, DebugFlags mockDebugFlags) {
-            super(checker, mockFlags, mockDebugFlags);
+            super(checker, mockFlags);
             mJobMocker = new AdServicesMockitoJobMocker(checker);
         }
 

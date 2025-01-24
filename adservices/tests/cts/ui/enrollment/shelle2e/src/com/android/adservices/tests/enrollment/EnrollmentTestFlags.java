@@ -18,6 +18,7 @@ package com.android.adservices.tests.enrollment;
 
 import static com.android.adservices.service.CommonDebugFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
+import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS;
@@ -41,6 +42,7 @@ import com.android.adservices.shared.testing.annotations.SetLongFlag;
 @SetFlagEnabled(KEY_ADSERVICES_ENABLED)
 @SetFlagEnabled(KEY_ENABLE_AD_SERVICES_SYSTEM_API)
 @SetFlagEnabled(KEY_IS_EEA_DEVICE_FEATURE_ENABLED)
+@SetFlagEnabled(KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED)
 @EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @SetLongFlag(name = KEY_CONSENT_NOTIFICATION_INTERVAL_BEGIN_MS, value = 0)
 @SetLongFlag(name = KEY_CONSENT_NOTIFICATION_INTERVAL_END_MS, value = 86400000)

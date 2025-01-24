@@ -15,6 +15,8 @@
  */
 package com.android.adservices.shared.testing;
 
+import static com.android.adservices.shared.testing.ActionBasedRule.PER_ACTION_PREFIX;
+
 import static org.junit.Assert.assertThrows;
 
 import com.android.adservices.shared.meta_testing.CommonDescriptions.AClassHasNoNothingAtAll;
@@ -35,6 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public final class ActionBasedRuleTest extends SharedSidelessTestCase {
 
@@ -99,7 +102,12 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     public void testAddAction_duringTest_throws() {
         mTest.onEvaluate(() -> mRule.addAction(mFakeAction1));
 
-        assertThrows(IllegalStateException.class, () -> runRule());
+        var thrown = assertThrows(ActionExecutionException.class, () -> runRule());
+
+        expect.withMessage("cause")
+                .that(thrown)
+                .hasCauseThat()
+                .isInstanceOf(IllegalStateException.class);
     }
 
     @Test
@@ -186,7 +194,7 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
         mRule.onCreateActionsForTest = mException1;
         mRule.addAction(mFakeAction1);
 
-        runRuleAndExpectTestFailed(mException1);
+        runRuleAndExpectTestFailedDueToActionFailure(mException1);
 
         mTest.assertNotEvaluated();
         expect.withMessage("action executed()").that(mFakeAction1.isExecuted()).isFalse();
@@ -229,7 +237,7 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testWorkflow_allCommandsExecuted_testPassed() throws Throwable {
+    public void testWorkflow_allActionsExecuted_testPassed() throws Throwable {
         mRule.addAction(mFakeAction1).addAction(mFakeAction2);
 
         runRule();
@@ -250,7 +258,7 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testWorkflow_commandSkipped_testPassed() throws Throwable {
+    public void testWorkflow_actionSkipped_testPassed() throws Throwable {
         mFakeAction1.onExecuteReturn(false);
         mRule.addAction(mFakeAction1).addAction(mFakeAction2);
 
@@ -270,11 +278,11 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testWorkflow_commandThrowOnExecute() throws Throwable {
+    public void testWorkflow_actionThrowOnExecute() throws Throwable {
         mFakeAction2.onExecuteThrows(mException1);
         mRule.addAction(mFakeAction1).addAction(mFakeAction2).addAction(mFakeAction3);
 
-        runRuleAndExpectTestFailed(mException1);
+        runRuleAndExpectTestFailedDueToActionFailure(mException1);
 
         mTest.assertNotEvaluated();
         expect.withMessage("execution order of action1")
@@ -292,7 +300,7 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testWorkflow_commandThrowOnRevert_testPassed() throws Throwable {
+    public void testWorkflow_actionThrowOnRevert_testPassed() throws Throwable {
         mFakeAction2.onRevertThrows(mException1);
         mRule.addAction(mFakeAction1).addAction(mFakeAction2).addAction(mFakeAction3);
 
@@ -320,12 +328,12 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testWorkflow_oneCommandThrowOnExecuteAnotherOnRevert() throws Throwable {
+    public void testWorkflow_oneActionThrowOnExecuteAnotherOnRevert() throws Throwable {
         mFakeAction3.onExecuteThrows(mException1);
         mFakeAction2.onRevertThrows(mException2);
         mRule.addAction(mFakeAction1).addAction(mFakeAction2).addAction(mFakeAction3);
 
-        runRuleAndExpectTestFailed(mException1);
+        runRuleAndExpectTestFailedDueToActionFailure(mException1);
 
         mTest.assertNotEvaluated();
         expect.withMessage("execution order of action1")
@@ -347,11 +355,11 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testWorkflow_allCommandsExecuted_testFailed() throws Throwable {
+    public void testWorkflow_allActionsExecuted_testFailed() throws Throwable {
         setTestToFail();
         mRule.addAction(mFakeAction1).addAction(mFakeAction2);
 
-        runRuleAndExpectTestFailed(mTestException);
+        runRuleAndExpectTestFailedDueToTestFailure(mTestException, mFakeAction1, mFakeAction2);
 
         mTest.assertEvaluated();
         expect.withMessage("execution order of action1")
@@ -369,12 +377,12 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
     }
 
     @Test
-    public void testWorkflow_commandSkipped_testFailed() throws Throwable {
+    public void testWorkflow_actionSkipped_testFailed() throws Throwable {
         setTestToFail();
         mFakeAction1.onExecuteReturn(false);
         mRule.addAction(mFakeAction1).addAction(mFakeAction2).apply(mTest, mTestDescription);
 
-        runRuleAndExpectTestFailed(mTestException);
+        runRuleAndExpectTestFailedDueToTestFailure(mTestException, mFakeAction1, mFakeAction2);
 
         mTest.assertEvaluated();
         expect.withMessage("execution order of action1")
@@ -389,13 +397,26 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
                 .isEqualTo(1);
     }
 
+    /**
+     * Test used to make sure the test exception is re-thrown "as is" when no action was executed.
+     */
     @Test
-    public void testWorkflow_commandThrowOnRevert_testFailed() throws Throwable {
+    public void testWorkflow_noAction_testFailed() throws Throwable {
+        setTestToFail();
+
+        runRuleAndExpectTestFailedDueToTestFailure(mTestException);
+
+        mTest.assertEvaluated();
+    }
+
+    @Test
+    public void testWorkflow_actionThrowOnRevert_testFailed() throws Throwable {
         setTestToFail();
         mFakeAction2.onRevertThrows(mException1);
         mRule.addAction(mFakeAction1).addAction(mFakeAction2).addAction(mFakeAction3);
 
-        runRuleAndExpectTestFailed(mTestException);
+        runRuleAndExpectTestFailedDueToTestFailure(
+                mTestException, mFakeAction1, mFakeAction2, mFakeAction3);
 
         mTest.assertEvaluated();
         expect.withMessage("execution order of action1")
@@ -454,9 +475,36 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
         mRule.apply(test, mTestDescription).evaluate();
     }
 
-    private void runRuleAndExpectTestFailed(Throwable expected) {
+    private void runRuleAndExpectTestFailedDueToActionFailure(Throwable expected) {
         var actual = assertThrows(Throwable.class, () -> runRule());
         expect.withMessage("exception thrown by test").that(actual).isSameInstanceAs(expected);
+    }
+
+    private void runRuleAndExpectTestFailedDueToTestFailure(
+            Throwable expected, Action... executedActions) {
+        if (executedActions.length == 0) {
+            // No action executed, should just rethrow
+            var thrown = assertThrows(Throwable.class, () -> runRule());
+            expect.withMessage("exception thrown by test").that(thrown).isSameInstanceAs(expected);
+            return;
+        }
+
+        TestFailure actual = assertThrows(TestFailure.class, () -> runRule());
+
+        expect.withMessage("cause of exception thrown by test")
+                .that(actual.getCause())
+                .isSameInstanceAs(expected);
+        String expectedExtraInfo =
+                Arrays.stream(executedActions)
+                        .map(a -> PER_ACTION_PREFIX + a.toStringForTestFailure())
+                        .collect(
+                                Collectors.joining(
+                                        "\n",
+                                        "Ready, Set..." + executedActions.length + " Actions:\n",
+                                        ""));
+        expect.withMessage("extra info on exception")
+                .that(actual.getExtraInfo())
+                .containsExactly(expectedExtraInfo);
     }
 
     private void assertActionsExecutedAndReverted(String when, Action... actions) {
@@ -496,6 +544,11 @@ public final class ActionBasedRuleTest extends SharedSidelessTestCase {
         @Override
         protected void decorateToString(StringBuilder string) {
             string.append(", concrete=I am!");
+        }
+
+        @Override
+        protected String getTestFailureHeader(int numberExecutedActions) {
+            return "Ready, Set..." + numberExecutedActions + " Actions";
         }
     }
 }

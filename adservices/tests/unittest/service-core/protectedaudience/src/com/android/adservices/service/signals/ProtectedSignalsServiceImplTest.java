@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.signals;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED;
@@ -101,7 +102,7 @@ import java.util.concurrent.ExecutorService;
 @MockStatic(PeriodicEncodingJobService.class)
 @RequiresSdkLevelAtLeastT(reason = "Protected App Signals is enabled for T+")
 @SetErrorLogUtilDefaultParams(
-        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
 @SetFlagFalse(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS)
@@ -140,7 +141,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
 
     @Before
     public void setup() {
-        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
         logApiCallStatsCallback = mocker.mockLogApiCallStats(mAdServicesLoggerMock);
 
         mProtectedSignalsService =
@@ -153,7 +154,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerMock,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mCallingAppUidSupplierMock,
                         mProtectedSignalsServiceFilterMock,
                         mEnrollmentDaoMock,
@@ -274,7 +275,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
     @SuppressWarnings("FutureReturnValueIgnored")
     @Test
     public void testUpdateSignalsSuccessWithUXNotificationNotEnforced() throws Exception {
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
         when(mProtectedSignalsServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(URI),
                         eq(PACKAGE),
@@ -298,7 +299,7 @@ public final class ProtectedSignalsServiceImplTest extends AdServicesExtendedMoc
                         DIRECT_EXECUTOR,
                         mAdServicesLoggerMock,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mCallingAppUidSupplierMock,
                         mProtectedSignalsServiceFilterMock,
                         mEnrollmentDaoMock,

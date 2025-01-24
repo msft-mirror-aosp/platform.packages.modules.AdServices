@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 The Android Open Source Project
+ * Copyright (C) 2025 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.mockito;
+package com.android.adservices.flags;
 
-import com.android.adservices.service.DebugFlags;
+import com.android.adservices.service.PhFlagsTest;
 
-public final class AdServicesMockitoFlagsMockerTest
-        extends AdServicesDebugFlagsMockerTestCase<AdServicesDebugFlagsMocker> {
+public final class FakeFlagsTest extends PhFlagsTest {
 
-    @Override
-    protected AdServicesDebugFlagsMocker getMocker(DebugFlags debugFlags) {
-        return new AdServicesMockitoDebugFlagsMocker(debugFlags);
+    @SuppressWarnings("VisibleForTests") // TODO(b/343741206): Remove suppress warning once fixed.
+    public FakeFlagsTest() {
+        super(FakeFlags.createFakeFlagsForFakeFlagsTestPurposesOnly(), /* isRaw= */ true);
     }
 }

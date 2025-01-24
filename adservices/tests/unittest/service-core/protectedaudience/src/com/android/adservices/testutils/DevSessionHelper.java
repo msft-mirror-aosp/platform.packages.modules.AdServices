@@ -27,6 +27,7 @@ import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
@@ -72,6 +73,7 @@ public class DevSessionHelper {
             AppInstallDao appInstallDao,
             FrequencyCapDao frequencyCapDao,
             ProtectedSignalsDao protectedSignalsDao,
+            EncodedPayloadDao encodedPayloadDao,
             DatastoreManager measurementDatastoreManager) {
         this.mDevSessionController =
                 new DevSessionControllerImpl(
@@ -82,6 +84,7 @@ public class DevSessionHelper {
                                                 appInstallDao, frequencyCapDao, new Flags() {})
                                         .getFrequencyCapDataClearer(),
                                 protectedSignalsDao,
+                                encodedPayloadDao,
                                 measurementDatastoreManager,
                                 AdServicesExecutors.getBackgroundExecutor()),
                         new DevSessionInMemoryDataStore(),

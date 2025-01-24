@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 The Android Open Source Project
+ * Copyright (C) 2025 The Android Open Source Project
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.android.adservices.mockito;
+package com.android.adservices.flags;
 
-import com.android.adservices.service.DebugFlags;
+import com.android.adservices.shared.testing.flags.TestableFlagsBackend;
 
-public final class AdServicesMockitoDebugFlagsMockerTest
-        extends AdServicesDebugFlagsMockerTestCase<AdServicesDebugFlagsMocker> {
+/** Abstraction for a {@code Flags} object that is backed by a {@link TestableFlagsBackend}. */
+public interface TestableFlags {
 
-    @Override
-    protected AdServicesDebugFlagsMocker getMocker(DebugFlags debugFlags) {
-        return new AdServicesMockitoDebugFlagsMocker(debugFlags);
-    }
+    /** Gets the backend backing this {@code Flags}. */
+    TestableFlagsBackend getBackend();
 }

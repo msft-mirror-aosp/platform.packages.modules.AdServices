@@ -152,7 +152,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     @Before
     public void setup() throws Exception {
-        mocker.mockGetConsentNotificationDebugMode(false);
+        mockGetConsentNotificationDebugMode(false);
         mocker.mockGetFlags(mFlagsWithAllCheckEnabled);
         mService =
                 new CustomAudienceServiceImpl(
@@ -165,7 +165,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithAllCheckEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -255,7 +255,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
             throws RemoteException {
         CustomAudienceServiceFilter customAudienceServiceFilterMock =
                 Mockito.mock(CustomAudienceServiceFilter.class);
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
 
         CustomAudienceServiceImpl service =
                 new CustomAudienceServiceImpl(
@@ -268,7 +268,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithAllCheckEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         customAudienceServiceFilterMock,
                         new AdFilteringFeatureFactory(
@@ -383,7 +383,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithAllCheckEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -748,7 +748,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithAllCheckEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -843,7 +843,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
             throws RemoteException {
         CustomAudienceServiceFilter customAudienceServiceFilterMock =
                 Mockito.mock(CustomAudienceServiceFilter.class);
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
 
         CustomAudienceServiceImpl service =
                 new CustomAudienceServiceImpl(
@@ -856,7 +856,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithAllCheckEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         customAudienceServiceFilterMock,
                         new AdFilteringFeatureFactory(
@@ -970,7 +970,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithAllCheckEnabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -1292,7 +1292,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithForegroundCheckDisabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -1402,7 +1402,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithForegroundCheckDisabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -1532,7 +1532,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithForegroundCheckDisabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -1643,7 +1643,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithForegroundCheckDisabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -1735,7 +1735,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithForegroundCheckDisabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -2017,7 +2017,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithEnrollmentCheckDisabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,
@@ -2132,7 +2132,7 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         mFlagsWithEnrollmentCheckDisabled,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 sContext,

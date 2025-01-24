@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.signals;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.data.signals.EncoderLogicHandler.EMPTY_ADTECH_ID;
 import static com.android.adservices.data.signals.EncoderLogicHandler.ENCODER_VERSION_RESPONSE_HEADER;
 import static com.android.adservices.data.signals.EncoderLogicHandler.FALLBACK_VERSION;
@@ -82,7 +83,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 @RequiresSdkLevelAtLeastT
 @SetErrorLogUtilDefaultParams(
-        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
 @SetFlagTrue(KEY_PAS_EXTENDED_METRICS_ENABLED)
 public final class EncoderLogicHandlerTest extends AdServicesExtendedMockitoTestCase {

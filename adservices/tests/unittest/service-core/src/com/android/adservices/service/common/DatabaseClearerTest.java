@@ -30,6 +30,7 @@ import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.adselection.AdFilteringFeatureFactory;
@@ -50,6 +51,7 @@ public final class DatabaseClearerTest extends AdServicesMockitoTestCase {
     @Mock private CustomAudienceDao mCustomAudienceDao;
     @Mock private FrequencyCapDao mFrequencyCapDao;
     @Mock private AppInstallDao mAppInstallDao;
+    @Mock private EncodedPayloadDao mEncodedPayloadDao;
     @Mock private ProtectedSignalsDao mProtectedSignalsDao;
     @Mock private DatastoreManager mDatastoreManager;
     private DatabaseClearer mDatabaseClearer;
@@ -73,6 +75,7 @@ public final class DatabaseClearerTest extends AdServicesMockitoTestCase {
                                         })
                                 .getFrequencyCapDataClearer(),
                         mProtectedSignalsDao,
+                        mEncodedPayloadDao,
                         mDatastoreManager,
                         backgroundExecutor);
     }
@@ -91,6 +94,7 @@ public final class DatabaseClearerTest extends AdServicesMockitoTestCase {
         verify(mFrequencyCapDao, times(1)).deleteAllHistogramData();
         verify(mAppInstallDao, times(1)).deleteAllAppInstallData();
         verify(mProtectedSignalsDao, times(1)).deleteAllSignals();
+        verify(mEncodedPayloadDao, times(1)).deleteAllEncodedPayloads();
     }
 
     @Test

@@ -36,6 +36,7 @@ import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.MeasurementDbHelper;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
+import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.Flags;
@@ -86,6 +87,10 @@ public class MeasurementDevSessionTest extends AdServicesExtendedMockitoTestCase
                 Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
                         .build()
                         .protectedSignalsDao();
+        EncodedPayloadDao encodedPayloadDao =
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
+                        .build()
+                        .getEncodedPayloadDao();
 
         mMeasurementDatastoreManager =
                 new SQLDatastoreManager(
@@ -98,6 +103,7 @@ public class MeasurementDevSessionTest extends AdServicesExtendedMockitoTestCase
                         mAppInstallDao,
                         mFrequencyCapDao,
                         protectedSignalsDao,
+                        encodedPayloadDao,
                         mMeasurementDatastoreManager);
     }
 

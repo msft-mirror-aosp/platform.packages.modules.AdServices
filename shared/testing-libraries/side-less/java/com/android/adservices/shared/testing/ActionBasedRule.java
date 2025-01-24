@@ -34,6 +34,9 @@ import java.util.Objects;
  */
 public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends AbstractRule {
 
+    /** Prefix used when test fail and rule throws a {@link TestFailure} exception. */
+    @VisibleForTesting static final String PER_ACTION_PREFIX = "  ";
+
     /** Actions added by {@link #addAction(Action)} and executed on all tests. */
     private final List<Action> mFixedActions = new ArrayList<>();
 
@@ -45,6 +48,9 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
 
     /** Actions to be reverted after each test. */
     private final List<Action> mActionsToBeReverted = new ArrayList<>();
+
+    /** Actions executed by the test - used to generate a {@link TestFailure} on test failures. */
+    private final List<Action> mExecutedActions = new ArrayList<>();
 
     private boolean mIsRunning;
 
@@ -64,8 +70,9 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
         Objects.requireNonNull(action, "action cannot be null");
 
         if (mIsRunning) {
-            throw new IllegalStateException(
-                    "Cannot add action " + action + " because test is already running");
+            throw new ActionExecutionException(
+                    new IllegalStateException(
+                            "Cannot add action " + action + " because test is already running"));
         }
 
         cacheAction(action);
@@ -147,6 +154,7 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
                 "Before clearing mActionsToBeExecuted and mActionsToBeReverted: mFixedActions=%s"
                         + " mActionsToBeExecuted=%s, mActionsToBeReverted=%s",
                 mFixedActions, mActionsToBeExecuted, mActionsToBeReverted);
+        mExecutedActions.clear();
         mActionsToBeExecuted.clear();
         mActionsToBeReverted.clear();
 
@@ -164,6 +172,11 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
         mIsRunning = true;
         try {
             base.evaluate();
+        } catch (ActionExecutionException t) {
+            // Pass it around, otherwise it would be encapsulated into a TestFailure
+            throw t;
+        } catch (Throwable t) {
+            throwTestFailure(t);
         } finally {
             mIsRunning = false;
             revertActions();
@@ -198,6 +211,7 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
                 action = mActionsToBeExecuted.get(i);
                 mLog.d("Executing %s", action);
                 boolean revert = action.execute();
+                mExecutedActions.add(action);
                 if (revert) {
                     mLog.v("Adding %s for reversion", action);
                     mActionsToBeReverted.add(action);
@@ -229,6 +243,41 @@ public abstract class ActionBasedRule<R extends ActionBasedRule<R>> extends Abst
                 mLog.w(t, "Failed to revert action (%s), but not failing test", action);
             }
         }
+    }
+
+    // TODO(b/338067482): should extend AbstractRethrowerRule instead, but that rule is not unit
+    // tested (and it would require changing the overall structure of this one)
+    private void throwTestFailure(Throwable t) throws Throwable {
+        int size = mExecutedActions.size();
+        if (size == 0) {
+            mLog.v("throwTestFailure(): rethrowing %s when no action was executed", t);
+            // Don't need a custom TestFailure if the rule didn't execute any action
+            throw t;
+        }
+        StringBuilder extraInfo = new StringBuilder(getTestFailureHeader(size)).append(":");
+        mExecutedActions.forEach(
+                a ->
+                        extraInfo
+                                .append("\n")
+                                .append(PER_ACTION_PREFIX)
+                                .append(a.toStringForTestFailure()));
+        mLog.v("throwTestFailure(): throwing TestFailure with extraInfo: %s", extraInfo);
+        TestFailure.throwTestFailure(t, extraInfo.toString());
+    }
+
+    // TODO(b/338067482): it might be better / more flexible to expose throwTestFailure() or a
+    // similar method (which would also pass the actions), but for now let's keep it simple...
+    /**
+     * Gets a "header" for the {@link TestFailure#getExtraInfo() extra info} added to a {@link
+     * TestFailure} when the test fail.
+     *
+     * @param numberExecutedActions number of actions executed so far
+     * @return a description of the actions (like "Test changed X flags")
+     */
+    protected String getTestFailureHeader(int numberExecutedActions) {
+        String clazz = getClass().getSimpleName();
+        mLog.w("getTestFailureHeader(): not overridden by %s", clazz);
+        return mExecutedActions.size() + " actions set by " + clazz;
     }
 
     /** Returns a cast reference to this rule */

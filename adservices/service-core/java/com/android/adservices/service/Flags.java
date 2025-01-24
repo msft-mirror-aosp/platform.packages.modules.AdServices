@@ -3833,6 +3833,23 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT;
     }
 
+    /** Default value for the feature to enable AdIDs per device per window. */
+    @FeatureFlag boolean DEFAULT_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW = false;
+
+    /** Returns true if the AdIDs per device per window feature is enabled. */
+    default boolean getMeasurementEnableAdIdsPerDevicePerWindow() {
+        return DEFAULT_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW;
+    }
+
+    /** Default value for the AdIDs per device per window period in milliseconds. */
+    @ConfigFlag
+    long DEFAULT_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS = TimeUnit.DAYS.toMillis(7);
+
+    /** Returns true if the AdIDs per device per window feature is enabled. */
+    default long getMeasurementAdIdsPerDevicePerWindowPeriodMs() {
+        return DEFAULT_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS;
+    }
+
     /** Kill switch to guard backward-compatible logging. See go/rbc-ww-logging */
     @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean COMPAT_LOGGING_KILL_SWITCH = false;

@@ -17,10 +17,8 @@ package com.android.adservices.flags;
 
 import static org.junit.Assert.assertThrows;
 
-import android.provider.DeviceConfig;
-
 import com.android.adservices.service.PhFlagsTest;
-import com.android.adservices.shared.flags.DeviceConfigFlagsBackend;
+import com.android.adservices.shared.testing.flags.FakeFlagsBackend;
 
 import org.junit.Test;
 
@@ -28,14 +26,14 @@ public final class RawFlagsForTestsTest extends PhFlagsTest {
 
     public RawFlagsForTestsTest() {
         super(
-                new RawFlagsForTests<DeviceConfigFlagsBackend>(
-                        new DeviceConfigFlagsBackend(DeviceConfig.NAMESPACE_ADSERVICES)) {},
+                new RawFlagsForTests<FakeFlagsBackend>(
+                        new FakeFlagsBackend(RawFlagsForTestsTest.class)),
                 /* isRaw= */ true);
     }
 
     @Test
     public void testNullConstructor() {
         assertThrows(
-                NullPointerException.class,
-                () -> new RawFlagsForTests<DeviceConfigFlagsBackend>(null));
-    }}
+                NullPointerException.class, () -> new RawFlagsForTests<FakeFlagsBackend>(null));
+    }
+}

@@ -26,6 +26,8 @@ import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRU
 import static com.android.adservices.service.Flags.DEFAULT_ENABLE_LOG_SAMPLING_INFRA;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST;
 import static com.android.adservices.service.Flags.DEFAULT_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS;
@@ -1100,6 +1102,22 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementEnablePackageNameUidCheck",
                 DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK,
                 Flags::getMeasurementEnablePackageNameUidCheck);
+    }
+
+    @Test
+    public void testGetMeasurementEnableAdIdsPerDevicePerWindow() {
+        testFlag(
+                "getMeasurementEnableAdIdsPerDevicePerWindow",
+                DEFAULT_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW,
+                Flags::getMeasurementEnableAdIdsPerDevicePerWindow);
+    }
+
+    @Test
+    public void testMeasurementAdIdsPerDevicePerWindowPeriodMs() {
+        testFlag(
+                "getMeasurementAdIdsPerDevicePerWindowPeriodMs",
+                DEFAULT_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS,
+                Flags::getMeasurementAdIdsPerDevicePerWindowPeriodMs);
     }
 
     @Test

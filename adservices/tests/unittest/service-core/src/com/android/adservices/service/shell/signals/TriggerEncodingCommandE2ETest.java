@@ -224,7 +224,7 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                         .createRetryStrategy(
                                 mMockFlags.getAdServicesJsScriptEngineMaxRetryAttempts());
         mocker.mockGetFlags(mMockFlags);
-        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
         boolean jsIsolateMessagesInLogs = true;
         SignalsProviderAndArgumentFactory signalsProviderAndArgumentFactory =
                 new SignalsProviderAndArgumentFactory(mProtectedSignalsDao, true);
@@ -283,7 +283,7 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
                         AdServicesExecutors.getBackgroundExecutor(),
                         logger,
                         mMockFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         new CallingAppUidSupplierProcessImpl(),
                         new ProtectedSignalsServiceFilter(
                                 mContext,
@@ -301,7 +301,7 @@ public final class TriggerEncodingCommandE2ETest extends AdServicesExtendedMocki
         when(mConsentManagerMock.isPasConsentGiven()).thenReturn(true);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(false);
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
         when(mMockFlags.getDisableFledgeEnrollmentCheck()).thenReturn(true);
         when(mMockFlags.getPasAppAllowList()).thenReturn("*");
         when(mMockFlags.getPpapiAppAllowList()).thenReturn("*");

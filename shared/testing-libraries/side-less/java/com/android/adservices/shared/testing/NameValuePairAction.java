@@ -106,4 +106,16 @@ public final class NameValuePairAction extends AbstractAction {
                 + mSet
                 + ']';
     }
+
+    @Override
+    public String toStringForTestFailure() {
+        StringBuilder string =
+                new StringBuilder().append(mNvp.name).append('=').append(mNvp.value).append(" (");
+        if (mPreviousNvp == null) {
+            string.append("not set before");
+        } else {
+            string.append("before: ").append(mPreviousNvp.value);
+        }
+        return string.append(')').toString();
+    }
 }

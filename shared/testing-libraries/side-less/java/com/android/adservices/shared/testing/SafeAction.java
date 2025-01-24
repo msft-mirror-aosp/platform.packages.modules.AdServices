@@ -16,6 +16,7 @@
 package com.android.adservices.shared.testing;
 
 import java.util.Objects;
+import java.util.function.Supplier;
 
 /** {@link Action} implementation that wraps another action so its methods don't throw. */
 public final class SafeAction implements Action {
@@ -69,7 +70,16 @@ public final class SafeAction implements Action {
 
     @Override
     public String toString() {
-        String originalString = mAction.toString();
+        return toString(() -> mAction.toString());
+    }
+
+    @Override
+    public String toStringForTestFailure() {
+        return toString(() -> mAction.toStringForTestFailure());
+    }
+
+    private String toString(Supplier<String> supplier) {
+        String originalString = supplier.get();
         return originalString.contains("Action[")
                 ? originalString.replace("Action[", "SafeAction[")
                 : "SafeAction[" + originalString + ']';

@@ -63,7 +63,7 @@ public final class FakeNameValuePairContainer implements NameValuePairContainer 
             mLog.i("Removing %s", name);
             mMap.remove(name);
         } else {
-            mLog.i("Addiong %s -> %s", name, nvp);
+            mLog.i("Adding %s -> %s", name, nvp);
             mMap.put(name, nvp);
         }
         return previous;

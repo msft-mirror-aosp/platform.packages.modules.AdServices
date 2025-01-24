@@ -214,8 +214,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     @Before
     public void setup() throws Exception {
         mLegacyFakeFlags = new GetAdSelectionDataRunnerTestFlags();
-        mocker.mockGetDebugFlags(mMockDebugFlags);
-        mocker.mockGetConsentNotificationDebugMode(false);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
+        mockGetConsentNotificationDebugMode(false);
         mMultiCloudSupportStrategyFlagOff =
                 MultiCloudTestStrategyFactory.getDisabledTestStrategy(mObliviousHttpEncryptorMock);
         mMultiCloudSupportStrategyFlagOn =
@@ -325,7 +325,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
     @Test
     public void testRunner_getAdSelectionData_returnsSuccessWithUXNotificationEnforcementDisabled()
             throws Exception {
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
 
         mocker.mockGetFlags(mLegacyFakeFlags);
         doReturn(FluentFuture.from(immediateFuture(CIPHER_TEXT_BYTES)))
@@ -1380,7 +1380,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                         BLOCKING_EXECUTOR,
                         mScheduledExecutor,
                         shortTimeoutFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CALLER_UID,
                         DevContext.createForDevOptionsDisabled(),
                         mAdsRelevanceExecutionLogger,
@@ -1445,7 +1445,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                 BLOCKING_EXECUTOR,
                 mScheduledExecutor,
                 flags,
-                mMockDebugFlags,
+                mFakeDebugFlags,
                 CALLER_UID,
                 DevContext.createForDevOptionsDisabled(),
                 mClockMock,

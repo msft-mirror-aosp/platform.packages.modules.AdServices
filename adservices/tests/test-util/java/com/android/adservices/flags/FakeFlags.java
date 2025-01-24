@@ -26,8 +26,6 @@ import java.util.stream.Collectors;
 // TODO(b/384798806): make it package protected once FakeFlagsFactory is moved to this package
 public final class FakeFlags extends RawFlagsForTests<FakeFlagsBackend> implements Identifiable {
 
-    private static final String TAG = FakeFlags.class.getSimpleName();
-
     private static int sNextId;
 
     private final String mId = String.valueOf(++sNextId);
@@ -37,7 +35,7 @@ public final class FakeFlags extends RawFlagsForTests<FakeFlagsBackend> implemen
     }
 
     static FakeFlags createFakeFlagsForFlagSetterRulePurposesOnly() {
-        return new FakeFlags(new FakeFlagsBackend(TAG));
+        return new FakeFlags(new FakeFlagsBackend(FakeFlags.class));
     }
 
     @VisibleForTesting
@@ -49,14 +47,10 @@ public final class FakeFlags extends RawFlagsForTests<FakeFlagsBackend> implemen
 
     // TODO(b/384798806): make it package protected once FakeFlagsFactory is moved to this package
     public static FakeFlags createFakeFlagsForFakeFlagsFactoryPurposesOnly() {
-        var backend = new FakeFlagsBackend(TAG);
+        var backend = new FakeFlagsBackend(FakeFlags.class);
         AdServicesFlagsSetterRuleForUnitTests.setFakeFlagsFactoryFlags(
                 (name, value) -> backend.setFlag(name, value));
         return new FakeFlags(backend.cloneForSnapshot());
-    }
-
-    FakeFlagsBackend getBackend() {
-        return mBackend;
     }
 
     FakeFlags getSnapshot() {

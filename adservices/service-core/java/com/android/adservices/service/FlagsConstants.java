@@ -1252,6 +1252,10 @@ public final class FlagsConstants {
             "measurement_debug_key_ad_id_matching_limit";
     public static final String KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST =
             "measurement_debug_key_ad_id_matching_enrollment_blocklist";
+    public static final String KEY_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW =
+            "Measurement__enable_adids_per_device_per_window";
+    public static final String KEY_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS =
+            "Measurement__adids_per_device_per_window_period_ms";
 
     public static final String KEY_MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS =
             "Measurement__enable_aggregatable_named_budgets";

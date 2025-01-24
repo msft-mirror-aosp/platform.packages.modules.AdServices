@@ -17,7 +17,6 @@ package com.android.adservices.shared.testing.flags;
 
 import static com.android.adservices.shared.testing.flags.MissingFlagBehavior.USES_EXPLICIT_DEFAULT;
 
-import com.android.adservices.shared.flags.FlagsBackend;
 import com.android.adservices.shared.testing.DynamicLogger;
 import com.android.adservices.shared.testing.FakeNameValuePairContainer;
 import com.android.adservices.shared.testing.ImmutableNameValuePairContainer;
@@ -32,7 +31,7 @@ import com.google.common.collect.ImmutableMap;
 import java.util.Objects;
 
 /** In-memory container for flag-related backends. */
-public final class FakeFlagsBackend implements FlagsBackend {
+public final class FakeFlagsBackend implements TestableFlagsBackend {
 
     private final NameValuePairContainer mContainer;
     private final Logger mLog;
@@ -48,6 +47,15 @@ public final class FakeFlagsBackend implements FlagsBackend {
         this(
                 new Logger(DynamicLogger.getInstance(), tagName),
                 new FakeNameValuePairContainer(tagName));
+    }
+
+    /**
+     * Default constructor.
+     *
+     * @param clazz used to derive the tag name
+     */
+    public FakeFlagsBackend(Class<?> clazz) {
+        this(Objects.requireNonNull(clazz, "clazz cannot be null").getSimpleName());
     }
 
     /**
@@ -189,7 +197,7 @@ public final class FakeFlagsBackend implements FlagsBackend {
         return mContainer.get(name);
     }
 
-    /** Sets the flag to the given value, or removes it if the value is {@code null}. */
+    @Override
     public void setFlag(String name, @Nullable String value) {
         mLog.v("setFlag(%s, %s)", name, value);
         mContainer.set(new NameValuePair(name, value));

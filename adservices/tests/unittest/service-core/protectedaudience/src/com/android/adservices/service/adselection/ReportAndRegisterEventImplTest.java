@@ -78,7 +78,6 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.data.adselection.datahandlers.RegisteredAdInteraction;
-import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AllowLists;
@@ -175,7 +174,6 @@ public final class ReportAndRegisterEventImplTest extends AdServicesExtendedMock
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     @Mock private MeasurementImpl mMeasurementServiceMock;
     @Mock private ConsentManager mConsentManagerMock;
-    @Mock private DebugFlags mDebugFlags;
     private ReportAndRegisterEventImpl mEventReporter;
     private DBAdSelection mDBAdSelection;
     private DBRegisteredAdInteraction mDBRegisteredAdInteractionSellerClick;
@@ -1179,7 +1177,7 @@ public final class ReportAndRegisterEventImplTest extends AdServicesExtendedMock
                 mBackgroundExecutorService,
                 mAdServicesLoggerMock,
                 flags,
-                mDebugFlags,
+                mFakeDebugFlags,
                 mAdSelectionServiceFilterMock,
                 MY_UID,
                 mFledgeAuthorizationFilterMock,

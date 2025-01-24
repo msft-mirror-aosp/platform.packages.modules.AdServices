@@ -139,4 +139,13 @@ public abstract class AbstractAction implements Action {
      */
     @GuardedBy("mLock")
     protected abstract void onResetLocked();
+
+    @Override
+    public String toStringForTestFailure() {
+        String toString = toString();
+        mLog.w(
+                "toStringForTestFailure() not overridden by %s, returning toString(): %s",
+                getClass().getSimpleName(), toString);
+        return toString;
+    }
 }

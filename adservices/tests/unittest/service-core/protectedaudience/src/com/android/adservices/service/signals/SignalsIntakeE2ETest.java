@@ -72,6 +72,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.signals.DBProtectedSignal;
+import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.EncoderEndpointsDao;
 import com.android.adservices.data.signals.EncoderLogicHandler;
 import com.android.adservices.data.signals.EncoderLogicMetadataDao;
@@ -197,6 +198,10 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
                 Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
                         .build()
                         .getEncoderLogicMetadataDao();
+        EncodedPayloadDao encodedPayloadDao =
+                Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)
+                        .build()
+                        .getEncodedPayloadDao();
         mEnrollmentDao =
                 new EnrollmentDao(mSpyContext, DbTestUtil.getSharedDbHelperForTest(), mFakeFlags);
         mEnrollmentDao.insert(
@@ -268,6 +273,7 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
                         sharedStorageDatabase.appInstallDao(),
                         sharedStorageDatabase.frequencyCapDao(),
                         mSignalsDao,
+                        encodedPayloadDao,
                         mDatastoreManager);
         mProtectedSignalsServiceFilter =
                 new ProtectedSignalsServiceFilter(
