@@ -21,7 +21,6 @@ import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.MeasurementTables.EventReportContract;
 import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
-import com.android.adservices.service.measurement.reporting.DebugReportFixture;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventReportFixture;
 import com.android.adservices.service.measurement.Source;
@@ -31,6 +30,7 @@ import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
 import com.android.adservices.service.measurement.reporting.DebugReport;
+import com.android.adservices.service.measurement.reporting.DebugReportFixture;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -54,18 +54,16 @@ public final class AttributionReportingHelperTest extends AdServicesUnitTestCase
                 .isEqualTo(source.getId());
         expect.withMessage("STATUS")
                 .that(jsonObject.getString(SourceContract.STATUS))
-                .isEqualTo("active");
+                .isEqualTo(AttributionReportingHelper.STATUS_MAP.get(source.getStatus()));
         expect.withMessage("REGISTRATION_ORIGIN")
                 .that(jsonObject.getString(SourceContract.REGISTRATION_ORIGIN))
                 .isEqualTo(source.getRegistrationOrigin().toString());
-
         expect.withMessage("APP_DESTINATION")
                 .that(jsonObject.getString(APP_DESTINATION))
                 .isEqualTo(source.getAppDestinations().toString());
         expect.withMessage("WEB_DESTINATION")
                 .that(jsonObject.getString(WEB_DESTINATION))
                 .isEqualTo(source.getWebDestinations().toString());
-
         expect.withMessage("REGISTRANT")
                 .that(jsonObject.getString(SourceContract.REGISTRANT))
                 .isEqualTo(source.getRegistrant().toString());
@@ -83,6 +81,10 @@ public final class AttributionReportingHelperTest extends AdServicesUnitTestCase
         expect.withMessage("DEBUG_KEY")
                 .that(debugKeyString)
                 .isEqualTo(source.getDebugKey().toString());
+        expect.withMessage("ATTRIBUTION_MODE")
+                .that(jsonObject.getString(SourceContract.ATTRIBUTION_MODE))
+                .isEqualTo(AttributionReportingHelper.ATTRIBUTION_MODE_MAP.get(
+                        source.getAttributionMode()));
     }
 
     @Test
