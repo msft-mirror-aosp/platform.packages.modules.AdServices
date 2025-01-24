@@ -54,9 +54,9 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_GET_AD_SE
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_PERIODIC_ENCODING_ENABLED;
-import static com.android.adservices.service.adselection.AdSelectionFromOutcomesE2ETest.BID_FLOOR_SELECTION_SIGNAL_TEMPLATE;
-import static com.android.adservices.service.adselection.AdSelectionFromOutcomesE2ETest.SELECTION_WATERFALL_LOGIC_JS;
-import static com.android.adservices.service.adselection.AdSelectionFromOutcomesE2ETest.SELECTION_WATERFALL_LOGIC_JS_PATH;
+import static com.android.adservices.service.adselection.AdSelectionFromOutcomesIntegrationTest.BID_FLOOR_SELECTION_SIGNAL_TEMPLATE;
+import static com.android.adservices.service.adselection.AdSelectionFromOutcomesIntegrationTest.SELECTION_WATERFALL_LOGIC_JS;
+import static com.android.adservices.service.adselection.AdSelectionFromOutcomesIntegrationTest.SELECTION_WATERFALL_LOGIC_JS_PATH;
 import static com.android.adservices.service.adselection.AdSelectionServiceImpl.AUCTION_SERVER_API_IS_NOT_AVAILABLE;
 import static com.android.adservices.service.adselection.GetAdSelectionDataRunner.REVOKED_CONSENT_RANDOM_DATA_SIZE;
 import static com.android.adservices.service.stats.AdSelectionExecutionLoggerTestFixture.sCallerMetadata;
@@ -279,7 +279,7 @@ import java.util.stream.Collectors;
 @MockStatic(FlagsFactory.class)
 // TODO (b/384952360): refine CEL related verifications later
 @SkipLoggingUsageRule(reason = "b/384952360")
-public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCase {
+public final class AuctionServerIntegrationTest extends AdServicesExtendedMockitoTestCase {
     private static final int COUNTDOWN_LATCH_LIMIT_SECONDS = 10;
     private static final int CALLER_UID = Process.myUid();
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
@@ -434,8 +434,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                         .adSelectionEntryDao();
         ProtectedSignalsDatabase protectedSignalsDatabase =
                 Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class).build();
-        mProtectedSignalsDao =
-                        protectedSignalsDatabase.protectedSignalsDao();
+        mProtectedSignalsDao = protectedSignalsDatabase.protectedSignalsDao();
         SharedStorageDatabase sharedDb =
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class).build();
 
@@ -4205,8 +4204,7 @@ public final class AuctionServerE2ETest extends AdServicesExtendedMockitoTestCas
                 mAuctionServerDebugConfigurationGenerator);
     }
 
-    private void prepareDataAndRunServerAuction(Flags flags)
-            throws Exception {
+    private void prepareDataAndRunServerAuction(Flags flags) throws Exception {
         mocker.mockGetFlags(flags);
 
         Map<String, AdTechIdentifier> nameAndBuyersMap =
