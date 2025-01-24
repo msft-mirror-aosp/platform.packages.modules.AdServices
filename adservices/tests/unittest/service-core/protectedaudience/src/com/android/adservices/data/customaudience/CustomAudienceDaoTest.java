@@ -18,6 +18,8 @@ package com.android.adservices.data.customaudience;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_DAO_QUARANTINE_TABLE_MAX_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE;
@@ -54,6 +56,8 @@ import android.net.Uri;
 import androidx.room.Room;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.common.DBAdData;
@@ -94,6 +98,7 @@ import java.util.stream.Stream;
 
 @SpyStatic(FlagsFactory.class)
 @MockStatic(PackageManagerCompatUtils.class)
+@SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE)
 public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCase {
     private static final Flags TEST_FLAGS = FakeFlagsFactory.getFlagsForTest();
 
@@ -719,6 +724,7 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
     }
 
     @Test
+    @ExpectErrorLogUtilCall(errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_DAO_QUARANTINE_TABLE_MAX_REACHED)
     public void testSafelyInsertCustomAudienceQuarantineEntries() {
         // Assert table is empty
         assertFalse(mCustomAudienceDao.doesCustomAudienceQuarantineExist(OWNER_1, BUYER_1));
