@@ -17,9 +17,17 @@
 package com.android.adservices.data.enrollment;
 
 import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_GET_FLEDGE_ENROLLMENT_DATA_FROM_DB_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_GET_PAS_ENROLLMENT_DATA_FROM_DB_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_PRIVACY_API_INVALID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_URI_ENROLLMENT_MATCH_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_URI_INVALID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -44,6 +52,7 @@ import android.util.Pair;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.data.shared.SharedDbHelper;
 import com.android.adservices.service.enrollment.EnrollmentData;
@@ -1177,6 +1186,22 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_GET_FLEDGE_ENROLLMENT_DATA_FROM_DB_FAILED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE,
+            throwable = SQLiteException.class)
+    public void
+            testGetEnrollmentDataForFledgeByMatchingAdTechIdentifier_logCelIfFailedGettingEnrollment() {
+        when(mMockFlags.getEnrollmentApiBasedSchemaEnabled()).thenReturn(false);
+        Uri testUri = Uri.parse("https://1test.com' AND");
+
+        expect.withMessage("enrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier")
+                .that(mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(testUri))
+                .isNull();
+    }
+
+    @Test
     public void testGetEnrollmentDataFromSdkName() {
         mEnrollmentDao.insert(ENROLLMENT_DATA2);
         verify(mEnrollmentUtil, times(1))
@@ -1215,6 +1240,18 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(true),
                         eq(1));
         verify(mEnrollmentUtil, times(3)).logEnrollmentMatchStats(eq(mLogger), eq(true), eq(1));
+    }
+
+    @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_GET_PAS_ENROLLMENT_DATA_FROM_DB_FAILED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS,
+            throwable = SQLiteException.class)
+    public void testGetEnrollmentDataFromSdkNameLogCelIfSqlException() {
+        expect.withMessage("enrollmentDao.getEnrollmentDataFromSdkName")
+                .that(mEnrollmentDao.getEnrollmentDataFromSdkName("sdk'AND"))
+                .isNull();
     }
 
     @Test
@@ -1563,6 +1600,68 @@ public final class EnrollmentDaoTest extends AdServicesExtendedMockitoTestCase {
                         eq(EnrollmentStatus.TransactionType.READ_TRANSACTION_TYPE.getValue()),
                         eq(true),
                         eq(1));
+    }
+
+    @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_URI_ENROLLMENT_MATCH_FAILED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE)
+    public void getEnrollmentDataForAPIByUrl_logCelIfFailedMatchingEnrollmentByUrl() {
+        mEnrollmentDao.insert(ENROLLMENT_DATA1_API_BASED);
+
+        expect.withMessage("mEnrollmentDao.getEnrollmentDataForAPIByUrl")
+                .that(
+                        mEnrollmentDao.getEnrollmentDataForAPIByUrl(
+                                Uri.parse("https://abc.example.1test.com"),
+                                PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE))
+                .isNull();
+    }
+
+    @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_PRIVACY_API_INVALID,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE)
+    public void getEnrollmentDataForAPIByUrl_logCelIfInvalidPrivacyApi() {
+        expect.withMessage("mEnrollmentDao.getEnrollmentDataForAPIByUrl")
+                .that(mEnrollmentDao.getEnrollmentDataForAPIByUrl(Uri.parse("test"), null))
+                .isNull();
+    }
+
+    @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_URI_INVALID,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS)
+    public void getEnrollmentDataForAPIByUrl_invalidUriWithTopicApi_logCel() {
+        expect.withMessage("mEnrollmentDao.getEnrollmentDataForAPIByUrl")
+                .that(
+                        mEnrollmentDao.getEnrollmentDataForAPIByUrl(
+                                null, PrivacySandboxApi.PRIVACY_SANDBOX_API_TOPICS))
+                .isNull();
+    }
+
+    @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_URI_INVALID,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
+    public void getEnrollmentDataForAPIByUrl_invalidUriWithPASApi_logCel() {
+        expect.withMessage("mEnrollmentDao.getEnrollmentDataForAPIByUrl")
+                .that(
+                        mEnrollmentDao.getEnrollmentDataForAPIByUrl(
+                                null, PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS))
+                .isNull();
+    }
+
+    @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_URI_INVALID,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE)
+    public void getEnrollmentDataForAPIByUrl_invalidUriWithPAApi_logCel() {
+        expect.withMessage("mEnrollmentDao.getEnrollmentDataForAPIByUrl")
+                .that(
+                        mEnrollmentDao.getEnrollmentDataForAPIByUrl(
+                                null, PrivacySandboxApi.PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE))
+                .isNull();
     }
 
     @Test
