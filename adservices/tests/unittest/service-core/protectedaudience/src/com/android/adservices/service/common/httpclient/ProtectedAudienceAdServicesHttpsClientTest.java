@@ -93,6 +93,7 @@ import java.util.concurrent.TimeUnit;
 @MockStatic(FlagsFactory.class)
 // TODO (b/384952360): refine CEL related verifications later
 @SkipLoggingUsageRule(reason = "b/384952360")
+@SuppressWarnings("DoNotMockErrorLogUtilBehavior") // TODO(b/384952360)
 public final class ProtectedAudienceAdServicesHttpsClientTest
         extends AdServicesExtendedMockitoTestCase {
     private static final String CACHE_HEADER = "Cache-Control: max-age=60";
@@ -119,6 +120,9 @@ public final class ProtectedAudienceAdServicesHttpsClientTest
 
     @Before
     public void setup() throws Exception {
+        // TODO (b/384952360): Delete doNothingOnErrorLogUtilError when all CEL logs in this test
+        // are captured properly.
+        doNothingOnErrorLogUtilError();
         mocker.mockGetFlags(mFakeFlags);
         CacheEntryDao cacheEntryDao =
                 Room.inMemoryDatabaseBuilder(mContext, CacheDatabase.class)

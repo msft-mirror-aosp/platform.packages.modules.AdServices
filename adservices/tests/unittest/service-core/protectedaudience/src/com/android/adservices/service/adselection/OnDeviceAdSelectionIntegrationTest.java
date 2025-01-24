@@ -271,6 +271,7 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 @SetFlagFalse(KEY_FLEDGE_EVENT_LEVEL_DEBUG_REPORT_SEND_IMMEDIATELY)
 // TODO (b/384952360): refine CEL related verifications later
 @SkipLoggingUsageRule(reason = "b/384952360")
+@SuppressWarnings("DoNotMockErrorLogUtilBehavior") // TODO(b/384952360)
 public final class OnDeviceAdSelectionIntegrationTest extends AdServicesExtendedMockitoTestCase {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -766,6 +767,9 @@ public final class OnDeviceAdSelectionIntegrationTest extends AdServicesExtended
 
     @Before
     public void setUp() throws Exception {
+        // TODO (b/384952360): Delete doNothingOnErrorLogUtilError when all CEL logs in this test
+        // are captured properly.
+        doNothingOnErrorLogUtilError();
         mocker.mockGetFlags(mFakeFlags);
         mocker.mockGetDebugFlags(mFakeDebugFlags);
         mockGetConsentNotificationDebugMode(false);
