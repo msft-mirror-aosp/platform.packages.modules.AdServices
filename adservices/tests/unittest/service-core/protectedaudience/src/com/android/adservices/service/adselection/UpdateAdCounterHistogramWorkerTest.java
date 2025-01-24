@@ -23,6 +23,9 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNKNOWN_ERR
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH;
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -48,8 +51,6 @@ import android.os.RemoteException;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.consent.ConsentManager;
@@ -57,6 +58,8 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.MoreExecutors;
@@ -69,8 +72,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-@SpyStatic(FlagsFactory.class)
 @SpyStatic(DebugFlags.class)
+@SetFlagFalse(KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH)
+@SetFlagTrue(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
 public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLBACK_WAIT_MS = 500;
     private static final int CALLER_UID = 10;
@@ -96,7 +100,7 @@ public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockit
                         DIRECT_EXECUTOR,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                         mAdServicesLoggerMock,
-                        new FlagsOverridingAdFiltering(true),
+                        mFakeFlags,
                         mFakeDebugFlags,
                         mServiceFilterMock,
                         mConsentManagerMock,
@@ -113,7 +117,7 @@ public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testWorkerUpdatesHistogramAndNotifiesSuccess() throws InterruptedException {
+    public void testWorkerUpdatesHistogramAndNotifiesSuccess() throws Exception {
         CountDownLatch callbackLatch = new CountDownLatch(1);
         UpdateAdCounterHistogramTestCallback callback =
                 new UpdateAdCounterHistogramTestCallback(callbackLatch);
@@ -137,7 +141,7 @@ public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockit
 
     @Test
     public void testWorkerUpdatesHistogramAndNotifiesSuccessWithUXNotificationEnforcementDisabled()
-            throws InterruptedException {
+            throws Exception {
         CountDownLatch callbackLatch = new CountDownLatch(1);
         UpdateAdCounterHistogramTestCallback callback =
                 new UpdateAdCounterHistogramTestCallback(callbackLatch);
@@ -149,7 +153,7 @@ public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockit
                         DIRECT_EXECUTOR,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                         mAdServicesLoggerMock,
-                        new FlagsOverridingAdFiltering(true),
+                        mFakeFlags,
                         mFakeDebugFlags,
                         mServiceFilterMock,
                         mConsentManagerMock,
@@ -220,14 +224,15 @@ public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testWorkerFeatureFlagDisabledStopsAndNotifiesFailure() throws InterruptedException {
+    @SetFlagFalse(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
+    public void testWorkerFeatureFlagDisabledStopsAndNotifiesFailure() throws Exception {
         mUpdateWorker =
                 new UpdateAdCounterHistogramWorker(
                         mHistogramUpdaterMock,
                         DIRECT_EXECUTOR,
                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                         mAdServicesLoggerMock,
-                        new FlagsOverridingAdFiltering(false),
+                        mFakeFlags,
                         mFakeDebugFlags,
                         mServiceFilterMock,
                         mConsentManagerMock,
@@ -255,7 +260,7 @@ public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testWorkerFilterFailureStopsAndNotifiesFailure() throws InterruptedException {
+    public void testWorkerFilterFailureStopsAndNotifiesFailure() throws Exception {
         doThrow(new FilterException(new FledgeAuthorizationFilter.CallerMismatchException()))
                 .when(mServiceFilterMock)
                 .filterRequest(
@@ -282,7 +287,7 @@ public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testWorkerConsentFailureStopsAndNotifiesSuccess() throws InterruptedException {
+    public void testWorkerConsentFailureStopsAndNotifiesSuccess() throws Exception {
         doReturn(true)
                 .when(mConsentManagerMock)
                 .isFledgeConsentRevokedForAppAfterSettingFledgeUse(any());
@@ -307,8 +312,7 @@ public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testWorkerInvalidArgumentFailureStopsAndNotifiesFailure()
-            throws InterruptedException {
+    public void testWorkerInvalidArgumentFailureStopsAndNotifiesFailure() throws Exception {
         doThrow(new IllegalArgumentException())
                 .when(mHistogramUpdaterMock)
                 .updateNonWinHistogram(anyLong(), any(), anyInt(), any());
@@ -340,7 +344,7 @@ public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testWorkerSuccessWithCallbackErrorLogsUnknownError() throws InterruptedException {
+    public void testWorkerSuccessWithCallbackErrorLogsUnknownError() throws Exception {
         CountDownLatch logCallbackErrorLatch = new CountDownLatch(1);
         doAnswer(
                         unusedInput -> {
@@ -384,7 +388,7 @@ public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockit
     }
 
     @Test
-    public void testWorkerFailureWithCallbackErrorLogsUnknownError() throws InterruptedException {
+    public void testWorkerFailureWithCallbackErrorLogsUnknownError() throws Exception {
         doThrow(new IllegalStateException())
                 .when(mHistogramUpdaterMock)
                 .updateNonWinHistogram(anyLong(), any(), anyInt(), any());
@@ -491,28 +495,6 @@ public class UpdateAdCounterHistogramWorkerTest extends AdServicesExtendedMockit
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
             throw new RemoteException();
-        }
-    }
-
-    public static class FlagsOverridingAdFiltering implements Flags {
-        private final boolean mShouldEnableAdFilteringFeature;
-
-        public FlagsOverridingAdFiltering(boolean shouldEnableAdFilteringFeature) {
-            mShouldEnableAdFilteringFeature = shouldEnableAdFilteringFeature;
-        }
-
-        public FlagsOverridingAdFiltering() {
-            this(FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED);
-        }
-
-        @Override
-        public boolean getFledgeOnDeviceAuctionKillSwitch() {
-            return false;
-        }
-
-        @Override
-        public boolean getFledgeFrequencyCapFilteringEnabled() {
-            return mShouldEnableAdFilteringFeature;
         }
     }
 }
