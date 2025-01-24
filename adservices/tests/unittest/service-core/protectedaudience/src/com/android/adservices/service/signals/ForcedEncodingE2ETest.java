@@ -123,6 +123,7 @@ import java.util.Map;
 @MockStatic(FlagsFactory.class)
 // TODO (b/384952360): refine CEL related verifications later
 @SkipLoggingUsageRule(reason = "b/384952360")
+@SuppressWarnings("DoNotMockErrorLogUtilBehavior") // TODO(b/384952360)
 public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final int TIMEOUT_MS = 30_000;
     private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
@@ -203,6 +204,9 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
     private ProtectedSignalsServiceImpl mService;
     @Before
     public void setup() {
+        // TODO (b/384952360): Delete doNothingOnErrorLogUtilError when all CEL logs in this test
+        // are captured properly.
+        doNothingOnErrorLogUtilError();
         mLegacyFakeFlags = new ForcedEncodingE2ETestFlags();
         mocker.mockGetFlags(mLegacyFakeFlags);
         mSignalsDao =
