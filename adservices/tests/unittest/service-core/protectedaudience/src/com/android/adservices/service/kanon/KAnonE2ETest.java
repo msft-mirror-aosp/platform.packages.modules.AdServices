@@ -1525,7 +1525,7 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
                         .build();
         Assert.assertNotNull(winningCustomAudience.getAds());
         mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
-                winningCustomAudience, Uri.EMPTY, false);
+                winningCustomAudience, Uri.EMPTY, false, List.of());
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()

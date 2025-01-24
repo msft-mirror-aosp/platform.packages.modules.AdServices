@@ -1470,7 +1470,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                     DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(buyer, name)
                             .build();
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                    thisCustomAudience, Uri.EMPTY, false);
+                    thisCustomAudience, Uri.EMPTY, false, List.of());
         }
     }
 

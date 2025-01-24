@@ -26,6 +26,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.CommonFixture.getAlphaNumericString;
 import static android.adservices.common.KeyedFrequencyCapFixture.ONE_DAY_DURATION;
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
+
 import static com.android.adservices.common.DBAdDataFixture.getValidDbAdDataNoFiltersBuilder;
 import static com.android.adservices.data.adselection.EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
@@ -77,8 +78,10 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
+
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
+
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -132,7 +135,9 @@ import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
 import android.util.Base64;
+
 import androidx.room.Room;
+
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DBAdDataFixture;
@@ -214,6 +219,7 @@ import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.adservices.testutils.DevSessionHelper;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
+
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
@@ -225,6 +231,19 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.RecordedRequest;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+
+import org.json.JSONObject;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.stubbing.Answer;
+
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -247,17 +266,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.json.JSONObject;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.stubbing.Answer;
 
 @SetFlagTrue(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
 @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM)
@@ -747,7 +755,7 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                         .build();
         Assert.assertNotNull(winningCustomAudience.getAds());
         mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
-                winningCustomAudience, Uri.EMPTY, false);
+                winningCustomAudience, Uri.EMPTY, false, List.of());
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -860,7 +868,7 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                         .build();
         Assert.assertNotNull(winningCustomAudience.getAds());
         mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
-                winningCustomAudience, Uri.EMPTY, false);
+                winningCustomAudience, Uri.EMPTY, false, List.of());
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -980,7 +988,7 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                         .build();
         Assert.assertNotNull(winningCustomAudience.getAds());
         mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
-                winningCustomAudience, Uri.EMPTY, false);
+                winningCustomAudience, Uri.EMPTY, false, List.of());
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1724,7 +1732,7 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                         .build();
         Assert.assertNotNull(winningCustomAudience.getAds());
         mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
-                winningCustomAudience, Uri.EMPTY, false);
+                winningCustomAudience, Uri.EMPTY, false, List.of());
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1900,7 +1908,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                false);
+                false,
+                List.of());
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -1996,7 +2005,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                         .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS)
                         .build(),
                 Uri.EMPTY,
-                false);
+                false,
+                List.of());
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -2084,7 +2094,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                false);
+                false,
+                List.of());
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -2344,7 +2355,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                false);
+                false,
+                List.of());
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -2525,7 +2537,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                false);
+                false,
+                List.of());
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -2676,7 +2689,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                false);
+                false,
+                List.of());
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -2783,7 +2797,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                false);
+                false,
+                List.of());
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -2874,7 +2889,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                false);
+                false,
+                List.of());
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -2947,7 +2963,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                false);
+                false,
+                List.of());
 
         GetAdSelectionDataInput input =
                 new GetAdSelectionDataInput.Builder()
@@ -3249,7 +3266,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                false);
+                false,
+                List.of());
         AdSelectionService service =
                 getService(
                         MultiCloudTestStrategyFactory.getEnabledTestStrategy(
@@ -3348,7 +3366,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                false);
+                false,
+                List.of());
 
         AdSelectionService service =
                 getService(
@@ -3478,7 +3497,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                false);
+                false,
+                List.of());
 
         AdSelectionService service =
                 getService(
@@ -3611,7 +3631,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                false);
+                false,
+                List.of());
 
         AdSelectionService service =
                 getService(
@@ -3726,7 +3747,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                false);
+                false,
+                List.of());
 
         AdSelectionService service =
                 getService(
@@ -3841,7 +3863,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                                         WINNER_BUYER))
                         .build(),
                 Uri.EMPTY,
-                false);
+                false,
+                List.of());
 
         AdSelectionService service =
                 getService(
@@ -4478,7 +4501,7 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                             .build();
             customAudiences.put(name, thisCustomAudience);
             mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
-                    thisCustomAudience, Uri.EMPTY, false);
+                    thisCustomAudience, Uri.EMPTY, false, List.of());
         }
         return customAudiences;
     }
@@ -4494,7 +4517,7 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                                         buyer, getAlphaNumericString(15))
                                 .build();
                 mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
-                        thisCustomAudience, Uri.EMPTY, false);
+                        thisCustomAudience, Uri.EMPTY, false, List.of());
             }
         }
     }
@@ -4517,7 +4540,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
         DBCustomAudience thisCustomAudience =
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithOmitAdsEnabled(buyer, name)
                         .build();
-        mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(thisCustomAudience, Uri.EMPTY, false);
+        mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
+                thisCustomAudience, Uri.EMPTY, false, List.of());
         return thisCustomAudience;
     }
 

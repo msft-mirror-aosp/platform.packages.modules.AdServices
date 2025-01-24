@@ -19,11 +19,15 @@ package com.android.adservices.service.customaudience;
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 import static android.adservices.customaudience.CustomAudience.PRIORITY_DEFAULT;
 
+import static com.android.adservices.service.Flags.COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES;
+import static com.android.adservices.service.Flags.ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
+import static com.android.adservices.service.Flags.MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_COUNTERS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_FILTERS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_RENDER_ID_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.COMPONENT_ADS_SIZE_EXCEEDS_MAX;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.FIELD_FOUND_LOG_FORMAT;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.FIELD_NOT_FOUND_LOG_FORMAT;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.METADATA_KEY;
@@ -43,6 +47,7 @@ import static com.android.adservices.service.customaudience.FetchCustomAudienceR
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.ComponentAdData;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
 import android.adservices.customaudience.PartialCustomAudience;
@@ -53,7 +58,10 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceBackgroundFetchData;
+import com.android.adservices.service.common.AdRenderIdValidator;
+import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.JsonUtils;
+import com.android.adservices.service.common.ValidatorUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.Lists;
@@ -136,6 +144,7 @@ public class CustomAudienceBlob {
     public static final String AUCTION_SERVER_REQUEST_FLAGS_KEY = "auction_server_request_flags";
     public static final String PRIORITY_KEY = "priority";
     public static final String OMIT_ADS_VALUE = "omit_ads";
+    public static final String COMPONENT_ADS_KEY = "component_ads";
     static final LinkedHashSet<String> mKeysSet =
             new LinkedHashSet<>(
                     Arrays.asList(
@@ -154,6 +163,9 @@ public class CustomAudienceBlob {
     private final ReadAdRenderIdFromJsonStrategy mReadAdRenderIdFromJsonStrategy;
     private final boolean mAuctionServerRequestFlagsEnabled;
     private final boolean mSellerConfigurationEnabled;
+    private final boolean mComponentAdsEnabled;
+    private final AdRenderIdValidator mComponentAdRenderIdValidator;
+    private final int mMaxNumComponentAds;
 
     public CustomAudienceBlob(
             boolean frequencyCapFilteringEnabled,
@@ -161,7 +173,10 @@ public class CustomAudienceBlob {
             boolean adRenderIdEnabled,
             long adRenderIdMaxLength,
             boolean auctionServerRequestFlagsEnabled,
-            boolean sellerConfigurationEnabled) {
+            boolean sellerConfigurationEnabled,
+            boolean componentAdsEnabled,
+            int componentAdRenderIdMaxLength,
+            int maxNumComponentAds) {
         mReadFiltersFromJsonStrategy =
                 ReadFiltersFromJsonStrategyFactory.getStrategy(
                         frequencyCapFilteringEnabled, appInstallFilteringEnabled);
@@ -170,13 +185,26 @@ public class CustomAudienceBlob {
                         adRenderIdEnabled, adRenderIdMaxLength);
         mAuctionServerRequestFlagsEnabled = auctionServerRequestFlagsEnabled;
         mSellerConfigurationEnabled = sellerConfigurationEnabled;
+        mComponentAdsEnabled = componentAdsEnabled;
+        mComponentAdRenderIdValidator =
+                AdRenderIdValidator.createEnabledInstance(componentAdRenderIdMaxLength);
+        mMaxNumComponentAds = maxNumComponentAds;
     }
 
     @VisibleForTesting
     public CustomAudienceBlob() {
         // TODO (b/356394210) Move this convenience method into a test fixture (or remove entirely)
         // Filtering enabled by default.
-        this(true, true, true, FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH, false, false);
+        this(
+                true,
+                true,
+                true,
+                FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH,
+                false,
+                false,
+                ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS,
+                COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
+                MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
     }
 
     /** Update fields of the {@link CustomAudienceBlob} from a {@link JSONObject}. */
@@ -242,6 +270,10 @@ public class CustomAudienceBlob {
         // Set priority if seller configuration flag is enabled
         if (mSellerConfigurationEnabled && jsonKeySet.contains(PRIORITY_KEY)) {
             this.setPriority(this.getDoubleFromJSONObject(json, PRIORITY_KEY));
+        }
+
+        if (mComponentAdsEnabled && jsonKeySet.contains(COMPONENT_ADS_KEY)) {
+            this.setComponentAds(this.getComponentAdsFromJSONObject(json, COMPONENT_ADS_KEY));
         }
     }
 
@@ -764,6 +796,35 @@ public class CustomAudienceBlob {
         }
     }
 
+    /** set the {@code componentAds} {@link Field} */
+    public void setComponentAds(List<ComponentAdData> value) {
+        if (mFieldsMap.containsKey(COMPONENT_ADS_KEY)) {
+            Field<List<ComponentAdData>> field =
+                    (Field<List<ComponentAdData>>) mFieldsMap.get(COMPONENT_ADS_KEY);
+            field.mValue = value;
+        } else {
+            Field<List<ComponentAdData>> field =
+                    new Field<>(
+                            this::getComponentAdsAdsAsJSONObject,
+                            this::getComponentAdsFromJSONObject);
+
+            field.mName = COMPONENT_ADS_KEY;
+            field.mValue = value;
+
+            mFieldsMap.put(COMPONENT_ADS_KEY, field);
+        }
+    }
+
+    /**
+     * @return the {@code componentAds} {@link Field}
+     */
+    public List<ComponentAdData> getComponentAds() {
+        if (mFieldsMap.containsKey(COMPONENT_ADS_KEY)) {
+            return (List<ComponentAdData>) mFieldsMap.get(COMPONENT_ADS_KEY).mValue;
+        }
+        return List.of();
+    }
+
     private JSONArray getAdsAsJSONObject(List<AdData> value) {
         try {
             JSONArray adsJson = new JSONArray();
@@ -794,6 +855,24 @@ public class CustomAudienceBlob {
             return adsJson;
         } catch (JSONException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private JSONArray getComponentAdsAdsAsJSONObject(List<ComponentAdData> componentAds) {
+        try {
+            JSONArray componentAdsJson = new JSONArray();
+            for (ComponentAdData componentAd : componentAds) {
+                JSONObject componentAdJson = new JSONObject();
+
+                componentAdJson.put(RENDER_URI_KEY, componentAd.getRenderUri().toString());
+                componentAdJson.put(AD_RENDER_ID_KEY, componentAd.getAdRenderId());
+
+                componentAdsJson.put(componentAdJson);
+            }
+            return componentAdsJson;
+        } catch (JSONException e) {
+            // Don't want to throw an exception since this is an optional field
+            return new JSONArray();
         }
     }
 
@@ -889,6 +968,79 @@ public class CustomAudienceBlob {
                         return adsList;
                     } catch (JSONException e) {
                         throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    private List<ComponentAdData> getComponentAdsFromJSONObject(JSONObject json, String key) {
+        return getValueFromJSONObject(
+                json,
+                key,
+                (jsonObject, jsonKey) -> {
+                    try {
+                        AdTechIdentifier buyer =
+                                AdTechIdentifier.fromString(
+                                        this.getStringFromJSONObject(json, BUYER_KEY));
+
+                        JSONArray componentAdsJsonArray = jsonObject.getJSONArray(key);
+
+                        int componentAdsListLength = componentAdsJsonArray.length();
+                        // TODO(b/381392728):investigate whether we need an overall size on list of
+                        // component
+                        if (componentAdsListLength > mMaxNumComponentAds) {
+                            sLogger.v(COMPONENT_ADS_SIZE_EXCEEDS_MAX);
+                            throw new IllegalArgumentException(COMPONENT_ADS_SIZE_EXCEEDS_MAX);
+                        }
+                        List<ComponentAdData> componentAdsList = new ArrayList<>();
+                        for (int i = 0; i < componentAdsListLength; i++) {
+                            try {
+                                JSONObject componentAdDataJsonObj =
+                                        componentAdsJsonArray.getJSONObject(i);
+
+                                // Note: getString() coerces values to be strings; use get() instead
+                                Object uri = componentAdDataJsonObj.get(RENDER_URI_KEY);
+                                if (!(uri instanceof String)) {
+                                    throw new JSONException(
+                                            "Unexpected format parsing "
+                                                    + RENDER_URI_KEY
+                                                    + " in "
+                                                    + COMPONENT_ADS_KEY);
+                                }
+                                Uri parsedUri = Uri.parse(Objects.requireNonNull((String) uri));
+
+                                AdTechUriValidator uriValidator =
+                                        new AdTechUriValidator(
+                                                ValidatorUtil.AD_TECH_ROLE_BUYER,
+                                                buyer.toString(),
+                                                this.getClass().getSimpleName(),
+                                                RENDER_URI_KEY);
+                                uriValidator.validate(parsedUri);
+
+                                Object adRenderId = componentAdDataJsonObj.get(AD_RENDER_ID_KEY);
+                                if (!(adRenderId instanceof String adRenderIdString)) {
+                                    throw new JSONException(
+                                            "Unexpected format parsing "
+                                                    + AD_RENDER_ID_KEY
+                                                    + " in "
+                                                    + COMPONENT_ADS_KEY);
+                                }
+                                mComponentAdRenderIdValidator.validate(adRenderIdString);
+
+                                ComponentAdData componentAdData =
+                                        new ComponentAdData(parsedUri, adRenderIdString);
+                                componentAdsList.add(componentAdData);
+                            } catch (JSONException
+                                    | NullPointerException
+                                    | IllegalArgumentException exception) {
+                                // We don't want to fail since this is an optional field,
+                                return new ArrayList<>();
+                            }
+                        }
+                        return componentAdsList;
+                    } catch (JSONException | IllegalArgumentException e) {
+                        // Ignore since we don't want to fail if there is an issue with this
+                        // optional field
+                        return new ArrayList<>();
                     }
                 });
     }

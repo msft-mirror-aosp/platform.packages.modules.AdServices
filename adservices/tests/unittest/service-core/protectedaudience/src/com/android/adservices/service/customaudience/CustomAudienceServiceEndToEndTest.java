@@ -304,6 +304,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     private CustomAudienceValidator mCustomAudienceValidator;
     private DevSessionHelper mDevSessionHelper;
     private ScheduleCustomAudienceUpdateStrategy mStrategy;
+    private ComponentAdsStrategy mComponentAdsStrategy;
 
     @Captor
     private ArgumentCaptor<ScheduledCustomAudienceUpdateScheduleAttemptedStats>
@@ -347,6 +348,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
                         .build()
                         .customAudienceDao();
+
+        mComponentAdsStrategy =
+                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
 
         SharedStorageDatabase sharedDb =
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class).build();
@@ -419,8 +423,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED,
-                                ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                mComponentAdsStrategy),
                         mFledgeAuthorizationFilterSpy,
                         mConsentManagerMock,
                         mDevContextFilter,
@@ -471,11 +474,11 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mCustomAudienceValidator,
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED,
-                                ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                mComponentAdsStrategy),
                         mCustomAudienceQuantityChecker,
                         mStrategy,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategy);
     }
 
     @After
@@ -1824,7 +1827,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                         /* componentAdsEnabled= */ false)),
                         mCustomAudienceQuantityChecker,
                         mStrategy,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategy);
 
         // Wire the mock web server
         String responsePayload =
@@ -1993,7 +1997,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                         /* componentAdsEnabled= */ false)),
                         mCustomAudienceQuantityChecker,
                         mStrategy,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategy);
 
         // Wire the mock web server
         String responsePayload =
@@ -2395,7 +2400,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         new CustomAudienceQuantityChecker(
                                 mCustomAudienceDao, flagsWithCAQuantityCheckerFlags),
                         mStrategy,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategy);
 
         // Wire the mock web server
         String responsePayload =
@@ -2531,7 +2537,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         new CustomAudienceQuantityChecker(
                                 mCustomAudienceDao, flagsWithCAQuantityCheckerFlags),
                         mStrategy,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategy);
 
         // Wire the mock web server
         String responsePayload =
@@ -5255,6 +5262,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                         /* componentAdsEnabled= */ false)),
                         mCustomAudienceQuantityChecker,
                         mStrategy,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategy);
     }
 }

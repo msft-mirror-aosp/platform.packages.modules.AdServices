@@ -122,6 +122,7 @@ import java.io.File;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
@@ -588,7 +589,8 @@ public final class FrequencyCapFilteringIntegrationTest extends AdServicesExtend
                         .setAds(Collections.singletonList(AD_WITH_FILTER))
                         .build(),
                 CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
-                false);
+                false,
+                List.of());
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -622,7 +624,8 @@ public final class FrequencyCapFilteringIntegrationTest extends AdServicesExtend
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
                 CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
-                false);
+                false,
+                List.of());
 
         AdSelectionTestCallback callback = callSelectAds();
 
@@ -656,7 +659,8 @@ public final class FrequencyCapFilteringIntegrationTest extends AdServicesExtend
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
                 CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
-                false);
+                false,
+                List.of());
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -701,7 +705,8 @@ public final class FrequencyCapFilteringIntegrationTest extends AdServicesExtend
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
                 CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
-                false);
+                false,
+                List.of());
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -737,7 +742,8 @@ public final class FrequencyCapFilteringIntegrationTest extends AdServicesExtend
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
                 CommonFixture.getUri(CommonFixture.VALID_BUYER_2, "/update"),
-                false);
+                false,
+                List.of());
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -811,7 +817,8 @@ public final class FrequencyCapFilteringIntegrationTest extends AdServicesExtend
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
                 CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
-                false);
+                false,
+                List.of());
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 
@@ -914,7 +921,8 @@ public final class FrequencyCapFilteringIntegrationTest extends AdServicesExtend
                         .setAds(Arrays.asList(AD_WITH_FILTER))
                         .build(),
                 CommonFixture.getUri(CommonFixture.VALID_BUYER_1, "/update"),
-                false);
+                false,
+                List.of());
 
         AdSelectionTestCallback adSelectionCallback = callSelectAds();
 

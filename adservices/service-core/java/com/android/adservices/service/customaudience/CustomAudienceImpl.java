@@ -165,11 +165,12 @@ public final class CustomAudienceImpl {
                         mAuctionServerRequestFlagsEnabled,
                         mSellerConfigurationFlagEnabled);
 
-        sLogger.v("Inserting CA in the DB: %s", dbCustomAudience);
-        mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                dbCustomAudience, customAudience.getDailyUpdateUri(), isDebuggableCustomAudience);
-        mComponentAdsStrategy.persistComponentAds(
-                customAudience, callerPackageName, mCustomAudienceDao);
+        mComponentAdsStrategy.persistCustomAudiencesWithComponentAds(
+                mCustomAudienceDao,
+                dbCustomAudience,
+                customAudience.getDailyUpdateUri(),
+                isDebuggableCustomAudience,
+                customAudience.getComponentAds());
     }
 
     /** Delete a custom audience with given key. No-op if not exist. */

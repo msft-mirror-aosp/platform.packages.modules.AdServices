@@ -20,6 +20,7 @@ import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_
 import static com.android.adservices.service.common.ValidatorUtil.AD_TECH_ROLE_BUYER;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.AUCTION_SERVER_REQUEST_FLAGS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.PRIORITY_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.COMPONENT_ADS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.USER_BIDDING_SIGNALS_KEY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 
@@ -147,6 +148,8 @@ public class FetchCustomAudienceImpl {
     private final int mCallingAppUid;
     @NonNull private String mCallerAppPackageName;
     private final Flags mFlags;
+    private final ComponentAdsStrategy mComponentAdsStrategy;
+    private final boolean mComponentAdsEnabled;
 
     public FetchCustomAudienceImpl(
             @NonNull Flags flags,
@@ -160,7 +163,8 @@ public class FetchCustomAudienceImpl {
             @NonNull AdServicesHttpsClient httpClient,
             @NonNull FrequencyCapAdDataValidator frequencyCapAdDataValidator,
             @NonNull AdRenderIdValidator adRenderIdValidator,
-            @NonNull AdDataConversionStrategy adDataConversionStrategy) {
+            @NonNull AdDataConversionStrategy adDataConversionStrategy,
+            ComponentAdsStrategy componentAdsStrategy) {
         Objects.requireNonNull(debugFlags);
         Objects.requireNonNull(flags);
         Objects.requireNonNull(debugFlags);
@@ -209,6 +213,10 @@ public class FetchCustomAudienceImpl {
         mFledgeCustomAuienceMaxTotal = flags.getFledgeCustomAudienceMaxCount();
         mDefaultRetryDurationSeconds = flags.getFledgeFetchCustomAudienceMinRetryAfterValueMs();
         mMaxRetryDurationSeconds = flags.getFledgeFetchCustomAudienceMaxRetryAfterValueMs();
+        mComponentAdsEnabled = flags.getEnableCustomAudienceComponentAds();
+        int componentAdRenderIdMaxLength = flags.getComponentAdRenderIdMaxLengthBytes();
+        int maxNumComponentAds = flags.getMaxComponentAdsPerCustomAudience();
+        mComponentAdsStrategy = componentAdsStrategy;
         // Instantiate request, response and result CustomAudienceBlobs
         mRequestCustomAudience =
                 new CustomAudienceBlob(
@@ -217,7 +225,10 @@ public class FetchCustomAudienceImpl {
                         mFledgeAuctionServerAdRenderIdEnabled,
                         mFledgeAuctionServerAdRenderIdMaxLength,
                         mAuctionServerRequestFlagsEnabled,
-                        mSellerConfigurationEnabled);
+                        mSellerConfigurationEnabled,
+                        mComponentAdsEnabled,
+                        componentAdRenderIdMaxLength,
+                        maxNumComponentAds);
         mResponseCustomAudience =
                 new CustomAudienceBlob(
                         frequencyCapFilteringEnabled,
@@ -225,7 +236,10 @@ public class FetchCustomAudienceImpl {
                         mFledgeAuctionServerAdRenderIdEnabled,
                         mFledgeAuctionServerAdRenderIdMaxLength,
                         mAuctionServerRequestFlagsEnabled,
-                        mSellerConfigurationEnabled);
+                        mSellerConfigurationEnabled,
+                        mComponentAdsEnabled,
+                        componentAdRenderIdMaxLength,
+                        maxNumComponentAds);
         mFusedCustomAudience =
                 new CustomAudienceBlob(
                         frequencyCapFilteringEnabled,
@@ -233,7 +247,10 @@ public class FetchCustomAudienceImpl {
                         mFledgeAuctionServerAdRenderIdEnabled,
                         mFledgeAuctionServerAdRenderIdMaxLength,
                         mAuctionServerRequestFlagsEnabled,
-                        mSellerConfigurationEnabled);
+                        mSellerConfigurationEnabled,
+                        mComponentAdsEnabled,
+                        componentAdRenderIdMaxLength,
+                        maxNumComponentAds);
 
         // Instantiate a CustomAudienceBlobValidator
         mCustomAudienceBlobValidator =
@@ -518,10 +535,13 @@ public class FetchCustomAudienceImpl {
                             DBCustomAudience customAudience = customAudienceBuilder.build();
 
                             // Persist response
-                            mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                            mComponentAdsStrategy.persistCustomAudiencesWithComponentAds(
+                                    mCustomAudienceDao,
                                     customAudience,
                                     mFusedCustomAudience.getDailyUpdateUri(),
-                                    isDebuggableCustomAudience);
+                                    isDebuggableCustomAudience,
+                                    mFusedCustomAudience.getComponentAds());
+
                             BackgroundFetchJob.schedule(mFlags);
                             return null;
                         }));
@@ -642,6 +662,10 @@ public class FetchCustomAudienceImpl {
 
         if (mSellerConfigurationEnabled) {
             currentKeySet.remove(PRIORITY_KEY);
+        }
+
+        if (mComponentAdsEnabled) {
+            currentKeySet.remove(COMPONENT_ADS_KEY);
         }
         return currentKeySet.size() == expectedKeysSet.size();
     }
