@@ -16,8 +16,8 @@
 
 package com.android.adservices.service.common;
 
-import static com.android.adservices.common.logging.ErrorLogUtilSyncCallback.mockErrorLogUtilWithThrowable;
 import static com.android.adservices.common.logging.ErrorLogUtilSyncCallback.mockErrorLogUtilWithoutThrowable;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_ATTRIBUTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_TOPICS;
 import static com.android.adservices.service.common.AppManifestConfigCall.RESULT_ALLOWED_APP_ALLOWS_ALL;
@@ -47,12 +47,12 @@ import static org.mockito.Mockito.when;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.ErrorLogUtilSyncCallback;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AppManifestConfigCall.ApiType;
 import com.android.adservices.service.common.AppManifestConfigCall.Result;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
-import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.common.DumpHelper;
 import com.android.adservices.shared.testing.common.FakeSharedPreferences;
 import com.android.adservices.shared.testing.concurrency.SyncOnSharedPreferenceChangeListener;
@@ -70,7 +70,9 @@ import java.util.regex.Pattern;
 
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(StatsdAdServicesLogger.class)
-@SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
+@SetErrorLogUtilDefaultParams(
+        throwable = Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
 public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String PKG_NAME = "pkg.I.am";
@@ -182,38 +184,24 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
     }
 
     @Test
-    // TODO (b/355696393): Enhance rule to verify log calls that happen in the background.
-    @SkipLoggingUsageRule(
-            reason = "Using ErrorLogUtilSyncCallback as logging happens in background.")
-    public void testLogUsage_handlesRuntimeException() throws Exception {
-        // Do not move this into setup as it will conflict with ErrorLogUtil mocking behavior
-        // required by the AdServicesLoggingUsageRule.
-        ErrorLogUtilSyncCallback errorLogUtilWithThrowableCallback =
-                mockErrorLogUtilWithThrowable();
-
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION)
+    public void testLogUsage_handlesRuntimeException() {
         RuntimeException exception = new RuntimeException("D'OH!");
-
         when(mMockContext.getSharedPreferences(any(String.class), anyInt())).thenThrow(exception);
 
         logUsageAndDontWait(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
 
-        errorLogUtilWithThrowableCallback.assertReceived(
-                expect,
-                exception,
-                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_EXCEPTION,
-                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
         assertNoMetricsLogged();
     }
 
     @Test
-    // TODO (b/355696393): Enhance rule to verify log calls that happen in the background.
-    @SkipLoggingUsageRule(
-            reason = "Using ErrorLogUtilSyncCallback as logging happens in background.")
     public void testLogUsage_commitFailed() throws Exception {
         // Do not move this into setup as it will conflict with ErrorLogUtil mocking behavior
         // required by the AdServicesLoggingUsageRule.
         ErrorLogUtilSyncCallback errorLogUtilWithoutThrowableCallback =
                 mockErrorLogUtilWithoutThrowable();
+
         mPrefs.onCommitReturns(/* result= */ false);
 
         logUsageAndDontWait(PKG_NAME, API, RESULT_ALLOWED_APP_ALLOWS_ALL);
@@ -221,6 +209,10 @@ public final class AppManifestConfigMetricsLoggerTest extends AdServicesExtended
         Map<String, ?> allProps = mPrefs.getAll();
         assertWithMessage("allProps").that(allProps).isEmpty();
 
+        // TODO(b/355036318) - Remove and use @ExpectErrorLogUtil annotation to verify
+        //  ErrorLogUtil call once programmatic verification of ErrorLogUtil logging is supported
+        //  through AdServicesLoggingUsageRule. This is needed for now to precisely wait for the
+        //  log call to be made prior to verifying the logged metrics.
         errorLogUtilWithoutThrowableCallback.assertReceived(
                 expect,
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SHARED_PREF_UPDATE_FAILURE,
