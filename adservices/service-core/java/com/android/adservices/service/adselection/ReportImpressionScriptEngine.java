@@ -22,6 +22,11 @@ import static com.android.adservices.service.js.JSScriptArgument.numericArg;
 import static com.android.adservices.service.js.JSScriptArgument.stringArg;
 import static com.android.adservices.service.js.JSScriptEngineCommonConstants.RESULTS_FIELD_NAME;
 import static com.android.adservices.service.js.JSScriptEngineCommonConstants.STATUS_FIELD_NAME;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_ILLEGAL_RESULT_RETURNED_BY_CALLING_FUNCTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_JS_OTHER_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_JS_REFERENCE_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_UNEXPECTED_RESULT_STRUCTURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_IMPRESSION;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_JS_REFERENCE_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OTHER_FAILURE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR;
@@ -37,6 +42,7 @@ import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.common.RetryStrategy;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.JSExecutionException;
@@ -75,6 +81,8 @@ public class ReportImpressionScriptEngine {
 
     // TODO: (b/228094391): Put these common constants in a separate class
     private static final int JS_SCRIPT_STATUS_SUCCESS = 0;
+    private static final int CEL_PPAPI_NAME =
+            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_IMPRESSION;
     public static final String AD_SELECTION_SIGNALS_ARG_NAME = "selection_signals";
     public static final String PER_BUYER_SIGNALS_ARG_NAME = "per_buyer_signals";
     public static final String SIGNALS_FOR_BUYER_ARG_NAME = "signals_for_buyer";
@@ -237,9 +245,17 @@ public class ReportImpressionScriptEngine {
                             if (e.getMessage().contains("Uncaught ReferenceError:")) {
                                 reportImpressionExecutionLogger.setReportResultJsScriptResultCode(
                                         JS_RUN_STATUS_JS_REFERENCE_ERROR);
+                                ErrorLogUtil.e(
+                                        e,
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_JS_REFERENCE_ERROR,
+                                        CEL_PPAPI_NAME);
                             } else {
                                 reportImpressionExecutionLogger.setReportResultJsScriptResultCode(
                                         JS_RUN_STATUS_OTHER_FAILURE);
+                                ErrorLogUtil.e(
+                                        e,
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_JS_OTHER_ERROR,
+                                        CEL_PPAPI_NAME);
                             }
                             throw e;
                         },
@@ -331,6 +347,10 @@ public class ReportImpressionScriptEngine {
                     this::parseReportingOutput,
                     mExecutor);
         } catch (Exception e) {
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_ILLEGAL_RESULT_RETURNED_BY_CALLING_FUNCTION,
+                    CEL_PPAPI_NAME);
             throw new IllegalStateException("Illegal result returned by our calling function.", e);
         }
     }
@@ -374,6 +394,10 @@ public class ReportImpressionScriptEngine {
                     jsonResult.getInt(STATUS_FIELD_NAME),
                     jsonResult.getJSONObject(RESULTS_FIELD_NAME));
         } catch (JSONException e) {
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_ILLEGAL_RESULT_RETURNED_BY_CALLING_FUNCTION,
+                    CEL_PPAPI_NAME);
             throw new IllegalStateException("Illegal result returned by our calling function.", e);
         }
     }
@@ -580,6 +604,10 @@ public class ReportImpressionScriptEngine {
                 sLogger.e(e.getMessage());
                 reportImpressionExecutionLogger.setReportResultJsScriptResultCode(
                         JS_RUN_STATUS_OUTPUT_SEMANTIC_ERROR);
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_UNEXPECTED_RESULT_STRUCTURE,
+                        CEL_PPAPI_NAME);
                 throw new IllegalStateException("Result does not match expected structure!");
             }
         }
@@ -649,6 +677,10 @@ public class ReportImpressionScriptEngine {
                 // Do not parse beacons since flag is disabled
                 return new BuyerReportingResult(reportingUri, null);
             } catch (Exception e) {
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_UNEXPECTED_RESULT_STRUCTURE,
+                        CEL_PPAPI_NAME);
                 throw new IllegalStateException("Result does not match expected structure!");
             }
         }
@@ -676,6 +708,10 @@ public class ReportImpressionScriptEngine {
                 return new SellerReportingResult(adSelectionSignals, reportingUri, null);
             } catch (Exception e) {
                 sLogger.e(e.getMessage());
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_UNEXPECTED_RESULT_STRUCTURE,
+                        CEL_PPAPI_NAME);
                 throw new IllegalStateException("Result does not match expected structure!");
             }
         }

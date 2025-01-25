@@ -32,6 +32,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSEN
 import static android.adservices.common.AdServicesStatusUtils.StatusCode;
 import static android.adservices.common.AdServicesStatusUtils.isSuccess;
 
+import static com.android.adservices.service.profiling.RbATraceProvider.FeatureNames.TOPICS_API;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__TARGETING;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS_PREVIEW_API;
@@ -77,6 +78,7 @@ import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.enrollment.EnrollmentData;
 import com.android.adservices.service.enrollment.EnrollmentStatus;
 import com.android.adservices.service.enrollment.EnrollmentUtil;
+import com.android.adservices.service.profiling.RbATraceProvider;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -153,6 +155,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                 () -> {
                     @StatusCode int resultCode = STATUS_UNSET;
                     try {
+                        RbATraceProvider.beginSection(TOPICS_API, "TopicsService", "getTopics");
                         if (mFlags.getTopicsDisableDirectAppCalls()) {
                             // Check if the request is valid.
                             if (!validateRequest(topicsParam, callback)) {
@@ -213,6 +216,7 @@ public class TopicsServiceImpl extends ITopicsService.Stub {
                                         .setLatencyMillisecond(apiLatency)
                                         .setResultCode(resultCode)
                                         .build());
+                        RbATraceProvider.endSection();
                     }
                 });
     }

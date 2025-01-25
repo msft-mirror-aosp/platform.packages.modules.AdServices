@@ -22,6 +22,8 @@ import static org.mockito.ArgumentMatchers.anyInt;
 
 import android.util.Log;
 
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.shared.testing.concurrency.FailableResultSyncCallback;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
@@ -36,7 +38,13 @@ import java.util.stream.Collectors;
 /**
  * {@code SyncCallback} used in conjunction with {@link #mockErrorLogUtilWithoutThrowable()} /
  * {@link #mockErrorLogUtilWithThrowable()}.
+ *
+ * @deprecated Unless there's some limitation, all {@link ErrorLogUtil} calls should be verified
+ *     using {@link ExpectErrorLogUtilCall} and/or {@link ExpectErrorLogUtilWithExceptionCall}. The
+ *     test infra already uses this sync callback. Therefore, there shouldn't be a need to use this
+ *     directly in tests.
  */
+@Deprecated
 public final class ErrorLogUtilSyncCallback
         extends FailableResultSyncCallback<ErrorLogUtilCall, Exception> {
     private static final int DEFAULT_NUM_CALLS = 1;
@@ -114,6 +122,8 @@ public final class ErrorLogUtilSyncCallback
      * that blocks until that call is made.
      *
      * <p>Useful in cases where {@link ErrorLogUtil} is expected to be called once asynchronously.
+     *
+     * @deprecated Use {@link ExpectErrorLogUtilWithExceptionCall} instead.
      */
     public static ErrorLogUtilSyncCallback mockErrorLogUtilWithThrowable() {
         ErrorLogUtilSyncCallback callback = new ErrorLogUtilSyncCallback();
@@ -127,6 +137,9 @@ public final class ErrorLogUtilSyncCallback
      *
      * <p>Useful in cases where {@link ErrorLogUtil} is expected to be called multiple times
      * asynchronously.
+     *
+     * @deprecated Use {@link ExpectErrorLogUtilWithExceptionCall} instead. The {@code
+     *     numExpectedCalls} can be set using the {@code times} field.
      */
     public static ErrorLogUtilSyncCallback mockErrorLogUtilWithThrowable(int numExpectedCalls) {
         ErrorLogUtilSyncCallback callback = new ErrorLogUtilSyncCallback(numExpectedCalls);
@@ -154,6 +167,8 @@ public final class ErrorLogUtilSyncCallback
      * until that call is made.
      *
      * <p>Useful in cases where {@link ErrorLogUtil} is expected to be called once asynchronously.
+     *
+     * @deprecated Use {@link ExpectErrorLogUtilCall} instead.
      */
     public static ErrorLogUtilSyncCallback mockErrorLogUtilWithoutThrowable() {
         ErrorLogUtilSyncCallback callback = new ErrorLogUtilSyncCallback();
@@ -167,6 +182,9 @@ public final class ErrorLogUtilSyncCallback
      *
      * <p>Useful in cases where {@link ErrorLogUtil} is expected to be called multiple times
      * asynchronously.
+     *
+     * @deprecated Use {@link ExpectErrorLogUtilCall} instead. The {@code numExpectedCalls} can be
+     *     set using the {@code times} field.
      */
     public static ErrorLogUtilSyncCallback mockErrorLogUtilWithoutThrowable(int numExpectedCalls) {
         ErrorLogUtilSyncCallback callback = new ErrorLogUtilSyncCallback(numExpectedCalls);

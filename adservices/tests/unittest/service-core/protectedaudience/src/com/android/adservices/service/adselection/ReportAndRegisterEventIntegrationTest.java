@@ -131,6 +131,7 @@ import com.android.adservices.service.measurement.reporting.DebugReportApi;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.adservices.shared.testing.annotations.SetLongFlag;
@@ -176,7 +177,9 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 @SetMsmtApiAppAllowList
 @SetFlagTrue(KEY_GA_UX_FEATURE_ENABLED)
 @SetFlagTrue(KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED)
-public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMockitoTestCase {
+// TODO (b/384952360): refine CEL related verifications later
+@SkipLoggingUsageRule(reason = "b/384952360")
+public final class ReportAndRegisterEventIntegrationTest extends AdServicesExtendedMockitoTestCase {
     private final DevContext mDevContext = DevContext.createForDevOptionsDisabled();
 
     @Spy
@@ -296,9 +299,7 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
     @Before
     public void setup() throws Exception {
         mRequestMatcherPrefixMatch = (a, b) -> !b.isEmpty() && a.startsWith(b);
-
-        doReturn(mFakeFlags).when(() -> FlagsFactory.getFlags());
-
+        mocker.mockGetFlags(mFakeFlags);
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)
                         .addTypeConverter(new DBCustomAudience.Converters(true, true, true))
@@ -993,7 +994,7 @@ public final class ReportAndRegisterEventE2ETest extends AdServicesExtendedMocki
                 mContext,
                 mAdServicesLoggerMock,
                 flags,
-                mMockDebugFlags,
+                mFakeDebugFlags,
                 CallingAppUidSupplierProcessImpl.create(),
                 mFledgeAuthorizationFilterMock,
                 mAdSelectionServiceFilterMock,

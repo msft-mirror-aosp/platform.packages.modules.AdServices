@@ -13744,7 +13744,10 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
     private void insertTriggerForPackageName(Uri... registrants) {
         for (Uri registrant : registrants) {
             Trigger validTrigger =
-                    TriggerFixture.getValidTriggerBuilder().setRegistrant(registrant).build();
+                    TriggerFixture.getValidTriggerBuilder()
+                            .setRegistrant(registrant)
+                            .setId(UUID.randomUUID().toString())
+                            .build();
 
             mDatastoreManager.runInTransaction((dao) -> dao.insertTrigger(validTrigger));
         }

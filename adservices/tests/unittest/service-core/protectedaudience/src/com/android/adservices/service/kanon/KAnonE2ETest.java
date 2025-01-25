@@ -1744,7 +1744,7 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
                 mContext,
                 mAdServicesLoggerMock,
                 mFakeFlags,
-                mMockDebugFlags,
+                mFakeDebugFlags,
                 CallingAppUidSupplierProcessImpl.create(),
                 mFledgeAuthorizationFilterMock,
                 mAdSelectionServiceFilterMock,

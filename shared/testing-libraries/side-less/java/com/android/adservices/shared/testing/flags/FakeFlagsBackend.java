@@ -28,6 +28,9 @@ import com.android.adservices.shared.testing.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
 
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 
 /** In-memory container for flag-related backends. */
@@ -37,6 +40,8 @@ public final class FakeFlagsBackend implements TestableFlagsBackend {
     private final Logger mLog;
 
     private MissingFlagBehavior mBehavior = USES_EXPLICIT_DEFAULT;
+
+    private final Map<String, String> mThrowReasons = new HashMap<>();
 
     /**
      * Default constructor.
@@ -178,6 +183,15 @@ public final class FakeFlagsBackend implements TestableFlagsBackend {
         return value;
     }
 
+    @Override
+    public void onGetFlagThrows(String name, String reason) {
+        mLog.v("onGetFlagThrows(%s, %s)", name, reason);
+        Objects.requireNonNull(name, "name cannot be null");
+        Objects.requireNonNull(reason, "reason cannot be null");
+
+        mThrowReasons.put(name, reason);
+    }
+
     private boolean isMockingMode(String name) {
         switch (mBehavior) {
             case THROWS_EXCEPTION:
@@ -194,6 +208,11 @@ public final class FakeFlagsBackend implements TestableFlagsBackend {
     @Nullable
     private NameValuePair getFlagChecked(String name) {
         Objects.requireNonNull(name, "name cannot be null");
+        String throwReason = mThrowReasons.get(name);
+        if (throwReason != null) {
+            throw new UnsupportedOperationException(
+                    String.format(Locale.ENGLISH, UNSUPPORTED_TEMPLATE, name, throwReason));
+        }
         return mContainer.get(name);
     }
 

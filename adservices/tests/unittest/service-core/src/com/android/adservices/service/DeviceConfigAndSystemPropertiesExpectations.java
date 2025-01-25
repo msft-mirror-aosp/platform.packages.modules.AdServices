@@ -97,6 +97,12 @@ final class DeviceConfigAndSystemPropertiesExpectations {
                     return "DeviceConfigAndSystemPropertiesExpectations.FlagsBackendForTests"
                             + " singleton";
                 }
+
+                @Override
+                public void onGetFlagThrows(String name, String reason) {
+                    throw new UnsupportedOperationException(
+                            "onGetFlagThrows(" + name + ", " + reason + ": cannot do that");
+                }
             };
 
     /** Gets the {@link TestableFlagsBackend} singleton. */

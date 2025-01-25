@@ -82,7 +82,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -90,6 +90,7 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelectionOverride;
 import com.android.adservices.data.adselection.DBBuyerDecisionOverride;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.debug.DebugReporting;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
@@ -101,10 +102,12 @@ import com.android.adservices.service.stats.AdSelectionExecutionLogger;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.RunAdScoringProcessReportedStats;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.adservices.shared.util.Clock;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.truth.Truth;
@@ -142,6 +145,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;
 
+@MockStatic(FlagsFactory.class)
 @SetFlagFalse(KEY_FLEDGE_AD_SELECTION_CONTEXTUAL_ADS_ENABLED)
 @SetLongFlag(
         name = KEY_FLEDGE_AD_SELECTION_SCORING_TIMEOUT_MS,
@@ -151,7 +155,9 @@ import java.util.stream.Collectors;
         value = EXTENDED_FLEDGE_AD_SELECTION_OVERALL_TIMEOUT_MS)
 @SetFlagTrue(KEY_FLEDGE_DATA_VERSION_HEADER_METRICS_ENABLED)
 @SetFlagTrue(KEY_FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED)
-public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
+// TODO (b/384952360): refine CEL related verifications later
+@SkipLoggingUsageRule(reason = "b/384952360")
+public final class AdsScoreGeneratorImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;
@@ -200,6 +206,7 @@ public final class AdsScoreGeneratorImplTest extends AdServicesMockitoTestCase {
 
     @Before
     public void setUp() throws Exception {
+        mocker.mockGetFlags(mFakeFlags);
         mDevContext = DevContext.createForDevOptionsDisabled();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();

@@ -361,6 +361,7 @@ java_library {
         "guava",
     ],
     static_libs: [
+        "adservices-shared-datastore",
         "adservices-shared-error-logging",
         "adservices-shared-util",
         "modules-utils-build",

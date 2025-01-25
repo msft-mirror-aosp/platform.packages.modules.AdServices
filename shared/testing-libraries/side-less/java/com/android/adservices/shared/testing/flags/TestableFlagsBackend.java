@@ -17,11 +17,22 @@ package com.android.adservices.shared.testing.flags;
 
 import com.android.adservices.shared.flags.FlagsBackend;
 
+import com.google.common.annotations.VisibleForTesting;
+
 /** Extension of {@link FlagsBackend} that provides setters. */
 public interface TestableFlagsBackend extends FlagsBackend {
 
+    @VisibleForTesting
+    String UNSUPPORTED_TEMPLATE = "getFlag(%s) should not have been called. Reason %s";
+
     /** Sets the flag to the given value, or removes it if the value is {@code null}. */
     void setFlag(String name, String value);
+
+    /**
+     * Configures the flag to throw an {@link UnsupportedOperationException} with the given {@code
+     * reason} when the flag with the given {@code name} is called.
+     */
+    void onGetFlagThrows(String name, String reason);
 
     /** Sets the flag to the given value. */
     default void setFlag(String name, boolean value) {

@@ -137,7 +137,8 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(DebugFlags.class)
-public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTestCase {
+public final class OnDeviceAdSelectionFailureIntegrationTest
+        extends AdServicesExtendedMockitoTestCase {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
     private static final int CALLER_UID = Process.myUid();
@@ -597,7 +598,7 @@ public final class AdSelectionFailureE2ETest extends AdServicesExtendedMockitoTe
                         new DBTrustedBiddingData.Builder()
                                 .setUri(
                                         mMockWebServerRule.uriForPath(
-                                                AdSelectionFailureE2ETest
+                                                OnDeviceAdSelectionFailureIntegrationTest
                                                         .BUYER_TRUSTED_SIGNAL_URI_PATH))
                                 .setKeys(TrustedBiddingDataFixture.getValidTrustedBiddingKeys())
                                 .build())

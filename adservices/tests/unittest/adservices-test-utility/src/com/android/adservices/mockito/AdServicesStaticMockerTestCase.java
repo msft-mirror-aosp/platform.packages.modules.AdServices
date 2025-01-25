@@ -19,9 +19,9 @@ package com.android.adservices.mockito;
 import static com.google.common.truth.Truth.assertWithMessage;
 
 import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.mock;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
-import com.android.adservices.flags.FakeFlags;
 import com.android.adservices.mockito.AbstractStaticMocker.ClassNotSpiedOrMockedException;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
@@ -48,7 +48,6 @@ public abstract class AdServicesStaticMockerTestCase<T extends AdServicesStaticM
         extends AdServicesUnitTestCase {
 
     @Mock private Flags mMockFlags;
-    @Mock private DebugFlags mMockDebugFlags;
     @Mock private AdServicesJobScheduler mMockAdServicesJobScheduler;
     @Mock private AdServicesLoggerImpl mMockAdServicesLoggerImpl;
 
@@ -97,17 +96,7 @@ public abstract class AdServicesStaticMockerTestCase<T extends AdServicesStaticM
     public final void testMockGetDebugFlags_staticClassNotMocked() {
         assertThrows(
                 ClassNotSpiedOrMockedException.class,
-                () -> getMocker().mockGetDebugFlags(mMockDebugFlags));
-    }
-
-    @Test
-    @MockStatic(DebugFlags.class)
-    public final void testMockGetDebugFlags() {
-        getMocker().mockGetDebugFlags(mMockDebugFlags);
-
-        var actual = DebugFlags.getInstance();
-
-        expect.withMessage("DebugFlags.getInstance").that(actual).isSameInstanceAs(mMockDebugFlags);
+                () -> getMocker().mockGetDebugFlags(mock(DebugFlags.class)));
     }
 
     @Test

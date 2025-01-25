@@ -38,6 +38,8 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
     private static final String REASON_NO_TARGET_CONTEXT =
             "tests should use mContext instead - if it needs the target context, please add to"
                     + " DeviceSideTestCase instead";
+    protected static final String REASON_USE_FAKE_DEBUG_FLAGS_INSTEAD =
+            "should use mFakeDebugFlags and debugFlags rule instead";
 
     // TODO(b/335935200): This (and RavenwoodConfig) should be removed once Ravenwood starts
     // using the package name from the build file.
@@ -146,9 +148,9 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
                 "errorLogUtilUsageRule",
                 "mocker",
                 "sInlineCleaner",
-                "sSpyContext",
+                "sSpyContext"
                 // NOTE: mMockFlags is now checked by AdServicesUnitTestCase itself
-                "mMockDebugFlags");
+                );
         testInstance.assertTestClassHasNoSuchField(
                 "mContextMock", "should use existing mMockContext instead");
         testInstance.assertTestClassHasNoSuchField(
@@ -156,6 +158,11 @@ public abstract class DeviceSideTestCase extends SidelessTestCase {
         testInstance.assertTestClassHasNoSuchField("mockito", "already taken care by @Rule");
         testInstance.assertTestClassHasNoSuchField(
                 "mFlagsMock", "should use existing mMockFlags instead");
+        testInstance.assertTestClassHasNoSuchField(
+                "mMockDebugFlags", REASON_USE_FAKE_DEBUG_FLAGS_INSTEAD);
+        testInstance.assertTestClassHasNoSuchField(
+                "mDebugFlagsMock", REASON_USE_FAKE_DEBUG_FLAGS_INSTEAD);
+
         testInstance.assertTestClassHasNoSuchField(
                 "sMockFlags", "should use existing mMockFlags instead");
         testInstance.assertTestClassHasNoSuchField(

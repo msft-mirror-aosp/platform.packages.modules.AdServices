@@ -40,7 +40,7 @@ import org.mockito.Mock;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class JSScriptEngineE2ETest extends AdServicesMockitoTestCase {
+public class JSScriptEngineIntegrationTest extends AdServicesMockitoTestCase {
     @Rule(order = 15)
     public final SupportedByConditionRule mJSSandboxSupportedRule =
             WebViewSupportUtil.createJSSandboxAvailableRule(mContext);
@@ -175,5 +175,4 @@ public class JSScriptEngineE2ETest extends AdServicesMockitoTestCase {
         jsStringFutureSyncCallback.assertResultReceived();
         mLog.v("callAndVerifyJSScriptEngine completed successfully");
     }
-
 }

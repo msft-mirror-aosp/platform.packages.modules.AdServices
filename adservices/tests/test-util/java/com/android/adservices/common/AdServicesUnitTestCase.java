@@ -49,10 +49,7 @@ public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
 
     private static final String APP_CONTEXT_MSG = "should use existing mAppContext instead";
 
-    private static final String FAKE_FLAGS_MSG = "should use mFakeFlags and flags rule insteads";
-
-    private static final String FAKE_DEBUG_FLAGS_MSG =
-            "should use mFakeDebugFlags and debugFlags rule insteads";
+    protected static final String FAKE_FLAGS_MSG = "should use mFakeFlags and flags rule insteads";
 
     @Rule(order = 5)
     public final ApplicationContextSingletonRule appContext =
@@ -113,7 +110,6 @@ public abstract class AdServicesUnitTestCase extends AdServicesTestCase {
         // We'll need to fix these test first (for example, some of them also set DebugFlags, which
         // is not supported by AdServicesFakeFlagsSetterRule and won't be, as we should have a
         // separate rule for DebugFlags / SystemProperties)
-        assertTestClassHasNoSuchField("mDebugFlags", FAKE_DEBUG_FLAGS_MSG);
-        // TODO(b/338067482): add mMockDebugFlags as well
+        assertTestClassHasNoSuchField("mDebugFlags", REASON_USE_FAKE_DEBUG_FLAGS_INSTEAD);
     }
 }

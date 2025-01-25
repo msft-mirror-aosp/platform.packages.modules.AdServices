@@ -16,28 +16,33 @@
 
 package com.android.adservices.service.customaudience;
 
-import static org.junit.Assert.*;
-import static org.mockito.Mockito.*;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_CUSTOM_AUDIENCE_PER_OWNER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_OWNER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_TOTAL_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
+
+import static org.junit.Assert.assertThrows;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceStats;
-import com.android.adservices.service.FakeFlagsFactory;
-import com.android.adservices.service.Flags;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.List;
 
-@RunWith(MockitoJUnitRunner.class)
-public class CustomAudienceQuantityCheckerTest {
-    private static final Flags FLAGS = FakeFlagsFactory.getFlagsForTest();
+@SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE)
+public final class CustomAudienceQuantityCheckerTest extends AdServicesExtendedMockitoTestCase {
 
     @Mock private CustomAudienceDao mCustomAudienceDao;
 
@@ -45,7 +50,7 @@ public class CustomAudienceQuantityCheckerTest {
 
     @Before
     public void setup() {
-        mChecker = new CustomAudienceQuantityChecker(mCustomAudienceDao, FLAGS);
+        mChecker = new CustomAudienceQuantityChecker(mCustomAudienceDao, mFakeFlags);
     }
 
     @Test
@@ -78,7 +83,8 @@ public class CustomAudienceQuantityCheckerTest {
                                 .setOwner(CustomAudienceFixture.VALID_OWNER)
                                 .setTotalCustomAudienceCount(20L)
                                 .setPerOwnerCustomAudienceCount(1L)
-                                .setTotalOwnerCount(FLAGS.getFledgeCustomAudienceMaxOwnerCount())
+                                .setTotalOwnerCount(
+                                        mFakeFlags.getFledgeCustomAudienceMaxOwnerCount())
                                 .setBuyer(CommonFixture.VALID_BUYER_1)
                                 .setPerBuyerCustomAudienceCount(5L)
                                 .build());
@@ -93,6 +99,8 @@ public class CustomAudienceQuantityCheckerTest {
     }
 
     @Test
+    @ExpectErrorLogUtilCall(errorCode =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_OWNER)
     public void testOwnerExceedMax() {
         when(mCustomAudienceDao.getCustomAudienceStats(
                         CustomAudienceFixture.VALID_OWNER, CommonFixture.VALID_BUYER_1))
@@ -101,7 +109,8 @@ public class CustomAudienceQuantityCheckerTest {
                                 .setOwner(CustomAudienceFixture.VALID_OWNER)
                                 .setTotalCustomAudienceCount(20L)
                                 .setPerOwnerCustomAudienceCount(0L)
-                                .setTotalOwnerCount(FLAGS.getFledgeCustomAudienceMaxOwnerCount())
+                                .setTotalOwnerCount(
+                                        mFakeFlags.getFledgeCustomAudienceMaxOwnerCount())
                                 .setBuyer(CommonFixture.VALID_BUYER_1)
                                 .setPerBuyerCustomAudienceCount(5L)
                                 .build());
@@ -125,6 +134,8 @@ public class CustomAudienceQuantityCheckerTest {
     }
 
     @Test
+    @ExpectErrorLogUtilCall(errorCode =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_TOTAL_CUSTOM_AUDIENCE)
     public void testTotalCountExceedMax() {
         when(mCustomAudienceDao.getCustomAudienceStats(
                         CustomAudienceFixture.VALID_OWNER, CommonFixture.VALID_BUYER_1))
@@ -132,7 +143,7 @@ public class CustomAudienceQuantityCheckerTest {
                         CustomAudienceStats.builder()
                                 .setOwner(CustomAudienceFixture.VALID_OWNER)
                                 .setTotalCustomAudienceCount(
-                                        FLAGS.getFledgeCustomAudienceMaxCount())
+                                        mFakeFlags.getFledgeCustomAudienceMaxCount())
                                 .setPerOwnerCustomAudienceCount(0L)
                                 .setTotalOwnerCount(1L)
                                 .setBuyer(CommonFixture.VALID_BUYER_1)
@@ -157,6 +168,8 @@ public class CustomAudienceQuantityCheckerTest {
     }
 
     @Test
+    @ExpectErrorLogUtilCall(errorCode =
+            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_CUSTOM_AUDIENCE_PER_OWNER)
     public void testPerOwnerCountExceedMax() {
         when(mCustomAudienceDao.getCustomAudienceStats(
                         CustomAudienceFixture.VALID_OWNER, CommonFixture.VALID_BUYER_1))
@@ -165,7 +178,7 @@ public class CustomAudienceQuantityCheckerTest {
                                 .setOwner(CustomAudienceFixture.VALID_OWNER)
                                 .setTotalCustomAudienceCount(20L)
                                 .setPerOwnerCustomAudienceCount(
-                                        FLAGS.getFledgeCustomAudiencePerAppMaxCount())
+                                        mFakeFlags.getFledgeCustomAudiencePerAppMaxCount())
                                 .setTotalOwnerCount(1L)
                                 .setBuyer(CommonFixture.VALID_BUYER_1)
                                 .setPerBuyerCustomAudienceCount(5L)
@@ -198,7 +211,7 @@ public class CustomAudienceQuantityCheckerTest {
                                 .setOwner(CustomAudienceFixture.VALID_OWNER)
                                 .setTotalCustomAudienceCount(20L)
                                 .setPerBuyerCustomAudienceCount(
-                                        FLAGS.getFledgeCustomAudiencePerBuyerMaxCount())
+                                        mFakeFlags.getFledgeCustomAudiencePerBuyerMaxCount())
                                 .setTotalBuyerCount(1L)
                                 .setBuyer(CommonFixture.VALID_BUYER_1)
                                 .build());
@@ -245,10 +258,9 @@ public class CustomAudienceQuantityCheckerTest {
     }
 
     private void assertViolations(Exception exception, String... violations) {
-        assertEquals(
+        expect.withMessage("mChecker.check").that(exception).hasMessageThat().isEqualTo(
                 String.format(
                         CustomAudienceQuantityChecker.CUSTOM_AUDIENCE_QUANTITY_CHECK_FAILED,
-                        List.of(violations)),
-                exception.getMessage());
+                        List.of(violations)));
     }
 }

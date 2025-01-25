@@ -17,6 +17,7 @@
 package com.android.adservices.service.measurement.attribution;
 
 import static com.android.adservices.service.measurement.util.JobLockHolder.Type.ATTRIBUTION_PROCESSING;
+import static com.android.adservices.service.profiling.RbATraceProvider.FeatureNames.MEASUREMENT_API;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__EXECUTION_RESULT_CODE__SKIP_FOR_KILL_SWITCH_ON;
 import static com.android.adservices.spe.AdServicesJobInfo.MEASUREMENT_ATTRIBUTION_JOB;
 
@@ -42,6 +43,7 @@ import com.android.adservices.service.measurement.reporting.DebugReportingJobSer
 import com.android.adservices.service.measurement.reporting.ImmediateAggregateReportingJobService;
 import com.android.adservices.service.measurement.reporting.ReportingJobService;
 import com.android.adservices.service.measurement.util.JobLockHolder;
+import com.android.adservices.service.profiling.RbATraceProvider;
 import com.android.adservices.spe.AdServicesJobServiceLogger;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -92,6 +94,8 @@ public final class AttributionJobService extends JobService {
         mExecutorFuture =
                 sBackgroundExecutor.submit(
                         () -> {
+                            RbATraceProvider.beginSection(
+                                    MEASUREMENT_API, "AttributionJobService", "onStartJob");
                             ProcessingResult result = acquireLockAndProcessPendingAttributions();
                             LoggerFactory.getMeasurementLogger()
                                     .d("AttributionJobService finished processing [%s]", result);
@@ -131,6 +135,7 @@ public final class AttributionJobService extends JobService {
                                 ReportingJobService.scheduleIfNeeded(
                                         getApplicationContext(), /* forceSchedule */ false);
                             }
+                            RbATraceProvider.endSection();
                         });
         return true;
     }

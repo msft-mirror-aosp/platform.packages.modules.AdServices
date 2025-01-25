@@ -50,7 +50,8 @@ import android.net.Uri;
 import androidx.room.Room;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.cache.CacheDatabase;
 import com.android.adservices.service.common.cache.CacheEntryDao;
 import com.android.adservices.service.common.cache.FledgeHttpCache;
@@ -63,7 +64,9 @@ import com.android.adservices.service.stats.ServerAuctionKeyFetchCalledStats;
 import com.android.adservices.service.stats.ServerAuctionKeyFetchExecutionLoggerImpl;
 import com.android.adservices.service.stats.pas.EncodingFetchStats;
 import com.android.adservices.service.stats.pas.EncodingJsFetchProcessLoggerImpl;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.util.Clock;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
@@ -87,7 +90,11 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public final class ProtectedAudienceAdServicesHttpsClientTest extends AdServicesMockitoTestCase {
+@MockStatic(FlagsFactory.class)
+// TODO (b/384952360): refine CEL related verifications later
+@SkipLoggingUsageRule(reason = "b/384952360")
+public final class ProtectedAudienceAdServicesHttpsClientTest
+        extends AdServicesExtendedMockitoTestCase {
     private static final String CACHE_HEADER = "Cache-Control: max-age=60";
     private static final String RESPONSE_HEADER_KEY = "fake_response_header_key";
     private static final String RESPONSE_HEADER_VALUE_1 = "fake_response_header_value_1";
@@ -112,6 +119,7 @@ public final class ProtectedAudienceAdServicesHttpsClientTest extends AdServices
 
     @Before
     public void setup() throws Exception {
+        mocker.mockGetFlags(mFakeFlags);
         CacheEntryDao cacheEntryDao =
                 Room.inMemoryDatabaseBuilder(mContext, CacheDatabase.class)
                         .build()

@@ -79,6 +79,9 @@ import static com.android.adservices.service.customaudience.FetchCustomAudienceR
 import static com.android.adservices.service.customaudience.FetchCustomAudienceReader.EXPIRATION_TIME_KEY;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceReader.NAME_KEY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_CUSTOM_AUDIENCE_PER_OWNER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_TOTAL_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -111,6 +114,7 @@ import android.os.RemoteException;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -565,6 +569,12 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_TOTAL_CUSTOM_AUDIENCE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE)
+    @ExpectErrorLogUtilCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_CUSTOM_AUDIENCE_PER_OWNER,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE)
     public void testImpl_invalidRequest_quotaExhausted_throws() throws Exception {
         // Use flag values with a clearly small quota limits.
         mFetchCustomAudienceImpl =

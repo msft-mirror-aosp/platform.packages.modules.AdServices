@@ -16,6 +16,11 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_ILLEGAL_RESULT_RETURNED_BY_CALLING_FUNCTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_JS_OTHER_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_JS_REFERENCE_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_UNEXPECTED_RESULT_STRUCTURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_IMPRESSION;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_JS_REFERENCE_ERROR;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_SUCCESS;
 
@@ -35,8 +40,10 @@ import android.util.Log;
 
 import androidx.test.filters.FlakyTest;
 
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebViewSupportUtil;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
@@ -54,6 +61,7 @@ import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -67,7 +75,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
-public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTestCase {
+@SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_IMPRESSION)
+public final class ReportImpressionScriptEngineTest extends AdServicesExtendedMockitoTestCase {
     private static final String TAG = "ReportImpressionScriptEngineTest";
     private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED =
             true; // Enabling console messages for tests.
@@ -183,6 +192,10 @@ public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTes
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_ILLEGAL_RESULT_RETURNED_BY_CALLING_FUNCTION,
+            throwable = JSONException.class)
     public void testThrowsIllegalStateExceptionIfScriptIsNotReturningJson() throws Exception {
         ImmutableList.Builder<JSScriptArgument> args = new ImmutableList.Builder<>();
         args.add(AD_DATA_ARGUMENT_UTIL.asScriptArgument("ignored", AD_DATA));
@@ -308,6 +321,10 @@ public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTes
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_JS_REFERENCE_ERROR,
+            throwable = JSExecutionException.class)
     public void testReportResultFailsWhenCallingRegisterAdBeaconWhenFlagDisabled()
             throws Exception {
         // Re init engine
@@ -343,6 +360,10 @@ public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTes
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_JS_OTHER_ERROR,
+            throwable = JSExecutionException.class)
     public void testReportResultFailsInvalidInteractionKeyType() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
@@ -371,6 +392,10 @@ public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTes
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_JS_OTHER_ERROR,
+            throwable = JSExecutionException.class)
     public void testReportResultFailsInvalidInteractionReportingUriType() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
@@ -399,6 +424,10 @@ public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTes
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_JS_OTHER_ERROR,
+            throwable = JSExecutionException.class)
     public void testReportResultFailsWhenRegisterAdBeaconCalledMoreThanOnce() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
@@ -429,6 +458,10 @@ public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTes
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_JS_OTHER_ERROR,
+            throwable = JSExecutionException.class)
     public void testReportResultFailsWhenRegisterAdBeaconInputNotAnObject__Null() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
@@ -456,6 +489,10 @@ public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTes
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_JS_OTHER_ERROR,
+            throwable = JSExecutionException.class)
     public void testReportResultFailsWhenRegisterAdBeaconInputNotAnObject__Int() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals)"
@@ -483,6 +520,10 @@ public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTes
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_JS_OTHER_ERROR,
+            throwable = JSExecutionException.class)
     public void testReportResultFailsWhenRegisterAdBeaconInputNotAnObject__String()
             throws Exception {
         String jsScript =
@@ -511,6 +552,10 @@ public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTes
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_JS_OTHER_ERROR,
+            throwable = JSExecutionException.class)
     public void testReportResultFailsWhenRegisterAdBeaconInputNotAnObject__Array()
             throws Exception {
         String jsScript =
@@ -626,6 +671,10 @@ public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTes
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_UNEXPECTED_RESULT_STRUCTURE,
+            throwable = JSONException.class)
     public void testReportResultFailedCaseNoReportingUri() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -651,6 +700,10 @@ public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTes
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_UNEXPECTED_RESULT_STRUCTURE,
+            throwable = JSONException.class)
     public void testReportResultIncorrectReportingUriNameCase() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -678,6 +731,10 @@ public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTes
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_ILLEGAL_RESULT_RETURNED_BY_CALLING_FUNCTION,
+            throwable = JSONException.class)
     public void testReportResultIncorrectNameForResultsCase() throws Exception {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -704,6 +761,10 @@ public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTes
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_JS_REFERENCE_ERROR,
+            throwable = JSExecutionException.class)
     public void testReportResult_JsReferenceError() {
         String jsScript =
                 "function reportResult(ad_selection_config, render_uri, bid, contextual_signals) {"
@@ -1162,6 +1223,10 @@ public final class ReportImpressionScriptEngineTest extends AdServicesMockitoTes
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_IMPRESSION_SCRIPT_ENGINE_ILLEGAL_RESULT_RETURNED_BY_CALLING_FUNCTION,
+            throwable = JSONException.class)
     public void testReportWinIncorrectNameForResultsCase() throws Exception {
         String jsScript =
                 "function reportWin(ad_selection_signals, per_buyer_signals, signals_for_buyer,"

@@ -16,8 +16,13 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+import static android.adservices.common.AdServicesStatusUtils.StatusCode;
 
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_LEAVE_CUSTOM_AUDIENCE;
@@ -29,6 +34,13 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_BACKGROUND_CALLER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_CALLER_NOT_ALLOWED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_INTERNAL_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_INVALID_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_UNAUTHORIZED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_SUCCESS_TO_CALLER_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE;
@@ -61,6 +73,7 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
@@ -296,7 +309,11 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 }
             } catch (Exception exception) {
                 sLogger.d(exception, "Error encountered in joinCustomAudience, notifying caller");
-                resultCode = notifyFailure(callback, exception);
+                resultCode =
+                        notifyFailure(
+                                callback,
+                                exception,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE);
                 return;
             }
 
@@ -304,6 +321,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         } catch (Exception exception) {
             sLogger.e(exception, "Unable to send result to the callback");
             resultCode = STATUS_INTERNAL_ERROR;
+            ErrorLogUtil.e(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_SUCCESS_TO_CALLER_FAILED,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE);
         } finally {
             if (shouldLog) {
                 mAdServicesLogger.logFledgeApiCallStats(
@@ -375,7 +396,8 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                 });
     }
 
-    private int notifyFailure(ICustomAudienceCallback callback, Exception exception)
+    private int notifyFailure(
+            ICustomAudienceCallback callback, Exception exception, int celPpapiNameId)
             throws RemoteException {
         int resultCode;
         if (exception instanceof NullPointerException
@@ -396,6 +418,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
             sLogger.e(exception, "Unexpected error during operation");
             resultCode = STATUS_INTERNAL_ERROR;
         }
+        logExceptionCel(exception, resultCode, celPpapiNameId);
         callback.onFailure(
                 new FledgeErrorResponse.Builder()
                         .setStatusCode(resultCode)
@@ -549,7 +572,11 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     | FledgeAllowListsFilter.AppNotAllowedException exception) {
                 // Catch these specific exceptions, but report them back to the caller
                 sLogger.d(exception, "Error encountered in leaveCustomAudience, notifying caller");
-                resultCode = notifyFailure(callback, exception);
+                resultCode =
+                        notifyFailure(
+                                callback,
+                                exception,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE);
                 return;
             } catch (Exception exception) {
                 // For all other exceptions, report success
@@ -776,5 +803,36 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                     apiNameLoggingId);
             throw illegalStateException;
         }
+    }
+
+    private void logExceptionCel(
+            Exception exception,
+            @StatusCode int resultCode,
+            int celPpapiNameId) {
+        int celEnum =
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_INTERNAL_ERROR;
+        switch (resultCode) {
+            case STATUS_INVALID_ARGUMENT:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_INVALID_ARGUMENT;
+                break;
+            case STATUS_BACKGROUND_CALLER:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_BACKGROUND_CALLER;
+                break;
+            case STATUS_CALLER_NOT_ALLOWED:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_CALLER_NOT_ALLOWED;
+                break;
+            case STATUS_UNAUTHORIZED:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_UNAUTHORIZED;
+                break;
+            case STATUS_RATE_LIMIT_REACHED:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_RATE_LIMIT_REACHED;
+                break;
+        }
+        ErrorLogUtil.e(exception, celEnum, celPpapiNameId);
     }
 }

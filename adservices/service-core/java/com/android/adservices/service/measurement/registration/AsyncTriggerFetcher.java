@@ -73,6 +73,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Download and decode Trigger registration.
@@ -130,6 +131,7 @@ public class AsyncTriggerFetcher {
         LoggerFactory.getMeasurementLogger()
                 .d("Trigger ArDebug permission enabled %b", arDebugPermission);
         Trigger.Builder builder = new Trigger.Builder();
+        builder.setId(UUID.randomUUID().toString());
         builder.setEnrollmentId(enrollmentId);
         builder.setAttributionDestination(
                 getAttributionDestination(
@@ -468,6 +470,11 @@ public class AsyncTriggerFetcher {
                 Optional<Integer> maybeAggregatableFilteringIdMaxBytes =
                         getValidAggregatableFilteringIdMaxBytes(json);
                 if (!maybeAggregatableFilteringIdMaxBytes.isPresent()) {
+                    LoggerFactory.getMeasurementLogger()
+                            .d(
+                                    "AsyncTriggerFetcher: Invalid"
+                                            + " AGGREGATABLE_FILTERING_ID_MAX_BYTES in"
+                                            + " header");
                     return false;
                 }
                 filteringIdMaxBytes = maybeAggregatableFilteringIdMaxBytes.get();
@@ -499,6 +506,10 @@ public class AsyncTriggerFetcher {
                         (JSONObject) maybeValidAggregatableValues,
                         filteringIdMaxBytes,
                         asyncFetchStatus)) {
+                    LoggerFactory.getMeasurementLogger()
+                            .d(
+                                    "AsyncTriggerFetcher: Invalid values for JSONObject typed"
+                                            + " AGGREGATABLE_VALUES");
                     return false;
                 }
             } else {
@@ -506,6 +517,10 @@ public class AsyncTriggerFetcher {
                         (JSONArray) maybeValidAggregatableValues,
                         filteringIdMaxBytes,
                         asyncFetchStatus)) {
+                    LoggerFactory.getMeasurementLogger()
+                            .d(
+                                    "AsyncTriggerFetcher: Invalid values for JSONArray typed"
+                                            + " AGGREGATABLE_VALUES");
                     return false;
                 }
                 if (mFlags.getMeasurementEnableAggregateValueFilters()) {

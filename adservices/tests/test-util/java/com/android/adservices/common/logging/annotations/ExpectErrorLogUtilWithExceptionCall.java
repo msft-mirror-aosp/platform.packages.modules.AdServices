@@ -28,6 +28,7 @@ import java.lang.annotation.Target;
 
 /**
  * Used to specify expected {@code ErrorLogUtil.e(Throwable, int, int)} calls over test methods.
+ * This annotation can be used for verifying background calls as well.
  *
  * <ol>
  *   <li>To verify ErrorLogUtil.e(Throwable, int, int): @ExpectErrorLogUtilCall(E.class, X, Y)

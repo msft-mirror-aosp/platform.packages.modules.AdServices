@@ -18,7 +18,6 @@ package com.android.adservices.common;
 import com.android.adservices.common.AdServicesJobTestCase.Mocker;
 import com.android.adservices.mockito.AdServicesJobMockerTestCase;
 import com.android.adservices.mockito.StaticClassChecker;
-import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 
 /** Test case for the {@code AdServicesJobSTestCase.Mocker} class. */
@@ -26,8 +25,7 @@ import com.android.adservices.service.Flags;
 public final class AdServicesJobTestCaseMockerTest extends AdServicesJobMockerTestCase<Mocker> {
 
     @Override
-    protected Mocker getMocker(
-            StaticClassChecker checker, Flags mockFlags, DebugFlags mockDebugFlags) {
-        return new Mocker(checker, mockFlags, mockDebugFlags);
+    protected Mocker getMocker(StaticClassChecker checker, Flags mockFlags) {
+        return new Mocker(checker, mockFlags);
     }
 }
