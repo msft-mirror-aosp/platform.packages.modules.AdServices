@@ -62,7 +62,7 @@ import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -78,7 +78,7 @@ import org.mockito.quality.Strictness;
  * @param <M> mocker type
  */
 @ClearInlineMocksMode(CLEAR_AFTER_TEST_CLASS)
-@SpyStatic(ErrorLogUtil.class)
+@MockStatic(ErrorLogUtil.class)
 public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends InternalMocker>
         extends AdServicesUnitTestCase {
 

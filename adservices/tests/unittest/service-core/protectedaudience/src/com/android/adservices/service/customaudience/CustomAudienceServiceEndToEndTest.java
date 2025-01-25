@@ -197,6 +197,7 @@ import java.util.stream.Collectors;
 @MockStatic(BackgroundFetchJob.class)
 // TODO (b/384952360): refine CEL related verifications later
 @SkipLoggingUsageRule(reason = "b/384952360")
+@SuppressWarnings("DoNotMockErrorLogUtilBehavior") // TODO(b/384952360)
 public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedMockitoTestCase {
 
     @Rule(order = 11)
@@ -335,6 +336,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
     @Before
     public void setup() {
+        // TODO (b/384952360): Delete doNothingOnErrorLogUtilError when all CEL logs in this test
+        // are captured properly.
+        doNothingOnErrorLogUtilError();
         mocker.mockGetFlags(new CustomAudienceServiceE2ETestFlags());
         mFetchUri = mMockWebServerRule.uriForPath("/fetch");
 

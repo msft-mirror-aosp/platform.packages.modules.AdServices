@@ -176,6 +176,7 @@ import java.util.stream.Collectors;
 @SetFlagTrue(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
 // TODO (b/384952360): refine CEL related verifications later
 @SkipLoggingUsageRule(reason = "b/384952360")
+@SuppressWarnings("DoNotMockErrorLogUtilBehavior") // TODO(b/384952360)
 public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final String OWNER = CustomAudienceFixture.VALID_OWNER;
@@ -253,6 +254,9 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     @Before
     public void setup() throws Exception {
+        // TODO (b/384952360): Delete doNothingOnErrorLogUtilError when all CEL logs in this test
+        // are captured properly.
+        doNothingOnErrorLogUtilError();
         mocker.mockGetFlags(mFakeFlags);
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDaoMock, mFrequencyCapDaoMock, mFakeFlags);

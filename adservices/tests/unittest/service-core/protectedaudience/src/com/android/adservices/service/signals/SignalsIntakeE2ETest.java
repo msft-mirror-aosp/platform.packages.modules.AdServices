@@ -139,6 +139,7 @@ import java.util.concurrent.TimeUnit;
 @SetPasAppAllowList
 // TODO (b/384952360): refine CEL related verifications later
 @SkipLoggingUsageRule(reason = "b/384952360")
+@SuppressWarnings("DoNotMockErrorLogUtilBehavior") // TODO(b/384952360)
 public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("localhost");
     private static final Uri URI = Uri.parse("https://localhost");
@@ -188,6 +189,9 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
 
     @Before
     public void setup() {
+        // TODO (b/384952360): Delete doNothingOnErrorLogUtilError when all CEL logs in this test
+        // are captured properly.
+        doNothingOnErrorLogUtilError();
         mocker.mockGetFlags(mFakeFlags);
         mSignalsDao =
                 Room.inMemoryDatabaseBuilder(mSpyContext, ProtectedSignalsDatabase.class)

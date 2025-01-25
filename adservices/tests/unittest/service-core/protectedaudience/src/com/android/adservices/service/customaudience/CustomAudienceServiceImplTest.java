@@ -121,6 +121,7 @@ import java.util.concurrent.ExecutorService;
 
 // TODO (b/315812832) - Refactor test so strictness can be lenient and enable logging usage rule.
 @SkipLoggingUsageRule(reason = "Overrides mocking strictness to STRICT_STUBS.")
+@SuppressWarnings("DoNotMockErrorLogUtilBehavior") // TODO(b/384952360)
 @SetErrorLogUtilDefaultParams(throwable = ExpectErrorLogUtilWithExceptionCall.Any.class)
 @MockStatic(BackgroundFetchJob.class)
 @MockStatic(FlagsFactory.class)
@@ -161,6 +162,9 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     @Before
     public void setup() throws Exception {
+        // TODO (b/384952360): Delete doNothingOnErrorLogUtilError when all CEL logs in this test
+        // are captured properly.
+        doNothingOnErrorLogUtilError();
         mockGetConsentNotificationDebugMode(false);
         mocker.mockGetFlags(mFlagsWithAllCheckEnabled);
         mService =
