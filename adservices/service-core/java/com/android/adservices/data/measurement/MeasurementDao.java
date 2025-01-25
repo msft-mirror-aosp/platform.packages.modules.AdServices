@@ -687,6 +687,10 @@ class MeasurementDao implements IMeasurementDao {
     @Override
     public int countNumAggregateReportsPerSource(String sourceId, String api)
             throws DatastoreException {
+        String maybeTriggerContextIdMatch =
+                FlagsFactory.getFlags().getMeasurementEnableUnboundedReportsWithTriggerContextId()
+                        ? "AND " + MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID + " IS NULL"
+                        : "";
         String query =
                 String.format(
                         Locale.ENGLISH,
@@ -694,9 +698,8 @@ class MeasurementDao implements IMeasurementDao {
                                 + " WHERE " + MeasurementTables.AggregateReport.SOURCE_ID
                                 + " = '" + sourceId + "'"
                                 + " AND " + MeasurementTables.AggregateReport.API
-                                + " = '" + api + "'"
-                                + " AND " + MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID
-                                + " IS NULL");
+                                + " = '" + api + "' "
+                                + maybeTriggerContextIdMatch);
         return (int) DatabaseUtils.longForQuery(mSQLTransaction.getDatabase(), query, null);
     }
 

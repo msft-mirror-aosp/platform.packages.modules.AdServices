@@ -3975,8 +3975,6 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                                 WebUtil.validUrl("https://destination-2.test"),
                                 3,
                                 "source2",
-                                // This report should not be counted because it includes a trigger
-                                // context ID.
                                 AggregateReportFixture.ValidAggregateReportParams.API),
                         generateMockAggregateReportBuilder(
                                 WebUtil.validUrl("https://destination-2.test"),
@@ -4033,7 +4031,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                                     measurementDao.countNumAggregateReportsPerSource(
                                             "source2",
                                             AggregateReportFixture.ValidAggregateReportParams.API))
-                            .isEqualTo(1);
+                            .isEqualTo(2);
                     assertThat(
                                     measurementDao.countNumAggregateReportsPerSource(
                                             "source3",
@@ -4054,6 +4052,94 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                                             "source3",
                                             AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API))
                             .isEqualTo(3);
+                });
+    }
+
+    @Test
+    public void countNumAggregateReportsPerSource_unboundedReportsWithTriggerContextId_expected() {
+        mLegacyFlags = mMockFlags;
+        mocker.mockGetFlags(mMockFlags);
+        doReturn(true).when(mMockFlags).getMeasurementEnableUnboundedReportsWithTriggerContextId();
+
+        List<Source> sources =
+                Arrays.asList(
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(1L))
+                                .setId("source1")
+                                .build(),
+                        SourceFixture.getMinimalValidSourceBuilder()
+                                .setEventId(new UnsignedLong(2L))
+                                .setId("source2")
+                                .build());
+        List<AggregateReport> reports =
+                Arrays.asList(
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-1.test"),
+                                1,
+                                "source1",
+                                AggregateReportFixture.ValidAggregateReportParams.API),
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-1.test"),
+                                2,
+                                "source1",
+                                AggregateReportFixture.ValidAggregateReportParams.API),
+                        generateMockAggregateReport(
+                                WebUtil.validUrl("https://destination-2.test"),
+                                3,
+                                "source2",
+                                AggregateReportFixture.ValidAggregateReportParams.API),
+                        // Report should not be counted since trigger context ID is present.
+                        generateMockAggregateReportBuilder(
+                                WebUtil.validUrl("https://destination-2.test"),
+                                33,
+                                "source2",
+                                AggregateReportFixture.ValidAggregateReportParams.API)
+                                        .setTriggerContextId("12345")
+                                        .build());
+
+        SQLiteDatabase db = MeasurementDbHelper.getInstance().safeGetWritableDatabase();
+        Objects.requireNonNull(db);
+        sources.forEach(source -> insertSource(source, source.getId()));
+        Consumer<AggregateReport> aggregateReportConsumer =
+                aggregateReport -> {
+                    ContentValues values = new ContentValues();
+                    values.put(MeasurementTables.AggregateReport.ID, aggregateReport.getId());
+                    values.put(
+                            MeasurementTables.AggregateReport.SOURCE_ID,
+                            aggregateReport.getSourceId());
+                    values.put(
+                            MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                            aggregateReport.getAttributionDestination().toString());
+                    values.put(MeasurementTables.AggregateReport.API, aggregateReport.getApi());
+                    values.put(
+                            MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID,
+                            aggregateReport.getTriggerContextId());
+                    db.insert(MeasurementTables.AggregateReport.TABLE, null, values);
+                };
+        reports.forEach(aggregateReportConsumer);
+
+        mDatastoreManager.runInTransaction(
+                measurementDao -> {
+                    assertThat(
+                                    measurementDao.countNumAggregateReportsPerSource(
+                                            "source1",
+                                            AggregateReportFixture.ValidAggregateReportParams.API))
+                            .isEqualTo(2);
+                    assertThat(
+                                    measurementDao.countNumAggregateReportsPerSource(
+                                            "source2",
+                                            AggregateReportFixture.ValidAggregateReportParams.API))
+                            .isEqualTo(1);
+                    assertThat(
+                                    measurementDao.countNumAggregateReportsPerSource(
+                                            "source1",
+                                            AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API))
+                            .isEqualTo(0);
+                    assertThat(
+                                    measurementDao.countNumAggregateReportsPerSource(
+                                            "source2",
+                                            AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API))
+                            .isEqualTo(0);
                 });
     }
 
