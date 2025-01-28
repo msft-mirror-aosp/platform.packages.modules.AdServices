@@ -37,9 +37,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Log verifier for scanning usage of {@code ErrorLogUtil.e(Throwable, int, int)} invocations. Use
- * {@link ExpectErrorLogUtilWithExceptionCall} to verify both background and non-background logging
- * calls.
+ * Log verifier for scanning usage of {@code ErrorLogUtil.e(Throwable, int, int)} invocations. Uses
+ * {@link ErrorLogUtilSyncCallback} internally to capture log calls and waits for expected number of
+ * calls to be made before verifying or failing the test if expected number of calls are not made
+ * (default 5s timeout).
+ *
+ * <p>Use {@link ExpectErrorLogUtilWithExceptionCall} to verify both background and non-background
+ * logging calls.
  */
 public final class AdServicesErrorLogUtilWithExceptionVerifier
         extends AbstractLogVerifier<ErrorLogUtilCall> {
