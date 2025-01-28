@@ -80,8 +80,10 @@ import android.os.Process;
 import android.os.RemoteException;
 
 import androidx.room.Room;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.WebViewSupportUtil;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
@@ -107,6 +109,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
+import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
@@ -118,6 +121,7 @@ import com.google.common.collect.ImmutableMap;
 
 import org.json.JSONException;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -130,6 +134,7 @@ import java.util.concurrent.ExecutionException;
 @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED)
 @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION)
 @SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_IMPRESSION)
+@RequiresSdkLevelAtLeastT(reason = "test has requirements on WebView version.")
 public final class ImpressionReporterTest extends AdServicesExtendedMockitoTestCase {
     private static final long AD_SELECTION_ID = 100;
     private static final int LOGGING_TIMEOUT_MS = 5_000;
@@ -149,6 +154,11 @@ public final class ImpressionReporterTest extends AdServicesExtendedMockitoTestC
             "registerAdBeacon({\"key_a\": \"reporting_uri_a\", \"b\": \"reporting_uri_b\", \"c\":"
                     + " \"c\"});";
     private static final String VALID_REPORTING_URI = "https://test.com/uri";
+
+    @Rule(order = 11)
+    public final SupportedByConditionRule webViewSupportsJSSandbox =
+            WebViewSupportUtil.createJSSandboxAvailableRule(
+                    ApplicationProvider.getApplicationContext());
 
     @Mock private AdServicesHttpsClient mMockAdServicesHttpsClient;
     @Mock private AdServicesLogger mMockAdServicesLogger;
@@ -384,7 +394,6 @@ public final class ImpressionReporterTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastT(reason = "test has requirements on WebView version.")
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_INVALID_JSON_BUYER,
@@ -405,7 +414,6 @@ public final class ImpressionReporterTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastT(reason = "test has requirements on WebView version.")
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_ERROR_FETCHING_BUYER_SCRIPT_FROM_URI,
@@ -432,7 +440,6 @@ public final class ImpressionReporterTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastT(reason = "test has requirements on WebView version.")
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_INVALID_SELLER_REPORTING_URI,
@@ -452,7 +459,6 @@ public final class ImpressionReporterTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastT(reason = "test has requirements on WebView version.")
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_HTTP_GET_REPORTING_URL_FAILED,
@@ -473,7 +479,6 @@ public final class ImpressionReporterTest extends AdServicesExtendedMockitoTestC
     }
 
     @Test
-    @RequiresSdkLevelAtLeastT(reason = "test has requirements on WebView version.")
     @SetFlagTrue(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
     @SetIntegerFlag(
             name = KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B,
