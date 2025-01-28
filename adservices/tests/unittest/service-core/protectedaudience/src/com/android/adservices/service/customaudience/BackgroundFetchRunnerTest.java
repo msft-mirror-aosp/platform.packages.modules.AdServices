@@ -88,7 +88,6 @@ import java.util.concurrent.TimeUnit;
 @SetFlagEnabled(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
 // TODO (b/384952360): refine CEL related verifications later
 @SkipLoggingUsageRule(reason = "b/384952360")
-@SuppressWarnings("DoNotMockErrorLogUtilBehavior") // TODO(b/384952360)
 public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTestCase {
 
     private final String mFetchPath = "/fetch";
@@ -107,9 +106,6 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
 
     @Before
     public void setup() {
-        // TODO (b/384952360): Delete doNothingOnErrorLogUtilError when all CEL logs in this test
-        // are captured properly.
-        doNothingOnErrorLogUtilError();
         mocker.mockGetFlags(mFakeFlags);
         when(mCustomAudienceLoggerFactoryMock.getUpdateCustomAudienceExecutionLogger())
                 .thenReturn(mUpdateCustomAudienceExecutionLoggerMock);

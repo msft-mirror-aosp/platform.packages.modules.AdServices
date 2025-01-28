@@ -279,7 +279,6 @@ import java.util.stream.Collectors;
 @MockStatic(FlagsFactory.class)
 // TODO (b/384952360): refine CEL related verifications later
 @SkipLoggingUsageRule(reason = "b/384952360")
-@SuppressWarnings("DoNotMockErrorLogUtilBehavior") // TODO(b/384952360)
 public final class AuctionServerIntegrationTest extends AdServicesExtendedMockitoTestCase {
     private static final int COUNTDOWN_LATCH_LIMIT_SECONDS = 10;
     private static final int CALLER_UID = Process.myUid();
@@ -407,10 +406,6 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
 
     @Before
     public void setUp() {
-        // TODO (b/384952360): Delete doNothingOnErrorLogUtilError when all CEL logs in this test
-        // are captured properly.
-        doNothingOnErrorLogUtilError();
-
         // NOTE: not using annotation to set string flags below because the constants are private
         flags.setFlag(KEY_FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST, COORDINATOR_ALLOWLIST);
         flags.setFlag(KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI, DEFAULT_FETCH_URI);

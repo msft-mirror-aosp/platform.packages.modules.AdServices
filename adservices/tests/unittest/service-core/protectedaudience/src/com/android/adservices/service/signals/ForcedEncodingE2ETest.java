@@ -25,8 +25,6 @@ import static com.android.adservices.service.signals.SignalsFixture.intToBytes;
 import static com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler.ACTION_REGISTER_ENCODER_LOGIC_COMPLETE;
 import static com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler.FORCED_ENCODING_COMPLETED_ENCODING_ATTEMPTED;
 import static com.android.adservices.service.signals.updateprocessors.UpdateEncoderEventHandler.FORCED_ENCODING_COMPLETED_ENCODING_NOT_ATTEMPTED;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_EMPTY_RESPONSE_FROM_CLIENT_DOWNLOADING_ENCODER;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 
@@ -54,7 +52,6 @@ import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.WebViewSupportUtil;
-import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.signals.DBEncodedPayload;
@@ -123,7 +120,6 @@ import java.util.Map;
 @MockStatic(FlagsFactory.class)
 // TODO (b/384952360): refine CEL related verifications later
 @SkipLoggingUsageRule(reason = "b/384952360")
-@SuppressWarnings("DoNotMockErrorLogUtilBehavior") // TODO(b/384952360)
 public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCase {
     private static final int TIMEOUT_MS = 30_000;
     private static final boolean ISOLATE_CONSOLE_MESSAGE_IN_LOGS_ENABLED = true;
@@ -204,9 +200,6 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
     private ProtectedSignalsServiceImpl mService;
     @Before
     public void setup() {
-        // TODO (b/384952360): Delete doNothingOnErrorLogUtilError when all CEL logs in this test
-        // are captured properly.
-        doNothingOnErrorLogUtilError();
         mLegacyFakeFlags = new ForcedEncodingE2ETestFlags();
         mocker.mockGetFlags(mLegacyFakeFlags);
         mSignalsDao =
@@ -664,10 +657,6 @@ public final class ForcedEncodingE2ETest extends AdServicesExtendedMockitoTestCa
     }
 
     @Test
-    @ExpectErrorLogUtilCall(
-            errorCode =
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PAS_EMPTY_RESPONSE_FROM_CLIENT_DOWNLOADING_ENCODER,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
     public void test_noExistingEncodedPayload_downloadedEmptyEncoder_skipped() throws Exception {
         // Generate signals and encoders.
         Uri rawSignalsUri = mMockWebServerRule.uriForPath(SIGNALS_PATH);
