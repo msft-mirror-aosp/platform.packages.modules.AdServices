@@ -20,11 +20,14 @@ import static com.android.adservices.service.adselection.AuctionServerPayloadFor
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.META_INFO_LENGTH_BYTE;
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.getMetaInfoByte;
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.getNumOfPaddedZerosBytes;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_PARSING_RESPONSE_DATA_SIZE_GREATER_THAN_PAYLOAD_SIZE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
 
 import android.adservices.exceptions.UnsupportedPayloadSizeException;
 import android.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.internal.annotations.VisibleForTesting;
@@ -123,7 +126,14 @@ public class AuctionServerPayloadFormatterV0
 
         if (META_INFO_LENGTH_BYTE + DATA_SIZE_PADDING_LENGTH_BYTE + dataSize > payload.length) {
             sLogger.e(DATA_SIZE_MISMATCH);
-            throw new IllegalArgumentException(DATA_SIZE_MISMATCH);
+            IllegalArgumentException error = new IllegalArgumentException(DATA_SIZE_MISMATCH);
+            // Illegal argument exception is only thrown when encryption context is not found in the
+            // database.
+            ErrorLogUtil.e(
+                    error,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_PARSING_RESPONSE_DATA_SIZE_GREATER_THAN_PAYLOAD_SIZE,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
+            throw error;
         }
 
         // Extract the data
