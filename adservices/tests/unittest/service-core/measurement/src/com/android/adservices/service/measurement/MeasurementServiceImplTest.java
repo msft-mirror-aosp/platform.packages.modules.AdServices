@@ -37,6 +37,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REGISTER_TRIGGER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_SOURCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REGISTER_WEB_TRIGGER;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -77,7 +78,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Binder;
-import android.os.RemoteException;
 import android.os.SystemClock;
 
 import androidx.test.filters.SmallTest;
@@ -110,7 +110,7 @@ import com.android.adservices.service.measurement.reporting.EventReportingJobSer
 import com.android.adservices.service.measurement.reporting.VerboseDebugReportingFallbackJobService;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
-import com.android.adservices.shared.testing.concurrency.SimpleSyncCallback;
+import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.compatibility.common.util.TestUtils;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -252,22 +252,12 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testSchedulePeriodicJobs_success() throws Exception {
-        SimpleSyncCallback callback = new SimpleSyncCallback();
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
         mockJobSchedulers();
         mMeasurementServiceImpl = createServiceWithMocks();
-        mMeasurementServiceImpl.schedulePeriodicJobs(
-                new IMeasurementCallback.Stub() {
-                    @Override
-                    public void onResult() throws RemoteException {
-                        callback.setCalled();
-                    }
-
-                    @Override
-                    public void onFailure(MeasurementErrorResponse responseParcel)
-                            throws RemoteException {}
-                });
-        callback.assertCalled();
+        SyncSchedulePeriodicJobsCallback callback = new SyncSchedulePeriodicJobsCallback();
+        mMeasurementServiceImpl.schedulePeriodicJobs(callback);
+        callback.assertResultReceived();
         assertJobsScheduled();
     }
 
@@ -2192,37 +2182,31 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
     }
 
     private void mockJobSchedulers() {
-        ExtendedMockito.doNothing()
-                .when(() -> AggregateReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
-        ExtendedMockito.doNothing()
+        doNothing().when(() -> AggregateReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doNothing()
                 .when(
                         () ->
                                 AggregateFallbackReportingJobService.scheduleIfNeeded(
                                         any(), anyBoolean()));
-        ExtendedMockito.doNothing()
-                .when(() -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()));
-        ExtendedMockito.doNothing()
-                .when(() -> AttributionFallbackJobService.scheduleIfNeeded(any(), anyBoolean()));
-        ExtendedMockito.doNothing()
-                .when(() -> EventReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
-        ExtendedMockito.doNothing()
+        doNothing().when(() -> AttributionJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doNothing().when(() -> AttributionFallbackJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doNothing().when(() -> EventReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doNothing()
                 .when(() -> EventFallbackReportingJobService.scheduleIfNeeded(any(), anyBoolean()));
-        ExtendedMockito.doNothing()
-                .when(() -> DeleteExpiredJobService.scheduleIfNeeded(any(), anyBoolean()));
-        ExtendedMockito.doNothing()
-                .when(() -> DeleteUninstalledJobService.scheduleIfNeeded(any(), anyBoolean()));
-        ExtendedMockito.doNothing().when(MddJob::scheduleAllMddJobs);
+        doNothing().when(() -> DeleteExpiredJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doNothing().when(() -> DeleteUninstalledJobService.scheduleIfNeeded(any(), anyBoolean()));
+        doNothing().when(MddJob::scheduleAllMddJobs);
         ExtendedMockito.doReturn(true)
                 .when(() -> EncryptionKeyJobService.scheduleIfNeeded(any(), anyBoolean()));
-        ExtendedMockito.doNothing()
+        doNothing()
                 .when(() -> AsyncRegistrationQueueJobService.scheduleIfNeeded(any(), anyBoolean()));
-        ExtendedMockito.doNothing().when(AsyncRegistrationFallbackJob::schedule);
-        ExtendedMockito.doNothing()
+        doNothing().when(AsyncRegistrationFallbackJob::schedule);
+        doNothing()
                 .when(
                         () ->
                                 VerboseDebugReportingFallbackJobService.scheduleIfNeeded(
                                         any(), anyBoolean()));
-        ExtendedMockito.doNothing()
+        doNothing()
                 .when(() -> DebugReportingFallbackJobService.scheduleIfNeeded(any(), anyBoolean()));
     }
 
@@ -2757,6 +2741,15 @@ public final class MeasurementServiceImplTest extends AdServicesExtendedMockitoT
         private AccessDenier deniedByPackageName() {
             mByPackageName = true;
             return this;
+        }
+    }
+
+    private static final class SyncSchedulePeriodicJobsCallback
+            extends FailableOnResultSyncCallback<Void, MeasurementErrorResponse>
+            implements IMeasurementCallback {
+        @Override
+        public void onResult() {
+            internalSetCalled("onResult()");
         }
     }
 }

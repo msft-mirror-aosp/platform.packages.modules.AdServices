@@ -15,7 +15,7 @@
  */
 package com.android.adservices.measurement;
 
-
+import android.annotation.Nullable;
 import android.app.Service;
 import android.content.Intent;
 import android.os.Build;
@@ -49,10 +49,12 @@ public class MeasurementService extends Service {
      * without this one, making the class uninstantiable. See: <a
      * href="https://docs.oracle.com/javase/specs/jls/se22/html/jls-8.html#jls-8.8.10">...</a>
      */
-    public MeasurementService() {}
+    public MeasurementService() {
+        this(null);
+    }
 
     @VisibleForTesting
-    MeasurementService(MeasurementServiceImpl measurementService) {
+    MeasurementService(@Nullable MeasurementServiceImpl measurementService) {
         mMeasurementService = measurementService;
     }
 
