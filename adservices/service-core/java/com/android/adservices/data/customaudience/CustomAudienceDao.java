@@ -16,8 +16,10 @@
 
 package com.android.adservices.data.customaudience;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_DAO_FAILED_DUE_TO_PENDING_SCHEDULE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_DAO_QUARANTINE_TABLE_MAX_REACHED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE;
@@ -849,12 +851,18 @@ public abstract class CustomAudienceDao {
             } else {
                 statsBuilder.setExistingUpdateStatus(
                         SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE);
-                throw new PersistScheduleCAUpdateException(
-                        String.format(
-                                Locale.ENGLISH,
-                                "Failed to persist scheduled update due to %d existing pending"
-                                        + " update(s)",
-                                pendingUpdates));
+                PersistScheduleCAUpdateException exception =
+                        new PersistScheduleCAUpdateException(
+                                String.format(
+                                        Locale.ENGLISH,
+                                        "Failed to persist scheduled update due to %d existing"
+                                                + " pending update(s)",
+                                        pendingUpdates));
+                ErrorLogUtil.e(
+                        exception,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_DAO_FAILED_DUE_TO_PENDING_SCHEDULE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE);
+                throw exception;
             }
         } else {
             statsBuilder.setExistingUpdateStatus(
