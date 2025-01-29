@@ -17,14 +17,28 @@
 package com.android.adservices.service.adselection;
 
 import static com.android.adservices.service.adselection.AuctionServerDataCompressorFactory.NO_IMPLEMENTATION_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_PARSING_RESPONSE_DATA_COMPRESSION_NOT_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
+
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.service.FlagsFactory;
+import com.android.modules.utils.testing.ExtendedMockitoRule;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.function.ThrowingRunnable;
 
-public class AuctionServerDataCompressorFactoryTest {
+@ExtendedMockitoRule.MockStatic(FlagsFactory.class)
+public class AuctionServerDataCompressorFactoryTest extends AdServicesExtendedMockitoTestCase {
     private static final int VALID_VERSION = AuctionServerDataCompressorGzip.VERSION;
     private static final int INVALID_VERSION = Integer.MAX_VALUE;
+
+    @Before
+    public void setup() {
+        mocker.mockGetFlags(mFakeFlags);
+    }
 
     @Test
     public void testFactory_validVersion_returnImplementationSuccess() {
@@ -34,6 +48,11 @@ public class AuctionServerDataCompressorFactoryTest {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_PARSING_RESPONSE_DATA_COMPRESSION_NOT_FOUND,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE,
+            throwable = IllegalArgumentException.class)
     public void testFactory_invalidVersion_throwsExceptionFailure() {
         ThrowingRunnable runnable =
                 () -> AuctionServerDataCompressorFactory.getDataCompressor(INVALID_VERSION);

@@ -16,6 +16,9 @@
 
 package com.android.adservices.service.adselection.encryption;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_CONTEXT_NOT_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
+
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
@@ -25,6 +28,8 @@ import android.adservices.common.CommonFixture;
 import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.DBEncryptionContext;
 import com.android.adservices.data.adselection.EncryptionContextDao;
@@ -32,6 +37,8 @@ import com.android.adservices.data.adselection.EncryptionKeyConstants;
 import com.android.adservices.ohttp.EncapsulatedSharedSecret;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.ohttp.ObliviousHttpRequestContext;
+import com.android.adservices.service.FlagsFactory;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.io.BaseEncoding;
 
@@ -41,7 +48,8 @@ import org.junit.Test;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 
-public class ObliviousHttpRequestContextMarshallerTest {
+@MockStatic(FlagsFactory.class)
+public class ObliviousHttpRequestContextMarshallerTest extends AdServicesExtendedMockitoTestCase {
 
     private static final long CONTEXT_ID_1 = 1L;
     private static final long CONTEXT_ID_2 = 2L;
@@ -73,6 +81,7 @@ public class ObliviousHttpRequestContextMarshallerTest {
 
     @Before
     public void setUp() {
+        mocker.mockGetFlags(mFakeFlags);
         mEncryptionContextDao =
                 Room.inMemoryDatabaseBuilder(
                                 ApplicationProvider.getApplicationContext(),
@@ -157,6 +166,10 @@ public class ObliviousHttpRequestContextMarshallerTest {
 
     /** Test to verify that a getContext call where context Id is absent throws an IAE. */
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_CONTEXT_NOT_FOUND,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT)
     public void test_getContext_contextMissing_throwsIAE() throws Exception {
         assertThat(
                         mEncryptionContextDao.getEncryptionContext(

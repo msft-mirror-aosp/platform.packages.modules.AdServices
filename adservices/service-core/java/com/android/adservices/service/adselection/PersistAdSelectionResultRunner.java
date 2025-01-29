@@ -565,9 +565,6 @@ public class PersistAdSelectionResultRunner {
                 .build();
     }
 
-    private void validateAuctionResult(AuctionResult auctionResult) {
-        mAuctionResultValidator.validate(auctionResult);
-    }
 
     @Nullable
     private AuctionResult handleTimeoutError(TimeoutException e) {

@@ -19,25 +19,38 @@ package com.android.adservices.service.adselection;
 import static android.adservices.adselection.SellerConfigurationFixture.SELLER_CONFIGURATION;
 
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormatterFactory.NO_IMPLEMENTATION_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_PARSING_RESPONSE_DATA_COMPRESSION_NOT_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
 
 import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
-public class AuctionServerPayloadFormatterFactoryTest {
+@MockStatic(FlagsFactory.class)
+public class AuctionServerPayloadFormatterFactoryTest extends AdServicesExtendedMockitoTestCase {
     private static final int V0_VERSION = AuctionServerPayloadFormatterV0.VERSION;
     private static final int V1_VERSION = AuctionServerPayloadFormatterExcessiveMaxSize.VERSION;
     private static final int V2_VERSION = AuctionServerPayloadFormatterExactSize.VERSION;
     private static final int INVALID_VERSION = Integer.MAX_VALUE;
 
     @Mock private AdServicesLogger mAdServicesLoggerMock;
+
+    @Before
+    public void setup() {
+        mocker.mockGetFlags(mFakeFlags);
+    }
 
     @Test
     public void testCreateFormatter_validVersion_returnImplementationSuccess() {
@@ -121,6 +134,11 @@ public class AuctionServerPayloadFormatterFactoryTest {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_PARSING_RESPONSE_DATA_COMPRESSION_NOT_FOUND,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT,
+            throwable = IllegalArgumentException.class)
     public void testCreateExtractor_invalidVersion_throwsExceptionFailure() {
         assertThrows(
                 String.format(

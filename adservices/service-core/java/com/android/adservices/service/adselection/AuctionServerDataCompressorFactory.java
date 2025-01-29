@@ -16,7 +16,11 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_PARSING_RESPONSE_DATA_COMPRESSION_NOT_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
+
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 /** Factory for {@link AuctionServerDataCompressor} */
@@ -34,7 +38,12 @@ public class AuctionServerDataCompressorFactory {
         }
 
         String errMsg = String.format(NO_IMPLEMENTATION_FOUND, version);
-        sLogger.e(errMsg);
-        throw new IllegalArgumentException(errMsg);
+        IllegalArgumentException exception = new IllegalArgumentException(errMsg);
+        sLogger.e(exception, errMsg);
+        ErrorLogUtil.e(
+                exception,
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_PARSING_RESPONSE_DATA_COMPRESSION_NOT_FOUND,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
+        throw exception;
     }
 }

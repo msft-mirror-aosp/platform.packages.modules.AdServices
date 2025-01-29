@@ -21,7 +21,11 @@ import static com.android.adservices.shared.testing.Logger.LogLevel.INFO;
 import static com.android.adservices.shared.testing.Logger.LogLevel.VERBOSE;
 import static com.android.adservices.shared.testing.Logger.LogLevel.WARNING;
 import static com.android.adservices.shared.testing.Logger.LogLevel.WTF;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 
 import android.util.Log;
 
@@ -45,6 +49,8 @@ public final class DeviceSideDynamicLoggerTest extends SharedExtendedMockitoTest
 
     @Test
     public void testWtf() {
+        // Log.wtf() with some Android Configurations will trigger a process to terminate.
+        doReturn(0).when(() -> Log.wtf(anyString(), anyString()));
         mLogger.log(WTF, mTag, "%s %s", "message", "in a bottle");
 
         verify(() -> Log.wtf(mTag, "message in a bottle"));
@@ -52,6 +58,8 @@ public final class DeviceSideDynamicLoggerTest extends SharedExtendedMockitoTest
 
     @Test
     public void testWtf_withThrowable() {
+        // Log.wtf() with some Android Configurations will trigger a process to terminate.
+        doReturn(0).when(() -> Log.wtf(anyString(), anyString(), any()));
         mLogger.log(WTF, mTag, mThrowable, "%s %s", "message", "in a bottle");
 
         verify(() -> Log.wtf(mTag, "message in a bottle", mThrowable));

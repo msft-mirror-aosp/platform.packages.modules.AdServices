@@ -23,6 +23,7 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_ENCRYPTION_IO_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_ENCRYPTION_UNSUPPORTED_HPKE_ALGORITHM_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
 
 import android.net.Uri;
 
@@ -109,19 +110,19 @@ public class ObliviousHttpEncryptorImpl implements ObliviousHttpEncryptor {
                 ErrorLogUtil.e(
                         e,
                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_DECRYPTION_INVALID_KEY_SPEC_EXCEPTION,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             }
             if (e instanceof UnsupportedHpkeAlgorithmException) {
                 ErrorLogUtil.e(
                         e,
                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_DECRYPTION_UNSUPPORTED_HPKE_ALGORITHM_EXCEPTION,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             }
             if (e instanceof IOException) {
                 ErrorLogUtil.e(
                         e,
                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_DECRYPTION_IO_EXCEPTION,
-                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             }
             throw new RuntimeException(e);
         }

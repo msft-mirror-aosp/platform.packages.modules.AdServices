@@ -214,12 +214,12 @@
     <string name="settingsUI_main_view_apps_info" msgid="3093099990301760086">"As aplicacións que usas tamén poden determinar o que che gusta en función de como as usas."</string>
     <string name="settingsU_main_view_measurement_info" msgid="7231616293146266690">"As aplicacións que usas poden solicitarlle a Android información que lles axude a medir o rendemento dos seus anuncios. Android permite que as aplicacións recompilen tipos de datos limitados."</string>
     <string name="settingsU_main_view_learn_more" msgid="1510918572255886819">"Obtén máis información sobre a "<a href="https://support.google.com/android?p=ad_privacy">"privacidade nos anuncios en Android"</a></string>
-    <string name="settingsUI_topics_subtitle" msgid="6972706530860751586">"Opción activada (<xliff:g id="TOPICS_COUNT">%1$d</xliff:g> temas)"</string>
-    <string name="settingsUI_topics_subtitle_plural" msgid="7938363290536769313">"{count,plural, =1{Opción activada (# tema)}other{Opción activada (# temas)}}"</string>
-    <string name="settingsUI_apps_subtitle" msgid="5488403228775310943">"Opción activada (<xliff:g id="APPS_COUNT">%1$d</xliff:g> aplicacións)"</string>
-    <string name="settingsUI_apps_subtitle_plural" msgid="7184167843623106783">"{count,plural, =1{Opción activada (# aplicación)}other{Opción activada (# aplicacións)}}"</string>
+    <string name="settingsUI_topics_subtitle" msgid="6972706530860751586">"Activado / <xliff:g id="TOPICS_COUNT">%1$d</xliff:g> temas"</string>
+    <string name="settingsUI_topics_subtitle_plural" msgid="7938363290536769313">"{count,plural, =1{Activado / # tema}other{Activado / # temas}}"</string>
+    <string name="settingsUI_apps_subtitle" msgid="5488403228775310943">"Activado / <xliff:g id="APPS_COUNT">%1$d</xliff:g> aplicacións"</string>
+    <string name="settingsUI_apps_subtitle_plural" msgid="7184167843623106783">"{count,plural, =1{Activado / # aplicación}other{Activado / # aplicacións}}"</string>
     <string name="settingsUI_subtitle_consent_on" msgid="4526152882066971753">"Activado"</string>
-    <string name="settingsUI_subtitle_consent_off" msgid="3699617207496648034">"Opción desactivada"</string>
+    <string name="settingsUI_subtitle_consent_off" msgid="3699617207496648034">"Desactivado"</string>
     <string name="settingsUI_topics_view_ga_subtitle" msgid="4448883758817660143">"Para mostrarche anuncios personalizados, as aplicacións utilizan os temas que che interesan, que se determinan a partir das que usases recentemente.\n\nPodes bloquear os temas que non queiras que se compartan coas aplicacións. Android tamén elimina os temas de xeito automático e periódico.\n\nAínda que esta función se pode activar, é posible que non vexas ningunha lista de temas ata que a función estea totalmente dispoñible e as aplicacións empecen a usala."</string>
     <string name="settingsUI_topics_switch_title" msgid="6138535622464144001">"Permitir temas de anuncios"</string>
     <string name="settingsUI_blocked_topics_ga_title" msgid="1855691597262481021">"Temas de anuncios bloqueados"</string>

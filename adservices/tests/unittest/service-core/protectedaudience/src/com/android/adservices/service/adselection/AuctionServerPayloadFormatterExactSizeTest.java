@@ -22,6 +22,8 @@ import static com.android.adservices.service.adselection.AuctionServerPayloadFor
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.DATA_SIZE_PADDING_LENGTH_BYTE;
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.META_INFO_LENGTH_BYTE;
 import static com.android.adservices.service.adselection.AuctionServerPayloadFormattingUtil.getMetaInfoByte;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_PARSING_RESPONSE_DATA_SIZE_GREATER_THAN_PAYLOAD_SIZE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -31,7 +33,11 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.exceptions.UnsupportedPayloadSizeException;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.service.FlagsFactory;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -40,7 +46,9 @@ import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Arrays;
 
-public final class AuctionServerPayloadFormatterExactSizeTest extends AdServicesUnitTestCase {
+@MockStatic(FlagsFactory.class)
+public final class AuctionServerPayloadFormatterExactSizeTest extends
+        AdServicesExtendedMockitoTestCase {
     private static final int VALID_COMPRESSOR_VERSION = 0;
     private static final byte EXPECTED_META_INFO_BYTE = 64;
     private static final int DATA_START = META_INFO_LENGTH_BYTE + DATA_SIZE_PADDING_LENGTH_BYTE;
@@ -57,6 +65,7 @@ public final class AuctionServerPayloadFormatterExactSizeTest extends AdServices
 
     @Before
     public void setup() {
+        mocker.mockGetFlags(mFakeFlags);
         mAuctionServerPayloadFormatterExactSize =
                 new AuctionServerPayloadFormatterExactSize(TARGET_SIZE_KB);
     }
@@ -126,6 +135,7 @@ public final class AuctionServerPayloadFormatterExactSizeTest extends AdServices
                                         + DATA_SIZE_PADDING_LENGTH_BYTE)
                                 / BYTES_CONVERSION_FACTOR);
     }
+
 
     @Test
     public void testExtractDataSizeMismatch_throwsISE() {
