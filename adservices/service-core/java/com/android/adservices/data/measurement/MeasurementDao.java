@@ -3704,6 +3704,30 @@ class MeasurementDao implements IMeasurementDao {
         return registrations;
     }
 
+    /** Fetch all Event Reports */
+    @Override
+    public List<EventReport> fetchAllEventReports() throws DatastoreException {
+        List<EventReport> reports = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                EventReportContract.TABLE,
+                                /* columns= */ null,
+                                /* selection= */ null,
+                                /* selectionArgs= */ null,
+                                /* groupBy= */ null,
+                                /* having= */ null,
+                                /* orderBy= */ EventReportContract.TRIGGER_TIME,
+                                /* limit= */ null)) {
+            while (cursor.moveToNext()) {
+                EventReport eventReport = SqliteObjectMapper.constructEventReportFromCursor(cursor);
+                reports.add(eventReport);
+            }
+        }
+        return reports;
+    }
+
     @Override
     public boolean existsActiveSourcesWithDestination(Uri attributionDestination, long eventTime)
             throws DatastoreException {

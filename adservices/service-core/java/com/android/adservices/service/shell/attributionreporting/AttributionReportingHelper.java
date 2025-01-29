@@ -16,8 +16,10 @@
 
 package com.android.adservices.service.shell.attributionreporting;
 
+import com.android.adservices.data.measurement.MeasurementTables.EventReportContract;
 import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
+import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 
@@ -33,6 +35,7 @@ public final class AttributionReportingHelper {
     private static final String ACTIVE = "active";
     private static final String IGNORED = "ignored";
     private static final String MARKED_TO_DELETE = "marked_to_delete";
+    private static final String RANDOMIZED = "randomized";
 
     private static final ImmutableMap<Integer, String> STATUS_MAP =
             ImmutableMap.of(
@@ -85,5 +88,21 @@ public final class AttributionReportingHelper {
         }
 
         return jsonObject;
+    }
+
+    static JSONObject eventReportToJson(EventReport eventReport) throws JSONException {
+        return new JSONObject()
+                .put(EventReportContract.STATUS, eventReport.getStatus())
+                .put(
+                        EventReportContract.ATTRIBUTION_DESTINATION,
+                        eventReport.getAttributionDestinations())
+                .put(EventReportContract.TRIGGER_TIME, eventReport.getTriggerTime())
+                .put(EventReportContract.REPORT_TIME, eventReport.getReportTime())
+                .put(EventReportContract.TRIGGER_PRIORITY, eventReport.getTriggerPriority())
+                .put(
+                        EventReportContract.RANDOMIZED_TRIGGER_RATE,
+                        eventReport.getRandomizedTriggerRate())
+                .put(RANDOMIZED, eventReport.isRandomized())
+                .put(EventReportContract.REGISTRATION_ORIGIN, eventReport.getRegistrationOrigin());
     }
 }

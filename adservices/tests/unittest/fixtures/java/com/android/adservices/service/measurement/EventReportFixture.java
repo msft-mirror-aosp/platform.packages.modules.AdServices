@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.measurement;
 
+import static com.android.adservices.service.measurement.EventReportFixture.ValidEventReportParams;
+
 import android.net.Uri;
 
 import com.android.adservices.common.WebUtil;
@@ -30,24 +32,40 @@ public final class EventReportFixture {
     public static EventReport.Builder getBaseEventReportBuild() {
         return new EventReport.Builder()
                 .setId(UUID.randomUUID().toString())
-                .setSourceEventId(new UnsignedLong(21L))
-                .setEnrollmentId("enrollment-id")
-                .setAttributionDestinations(List.of(Uri.parse("https://bar.test")))
+                .setSourceEventId(ValidEventReportParams.SOURCE_EVENT_ID)
+                .setEnrollmentId(ValidEventReportParams.ENROLLMENT_ID)
+                .setAttributionDestinations(ValidEventReportParams.ATTRIBUTION_DESTINATIONS)
                 .setTriggerTime(1000L)
-                .setTriggerDedupKey(new UnsignedLong(3L))
-                .setReportTime(2000L)
-                .setStatus(EventReport.Status.PENDING)
-                .setDebugReportStatus(EventReport.DebugReportStatus.PENDING)
-                .setSourceType(Source.SourceType.NAVIGATION)
-                .setSourceDebugKey(new UnsignedLong(237865L))
-                .setTriggerDebugKey(new UnsignedLong(928762L))
+                .setTriggerDedupKey(ValidEventReportParams.TRIGGER_DEDUP_KEY)
+                .setReportTime(ValidEventReportParams.REPORT_TIME)
+                .setStatus(ValidEventReportParams.STATUS)
+                .setDebugReportStatus(ValidEventReportParams.DEBUG_REPORT_STATUS)
+                .setSourceType(ValidEventReportParams.SOURCE_TYPE)
+                .setSourceDebugKey(ValidEventReportParams.SOURCE_DEBUG_KEY)
+                .setTriggerDebugKey(ValidEventReportParams.TRIGGER_DEBUG_KEY)
                 .setSourceId(UUID.randomUUID().toString())
                 .setTriggerId(UUID.randomUUID().toString())
-                .setRegistrationOrigin(WebUtil.validUri("https://subdomain.example.test"))
-                .setTriggerSummaryBucket("2,3");
+                .setRegistrationOrigin(ValidEventReportParams.REGISTRATION_ORIGIN)
+                .setTriggerSummaryBucket(ValidEventReportParams.TRIGGER_SUMMARY_BUCKET);
     }
 
     public static class ValidEventReportParams {
+        public static final UnsignedLong SOURCE_EVENT_ID = new UnsignedLong(21L);
+        public static final String ENROLLMENT_ID = "enrollment-id";
+        public static final List<Uri> ATTRIBUTION_DESTINATIONS =
+                List.of(Uri.parse("https://bar.test"));
         public static final long TRIGGER_TIME = 8640000000L;
+        public static final String SOURCE_ID = "source_id";
+        public static final String TRIGGER_ID = "trigger_id";
+        public static final UnsignedLong TRIGGER_DEDUP_KEY = new UnsignedLong(3L);
+        public static final long REPORT_TIME = 2000L;
+        public static final int STATUS = EventReport.Status.PENDING;
+        public static final int DEBUG_REPORT_STATUS = EventReport.DebugReportStatus.PENDING;
+        public static final Source.SourceType SOURCE_TYPE = Source.SourceType.NAVIGATION;
+        public static final UnsignedLong SOURCE_DEBUG_KEY = new UnsignedLong(237865L);
+        public static final UnsignedLong TRIGGER_DEBUG_KEY = new UnsignedLong(928762L);
+        public static final Uri REGISTRATION_ORIGIN =
+                WebUtil.validUri("https://subdomain.example.test");
+        public static final String TRIGGER_SUMMARY_BUCKET = "2,3";
     }
 }
