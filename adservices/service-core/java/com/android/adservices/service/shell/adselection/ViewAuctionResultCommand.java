@@ -28,6 +28,8 @@ import android.util.Base64;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.shell.AbstractShellCommand;
 import com.android.adservices.service.shell.ShellCommandArgParserHelper;
@@ -37,6 +39,7 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.collect.ImmutableMap;
 
+import java.util.List;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -46,6 +49,9 @@ public class ViewAuctionResultCommand extends AbstractShellCommand {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
 
     @VisibleForTesting public static final String CMD = "view-auction-result";
+    // Not interested in the on-device auction flow for this command, only the
+    // server-side auction.
+    private static final boolean USE_UNIFIED_TABLE = true;
 
     @VisibleForTesting
     public static final String HELP =
@@ -77,26 +83,47 @@ public class ViewAuctionResultCommand extends AbstractShellCommand {
         try {
             adSelectionId = Long.parseLong(cliArgs.get(AD_SELECTION_ID));
         } catch (NumberFormatException exception) {
-            sLogger.e(exception, "could not parse ad selection ID to number");
+            sLogger.e(
+                    exception,
+                    String.format(
+                            "could not parse ad selection ID to number, args: %s",
+                            cliArgs.toString()));
             err.write("--ad-selection-id should be a number");
             return invalidArgsError(HELP, err, COMMAND_AD_SELECTION_VIEW_AUCTION_RESULT, args);
         }
 
-        if (!mAdSelectionEntryDao.doesAdSelectionIdExist(adSelectionId)) {
+        if (!mAdSelectionEntryDao.doesAdSelectionIdExistUponFlag(
+                adSelectionId, USE_UNIFIED_TABLE)) {
             sLogger.v("no auction result found for ad selection id: %s", adSelectionId);
             err.write("no auction result found for ad selection id: " + adSelectionId);
-            return invalidArgsError(HELP, err, COMMAND_AD_SELECTION_VIEW_AUCTION_RESULT, args);
+            return toShellCommandResult(
+                    ShellCommandStats.RESULT_GENERIC_ERROR,
+                    COMMAND_AD_SELECTION_VIEW_AUCTION_RESULT);
         }
 
         try {
+            List<AdSelectionResultBidAndUri> adSelectionResultBidAndUri =
+                    mAdSelectionEntryDao.getWinningBidAndUriForIdsUnifiedTables(
+                            List.of(adSelectionId));
+            if (adSelectionResultBidAndUri.isEmpty()) {
+                sLogger.v("no bid result found for ad selection id: %s", adSelectionId);
+                err.write("no bid result found for ad selection id: " + adSelectionId);
+                return toShellCommandResult(
+                        ShellCommandStats.RESULT_GENERIC_ERROR,
+                        COMMAND_AD_SELECTION_VIEW_AUCTION_RESULT);
+            }
+
             AuctionResult result =
-                    AdSelectionEntryHelper.getAuctionResultFromAdSelectionEntry(
-                            mAdSelectionEntryDao.getAdSelectionEntityById(adSelectionId),
+                    AdSelectionEntryHelper.createAuctionResultFromAdSelectionData(
+                            adSelectionResultBidAndUri.get(0),
+                            mAdSelectionEntryDao.getWinningBuyerForIdUnifiedTables(adSelectionId),
+                            mAdSelectionEntryDao.getWinningCustomAudienceDataForId(adSelectionId),
                             mAdSelectionEntryDao.getReportingUris(adSelectionId),
                             mAdSelectionEntryDao.listRegisteredAdInteractions(
                                     adSelectionId, FLAG_REPORTING_DESTINATION_BUYER),
                             mAdSelectionEntryDao.listRegisteredAdInteractions(
                                     adSelectionId, FLAG_REPORTING_DESTINATION_SELLER));
+            sLogger.v("auction result: %s", result);
             out.printf(
                     new JSONObject()
                             .put(
