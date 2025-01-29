@@ -16,51 +16,67 @@
 
 package android.adservices.debuggablects;
 
+import static com.android.adservices.spe.AdServicesJobInfo.PERIODIC_SIGNALS_ENCODING_JOB;
 import static com.android.adservices.service.CommonDebugFlagsConstants.KEY_ADSERVICES_SHELL_COMMAND_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_AD_SELECTION_CLI_ENABLED;
 import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH;
 import static com.android.adservices.service.shell.adselection.AdSelectionShellCommandConstants.OUTPUT_PROTO_FIELD_NAME;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import android.adservices.adselection.GetAdSelectionDataOutcome;
+import android.adservices.clients.signals.ProtectedSignalsClient;
+import android.adservices.signals.UpdateSignalsRequest;
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.AdSelectionOutcome;
+import android.adservices.common.AdTechIdentifier;
+import android.adservices.adselection.GetAdSelectionDataRequest;
+import android.adservices.adselection.GetAdSelectionDataResponse;
+import android.adservices.adselection.PersistAdSelectionResultRequest;
+import android.adservices.clients.adselection.AdSelectionClient;
 import android.adservices.common.CommonFixture;
+import android.adservices.signals.UpdateSignalsRequest;
 import android.adservices.utils.DevContextUtils;
 import android.adservices.utils.ScenarioDispatcher;
 import android.adservices.utils.ScenarioDispatcherFactory;
+import android.net.Uri;
 import android.util.Base64;
 
 import com.android.adservices.common.AdServicesShellCommandHelper;
+import com.android.adservices.common.AdservicesTestHelper;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.EnableDebugFlag;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.shell.CommandResult;
+import android.adservices.utils.MockWebServerRule;
 
+import java.nio.charset.StandardCharsets;
 import org.json.JSONObject;
+import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 @SetFlagEnabled(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
 @SetFlagEnabled(KEY_PROTECTED_SIGNALS_ENABLED)
+@SetFlagDisabled(KEY_FLEDGE_AUCTION_SERVER_KILL_SWITCH)
 @EnableDebugFlag(KEY_ADSERVICES_SHELL_COMMAND_ENABLED)
 @EnableDebugFlag(KEY_AD_SELECTION_CLI_ENABLED)
 @EnableDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE)
 public class ViewAuctionResultCommandTest extends FledgeDebuggableScenarioTest {
-    private static final String STATUS_FINISHED = "FINISHED";
-
-    @Rule(order = 11)
-    public final SupportedByConditionRule devOptionsEnabled =
-            DevContextUtils.createDevOptionsAvailableRule(mContext, LOGCAT_TAG_FLEDGE);
-
     private final AdServicesShellCommandHelper mShellCommandHelper =
             new AdServicesShellCommandHelper();
 
     @Test
-    public void testRun_withJoinCustomAudienceAndAuction_happyPath() throws Exception {
+    public void testRun_onDeviceAuction_returnsFailure() throws Exception {
         ScenarioDispatcher dispatcher =
                 setupDispatcher(
                         ScenarioDispatcherFactory.createFromScenarioFileWithRandomPrefix(
@@ -77,41 +93,14 @@ public class ViewAuctionResultCommandTest extends FledgeDebuggableScenarioTest {
                             "ad-selection view-auction-result --ad-selection-id %s",
                             Long.toString(result.getAdSelectionId()));
             assertThat(result.hasOutcome()).isTrue();
+            assertThat(output.getOut()).isEmpty();
+            assertThat(output.getErr())
+                    .isEqualTo(
+                            String.format(
+                                    "no auction result found for ad selection id: %s",
+                                    result.getAdSelectionId()));
         } finally {
             leaveCustomAudience(mCustomAudienceClient, SHIRTS_CA);
         }
-
-        assertThat(output.getCommandStatus()).isEqualTo(STATUS_FINISHED);
-        assertThat(output.getErr()).isEmpty();
-        AuctionResult actual =
-                AuctionResult.parseFrom(
-                        Base64.decode(
-                                new JSONObject(output.getOut()).getString(OUTPUT_PROTO_FIELD_NAME),
-                                Base64.DEFAULT));
-        assertThat(actual.getIsChaff()).isFalse();
-        assertThat(actual.getBid()).isEqualTo(5.0f);
-        assertThat(actual.getCustomAudienceOwner()).isEqualTo(CommonFixture.TEST_PACKAGE_NAME);
-        assertThat(actual.getCustomAudienceName()).isEqualTo(SHIRTS_CA);
-        assertThat(actual.getAdRenderUrl())
-                .isEqualTo(
-                        dispatcher.getBaseAddressWithPrefix().toString()
-                                + "/render/"
-                                + SHIRTS_CA
-                                + "/0");
-        assertThat(actual.getWinReportingUrls().getBuyerReportingUrls().getReportingUrl())
-                .isEmpty();
-        assertThat(actual.getWinReportingUrls().getTopLevelSellerReportingUrls().getReportingUrl())
-                .isEmpty();
-        assertThat(
-                        actual.getWinReportingUrls()
-                                .getTopLevelSellerReportingUrls()
-                                .getInteractionReportingUrls())
-                .isEmpty();
-        assertThat(
-                        actual.getWinReportingUrls()
-                                .getBuyerReportingUrls()
-                                .getInteractionReportingUrls())
-                .isEmpty();
-        assertThat(dispatcher.getVerifyCalledPaths()).isEqualTo(dispatcher.getCalledPaths());
     }
 }

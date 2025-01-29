@@ -26,7 +26,6 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.CommonFixture.getAlphaNumericString;
 import static android.adservices.common.KeyedFrequencyCapFixture.ONE_DAY_DURATION;
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
-
 import static com.android.adservices.common.DBAdDataFixture.getValidDbAdDataNoFiltersBuilder;
 import static com.android.adservices.data.adselection.EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
@@ -78,10 +77,8 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doThrow;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.when;
-
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
-
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -134,9 +131,8 @@ import android.net.Uri;
 import android.os.IBinder;
 import android.os.Process;
 import android.os.RemoteException;
-
+import android.util.Base64;
 import androidx.room.Room;
-
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DBAdDataFixture;
@@ -201,6 +197,9 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAuctionInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls.ReportingUrls;
+import com.android.adservices.service.shell.ShellCommandResult;
+import com.android.adservices.service.shell.adselection.AdSelectionShellCommandFactory;
+import com.android.adservices.service.shell.adselection.ViewAuctionResultCommand;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.AdServicesStatsLog;
@@ -215,7 +214,6 @@ import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.adservices.testutils.DevSessionHelper;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.BaseEncoding;
@@ -227,19 +225,10 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.RecordedRequest;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
-
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Assume;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.stubbing.Answer;
-
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -258,6 +247,17 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.json.JSONObject;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Assume;
+import org.junit.Before;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.function.ThrowingRunnable;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.stubbing.Answer;
 
 @SetFlagTrue(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
 @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_UPDATE_HISTOGRAM)
@@ -3215,6 +3215,103 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                         buyerInputs.get(WINNER_BUYER.toString()).getCustomAudiences(1).getName());
         List<String> expected = Arrays.asList(winnerBuyerCaOneName, winnerBuyerCaTwoName);
         assertTrue(expected.containsAll(actual));
+    }
+
+    @Test
+    @SetLongFlag(
+            name = KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS,
+            value = AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS)
+    @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED)
+    public void testGetAdSelectionData_shellCommand_success() throws Exception {
+        String privateKeyHex = "e7b292f49df28b8065992cdeadbc9d032a0e09e8476cb6d8d507212e7be3b9b4";
+        OhttpGatewayPrivateKey privKey =
+                OhttpGatewayPrivateKey.create(
+                        BaseEncoding.base16().lowerCase().decode(privateKeyHex));
+        AuctionEncryptionKeyFixture.AuctionKey auctionKey =
+                AuctionEncryptionKeyFixture.AuctionKey.builder()
+                        .setKeyId("400bed24-c62f-46e0-a1ad-211361ad771a")
+                        .setPublicKey("87ey8XZPXAd+/+ytKv2GFUWW5j9zdepSJ2G4gebDwyM=")
+                        .build();
+        AdServicesHttpClientResponse httpClientResponse =
+                AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponseWithGivenKey(auctionKey);
+        when(mMockHttpClient.fetchPayloadWithLogging(
+                        eq(Uri.parse(COORDINATOR_URL)),
+                        eq(DevContext.createForDevOptionsDisabled()),
+                        any(FetchProcessLogger.class)))
+                .thenReturn(Futures.immediateFuture(httpClientResponse));
+        mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(
+                                WINNER_BUYER,
+                                WINNING_CUSTOM_AUDIENCE_NAME,
+                                WINNING_CUSTOM_AUDIENCE_OWNER)
+                        .setAds(
+                                DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(
+                                        WINNER_BUYER))
+                        .build(),
+                Uri.EMPTY,
+                false);
+        AdSelectionService service =
+                getService(
+                        MultiCloudTestStrategyFactory.getEnabledTestStrategy(
+                                new ObliviousHttpEncryptorImpl(
+                                        new ProtectedServersEncryptionConfigManager(
+                                                mProtectedServersEncryptionConfigDao,
+                                                mFakeFlags,
+                                                mMockHttpClient,
+                                                mLightweightExecutorService,
+                                                mAdServicesLoggerMock),
+                                        mEncryptionContextDao,
+                                        mLightweightExecutorService),
+                                COORDINATOR_ALLOWLIST));
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .setCoordinatorOriginUri(Uri.parse(COORDINATOR_HOST))
+                        .build();
+
+        GetAdSelectionDataTestCallback callback = invokeGetAdSelectionData(service, input);
+        long adSelectionId = callback.mGetAdSelectionDataResponse.getAdSelectionId();
+        ProtectedAuctionInput protectedAuctionInput =
+                getProtectedAuctionInputFromCipherText(
+                        callback.mGetAdSelectionDataResponse.getAdSelectionData(), privKey);
+
+        // assert that we can decrypt server's response as well even when using non-default
+        // coordinator
+        byte[] encryptedServerResponse =
+                ObliviousHttpGateway.encrypt(
+                        privKey,
+                        callback.mGetAdSelectionDataResponse.getAdSelectionData(),
+                        prepareAuctionResultBytes());
+        PersistAdSelectionResultInput persistAdSelectionResultInput =
+                new PersistAdSelectionResultInput.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setSeller(SELLER)
+                        .setAdSelectionResult(encryptedServerResponse)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+        invokePersistAdSelectionResult(service, persistAdSelectionResultInput);
+        StringWriter stringWriter = new StringWriter();
+        PrintWriter out = new PrintWriter(stringWriter);
+        PrintWriter err =
+                new PrintWriter(new OutputStreamWriter(System.err, StandardCharsets.UTF_8));
+        ViewAuctionResultCommand command = new ViewAuctionResultCommand(mAdSelectionEntryDao);
+        ShellCommandResult result =
+                command.run(
+                        out,
+                        err,
+                        new String[] {
+                            AdSelectionShellCommandFactory.COMMAND_PREFIX,
+                            ViewAuctionResultCommand.CMD,
+                            "--ad-selection-id",
+                            Long.toString(adSelectionId)
+                        });
+        AuctionResult auctionResult =
+                AuctionResult.parseFrom(
+                        Base64.decode(
+                                new JSONObject(stringWriter.toString()).getString("output_proto"),
+                                Base64.DEFAULT));
+        Assert.assertEquals(WINNER_AD_RENDER_URI, Uri.parse(auctionResult.getAdRenderUrl()));
     }
 
     @Test
