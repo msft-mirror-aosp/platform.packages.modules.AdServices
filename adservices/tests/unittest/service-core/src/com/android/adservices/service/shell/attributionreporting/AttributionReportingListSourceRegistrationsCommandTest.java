@@ -59,13 +59,15 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
     private static final String EVENT_TIME = "event_time";
     private static final String EXPIRY_TIME = "expiry_time";
     private static final String DEBUG_KEY = "debug_key";
+    private static final String ATTRIBUTION_MODE = "attribution_mode";
     private static final String APP_DESTINATION = "app_destination";
     private static final String WEB_DESTINATION = "web_destination";
     private static final String ACTIVE = "active";
     private static final String IGNORED = "ignored";
     private static final String MARKED_TO_DELETE = "marked_to_delete";
     DatastoreManager mDatastoreManager = Mockito.mock(DatastoreManager.class);
-    @Mock private DevSessionDataStore mDevSessionDataStore;
+    @Mock
+    private DevSessionDataStore mDevSessionDataStore;
 
     public static List<Uri> multipleWebDestinations =
             List.of(Uri.parse("https://destination.test"), Uri.parse("https://destination2.test"));
@@ -300,7 +302,10 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
                         .setExpiryTime(jsonObject.getLong(EXPIRY_TIME))
                         .setDebugKey(new UnsignedLong(jsonObject.getLong(DEBUG_KEY)))
                         .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
-                        .setEnrollmentId(SourceFixture.ValidSourceParams.ENROLLMENT_ID);
+                        .setEnrollmentId(SourceFixture.ValidSourceParams.ENROLLMENT_ID)
+                        .setAttributionMode(
+                                getAttributionModeFromString(
+                                        jsonObject.getString(ATTRIBUTION_MODE)));
 
         if (jsonObject.has(APP_DESTINATION)) {
             List<Uri> fetchedAppDestinations =
@@ -336,6 +341,21 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
             return Source.Status.MARKED_TO_DELETE;
         } else {
             throw new IllegalArgumentException("Invalid status: " + statusString);
+        }
+    }
+
+    private static int getAttributionModeFromString(String attributionModeString) {
+        if (attributionModeString.equals("Attributable")) {
+            return Source.AttributionMode.TRUTHFULLY;
+        } else if (attributionModeString.equals("Unattributable: noised with fake reports")) {
+            return Source.AttributionMode.FALSELY;
+        } else if (attributionModeString.equals("Unattributable: noised with no reports")) {
+            return Source.AttributionMode.NEVER;
+        } else if (attributionModeString.equals("Unassigned")) {
+            return Source.AttributionMode.UNASSIGNED;
+        } else {
+            throw new IllegalArgumentException(
+                    "Invalid attribution mode: " + attributionModeString);
         }
     }
 }

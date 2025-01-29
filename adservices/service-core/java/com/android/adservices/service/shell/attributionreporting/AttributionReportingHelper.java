@@ -40,11 +40,18 @@ public final class AttributionReportingHelper {
     private static final String MARKED_TO_DELETE = "marked_to_delete";
     private static final String RANDOMIZED = "randomized";
 
-    private static final ImmutableMap<Integer, String> STATUS_MAP =
+    public static final ImmutableMap<Integer, String> STATUS_MAP =
             ImmutableMap.of(
                     Source.Status.ACTIVE, ACTIVE,
                     Source.Status.IGNORED, IGNORED,
                     Source.Status.MARKED_TO_DELETE, MARKED_TO_DELETE);
+
+    public static final ImmutableMap<Integer, String> ATTRIBUTION_MODE_MAP =
+            ImmutableMap.of(
+                    Source.AttributionMode.TRUTHFULLY, "Attributable",
+                    Source.AttributionMode.FALSELY, "Unattributable: noised with fake reports",
+                    Source.AttributionMode.NEVER, "Unattributable: noised with no reports",
+                    Source.AttributionMode.UNASSIGNED, "Unassigned");
 
     private AttributionReportingHelper() {
         throw new UnsupportedOperationException(
@@ -60,7 +67,9 @@ public final class AttributionReportingHelper {
                         .put(SourceContract.REGISTRANT, source.getRegistrant())
                         .put(SourceContract.EVENT_TIME, source.getEventTime())
                         .put(SourceContract.EXPIRY_TIME, source.getExpiryTime())
-                        .put(SourceContract.SOURCE_TYPE, source.getSourceType().getValue());
+                        .put(SourceContract.SOURCE_TYPE, source.getSourceType().getValue())
+                        .put(SourceContract.ATTRIBUTION_MODE,
+                                ATTRIBUTION_MODE_MAP.get(source.getAttributionMode()));
 
         if (source.getDebugKey() != null) {
             jsonObject.put(SourceContract.DEBUG_KEY, source.getDebugKey().toString());
