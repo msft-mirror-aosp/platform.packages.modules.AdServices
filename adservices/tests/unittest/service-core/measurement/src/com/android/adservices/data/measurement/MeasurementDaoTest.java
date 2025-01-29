@@ -13627,6 +13627,32 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         assertThat(fetchedAllAggregatableReports.get(1)).isEqualTo(aggregatableReport2);
     }
 
+    @Test
+    public void testFetchAllDebugReports_pass() {
+        DebugReport debugReport1 =
+                createDebugReport(/* id= */ "1", Uri.parse("android-app://debug1"), 1701206853050L);
+
+        DebugReport debugReport2 =
+                createDebugReport(/* id= */ "2", Uri.parse("android-app://debug2"), 1701206853050L);
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertDebugReport(debugReport1);
+                    dao.insertDebugReport(debugReport2);
+                });
+
+        List<DebugReport> fetchedAllDebugReports =
+                mDatastoreManager
+                        .runInTransactionWithResult(dao -> dao.fetchAllDebugReports())
+                        .orElseThrow();
+
+        assertThat(fetchedAllDebugReports).isNotNull();
+        assertThat(fetchedAllDebugReports.size()).isEqualTo(2);
+
+        assertThat(fetchedAllDebugReports.get(0)).isEqualTo(debugReport1);
+        assertThat(fetchedAllDebugReports.get(1)).isEqualTo(debugReport2);
+    }
+
     private Source getFirstSourceFromDb() {
         return mDatastoreManager
                 .runInTransactionWithResult(

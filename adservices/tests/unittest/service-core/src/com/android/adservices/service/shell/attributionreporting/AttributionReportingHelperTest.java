@@ -21,6 +21,7 @@ import com.android.adservices.data.measurement.MeasurementTables;
 import com.android.adservices.data.measurement.MeasurementTables.EventReportContract;
 import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
+import com.android.adservices.service.measurement.reporting.DebugReportFixture;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventReportFixture;
 import com.android.adservices.service.measurement.Source;
@@ -29,6 +30,7 @@ import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
+import com.android.adservices.service.measurement.reporting.DebugReport;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -184,5 +186,34 @@ public final class AttributionReportingHelperTest extends AdServicesUnitTestCase
         expect.withMessage("TRIGGER_CONTEXT_ID")
                 .that(jsonObject.getString(MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID))
                 .isEqualTo(aggregatableReport.getTriggerContextId());
+    }
+
+    @Test
+    public void testDebugReportToJson_happyPath() throws JSONException {
+        DebugReport debugReport =
+                new DebugReport.Builder()
+                        .setId("report1")
+                        .setType(DebugReportFixture.ValidDebugReportParams.TYPE)
+                        .setBody(DebugReportFixture.ValidDebugReportParams.BODY)
+                        .setEnrollmentId(DebugReportFixture.ValidDebugReportParams.ENROLLMENT_ID)
+                        .setRegistrationOrigin(
+                                DebugReportFixture.ValidDebugReportParams.REGISTRATION_ORIGIN)
+                        .setRegistrant(DebugReportFixture.ValidDebugReportParams.REGISTRANT)
+                        .setInsertionTime(DebugReportFixture.ValidDebugReportParams.INSERTION_TIME)
+                        .build();
+
+        JSONObject jsonObject = AttributionReportingHelper.debugReportToJson(debugReport);
+
+        expect.withMessage("INSERTION_TIME")
+                .that(jsonObject.getLong(MeasurementTables.DebugReportContract.INSERTION_TIME))
+                .isEqualTo(debugReport.getInsertionTime());
+        expect.withMessage("REGISTRATION_ORIGIN")
+                .that(
+                        jsonObject.getString(
+                                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN))
+                .isEqualTo(debugReport.getRegistrationOrigin().toString());
+        expect.withMessage("TYPE")
+                .that(jsonObject.getString(MeasurementTables.DebugReportContract.TYPE))
+                .isEqualTo(debugReport.getType());
     }
 }

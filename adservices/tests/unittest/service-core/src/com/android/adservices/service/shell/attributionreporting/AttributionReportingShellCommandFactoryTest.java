@@ -77,6 +77,13 @@ public final class AttributionReportingShellCommandFactoryTest extends AdService
     }
 
     @Test
+    public void testGetShellCommand_listDebugReportsCmd() {
+        ShellCommand shellCommand =
+                mFactory.getShellCommand(AttributionReportingListDebugReportsCommand.CMD);
+        assertThat(shellCommand).isInstanceOf(AttributionReportingListDebugReportsCommand.class);
+    }
+
+    @Test
     public void testGetShellCommand_nullCmd() {
         ShellCommand shellCommand = mFactory.getShellCommand(null);
         assertThat(shellCommand).isNull();
@@ -137,6 +144,18 @@ public final class AttributionReportingShellCommandFactoryTest extends AdService
     }
 
     @Test
+    public void testGetAttributionReportingListDebugReportsCommand_invalidCmd() {
+        mFactory =
+                new AttributionReportingShellCommandFactory(
+                        ATTRIBUTION_REPORTING_CLI_DISABLED,
+                        mDatastoreManager,
+                        mDevSessionDataStore);
+        ShellCommand shellCommand =
+                mFactory.getShellCommand(AttributionReportingListDebugReportsCommand.CMD);
+        assertThat(shellCommand).isInstanceOf(NoOpShellCommand.class);
+    }
+
+    @Test
     public void testGetShellCommand_invalidCmdCLIDisabled() {
         mFactory =
                 new AttributionReportingShellCommandFactory(
@@ -168,6 +187,7 @@ public final class AttributionReportingShellCommandFactoryTest extends AdService
                                 AttributionReportingListSourceRegistrationsCommand.HELP,
                                 AttributionReportingListTriggerRegistrationsCommand.HELP,
                                 AttributionReportingListEventReportsCommand.HELP,
-                                AttributionReportingListAggregatableReportsCommand.HELP));
+                                AttributionReportingListAggregatableReportsCommand.HELP,
+                                AttributionReportingListDebugReportsCommand.HELP));
     }
 }
