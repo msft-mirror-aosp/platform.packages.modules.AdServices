@@ -3832,6 +3832,7 @@ class MeasurementDao implements IMeasurementDao {
         return retryCount;
     }
 
+    @Deprecated
     @Override
     public long countDistinctDebugAdIdsUsedByEnrollment(@NonNull String enrollmentId)
             throws DatastoreException {
@@ -3843,6 +3844,27 @@ class MeasurementDao implements IMeasurementDao {
                     String.valueOf(EventSurfaceType.WEB),
                     enrollmentId,
                     String.valueOf(EventSurfaceType.WEB)
+                });
+    }
+
+    @Override
+    public long countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+            String enrollmentId, long startTime, long endTime, String excludedDebugAdId)
+            throws DatastoreException {
+        return DatabaseUtils.longForQuery(
+                mSQLTransaction.getDatabase(),
+                countDistinctDebugAdIdsUsedByEnrollmentQueryWithinWindow(),
+                new String[] {
+                    enrollmentId,
+                    String.valueOf(EventSurfaceType.WEB),
+                    String.valueOf(startTime),
+                    String.valueOf(endTime),
+                    excludedDebugAdId,
+                    enrollmentId,
+                    String.valueOf(EventSurfaceType.WEB),
+                    String.valueOf(startTime),
+                    String.valueOf(endTime),
+                    excludedDebugAdId
                 });
     }
 
@@ -4380,6 +4402,65 @@ class MeasurementDao implements IMeasurementDao {
                         + "AND "
                         + TriggerContract.DESTINATION_TYPE
                         + " = ?"
+                        + ")");
+    }
+
+    /**
+     * Given an enrollment id, return the number of unique debug ad id values present in sources and
+     * triggers with this enrollment within the provided time window limits.
+     */
+    private static String countDistinctDebugAdIdsUsedByEnrollmentQueryWithinWindow() {
+        return String.format(
+                Locale.ENGLISH,
+                "SELECT COUNT (DISTINCT "
+                        + SourceContract.DEBUG_AD_ID
+                        + ") "
+                        + "FROM ( "
+                        + "SELECT "
+                        + SourceContract.DEBUG_AD_ID
+                        + " FROM "
+                        + SourceContract.TABLE
+                        + " WHERE "
+                        + SourceContract.DEBUG_AD_ID
+                        + " IS NOT NULL "
+                        + "AND "
+                        + SourceContract.ENROLLMENT_ID
+                        + " = ? "
+                        + "AND "
+                        + SourceContract.PUBLISHER_TYPE
+                        + " = ? "
+                        + "AND "
+                        + SourceContract.EVENT_TIME
+                        + " >= ? "
+                        + "AND "
+                        + SourceContract.EVENT_TIME
+                        + " < ? "
+                        + "AND "
+                        + SourceContract.DEBUG_AD_ID
+                        + " != ? "
+                        + "UNION ALL "
+                        + "SELECT "
+                        + TriggerContract.DEBUG_AD_ID
+                        + " FROM "
+                        + TriggerContract.TABLE
+                        + " WHERE "
+                        + TriggerContract.DEBUG_AD_ID
+                        + " IS NOT NULL "
+                        + "AND "
+                        + TriggerContract.ENROLLMENT_ID
+                        + " = ? "
+                        + "AND "
+                        + TriggerContract.DESTINATION_TYPE
+                        + " = ? "
+                        + "AND "
+                        + TriggerContract.TRIGGER_TIME
+                        + " >= ? "
+                        + "AND "
+                        + TriggerContract.TRIGGER_TIME
+                        + " < ? "
+                        + "AND "
+                        + TriggerContract.DEBUG_AD_ID
+                        + " != ? "
                         + ")");
     }
 
