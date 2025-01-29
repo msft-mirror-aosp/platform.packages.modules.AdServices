@@ -56,7 +56,9 @@ public class AttributionReportingListAggregatableReportsCommand extends Abstract
                     + " "
                     + CMD
                     + " "
-                    + "\n List Aggregatable Reports";
+                    + "[--schema {partial[DEFAULT]|full}]"
+                    + " "
+                    + "\n List Aggregatable Reports. Default schema is 'partial'.";
 
     private final DatastoreManager mDatastoreManager;
     private final DevSessionDataStore mDevSessionDataStore;
@@ -81,23 +83,37 @@ public class AttributionReportingListAggregatableReportsCommand extends Abstract
                     COMMAND_ATTRIBUTION_REPORTING_LIST_AGGREGATABLE_REPORTS);
         }
 
+        String schema;
+        String output;
+        try {
+            schema = AttributionReportingArgParserHelper.parseAttributionReportingSchema(args);
+        } catch (IllegalArgumentException exception) {
+            output = "IllegalArgumentException while running list-aggregatable-reports command";
+            Log.e(TAG, output, exception);
+            out.print(output);
+            out.flush();
+            return invalidArgsError(
+                    HELP, err, COMMAND_ATTRIBUTION_REPORTING_LIST_AGGREGATABLE_REPORTS, args);
+        }
+
         try {
             ListenableFuture<Optional<List<AggregateReport>>> futureResult =
                     queryForListAggregatableReportsCommand();
             Optional<List<AggregateReport>> result = futureResult.get(TIMEOUT_SEC, SECONDS);
-            String output;
             if (result.isPresent()) {
-                output = createOutputJson(result).toString();
+                output = createOutputJson(result, schema).toString();
             } else {
-                output = "Error in retrieving aggregatable reports from database.";
+                output = "Error in retrieving aggregatable reports from database";
             }
             out.print(output);
             out.flush();
             return toShellCommandResult(
                     RESULT_SUCCESS, COMMAND_ATTRIBUTION_REPORTING_LIST_AGGREGATABLE_REPORTS);
         } catch (Exception e) {
-            Log.e(TAG, String.format("Failed to generate JSON: %s", e.getMessage()));
-
+            output = "Failed to generate JSON: " + e.getMessage();
+            Log.e(TAG, String.format(output));
+            out.print(output);
+            out.flush();
             return toShellCommandResult(
                     ShellCommandStats.RESULT_GENERIC_ERROR,
                     COMMAND_ATTRIBUTION_REPORTING_LIST_AGGREGATABLE_REPORTS);
@@ -130,13 +146,16 @@ public class AttributionReportingListAggregatableReportsCommand extends Abstract
                                         (dao) -> dao.fetchAllAggregatableReports()));
     }
 
-    private static JSONObject createOutputJson(Optional<List<AggregateReport>> aggregatableReports)
+    private static JSONObject createOutputJson(
+            Optional<List<AggregateReport>> aggregatableReports, String schema)
             throws JSONException {
         JSONObject jsonObject = new JSONObject();
         JSONArray jsonArray = new JSONArray();
 
         for (AggregateReport aggregatableReport : aggregatableReports.get()) {
-            jsonArray.put(AttributionReportingHelper.aggregatableReportToJson(aggregatableReport));
+            jsonArray.put(
+                    AttributionReportingHelper.aggregatableReportToJson(
+                            aggregatableReport, schema));
         }
 
         jsonObject.put("attribution_reporting", jsonArray);

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.shell.attributionreporting;
 
+import static com.android.adservices.service.shell.attributionreporting.AttributionReportingHelper.replaceWithAggregatable;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_ATTRIBUTION_REPORTING_LIST_TRIGGER_REGISTRATIONS;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_DEV_MODE_UNCONFIRMED;
 
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.when;
 import android.net.Uri;
 
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
 import com.android.adservices.devapi.DevSessionFixture;
 import com.android.adservices.service.devapi.DevSession;
 import com.android.adservices.service.devapi.DevSessionDataStore;
@@ -55,6 +57,9 @@ public class AttributionReportingListTriggerRegistrationsCommandTest
     private static final String ATTRIBUTION_DESTINATION = "attribution_destination";
     private static final String REGISTRATION_ORIGIN = "registration_origin";
     private static final String DEBUG_KEY = "debug_key";
+    private static final String SCHEMA_FULL = "full";
+    private static final String SCHEMA_PARTIAL = "partial";
+    private static final String SCHEMA_SUB_COMMAND = "--schema";
     DatastoreManager mDatastoreManager = Mockito.mock(DatastoreManager.class);
     @Mock private DevSessionDataStore mDevSessionDataStore;
     private static Trigger trigger1 =
@@ -97,6 +102,60 @@ public class AttributionReportingListTriggerRegistrationsCommandTest
                     .setAggregatableSourceRegistrationTimeConfig(
                             TriggerFixture.ValidTriggerParams
                                     .AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG)
+                    .build();
+
+    private static Trigger trigger4 =
+            TriggerFixture.getValidTriggerBuilder()
+                    .setEnrollmentId("trigger1")
+                    .setTriggerTime(TriggerFixture.ValidTriggerParams.TRIGGER_TIME)
+                    .setAttributionDestination(
+                            TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
+                    .setRegistrationOrigin(TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                    .setDebugKey(TriggerFixture.ValidTriggerParams.DEBUG_KEY)
+                    .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
+                    .setAggregatableSourceRegistrationTimeConfig(
+                            TriggerFixture.ValidTriggerParams
+                                    .AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG)
+                    .setAggregateDebugReportingString(
+                            TriggerFixture.ValidTriggerParams.AGGREGATE_DEBUG_REPORT)
+                    .setAggregateDeduplicationKeys(
+                            TriggerFixture.ValidTriggerParams.AGGREGATE_DEDUPLICATION_KEYS)
+                    .setAggregatableFilteringIdMaxBytes(
+                            TriggerFixture.ValidTriggerParams.AGGREGATABLE_FILTERING_ID_MAX_BYTES)
+                    .setAggregateTriggerData(
+                            TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA)
+                    .setAggregateValuesString(
+                            TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES_STRING)
+                    .setAggregationCoordinatorOrigin(
+                            TriggerFixture.ValidTriggerParams.AGGREGATION_COORDINATOR_ORIGIN)
+                    .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
+                    .build();
+
+    private static Trigger trigger5 =
+            TriggerFixture.getValidTriggerBuilder()
+                    .setEnrollmentId("trigger2")
+                    .setTriggerTime(TriggerFixture.ValidTriggerParams.TRIGGER_TIME)
+                    .setAttributionDestination(
+                            TriggerFixture.ValidTriggerParams.ATTRIBUTION_DESTINATION)
+                    .setRegistrationOrigin(TriggerFixture.ValidTriggerParams.REGISTRATION_ORIGIN)
+                    .setDebugKey(TriggerFixture.ValidTriggerParams.DEBUG_KEY)
+                    .setRegistrant(TriggerFixture.ValidTriggerParams.REGISTRANT)
+                    .setAggregatableSourceRegistrationTimeConfig(
+                            TriggerFixture.ValidTriggerParams
+                                    .AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG)
+                    .setAggregateDebugReportingString(
+                            TriggerFixture.ValidTriggerParams.AGGREGATE_DEBUG_REPORT)
+                    .setAggregateDeduplicationKeys(
+                            TriggerFixture.ValidTriggerParams.AGGREGATE_DEDUPLICATION_KEYS)
+                    .setAggregatableFilteringIdMaxBytes(
+                            TriggerFixture.ValidTriggerParams.AGGREGATABLE_FILTERING_ID_MAX_BYTES)
+                    .setAggregateTriggerData(
+                            TriggerFixture.ValidTriggerParams.AGGREGATE_TRIGGER_DATA)
+                    .setAggregateValuesString(
+                            TriggerFixture.ValidTriggerParams.AGGREGATE_VALUES_STRING)
+                    .setAggregationCoordinatorOrigin(
+                            TriggerFixture.ValidTriggerParams.AGGREGATION_COORDINATOR_ORIGIN)
+                    .setEventTriggers(TriggerFixture.ValidTriggerParams.EVENT_TRIGGERS)
                     .build();
 
     @Before
@@ -154,9 +213,12 @@ public class AttributionReportingListTriggerRegistrationsCommandTest
 
         for (int i = 0; i < registrationsArray.length(); i++) {
             String triggerEnrollmentId = "trigger" + (i + 1);
+            JSONObject registrationsObject = registrationsArray.getJSONObject(i);
             Trigger outputTrigger =
-                    getTriggerFromJson(registrationsArray.getJSONObject(i), triggerEnrollmentId);
+                    getTriggerFromJson(
+                            registrationsArray.getJSONObject(i), triggerEnrollmentId, "");
             assertThat(outputTrigger).isEqualTo(expectedTriggers.get(i));
+            assertTriggerJson(registrationsObject, outputTrigger, SCHEMA_PARTIAL);
         }
     }
 
@@ -177,14 +239,82 @@ public class AttributionReportingListTriggerRegistrationsCommandTest
     }
 
     @Test
-    public void testRunListTriggerRegistrations_nullTriggersJSON() {
+    public void testRunListTriggerRegistrations_nullTriggersJson() {
         doReturn(Optional.empty()).when(mDatastoreManager).runInTransactionWithResult(any());
 
         Result result = runCommandAndGetResult();
 
         expectSuccess(result, COMMAND_ATTRIBUTION_REPORTING_LIST_TRIGGER_REGISTRATIONS);
 
-        assertThat(result.mOut).isEqualTo("Error in retrieving triggers from database.");
+        assertThat(result.mOut).isEqualTo("Error in retrieving triggers from database");
+    }
+
+    @Test
+    public void testRunListTriggerRegistrations_singleTriggerPartialSchemaJson()
+            throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_PARTIAL};
+        List<Trigger> triggers = List.of(trigger1);
+        testRunListTriggerRegistrationsWithSchema(triggers, args);
+    }
+
+    @Test
+    public void testRunListTriggerRegistrations_multipleTriggersPartialSchemaJson()
+            throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_PARTIAL};
+        List<Trigger> sources = List.of(trigger1, trigger2);
+        testRunListTriggerRegistrationsWithSchema(sources, args);
+    }
+
+    @Test
+    public void testRunListTriggerRegistrations_singleTriggerFullSchemaJson() throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_FULL};
+        List<Trigger> triggers = List.of(trigger4);
+        testRunListTriggerRegistrationsWithSchema(triggers, args);
+    }
+
+    @Test
+    public void testRunListTriggerRegistrations_multipleTriggersFullSchemaJson()
+            throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_FULL};
+        List<Trigger> sources = List.of(trigger4, trigger5);
+        testRunListTriggerRegistrationsWithSchema(sources, args);
+    }
+
+    private void testRunListTriggerRegistrationsWithSchema(List<Trigger> triggers, String[] schema)
+            throws JSONException {
+        doReturn(Optional.ofNullable(triggers))
+                .when(mDatastoreManager)
+                .runInTransactionWithResult(any());
+
+        Result result = runCommandAndGetResult(schema);
+
+        expectSuccess(result, COMMAND_ATTRIBUTION_REPORTING_LIST_TRIGGER_REGISTRATIONS);
+
+        JSONObject jsonOutput = new JSONObject(result.mOut);
+        JSONArray registrationsArray = jsonOutput.getJSONArray("attribution_reporting");
+
+        for (int i = 0; i < registrationsArray.length(); i++) {
+            String triggerEnrollmentId = "trigger" + (i + 1);
+            JSONObject registrationsObject = registrationsArray.getJSONObject(i);
+            Trigger outputTrigger =
+                    getTriggerFromJson(
+                            registrationsArray.getJSONObject(i), triggerEnrollmentId, schema[1]);
+            assertThat(outputTrigger).isEqualTo(triggers.get(i));
+            assertTriggerJson(registrationsObject, outputTrigger, schema[1]);
+        }
+    }
+
+    private Result runCommandAndGetResult(String[] args) {
+        String[] stringArray = new String[2 + args.length];
+        stringArray[0] = AttributionReportingShellCommandFactory.COMMAND_PREFIX;
+        stringArray[1] = AttributionReportingListTriggerRegistrationsCommand.CMD;
+        for (int i = 0; i < args.length; i++) {
+            stringArray[i + 1] = args[i];
+        }
+        return run(
+                new AttributionReportingListTriggerRegistrationsCommand(
+                        mDatastoreManager, mDevSessionDataStore),
+                stringArray);
     }
 
     private Result runCommandAndGetResult() {
@@ -196,8 +326,8 @@ public class AttributionReportingListTriggerRegistrationsCommandTest
     }
 
     /** Creates a Trigger.Builder from JSON. Missing fields are populated with default values. */
-    private static Trigger getTriggerFromJson(JSONObject jsonObject, String enrollmentId)
-            throws JSONException {
+    private static Trigger getTriggerFromJson(
+            JSONObject jsonObject, String enrollmentId, String schema) throws JSONException {
         Trigger.Builder builder =
                 new Trigger.Builder()
                         .setEnrollmentId(enrollmentId)
@@ -211,6 +341,70 @@ public class AttributionReportingListTriggerRegistrationsCommandTest
                         .setAggregatableSourceRegistrationTimeConfig(
                                 TriggerFixture.ValidTriggerParams
                                         .AGGREGATABLE_SOURCE_REGISTRATION_TIME_CONFIG);
+
+        if (schema.equals(SCHEMA_FULL)) {
+            String aggregatableDebugReporting =
+                    replaceWithAggregatable(TriggerContract.AGGREGATE_DEBUG_REPORTING);
+            String aggregatableTriggerData =
+                    replaceWithAggregatable(TriggerContract.AGGREGATE_TRIGGER_DATA);
+            String aggregatableValues = replaceWithAggregatable(TriggerContract.AGGREGATE_VALUES);
+
+            builder.setAggregateDebugReportingString(
+                            jsonObject.getString(aggregatableDebugReporting))
+                    .setAggregateDeduplicationKeys(
+                            jsonObject.getString(TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS))
+                    .setAggregatableFilteringIdMaxBytes(
+                            jsonObject.getInt(TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES))
+                    .setAggregateTriggerData(jsonObject.getString(aggregatableTriggerData))
+                    .setAggregateValuesString(jsonObject.getString(aggregatableValues))
+                    .setAggregationCoordinatorOrigin(
+                            Uri.parse(
+                                    jsonObject.getString(
+                                            TriggerContract.AGGREGATION_COORDINATOR_ORIGIN)))
+                    .setEventTriggers(jsonObject.getString(TriggerContract.EVENT_TRIGGERS));
+        }
         return builder.build();
+    }
+
+    private void assertTriggerJson(JSONObject triggerJson, Trigger trigger, String schema)
+            throws JSONException {
+        assertThat(triggerJson.getLong(TRIGGER_TIME)).isEqualTo(trigger.getTriggerTime());
+        assertThat(triggerJson.getString(ATTRIBUTION_DESTINATION))
+                .isEqualTo(trigger.getAttributionDestination().toString());
+        assertThat(triggerJson.getString(REGISTRATION_ORIGIN))
+                .isEqualTo(trigger.getRegistrationOrigin().toString());
+        assertThat(triggerJson.getString(DEBUG_KEY)).isEqualTo(trigger.getDebugKey().toString());
+
+        if (schema.equals(SCHEMA_FULL)) {
+            String aggregatableDebugReporting =
+                    replaceWithAggregatable(TriggerContract.AGGREGATE_DEBUG_REPORTING);
+            String aggregatableTriggerData =
+                    replaceWithAggregatable(TriggerContract.AGGREGATE_TRIGGER_DATA);
+            String aggregatableValues = replaceWithAggregatable(TriggerContract.AGGREGATE_VALUES);
+
+            assertThat(triggerJson.getString(aggregatableDebugReporting))
+                    .isEqualTo(trigger.getAggregateDebugReportingString());
+            assertThat(triggerJson.getString(TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS))
+                    .isEqualTo(trigger.getAggregateDeduplicationKeys());
+            assertThat(triggerJson.getInt(TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES))
+                    .isEqualTo(trigger.getAggregatableFilteringIdMaxBytes());
+            assertThat(triggerJson.getString(aggregatableTriggerData))
+                    .isEqualTo(trigger.getAggregateTriggerData());
+            assertThat(triggerJson.getString(aggregatableValues))
+                    .isEqualTo(trigger.getAggregateValuesString());
+            assertThat(triggerJson.getString(TriggerContract.AGGREGATION_COORDINATOR_ORIGIN))
+                    .isEqualTo(trigger.getAggregationCoordinatorOrigin().toString());
+            assertThat(triggerJson.getString(TriggerContract.EVENT_TRIGGERS))
+                    .isEqualTo(trigger.getEventTriggers());
+        } else if (schema.equals(SCHEMA_PARTIAL)) {
+            assertThat(triggerJson.has(TriggerContract.AGGREGATE_DEBUG_REPORTING)).isFalse();
+            assertThat(triggerJson.has(TriggerContract.AGGREGATABLE_DEDUPLICATION_KEYS)).isFalse();
+            assertThat(triggerJson.has(TriggerContract.AGGREGATABLE_FILTERING_ID_MAX_BYTES))
+                    .isFalse();
+            assertThat(triggerJson.has(TriggerContract.AGGREGATE_TRIGGER_DATA)).isFalse();
+            assertThat(triggerJson.has(TriggerContract.AGGREGATE_VALUES)).isFalse();
+            assertThat(triggerJson.has(TriggerContract.AGGREGATION_COORDINATOR_ORIGIN)).isFalse();
+            assertThat(triggerJson.has(TriggerContract.EVENT_TRIGGERS)).isFalse();
+        }
     }
 }

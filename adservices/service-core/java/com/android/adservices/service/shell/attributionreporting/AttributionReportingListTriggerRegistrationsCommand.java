@@ -56,7 +56,9 @@ public class AttributionReportingListTriggerRegistrationsCommand extends Abstrac
                     + " "
                     + CMD
                     + " "
-                    + "\n List Trigger Registration";
+                    + "[--schema {partial[DEFAULT]|full}]"
+                    + " "
+                    + "\n List Trigger Registrations. Default schema is 'partial'.";
 
     private final DatastoreManager mDatastoreManager;
     private final DevSessionDataStore mDevSessionDataStore;
@@ -81,23 +83,37 @@ public class AttributionReportingListTriggerRegistrationsCommand extends Abstrac
                     COMMAND_ATTRIBUTION_REPORTING_LIST_TRIGGER_REGISTRATIONS);
         }
 
+        String schema;
+        String output;
+        try {
+            schema = AttributionReportingArgParserHelper.parseAttributionReportingSchema(args);
+        } catch (IllegalArgumentException exception) {
+            output = "IllegalArgumentException while running list-trigger-registrations command";
+            Log.e(TAG, output, exception);
+            out.print(output);
+            out.flush();
+            return invalidArgsError(
+                    HELP, err, COMMAND_ATTRIBUTION_REPORTING_LIST_TRIGGER_REGISTRATIONS, args);
+        }
+
         try {
             ListenableFuture<Optional<List<Trigger>>> futureResult =
                     queryForListTriggerRegistrationsCommand();
             Optional<List<Trigger>> result = futureResult.get(TIMEOUT_SEC, SECONDS);
-            String output;
             if (result.isPresent()) {
-                output = createOutputJson(result).toString();
+                output = createOutputJson(result, schema).toString();
             } else {
-                output = "Error in retrieving triggers from database.";
+                output = "Error in retrieving triggers from database";
             }
             out.print(output);
             out.flush();
             return toShellCommandResult(
                     RESULT_SUCCESS, COMMAND_ATTRIBUTION_REPORTING_LIST_TRIGGER_REGISTRATIONS);
         } catch (Exception e) {
-            Log.e(TAG, String.format("Failed to generate JSON: %s", e.getMessage()));
-
+            output = "Failed to generate JSON: " + e.getMessage();
+            Log.e(TAG, String.format(output));
+            out.print(output);
+            out.flush();
             return toShellCommandResult(
                     ShellCommandStats.RESULT_GENERIC_ERROR,
                     COMMAND_ATTRIBUTION_REPORTING_LIST_TRIGGER_REGISTRATIONS);
@@ -129,13 +145,13 @@ public class AttributionReportingListTriggerRegistrationsCommand extends Abstrac
                                         (dao) -> dao.fetchAllTriggerRegistrations()));
     }
 
-    private static JSONObject createOutputJson(Optional<List<Trigger>> triggers)
+    private static JSONObject createOutputJson(Optional<List<Trigger>> triggers, String schema)
             throws JSONException {
         JSONObject jsonObject = new JSONObject();
         JSONArray jsonArray = new JSONArray();
 
         for (Trigger trigger : triggers.get()) {
-            jsonArray.put(AttributionReportingHelper.triggerToJson(trigger));
+            jsonArray.put(AttributionReportingHelper.triggerToJson(trigger, schema));
         }
 
         jsonObject.put("attribution_reporting", jsonArray);

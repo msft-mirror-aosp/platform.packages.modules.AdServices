@@ -196,5 +196,12 @@ public final class TriggerFixture {
                         + "}"
                         + "],"
                         + "\"aggregation_coordinator_origin\":\"https://aws.example\"}";
+        public static final String AGGREGATE_DEDUPLICATION_KEYS =
+                "[{\n"
+                        + "    \"deduplication_key\": \"0\",\n"
+                        + "    \"filters\": {\n"
+                        + "      \"x\": [\"x\"]\n"
+                        + "    }\n"
+                        + "}]";
     }
 }
