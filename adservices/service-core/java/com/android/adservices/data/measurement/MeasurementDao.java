@@ -3728,6 +3728,31 @@ class MeasurementDao implements IMeasurementDao {
         return reports;
     }
 
+    /** Fetch all Aggregatable Reports */
+    @Override
+    public List<AggregateReport> fetchAllAggregatableReports() throws DatastoreException {
+        List<AggregateReport> reports = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.AggregateReport.TABLE,
+                                /* columns= */ null,
+                                /* selection= */ null,
+                                /* selectionArgs= */ null,
+                                /* groupBy= */ null,
+                                /* having= */ null,
+                                /* orderBy= */ null,
+                                /* limit= */ null)) {
+            while (cursor.moveToNext()) {
+                AggregateReport aggregatableReportBuilder =
+                        SqliteObjectMapper.constructAggregateReport(cursor);
+                reports.add(aggregatableReportBuilder);
+            }
+        }
+        return reports;
+    }
+
     @Override
     public boolean existsActiveSourcesWithDestination(Uri attributionDestination, long eventTime)
             throws DatastoreException {

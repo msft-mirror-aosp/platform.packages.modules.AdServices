@@ -13591,6 +13591,42 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         assertThat(fetchedAllEventReports.get(1)).isEqualTo(eventReport2);
     }
 
+    /** Test that records in AggregateReport Table are fetched properly. */
+    @Test
+    public void testFetchAllAggregatableReports_pass() {
+        AggregateReport aggregatableReport1 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("report1")
+                        .setPublisher(Uri.parse("android-app://com.registrant1"))
+                        .setAttributionDestination(Uri.parse("android-app://com.destination1"))
+                        .build();
+
+        AggregateReport aggregatableReport2 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("report2")
+                        .setPublisher(Uri.parse("android-app://com.registrant2"))
+                        .setAttributionDestination(
+                                Uri.parse("android-app://com.destination2"))
+                        .build();
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertAggregateReport(aggregatableReport1);
+                    dao.insertAggregateReport(aggregatableReport2);
+                });
+
+        List<AggregateReport> fetchedAllAggregatableReports =
+                mDatastoreManager
+                        .runInTransactionWithResult(dao -> dao.fetchAllAggregatableReports())
+                        .orElseThrow();
+
+        assertThat(fetchedAllAggregatableReports).isNotNull();
+        assertThat(fetchedAllAggregatableReports.size()).isEqualTo(2);
+
+        assertThat(fetchedAllAggregatableReports.get(0)).isEqualTo(aggregatableReport1);
+        assertThat(fetchedAllAggregatableReports.get(1)).isEqualTo(aggregatableReport2);
+    }
+
     private Source getFirstSourceFromDb() {
         return mDatastoreManager
                 .runInTransactionWithResult(
