@@ -27,7 +27,11 @@ import static com.android.adservices.service.Flags.DEFAULT_ENABLE_LOG_SAMPLING_I
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_SERVICE;
 import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST;
 import static com.android.adservices.service.Flags.DEFAULT_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS;
@@ -1118,6 +1122,38 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementAdIdsPerDevicePerWindowPeriodMs",
                 DEFAULT_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS,
                 Flags::getMeasurementAdIdsPerDevicePerWindowPeriodMs);
+    }
+
+    @Test
+    public void testGetMeasurementEnableCountUniqueService() {
+        testFlag(
+                "getMeasurementEnableCountUniqueService",
+                DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_SERVICE,
+                Flags::getMeasurementEnableCountUniqueService);
+    }
+
+    @Test
+    public void testGetMeasurementEnableCountUniqueReportingJob() {
+        testFlag(
+                "getMeasurementEnableCountUniqueReportingJob",
+                DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB,
+                Flags::getMeasurementEnableCountUniqueReportingJob);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueReportingJobPeriodMs() {
+        testFlag(
+                "getMeasurementCountUniqueReportingJobPeriodMs",
+                DEFAULT_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS,
+                Flags::getMeasurementCountUniqueReportingJobPeriodMs);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueAppAllowlist() {
+        testFlag(
+                "getMeasurementCountUniqueAppAllowlist",
+                DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST,
+                Flags::getMeasurementCountUniqueAppAllowlist);
     }
 
     @Test
