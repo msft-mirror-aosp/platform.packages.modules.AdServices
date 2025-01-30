@@ -303,7 +303,8 @@ public class ImpressionReporter {
                                 return Futures.immediateFuture(
                                         new ReportingUris(
                                                 reportingData.getBuyerWinReportingUri(),
-                                                reportingData.getSellerWinReportingUri()));
+                                                reportingData.getSellerWinReportingUri(),
+                                                reportingData.getComponentSellerWinReportingUri()));
                             } else {
                                 // TODO(b/291957376): Move computation into selectAds in phase 2 of
                                 //  go/rb-rm-unified-flow-reporting
@@ -377,7 +378,8 @@ public class ImpressionReporter {
      */
     private boolean isReportingUrisPresent(ReportingData reportingData) {
         return !Objects.isNull(reportingData.getBuyerWinReportingUri())
-                || !Objects.isNull(reportingData.getSellerWinReportingUri());
+                || !Objects.isNull(reportingData.getSellerWinReportingUri())
+                || !Objects.isNull(reportingData.getComponentSellerWinReportingUri());
     }
 
     private FluentFuture<Pair<ReportingUris, ReportingContext>> computeReportingUris(
@@ -473,13 +475,13 @@ public class ImpressionReporter {
                 .addCallback(
                         new FutureCallback<>() {
                             @Override
-                            public void onSuccess(List<Void> result) {
+                            public void onSuccess(Void result) {
                                 sLogger.d("Reporting finished successfully!");
                                 mAdServicesLogger.logFledgeApiCallStats(
                                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                                         mCallerAppPackageName,
                                         STATUS_SUCCESS,
-                                        /*latencyMs=*/ 0);
+                                        /* latencyMs= */ 0);
                             }
 
                             @Override
@@ -492,32 +494,33 @@ public class ImpressionReporter {
                                             AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                                             mCallerAppPackageName,
                                             STATUS_IO_ERROR,
-                                            /*latencyMs=*/ 0);
+                                            /* latencyMs= */ 0);
                                 }
                                 mAdServicesLogger.logFledgeApiCallStats(
                                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                                         mCallerAppPackageName,
                                         STATUS_INTERNAL_ERROR,
-                                        /*latencyMs=*/ 0);
+                                        /* latencyMs= */ 0);
                             }
                         },
                         mLightweightExecutorService);
     }
 
     @NonNull
-    private FluentFuture<List<Void>> doReport(ReportingUris reportingUris) {
+    private FluentFuture<Void> doReport(ReportingUris reportingUris) {
         sLogger.v("Do report.");
         Uri sellerReportingUri = reportingUris.sellerReportingUri;
         Uri buyerReportingUri = reportingUris.buyerReportingUri;
+        Uri componentSellerReportingUri = reportingUris.componentSellerReportingUri;
 
         // We don't need to verify enrollment since that is done during request filtering
         // Perform reporting if no exception was thrown
-        ListenableFuture<Void> sellerFuture = bestEffortReporting(sellerReportingUri);
+        ListenableFuture<Void> sellerReportingFuture = bestEffortReporting(sellerReportingUri);
 
-        ListenableFuture<Void> buyerFuture;
+        ListenableFuture<Void> buyerReportingFuture;
         if (buyerReportingUri == null || buyerReportingUri.getHost() == null) {
             sLogger.w("Buyer reporting URI not found, skipping reporting");
-            buyerFuture = Futures.immediateVoidFuture();
+            buyerReportingFuture = Futures.immediateVoidFuture();
         } else {
             try {
                 if (!mFlags.getDisableFledgeEnrollmentCheck()) {
@@ -526,13 +529,27 @@ public class ImpressionReporter {
                             AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                             API_AD_SELECTION);
                 }
-                buyerFuture = bestEffortReporting(buyerReportingUri);
+                buyerReportingFuture = bestEffortReporting(buyerReportingUri);
             } catch (FledgeAuthorizationFilter.AdTechNotAllowedException e) {
-                buyerFuture = Futures.immediateVoidFuture();
+                buyerReportingFuture = Futures.immediateVoidFuture();
             }
         }
 
-        return FluentFuture.from(Futures.allAsList(sellerFuture, buyerFuture));
+        ListenableFuture<Void> componentSellerReportingFuture = Futures.immediateVoidFuture();
+        if (mFlags.getEnableReportEventForComponentSeller()
+                && componentSellerReportingUri != null
+                && componentSellerReportingUri.getHost() != null) {
+            // We don't need to check the adtech enrollment here because component seller reporting
+            // urls were validated before persisting in the persistAdSelectionResultAPI.
+            componentSellerReportingFuture = bestEffortReporting(componentSellerReportingUri);
+        }
+
+        return FluentFuture.from(
+                Futures.whenAllComplete(
+                                sellerReportingFuture,
+                                buyerReportingFuture,
+                                componentSellerReportingFuture)
+                        .call(() -> null, mLightweightExecutorService));
     }
 
     private ListenableFuture<Void> bestEffortReporting(Uri reportingUri) {
@@ -762,13 +779,23 @@ public class ImpressionReporter {
     private static final class ReportingUris {
         @Nullable public Uri buyerReportingUri;
         @NonNull public Uri sellerReportingUri;
+        @Nullable public Uri componentSellerReportingUri;
 
-        private ReportingUris(@Nullable Uri buyerReportingUri, @NonNull Uri sellerReportingUri) {
-            /* buyer could be empty in case of contextual ad */
+        private ReportingUris(
+                @Nullable Uri buyerReportingUri,
+                @NonNull Uri sellerReportingUri,
+                @Nullable Uri componentSellerReportingUri) {
+            /* buyer could be empty in case of contextual ad and component seller reporting uri can
+            be null if the flag is disabled. */
             Objects.requireNonNull(sellerReportingUri);
 
             this.buyerReportingUri = buyerReportingUri;
             this.sellerReportingUri = sellerReportingUri;
+            this.componentSellerReportingUri = componentSellerReportingUri;
+        }
+
+        private ReportingUris(@Nullable Uri buyerReportingUri, @NonNull Uri sellerReportingUri) {
+            this(buyerReportingUri, sellerReportingUri, null);
         }
     }
 
