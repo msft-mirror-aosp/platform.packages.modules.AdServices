@@ -17,15 +17,19 @@
 package com.android.adservices.shared.metriclogger;
 
 import android.annotation.Nullable;
+import android.content.Context;
 
 import com.android.adservices.shared.metriclogger.logsampler.LogSampler;
 import com.android.adservices.shared.metriclogger.logsampler.PerEventLogSampler;
 import com.android.adservices.shared.metriclogger.logsampler.PerEventSamplingConfig;
+import com.android.adservices.shared.metriclogger.logsampler.deviceselection.PerDeviceLogSampler;
+import com.android.adservices.shared.metriclogger.logsampler.deviceselection.PerDeviceSamplingConfig;
 import com.android.adservices.shared.proto.LogSamplingConfig;
 import com.android.adservices.shared.proto.MetricId;
 
 import com.google.auto.value.AutoValue;
-import com.google.errorprone.annotations.Immutable;
+
+import java.util.concurrent.Executor;
 
 /**
  * Describes the configuration for a single metric.
@@ -35,7 +39,6 @@ import com.google.errorprone.annotations.Immutable;
  *
  * @param <L> the type of the log event.
  */
-@Immutable
 @AutoValue
 public abstract class MetricLoggerConfig<L> {
 
@@ -45,26 +48,53 @@ public abstract class MetricLoggerConfig<L> {
     /** Returns the metric id. */
     public abstract MetricId getMetricId();
 
+    /** Returns the context. */
+    public abstract Context getContext();
+
+    /** Returns the lightweight executor. */
+    public abstract Executor getLightweightExecutor();
+
+    /** Returns the background executor. */
+    public abstract Executor getBackgroundExecutor();
+
     /** Returns a function for uploading one log event. */
     public abstract LogUploader<L> getLogUploader();
 
     /** Returns the per-event sampling config. */
     public abstract @Nullable PerEventSamplingConfig getPerEventSamplingConfig();
 
+    /** Returns the per-device sampling config. */
+    public abstract @Nullable PerDeviceSamplingConfig getPerDeviceSamplingConfig();
+
     /** Returns a generic builder. */
     public static <L> Builder<L> builder(
-            MetricId metricId, LogSamplingConfig config, LogUploader<L> logUploader) {
+            MetricId metricId,
+            LogSamplingConfig config,
+            Executor lightweightExecutor,
+            Executor backgroundExecutor,
+            Context context,
+            LogUploader<L> logUploader) {
         return new AutoValue_MetricLoggerConfig.Builder<L>()
                 .metricId(metricId)
                 .logSamplingConfig(config)
-                .logUploader(logUploader);
+                .logUploader(logUploader)
+                .context(context)
+                .lightweightExecutor(lightweightExecutor)
+                .backgroundExecutor(backgroundExecutor);
     }
 
     private static <L> Builder<L> builderWithoutSamplingConfig(
-            MetricId metricId, LogUploader<L> logUploader) {
+            MetricId metricId,
+            Executor lightweightExecutor,
+            Executor backgroundExecutor,
+            Context context,
+            LogUploader<L> logUploader) {
         return new AutoValue_MetricLoggerConfig.Builder<L>()
                 .metricId(metricId)
-                .logUploader(logUploader);
+                .logUploader(logUploader)
+                .context(context)
+                .lightweightExecutor(lightweightExecutor)
+                .backgroundExecutor(backgroundExecutor);
     }
 
     /**
@@ -73,6 +103,19 @@ public abstract class MetricLoggerConfig<L> {
      */
     LogSampler<L> createPerEventSampling() {
         return new PerEventLogSampler<>(getMetricId(), getPerEventSamplingConfig());
+    }
+
+    /**
+     * Creates Per-device sampling strategy that determines whether to log events based on the
+     * sampling rate for a particular metric.
+     */
+    LogSampler<L> createPerDeviceSampling() {
+        return new PerDeviceLogSampler<>(
+                getContext(),
+                getMetricId(),
+                getPerDeviceSamplingConfig(),
+                getBackgroundExecutor(),
+                getLightweightExecutor());
     }
 
     /**
@@ -88,12 +131,25 @@ public abstract class MetricLoggerConfig<L> {
         /** Sets the id for the metric. */
         public abstract Builder<L> metricId(MetricId metricId);
 
+        /** Sets the context. */
+        public abstract Builder<L> context(Context context);
+
+        /** Sets the lightweight executor. */
+        public abstract Builder<L> lightweightExecutor(Executor executor);
+
+        /** Sets the background executor. */
+        public abstract Builder<L> backgroundExecutor(Executor executor);
+
         /** Function to upload metric to statsd. */
         public abstract Builder<L> logUploader(LogUploader<L> logUploader);
 
         /** Sets the config for perEventSampling. */
         public abstract Builder<L> perEventSamplingConfig(
                 PerEventSamplingConfig eventSamplingConfig);
+
+        /** Sets the config for perDeviceSampling. */
+        public abstract Builder<L> perDeviceSamplingConfig(
+                PerDeviceSamplingConfig deviceSamplingConfig);
 
         abstract MetricLoggerConfig<L> autoBuild();
 
@@ -116,7 +172,11 @@ public abstract class MetricLoggerConfig<L> {
 
             MetricLoggerConfig.Builder<L> builder =
                     MetricLoggerConfig.builderWithoutSamplingConfig(
-                            original.getMetricId(), original.getLogUploader());
+                            original.getMetricId(),
+                            original.getLightweightExecutor(),
+                            original.getBackgroundExecutor(),
+                            original.getContext(),
+                            original.getLogUploader());
             // Extract the sampling strategies from proto to create relevant sampling config objects
             // for each strategy.
             if (config.hasPerEventSampling()) {
@@ -124,6 +184,12 @@ public abstract class MetricLoggerConfig<L> {
                         PerEventSamplingConfig.createPerEventSamplingConfig(
                                 config.getPerEventSampling()));
             }
+            if (config.hasPerDeviceSampling()) {
+                builder.perDeviceSamplingConfig(
+                        PerDeviceSamplingConfig.createPerDeviceSamplingConfig(
+                                config.getPerDeviceSampling()));
+            }
+
             return builder.autoBuild();
         }
     }

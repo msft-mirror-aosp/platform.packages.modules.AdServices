@@ -161,7 +161,7 @@ public class AttributionReportingListTriggerRegistrationsCommandTest
     }
 
     @Test
-    public void testRunListTriggerRegistrations_noTriggersJSON() throws JSONException {
+    public void testRunListTriggerRegistrations_emptyListTriggers() throws JSONException {
         doReturn(Optional.ofNullable(List.of()))
                 .when(mDatastoreManager)
                 .runInTransactionWithResult(any());
@@ -195,6 +195,7 @@ public class AttributionReportingListTriggerRegistrationsCommandTest
                 AttributionReportingListTriggerRegistrationsCommand.CMD);
     }
 
+    /** Creates a Trigger.Builder from JSON. Missing fields are populated with default values. */
     private static Trigger getTriggerFromJson(JSONObject jsonObject, String enrollmentId)
             throws JSONException {
         Trigger.Builder builder =

@@ -30,7 +30,6 @@ import java.util.List;
  * log call behavior in the test itself as it will likely override the required mocking behavior set
  * by the rule.
  */
-// TODO (b/339709062): Consider extending AbstractRethrowerRule.
 public abstract class AbstractLoggingUsageRule extends AbstractRule {
 
     public AbstractLoggingUsageRule() {

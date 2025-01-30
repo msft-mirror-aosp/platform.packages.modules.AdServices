@@ -55,7 +55,7 @@ public final class BackgroundJobHelper {
         runScheduleJobCommand(jobId);
         if (isJobPending(jobId)) {
             // If the job wasn't immediately scheduled then something has gone wrong.
-            Log.d(TAG, String.format("rootcts: Job with id %s did not schedule!", jobId));
+            Log.d(TAG, String.format("cts: Job with id %s did not schedule!", jobId));
             return false;
         }
 
@@ -64,13 +64,13 @@ public final class BackgroundJobHelper {
         while (timeout < MAX_TIMEOUT_MS) {
             Thread.sleep(timeout);
             if (!isJobPending(jobId)) {
-                Log.d(TAG, String.format("rootcts: Job with id %s did schedule.", jobId));
+                Log.d(TAG, String.format("cts: Job with id %s did schedule.", jobId));
                 return true;
             }
             timeout *= 2;
         }
 
-        Log.d(TAG, String.format("rootcts: Job with id %s scheduled but timed out!", jobId));
+        Log.d(TAG, String.format("cts: Job with id %s scheduled but timed out!", jobId));
         return false;
     }
 

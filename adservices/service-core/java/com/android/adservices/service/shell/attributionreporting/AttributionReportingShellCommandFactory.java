@@ -57,6 +57,12 @@ public final class AttributionReportingShellCommandFactory implements ShellComma
                         new AttributionReportingListSourceRegistrationsCommand(
                                 datastoreManager, devSessionDataStore),
                         new AttributionReportingListTriggerRegistrationsCommand(
+                                datastoreManager, devSessionDataStore),
+                        new AttributionReportingListEventReportsCommand(
+                                datastoreManager, devSessionDataStore),
+                        new AttributionReportingListAggregatableReportsCommand(
+                                datastoreManager, devSessionDataStore),
+                        new AttributionReportingListDebugReportsCommand(
                                 datastoreManager, devSessionDataStore));
         mAllCommandsMap =
                 allCommands.stream()

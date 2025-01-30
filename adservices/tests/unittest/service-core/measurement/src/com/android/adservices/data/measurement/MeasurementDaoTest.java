@@ -8594,6 +8594,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
         values.put(SourceContract.SHARED_FILTER_DATA_KEYS, source.getSharedFilterDataKeys());
         values.put(SourceContract.AGGREGATE_CONTRIBUTIONS, source.getAggregateContributions());
         values.put(SourceContract.DEBUG_REPORTING, source.isDebugReporting());
+        values.put(SourceContract.DEBUG_AD_ID, source.getDebugAdId());
         values.put(SourceContract.INSTALL_TIME, source.getInstallTime());
         values.put(SourceContract.REGISTRATION_ID, source.getRegistrationId());
         values.put(SourceContract.SHARED_AGGREGATION_KEYS, source.getSharedAggregationKeys());
@@ -10799,6 +10800,115 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                                         1,
                                         dao.countDistinctDebugAdIdsUsedByEnrollment(
                                                 "enrollment-id-1"))));
+    }
+
+    @Test
+    public void countDistinctDebugAdIdsUsedByEnrollmentWithinWindow() {
+        // Setup
+        long startTime = System.currentTimeMillis();
+        long endTime = System.currentTimeMillis() + DAYS.toMillis(7);
+        Source.Builder webSourceBuilder =
+                SourceFixture.getValidSourceBuilder().setPublisherType(EventSurfaceType.WEB);
+        Trigger.Builder webTriggerBuilder =
+                TriggerFixture.getValidTriggerBuilder().setDestinationType(EventSurfaceType.WEB);
+
+        // Not counted as debug ad id is null
+        insertSource(webSourceBuilder.setDebugAdId(null).setEventTime(startTime).build(), "s1");
+        insertTrigger(webTriggerBuilder.setDebugAdId(null).setTriggerTime(startTime).build(), "t1");
+
+        // Not counted as they are outside the window
+        insertSource(
+                webSourceBuilder.setDebugAdId("debug_ad_id_s2").setEventTime(startTime - 1).build(),
+                "s2");
+        insertTrigger(
+                webTriggerBuilder
+                        .setDebugAdId("debug_ad_id_t2")
+                        .setTriggerTime(startTime - 1)
+                        .build(),
+                "t2");
+
+        // count = 2
+        insertSource(
+                webSourceBuilder.setDebugAdId("debug_ad_id_s3").setEventTime(startTime).build(),
+                "s3");
+        insertTrigger(
+                webTriggerBuilder.setDebugAdId("debug_ad_id_t3").setTriggerTime(startTime).build(),
+                "t3");
+
+        // count = 4
+        insertSource(
+                webSourceBuilder
+                        .setDebugAdId("debug_ad_id_s4")
+                        .setEventTime(startTime + DAYS.toMillis(2))
+                        .build(),
+                "s4");
+        insertTrigger(
+                webTriggerBuilder
+                        .setDebugAdId("debug_ad_id_t4")
+                        .setTriggerTime(startTime + DAYS.toMillis(2))
+                        .build(),
+                "t4");
+
+        // count = 5; they share a common debug_ad_id value
+        insertSource(
+                webSourceBuilder.setDebugAdId("debug_ad_id_s5").setEventTime(endTime - 1).build(),
+                "s5");
+        insertTrigger(
+                webTriggerBuilder
+                        .setDebugAdId("debug_ad_id_s5")
+                        .setTriggerTime(endTime - 1)
+                        .build(),
+                "t5");
+
+        // Not counted as they fall outside the window
+        insertSource(
+                webSourceBuilder.setDebugAdId("debug_ad_id_s6").setEventTime(endTime).build(),
+                "s6");
+        insertTrigger(
+                webTriggerBuilder.setDebugAdId("debug_ad_id_s6").setTriggerTime(endTime).build(),
+                "t6");
+
+        // Not counted as they belong to a different enrollment
+        insertSource(
+                webSourceBuilder
+                        .setDebugAdId("debug_ad_id_s7")
+                        .setEventTime(startTime + DAYS.toMillis(2))
+                        .setEnrollmentId("otherEnrollment")
+                        .build(),
+                "s7");
+        insertTrigger(
+                webTriggerBuilder
+                        .setDebugAdId("debug_ad_id_s7")
+                        .setTriggerTime(startTime + DAYS.toMillis(2))
+                        .setEnrollmentId("otherEnrollment")
+                        .build(),
+                "t7");
+
+        // Not counted as they have the excluded debug AdId
+        insertSource(
+                webSourceBuilder
+                        .setDebugAdId("debug_ad_id_s8")
+                        .setEventTime(startTime + DAYS.toMillis(2))
+                        .build(),
+                "s8");
+        insertTrigger(
+                webTriggerBuilder
+                        .setDebugAdId("debug_ad_id_s8")
+                        .setTriggerTime(startTime + DAYS.toMillis(2))
+                        .build(),
+                "t8");
+
+        // Assertion
+        assertTrue(
+                mDatastoreManager.runInTransaction(
+                        dao ->
+                                assertEquals(
+                                        5,
+                                        dao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                                                SourceFixture.ValidSourceParams.ENROLLMENT_ID,
+                                                startTime,
+                                                endTime,
+                                                "debug_ad_id_s8"))));
     }
 
     @Test
@@ -13350,7 +13460,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         .runInTransactionWithResult(dao -> dao.fetchAllSourceRegistrations())
                         .orElseThrow();
 
-        assertNotNull(fetchedAllSourceRegistration);
+        assertThat(fetchedAllSourceRegistration).isNotNull();
         assertThat(fetchedAllSourceRegistration.size()).isEqualTo(2);
 
         assertThat(fetchedAllSourceRegistration.get(0)).isEqualTo(source1);
@@ -13389,7 +13499,7 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         .runInTransactionWithResult(dao -> dao.fetchAllSourceRegistrations())
                         .orElseThrow();
 
-        assertNotNull(fetchedAllSourceRegistration);
+        assertThat(fetchedAllSourceRegistration).isNotNull();
         assertThat(fetchedAllSourceRegistration.size()).isEqualTo(2);
 
         assertThat(fetchedAllSourceRegistration.get(0)).isEqualTo(source1);
@@ -13422,11 +13532,125 @@ public final class MeasurementDaoTest extends AdServicesExtendedMockitoTestCase 
                         .runInTransactionWithResult(dao -> dao.fetchAllTriggerRegistrations())
                         .orElseThrow();
 
-        assertNotNull(fetchedAllTriggerRegistration);
+        assertThat(fetchedAllTriggerRegistration).isNotNull();
         assertThat(fetchedAllTriggerRegistration.size()).isEqualTo(2);
 
         assertThat(fetchedAllTriggerRegistration.get(0)).isEqualTo(trigger1);
         assertThat(fetchedAllTriggerRegistration.get(1)).isEqualTo(trigger2);
+    }
+
+    /** Test that records in EventReport Table are fetched properly. */
+    @Test
+    public void testFetchAllEventReports_pass() {
+        Source source1 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("S1")
+                        .setAttributionMode(Source.AttributionMode.FALSELY)
+                        .build();
+        insertSource(source1, source1.getId());
+        Source source2 =
+                SourceFixture.getMinimalValidSourceBuilder()
+                        .setId("S2")
+                        .setAttributionMode(Source.AttributionMode.TRUTHFULLY)
+                        .build();
+        insertSource(source2, source2.getId());
+
+        Trigger trigger1 = TriggerFixture.getValidTriggerBuilder().setId("T1").build();
+        insertTrigger(trigger1, trigger1.getId());
+
+        EventReport eventReport1 =
+                EventReportFixture.getBaseEventReportBuild()
+                        .setId("Event1")
+                        .setSourceId("S1")
+                        .setTriggerId(null)
+                        .build();
+
+        EventReport eventReport2 =
+                EventReportFixture.getBaseEventReportBuild()
+                        .setId("Event2")
+                        .setSourceId("S2")
+                        .setTriggerId("T1")
+                        .build();
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertEventReport(eventReport1);
+                    dao.insertEventReport(eventReport2);
+                });
+
+        List<EventReport> fetchedAllEventReports =
+                mDatastoreManager
+                        .runInTransactionWithResult(dao -> dao.fetchAllEventReports())
+                        .orElseThrow();
+        ;
+
+        assertThat(fetchedAllEventReports).isNotNull();
+        assertThat(fetchedAllEventReports.size()).isEqualTo(2);
+
+        assertThat(fetchedAllEventReports.get(0)).isEqualTo(eventReport1);
+        assertThat(fetchedAllEventReports.get(1)).isEqualTo(eventReport2);
+    }
+
+    /** Test that records in AggregateReport Table are fetched properly. */
+    @Test
+    public void testFetchAllAggregatableReports_pass() {
+        AggregateReport aggregatableReport1 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("report1")
+                        .setPublisher(Uri.parse("android-app://com.registrant1"))
+                        .setAttributionDestination(Uri.parse("android-app://com.destination1"))
+                        .build();
+
+        AggregateReport aggregatableReport2 =
+                AggregateReportFixture.getValidAggregateReportBuilder()
+                        .setId("report2")
+                        .setPublisher(Uri.parse("android-app://com.registrant2"))
+                        .setAttributionDestination(
+                                Uri.parse("android-app://com.destination2"))
+                        .build();
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertAggregateReport(aggregatableReport1);
+                    dao.insertAggregateReport(aggregatableReport2);
+                });
+
+        List<AggregateReport> fetchedAllAggregatableReports =
+                mDatastoreManager
+                        .runInTransactionWithResult(dao -> dao.fetchAllAggregatableReports())
+                        .orElseThrow();
+
+        assertThat(fetchedAllAggregatableReports).isNotNull();
+        assertThat(fetchedAllAggregatableReports.size()).isEqualTo(2);
+
+        assertThat(fetchedAllAggregatableReports.get(0)).isEqualTo(aggregatableReport1);
+        assertThat(fetchedAllAggregatableReports.get(1)).isEqualTo(aggregatableReport2);
+    }
+
+    @Test
+    public void testFetchAllDebugReports_pass() {
+        DebugReport debugReport1 =
+                createDebugReport(/* id= */ "1", Uri.parse("android-app://debug1"), 1701206853050L);
+
+        DebugReport debugReport2 =
+                createDebugReport(/* id= */ "2", Uri.parse("android-app://debug2"), 1701206853050L);
+
+        mDatastoreManager.runInTransaction(
+                (dao) -> {
+                    dao.insertDebugReport(debugReport1);
+                    dao.insertDebugReport(debugReport2);
+                });
+
+        List<DebugReport> fetchedAllDebugReports =
+                mDatastoreManager
+                        .runInTransactionWithResult(dao -> dao.fetchAllDebugReports())
+                        .orElseThrow();
+
+        assertThat(fetchedAllDebugReports).isNotNull();
+        assertThat(fetchedAllDebugReports.size()).isEqualTo(2);
+
+        assertThat(fetchedAllDebugReports.get(0)).isEqualTo(debugReport1);
+        assertThat(fetchedAllDebugReports.get(1)).isEqualTo(debugReport2);
     }
 
     private Source getFirstSourceFromDb() {

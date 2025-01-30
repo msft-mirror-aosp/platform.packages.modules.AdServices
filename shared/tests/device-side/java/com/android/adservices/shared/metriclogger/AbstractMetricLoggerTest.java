@@ -34,19 +34,34 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
+import java.util.concurrent.Executor;
+
 public final class AbstractMetricLoggerTest extends SharedMockitoTestCase {
 
     private static final LogSamplingConfig EXAMPLE_CONFIG_RATE_100_PERCENT =
             LogSamplingConfig.newBuilder()
                     .setPerEventSampling(
                             LogSamplingConfig.PerEventSampling.newBuilder()
-                                    .setSamplingRate(1)
+                                    .setSamplingRate(1.0)
+                                    .build())
+                    .setPerDeviceSampling(
+                            LogSamplingConfig.PerDeviceSampling.newBuilder()
+                                    .setSamplingRate(1.0)
                                     .build())
                     .build();
+
     private static final LogSamplingConfig EXAMPLE_CONFIG_RATE_0_PERCENT =
             LogSamplingConfig.newBuilder()
                     .setPerEventSampling(
                             LogSamplingConfig.PerEventSampling.newBuilder()
+                                    .setSamplingRate(0)
+                                    .build())
+                    .build();
+
+    private static final LogSamplingConfig EXAMPLE_PER_DEVICE_CONFIG_RATE_0_PERCENT =
+            LogSamplingConfig.newBuilder()
+                    .setPerDeviceSampling(
+                            LogSamplingConfig.PerDeviceSampling.newBuilder()
                                     .setSamplingRate(0)
                                     .build())
                     .build();
@@ -57,6 +72,7 @@ public final class AbstractMetricLoggerTest extends SharedMockitoTestCase {
             ArgumentCaptor.forClass(SamplingMetadata.class);
 
     @Mock private LogUploader<ExampleStats> mMockLogUploader;
+    @Mock private Executor mMockExecutor;
 
     @Test
     public void testLog() {
@@ -64,6 +80,9 @@ public final class AbstractMetricLoggerTest extends SharedMockitoTestCase {
                 MetricLoggerConfig.builder(
                                 MetricId.EXAMPLE_STATS,
                                 EXAMPLE_CONFIG_RATE_100_PERCENT,
+                                mMockExecutor,
+                                mMockExecutor,
+                                mMockContext,
                                 mMockLogUploader)
                         .build();
         AbstractMetricLogger<ExampleStats> logger = new ExampleStatsLogger(config);
@@ -73,7 +92,10 @@ public final class AbstractMetricLoggerTest extends SharedMockitoTestCase {
         verify(mMockLogUploader).accept(eq(EVENT), mMetadataArgumentCaptor.capture());
         expect.withMessage("sampleRate")
                 .that(mMetadataArgumentCaptor.getValue().getPerEventSamplingRate())
-                .isEqualTo(1);
+                .isEqualTo(1.0);
+        expect.withMessage("deviceSampleRate")
+                .that(mMetadataArgumentCaptor.getValue().getPerDeviceSamplingRate())
+                .isEqualTo(1.0);
     }
 
     @Test
@@ -82,6 +104,9 @@ public final class AbstractMetricLoggerTest extends SharedMockitoTestCase {
                 MetricLoggerConfig.builder(
                                 MetricId.EXAMPLE_STATS,
                                 EXAMPLE_CONFIG_RATE_100_PERCENT,
+                                mMockExecutor,
+                                mMockExecutor,
+                                mMockContext,
                                 mMockLogUploader)
                         .build();
         AbstractMetricLogger<ExampleStats> logger = new ExampleStatsLogger(config);
@@ -89,9 +114,12 @@ public final class AbstractMetricLoggerTest extends SharedMockitoTestCase {
         logger.log(() -> EVENT);
 
         verify(mMockLogUploader).accept(eq(EVENT), mMetadataArgumentCaptor.capture());
-        expect.withMessage("sampleRate")
+        expect.withMessage("eventSampleRate")
                 .that(mMetadataArgumentCaptor.getValue().getPerEventSamplingRate())
-                .isEqualTo(1);
+                .isEqualTo(1.0);
+        expect.withMessage("deviceSampleRate")
+                .that(mMetadataArgumentCaptor.getValue().getPerDeviceSamplingRate())
+                .isEqualTo(1.0);
     }
 
     @Test
@@ -101,6 +129,9 @@ public final class AbstractMetricLoggerTest extends SharedMockitoTestCase {
                 MetricLoggerConfig.builder(
                                 MetricId.EXAMPLE_STATS,
                                 LogSamplingConfig.getDefaultInstance(),
+                                mMockExecutor,
+                                mMockExecutor,
+                                mMockContext,
                                 mMockLogUploader)
                         .build();
         AbstractMetricLogger<ExampleStats> logger = new ExampleStatsLogger(config);
@@ -108,9 +139,12 @@ public final class AbstractMetricLoggerTest extends SharedMockitoTestCase {
         logger.log(EVENT);
 
         verify(mMockLogUploader).accept(eq(EVENT), mMetadataArgumentCaptor.capture());
-        expect.withMessage("sampleRate")
+        expect.withMessage("eventSampleRate")
                 .that(mMetadataArgumentCaptor.getValue().getPerEventSamplingRate())
-                .isEqualTo(1);
+                .isEqualTo(1.0);
+        expect.withMessage("deviceSampleRate")
+                .that(mMetadataArgumentCaptor.getValue().getPerDeviceSamplingRate())
+                .isEqualTo(1.0);
     }
 
     @Test
@@ -120,6 +154,28 @@ public final class AbstractMetricLoggerTest extends SharedMockitoTestCase {
                 MetricLoggerConfig.builder(
                                 MetricId.EXAMPLE_STATS,
                                 EXAMPLE_CONFIG_RATE_0_PERCENT,
+                                mMockExecutor,
+                                mMockExecutor,
+                                mMockContext,
+                                mMockLogUploader)
+                        .build();
+        AbstractMetricLogger<ExampleStats> logger = new ExampleStatsLogger(config);
+
+        logger.log(EVENT);
+
+        verify(mMockLogUploader, times(0)).accept(any(), any());
+    }
+
+    @Test
+    public void testLog_zeroPerDeviceSamplingRate_noLog() {
+        // Per event sampling rate set to 0%, performs no event logging.
+        MetricLoggerConfig<ExampleStats> config =
+                MetricLoggerConfig.builder(
+                                MetricId.EXAMPLE_STATS,
+                                EXAMPLE_PER_DEVICE_CONFIG_RATE_0_PERCENT,
+                                mMockExecutor,
+                                mMockExecutor,
+                                mMockContext,
                                 mMockLogUploader)
                         .build();
         AbstractMetricLogger<ExampleStats> logger = new ExampleStatsLogger(config);
@@ -138,6 +194,9 @@ public final class AbstractMetricLoggerTest extends SharedMockitoTestCase {
                 MetricLoggerConfig.builder(
                                 MetricId.EXAMPLE_STATS,
                                 EXAMPLE_CONFIG_RATE_0_PERCENT,
+                                mMockExecutor,
+                                mMockExecutor,
+                                mMockContext,
                                 mMockLogUploader)
                         .build();
         AbstractMetricLogger<ExampleStats> logger = new ExampleStatsLogger(config);

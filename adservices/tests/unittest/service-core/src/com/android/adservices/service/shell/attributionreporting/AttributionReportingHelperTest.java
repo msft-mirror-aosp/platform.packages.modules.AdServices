@@ -17,12 +17,20 @@
 package com.android.adservices.service.shell.attributionreporting;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
+import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.data.measurement.MeasurementTables.EventReportContract;
 import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
+import com.android.adservices.service.measurement.EventReport;
+import com.android.adservices.service.measurement.EventReportFixture;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
+import com.android.adservices.service.measurement.reporting.DebugReport;
+import com.android.adservices.service.measurement.reporting.DebugReportFixture;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -31,6 +39,8 @@ import org.junit.Test;
 public final class AttributionReportingHelperTest extends AdServicesUnitTestCase {
     private static final String APP_DESTINATION = "app_destination";
     private static final String WEB_DESTINATION = "web_destination";
+    private static final String RANDOMIZED = "randomized";
+
     @Test
     public void testSourceToJson_happyPath() throws JSONException {
         Source source =
@@ -44,18 +54,16 @@ public final class AttributionReportingHelperTest extends AdServicesUnitTestCase
                 .isEqualTo(source.getId());
         expect.withMessage("STATUS")
                 .that(jsonObject.getString(SourceContract.STATUS))
-                .isEqualTo("active");
+                .isEqualTo(AttributionReportingHelper.STATUS_MAP.get(source.getStatus()));
         expect.withMessage("REGISTRATION_ORIGIN")
                 .that(jsonObject.getString(SourceContract.REGISTRATION_ORIGIN))
                 .isEqualTo(source.getRegistrationOrigin().toString());
-
         expect.withMessage("APP_DESTINATION")
                 .that(jsonObject.getString(APP_DESTINATION))
                 .isEqualTo(source.getAppDestinations().toString());
         expect.withMessage("WEB_DESTINATION")
                 .that(jsonObject.getString(WEB_DESTINATION))
                 .isEqualTo(source.getWebDestinations().toString());
-
         expect.withMessage("REGISTRANT")
                 .that(jsonObject.getString(SourceContract.REGISTRANT))
                 .isEqualTo(source.getRegistrant().toString());
@@ -73,6 +81,10 @@ public final class AttributionReportingHelperTest extends AdServicesUnitTestCase
         expect.withMessage("DEBUG_KEY")
                 .that(debugKeyString)
                 .isEqualTo(source.getDebugKey().toString());
+        expect.withMessage("ATTRIBUTION_MODE")
+                .that(jsonObject.getString(SourceContract.ATTRIBUTION_MODE))
+                .isEqualTo(AttributionReportingHelper.ATTRIBUTION_MODE_MAP.get(
+                        source.getAttributionMode()));
     }
 
     @Test
@@ -100,5 +112,110 @@ public final class AttributionReportingHelperTest extends AdServicesUnitTestCase
         expect.withMessage("DEBUG_KEY")
                 .that(debugKeyString)
                 .isEqualTo(trigger.getDebugKey().toString());
+    }
+
+    @Test
+    public void testEventReportToJson_happyPath() throws JSONException {
+        EventReport eventReport =
+                EventReportFixture.getBaseEventReportBuild()
+                        .setId("Event1")
+                        .setSourceId("S1")
+                        .setTriggerId(null)
+                        .build();
+
+        JSONObject jsonObject = AttributionReportingHelper.eventReportToJson(eventReport);
+
+        expect.withMessage("STATUS")
+                .that(jsonObject.getInt(EventReportContract.STATUS))
+                .isEqualTo(eventReport.getStatus());
+        expect.withMessage("ATTRIBUTION_DESTINATION")
+                .that(jsonObject.getString(EventReportContract.ATTRIBUTION_DESTINATION))
+                .isEqualTo(eventReport.getAttributionDestinations().toString());
+        expect.withMessage("TRIGGER_TIME")
+                .that(jsonObject.getLong(EventReportContract.TRIGGER_TIME))
+                .isEqualTo(eventReport.getTriggerTime());
+        expect.withMessage("REPORT_TIME")
+                .that(jsonObject.getLong(EventReportContract.REPORT_TIME))
+                .isEqualTo(eventReport.getReportTime());
+        expect.withMessage("TRIGGER_PRIORITY")
+                .that(jsonObject.getLong(EventReportContract.TRIGGER_PRIORITY))
+                .isEqualTo(eventReport.getTriggerPriority());
+        expect.withMessage("RANDOMIZED_TRIGGER_RATE")
+                .that(jsonObject.getDouble(EventReportContract.RANDOMIZED_TRIGGER_RATE))
+                .isEqualTo(eventReport.getRandomizedTriggerRate());
+        expect.withMessage("RANDOMIZED").that(jsonObject.getBoolean(RANDOMIZED)).isEqualTo(true);
+        expect.withMessage("REGISTRATION_ORIGIN").that(
+                jsonObject.getString(EventReportContract.REGISTRATION_ORIGIN)).isEqualTo(
+                eventReport.getRegistrationOrigin().toString());
+    }
+
+    @Test
+    public void testAggregatableReportToJson_happyPath() throws JSONException {
+        AggregateReport aggregatableReport =
+                AggregateReportFixture.getValidAggregateReportBuilder().build();
+
+        JSONObject jsonObject =
+                AttributionReportingHelper.aggregatableReportToJson(aggregatableReport);
+
+        expect.withMessage("STATUS")
+                .that(jsonObject.getInt(MeasurementTables.AggregateReport.STATUS))
+                .isEqualTo(aggregatableReport.getStatus());
+        expect.withMessage("ATTRIBUTION_DESTINATION")
+                .that(
+                        jsonObject.getString(
+                                MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION))
+                .isEqualTo(aggregatableReport.getAttributionDestination().toString());
+        expect.withMessage("TRIGGER_TIME")
+                .that(jsonObject.getLong(MeasurementTables.AggregateReport.TRIGGER_TIME))
+                .isEqualTo(aggregatableReport.getTriggerTime());
+        expect.withMessage("SCHEDULED_REPORT_TIME")
+                .that(jsonObject.getLong(MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME))
+                .isEqualTo(aggregatableReport.getScheduledReportTime());
+        expect.withMessage("AGGREGATION_COORDINATOR_ORIGIN")
+                .that(
+                        jsonObject.getString(
+                                MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN))
+                .isEqualTo(aggregatableReport.getAggregationCoordinatorOrigin().toString());
+        expect.withMessage("DEBUG_CLEARTEXT_PAYLOAD")
+                .that(
+                        jsonObject.getString(
+                                MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD))
+                .isEqualTo(aggregatableReport.getDebugCleartextPayload());
+        expect.withMessage("REGISTRATION_ORIGIN")
+                .that(jsonObject.getString(
+                        MeasurementTables.AggregateReport.REGISTRATION_ORIGIN))
+                .isEqualTo(aggregatableReport.getRegistrationOrigin().toString());
+        expect.withMessage("TRIGGER_CONTEXT_ID")
+                .that(jsonObject.getString(MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID))
+                .isEqualTo(aggregatableReport.getTriggerContextId());
+    }
+
+    @Test
+    public void testDebugReportToJson_happyPath() throws JSONException {
+        DebugReport debugReport =
+                new DebugReport.Builder()
+                        .setId("report1")
+                        .setType(DebugReportFixture.ValidDebugReportParams.TYPE)
+                        .setBody(DebugReportFixture.ValidDebugReportParams.BODY)
+                        .setEnrollmentId(DebugReportFixture.ValidDebugReportParams.ENROLLMENT_ID)
+                        .setRegistrationOrigin(
+                                DebugReportFixture.ValidDebugReportParams.REGISTRATION_ORIGIN)
+                        .setRegistrant(DebugReportFixture.ValidDebugReportParams.REGISTRANT)
+                        .setInsertionTime(DebugReportFixture.ValidDebugReportParams.INSERTION_TIME)
+                        .build();
+
+        JSONObject jsonObject = AttributionReportingHelper.debugReportToJson(debugReport);
+
+        expect.withMessage("INSERTION_TIME")
+                .that(jsonObject.getLong(MeasurementTables.DebugReportContract.INSERTION_TIME))
+                .isEqualTo(debugReport.getInsertionTime());
+        expect.withMessage("REGISTRATION_ORIGIN")
+                .that(
+                        jsonObject.getString(
+                                MeasurementTables.DebugReportContract.REGISTRATION_ORIGIN))
+                .isEqualTo(debugReport.getRegistrationOrigin().toString());
+        expect.withMessage("TYPE")
+                .that(jsonObject.getString(MeasurementTables.DebugReportContract.TYPE))
+                .isEqualTo(debugReport.getType());
     }
 }

@@ -16,10 +16,16 @@
 
 package com.android.adservices.service.shell.attributionreporting;
 
+import com.android.adservices.data.measurement.MeasurementTables;
+import com.android.adservices.data.measurement.MeasurementTables.DebugReportContract;
+import com.android.adservices.data.measurement.MeasurementTables.EventReportContract;
 import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import com.android.adservices.data.measurement.MeasurementTables.TriggerContract;
+import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
+import com.android.adservices.service.measurement.aggregation.AggregateReport;
+import com.android.adservices.service.measurement.reporting.DebugReport;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -27,18 +33,25 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public final class AttributionReportingHelper {
-
     private static final String APP_DESTINATION = "app_destination";
     private static final String WEB_DESTINATION = "web_destination";
     private static final String ACTIVE = "active";
     private static final String IGNORED = "ignored";
     private static final String MARKED_TO_DELETE = "marked_to_delete";
+    private static final String RANDOMIZED = "randomized";
 
-    private static final ImmutableMap<Integer, String> STATUS_MAP =
+    public static final ImmutableMap<Integer, String> STATUS_MAP =
             ImmutableMap.of(
                     Source.Status.ACTIVE, ACTIVE,
                     Source.Status.IGNORED, IGNORED,
                     Source.Status.MARKED_TO_DELETE, MARKED_TO_DELETE);
+
+    public static final ImmutableMap<Integer, String> ATTRIBUTION_MODE_MAP =
+            ImmutableMap.of(
+                    Source.AttributionMode.TRUTHFULLY, "Attributable",
+                    Source.AttributionMode.FALSELY, "Unattributable: noised with fake reports",
+                    Source.AttributionMode.NEVER, "Unattributable: noised with no reports",
+                    Source.AttributionMode.UNASSIGNED, "Unassigned");
 
     private AttributionReportingHelper() {
         throw new UnsupportedOperationException(
@@ -54,7 +67,9 @@ public final class AttributionReportingHelper {
                         .put(SourceContract.REGISTRANT, source.getRegistrant())
                         .put(SourceContract.EVENT_TIME, source.getEventTime())
                         .put(SourceContract.EXPIRY_TIME, source.getExpiryTime())
-                        .put(SourceContract.SOURCE_TYPE, source.getSourceType().getValue());
+                        .put(SourceContract.SOURCE_TYPE, source.getSourceType().getValue())
+                        .put(SourceContract.ATTRIBUTION_MODE,
+                                ATTRIBUTION_MODE_MAP.get(source.getAttributionMode()));
 
         if (source.getDebugKey() != null) {
             jsonObject.put(SourceContract.DEBUG_KEY, source.getDebugKey().toString());
@@ -85,5 +100,55 @@ public final class AttributionReportingHelper {
         }
 
         return jsonObject;
+    }
+
+    static JSONObject eventReportToJson(EventReport eventReport) throws JSONException {
+        return new JSONObject()
+                .put(EventReportContract.STATUS, eventReport.getStatus())
+                .put(
+                        EventReportContract.ATTRIBUTION_DESTINATION,
+                        eventReport.getAttributionDestinations())
+                .put(EventReportContract.TRIGGER_TIME, eventReport.getTriggerTime())
+                .put(EventReportContract.REPORT_TIME, eventReport.getReportTime())
+                .put(EventReportContract.TRIGGER_PRIORITY, eventReport.getTriggerPriority())
+                .put(
+                        EventReportContract.RANDOMIZED_TRIGGER_RATE,
+                        eventReport.getRandomizedTriggerRate())
+                .put(RANDOMIZED, eventReport.isRandomized())
+                .put(EventReportContract.REGISTRATION_ORIGIN, eventReport.getRegistrationOrigin());
+    }
+
+    static JSONObject aggregatableReportToJson(AggregateReport aggregateReport)
+            throws JSONException {
+        return new JSONObject()
+                .put(MeasurementTables.AggregateReport.STATUS, aggregateReport.getStatus())
+                .put(
+                        MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION,
+                        aggregateReport.getAttributionDestination())
+                .put(
+                        MeasurementTables.AggregateReport.TRIGGER_TIME,
+                        aggregateReport.getTriggerTime())
+                .put(
+                        MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME,
+                        aggregateReport.getScheduledReportTime())
+                .put(
+                        MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN,
+                        aggregateReport.getAggregationCoordinatorOrigin())
+                .put(
+                        MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD,
+                        aggregateReport.getDebugCleartextPayload())
+                .put(
+                        MeasurementTables.AggregateReport.REGISTRATION_ORIGIN,
+                        aggregateReport.getRegistrationOrigin())
+                .put(
+                        MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID,
+                        aggregateReport.getTriggerContextId());
+    }
+
+    static JSONObject debugReportToJson(DebugReport debugReport) throws JSONException {
+        return new JSONObject()
+                .put(DebugReportContract.INSERTION_TIME, debugReport.getInsertionTime())
+                .put(DebugReportContract.REGISTRATION_ORIGIN, debugReport.getRegistrationOrigin())
+                .put(DebugReportContract.TYPE, debugReport.getType());
     }
 }

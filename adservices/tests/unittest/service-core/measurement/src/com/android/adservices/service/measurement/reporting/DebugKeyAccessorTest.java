@@ -30,6 +30,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -93,6 +95,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
         when(mMockFlags.getMeasurementPrivacyEpsilon())
                 .thenReturn(DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
         when(mMockFlags.getMeasurementEnableBothSideDebugKeysInReports()).thenReturn(false);
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(false);
     }
 
     @Test
@@ -2107,6 +2110,50 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    public void getDebugKeys_adIdMatchingA2WNullPlatformAdIdInWindow_debugKeysAbsent()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(1L);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        null,
+                        null);
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
     public void getDebugKeys_adIdMatching_appToWeb_matchingAdIds_debugKeysPresent()
             throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
@@ -2148,9 +2195,12 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeys_encryptedAdIdMatching_appToWeb_matchingAdIds_debugKeysPresent()
+    public void getDebugKeys_adIdMatchingA2WMatchingAdIdsInWindow_debugKeysPresent()
             throws Exception {
-        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(1L);
 
         Source source =
                 createSource(
@@ -2159,7 +2209,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
                         false,
                         ValidSourceParams.REGISTRANT,
                         null,
-                        TEST_SHA_ENCRYPTED_AD_ID_1,
+                        TEST_ACTUAL_AD_ID_1,
                         null);
         Trigger trigger =
                 createTrigger(
@@ -2230,9 +2280,12 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeys_adIdMatching_appToWeb_failedMatch_doesNotMatchJoinKeys()
+    public void getDebugKeys_adIdMatchingA2WNonMatchingAdIdsInWindow_debugKeysAbsent()
             throws Exception {
-        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(2L);
 
         Source source =
                 createSource(
@@ -2240,7 +2293,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
                         true,
                         false,
                         ValidSourceParams.REGISTRANT,
-                        "test-debug-key",
+                        null,
                         TEST_ACTUAL_AD_ID_1,
                         null);
         Trigger trigger =
@@ -2249,14 +2302,12 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
                         false,
                         true,
                         ValidTriggerParams.REGISTRANT,
-                        "test-debug-key",
+                        null,
                         null,
                         TEST_SHA_ENCRYPTED_AD_ID_2);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
-        // The AdID matching attempt happens first and fails, so the debug join key matching does
-        // not occur.
         assertNull(debugKeyPair.first);
         assertNull(debugKeyPair.second);
         MsmtAdIdMatchForDebugKeysStats stats =
@@ -2265,12 +2316,11 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
                         .setAttributionType(
                                 AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
                         .setMatched(false)
-                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIds(2L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
                         .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
     }
 
     @Test
@@ -2341,6 +2391,52 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     public void getDebugKeys_adIdMatching_appToWeb_uniqueAdIdLimitReached_debugKeysAbsent()
             throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any()))
+                .thenReturn(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(false);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        TEST_ACTUAL_AD_ID_1,
+                        null);
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
+    public void getDebugKeys_adIdMatchingA2WAdIdLimitReachedInWindow_debugKeysAbsent()
+            throws Exception {
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(anyString()))
                 .thenReturn(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
 
         Source source =
@@ -2449,6 +2545,50 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    public void getDebugKeys_adIdMatchingWebToAppNullPlatformAdIdInWindow_debugKeysAbsent()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(1L);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.WEB,
+                        true,
+                        true,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        true,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        null);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
     public void getDebugKeys_adIdMatching_webToApp_matchingAdIds_debugKeysPresent()
             throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
@@ -2490,9 +2630,12 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeys_encryptedAdIdMatching_webToApp_matchingAdIds_debugKeysPresent()
+    public void getDebugKeys_adIdMatchingW2AMatchingAdIdsInWindow_debugKeysPresent()
             throws Exception {
-        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(1L);
 
         Source source =
                 createSource(
@@ -2510,7 +2653,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        TEST_SHA_ENCRYPTED_AD_ID_1,
+                        TEST_ACTUAL_AD_ID_1,
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -2572,9 +2715,12 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeys_adIdMatching_webToApp_failedMatch_doesNotMatchJoinKeys()
+    public void getDebugKeys_adIdMatchingW2ANonMatchingAdIdsInWindow_debugKeysAbsent()
             throws Exception {
-        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(2L);
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(2L);
 
         Source source =
                 createSource(
@@ -2582,7 +2728,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
                         false,
                         true,
                         ValidSourceParams.REGISTRANT,
-                        "test-debug-key",
+                        null,
                         null,
                         TEST_SHA_ENCRYPTED_AD_ID_1);
         Trigger trigger =
@@ -2591,14 +2737,12 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
                         true,
                         false,
                         ValidTriggerParams.REGISTRANT,
-                        "test-debug-key",
+                        null,
                         TEST_ACTUAL_AD_ID_2,
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
                 mDebugKeyAccessor.getDebugKeys(source, trigger);
-        // The AdID matching attempt happens first and fails, so the debug join key matching does
-        // not occur.
         assertNull(debugKeyPair.first);
         assertNull(debugKeyPair.second);
         MsmtAdIdMatchForDebugKeysStats stats =
@@ -2612,7 +2756,6 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
                         .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
         verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
-        verify(mAdServicesLogger, never()).logMeasurementDebugKeysMatch(any());
     }
 
     @Test
@@ -2683,6 +2826,50 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     public void getDebugKeys_adIdMatching_webToApp_uniqueAdIdLimitReached_debugKeysAbsent()
             throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any()))
+                .thenReturn(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        TEST_ACTUAL_AD_ID_1,
+                        null);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
+    public void getDebugKeys_adIdMatchingW2AUniqueAdIdLimitReachedInWindow_debugKeysAbsent()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
                 .thenReturn(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
 
         Source source =
@@ -2793,6 +2980,50 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    public void getDebugKeysForVerbose_adIdA2WNullPlatformAdIdInWindow_sourceDebugKeyAbsent()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(1L);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        null,
+                        null);
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
     public void getDebugKeysForVerbose_adIdAppToWeb_matchingAdIds_sourceDebugKeyPresent()
             throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
@@ -2834,9 +3065,12 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeysForVerbose_encryptedAdIdAppToWeb_matchingAdIds_sourceDebugKeyPresent()
+    public void getDebugKeysForVerbose_adIdA2WMatchingAdIdsInWindow_sourceDebugKeyPresent()
             throws Exception {
-        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(1L);
 
         Source source =
                 createSource(
@@ -2845,7 +3079,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
                         false,
                         ValidSourceParams.REGISTRANT,
                         null,
-                        TEST_SHA_ENCRYPTED_AD_ID_1,
+                        TEST_ACTUAL_AD_ID_1,
                         null);
         Trigger trigger =
                 createTrigger(
@@ -2878,6 +3112,50 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     public void getDebugKeysForVerbose_adIdAppToWeb_nonMatchingAdIds_sourceDebugKeyAbsent()
             throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(2L);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        TEST_ACTUAL_AD_ID_1,
+                        null);
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_2);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(2L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_adIdA2WNonMatchingAdIdsInWindow_sourceDebugKeyAbsent()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(2L);
 
         Source source =
                 createSource(
@@ -3066,6 +3344,50 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    public void getDebugKeysForVerbose_adIdA2WUniqueAdIdLimitReachedInWindow_sourceDebugKeyAbsent()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        TEST_ACTUAL_AD_ID_1,
+                        null);
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
     public void getDebugKeysForVerbose_adIdWebToApp_noAdIds_sourceDebugKeyAbsent()
             throws Exception {
         Source source =
@@ -3099,6 +3421,50 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
             getDebugKeysForVerbose_adIdWebToApp_nullPlatformAdId_sourceDebugKeyAbsent_logsMetric()
                     throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        null);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_adIdW2ANullPlatformAdIdInWindow_sourceDebugKeyAbsent()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(1L);
 
         Source source =
                 createSource(
@@ -3178,9 +3544,12 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
-    public void getDebugKeysForVerbose_encryptedAdIdWebToApp_matchingAdIds_sourceDebugKeyPresent()
+    public void getDebugKeysForVerbose_adIdW2AMatchingAdIdsInWindow_sourceDebugKeyPresent()
             throws Exception {
-        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(1L);
 
         Source source =
                 createSource(
@@ -3198,7 +3567,7 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
                         false,
                         ValidTriggerParams.REGISTRANT,
                         null,
-                        TEST_SHA_ENCRYPTED_AD_ID_1,
+                        TEST_ACTUAL_AD_ID_1,
                         null);
 
         Pair<UnsignedLong, UnsignedLong> debugKeyPair =
@@ -3253,6 +3622,50 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
                                 AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
                         .setMatched(false)
                         .setNumUniqueAdIds(2L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_adIdW2ANonMatchingAdIdsInWindow_sourceDebugKeyAbsent()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(1L);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        TEST_ACTUAL_AD_ID_2,
+                        null);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(1L)
                         .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
                         .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
                         .build();
@@ -3371,6 +3784,50 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     public void getDebugKeysForVerbose_adIdWebToApp_uniqueAdIdLimitReached_sourceDebugKeyAbsent()
             throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any()))
+                .thenReturn(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
+
+        Source source =
+                createSource(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidSourceParams.REGISTRANT,
+                        null,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        TEST_ACTUAL_AD_ID_1,
+                        null);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__WEB_APP)
+                        .setMatched(false)
+                        .setNumUniqueAdIds(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_adIdW2AUniqueAdIdLimitReachedInWindow_sourceDebugKeyAbsent()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
                 .thenReturn(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT);
 
         Source source =
@@ -3632,9 +4089,92 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    public void getDebugKeys_adIdMatchingXnaAppToWebMatchingAdIdsInWindow_debugKeysPresent()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(1L);
+
+        Source source =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.APP,
+                                        true,
+                                        false,
+                                        ValidSourceParams.REGISTRANT,
+                                        null,
+                                        TEST_ACTUAL_AD_ID_1,
+                                        null))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(true)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
     public void getDebugKeys_adIdMatching_xnaWebToApp_matchingAdIds_debugKeysAbsent()
             throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
+        Source source =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.WEB,
+                                        false,
+                                        true,
+                                        ValidSourceParams.REGISTRANT,
+                                        null,
+                                        null,
+                                        TEST_ACTUAL_AD_ID_1))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        TEST_ACTUAL_AD_ID_1,
+                        null);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeys(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertNull(debugKeyPair.second);
+    }
+
+    @Test
+    public void getDebugKeys_adIdMatchingXnaWebToAppMatchingAdIdsInWindow_debugKeysAbsent()
+            throws Exception {
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(1L);
 
         Source source =
                 Source.Builder.from(
@@ -3740,6 +4280,52 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    public void getDebugKeysForVerbose_xnaA2WMatchingAdIds_debugKeysPresent() throws Exception {
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(1L);
+
+        Source source =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.APP,
+                                        true,
+                                        false,
+                                        ValidSourceParams.REGISTRANT,
+                                        null,
+                                        TEST_ACTUAL_AD_ID_1,
+                                        null))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.WEB,
+                        false,
+                        true,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        null,
+                        TEST_SHA_ENCRYPTED_AD_ID_1);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertEquals(SOURCE_DEBUG_KEY, debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+        MsmtAdIdMatchForDebugKeysStats stats =
+                MsmtAdIdMatchForDebugKeysStats.builder()
+                        .setAdTechEnrollmentId(ValidTriggerParams.ENROLLMENT_ID)
+                        .setAttributionType(
+                                AD_SERVICES_MEASUREMENT_DEBUG_KEYS__ATTRIBUTION_TYPE__APP_WEB)
+                        .setMatched(true)
+                        .setNumUniqueAdIds(1L)
+                        .setNumUniqueAdIdsLimit(DEFAULT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT)
+                        .setSourceRegistrant(ValidSourceParams.REGISTRANT.toString())
+                        .build();
+        verify(mAdServicesLogger).logMeasurementAdIdMatchForDebugKeysStats(eq(stats));
+    }
+
+    @Test
     public void getDebugKeysForVerbose_xnaAppToWebJoinKeysMatch_sourceDebugKeysAbsent()
             throws Exception {
         Source source =
@@ -3773,6 +4359,41 @@ public final class DebugKeyAccessorTest extends AdServicesMockitoTestCase {
     public void getDebugKeysForVerbose_xnaWebToApp_matchingAdIds_sourceDebugKeyAbsent()
             throws Exception {
         when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollment(any())).thenReturn(1L);
+
+        Source source =
+                Source.Builder.from(
+                                createSource(
+                                        EventSurfaceType.WEB,
+                                        false,
+                                        true,
+                                        ValidSourceParams.REGISTRANT,
+                                        null,
+                                        null,
+                                        TEST_SHA_ENCRYPTED_AD_ID_1))
+                        .setParentId(PARENT_SOURCE_ID)
+                        .build();
+        Trigger trigger =
+                createTrigger(
+                        EventSurfaceType.APP,
+                        true,
+                        false,
+                        ValidTriggerParams.REGISTRANT,
+                        null,
+                        TEST_ACTUAL_AD_ID_1,
+                        null);
+
+        Pair<UnsignedLong, UnsignedLong> debugKeyPair =
+                mDebugKeyAccessor.getDebugKeysForVerboseTriggerDebugReport(source, trigger);
+        assertNull(debugKeyPair.first);
+        assertEquals(TRIGGER_DEBUG_KEY, debugKeyPair.second);
+    }
+
+    @Test
+    public void getDebugKeysForVerbose_xnaW2AMatchingAdIds_sourceDebugKeyAbsent() throws Exception {
+        when(mMockFlags.getMeasurementEnableAdIdsPerDevicePerWindow()).thenReturn(true);
+        when(mMeasurementDao.countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+                        anyString(), anyLong(), anyLong(), anyString()))
+                .thenReturn(1L);
 
         Source source =
                 Source.Builder.from(

@@ -1025,6 +1025,12 @@ public abstract class AdSelectionEntryDao {
             List<Long> adSelectionIds);
 
     /**
+     * Query the unified table to get winning buyer of ad selection run identified by adSelectionId.
+     */
+    @Query("SELECT winning_buyer FROM ad_selection_result WHERE ad_selection_id = :adSelectionId")
+    public abstract AdTechIdentifier getWinningBuyerForIdUnifiedTables(Long adSelectionId);
+
+    /**
      * Insert new ad selection initialization record. Aborts if adselectionId already exists.
      *
      * @param dbAdSelectionInitialization the record keyed by adSelectionId to insert.

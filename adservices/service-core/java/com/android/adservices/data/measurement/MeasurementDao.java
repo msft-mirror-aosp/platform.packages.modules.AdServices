@@ -3704,6 +3704,79 @@ class MeasurementDao implements IMeasurementDao {
         return registrations;
     }
 
+    /** Fetch all Event Reports */
+    @Override
+    public List<EventReport> fetchAllEventReports() throws DatastoreException {
+        List<EventReport> reports = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                EventReportContract.TABLE,
+                                /* columns= */ null,
+                                /* selection= */ null,
+                                /* selectionArgs= */ null,
+                                /* groupBy= */ null,
+                                /* having= */ null,
+                                /* orderBy= */ EventReportContract.TRIGGER_TIME,
+                                /* limit= */ null)) {
+            while (cursor.moveToNext()) {
+                EventReport eventReport = SqliteObjectMapper.constructEventReportFromCursor(cursor);
+                reports.add(eventReport);
+            }
+        }
+        return reports;
+    }
+
+    /** Fetch all Aggregatable Reports */
+    @Override
+    public List<AggregateReport> fetchAllAggregatableReports() throws DatastoreException {
+        List<AggregateReport> reports = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.AggregateReport.TABLE,
+                                /* columns= */ null,
+                                /* selection= */ null,
+                                /* selectionArgs= */ null,
+                                /* groupBy= */ null,
+                                /* having= */ null,
+                                /* orderBy= */ null,
+                                /* limit= */ null)) {
+            while (cursor.moveToNext()) {
+                AggregateReport aggregatableReportBuilder =
+                        SqliteObjectMapper.constructAggregateReport(cursor);
+                reports.add(aggregatableReportBuilder);
+            }
+        }
+        return reports;
+    }
+
+    @Override
+    public List<DebugReport> fetchAllDebugReports() throws DatastoreException {
+        List<DebugReport> reports = new ArrayList<>();
+        try (Cursor cursor =
+                mSQLTransaction
+                        .getDatabase()
+                        .query(
+                                MeasurementTables.DebugReportContract.TABLE,
+                                /* columns= */ null,
+                                /* selection= */ null,
+                                /* selectionArgs= */ null,
+                                /* groupBy= */ null,
+                                /* having= */ null,
+                                /* orderBy= */ null,
+                                /* limit= */ null)) {
+            while (cursor.moveToNext()) {
+                DebugReport debugReportBuilder =
+                        SqliteObjectMapper.constructDebugReportFromCursor(cursor);
+                reports.add(debugReportBuilder);
+            }
+        }
+        return reports;
+    }
+
     @Override
     public boolean existsActiveSourcesWithDestination(Uri attributionDestination, long eventTime)
             throws DatastoreException {
@@ -3808,6 +3881,7 @@ class MeasurementDao implements IMeasurementDao {
         return retryCount;
     }
 
+    @Deprecated
     @Override
     public long countDistinctDebugAdIdsUsedByEnrollment(@NonNull String enrollmentId)
             throws DatastoreException {
@@ -3819,6 +3893,27 @@ class MeasurementDao implements IMeasurementDao {
                     String.valueOf(EventSurfaceType.WEB),
                     enrollmentId,
                     String.valueOf(EventSurfaceType.WEB)
+                });
+    }
+
+    @Override
+    public long countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+            String enrollmentId, long startTime, long endTime, String excludedDebugAdId)
+            throws DatastoreException {
+        return DatabaseUtils.longForQuery(
+                mSQLTransaction.getDatabase(),
+                countDistinctDebugAdIdsUsedByEnrollmentQueryWithinWindow(),
+                new String[] {
+                    enrollmentId,
+                    String.valueOf(EventSurfaceType.WEB),
+                    String.valueOf(startTime),
+                    String.valueOf(endTime),
+                    excludedDebugAdId,
+                    enrollmentId,
+                    String.valueOf(EventSurfaceType.WEB),
+                    String.valueOf(startTime),
+                    String.valueOf(endTime),
+                    excludedDebugAdId
                 });
     }
 
@@ -4356,6 +4451,65 @@ class MeasurementDao implements IMeasurementDao {
                         + "AND "
                         + TriggerContract.DESTINATION_TYPE
                         + " = ?"
+                        + ")");
+    }
+
+    /**
+     * Given an enrollment id, return the number of unique debug ad id values present in sources and
+     * triggers with this enrollment within the provided time window limits.
+     */
+    private static String countDistinctDebugAdIdsUsedByEnrollmentQueryWithinWindow() {
+        return String.format(
+                Locale.ENGLISH,
+                "SELECT COUNT (DISTINCT "
+                        + SourceContract.DEBUG_AD_ID
+                        + ") "
+                        + "FROM ( "
+                        + "SELECT "
+                        + SourceContract.DEBUG_AD_ID
+                        + " FROM "
+                        + SourceContract.TABLE
+                        + " WHERE "
+                        + SourceContract.DEBUG_AD_ID
+                        + " IS NOT NULL "
+                        + "AND "
+                        + SourceContract.ENROLLMENT_ID
+                        + " = ? "
+                        + "AND "
+                        + SourceContract.PUBLISHER_TYPE
+                        + " = ? "
+                        + "AND "
+                        + SourceContract.EVENT_TIME
+                        + " >= ? "
+                        + "AND "
+                        + SourceContract.EVENT_TIME
+                        + " < ? "
+                        + "AND "
+                        + SourceContract.DEBUG_AD_ID
+                        + " != ? "
+                        + "UNION ALL "
+                        + "SELECT "
+                        + TriggerContract.DEBUG_AD_ID
+                        + " FROM "
+                        + TriggerContract.TABLE
+                        + " WHERE "
+                        + TriggerContract.DEBUG_AD_ID
+                        + " IS NOT NULL "
+                        + "AND "
+                        + TriggerContract.ENROLLMENT_ID
+                        + " = ? "
+                        + "AND "
+                        + TriggerContract.DESTINATION_TYPE
+                        + " = ? "
+                        + "AND "
+                        + TriggerContract.TRIGGER_TIME
+                        + " >= ? "
+                        + "AND "
+                        + TriggerContract.TRIGGER_TIME
+                        + " < ? "
+                        + "AND "
+                        + TriggerContract.DEBUG_AD_ID
+                        + " != ? "
                         + ")");
     }
 

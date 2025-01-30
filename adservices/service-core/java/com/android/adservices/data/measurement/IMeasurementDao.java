@@ -616,6 +616,15 @@ public interface IMeasurementDao {
     /** Get all the records from the TriggerContract table. */
     List<Trigger> fetchAllTriggerRegistrations() throws DatastoreException;
 
+    /** Get all the records from the EventReport table. */
+    List<EventReport> fetchAllEventReports() throws DatastoreException;
+
+    /** Get all the records from the AggregateReport table. */
+    List<AggregateReport> fetchAllAggregatableReports() throws DatastoreException;
+
+    /** Get all the records from the DebugReport table. */
+    List<DebugReport> fetchAllDebugReports() throws DatastoreException;
+
     /**
      * Insert/Update the supplied {@link KeyValueData} object
      *
@@ -835,8 +844,28 @@ public interface IMeasurementDao {
      *     provided on registration.
      * @return number of unique AdIds the AdTech has provided.
      * @throws DatastoreException when SQLite issue occurs
+     * @deprecated use {@link #countDistinctDebugAdIdsUsedByEnrollmentInWindow(String, long, long,
+     *     String)} instead
      */
+    @Deprecated
     long countDistinctDebugAdIdsUsedByEnrollment(@NonNull String enrollmentId)
+            throws DatastoreException;
+
+    /**
+     * Returns the number of unique AdIds provided by an Ad Tech in web contexts to match with the
+     * platform AdID from app contexts for debug key population in reports. It counts distinct AdIDs
+     * provided by the AdTech across sources and triggers in the DB within a time window.
+     *
+     * @param enrollmentId enrollmentId of previous source/trigger registrations to check AdId
+     *     provided on registration.
+     * @param startTime window start time (inclusive)
+     * @param endTime window start time (exclusive)
+     * @param excludedDebugAdId excluded debug ad ID from the count
+     * @return number of unique AdIds the AdTech has provided.
+     * @throws DatastoreException when SQLite issue occurs
+     */
+    long countDistinctDebugAdIdsUsedByEnrollmentInWindow(
+            String enrollmentId, long startTime, long endTime, String excludedDebugAdId)
             throws DatastoreException;
 
     /**
