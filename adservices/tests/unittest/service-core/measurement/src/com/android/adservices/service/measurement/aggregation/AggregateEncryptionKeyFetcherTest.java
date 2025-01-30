@@ -20,33 +20,27 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_PARSING_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.net.Uri;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.filters.SmallTest;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.WebUtil;
-import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 
 import org.json.JSONException;
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 import java.io.ByteArrayInputStream;
@@ -61,25 +55,13 @@ import java.util.Optional;
 
 import javax.net.ssl.HttpsURLConnection;
 
-/**
- * Unit tests for {@link AggregateEncryptionKeyFetcher}
- */
+/** Unit tests for {@link AggregateEncryptionKeyFetcher} */
 @SmallTest
-public final class AggregateEncryptionKeyFetcherTest {
-    @Spy
-    AggregateEncryptionKeyFetcher mFetcher =
-            new AggregateEncryptionKeyFetcher(ApplicationProvider.getApplicationContext());
+@SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)
+public final class AggregateEncryptionKeyFetcherTest extends AdServicesExtendedMockitoTestCase {
+    @Spy AggregateEncryptionKeyFetcher mFetcher = new AggregateEncryptionKeyFetcher(mContext);
 
     @Mock HttpsURLConnection mUrlConnection;
-
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this).mockStatic(ErrorLogUtil.class).build();
-
-    @Before
-    public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
-    }
 
     @Test
     public void testBasicAggregateEncryptionKeyRequest() throws Exception {
@@ -91,19 +73,23 @@ public final class AggregateEncryptionKeyFetcherTest {
                         AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         List<AggregateEncryptionKey> result = resultOptional.get();
-        assertEquals(2, result.size());
-        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.KEY_ID,
-                result.get(0).getKeyId());
-        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.PUBLIC_KEY,
-                result.get(0).getPublicKey());
-        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_EXPIRY,
-                result.get(0).getExpiry());
-        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.KEY_ID,
-                result.get(1).getKeyId());
-        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.PUBLIC_KEY,
-                result.get(1).getPublicKey());
-        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_EXPIRY,
-                result.get(1).getExpiry());
+
+        assertThat(result.size()).isEqualTo(2);
+
+        assertThat(result.get(0).getKeyId())
+                .isEqualTo(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.KEY_ID);
+        assertThat(result.get(0).getPublicKey())
+                .isEqualTo(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.PUBLIC_KEY);
+        assertThat(result.get(0).getExpiry())
+                .isEqualTo(AggregateEncryptionKeyTestUtil.DEFAULT_EXPIRY);
+
+        assertThat(result.get(1).getKeyId())
+                .isEqualTo(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.KEY_ID);
+        assertThat(result.get(1).getPublicKey())
+                .isEqualTo(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.PUBLIC_KEY);
+        assertThat(result.get(1).getExpiry())
+                .isEqualTo(AggregateEncryptionKeyTestUtil.DEFAULT_EXPIRY);
+
         verify(mUrlConnection).setRequestMethod("GET");
     }
 
@@ -115,10 +101,14 @@ public final class AggregateEncryptionKeyFetcherTest {
                         AggregateEncryptionKeyTestUtil.DEFAULT_COORDINATOR_ORIGIN,
                         badTarget,
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
-        assertFalse(resultOptional.isPresent());
+        assertThat(resultOptional.isPresent()).isFalse();
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = MalformedURLException.class,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_INVALID_PARAMETER)
     public void testMalformedUrl() throws Exception {
         Uri invalidPort = WebUtil.validUri("https://foo.test:-1");
         Optional<List<AggregateEncryptionKey>> resultOptional =
@@ -126,18 +116,14 @@ public final class AggregateEncryptionKeyFetcherTest {
                         AggregateEncryptionKeyTestUtil.DEFAULT_COORDINATOR_ORIGIN,
                         invalidPort,
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
-        assertFalse(resultOptional.isPresent());
-        ExtendedMockito.verify(
-                () ->
-                        ErrorLogUtil.e(
-                                any(MalformedURLException.class),
-                                eq(
-                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_INVALID_PARAMETER),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)),
-                times(1));
+        assertThat(resultOptional.isPresent()).isFalse();
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = IOException.class,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_IO_ERROR)
     public void testBadConnection() throws Exception {
         doThrow(new IOException("Bad internet things")).when(mFetcher).openUrl(
                 new URL(AggregateEncryptionKeyTestUtil.DEFAULT_TARGET.toString()));
@@ -146,18 +132,14 @@ public final class AggregateEncryptionKeyFetcherTest {
                         AggregateEncryptionKeyTestUtil.DEFAULT_COORDINATOR_ORIGIN,
                         AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
-        assertFalse(resultOptional.isPresent());
-        ExtendedMockito.verify(
-                () ->
-                        ErrorLogUtil.e(
-                                any(IOException.class),
-                                eq(
-                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_IO_ERROR),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)),
-                times(1));
+        assertThat(resultOptional.isPresent()).isFalse();
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = IOException.class,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_IO_ERROR)
     public void testServerTimeout() throws Exception {
         doReturn(mUrlConnection)
                 .when(mFetcher)
@@ -170,18 +152,14 @@ public final class AggregateEncryptionKeyFetcherTest {
                         AggregateEncryptionKeyTestUtil.DEFAULT_COORDINATOR_ORIGIN,
                         AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
-        assertFalse(resultOptional.isPresent());
-        ExtendedMockito.verify(
-                () ->
-                        ErrorLogUtil.e(
-                                any(IOException.class),
-                                eq(
-                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_IO_ERROR),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)),
-                times(1));
+        assertThat(resultOptional.isPresent()).isFalse();
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = JSONException.class,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_PARSING_ERROR)
     public void testInvalidResponseBodyJson() throws Exception {
         InputStream inputStream = new ByteArrayInputStream(
                 ("{" + AggregateEncryptionKeyTestUtil.getDefaultResponseBody()).getBytes());
@@ -196,15 +174,7 @@ public final class AggregateEncryptionKeyFetcherTest {
                         AggregateEncryptionKeyTestUtil.DEFAULT_COORDINATOR_ORIGIN,
                         AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
-        assertFalse(resultOptional.isPresent());
-        ExtendedMockito.verify(
-                () ->
-                        ErrorLogUtil.e(
-                                any(JSONException.class),
-                                eq(
-                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_PUBLIC_KEY_FETCHER_PARSING_ERROR),
-                                eq(AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT)),
-                times(1));
+        assertThat(resultOptional.isPresent()).isFalse();
     }
 
     @Test
@@ -221,7 +191,7 @@ public final class AggregateEncryptionKeyFetcherTest {
                         AggregateEncryptionKeyTestUtil.DEFAULT_COORDINATOR_ORIGIN,
                         AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
-        assertFalse(resultOptional.isPresent());
+        assertThat(resultOptional.isPresent()).isFalse();
     }
 
     @Test
@@ -242,17 +212,21 @@ public final class AggregateEncryptionKeyFetcherTest {
                         AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         List<AggregateEncryptionKey> result = resultOptional.get();
-        assertEquals(2, result.size());
-        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.KEY_ID,
-                result.get(0).getKeyId());
-        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.PUBLIC_KEY,
-                result.get(0).getPublicKey());
-        assertEquals(expectedExpiry, result.get(0).getExpiry());
-        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.KEY_ID,
-                result.get(1).getKeyId());
-        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.PUBLIC_KEY,
-                result.get(1).getPublicKey());
-        assertEquals(expectedExpiry, result.get(1).getExpiry());
+
+        assertThat(result.size()).isEqualTo(2);
+
+        assertThat(result.get(0).getKeyId())
+                .isEqualTo(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.KEY_ID);
+        assertThat(result.get(0).getPublicKey())
+                .isEqualTo(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.PUBLIC_KEY);
+        assertThat(result.get(0).getExpiry()).isEqualTo(expectedExpiry);
+
+        assertThat(result.get(1).getKeyId())
+                .isEqualTo(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.KEY_ID);
+        assertThat(result.get(1).getPublicKey())
+                .isEqualTo(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.PUBLIC_KEY);
+        assertThat(result.get(0).getExpiry()).isEqualTo(expectedExpiry);
+
         verify(mUrlConnection).setRequestMethod("GET");
     }
 
@@ -275,17 +249,21 @@ public final class AggregateEncryptionKeyFetcherTest {
                         AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
         List<AggregateEncryptionKey> result = resultOptional.get();
-        assertEquals(2, result.size());
-        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.KEY_ID,
-                result.get(0).getKeyId());
-        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.PUBLIC_KEY,
-                result.get(0).getPublicKey());
-        assertEquals(expectedExpiry, result.get(0).getExpiry());
-        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.KEY_ID,
-                result.get(1).getKeyId());
-        assertEquals(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.PUBLIC_KEY,
-                result.get(1).getPublicKey());
-        assertEquals(expectedExpiry, result.get(1).getExpiry());
+
+        assertThat(result.size()).isEqualTo(2);
+
+        assertThat(result.get(0).getKeyId())
+                .isEqualTo(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.KEY_ID);
+        assertThat(result.get(0).getPublicKey())
+                .isEqualTo(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_1.PUBLIC_KEY);
+        assertThat(result.get(0).getExpiry()).isEqualTo(expectedExpiry);
+
+        assertThat(result.get(1).getKeyId())
+                .isEqualTo(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.KEY_ID);
+        assertThat(result.get(1).getPublicKey())
+                .isEqualTo(AggregateEncryptionKeyTestUtil.DEFAULT_KEY_2.PUBLIC_KEY);
+        assertThat(result.get(0).getExpiry()).isEqualTo(expectedExpiry);
+
         verify(mUrlConnection).setRequestMethod("GET");
     }
 
@@ -305,7 +283,7 @@ public final class AggregateEncryptionKeyFetcherTest {
                         AggregateEncryptionKeyTestUtil.DEFAULT_COORDINATOR_ORIGIN,
                         AggregateEncryptionKeyTestUtil.DEFAULT_TARGET,
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
-        assertFalse(resultOptional.isPresent());
+        assertThat(resultOptional.isPresent()).isFalse();
     }
 
     @Test
@@ -315,7 +293,7 @@ public final class AggregateEncryptionKeyFetcherTest {
                         WebUtil.validUri("http://foo.test"),
                         WebUtil.validUri("http://foo.test"),
                         AggregateEncryptionKeyTestUtil.DEFAULT_EVENT_TIME);
-        assertFalse(resultOptional.isPresent());
+        assertThat(resultOptional.isPresent()).isFalse();
         verify(mFetcher, never()).openUrl(any());
     }
 }
