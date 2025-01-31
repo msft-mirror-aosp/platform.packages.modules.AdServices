@@ -18,6 +18,8 @@ package com.android.adservices.service;
 
 import static com.android.adservices.service.DeviceConfigFlagsHelper.getDeviceConfigFlag;
 import static com.android.adservices.service.FlagsConstants.KEY_ADSERVICES_CONSENT_BUSINESS_LOGIC_MIGRATION_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG;
+import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_JS_SCRIPT_ENGINE_MAX_RETRY_ATTEMPTS;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_MODULE_JOB_POLICY;
 import static com.android.adservices.service.FlagsConstants.KEY_AD_SERVICES_RETRY_STRATEGY_ENABLED;
@@ -5193,5 +5195,19 @@ public final class PhFlags implements Flags {
     public boolean getEnableLogSamplingInfra() {
         return getDeviceConfigFlag(
                 KEY_ENABLE_LOG_SAMPLING_INFRA, DEFAULT_ENABLE_LOG_SAMPLING_INFRA);
+    }
+
+    @Override
+    public String getAdServicesJobExecutionSamplingConfig() {
+        return getDeviceConfigFlag(
+                KEY_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG,
+                DEFAULT_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG);
+    }
+
+    @Override
+    public String getAdServicesJobSchedulingSamplingConfig() {
+        return getDeviceConfigFlag(
+                KEY_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG,
+                DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG);
     }
 }
