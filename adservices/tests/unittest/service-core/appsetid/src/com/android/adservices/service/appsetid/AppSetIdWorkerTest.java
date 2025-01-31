@@ -18,6 +18,7 @@ package com.android.adservices.service.appsetid;
 
 import static android.adservices.appsetid.GetAppSetIdResult.SCOPE_APP;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PROVIDER_SERVICE_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_PROVIDER_SERVICE_TASK_CANCELLED_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -49,6 +50,7 @@ public final class AppSetIdWorkerTest extends AdServicesUnitTestCase {
     private static final String SUCCESS_RESPONSE = "success";
     private static final String UNAUTHORIZED_RESPONSE = "unauthorized";
     private static final String FAILURE_RESPONSE = "failure";
+    private static final String TASK_CANCELLED_RESPONSE = "task cancelled";
 
     @Test
     public void testGetSingleton() throws Exception {
@@ -150,6 +152,35 @@ public final class AppSetIdWorkerTest extends AdServicesUnitTestCase {
                 .isEqualTo(SCOPE_APP);
     }
 
+    @Test
+    public void testGetAppSetIdOnTaskCancelledError() throws Exception {
+        CompletableFuture<Integer> future = new CompletableFuture<>();
+        AppSetIdWorker worker = newAppSetIdWorker(TASK_CANCELLED_RESPONSE);
+
+        worker.getAppSetId(
+                PGK_NAME,
+                UID,
+                new IGetAppSetIdCallback.Stub() {
+                    @Override
+                    public void onResult(GetAppSetIdResult resultParcel) {
+                        Log.d(mTag, "onResult(): " + resultParcel);
+                        // should never be called.
+                        fail("onResult called: " + resultParcel);
+                    }
+
+                    @Override
+                    public void onError(int resultCode) {
+                        Log.d(mTag, "onError(): " + resultCode);
+                        future.complete(resultCode);
+                    }
+                });
+
+        int result = future.get();
+        expect.withMessage("result of getAppSetId()")
+                .that(result)
+                .isEqualTo(STATUS_PROVIDER_SERVICE_TASK_CANCELLED_ERROR);
+    }
+
     private AppSetIdWorker newAppSetIdWorker(String response) {
         IAppSetIdProviderService service =
                 new IAppSetIdProviderService.Stub() {
@@ -170,6 +201,8 @@ public final class AppSetIdWorkerTest extends AdServicesUnitTestCase {
                             resultCallback.onResult(appSetIdInternal);
                         } else if (response.equals(UNAUTHORIZED_RESPONSE)) {
                             resultCallback.onError("Unauthorized caller: com.google.test");
+                        } else if (response.equals(TASK_CANCELLED_RESPONSE)) {
+                            resultCallback.onError("Task was cancelled");
                         } else {
                             resultCallback.onError("testOnError");
                         }
