@@ -49,8 +49,13 @@ public interface IMeasurementDao {
     /** Set the transaction. */
     void setTransaction(ITransaction transaction);
 
-    /** Add an entry to the Trigger datastore. */
-    void insertTrigger(Trigger trigger) throws DatastoreException;
+    /**
+     * Add an entry to the Trigger datastore and return the trigger ID.
+     *
+     * @param trigger Trigger to be inserted.
+     * @return trigger ID, if trigger ID is null, the record was not saved.
+     */
+    String insertTrigger(Trigger trigger) throws DatastoreException;
 
     /** Returns list of ids for all pending {@link Trigger}. */
     List<String> getPendingTriggerIds() throws DatastoreException;
