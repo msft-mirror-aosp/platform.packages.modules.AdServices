@@ -1756,4 +1756,12 @@ public final class FlagsConstants {
     /** Key to enable log sampling infra. */
     public static final String KEY_ENABLE_LOG_SAMPLING_INFRA =
             "LogSampling__enable_log_sampling_infra";
+
+    /** Key for AdServices' Job Execution Sampling Config. */
+    public static final String KEY_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG =
+            "Spe__ad_services_job_execution_sampling_config";
+
+    /** Key for AdServices' Job Scheduling Sampling Config. */
+    public static final String KEY_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG =
+            "Spe__ad_services_job_scheduling_sampling_config";
 }
