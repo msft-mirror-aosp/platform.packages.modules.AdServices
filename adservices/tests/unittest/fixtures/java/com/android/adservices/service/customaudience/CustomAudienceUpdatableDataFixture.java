@@ -21,6 +21,7 @@ import static com.android.adservices.service.customaudience.CustomAudienceUpdata
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_FILTERS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_RENDER_ID_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AUCTION_SERVER_REQUEST_FLAGS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.COMPONENT_ADS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.METADATA_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.PRIORITY_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.RENDER_URI_KEY;
@@ -31,6 +32,7 @@ import static com.android.adservices.service.customaudience.CustomAudienceUpdata
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
+import android.adservices.common.ComponentAdData;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.LoggerFactory;
@@ -338,6 +340,42 @@ public class CustomAudienceUpdatableDataFixture {
             jsonResponse.put(ADS_KEY, adsJson);
         }
 
+        return jsonResponse;
+    }
+
+    /**
+     * Converts a list of {@link ComponentAdData} into a JSONObject with a keyed field for component
+     * ads.
+     *
+     * <p>Optionally adds harmless junk to the object by adding unexpected fields.
+     */
+    public static JSONObject addComponentAdsToJsonObject(
+            JSONObject jsonResponse,
+            List<ComponentAdData> componentAdDataList,
+            boolean shouldAddHarmlessJunk)
+            throws JSONException {
+        if (jsonResponse == null) {
+            jsonResponse = new JSONObject();
+        }
+
+        if (componentAdDataList != null) {
+            JSONArray componentAdsJson = new JSONArray();
+            if (shouldAddHarmlessJunk) {
+                JsonFixture.addHarmlessJunkValues(componentAdsJson);
+            }
+
+            for (ComponentAdData componentAdData : componentAdDataList) {
+                JSONObject componentAdJson = new JSONObject();
+                if (shouldAddHarmlessJunk) {
+                    JsonFixture.addHarmlessJunkValues(componentAdJson);
+                }
+
+                componentAdJson.put(RENDER_URI_KEY, componentAdData.getRenderUri().toString());
+                componentAdJson.put(AD_RENDER_ID_KEY, componentAdData.getAdRenderId());
+                componentAdsJson.put(componentAdJson);
+            }
+            jsonResponse.put(COMPONENT_ADS_KEY, componentAdsJson);
+        }
         return jsonResponse;
     }
 

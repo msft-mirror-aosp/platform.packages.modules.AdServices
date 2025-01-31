@@ -70,6 +70,8 @@ public class FetchCustomAudienceReader {
      * @param frequencyCapFilteringEnabled whether or not frequency cap filtering fields should be
      *     read
      * @param appInstallFilteringEnabled whether or not app install filtering fields should be read
+     * @param componentAdRenderIdMaxLength the max length of the component ad render id
+     * @param maxNumComponentAds the maximum number of component ads in a custom audience
      */
     protected FetchCustomAudienceReader(
             @NonNull JSONObject responseObject,
@@ -82,7 +84,9 @@ public class FetchCustomAudienceReader {
             boolean frequencyCapFilteringEnabled,
             boolean appInstallFilteringEnabled,
             boolean adRenderIdEnabled,
-            long adRenderIdMaxLength) {
+            long adRenderIdMaxLength,
+            int componentAdRenderIdMaxLength,
+            int maxNumComponentAds) {
         Objects.requireNonNull(responseObject);
         Objects.requireNonNull(responseHash);
         Objects.requireNonNull(buyer);
@@ -102,7 +106,9 @@ public class FetchCustomAudienceReader {
                         frequencyCapFilteringEnabled,
                         appInstallFilteringEnabled,
                         adRenderIdEnabled,
-                        adRenderIdMaxLength);
+                        adRenderIdMaxLength,
+                        componentAdRenderIdMaxLength,
+                        maxNumComponentAds);
     }
 
     /**

@@ -25,7 +25,12 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FREQUENCY
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.ADS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_RENDER_ID_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AUCTION_SERVER_REQUEST_FLAGS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.COMPONENT_ADS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.COMPONENT_ADS_SIZE_EXCEEDS_MAX;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.OMIT_ADS_VALUE;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.RENDER_URI_KEY;
+
+import static com.google.common.truth.Truth.assertThat;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -36,6 +41,8 @@ import static org.junit.Assert.assertTrue;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
+import android.adservices.common.ComponentAdData;
+import android.adservices.common.ComponentAdDataFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
@@ -52,6 +59,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,6 +71,8 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
             DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
     private static final List<DBAdData> VALID_DB_AD_DATA_LIST =
             DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1);
+    private static final List<ComponentAdData> VALID_COMPONENT_ADS_LIST =
+            ComponentAdDataFixture.getValidComponentAdsByBuyer(CommonFixture.VALID_BUYER_1);
     private static final List<DBAdData> INVALID_DB_AD_DATA_LIST =
             DBAdDataFixture.getInvalidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1);
 
@@ -87,7 +97,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertEquals(
                 AdSelectionSignals.fromString(validUserBiddingSignalsAsJsonObjectString),
@@ -113,7 +125,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertEquals(FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS, reader.getAuctionServerRequestFlags());
     }
@@ -137,7 +151,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertEquals(0, reader.getAuctionServerRequestFlags());
     }
@@ -158,7 +174,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertEquals(0, reader.getAuctionServerRequestFlags());
     }
@@ -179,7 +197,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertThrows(JSONException.class, reader::getAuctionServerRequestFlags);
     }
@@ -203,7 +223,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertEquals(0, Double.compare(VALID_PRIORITY_1, reader.getPriority()));
     }
@@ -224,7 +246,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertEquals(0, Double.compare(PRIORITY_DEFAULT, reader.getPriority()));
     }
@@ -251,7 +275,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertEquals(
                 AdSelectionSignals.fromString(validUserBiddingSignalsAsJsonObjectString),
@@ -277,7 +303,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertNull(reader.getUserBiddingSignalsFromJsonObject());
     }
@@ -296,7 +324,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
         assertThrows(JSONException.class, reader::getUserBiddingSignalsFromJsonObject);
     }
 
@@ -314,7 +344,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
         assertThrows(JSONException.class, reader::getUserBiddingSignalsFromJsonObject);
     }
 
@@ -332,7 +364,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
         assertThrows(JSONException.class, reader::getUserBiddingSignalsFromJsonObject);
     }
 
@@ -357,7 +391,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertThrows(IllegalArgumentException.class, reader::getUserBiddingSignalsFromJsonObject);
     }
@@ -381,7 +417,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertEquals(expectedTrustedBiddingData, reader.getTrustedBiddingDataFromJsonObject());
     }
@@ -406,7 +444,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertEquals(
                 "responseObject = " + responseObject.toString(4),
@@ -433,7 +473,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertNull(reader.getTrustedBiddingDataFromJsonObject());
     }
@@ -452,7 +494,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
         assertThrows(JSONException.class, reader::getTrustedBiddingDataFromJsonObject);
     }
 
@@ -470,7 +514,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
         assertThrows(JSONException.class, reader::getTrustedBiddingDataFromJsonObject);
     }
 
@@ -488,7 +534,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
         assertThrows(JSONException.class, reader::getTrustedBiddingDataFromJsonObject);
     }
 
@@ -511,7 +559,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertThrows(IllegalArgumentException.class, reader::getTrustedBiddingDataFromJsonObject);
     }
@@ -535,7 +585,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertThrows(IllegalArgumentException.class, reader::getTrustedBiddingDataFromJsonObject);
     }
@@ -558,7 +610,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertEquals(expectedAds, reader.getAdsFromJsonObject());
     }
@@ -583,7 +637,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         false,
                         false,
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertEquals(expectedAds, reader.getAdsFromJsonObject());
     }
@@ -610,7 +666,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         true,
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertEquals(expectedAds, reader.getAdsFromJsonObject());
     }
@@ -648,7 +706,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         false,
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertEquals(expectedAds, reader.getAdsFromJsonObject());
     }
@@ -676,7 +736,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         true,
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
         assertTrue(reader.getAdsFromJsonObject().isEmpty());
     }
 
@@ -701,7 +763,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         true,
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
         assertTrue(reader.getAdsFromJsonObject().isEmpty());
     }
 
@@ -723,7 +787,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertEquals(
                 "responseObject = " + responseObject.toString(4),
@@ -750,7 +816,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertNull(reader.getAdsFromJsonObject());
     }
@@ -769,7 +837,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
         assertThrows(JSONException.class, reader::getAdsFromJsonObject);
     }
 
@@ -787,7 +857,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
         assertThrows(JSONException.class, reader::getAdsFromJsonObject);
     }
 
@@ -805,7 +877,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         List<DBAdData> extractedAds = reader.getAdsFromJsonObject();
         assertNotNull(extractedAds);
@@ -827,7 +901,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         List<DBAdData> extractedAds = reader.getAdsFromJsonObject();
         assertNotNull(extractedAds);
@@ -852,7 +928,9 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertThrows(IllegalArgumentException.class, reader::getAdsFromJsonObject);
     }
@@ -875,8 +953,306 @@ public final class CustomAudienceUpdatableDataReaderTest extends AdServicesUnitT
                         mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
                         mFakeFlags.getFledgeAppInstallFilteringEnabled(),
                         mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
 
         assertThrows(IllegalArgumentException.class, reader::getAdsFromJsonObject);
+    }
+
+    @Test
+    public void testGetComponentAdsAdsFromFullJsonObjectSuccess() throws Exception {
+        List<ComponentAdData> expectedAds = VALID_COMPONENT_ADS_LIST;
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addComponentAdsToJsonObject(
+                        /* jsonResponse= */ null, expectedAds, /* shouldAddHarmlessJunk= */ false);
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        responseObject,
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFakeFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxNumAds(),
+                        mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFakeFlags.getFledgeAppInstallFilteringEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
+
+        expect.that(reader.getComponentAdsFromJsonObject()).isEqualTo(expectedAds);
+    }
+
+    @Test
+    public void testGetComponentAdsAdsFromEmptyJsonObjectSuccess() throws Exception {
+        JSONObject responseObject = new JSONObject();
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        responseObject,
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFakeFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxNumAds(),
+                        mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFakeFlags.getFledgeAppInstallFilteringEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
+
+        expect.that(reader.getComponentAdsFromJsonObject()).isNull();
+    }
+
+    @Test
+    public void testGetComponentAdsFromFullJsonObjectWithJunkSkipsJunk() throws Exception {
+        List<ComponentAdData> expectedAds = VALID_COMPONENT_ADS_LIST;
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addComponentAdsToJsonObject(
+                        /* jsonResponse= */ null, expectedAds, /* shouldAddHarmlessJunk= */ true);
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        responseObject,
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFakeFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxNumAds(),
+                        mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFakeFlags.getFledgeAppInstallFilteringEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
+
+        expect.that(reader.getComponentAdsFromJsonObject()).isEqualTo(expectedAds);
+    }
+
+    @Test
+    public void testGetComponentAdsThrowsExceptionExceedingMaxNumComponentAds() throws Exception {
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addComponentAdsToJsonObject(
+                        /* jsonResponse= */ null,
+                        VALID_COMPONENT_ADS_LIST,
+                        /* shouldAddHarmlessJunk= */ false);
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        responseObject,
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFakeFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxNumAds(),
+                        mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFakeFlags.getFledgeAppInstallFilteringEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        VALID_COMPONENT_ADS_LIST.size() - 1);
+
+        Exception exception =
+                assertThrows(IllegalArgumentException.class, reader::getComponentAdsFromJsonObject);
+        assertThat(exception.getMessage()).isEqualTo(COMPONENT_ADS_SIZE_EXCEEDS_MAX);
+    }
+
+    @Test
+    public void testGetComponentAdsSkipsComponentWithTooLongRenderId() throws Exception {
+        List<ComponentAdData> expectedAds = new ArrayList<>();
+
+        ComponentAdData componentAdData1 =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(
+                        CommonFixture.VALID_BUYER_1, 0);
+
+        expectedAds.add(componentAdData1);
+        expectedAds.add(
+                ComponentAdDataFixture.getValidComponentAdDataWithAdRenderId(
+                        CommonFixture.VALID_BUYER_1, 1, "I am extremely loooooong"));
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addComponentAdsToJsonObject(
+                        null, expectedAds, false);
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        responseObject,
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFakeFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxNumAds(),
+                        mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFakeFlags.getFledgeAppInstallFilteringEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
+
+        expect.that(reader.getComponentAdsFromJsonObject()).isEqualTo(List.of(componentAdData1));
+    }
+
+    @Test
+    public void testGetComponentAdsSkipsComponentAdWithIncorrectBuyer() throws Exception {
+        List<ComponentAdData> expectedAds = new ArrayList<>();
+
+        ComponentAdData componentAdData1 =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(
+                        CommonFixture.VALID_BUYER_1, 0);
+
+        expectedAds.add(componentAdData1);
+        expectedAds.add(
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(
+                        CommonFixture.VALID_BUYER_2, 1));
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addComponentAdsToJsonObject(
+                        null, expectedAds, false);
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        responseObject,
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFakeFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxNumAds(),
+                        mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFakeFlags.getFledgeAppInstallFilteringEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
+
+        expect.that(reader.getComponentAdsFromJsonObject()).isEqualTo(List.of(componentAdData1));
+    }
+
+    @Test
+    public void testGetComponentAdsSkipsComponentWithMalformedAdRenderId() throws Exception {
+        List<ComponentAdData> expectedAds = new ArrayList<>();
+
+        ComponentAdData componentAdData1 =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(
+                        CommonFixture.VALID_BUYER_1, 0);
+
+        expectedAds.add(componentAdData1);
+        expectedAds.add(
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(
+                        CommonFixture.VALID_BUYER_2, 1));
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addComponentAdsToJsonObject(
+                        null, expectedAds, false);
+
+        JSONObject wrongAdRenderIdJsonObject = new JSONObject().put("ik", "v");
+        responseObject
+                .getJSONArray(COMPONENT_ADS_KEY)
+                .getJSONObject(1)
+                .put(AD_RENDER_ID_KEY, wrongAdRenderIdJsonObject);
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        responseObject,
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFakeFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxNumAds(),
+                        mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFakeFlags.getFledgeAppInstallFilteringEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
+
+        expect.that(reader.getComponentAdsFromJsonObject()).isEqualTo(List.of(componentAdData1));
+    }
+
+    @Test
+    public void testGetComponentAdsSkipsComponentWithMalformedRenderUri() throws Exception {
+        List<ComponentAdData> expectedAds = new ArrayList<>();
+
+        ComponentAdData componentAdData1 =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(
+                        CommonFixture.VALID_BUYER_1, 0);
+
+        expectedAds.add(componentAdData1);
+
+        expectedAds.add(
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(
+                        CommonFixture.VALID_BUYER_2, 1));
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addComponentAdsToJsonObject(
+                        null, expectedAds, false);
+
+        JSONObject wrongRenderUriJsonObject = new JSONObject().put("ik", "v");
+        responseObject
+                .getJSONArray(COMPONENT_ADS_KEY)
+                .getJSONObject(1)
+                .put(RENDER_URI_KEY, wrongRenderUriJsonObject);
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        responseObject,
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFakeFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxNumAds(),
+                        mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFakeFlags.getFledgeAppInstallFilteringEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
+
+        expect.that(reader.getComponentAdsFromJsonObject()).isEqualTo(List.of(componentAdData1));
+    }
+
+    @Test
+    public void testGetComponentAdsSkipsComponentWithInvalidRenderUri() throws Exception {
+        List<ComponentAdData> expectedAds = new ArrayList<>();
+
+        ComponentAdData componentAdData1 =
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(
+                        CommonFixture.VALID_BUYER_1, 0);
+
+        expectedAds.add(componentAdData1);
+        expectedAds.add(
+                ComponentAdDataFixture.getValidComponentAdDataByBuyer(
+                        CommonFixture.VALID_BUYER_2, 1));
+
+        JSONObject responseObject =
+                CustomAudienceUpdatableDataFixture.addComponentAdsToJsonObject(
+                        null, expectedAds, false);
+
+        String invalidUri = "I'm an invalid Uri";
+        responseObject
+                .getJSONArray(COMPONENT_ADS_KEY)
+                .getJSONObject(1)
+                .put(RENDER_URI_KEY, invalidUri);
+        CustomAudienceUpdatableDataReader reader =
+                new CustomAudienceUpdatableDataReader(
+                        responseObject,
+                        RESPONSE_IDENTIFIER,
+                        CommonFixture.VALID_BUYER_1,
+                        mFakeFlags.getFledgeCustomAudienceMaxUserBiddingSignalsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxTrustedBiddingDataSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxAdsSizeB(),
+                        mFakeFlags.getFledgeCustomAudienceMaxNumAds(),
+                        mFakeFlags.getFledgeFrequencyCapFilteringEnabled(),
+                        mFakeFlags.getFledgeAppInstallFilteringEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdEnabled(),
+                        mFakeFlags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        mFakeFlags.getComponentAdRenderIdMaxLengthBytes(),
+                        mFakeFlags.getMaxComponentAdsPerCustomAudience());
+
+        expect.that(reader.getComponentAdsFromJsonObject()).isEqualTo(List.of(componentAdData1));
     }
 }
