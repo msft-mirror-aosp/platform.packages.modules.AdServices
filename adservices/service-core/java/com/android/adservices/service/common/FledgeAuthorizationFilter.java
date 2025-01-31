@@ -28,10 +28,14 @@ import static com.android.adservices.service.common.AppManifestConfigCall.API_PR
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_AD_TECH_NOT_AUTHORIZED_BY_APP;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ANY_PERMISSION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ENROLLMENT_DATA_MATCH_NOT_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ENROLLMENT_NOT_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_INVALID_API_TYPE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NOT_ALLOWED_ENROLLMENT_FROM_URI_BLOCKED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NO_MATCH_PACKAGE_NAME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_PERMISSION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.checkAndLogCelByApiNameLoggingId;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
@@ -357,7 +361,7 @@ public class FledgeAuthorizationFilter {
     }
 
     private Pair<AdTechIdentifier, EnrollmentData> getAdTechIdentifierEnrollmentDataPair(
-            Uri uriForAdTech, int apiType) {
+            Uri uriForAdTech, int apiType, int apiNameLoggingId) {
         if (apiType == API_CUSTOM_AUDIENCES) {
             return mEnrollmentDao.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
                     uriForAdTech);
@@ -373,8 +377,14 @@ public class FledgeAuthorizationFilter {
             }
             return caEnrollment;
         } else {
-            throw new IllegalStateException(
-                    String.format(Locale.ENGLISH, INVALID_API_TYPE, apiType));
+            IllegalStateException exception =
+                    new IllegalStateException(
+                            String.format(Locale.ENGLISH, INVALID_API_TYPE, apiType));
+            checkAndLogCelByApiNameLoggingId(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_INVALID_API_TYPE,
+                    apiNameLoggingId);
+            throw exception;
         }
     }
 
@@ -428,7 +438,7 @@ public class FledgeAuthorizationFilter {
         }
         int enrollmentRecordsCount = mEnrollmentDao.getEnrollmentRecordCountForLogging();
         Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
-                getAdTechIdentifierEnrollmentDataPair(uriForAdTech, apiType);
+                getAdTechIdentifierEnrollmentDataPair(uriForAdTech, apiType, apiNameLoggingId);
 
         if (enrollmentResult == null) {
             sLogger.v(
@@ -515,7 +525,7 @@ public class FledgeAuthorizationFilter {
         int enrollmentRecordsCount = mEnrollmentDao.getEnrollmentRecordCountForLogging();
 
         Pair<AdTechIdentifier, EnrollmentData> enrollmentResult =
-                getAdTechIdentifierEnrollmentDataPair(uriForAdTech, apiType);
+                getAdTechIdentifierEnrollmentDataPair(uriForAdTech, apiType, apiNameLoggingId);
 
         if (enrollmentResult == null) {
             sLogger.v(
@@ -528,7 +538,12 @@ public class FledgeAuthorizationFilter {
                     enrollmentRecordsCount,
                     uriForAdTech.toString(),
                     EnrollmentStatus.ErrorCause.ENROLLMENT_NOT_FOUND_ERROR_CAUSE.getValue());
-            throw new AdTechNotAllowedException();
+            AdTechNotAllowedException exception = new AdTechNotAllowedException();
+            checkAndLogCelByApiNameLoggingId(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ENROLLMENT_NOT_FOUND,
+                    apiNameLoggingId);
+            throw exception;
         }
 
         AdTechIdentifier adTechIdentifier = enrollmentResult.first;
@@ -547,7 +562,12 @@ public class FledgeAuthorizationFilter {
                     enrollmentRecordsCount,
                     uriForAdTech.toString(),
                     EnrollmentStatus.ErrorCause.ENROLLMENT_BLOCKLISTED_ERROR_CAUSE.getValue());
-            throw new AdTechNotAllowedException();
+            AdTechNotAllowedException exception = new AdTechNotAllowedException();
+            checkAndLogCelByApiNameLoggingId(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NOT_ALLOWED_ENROLLMENT_FROM_URI_BLOCKED,
+                    apiNameLoggingId);
+            throw exception;
         }
     }
 

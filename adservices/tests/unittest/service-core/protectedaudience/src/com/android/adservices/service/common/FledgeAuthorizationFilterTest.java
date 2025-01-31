@@ -34,7 +34,10 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_AD_TECH_NOT_AUTHORIZED_BY_APP;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ANY_PERMISSION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ENROLLMENT_DATA_MATCH_NOT_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ENROLLMENT_NOT_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_INVALID_API_TYPE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NOT_ALLOWED_ENROLLMENT_BLOCKLISTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NOT_ALLOWED_ENROLLMENT_FROM_URI_BLOCKED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NO_MATCH_PACKAGE_NAME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_PERMISSION_FAILURE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__GET_AD_SELECTION_DATA;
@@ -65,6 +68,7 @@ import android.util.Pair;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.service.FlagsFactory;
@@ -1353,6 +1357,11 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_INVALID_API_TYPE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = IllegalStateException.class)
     public void testGetAndAssertAdTechFromUriAllowed_badApiType_throwsIllegalState() {
         IllegalStateException exception =
                 assertThrows(
@@ -1398,6 +1407,11 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ENROLLMENT_NOT_FOUND,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = FledgeAuthorizationFilter.AdTechNotAllowedException.class)
     public void testAssertAdTechFromUriEnrolled_notEnrolled_throwsNotAllowedException() {
         when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
                         URI_FOR_AD_TECH))
@@ -1416,6 +1430,11 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_ENROLLMENT_NOT_FOUND,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = FledgeAuthorizationFilter.AdTechNotAllowedException.class)
     public void testAssertAdTechFromUriEnrolled_notEnrolled_logsEnrollmentFailedStats() {
         when(mEnrollmentUtilMock.getBuildId()).thenReturn(2);
         when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(1);
@@ -1447,6 +1466,11 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NOT_ALLOWED_ENROLLMENT_FROM_URI_BLOCKED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = FledgeAuthorizationFilter.AdTechNotAllowedException.class)
     public void testAssertAdTechFromUriEnrolled_blocklisted_throwsNotAllowedException() {
         when(mEnrollmentDaoMock.getEnrollmentDataForFledgeByMatchingAdTechIdentifier(
                         URI_FOR_AD_TECH))
@@ -1466,6 +1490,11 @@ public final class FledgeAuthorizationFilterTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NOT_ALLOWED_ENROLLMENT_FROM_URI_BLOCKED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = FledgeAuthorizationFilter.AdTechNotAllowedException.class)
     public void testAssertAdTechFromUriEnrolled_blocklisted_logsEnrollmentFailedStats() {
         when(mEnrollmentUtilMock.getBuildId()).thenReturn(2);
         when(mEnrollmentUtilMock.getFileGroupStatus()).thenReturn(1);

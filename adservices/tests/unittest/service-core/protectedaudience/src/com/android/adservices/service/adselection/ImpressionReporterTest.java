@@ -61,6 +61,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -98,6 +99,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.DebugFlags;
+import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -625,6 +627,182 @@ public final class ImpressionReporterTest extends AdServicesExtendedMockitoTestC
                 .when(mockDao)
                 .getReportingDataForId(anyLong(), anyBoolean());
         return mockDao;
+    }
+
+    public void testReportImpression_componentSellerEnabled_makesReportingCall() throws Exception {
+        when(mMockAdServicesHttpsClient.getAndReadNothing(any(), any()))
+                .thenReturn(immediateVoidFuture());
+        when(mMockAdServicesHttpsClient.getAndReadNothing(any(), any()))
+                .thenReturn(immediateVoidFuture());
+        AdSelectionInitialization initialization =
+                AdSelectionInitialization.builder()
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .setCreationInstant(CommonFixture.FIXED_NOW)
+                        .setSeller(CommonFixture.VALID_BUYER_1)
+                        .build();
+        ReportingData reportingData =
+                ReportingData.builder()
+                        .setBuyerWinReportingUri(Uri.EMPTY)
+                        .setSellerWinReportingUri(
+                                CommonFixture.getUriWithValidSubdomain(
+                                        CommonFixture.VALID_BUYER_1.toString(), "/report/seller"))
+                        .setComponentSellerWinReportingUri(
+                                CommonFixture.getUriWithValidSubdomain(
+                                        CommonFixture.VALID_BUYER_2.toString(),
+                                        "/report/componentSeller"))
+                        .build();
+        mAdSelectionEntryDao.persistAdSelectionInitialization(AD_SELECTION_ID, initialization);
+        mAdSelectionEntryDao.persistReportingData(AD_SELECTION_ID, reportingData);
+        Flags flagsWithAuctionServerAndComponentSellerEnabled =
+                new Flags() {
+                    @Override
+                    public boolean getFledgeAuctionServerKillSwitch() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeAuctionServerEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getEnableReportEventForComponentSeller() {
+                        return true;
+                    }
+                };
+        ImpressionReporter reporter =
+                new ImpressionReporter(
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getScheduler(),
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mMockAdServicesHttpsClient,
+                        DevContext.createForDevOptionsDisabled(),
+                        mMockAdServicesLogger,
+                        flagsWithAuctionServerAndComponentSellerEnabled,
+                        mFakeDebugFlags,
+                        mMockAdSelectionServiceFilter,
+                        mMockFledgeAuthorizationFilter,
+                        new FrequencyCapAdDataValidatorNoOpImpl(),
+                        Process.myUid(),
+                        new NoOpRetryStrategyImpl(),
+                        /* shouldUseUnifiedTables= */ true,
+                        mMockReportImpressionExecutionLogger);
+        SyncReportImpressionCallback callback = new SyncReportImpressionCallback();
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(
+                                AdSelectionConfigFixture.anAdSelectionConfig(
+                                        CommonFixture.VALID_BUYER_1))
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        reporter.reportImpression(input, callback);
+        callback.assertResultReceived();
+
+        verify(mMockAdServicesLogger, timeout(LOGGING_TIMEOUT_MS))
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        anyString(),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+        // verify 2 http calls were made. 1 for seller and 1 for component seller
+        verify(mMockAdServicesHttpsClient, times(2)).getAndReadNothing(any(), any());
+    }
+
+    @Test
+    public void testReportImpression_componentSellerDisabled_doesNotMakeReportingCall()
+            throws Exception {
+        when(mMockAdServicesHttpsClient.getAndReadNothing(any(), any()))
+                .thenReturn(immediateVoidFuture());
+        AdSelectionInitialization initialization =
+                AdSelectionInitialization.builder()
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .setCreationInstant(CommonFixture.FIXED_NOW)
+                        .setSeller(CommonFixture.VALID_BUYER_1)
+                        .build();
+        ReportingData reportingData =
+                ReportingData.builder()
+                        .setBuyerWinReportingUri(Uri.EMPTY)
+                        .setSellerWinReportingUri(
+                                CommonFixture.getUriWithValidSubdomain(
+                                        CommonFixture.VALID_BUYER_1.toString(), "/report/seller"))
+                        .setComponentSellerWinReportingUri(
+                                CommonFixture.getUriWithValidSubdomain(
+                                        CommonFixture.VALID_BUYER_2.toString(),
+                                        "/report/componentSeller"))
+                        .build();
+        mAdSelectionEntryDao.persistAdSelectionInitialization(AD_SELECTION_ID, initialization);
+        mAdSelectionEntryDao.persistReportingData(AD_SELECTION_ID, reportingData);
+        Flags flagsWithAuctionServerAndComponentSellerEnabled =
+                new Flags() {
+                    @Override
+                    public boolean getFledgeAuctionServerKillSwitch() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeAuctionServerEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getEnableReportEventForComponentSeller() {
+                        return true;
+                    }
+                };
+        ImpressionReporter reporter =
+                new ImpressionReporter(
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getScheduler(),
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mMockAdServicesHttpsClient,
+                        DevContext.createForDevOptionsDisabled(),
+                        mMockAdServicesLogger,
+                        flagsWithAuctionServerAndComponentSellerEnabled,
+                        mFakeDebugFlags,
+                        mMockAdSelectionServiceFilter,
+                        mMockFledgeAuthorizationFilter,
+                        new FrequencyCapAdDataValidatorNoOpImpl(),
+                        Process.myUid(),
+                        new NoOpRetryStrategyImpl(),
+                        /* shouldUseUnifiedTables= */ true,
+                        mMockReportImpressionExecutionLogger);
+        SyncReportImpressionCallback callback = new SyncReportImpressionCallback();
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(
+                                AdSelectionConfigFixture.anAdSelectionConfig(
+                                        CommonFixture.VALID_BUYER_1))
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        reporter.reportImpression(input, callback);
+        callback.assertResultReceived();
+
+        verify(mMockAdServicesLogger, timeout(LOGGING_TIMEOUT_MS))
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        anyString(),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+        // verify 2 http calls were made. 1 for seller and 1 for component seller
+        verify(mMockAdServicesHttpsClient, times(2)).getAndReadNothing(any(), any());
     }
 
     private static final class SyncReportImpressionCallback

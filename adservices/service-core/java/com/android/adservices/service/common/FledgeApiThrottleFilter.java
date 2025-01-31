@@ -18,6 +18,9 @@ package com.android.adservices.service.common;
 
 import static android.adservices.common.AdServicesStatusUtils.RATE_LIMIT_REACHED_ERROR_MESSAGE;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_API_THROTTLE_FILTER_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.checkAndLogCelByApiNameLoggingId;
+
 import android.adservices.common.AdServicesStatusUtils;
 import android.os.LimitExceededException;
 
@@ -57,7 +60,13 @@ public class FledgeApiThrottleFilter {
                     apiKey, callerPackageName);
             mAdServicesLogger.logFledgeApiCallStats(
                     apiName, callerPackageName, AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED, 0);
-            throw new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE);
+            LimitExceededException exception =
+                    new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE);
+            checkAndLogCelByApiNameLoggingId(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_API_THROTTLE_FILTER_RATE_LIMIT_REACHED,
+                    apiName);
+            throw exception;
         }
     }
 }

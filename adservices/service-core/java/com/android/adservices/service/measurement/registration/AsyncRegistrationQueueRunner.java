@@ -369,6 +369,15 @@ public final class AsyncRegistrationQueueRunner {
             if (!source.validateAndSetNumReportStates(flags)) {
                 long maxTriggerStateCardinality =
                         flags.getMeasurementMaxReportStatesPerSourceRegistration();
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "storeSource (FAILURE): Trigger state cardinality exceeded the"
+                                    + " limit of %s. Enrollment ID: %s, Source ID: %s, Source Event"
+                                    + " ID: %s",
+                                maxTriggerStateCardinality,
+                                source.getEnrollmentId(),
+                                source.getId(),
+                                source.getEventId());
                 mDebugReportApi.scheduleSourceReport(
                         source,
                         DebugReportApi.Type.SOURCE_TRIGGER_STATE_CARDINALITY_LIMIT,
@@ -381,6 +390,15 @@ public final class AsyncRegistrationQueueRunner {
             }
             if (!source.hasValidInformationGain(flags)) {
                 float maxEventLevelChannelCapacity = source.getInformationGainThreshold(flags);
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "storeSource (FAILURE): Event level channel capacity exceeded the"
+                                        + " limit of %s. Enrollment ID: %s, Source ID: %s, Source"
+                                        + " Event ID: %s",
+                                maxEventLevelChannelCapacity,
+                                source.getEnrollmentId(),
+                                source.getId(),
+                                source.getEventId());
                 mDebugReportApi.scheduleSourceReport(
                         source,
                         DebugReportApi.Type.SOURCE_CHANNEL_CAPACITY_LIMIT,
@@ -394,6 +412,12 @@ public final class AsyncRegistrationQueueRunner {
                 Source.AttributionScopeValidationResult attributionScopeValidationResult =
                         source.validateAttributionScopeValues(flags);
                 if (!attributionScopeValidationResult.isValid()) {
+                    LoggerFactory.getMeasurementLogger()
+                            .d(
+                                    "storeSource (FAILURE): Invalid attribution scopes values - max"
+                                        + " event states limit or channel capacity limit."
+                                        + " Enrollment ID: %s, Source ID: %s, Source Event ID: %s",
+                                    source.getEnrollmentId(), source.getId(), source.getEventId());
                     DebugReportApi.Type type =
                             mDebugReportApi.scheduleAttributionScopeDebugReport(
                                     source, attributionScopeValidationResult, dao);
@@ -411,13 +435,27 @@ public final class AsyncRegistrationQueueRunner {
                                     ? new HashSet<>(source.getAttributionScopes())
                                     : Set.of();
                     if (existingScopes.isPresent() && !existingScopes.get().equals(newScopes)) {
+                        LoggerFactory.getMeasurementLogger()
+                                .d(
+                                        "storeSource (FAILURE): Source in registration sequence has"
+                                            + " mismatched attribution scopes. Enrollment ID: %s,"
+                                            + " Source ID: %s, Source Event ID: %s",
+                                        source.getEnrollmentId(),
+                                        source.getId(),
+                                        source.getEventId());
                         return false;
                     }
                 }
             }
         } catch (ArithmeticException e) {
             LoggerFactory.getMeasurementLogger()
-                    .e(e, "Calculating the number of report states overflowed.");
+                    .d(
+                            e,
+                            "storeSource (FAILURE): Number of report states overflowed."
+                                    + " Enrollment ID: %s, Source ID: %s, Source Event ID: %s",
+                            source.getEnrollmentId(),
+                            source.getId(),
+                            source.getEventId());
             mDebugReportApi.scheduleSourceReport(
                     source,
                     DebugReportApi.Type.SOURCE_FLEXIBLE_EVENT_REPORT_VALUE_ERROR,
@@ -446,6 +484,13 @@ public final class AsyncRegistrationQueueRunner {
                         (dao) -> {
                             if (asyncFetchStatus.isRequestSuccess()) {
                                 if (resultTrigger.isPresent()) {
+                                    LoggerFactory.getMeasurementLogger()
+                                            .d(
+                                                    "AsyncRegistrationQueueRunner: Trigger fetched"
+                                                            + " and parsed. Attempting to store it."
+                                                            + " Enrollment ID: %s, Trigger ID: %s",
+                                                    resultTrigger.get().getEnrollmentId(),
+                                                    resultTrigger.get().getId());
                                     storeTrigger(resultTrigger.get(), dao);
                                 }
                                 handleSuccess(
@@ -480,13 +525,18 @@ public final class AsyncRegistrationQueueRunner {
             try {
                 dao.insertTrigger(trigger);
             } catch (DatastoreException e) {
+                LoggerFactory.getMeasurementLogger()
+                        .e(e, "storeTrigger (FAILURE): Insert trigger to DB error.");
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "Enrollment ID: %s, Trigger ID: %s",
+                                trigger.getEnrollmentId(), trigger.getId());
                 mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
                         trigger, dao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
-                LoggerFactory.getMeasurementLogger()
-                        .e(e, "Insert trigger to DB error, generate trigger-unknown-error report");
                 throw new DatastoreException(
                         "Insert trigger to DB error, generate trigger-unknown-error report");
             }
+
             notifyTriggerContentProvider();
         }
     }
@@ -504,6 +554,12 @@ public final class AsyncRegistrationQueueRunner {
         // Do not persist the navigation source if the same reporting origin has been registered
         // for the registration.
         if (isNavigationOriginAlreadyRegisteredForRegistration(source, dao, mFlags)) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "storeSource (FAILURE): Duplicate reporting origin in registration"
+                                + " sequence. Enrollment ID: %s, Source ID: %s, Source Event ID:"
+                                + " %s",
+                            source.getEnrollmentId(), source.getId(), source.getEventId());
             return InsertSourcePermission.NOT_ALLOWED;
         }
         long windowStartTime =
@@ -511,7 +567,13 @@ public final class AsyncRegistrationQueueRunner {
         Optional<Uri> publisher = getTopLevelPublisher(topOrigin, publisherType);
         if (publisher.isEmpty()) {
             LoggerFactory.getMeasurementLogger()
-                    .d("insertSources: getTopLevelPublisher failed, topOrigin: %s", topOrigin);
+                    .d(
+                            "storeSource (FAILURE): getTopLevelPublisher failed. topOrigin: %s,"
+                                    + " Enrollment ID: %s, Source ID: %s, Source Event ID: %s",
+                            topOrigin,
+                            source.getEnrollmentId(),
+                            source.getId(),
+                            source.getEventId());
             return InsertSourcePermission.NOT_ALLOWED;
         }
         long numOfSourcesPerPublisher =
@@ -520,8 +582,13 @@ public final class AsyncRegistrationQueueRunner {
         if (numOfSourcesPerPublisher >= mFlags.getMeasurementMaxSourcesPerPublisher()) {
             LoggerFactory.getMeasurementLogger()
                     .d(
-                            "insertSources: Max limit of %s sources for publisher - %s reached.",
-                            mFlags.getMeasurementMaxSourcesPerPublisher(), publisher);
+                            "storeSource (FAILURE): Reached limit of %s sources for publisher - %s."
+                                    + " Enrollment ID: %s, Source ID: %s, Source Event ID: %s",
+                            mFlags.getMeasurementMaxSourcesPerPublisher(),
+                            publisher,
+                            source.getEnrollmentId(),
+                            source.getId(),
+                            source.getEventId());
             mDebugReportApi.scheduleSourceReport(
                     source,
                     DebugReportApi.Type.SOURCE_STORAGE_LIMIT,
@@ -543,6 +610,14 @@ public final class AsyncRegistrationQueueRunner {
                         mFlags.getMeasurementDestinationRateLimitWindow(),
                         destinationsPerMinuteRateLimit,
                         dao)) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "storeSource (FAILURE): Exceeded limit of %s destinations per minute."
+                                    + " Enrollment ID: %s, Source ID: %s, Source Event ID: %s",
+                            destinationsPerMinuteRateLimit,
+                            source.getEnrollmentId(),
+                            source.getId(),
+                            source.getEventId());
             mDebugReportApi.scheduleSourceDestinationPerMinuteRateLimitDebugReport(
                     source, String.valueOf(destinationsPerMinuteRateLimit), dao);
             adrTypes.add(DebugReportApi.Type.SOURCE_DESTINATION_RATE_LIMIT);
@@ -567,6 +642,14 @@ public final class AsyncRegistrationQueueRunner {
                         mFlags.getMeasurementDestinationPerDayRateLimitWindowInMs(),
                         destinationsPerDayRateLimit,
                         dao)) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "storeSource (FAILURE): Exceeded limit of %s destinations per"
+                                    + " day. Enrollment ID: %s, Source ID: %s, Source Event ID: %s",
+                            destinationsPerDayRateLimit,
+                            source.getEnrollmentId(),
+                            source.getId(),
+                            source.getEventId());
             mDebugReportApi.scheduleSourceDestinationPerDayRateLimitDebugReport(
                     source, String.valueOf(destinationsPerDayRateLimit), dao);
             adrTypes.add(DebugReportApi.Type.SOURCE_DESTINATION_PER_DAY_RATE_LIMIT);
@@ -622,6 +705,12 @@ public final class AsyncRegistrationQueueRunner {
                             asyncFetchStatus);
             if (appDestSourceAllowedToInsert == InsertSourcePermission.NOT_ALLOWED) {
                 // Return early without checking web destinations
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "storeSource (FAILURE): Cannot make space for app destination in"
+                                        + " source. Enrollment ID: %s, Source ID: %s, Source"
+                                        + " Event ID: %s",
+                                source.getEnrollmentId(), source.getId(), source.getEventId());
                 mDebugReportApi.scheduleSourceDestinationLimitDebugReport(
                         source,
                         String.valueOf(
@@ -641,6 +730,12 @@ public final class AsyncRegistrationQueueRunner {
                             source.getWebDestinations(),
                             asyncFetchStatus);
             if (webDestSourceAllowedToInsert == InsertSourcePermission.NOT_ALLOWED) {
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "storeSource (FAILURE): Cannot make space for web destinations in"
+                                        + " source. Enrollment ID: %s, Source ID: %s, Source"
+                                        + " Event ID: %s",
+                                source.getEnrollmentId(), source.getId(), source.getEventId());
                 mDebugReportApi.scheduleSourceDestinationLimitDebugReport(
                         source,
                         String.valueOf(
@@ -680,16 +775,27 @@ public final class AsyncRegistrationQueueRunner {
                         mFlags.getMeasurementMinReportingOriginUpdateWindow());
         if (numOfDistinctOriginExcludingRegistrationOrigin
                 >= mFlags.getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow()) {
-            scheduleSourceSuccessOrNoisedDebugReport(source, dao, additionalDebugReportParams);
-            adrTypes.add(DebugReportApi.Type.SOURCE_REPORTING_ORIGIN_PER_SITE_LIMIT);
             LoggerFactory.getMeasurementLogger()
                     .d(
-                            "insertSources: Max limit of 1 reporting origin for publisher - %s and"
-                                    + " enrollment - %s reached.",
-                            publisher, source.getEnrollmentId());
+                            "storeSource (FAILURE): Reached limit of %s reporting origin for"
+                                    + " publisher - %s and enrollment - %s per window."
+                                    + " Source ID: %s, Source Event ID: %s",
+                            mFlags
+                                .getMeasurementMaxReportingOriginsPerSourceReportingSitePerWindow(),
+                            publisher,
+                            source.getEnrollmentId(),
+                            source.getId(),
+                            source.getEventId());
+            scheduleSourceSuccessOrNoisedDebugReport(source, dao, additionalDebugReportParams);
+            adrTypes.add(DebugReportApi.Type.SOURCE_REPORTING_ORIGIN_PER_SITE_LIMIT);
             return InsertSourcePermission.NOT_ALLOWED;
         }
 
+        LoggerFactory.getMeasurementLogger()
+                .d(
+                        "storeSource: Source allowed to be inserted. Enrollment ID: %s, "
+                                + "Source ID: %s, Source Event ID: %s",
+                        source.getEnrollmentId(), source.getId(), source.getEventId());
         return result;
     }
 
@@ -884,8 +990,14 @@ public final class AsyncRegistrationQueueRunner {
                         .d(
                                 "AsyncRegistrationQueueRunner: "
                                         + (destinationType == EventSurfaceType.APP ? "App" : "Web")
-                                        + " destination count >= MaxDistinctDestinations"
-                                        + "PerPublisherXEnrollmentInActiveSource");
+                                        + " destination count >="
+                                        + " MaxDistinctDestinationsPerPublisherXEnrollmentInActive"
+                                        + "Source. Enrollment ID: "
+                                        + source.getEnrollmentId()
+                                        + ", Source ID: "
+                                        + source.getId()
+                                        + ", Source Event ID: "
+                                        + source.getEventId());
                 debugReportApi.scheduleSourceDestinationLimitDebugReport(
                         source, String.valueOf(maxDistinctDestinations), dao);
                 adrTypes.add(DebugReportApi.Type.SOURCE_DESTINATION_LIMIT);
@@ -903,14 +1015,20 @@ public final class AsyncRegistrationQueueRunner {
                         requestTime);
         if (distinctReportingOriginCount
                 >= flags.getMeasurementMaxDistinctRepOrigPerPublXDestInSource()) {
-            scheduleSourceSuccessOrNoisedDebugReport(source, dao, null);
-            adrTypes.add(DebugReportApi.Type.SOURCE_REPORTING_ORIGIN_LIMIT);
             LoggerFactory.getMeasurementLogger()
                     .d(
                             "AsyncRegistrationQueueRunner: "
                                     + (destinationType == EventSurfaceType.APP ? "App" : "Web")
                                     + " distinct reporting origin count >= "
-                                    + "MaxDistinctRepOrigPerPublisherXDestInSource exceeded");
+                                    + "MaxDistinctRepOrigPerPublisherXDestInSource exceeded."
+                                    + " Enrollment ID: "
+                                    + source.getEnrollmentId()
+                                    + ", Source ID: "
+                                    + source.getId()
+                                    + ", Source Event ID: "
+                                    + source.getEventId());
+            scheduleSourceSuccessOrNoisedDebugReport(source, dao, null);
+            adrTypes.add(DebugReportApi.Type.SOURCE_REPORTING_ORIGIN_LIMIT);
             return true;
         }
         return false;
@@ -925,7 +1043,10 @@ public final class AsyncRegistrationQueueRunner {
                             trigger.getAttributionDestination(), trigger.getDestinationType());
         } catch (DatastoreException e) {
             LoggerFactory.getMeasurementLogger()
-                    .e("Unable to fetch number of triggers currently registered per destination.");
+                    .e(
+                            "storeTrigger (FAILURE): Unable to fetch number of triggers currently"
+                                + " registered per destination. Enrollment ID: %s, Trigger ID: %s",
+                            trigger.getEnrollmentId(), trigger.getId());
             return false;
         }
         return triggerInsertedPerDestination
@@ -1041,8 +1162,18 @@ public final class AsyncRegistrationQueueRunner {
         final String sourceId = insertSource(source, dao, adrTypes);
         if (sourceId == null) {
             // Source was not saved due to DB size restrictions
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "storeSource (FAILURE): Insertion prevented by the datastore manager."
+                                    + " Enrollment ID: %s, Source ID: %s, Source Event ID: %s",
+                            source.getEnrollmentId(), source.getId(), source.getEventId());
             return;
         }
+        LoggerFactory.getMeasurementLogger()
+                .d(
+                        "storeSource (SUCCESS): Source inserted to database. Enrollment ID: %s,"
+                                + " Source ID: %s, Source Event ID: %s",
+                        source.getEnrollmentId(), source.getId(), source.getEventId());
 
         if (mFlags.getMeasurementEnableAttributionScope()) {
             dao.updateSourcesForAttributionScope(source);
@@ -1105,7 +1236,11 @@ public final class AsyncRegistrationQueueRunner {
                     dao);
             adrTypes.add(DebugReportApi.Type.SOURCE_UNKNOWN_ERROR);
             LoggerFactory.getMeasurementLogger()
-                    .e(e, "Insert source to DB error, generate source-unknown-error report");
+                    .e(e, "storeSource (FAILURE): Insert source to DB error.");
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Enrollment ID: %s, Source ID: %s, Source Event ID: %s",
+                            source.getEnrollmentId(), source.getId(), source.getEventId());
             throw new DatastoreException(
                     "Insert source to DB error, generate source-unknown-error report");
         }

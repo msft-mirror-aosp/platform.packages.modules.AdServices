@@ -23,6 +23,11 @@ import static android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIB
 import static com.android.adservices.service.common.AppImportanceFilterTest.ApiCallStatsSubject.apiCallStats;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_TOPICS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_IMPORTANCE_FILTER_IMPORTANCE_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_IMPORTANCE_FILTER_IMPORTANCE_EXCEEDED_THRESHOLD;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import static com.google.common.truth.Truth.assertWithMessage;
 
@@ -39,6 +44,7 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.service.common.AppImportanceFilter.WrongCallingApplicationStateException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -209,6 +215,11 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_IMPORTANCE_FILTER_IMPORTANCE_EXCEEDED_THRESHOLD,
+            throwable = WrongCallingApplicationStateException.class)
     public void testCalledWithLessThanForegroundImportanceAppUid_throwsIllegalStateException() {
         mockIsAtLeastT(true);
         mockGetUidImportance(APP_UID, IMPORTANCE_VISIBLE);
@@ -219,6 +230,11 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_IMPORTANCE_FILTER_IMPORTANCE_EXCEEDED_THRESHOLD,
+            throwable = WrongCallingApplicationStateException.class)
     public void testCalledWithLessThanForegroundImportanceAppUid_logsFailure() {
         mockIsAtLeastT(true);
         mockGetUidImportance(APP_UID, IMPORTANCE_VISIBLE);
@@ -241,6 +257,11 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_IMPORTANCE_FILTER_IMPORTANCE_EXCEEDED_THRESHOLD,
+            throwable = WrongCallingApplicationStateException.class)
     public void testCalledWithLessThanForegroundImportanceAppUidAndNullSdkName_logsFailure() {
         mockIsAtLeastT(true);
         mockGetUidImportance(APP_UID, IMPORTANCE_VISIBLE);
@@ -274,6 +295,11 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = SecurityException.class,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_IMPORTANCE_FILTER_IMPORTANCE_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES)
     public void
             testSecurityExceptionTryingToRetrievePackageImportanceFromUid_throwsWrongCallingApplicationStateException() {
         mockIsAtLeastT(true);
@@ -284,7 +310,9 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
                         WrongCallingApplicationStateException.class,
                         () ->
                                 mAppImportanceFilter.assertCallerIsInForeground(
-                                        APP_UID, API_NAME, SDK_NAME));
+                                        APP_UID,
+                                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                                        SDK_NAME));
 
         assertWithMessage("exception message")
                 .that(thrown)
@@ -298,7 +326,7 @@ public final class AppImportanceFilterTest extends AdServicesExtendedMockitoTest
                 .about(apiCallStats())
                 .that(mApiCallStatsArgumentCaptor.getValue())
                 .hasCode(AD_SERVICES_API_CALLED)
-                .hasApiName(API_NAME)
+                .hasApiName(AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE)
                 .hasResultCode(
                         AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES)
                 .hasSdkPackageName(SDK_NAME)

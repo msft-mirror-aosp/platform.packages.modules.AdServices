@@ -44,6 +44,9 @@ public final class AndroidSdk {
     /** Android version {@code VIC}. */
     public static final int VIC = 35;
 
+    /** Android version {@code BAK}. */
+    public static final int BAK = 36;
+
     /** Android version for unreleased builds}. */
     public static final int CUR_DEVELOPMENT = 10_000; // Build.CUR_DEVELOPMENT.CUR_DEVELOPMENT
 
@@ -63,7 +66,8 @@ public final class AndroidSdk {
         S2(SC_V2),
         T(TM),
         U(UDC),
-        V(VIC);
+        V(VIC),
+        B(BAK);
 
         private final int mLevel;
 
@@ -100,8 +104,10 @@ public final class AndroidSdk {
                     return U;
                 case VIC:
                     return V;
+                case BAK:
+                    return B;
             }
-            if (level > VIC) {
+            if (level > BAK) {
                 sLogger.e(
                         "WARNING: Level.forLevel() called with unsupported / unreleased level (%d);"
                                 + " returning DEV (%d)",

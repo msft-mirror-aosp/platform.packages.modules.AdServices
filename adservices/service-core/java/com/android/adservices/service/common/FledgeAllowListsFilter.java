@@ -22,6 +22,8 @@ import static com.android.adservices.service.common.AppManifestConfigCall.API_AD
 import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_PROTECTED_SIGNALS;
 import static com.android.adservices.service.common.FledgeAuthorizationFilter.INVALID_API_TYPE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_ALLOW_LISTS_FILTER_PACKAGE_NOT_IN_ALLOW_LIST;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.checkAndLogCelByApiNameLoggingId;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
@@ -73,7 +75,12 @@ public class FledgeAllowListsFilter {
                     appPackageName,
                     STATUS_CALLER_NOT_ALLOWED_PACKAGE_NOT_IN_ALLOWLIST,
                     /*latencyMs=*/ 0);
-            throw new AppNotAllowedException();
+            AppNotAllowedException exception = new AppNotAllowedException();
+            checkAndLogCelByApiNameLoggingId(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_ALLOW_LISTS_FILTER_PACKAGE_NOT_IN_ALLOW_LIST,
+                    apiNameLoggingId);
+            throw exception;
         }
     }
 

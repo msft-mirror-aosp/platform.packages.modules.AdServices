@@ -17,6 +17,9 @@
 package com.android.adservices.service.common;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_IMPORTANCE_FILTER_IMPORTANCE_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_IMPORTANCE_FILTER_IMPORTANCE_EXCEEDED_THRESHOLD;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.checkAndLogCelByApiNameLoggingId;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.annotation.NonNull;
@@ -198,6 +201,10 @@ public final class AppImportanceFilter {
                     apiNameLoggingId,
                     AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES,
                     sdkName);
+            checkAndLogCelByApiNameLoggingId(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_IMPORTANCE_FILTER_IMPORTANCE_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES,
+                    apiNameLoggingId);
             throw new WrongCallingApplicationStateException(
                     AdServicesStatusUtils
                             .SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_TO_CROSS_USER_BOUNDARIES);
@@ -219,7 +226,13 @@ public final class AppImportanceFilter {
                     apiNameLoggingId,
                     AdServicesStatusUtils.STATUS_BACKGROUND_CALLER,
                     sdkName);
-            throw new WrongCallingApplicationStateException();
+            WrongCallingApplicationStateException exception =
+                    new WrongCallingApplicationStateException();
+            checkAndLogCelByApiNameLoggingId(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__APP_IMPORTANCE_FILTER_IMPORTANCE_EXCEEDED_THRESHOLD,
+                    apiNameLoggingId);
+            throw exception;
         }
         return;
     }

@@ -21,6 +21,11 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_
 import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_CUSTOM_AUDIENCES;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_PROTECTED_SIGNALS;
+import static com.android.adservices.service.common.FledgeAllowListsFilter.AppNotAllowedException;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_ALLOW_LISTS_FILTER_PACKAGE_NOT_IN_ALLOW_LIST;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.eq;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
@@ -32,16 +37,16 @@ import static org.junit.Assert.assertThrows;
 
 import android.adservices.common.AdServicesStatusUtils;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.mockito.MockitoSession;
+import org.mockito.Mock;
 
-public class FledgeAllowListsFilterTest {
+public final class FledgeAllowListsFilterTest extends AdServicesExtendedMockitoTestCase {
     private static final int API_NAME_LOGGING_ID = 1;
 
     private static final String PACKAGE_ALLOWED_PAS_1 = "pas.package.1";
@@ -52,12 +57,8 @@ public class FledgeAllowListsFilterTest {
 
     private static final String PACKAGE_ALLOWED_ALL = "pasandppapi.package";
 
-    private final AdServicesLogger mAdServicesLoggerMock =
-            ExtendedMockito.mock(AdServicesLoggerImpl.class);
-
+    @Mock private AdServicesLogger mAdServicesLoggerMock;
     private FledgeAllowListsFilter mFledgeAllowListsFilter;
-
-    public MockitoSession mMockitoSession;
 
     @Before
     public void setup() {
@@ -106,6 +107,11 @@ public class FledgeAllowListsFilterTest {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_ALLOW_LISTS_FILTER_PACKAGE_NOT_IN_ALLOW_LIST,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
+            throwable = AppNotAllowedException.class)
     public void testIsNotAllowedAdSelection() {
         String notAllowedPackage = "not.an.allowed.package";
         SecurityException exception =
@@ -131,6 +137,11 @@ public class FledgeAllowListsFilterTest {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_ALLOW_LISTS_FILTER_PACKAGE_NOT_IN_ALLOW_LIST,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
+            throwable = AppNotAllowedException.class)
     public void testNotAllowedPpapi() {
         SecurityException exception =
                 assertThrows(
@@ -155,6 +166,11 @@ public class FledgeAllowListsFilterTest {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_ALLOW_LISTS_FILTER_PACKAGE_NOT_IN_ALLOW_LIST,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS,
+            throwable = AppNotAllowedException.class)
     public void testNotAllowedSignals() {
         SecurityException exception =
                 assertThrows(
@@ -176,6 +192,29 @@ public class FledgeAllowListsFilterTest {
                         anyInt());
 
         verifyNoMoreInteractions(mAdServicesLoggerMock);
+    }
+
+    @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_ALLOW_LISTS_FILTER_PACKAGE_NOT_IN_ALLOW_LIST,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = AppNotAllowedException.class)
+    public void testNotAllowed_logCel() {
+        SecurityException exception =
+                assertThrows(
+                        SecurityException.class,
+                        () ->
+                                mFledgeAllowListsFilter.assertAppInAllowlist(
+                                        PACKAGE_ALLOWED_PAS_1,
+                                        AD_SERVICES_API_CALLED__API_NAME__JOIN_CUSTOM_AUDIENCE,
+                                        API_CUSTOM_AUDIENCES));
+
+        expect.withMessage("exception.getMessage")
+                .that(exception)
+                .hasMessageThat()
+                .isEqualTo(
+                        AdServicesStatusUtils.SECURITY_EXCEPTION_CALLER_NOT_ALLOWED_ERROR_MESSAGE);
     }
 
     @Test

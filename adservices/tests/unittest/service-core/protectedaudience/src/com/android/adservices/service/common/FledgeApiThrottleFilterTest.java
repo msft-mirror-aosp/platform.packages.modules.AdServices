@@ -18,6 +18,8 @@ package com.android.adservices.service.common;
 
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_API_THROTTLE_FILTER_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyString;
@@ -33,6 +35,7 @@ import android.adservices.common.CommonFixture;
 import android.os.LimitExceededException;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.service.stats.AdServicesLogger;
 
 import org.junit.Before;
@@ -64,6 +67,11 @@ public class FledgeApiThrottleFilterTest extends AdServicesExtendedMockitoTestCa
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_API_THROTTLE_FILTER_RATE_LIMIT_REACHED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE,
+            throwable = LimitExceededException.class)
     public void testAssertCallerNotThrottled_throttled_throwsAndLogsError() {
         when(mThrottlerMock.tryAcquire(any(), anyString())).thenReturn(false);
 
