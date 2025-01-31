@@ -239,10 +239,22 @@ message AuctionResult {
   // Type of the winning ad.
   AdType ad_type = 14;
 
-  // This is etld+1 of the seller that has won the auction. For single seller auction, this will the
-  // etld+1 of that seller. In case of multi seller, it will be etld+1 of the component seller that
-  // that won the auction.
-  string winning_seller = 27;
+  message AuctionParams {
+    // Component Seller domain.
+    // This field is used to tie the auction result to a specific component
+    // seller. This field is returned in server orchestrated
+    // component and top level auctions.
+    // 1. This is returned from a server orchestrated component auction and passed
+    // by the top level seller as part of component_auction_results in the top level
+    // auction. The top level seller's scoreAd function then receives this as input.
+    // 2. This is returned from top level auction conducted using server orchestrated
+    // component_auction_results. This is then passed to the device (Android) which
+    // uses the field to deduce the winning seller for the SDK.
+    string component_seller = 2;
+  }
+
+  // This is populated for multi seller auctions.
+  AuctionParams auction_params = 18;
 }
 
 // The reporting urls registered during the execution of reportResult() and
