@@ -523,7 +523,20 @@ public final class AsyncRegistrationQueueRunner {
     public void storeTrigger(Trigger trigger, IMeasurementDao dao) throws DatastoreException {
         if (isTriggerAllowedToInsert(dao, trigger)) {
             try {
-                dao.insertTrigger(trigger);
+                if (dao.insertTrigger(trigger) == null) {
+                    // Trigger was not saved due to DB size restrictions
+                    LoggerFactory.getMeasurementLogger()
+                            .d(
+                                    "storeTrigger (FAILURE): Insertion prevented by the datastore"
+                                            + " manager. Enrollment ID: %s, Trigger ID: %s",
+                                    trigger.getEnrollmentId(), trigger.getId());
+                    return;
+                }
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "storeTrigger (SUCCESS): Trigger inserted to database. Enrollment"
+                                        + " ID: %s, Trigger ID: %s",
+                                trigger.getEnrollmentId(), trigger.getId());
             } catch (DatastoreException e) {
                 LoggerFactory.getMeasurementLogger()
                         .e(e, "storeTrigger (FAILURE): Insert trigger to DB error.");

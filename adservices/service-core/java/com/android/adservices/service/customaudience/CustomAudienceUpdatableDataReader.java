@@ -21,6 +21,7 @@ import static android.adservices.customaudience.CustomAudience.PRIORITY_DEFAULT;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.ComponentAdData;
 import android.adservices.customaudience.CustomAudience;
 import android.net.Uri;
 
@@ -30,6 +31,7 @@ import androidx.annotation.Nullable;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.service.common.AdRenderIdValidator;
 import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.JsonUtils;
 import com.android.adservices.service.common.ValidatorUtil;
@@ -64,6 +66,7 @@ public class CustomAudienceUpdatableDataReader {
     public static final String AUCTION_SERVER_REQUEST_FLAGS_KEY = "auction_server_request_flags";
     public static final String PRIORITY_KEY = "priority";
     public static final String OMIT_ADS_VALUE = "omit_ads";
+    public static final String COMPONENT_ADS_KEY = "component_ads";
 
     public static final String FIELD_FOUND_LOG_FORMAT = "%s Found %s in JSON response";
     public static final String VALIDATED_FIELD_LOG_FORMAT =
@@ -72,6 +75,11 @@ public class CustomAudienceUpdatableDataReader {
     public static final String SKIP_INVALID_JSON_TYPE_LOG_FORMAT =
             "%s Invalid JSON type while parsing a single item in the %s found in JSON response;"
                     + " ignoring and continuing.  Error message: %s";
+    public static final String EXIT_INVALID_JSON_TYPE_LOG_FORMAT =
+            "%s Invalid JSON type while parsing a single item in the %s found in JSON response;"
+                    + " exiting the whole list.  Error message: %s";
+    public static final String COMPONENT_ADS_SIZE_EXCEEDS_MAX =
+            "Size of component ads list exceeds the maximum allowed.";
 
     private final JSONObject mResponseObject;
     private final String mResponseHash;
@@ -82,6 +90,8 @@ public class CustomAudienceUpdatableDataReader {
     private final int mMaxNumAds;
     private final ReadFiltersFromJsonStrategy mGetFiltersFromJsonObjectStrategy;
     private final ReadAdRenderIdFromJsonStrategy mReadAdRenderIdFromJsonStrategy;
+    private final AdRenderIdValidator mComponentAdRenderIdValidator;
+    private final int mMaxNumComponentAds;
 
     /**
      * Creates a {@link CustomAudienceUpdatableDataReader} that will read updatable data from a
@@ -102,6 +112,8 @@ public class CustomAudienceUpdatableDataReader {
      * @param appInstallFilteringEnabled whether or not app install filtering fields should be read
      * @param adRenderIdEnabled whether ad render id field should be read
      * @param adRenderIdMaxLength the max length of the ad render id
+     * @param componentAdRenderIdMaxLength the max length of the component ad render id
+     * @param maxNumComponentAds the maximum number of component ads in a custom audience
      */
     protected CustomAudienceUpdatableDataReader(
             @NonNull JSONObject responseObject,
@@ -114,7 +126,9 @@ public class CustomAudienceUpdatableDataReader {
             boolean frequencyCapFilteringEnabled,
             boolean appInstallFilteringEnabled,
             boolean adRenderIdEnabled,
-            long adRenderIdMaxLength) {
+            long adRenderIdMaxLength,
+            int componentAdRenderIdMaxLength,
+            int maxNumComponentAds) {
         Objects.requireNonNull(responseObject);
         Objects.requireNonNull(responseHash);
         Objects.requireNonNull(buyer);
@@ -132,6 +146,9 @@ public class CustomAudienceUpdatableDataReader {
         mReadAdRenderIdFromJsonStrategy =
                 ReadAdRenderIdFromJsonStrategyFactory.getStrategy(
                         adRenderIdEnabled, adRenderIdMaxLength);
+        mComponentAdRenderIdValidator =
+                AdRenderIdValidator.createEnabledInstance(componentAdRenderIdMaxLength);
+        mMaxNumComponentAds = maxNumComponentAds;
     }
 
     /**
@@ -366,5 +383,83 @@ public class CustomAudienceUpdatableDataReader {
             sLogger.v(FIELD_NOT_FOUND_LOG_FORMAT, mResponseHash, PRIORITY_KEY);
         }
         return result;
+    }
+
+    /**
+     * Returns the list of component ads extracted from the input object, if found.
+     *
+     * @throws JSONException if the key is found but the schema is incorrect
+     * @throws NullPointerException if the key found by the field is null
+     * @throws IllegalArgumentException if the extracted component ads fail data validation
+     */
+    @Nullable
+    public List<ComponentAdData> getComponentAdsFromJsonObject()
+            throws JSONException, NullPointerException, IllegalArgumentException {
+        if (mResponseObject.has(COMPONENT_ADS_KEY)) {
+            sLogger.v(FIELD_FOUND_LOG_FORMAT, mResponseHash, COMPONENT_ADS_KEY);
+
+            JSONArray componentAdsJsonArray = mResponseObject.getJSONArray(COMPONENT_ADS_KEY);
+            int componentAdsListLength = componentAdsJsonArray.length();
+
+            // TODO(b/381392728):investigate whether we need an overall size on list of component
+            if (componentAdsListLength > mMaxNumComponentAds) {
+                sLogger.v(COMPONENT_ADS_SIZE_EXCEEDS_MAX);
+                throw new IllegalArgumentException(COMPONENT_ADS_SIZE_EXCEEDS_MAX);
+            }
+
+            List<ComponentAdData> componentAdsList = new ArrayList<>();
+            for (int i = 0; i < componentAdsListLength; i++) {
+                try {
+                    JSONObject componentAdDataJsonObj = componentAdsJsonArray.getJSONObject(i);
+
+                    // Note: getString() coerces values to be strings; use get() instead
+                    Object uri = componentAdDataJsonObj.get(RENDER_URI_KEY);
+                    if (!(uri instanceof String)) {
+                        throw new JSONException(
+                                "Unexpected format parsing "
+                                        + RENDER_URI_KEY
+                                        + " in "
+                                        + COMPONENT_ADS_KEY);
+                    }
+                    Uri parsedUri = Uri.parse(Objects.requireNonNull((String) uri));
+
+                    AdTechUriValidator uriValidator =
+                            new AdTechUriValidator(
+                                    ValidatorUtil.AD_TECH_ROLE_BUYER,
+                                    mBuyer.toString(),
+                                    this.getClass().getSimpleName(),
+                                    RENDER_URI_KEY);
+                    uriValidator.validate(parsedUri);
+
+                    Object adRenderId = componentAdDataJsonObj.get(AD_RENDER_ID_KEY);
+                    if (!(adRenderId instanceof String adRenderIdString)) {
+                        throw new JSONException(
+                                "Unexpected format parsing "
+                                        + AD_RENDER_ID_KEY
+                                        + " in "
+                                        + COMPONENT_ADS_KEY);
+                    }
+                    mComponentAdRenderIdValidator.validate(adRenderIdString);
+
+                    ComponentAdData componentAdData =
+                            new ComponentAdData(parsedUri, adRenderIdString);
+                    componentAdsList.add(componentAdData);
+                } catch (JSONException
+                        | NullPointerException
+                        | IllegalArgumentException exception) {
+                    // Skip this component ad if it has issues
+                    sLogger.v(
+                            SKIP_INVALID_JSON_TYPE_LOG_FORMAT,
+                            mResponseHash,
+                            COMPONENT_ADS_KEY,
+                            Optional.ofNullable(exception.getMessage()).orElse("<null>"));
+                }
+            }
+            sLogger.v(VALIDATED_FIELD_LOG_FORMAT, mResponseHash, COMPONENT_ADS_KEY);
+            return componentAdsList;
+        } else {
+            sLogger.v(FIELD_NOT_FOUND_LOG_FORMAT, mResponseHash, COMPONENT_ADS_KEY);
+            return null;
+        }
     }
 }

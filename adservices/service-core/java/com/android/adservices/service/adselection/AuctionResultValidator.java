@@ -35,6 +35,7 @@ import com.android.adservices.service.common.ValidatorUtil;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.internal.annotations.VisibleForTesting;
 
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableCollection;
 
 import java.util.Locale;
@@ -102,17 +103,16 @@ public class AuctionResultValidator implements Validator<AuctionResult> {
             violations.add(BUYER_EMPTY);
         }
 
-        if (mEnableWinningSellerInAdSelectionOutcome
-                && auctionResult.getWinningSeller().isEmpty()) {
-            violations.add(WINNING_SELLER_EMPTY);
-        }
-
         if (!mDisableFledgeEnrollmentCheck) {
             assertAdTechEnrolledAndAddViolations(
                     violations, auctionResult.getBuyer(), BUYER_ENROLLMENT);
-            if (mEnableWinningSellerInAdSelectionOutcome) {
+            if (mEnableWinningSellerInAdSelectionOutcome
+                    && !Strings.isNullOrEmpty(
+                            auctionResult.getAuctionParams().getComponentSeller())) {
                 assertAdTechEnrolledAndAddViolations(
-                        violations, auctionResult.getWinningSeller(), WINNING_SELLER_ENROLLMENT);
+                        violations,
+                        auctionResult.getAuctionParams().getComponentSeller(),
+                        WINNING_SELLER_ENROLLMENT);
             }
         }
 

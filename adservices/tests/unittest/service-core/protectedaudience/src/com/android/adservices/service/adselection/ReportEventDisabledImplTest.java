@@ -19,6 +19,8 @@ package com.android.adservices.service.adselection;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 
 import static com.android.adservices.service.adselection.ReportEventDisabledImpl.API_DISABLED_MESSAGE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_INTERNAL_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -28,11 +30,11 @@ import android.adservices.common.FledgeErrorResponse;
 import android.os.Process;
 import android.os.RemoteException;
 
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
-import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.FakeFlagsFactory;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -42,14 +44,13 @@ import com.android.adservices.service.stats.AdServicesLogger;
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
 import java.util.concurrent.CountDownLatch;
 
-@RunWith(MockitoJUnitRunner.class)
-public class ReportEventDisabledImplTest {
+@SetErrorLogUtilDefaultParams(
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION)
+public final class ReportEventDisabledImplTest extends AdServicesExtendedMockitoTestCase {
     @Mock private AdSelectionEntryDao mAdSelectionEntryDaoMock;
     @Mock private AdServicesHttpsClient mHttpsClientMock;
     private ListeningExecutorService mLightweightExecutorService =
@@ -57,14 +58,16 @@ public class ReportEventDisabledImplTest {
     private ListeningExecutorService mBackgroundExecutorService =
             AdServicesExecutors.getBackgroundExecutor();
     @Mock private AdServicesLogger mAdServicesLoggerMock;
-    private Flags mFlags = FakeFlagsFactory.getFlagsForTest();
     @Mock private FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
     @Mock private AdSelectionServiceFilter mAdSelectionServiceFilterMock;
     private static final int MY_UID = Process.myUid();
     @Mock private ReportInteractionInput mReportInteractionInputMock;
-    @Mock private DebugFlags mDebugFlags;
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_INTERNAL_ERROR,
+            throwable = IllegalStateException.class)
     public void testReportEventDisabledImplFailsWhenCalled() throws Exception {
         EventReporter eventReporter =
                 new ReportEventDisabledImpl(
@@ -73,8 +76,8 @@ public class ReportEventDisabledImplTest {
                         mLightweightExecutorService,
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
-                        mFlags,
-                        mDebugFlags,
+                        mFakeFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,

@@ -328,7 +328,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                     .setScore((float) SCORE)
                     .setIsChaff(false)
                     .setWinReportingUrls(WIN_REPORTING_URLS);
-    private static final AuctionResult.Builder AUCTION_RESULT_WITH_WINNING_SELLER =
+    private static final AuctionResult.Builder AUCTION_RESULT_WITH_WINNING_COMPONENT_SELLER =
             AuctionResult.newBuilder()
                     .setAdRenderUrl(WINNER_AD_RENDER_URI.toString())
                     .setCustomAudienceName(WINNER_CUSTOM_AUDIENCE_NAME)
@@ -338,7 +338,10 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                     .setScore((float) SCORE)
                     .setIsChaff(false)
                     .setWinReportingUrls(WIN_REPORTING_URLS_WITH_COMPONENT_REPORTING_URLS)
-                    .setWinningSeller(COMPONENT_SELLER.toString());
+                    .setAuctionParams(
+                            AuctionResult.AuctionParams.newBuilder()
+                                    .setComponentSeller(COMPONENT_SELLER.toString())
+                                    .build());
     private static final AuctionResult.Builder
             AUCTION_RESULT_WITH_COMPONENT_REPORTING_URL_WITH_INVALID_ETLD_1 =
                     AuctionResult.newBuilder()
@@ -350,7 +353,10 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                             .setScore((float) SCORE)
                             .setIsChaff(false)
                             .setWinReportingUrls(WIN_REPORTING_URLS_WITH_COMPONENT_REPORTING_URLS)
-                            .setWinningSeller(DIFFERENT_SELLER.toString());
+                            .setAuctionParams(
+                                    AuctionResult.AuctionParams.newBuilder()
+                                            .setComponentSeller(DIFFERENT_SELLER.toString())
+                                            .build());
     private static final AuctionResult.Builder
             AUCTION_RESULT_WITH_DIFFERENT_SELLER_IN_REPORTING_URIS =
                     AuctionResult.newBuilder()
@@ -754,7 +760,9 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
 
-        doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT_WITH_WINNING_SELLER))
+        doReturn(
+                        prepareDecryptedAuctionResultForRemarketingAd(
+                                AUCTION_RESULT_WITH_WINNING_COMPONENT_SELLER))
                 .when(mObliviousHttpEncryptorMock)
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
         doReturn(WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD)
@@ -886,7 +894,9 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
 
-        doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT_WITH_WINNING_SELLER))
+        doReturn(
+                        prepareDecryptedAuctionResultForRemarketingAd(
+                                AUCTION_RESULT_WITH_WINNING_COMPONENT_SELLER))
                 .when(mObliviousHttpEncryptorMock)
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
         doReturn(WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD)
@@ -1025,7 +1035,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
 
-        AuctionResult auctionResult = AUCTION_RESULT_WITH_WINNING_SELLER.build();
+        AuctionResult auctionResult = AUCTION_RESULT_WITH_WINNING_COMPONENT_SELLER.build();
         PersistAdSelectionResultResponse response =
                 mPersistAdSelectionResultRunner.createPersistAdSelectionResultResponse(
                         auctionResult, AD_SELECTION_ID);
@@ -1070,7 +1080,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
 
-        AuctionResult auctionResult = AUCTION_RESULT_WITH_WINNING_SELLER.build();
+        AuctionResult auctionResult = AUCTION_RESULT_WITH_WINNING_COMPONENT_SELLER.build();
         PersistAdSelectionResultResponse response =
                 mPersistAdSelectionResultRunner.createPersistAdSelectionResultResponse(
                         auctionResult, AD_SELECTION_ID);
@@ -2635,7 +2645,9 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
 
-        doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT_WITH_WINNING_SELLER))
+        doReturn(
+                        prepareDecryptedAuctionResultForRemarketingAd(
+                                AUCTION_RESULT_WITH_WINNING_COMPONENT_SELLER))
                 .when(mObliviousHttpEncryptorMock)
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
         doReturn(WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD)
@@ -2741,7 +2753,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                 .isEmpty();
 
         mPersistAdSelectionResultRunner.persistAdInteractionKeysAndUrls(
-                AUCTION_RESULT_WITH_WINNING_SELLER.build(), AD_SELECTION_ID, SELLER);
+                AUCTION_RESULT_WITH_WINNING_COMPONENT_SELLER.build(), AD_SELECTION_ID, SELLER);
 
         List<RegisteredAdInteraction> registeredComponentSellerAdInteractions =
                 mAdSelectionEntryDao.listRegisteredAdInteractions(
@@ -2801,9 +2813,11 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                 .that(reportingDataBeforeApiCall)
                 .isNull();
 
-
         mPersistAdSelectionResultRunner.persistAuctionResults(
-                AUCTION_RESULT_WITH_WINNING_SELLER.build(), WINNING_AD, AD_SELECTION_ID, SELLER);
+                AUCTION_RESULT_WITH_WINNING_COMPONENT_SELLER.build(),
+                WINNING_AD,
+                AD_SELECTION_ID,
+                SELLER);
 
         ReportingData reportingData =
                 mAdSelectionEntryDao.getReportingDataForId(
@@ -2849,7 +2863,9 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                         mAdsRelevanceExecutionLogger,
                         mKAnonSignJoinFactoryMock);
 
-        doReturn(prepareDecryptedAuctionResultForRemarketingAd(AUCTION_RESULT_WITH_WINNING_SELLER))
+        doReturn(
+                        prepareDecryptedAuctionResultForRemarketingAd(
+                                AUCTION_RESULT_WITH_WINNING_COMPONENT_SELLER))
                 .when(mObliviousHttpEncryptorMock)
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
         doReturn(WINNER_CUSTOM_AUDIENCE_WITH_WIN_AD)

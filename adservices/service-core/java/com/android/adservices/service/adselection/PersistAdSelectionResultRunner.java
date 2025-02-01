@@ -687,7 +687,7 @@ public class PersistAdSelectionResultRunner {
             Uri componentSellerReportingUrl =
                     validateAdTechUriAndReturnEmptyIfInvalid(
                             ValidatorUtil.AD_TECH_ROLE_COMPONENT_SELLER,
-                            auctionResult.getWinningSeller(),
+                            auctionResult.getAuctionParams().getComponentSeller(),
                             SELLER_WIN_REPORTING_URI_FIELD_NAME,
                             Uri.parse(
                                     winReportingUrls
@@ -783,7 +783,7 @@ public class PersistAdSelectionResultRunner {
             Map<String, Uri> componentSellerInteractionReportingUrls =
                     filterInvalidInteractionUri(
                             ValidatorUtil.AD_TECH_ROLE_COMPONENT_SELLER,
-                            auctionResult.getWinningSeller(),
+                            auctionResult.getAuctionParams().getComponentSeller(),
                             COMPONENT_SELLER_INTERACTION_REPORTING_URI_FIELD_NAME,
                             attemptedComponentSellerInteractionReportingUrls);
             persistAdInteractionKeysAndUrls(
@@ -996,7 +996,8 @@ public class PersistAdSelectionResultRunner {
             AdTechIdentifier winningSeller =
                     result.getIsChaff()
                             ? AdTechIdentifier.UNSET_AD_TECH_IDENTIFIER
-                            : AdTechIdentifier.fromString(result.getWinningSeller());
+                            : AdTechIdentifier.fromString(
+                                    result.getAuctionParams().getComponentSeller());
             sLogger.d("Adding winning seller in PersistAdSelectionResponse");
             persistAdSelectionResponseBuilder.setWinningSeller(winningSeller);
         }

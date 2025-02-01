@@ -48,6 +48,10 @@ android_test_helper_app {
     ],
     manifest: "AndroidManifest.xml",
     test_suites: ["general-tests"],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//platform_testing:__subpackages__",
+    ],
 }
 
 android_test_helper_app {
@@ -62,6 +66,10 @@ android_test_helper_app {
     ],
     manifest: "AndroidManifest_WebViewProvider.xml",
     test_suites: ["general-tests"],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//platform_testing:__subpackages__",
+    ],
 }
 
 android_test_helper_app {
@@ -76,4 +84,8 @@ android_test_helper_app {
     ],
     manifest: "AndroidManifest_MediateeProvider.xml",
     test_suites: ["general-tests"],
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//platform_testing:__subpackages__",
+    ],
 }

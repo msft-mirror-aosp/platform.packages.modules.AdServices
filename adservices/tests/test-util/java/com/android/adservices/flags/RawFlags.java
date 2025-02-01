@@ -3606,6 +3606,20 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
     }
 
     @Override
+    public String getAdServicesJobExecutionSamplingConfig() {
+        return mBackend.getFlag(
+                KEY_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG,
+                DEFAULT_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG);
+    }
+
+    @Override
+    public String getAdServicesJobSchedulingSamplingConfig() {
+        return mBackend.getFlag(
+                KEY_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG,
+                DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG);
+    }
+
+    @Override
     public boolean getMeasurementEnableAdIdsPerDevicePerWindow() {
         return mBackend.getFlag(
                 KEY_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW,

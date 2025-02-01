@@ -201,6 +201,7 @@ import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.RunAdBiddingProcessReportedStats;
 import com.android.adservices.service.stats.RunAdSelectionProcessReportedStats;
 import com.android.adservices.service.stats.SignatureVerificationStats;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
@@ -272,6 +273,8 @@ import java.util.stream.Collectors;
         name = KEY_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS,
         value = EXTENDED_FLEDGE_REPORT_IMPRESSION_OVERALL_TIMEOUT_MS)
 @SetFlagFalse(KEY_FLEDGE_ON_DEVICE_AUCTION_KILL_SWITCH)
+// TODO (b/384952360): refine CEL related verifications later
+@SkipLoggingUsageRule(reason = "b/384952360")
 public final class OnDeviceAdSelectionRunnerTest extends AdServicesExtendedMockitoTestCase {
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
     private static final AdTechIdentifier BUYER_2 = AdSelectionConfigFixture.BUYER_2;

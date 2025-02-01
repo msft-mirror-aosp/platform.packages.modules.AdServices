@@ -19,6 +19,7 @@ package com.android.adservices.service.appsetid;
 import static android.adservices.appsetid.AppSetId.SCOPE_APP;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_PROVIDER_SERVICE_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_PROVIDER_SERVICE_TASK_CANCELLED_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
 import static com.android.adservices.AdServicesCommon.ACTION_APPSETID_PROVIDER_SERVICE;
@@ -56,6 +57,8 @@ public final class AppSetIdWorker {
 
     private static final String APPSETID_DEFAULT = "00000000-0000-0000-0000-000000000000";
     private static final String UNAUTHORIZED = "Unauthorized caller";
+
+    private static final String TAKSCANCELLED = "Task was cancelled";
 
     private static final AppSetIdWorker sInstance =
             new AppSetIdWorker(ApplicationContextSingleton.get());
@@ -171,6 +174,8 @@ public final class AppSetIdWorker {
                                                     .setAppSetIdScope(SCOPE_APP)
                                                     .build();
                                     callback.onResult(result);
+                                } else if (errorMessage.startsWith(TAKSCANCELLED)) {
+                                    callback.onError(STATUS_PROVIDER_SERVICE_TASK_CANCELLED_ERROR);
                                 } else {
                                     callback.onError(STATUS_PROVIDER_SERVICE_INTERNAL_ERROR);
                                 }

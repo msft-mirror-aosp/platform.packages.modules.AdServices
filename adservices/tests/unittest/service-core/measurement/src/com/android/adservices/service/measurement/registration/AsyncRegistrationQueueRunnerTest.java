@@ -131,6 +131,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
     private static final Uri DEFAULT_REGISTRANT = Uri.parse("android-app://com.registrant");
     private static final Uri DEFAULT_VERIFIED_DESTINATION = Uri.parse("android-app://com.example");
     private static final String DEFAULT_SOURCE_ID = UUID.randomUUID().toString();
+    private static final String DEFAULT_TRIGGER_ID = UUID.randomUUID().toString();
     private static final String SDK_PACKAGE_NAME = "sdk.package.name";
     private static final Uri APP_TOP_ORIGIN =
             Uri.parse("android-app://" + sContext.getPackageName());
@@ -314,6 +315,7 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                 .thenReturn(Flags.DEFAULT_MEASUREMENT_PRIVACY_EPSILON);
         when(mMockFlags.getMeasurementEnableBothSideDebugKeysInReports()).thenReturn(false);
         when(mMeasurementDao.insertSource(any())).thenReturn(DEFAULT_SOURCE_ID);
+        when(mMeasurementDao.insertTrigger(any())).thenReturn(DEFAULT_TRIGGER_ID);
         when(mSpyContext.getPackageManager()).thenReturn(mPackageManager);
     }
 

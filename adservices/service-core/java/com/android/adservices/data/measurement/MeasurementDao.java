@@ -117,11 +117,11 @@ class MeasurementDao implements IMeasurementDao {
     }
 
     @Override
-    public void insertTrigger(@NonNull Trigger trigger) throws DatastoreException {
+    public String insertTrigger(@NonNull Trigger trigger) throws DatastoreException {
         if (mDbFileMaxSizeLimitReachedSupplier.get()) {
             LoggerFactory.getMeasurementLogger()
                     .d("DB size has reached the limit, trigger will not be inserted");
-            return;
+            return null;
         }
 
         ContentValues values = new ContentValues();
@@ -176,6 +176,8 @@ class MeasurementDao implements IMeasurementDao {
         if (rowId == -1) {
             throw new DatastoreException("Trigger insertion failed.");
         }
+
+        return trigger.getId();
     }
 
     @Override

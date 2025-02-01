@@ -6136,6 +6136,26 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENABLE_LOG_SAMPLING_INFRA;
     }
 
+    /**
+     * Default value for the base64 encoded LogSamplingConfig proto for AdServices job execution.
+     */
+    @ConfigFlag String DEFAULT_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG = "";
+
+    /** Returns the base64 encoded LogSamplingConfig for AdServices job execution. */
+    default String getAdServicesJobExecutionSamplingConfig() {
+        return DEFAULT_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG;
+    }
+
+    /**
+     * Default value for the base64 encoded LogSamplingConfig proto for AdServices job scheduling.
+     */
+    @ConfigFlag String DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG = "";
+
+    /** Returns the base64 encoded LogSamplingConfig for AdServices job scheduling. */
+    default String getAdServicesJobSchedulingSamplingConfig() {
+        return DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG;
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////
     // NOTE: Add new getters either above this comment, or closer to the relevant getters         //
     ////////////////////////////////////////////////////////////////////////////////////////////////

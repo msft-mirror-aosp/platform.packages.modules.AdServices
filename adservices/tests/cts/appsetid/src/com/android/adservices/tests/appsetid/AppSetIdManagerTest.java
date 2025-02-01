@@ -35,6 +35,7 @@ import com.android.adservices.common.annotations.RequiresAndroidServiceAvailable
 import com.android.adservices.common.annotations.SetCompatModeFlags;
 import com.android.adservices.common.annotations.SetPpapiAppAllowList;
 import com.android.adservices.service.FlagsConstants;
+import com.android.adservices.shared.common.exception.ProviderServiceTaskCancelledException;
 import com.android.adservices.shared.common.exception.ServiceUnavailableException;
 import com.android.adservices.shared.testing.OutcomeReceiverForTests;
 import com.android.adservices.shared.testing.annotations.RequiresLowRamDevice;
@@ -74,6 +75,12 @@ public final class AppSetIdManagerTest extends CtsAppSetIdEndToEndTestCase {
         OutcomeReceiverForTests<AppSetId> callback = new OutcomeReceiverForTests<AppSetId>();
 
         appSetIdManager.getAppSetId(CALLBACK_EXECUTOR, callback);
+
+        Exception exception = callback.getFailure();
+        if (exception != null && exception instanceof ProviderServiceTaskCancelledException) {
+            mLog.e("task was cancelled");
+            return;
+        }
 
         AppSetId resultAppSetId = callback.assertResultReceived();
         assertWithMessage("resultAppset id null for " + callback.getError())

@@ -205,7 +205,9 @@ public abstract class CustomAudienceUpdatableData {
                         flags.getFledgeFrequencyCapFilteringEnabled(),
                         flags.getFledgeAppInstallFilteringEnabled(),
                         flags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        flags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        flags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        flags.getComponentAdRenderIdMaxLengthBytes(),
+                        flags.getMaxComponentAdsPerCustomAudience());
 
         ReadStatus userBiddingSignalsReadStatus =
                 readUserBiddingSignals(reader, responseHash, dataBuilder);
