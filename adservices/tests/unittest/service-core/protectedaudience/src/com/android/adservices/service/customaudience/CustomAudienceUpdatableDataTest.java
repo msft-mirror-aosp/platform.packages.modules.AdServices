@@ -20,6 +20,7 @@ import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERV
 import static android.adservices.customaudience.CustomAudience.PRIORITY_DEFAULT;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_PRIORITY_1;
 
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_ADS_SIZE_B;
@@ -27,6 +28,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AU
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_USER_BIDDING_SIGNALS_SIZE_B;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_GET_AD_SELECTION_DATA_SELLER_CONFIGURATION_ENABLED;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableData.readComponentAds;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataFixture.getValidBuilderFullSuccessfulResponse;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.OMIT_ADS_VALUE;
 
 import static org.junit.Assert.assertEquals;
@@ -35,9 +38,13 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.CommonFixture;
+import android.adservices.common.ComponentAdData;
+import android.adservices.common.ComponentAdDataFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
@@ -54,6 +61,7 @@ import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 
 import com.google.common.collect.ImmutableList;
 
+import org.json.JSONException;
 import org.junit.Test;
 
 import java.util.List;
@@ -67,6 +75,8 @@ public final class CustomAudienceUpdatableDataTest extends AdServicesUnitTestCas
             DBTrustedBiddingDataFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
     private static final List<DBAdData> VALID_DB_AD_DATA_LIST =
             DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1);
+    private static final List<ComponentAdData> COMPONENT_AD_DATA_LIST =
+            ComponentAdDataFixture.getValidComponentAdsByBuyer(CommonFixture.VALID_BUYER_1);
 
     @Test
     public void testBuildUpdatableDataSuccess() throws Exception {
@@ -246,6 +256,9 @@ public final class CustomAudienceUpdatableDataTest extends AdServicesUnitTestCas
                         JsonFixture.formatAsOrgJsonJSONObjectString(
                                 CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString()));
         boolean expectedContainsSuccessfulUpdate = true;
+
+        // TODO (b/390710940): This test is wrong, we should be setting auctionServerRequestFlags
+        // here.
         CustomAudienceUpdatableData updatableDataFromBuilder =
                 CustomAudienceUpdatableData.builder()
                         .setUserBiddingSignals(validUserBiddingSignalsAsJsonObjectString)
@@ -291,6 +304,124 @@ public final class CustomAudienceUpdatableDataTest extends AdServicesUnitTestCas
                 updatableDataFromBuilder,
                 updatableDataFromResponseString);
         assertEquals(0, updatableDataFromResponseString.getAuctionServerRequestFlags());
+    }
+
+    @Test
+    @SetFlagTrue(KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
+    public void testBuildUpdatableDataSuccessWithComponentAdsEnabled() throws Exception {
+        AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
+                AdSelectionSignals.fromString(
+                        JsonFixture.formatAsOrgJsonJSONObjectString(
+                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString()));
+        boolean expectedContainsSuccessfulUpdate = true;
+        CustomAudienceUpdatableData updatableDataFromBuilder =
+                CustomAudienceUpdatableData.builder()
+                        .setUserBiddingSignals(validUserBiddingSignalsAsJsonObjectString)
+                        .setTrustedBiddingData(VALID_DB_TRUSTED_BIDDING_DATA)
+                        .setAds(VALID_DB_AD_DATA_LIST)
+                        .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)
+                        .setInitialUpdateResult(BackgroundFetchRunner.UpdateResultType.SUCCESS)
+                        .setContainsSuccessfulUpdate(expectedContainsSuccessfulUpdate)
+                        .setComponentAds(COMPONENT_AD_DATA_LIST)
+                        .build();
+
+        expect.that(updatableDataFromBuilder.getUserBiddingSignals())
+                .isEqualTo(validUserBiddingSignalsAsJsonObjectString);
+        expect.that(updatableDataFromBuilder.getTrustedBiddingData())
+                .isEqualTo(VALID_DB_TRUSTED_BIDDING_DATA);
+        expect.that(updatableDataFromBuilder.getAds())
+                .containsExactlyElementsIn(VALID_DB_AD_DATA_LIST);
+        expect.that(updatableDataFromBuilder.getAttemptedUpdateTime())
+                .isEqualTo(CommonFixture.FIXED_NOW);
+        expect.that(updatableDataFromBuilder.getInitialUpdateResult())
+                .isEqualTo(BackgroundFetchRunner.UpdateResultType.SUCCESS);
+        expect.that(updatableDataFromBuilder.getContainsSuccessfulUpdate())
+                .isEqualTo(expectedContainsSuccessfulUpdate);
+        expect.that(updatableDataFromBuilder.getComponentAds())
+                .containsExactlyElementsIn(COMPONENT_AD_DATA_LIST);
+
+        final String jsonResponse =
+                CustomAudienceUpdatableDataFixture.toJsonResponseStringWithComponentAds(
+                        validUserBiddingSignalsAsJsonObjectString.toString(),
+                        VALID_DB_TRUSTED_BIDDING_DATA,
+                        VALID_DB_AD_DATA_LIST,
+                        COMPONENT_AD_DATA_LIST);
+        CustomAudienceUpdatableData updatableDataFromResponseString =
+                CustomAudienceUpdatableData.createFromResponseString(
+                        CommonFixture.FIXED_NOW,
+                        CommonFixture.VALID_BUYER_1,
+                        BackgroundFetchRunner.UpdateResultType.SUCCESS,
+                        jsonResponse,
+                        mFakeFlags);
+
+        expect.withMessage("Manually built updatable data")
+                .that(updatableDataFromResponseString)
+                .isEqualTo(updatableDataFromBuilder);
+    }
+
+    @Test
+    @SetFlagFalse(KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
+    public void testBuildUpdatableDataSuccessWithComponentAdsDisabled() throws Exception {
+        AdSelectionSignals validUserBiddingSignalsAsJsonObjectString =
+                AdSelectionSignals.fromString(
+                        JsonFixture.formatAsOrgJsonJSONObjectString(
+                                CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString()));
+        boolean expectedContainsSuccessfulUpdate = true;
+        CustomAudienceUpdatableData updatableDataFromBuilder =
+                CustomAudienceUpdatableData.builder()
+                        .setUserBiddingSignals(validUserBiddingSignalsAsJsonObjectString)
+                        .setTrustedBiddingData(VALID_DB_TRUSTED_BIDDING_DATA)
+                        .setAds(VALID_DB_AD_DATA_LIST)
+                        .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)
+                        .setInitialUpdateResult(BackgroundFetchRunner.UpdateResultType.SUCCESS)
+                        .setContainsSuccessfulUpdate(expectedContainsSuccessfulUpdate)
+                        .setComponentAds(COMPONENT_AD_DATA_LIST)
+                        .build();
+
+        expect.that(updatableDataFromBuilder.getUserBiddingSignals())
+                .isEqualTo(validUserBiddingSignalsAsJsonObjectString);
+        expect.that(updatableDataFromBuilder.getTrustedBiddingData())
+                .isEqualTo(VALID_DB_TRUSTED_BIDDING_DATA);
+        expect.that(updatableDataFromBuilder.getAds())
+                .containsExactlyElementsIn(VALID_DB_AD_DATA_LIST);
+        expect.that(updatableDataFromBuilder.getAttemptedUpdateTime())
+                .isEqualTo(CommonFixture.FIXED_NOW);
+        expect.that(updatableDataFromBuilder.getInitialUpdateResult())
+                .isEqualTo(BackgroundFetchRunner.UpdateResultType.SUCCESS);
+        expect.that(updatableDataFromBuilder.getContainsSuccessfulUpdate())
+                .isEqualTo(expectedContainsSuccessfulUpdate);
+        expect.that(updatableDataFromBuilder.getComponentAds())
+                .containsExactlyElementsIn(COMPONENT_AD_DATA_LIST);
+
+        final String jsonResponse =
+                CustomAudienceUpdatableDataFixture.toJsonResponseStringWithComponentAds(
+                        validUserBiddingSignalsAsJsonObjectString.toString(),
+                        VALID_DB_TRUSTED_BIDDING_DATA,
+                        VALID_DB_AD_DATA_LIST,
+                        COMPONENT_AD_DATA_LIST);
+        CustomAudienceUpdatableData updatableDataFromResponseString =
+                CustomAudienceUpdatableData.createFromResponseString(
+                        CommonFixture.FIXED_NOW,
+                        CommonFixture.VALID_BUYER_1,
+                        BackgroundFetchRunner.UpdateResultType.SUCCESS,
+                        jsonResponse,
+                        mFakeFlags);
+
+        CustomAudienceUpdatableData expectedUpdatableDataFromBuilderWithoutComponentAds =
+                CustomAudienceUpdatableData.builder()
+                        .setUserBiddingSignals(validUserBiddingSignalsAsJsonObjectString)
+                        .setTrustedBiddingData(VALID_DB_TRUSTED_BIDDING_DATA)
+                        .setAds(VALID_DB_AD_DATA_LIST)
+                        .setAttemptedUpdateTime(CommonFixture.FIXED_NOW)
+                        .setInitialUpdateResult(BackgroundFetchRunner.UpdateResultType.SUCCESS)
+                        .setContainsSuccessfulUpdate(expectedContainsSuccessfulUpdate)
+                        .build();
+
+        expect.withMessage("Manually built updatable data")
+                .that(updatableDataFromResponseString)
+                .isEqualTo(expectedUpdatableDataFromBuilderWithoutComponentAds);
+
+        expect.that(updatableDataFromResponseString.getComponentAds()).isNull();
     }
 
     @Test
@@ -736,5 +867,96 @@ public final class CustomAudienceUpdatableDataTest extends AdServicesUnitTestCas
 
         // All found fields in the response were too large, failing validation
         assertFalse(updatableDataFromResponseString.getContainsSuccessfulUpdate());
+    }
+
+    @Test
+    public void testReadComponentAdsJsonException() throws Exception {
+        CustomAudienceUpdatableDataReader mockReader =
+                mock(CustomAudienceUpdatableDataReader.class);
+        when(mockReader.getComponentAdsFromJsonObject()).thenThrow(JSONException.class);
+
+        CustomAudienceUpdatableData.Builder dataBuilder =
+                getValidBuilderFullSuccessfulResponse()
+                        .setComponentAds(
+                                ComponentAdDataFixture.getValidComponentAdsByBuyer(
+                                        CommonFixture.VALID_BUYER_1));
+
+        CustomAudienceUpdatableData.ReadStatus readStatus =
+                readComponentAds(mockReader, "responseHash", dataBuilder);
+
+        expect.that(readStatus)
+                .isEqualTo(CustomAudienceUpdatableData.ReadStatus.STATUS_FOUND_INVALID);
+        expect.that(dataBuilder.build().getComponentAds()).isNull();
+    }
+
+    @Test
+    public void testReadComponentAdsIAE() throws Exception {
+        CustomAudienceUpdatableDataReader reader = mock(CustomAudienceUpdatableDataReader.class);
+        when(reader.getComponentAdsFromJsonObject()).thenThrow(IllegalArgumentException.class);
+
+        CustomAudienceUpdatableData.Builder dataBuilder =
+                getValidBuilderFullSuccessfulResponse()
+                        .setComponentAds(
+                                ComponentAdDataFixture.getValidComponentAdsByBuyer(
+                                        CommonFixture.VALID_BUYER_1));
+
+        CustomAudienceUpdatableData.ReadStatus readStatus =
+                readComponentAds(reader, "responseHash", dataBuilder);
+
+        expect.that(readStatus)
+                .isEqualTo(CustomAudienceUpdatableData.ReadStatus.STATUS_FOUND_INVALID);
+        expect.that(dataBuilder.build().getComponentAds()).isNull();
+    }
+
+    @Test
+    public void testReadComponentAdsJsonNPE() throws Exception {
+        CustomAudienceUpdatableDataReader reader = mock(CustomAudienceUpdatableDataReader.class);
+        when(reader.getComponentAdsFromJsonObject()).thenThrow(NullPointerException.class);
+
+        CustomAudienceUpdatableData.Builder dataBuilder =
+                getValidBuilderFullSuccessfulResponse()
+                        .setComponentAds(
+                                ComponentAdDataFixture.getValidComponentAdsByBuyer(
+                                        CommonFixture.VALID_BUYER_1));
+
+        CustomAudienceUpdatableData.ReadStatus readStatus =
+                readComponentAds(reader, "responseHash", dataBuilder);
+
+        expect.that(readStatus)
+                .isEqualTo(CustomAudienceUpdatableData.ReadStatus.STATUS_FOUND_INVALID);
+        expect.that(dataBuilder.build().getComponentAds()).isNull();
+    }
+
+    @Test
+    public void testReadComponentAdsJsonNullComponentAds() throws Exception {
+        CustomAudienceUpdatableDataReader reader = mock(CustomAudienceUpdatableDataReader.class);
+        when(reader.getComponentAdsFromJsonObject()).thenReturn(null);
+
+        CustomAudienceUpdatableData.Builder dataBuilder =
+                getValidBuilderFullSuccessfulResponse()
+                        .setComponentAds(
+                                ComponentAdDataFixture.getValidComponentAdsByBuyer(
+                                        CommonFixture.VALID_BUYER_1));
+
+        CustomAudienceUpdatableData.ReadStatus readStatus =
+                readComponentAds(reader, "responseHash", dataBuilder);
+
+        expect.that(readStatus).isEqualTo(CustomAudienceUpdatableData.ReadStatus.STATUS_NOT_FOUND);
+        expect.that(dataBuilder.build().getComponentAds()).isNull();
+    }
+
+    @Test
+    public void testReadComponentAdsJsonFoundComponentAds() throws Exception {
+        CustomAudienceUpdatableDataReader reader = mock(CustomAudienceUpdatableDataReader.class);
+        when(reader.getComponentAdsFromJsonObject()).thenReturn(COMPONENT_AD_DATA_LIST);
+
+        CustomAudienceUpdatableData.Builder dataBuilder = getValidBuilderFullSuccessfulResponse();
+        CustomAudienceUpdatableData.ReadStatus readStatus =
+                readComponentAds(reader, "responseHash", dataBuilder);
+
+        expect.that(readStatus)
+                .isEqualTo(CustomAudienceUpdatableData.ReadStatus.STATUS_FOUND_VALID);
+        expect.that(dataBuilder.build().getComponentAds())
+                .containsExactlyElementsIn(COMPONENT_AD_DATA_LIST);
     }
 }

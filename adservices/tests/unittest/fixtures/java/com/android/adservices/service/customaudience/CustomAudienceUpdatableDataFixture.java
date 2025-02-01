@@ -184,6 +184,26 @@ public class CustomAudienceUpdatableDataFixture {
     }
 
     /**
+     * Converts the input user bidding signals, trusted bidding data, list of ads, and component ads
+     * to a valid JSON object and returns it as a serialized string.
+     */
+    public static String toJsonResponseStringWithComponentAds(
+            String userBiddingSignals,
+            DBTrustedBiddingData trustedBiddingData,
+            List<DBAdData> ads,
+            List<ComponentAdData> componentAdDataList)
+            throws JSONException {
+        JSONObject jsonResponse = new JSONObject();
+
+        jsonResponse = addToJsonObject(jsonResponse, userBiddingSignals, false);
+        jsonResponse = addToJsonObject(jsonResponse, trustedBiddingData, false);
+        jsonResponse = addToJsonObject(jsonResponse, ads, false);
+        jsonResponse = addComponentAdsToJsonObject(jsonResponse, componentAdDataList, false);
+
+        return jsonResponse.toString();
+    }
+
+    /**
      * Converts the input user bidding signals, trusted bidding data, list of ads, and
      * auctionServerRequestFlags to a valid JSON object and returns it as a serialized string.
      *
