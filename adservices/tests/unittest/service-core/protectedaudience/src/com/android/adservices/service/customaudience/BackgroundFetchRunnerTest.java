@@ -18,6 +18,7 @@ package com.android.adservices.service.customaudience;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_BACKGROUND_FETCH_NETWORK_READ_TIMEOUT_MS;
@@ -38,6 +39,8 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 
 import android.adservices.common.CommonFixture;
+import android.adservices.common.ComponentAdData;
+import android.adservices.common.ComponentAdDataFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.http.MockWebServerRule;
 import android.content.pm.PackageManager;
@@ -59,6 +62,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.CustomAudienceLoggerFactory;
 import com.android.adservices.service.stats.UpdateCustomAudienceExecutionLogger;
 import com.android.adservices.shared.testing.SkipLoggingUsageRule;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
@@ -86,6 +90,7 @@ import java.util.concurrent.TimeUnit;
 @SpyStatic(FlagsFactory.class)
 @SetFlagEnabled(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED)
 @SetFlagEnabled(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
+@SetFlagDisabled(KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
 // TODO (b/384952360): refine CEL related verifications later
 @SkipLoggingUsageRule(reason = "b/384952360")
 @SuppressWarnings("DoNotMockErrorLogUtilBehavior") // TODO(b/384952360)
@@ -626,5 +631,108 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
         assertEquals(1, mockWebServer.getRequestCount());
         RecordedRequest fetchRequest = mockWebServer.takeRequest();
         assertEquals(mFetchPath, fetchRequest.getPath());
+    }
+
+    @Test
+    @SetFlagEnabled(KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
+    public void
+            testFetchAndValidateSuccessfulFullCustomAudienceUpdatableDataWithComponentAdsEnabled()
+                    throws Exception {
+        List<ComponentAdData> componentAdDataList =
+                ComponentAdDataFixture.getValidComponentAdsByBuyer(CommonFixture.VALID_BUYER_1);
+
+        BackgroundFetchRunner runner =
+                new BackgroundFetchRunner(
+                        mCustomAudienceDaoMock,
+                        mAppInstallDaoMock,
+                        mPackageManagerMock,
+                        mEnrollmentDaoMock,
+                        mFakeFlags,
+                        mCustomAudienceLoggerFactoryMock);
+
+        String jsonResponseString =
+                CustomAudienceUpdatableDataFixture.toJsonResponseStringWithComponentAds(
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString(),
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
+                                        CommonFixture.VALID_BUYER_1)
+                                .build(),
+                        DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1),
+                        componentAdDataList);
+
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(new MockResponse().setBody(jsonResponseString)));
+        CustomAudienceUpdatableData expectedUpdatableDataWithComponentAds =
+                CustomAudienceUpdatableDataFixture.getValidBuilderFullSuccessfulResponse()
+                        .setComponentAds(componentAdDataList)
+                        .build();
+
+        CustomAudienceUpdatableData updatableData =
+                runner.fetchAndValidateCustomAudienceUpdatableData(
+                                CommonFixture.FIXED_NOW,
+                                CommonFixture.VALID_BUYER_1,
+                                mFetchUri,
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
+                        .get();
+
+        expect.withMessage("Updatable data")
+                .that(expectedUpdatableDataWithComponentAds)
+                .isEqualTo(updatableData);
+        expect.that(mockWebServer.getRequestCount()).isEqualTo(1);
+
+        RecordedRequest fetchRequest = mockWebServer.takeRequest();
+        expect.withMessage("Path").that(fetchRequest.getPath()).isEqualTo(mFetchPath);
+    }
+
+    @Test
+    @SetFlagDisabled(KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
+    public void
+            testFetchAndValidateSuccessfulFullCustomAudienceUpdatableDataWithComponentAdsDisabled()
+                    throws Exception {
+        List<ComponentAdData> componentAdDataList =
+                ComponentAdDataFixture.getValidComponentAdsByBuyer(CommonFixture.VALID_BUYER_1);
+
+        BackgroundFetchRunner runner =
+                new BackgroundFetchRunner(
+                        mCustomAudienceDaoMock,
+                        mAppInstallDaoMock,
+                        mPackageManagerMock,
+                        mEnrollmentDaoMock,
+                        mFakeFlags,
+                        mCustomAudienceLoggerFactoryMock);
+
+        String jsonResponseString =
+                CustomAudienceUpdatableDataFixture.toJsonResponseStringWithComponentAds(
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString(),
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(
+                                        CommonFixture.VALID_BUYER_1)
+                                .build(),
+                        DBAdDataFixture.getValidDbAdDataListByBuyer(CommonFixture.VALID_BUYER_1),
+                        componentAdDataList);
+
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(new MockResponse().setBody(jsonResponseString)));
+        CustomAudienceUpdatableData expectedUpdatableData =
+                CustomAudienceUpdatableDataFixture.getValidBuilderFullSuccessfulResponse()
+                        .setComponentAds(null)
+                        .build();
+
+        // Do not expect component ads as the flag is disabled
+        CustomAudienceUpdatableData updatableData =
+                runner.fetchAndValidateCustomAudienceUpdatableData(
+                                CommonFixture.FIXED_NOW,
+                                CommonFixture.VALID_BUYER_1,
+                                mFetchUri,
+                                DevContext.createForDevOptionsDisabled()
+                                        .getDeviceDevOptionsEnabled())
+                        .get();
+
+        expect.withMessage("Updatable data").that(expectedUpdatableData).isEqualTo(updatableData);
+        expect.that(mockWebServer.getRequestCount()).isEqualTo(1);
+
+        RecordedRequest fetchRequest = mockWebServer.takeRequest();
+        expect.withMessage("Path").that(fetchRequest.getPath()).isEqualTo(mFetchPath);
     }
 }
