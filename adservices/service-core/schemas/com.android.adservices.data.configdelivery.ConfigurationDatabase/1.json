@@ -1,0 +1,105 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 1,
+    "identityHash": "bfce7de368d76ec68b67cc370fc3b51c",
+    "entities": [
+      {
+        "tableName": "configurations",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`config_row_id` INTEGER NOT NULL, `type` INTEGER NOT NULL, `version` INTEGER NOT NULL, `id` TEXT NOT NULL, `value` BLOB, PRIMARY KEY(`config_row_id`))",
+        "fields": [
+          {
+            "fieldPath": "configRowId",
+            "columnName": "config_row_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "version",
+            "columnName": "version",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "value",
+            "columnName": "value",
+            "affinity": "BLOB"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "config_row_id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_configurations_type_version_id",
+            "unique": true,
+            "columnNames": [
+              "type",
+              "version",
+              "id"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_configurations_type_version_id` ON `${TABLE_NAME}` (`type`, `version`, `id`)"
+          }
+        ]
+      },
+      {
+        "tableName": "labels",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`config_row_id` INTEGER NOT NULL, `label` TEXT NOT NULL, PRIMARY KEY(`config_row_id`, `label`), FOREIGN KEY(`config_row_id`) REFERENCES `configurations`(`config_row_id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "fields": [
+          {
+            "fieldPath": "configRowId",
+            "columnName": "config_row_id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "label",
+            "columnName": "label",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "config_row_id",
+            "label"
+          ]
+        },
+        "foreignKeys": [
+          {
+            "table": "configurations",
+            "onDelete": "CASCADE",
+            "onUpdate": "NO ACTION",
+            "columns": [
+              "config_row_id"
+            ],
+            "referencedColumns": [
+              "config_row_id"
+            ]
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'bfce7de368d76ec68b67cc370fc3b51c')"
+    ]
+  }
+}
