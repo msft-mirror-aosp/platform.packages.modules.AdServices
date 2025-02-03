@@ -43,7 +43,7 @@ java_defaults {
     sdk_version: "module_current",
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
-        test: false,
+        test: true,
     },
 }
 

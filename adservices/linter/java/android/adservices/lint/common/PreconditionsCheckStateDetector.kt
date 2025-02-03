@@ -25,6 +25,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
+import java.util.EnumSet
 import org.jetbrains.uast.UCallExpression
 
 class PreconditionsCheckStateDetector : Detector(), SourceCodeScanner {
@@ -33,25 +34,41 @@ class PreconditionsCheckStateDetector : Detector(), SourceCodeScanner {
     }
 
     override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
-        if (method.name == "checkState" && method.containingClass?.qualifiedName ==
-                "com.android.internal.util.Preconditions" && method.parameterList.parametersCount >= 3) {
-            context.report(issue = ISSUE, location = context.getNameLocation(node),
-                    message = "DO NOT USE com.android.internal.util.Preconditions.CheckState(boolean, String, Object...)" +
-                            " because it is not available in R-. Use Preconditions.CheckState(boolean, String, Object...) " +
-                            "from adservices-shared-util instead.")
+        if (
+            method.name == "checkState" &&
+                method.containingClass?.qualifiedName ==
+                    "com.android.internal.util.Preconditions" &&
+                method.parameterList.parametersCount >= 3
+        ) {
+            context.report(
+                issue = ISSUE,
+                location = context.getNameLocation(node),
+                message =
+                    "DO NOT USE com.android.internal.util.Preconditions.CheckState(boolean, String, Object...)" +
+                        " because it is not available in R-. Use Preconditions.CheckState(boolean, String, Object...) " +
+                        "from adservices-shared-util instead.",
+            )
         }
     }
 
     companion object {
-        val ISSUE = Issue.create(
+        val ISSUE =
+            Issue.create(
                 id = "AvoidPreconditions.CheckState",
                 briefDescription = "DO NOT USE Preconditions.CheckState",
-                explanation = """
+                explanation =
+                    """
                       DO NOT USE com.android.internal.util.Preconditions.CheckState(boolean, String, Object...)
                       because it is not available in R-. Use Preconditions.CheckState(boolean, String, Object...) from adservices-shared-util instead.
                     """,
                 category = Category.COMPLIANCE,
                 severity = Severity.ERROR,
-                implementation = Implementation(PreconditionsCheckStateDetector::class.java, Scope.JAVA_FILE_SCOPE))
+                implementation =
+                    Implementation(
+                        PreconditionsCheckStateDetector::class.java,
+                        EnumSet.of(Scope.JAVA_FILE, Scope.TEST_SOURCES),
+                        Scope.JAVA_FILE_SCOPE,
+                    ),
+            )
     }
 }
