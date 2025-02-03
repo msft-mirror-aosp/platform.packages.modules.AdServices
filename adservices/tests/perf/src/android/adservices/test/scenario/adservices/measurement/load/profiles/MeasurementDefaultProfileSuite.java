@@ -18,6 +18,7 @@ package android.adservices.test.scenario.adservices.measurement.load.profiles;
 
 import android.Manifest;
 import android.adservices.test.longevity.concurrent.ProfileSuite;
+import android.adservices.test.longevity.concurrent.SuiteUtils;
 import android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterSource;
 import android.adservices.test.scenario.adservices.measurement.load.scenarios.CallRegisterTrigger;
 import android.adservices.test.scenario.adservices.measurement.load.scenarios.DeviceChangeTime;
@@ -99,6 +100,10 @@ public class MeasurementDefaultProfileSuite {
                             true)
                     // Set flag to pre seed enrollment.
                     .setFlag(FlagsConstants.KEY_ENABLE_ENROLLMENT_TEST_SEED, true)
+                    .setFlagsFromConfig(
+                            SuiteUtils.bundleToMap(InstrumentationRegistry.getArguments()),
+                            "flag_deviceconfig",
+                            ":")
                     .setMeasurementTags()
                     .setCompatModeFlags();
 
