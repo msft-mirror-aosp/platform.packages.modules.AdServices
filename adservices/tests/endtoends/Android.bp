@@ -43,7 +43,6 @@ android_test {
     ],
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
-        test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
 
@@ -85,7 +84,6 @@ android_test {
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
         baseline_filename: "lint-baseline-adextservices.xml",
-        test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
 
@@ -103,6 +101,5 @@ android_test {
     manifest: "AndroidManifestExtServicesRvc.xml",
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
-        test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
