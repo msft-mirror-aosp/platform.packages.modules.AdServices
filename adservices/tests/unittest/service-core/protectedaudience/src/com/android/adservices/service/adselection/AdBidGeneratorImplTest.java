@@ -162,7 +162,6 @@ import java.util.stream.Collectors;
 @SetFlagTrue(KEY_FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED)
 // TODO (b/384952360): refine CEL related verifications later
 @SkipLoggingUsageRule(reason = "b/384952360")
-@SuppressWarnings("DoNotMockErrorLogUtilBehavior") // TODO(b/384952360)
 public final class AdBidGeneratorImplTest extends AdServicesExtendedMockitoTestCase {
     private static final List<Double> BIDS =
             new ArrayList<>(ImmutableList.of(-10.0, 0.0, 1.0, 5.4, -1.0));
@@ -396,9 +395,6 @@ public final class AdBidGeneratorImplTest extends AdServicesExtendedMockitoTestC
 
     @Before
     public void setUp() throws Exception {
-        // TODO (b/384952360): Delete doNothingOnErrorLogUtilError when all CEL logs in this test
-        // are captured properly.
-        doNothingOnErrorLogUtilError();
         mocker.mockGetFlags(mFakeFlags);
         mDevContext = DevContext.createForDevOptionsDisabled();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
