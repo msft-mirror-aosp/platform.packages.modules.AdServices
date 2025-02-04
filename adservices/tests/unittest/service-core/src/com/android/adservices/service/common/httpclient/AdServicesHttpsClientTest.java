@@ -19,6 +19,12 @@ package com.android.adservices.service.common.httpclient;
 import static android.adservices.exceptions.RetryableAdServicesNetworkException.DEFAULT_RETRY_AFTER_VALUE;
 
 import static com.android.adservices.service.common.httpclient.AdServicesHttpUtil.EMPTY_BODY;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_RETRIABLE_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_OPENING_URL_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_TIMEOUT_READING_RESPONSE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_URI_IS_MALFORMED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
@@ -27,6 +33,7 @@ import static org.junit.Assert.assertThrows;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -39,7 +46,9 @@ import android.net.Uri;
 import androidx.room.Room;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.WebAddresses;
@@ -79,6 +88,8 @@ import org.mockito.internal.stubbing.answers.Returns;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -90,7 +101,8 @@ import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HttpsURLConnection;
 
-public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
+@SetErrorLogUtilDefaultParams(ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
+public final class AdServicesHttpsClientTest extends AdServicesExtendedMockitoTestCase {
     private static final String CACHE_HEADER = "Cache-Control: max-age=60";
     private static final String NO_CACHE_HEADER = "Cache-Control: no-cache";
     private static final String RESPONSE_HEADER_KEY = "fake_response_header_key";
@@ -164,6 +176,10 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_ERROR,
+            throwable = AdServicesNetworkException.class)
     public void testGetAndReadNothingFailedResponse() throws Exception {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -174,7 +190,7 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> getAndReadNothing(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
-        assertThat(exception.getCause()).isInstanceOf(AdServicesNetworkException.class);
+        assertThat(exception).hasCauseThat().isInstanceOf(AdServicesNetworkException.class);
     }
 
     @Test
@@ -185,7 +201,7 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> getAndReadNothing(Uri.parse(mFakeUrl), DEV_CONTEXT_DISABLED));
-        assertThat(exception.getCause()).isInstanceOf(IOException.class);
+        assertThat(exception).hasCauseThat().isInstanceOf(IOException.class);
     }
 
     @Test
@@ -197,8 +213,76 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
                                 getAndReadNothing(
                                         Uri.parse("http://google.com"), DEV_CONTEXT_DISABLED));
 
-        assertThat(wrapperExecutionException.getCause())
+        assertThat(wrapperExecutionException)
+                .hasCauseThat()
                 .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_URI_IS_MALFORMED,
+            throwable = MalformedURLException.class)
+    public void testGetAndReadNothingThrowsExceptionIfUriIsMalformed() {
+        Uri testUri = Uri.parse("https://[1200::AB00:1234::2552:7777:1313]");
+
+        ExecutionException wrapperExecutionException =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> getAndReadNothing(testUri, DEV_CONTEXT_DISABLED));
+
+        assertThat(wrapperExecutionException)
+                .hasCauseThat()
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_OPENING_URL_FAILED,
+            throwable = IOException.class)
+    public void testGetAndReadNothingThrowsExceptionIfFailedToOpenUrl() throws Exception {
+        doReturn(mUrlMock).when(mUriConverterMock).toUrl(any(Uri.class));
+        doThrow(new IOException()).when(mUrlMock).openConnection();
+        mClient =
+                new AdServicesHttpsClient(
+                        mExecutorService, 5000, 5000, 5, mUriConverterMock, mCache);
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
+        URL url = server.getUrl(mReportingPath);
+
+        ExecutionException wrapperExecutionException =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> getAndReadNothing(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
+
+        assertThat(wrapperExecutionException)
+                .hasCauseThat()
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_TIMEOUT_READING_RESPONSE,
+            throwable = SocketTimeoutException.class)
+    public void testGetAndReadNothingThrowsExceptionIfTimeoutReadingResponse() throws Exception {
+        doReturn(mUrlMock).when(mUriConverterMock).toUrl(any(Uri.class));
+        doReturn(mURLConnectionMock).when(mUrlMock).openConnection();
+        doThrow(new SocketTimeoutException()).when(mURLConnectionMock).getResponseCode();
+        mClient =
+                new AdServicesHttpsClient(
+                        mExecutorService, 5000, 5000, 5, mUriConverterMock, mCache);
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(ImmutableList.of(new MockResponse()));
+        URL url = server.getUrl(mReportingPath);
+
+        ExecutionException wrapperExecutionException =
+                assertThrows(
+                        ExecutionException.class,
+                        () -> getAndReadNothing(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
+
+        assertThat(wrapperExecutionException).hasCauseThat().isInstanceOf(IOException.class);
     }
 
     @Test
@@ -239,6 +323,10 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_ERROR,
+            throwable = AdServicesNetworkException.class)
     public void testFetchPayloadFailedResponse() throws Exception {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -249,7 +337,7 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
-        assertThat(exception.getCause()).isInstanceOf(AdServicesNetworkException.class);
+        assertThat(exception).hasCauseThat().isInstanceOf(AdServicesNetworkException.class);
     }
 
     @Test
@@ -260,7 +348,7 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> fetchPayload(Uri.parse(mFakeUrl), DEV_CONTEXT_DISABLED));
-        assertThat(exception.getCause()).isInstanceOf(IOException.class);
+        assertThat(exception).hasCauseThat().isInstanceOf(IOException.class);
     }
 
     @Test
@@ -284,7 +372,7 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
-        assertThat(exception.getCause()).isInstanceOf(IOException.class);
+        assertThat(exception).hasCauseThat().isInstanceOf(IOException.class);
     }
 
     @Test
@@ -294,7 +382,8 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
                         ExecutionException.class,
                         () -> fetchPayload(Uri.parse("http://google.com"), DEV_CONTEXT_DISABLED));
 
-        assertThat(wrapperExecutionException.getCause())
+        assertThat(wrapperExecutionException)
+                .hasCauseThat()
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
@@ -315,7 +404,7 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
-        assertThat(exception.getCause()).isInstanceOf(IOException.class);
+        assertThat(exception).hasCauseThat().isInstanceOf(IOException.class);
     }
 
     @Test
@@ -674,6 +763,10 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_ERROR,
+            throwable = AdServicesNetworkException.class)
     public void testPostJsonFailedResponse() throws Exception {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -684,7 +777,7 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> postJson(Uri.parse(url.toString()), mData, DEV_CONTEXT_DISABLED));
-        assertThat(exception.getCause()).isInstanceOf(AdServicesNetworkException.class);
+        assertThat(exception).hasCauseThat().isInstanceOf(AdServicesNetworkException.class);
     }
 
     @Test
@@ -695,7 +788,7 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> postJson(Uri.parse(mFakeUrl), mData, DEV_CONTEXT_DISABLED));
-        assertThat(exception.getCause()).isInstanceOf(IOException.class);
+        assertThat(exception).hasCauseThat().isInstanceOf(IOException.class);
     }
 
     @Test
@@ -709,11 +802,16 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
                                         mData,
                                         DEV_CONTEXT_DISABLED));
 
-        assertThat(wrapperExecutionException.getCause())
+        assertThat(wrapperExecutionException)
+                .hasCauseThat()
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_RETRIABLE_ERROR,
+            throwable = RetryableAdServicesNetworkException.class)
     public void testFailedResponseWithStatusCode() throws Exception {
         MockResponse response = new MockResponse().setResponseCode(429);
         MockWebServer server = mMockWebServerRule.startMockWebServer(ImmutableList.of(response));
@@ -724,7 +822,7 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
-        assertThat(wrapperException.getCause()).isInstanceOf(AdServicesNetworkException.class);
+        assertThat(wrapperException).hasCauseThat().isInstanceOf(AdServicesNetworkException.class);
 
         // Assert the expected AdServicesNetworkException is thrown.
         AdServicesNetworkException exception =
@@ -734,6 +832,10 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_RETRIABLE_ERROR,
+            throwable = RetryableAdServicesNetworkException.class)
     public void testFailedResponseWithStatusCodeAndRetryAfter() throws Exception {
         MockResponse response =
                 new MockResponse().setResponseCode(429).setHeader("Retry-After", 1000);
@@ -745,7 +847,8 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
-        assertThat(wrapperException.getCause())
+        assertThat(wrapperException)
+                .hasCauseThat()
                 .isInstanceOf(RetryableAdServicesNetworkException.class);
 
         // Assert the expected RetryableAdServicesNetworkException is thrown.
@@ -757,6 +860,10 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_RETRIABLE_ERROR,
+            throwable = RetryableAdServicesNetworkException.class)
     public void testFailedResponseWithStatusCodeAndRetryAfterWithNoRetryHeader() throws Exception {
         MockResponse response = new MockResponse().setResponseCode(429);
         MockWebServer server = mMockWebServerRule.startMockWebServer(ImmutableList.of(response));
@@ -767,7 +874,8 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
-        assertThat(wrapperException.getCause())
+        assertThat(wrapperException)
+                .hasCauseThat()
                 .isInstanceOf(RetryableAdServicesNetworkException.class);
 
         // Assert the expected RetryableAdServicesNetworkException is thrown.
@@ -779,6 +887,10 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_ERROR,
+            throwable = AdServicesNetworkException.class)
     public void testFetchPayloadDomainIsLocalhost_DevOptionsDisabled() throws Exception {
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -791,7 +903,7 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
                         () -> fetchPayload(Uri.parse(url.toString()), DEV_CONTEXT_DISABLED));
         // Verify we are pinging a local domain.
         assertThat(WebAddresses.isLocalhost(Uri.parse(url.toString()))).isTrue();
-        assertThat(exception.getCause()).isInstanceOf(AdServicesNetworkException.class);
+        assertThat(exception).hasCauseThat().isInstanceOf(AdServicesNetworkException.class);
     }
 
     @Test
@@ -892,6 +1004,10 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_RETRIABLE_ERROR,
+            throwable = RetryableAdServicesNetworkException.class)
     public void performRequestGetResponseBytes_failedStatusCode_shouldThrowErrorWithCorrectCode()
             throws Exception {
         MockWebServer server =
@@ -914,7 +1030,7 @@ public final class AdServicesHttpsClientTest extends AdServicesMockitoTestCase {
                 assertThrows(
                         ExecutionException.class,
                         () -> mClient.performRequestGetResponseInBase64String(request).get());
-        assertThat(wrapperException.getCause()).isInstanceOf(AdServicesNetworkException.class);
+        assertThat(wrapperException).hasCauseThat().isInstanceOf(AdServicesNetworkException.class);
 
         // Assert the expected AdServicesNetworkException is thrown.
         AdServicesNetworkException exception =
