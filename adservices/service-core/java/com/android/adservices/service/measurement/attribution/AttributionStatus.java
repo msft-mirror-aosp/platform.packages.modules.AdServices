@@ -20,8 +20,6 @@ import com.android.adservices.service.measurement.EventSurfaceType;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.Trigger;
 
-
-
 /** POJO for storing attribution status */
 public class AttributionStatus {
     /** Enums are tied to the AdservicesMeasurementAttributionStatus atom */
@@ -83,6 +81,11 @@ public class AttributionStatus {
         public int getValue() {
             return mValue;
         }
+
+        @Override
+        public String toString() {
+            return name();
+        }
     }
 
     public enum FailureType {
@@ -104,6 +107,11 @@ public class AttributionStatus {
 
         public int getValue() {
             return mValue;
+        }
+
+        @Override
+        public String toString() {
+            return name();
         }
     }
 
