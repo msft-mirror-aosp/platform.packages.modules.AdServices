@@ -24,10 +24,12 @@ import android.provider.DeviceConfig;
 import android.provider.DeviceConfig.Properties;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.internal.annotations.VisibleForTesting;
 
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 /**
  * The logger logs metrics for the lifecycle of AdServices process and process stable flags'
@@ -37,16 +39,19 @@ public final class ProcessStableFlagsLogger {
     private static final String DEFAULT_STRING_FLAG_VALUE = "defVal";
 
     private final ProcessStableFlagsStatsdLogger mStatsdLogger;
+    private final ExecutorService mExecutor;
 
     /** Constructor for {@link ProcessStableFlagsLogger}. */
     @VisibleForTesting
-    public ProcessStableFlagsLogger(ProcessStableFlagsStatsdLogger statsdLogger) {
+    public ProcessStableFlagsLogger(
+            ProcessStableFlagsStatsdLogger statsdLogger, ExecutorService executor) {
         mStatsdLogger = Objects.requireNonNull(statsdLogger);
+        mExecutor = Objects.requireNonNull(executor);
     }
 
     /** Constructor for {@link ProcessStableFlagsLogger}. */
     public ProcessStableFlagsLogger() {
-        this(new ProcessStableFlagsStatsdLogger());
+        this(new ProcessStableFlagsStatsdLogger(), AdServicesExecutors.getBackgroundExecutor());
     }
 
     /** Logs the occurrence of AdServices Process restarting. */
@@ -55,7 +60,7 @@ public final class ProcessStableFlagsLogger {
             return;
         }
 
-        mStatsdLogger.logAdServicesProcessRestart();
+        mExecutor.execute(mStatsdLogger::logAdServicesProcessRestart);
     }
 
     /**
@@ -68,7 +73,7 @@ public final class ProcessStableFlagsLogger {
             return;
         }
 
-        mStatsdLogger.logBatchReadFromDeviceConfigLatencyMs(latencyMs);
+        mExecutor.execute(() -> mStatsdLogger.logBatchReadFromDeviceConfigLatencyMs(latencyMs));
     }
 
     /**
@@ -79,7 +84,7 @@ public final class ProcessStableFlagsLogger {
             return;
         }
 
-        mStatsdLogger.logAdServicesProcessLowMemoryLevel();
+        mExecutor.execute(mStatsdLogger::logAdServicesProcessLowMemoryLevel);
     }
 
     /**
@@ -93,31 +98,37 @@ public final class ProcessStableFlagsLogger {
             return;
         }
 
-        Set<String> changedFlagNameSet = changedProperties.getKeyset();
-        Set<String> cachedFlagNameSet = cachedProperties.getKeyset();
+        mExecutor.execute(
+                () -> {
+                    Set<String> changedFlagNameSet = changedProperties.getKeyset();
+                    Set<String> cachedFlagNameSet = cachedProperties.getKeyset();
 
-        // Log the number of flags that are changed and different as their values in the cache.
-        int numOfCacheMissFlags = 0;
-        for (String flagName : changedFlagNameSet) {
-            if (!cachedFlagNameSet.contains(flagName)) {
-                numOfCacheMissFlags++;
-            } else {
-                // Compare the string value of the flag, despite the type of its actual usage.
-                String changedValue =
-                        changedProperties.getString(flagName, DEFAULT_STRING_FLAG_VALUE);
-                String cachedValue =
-                        cachedProperties.getString(flagName, DEFAULT_STRING_FLAG_VALUE);
-                if (!changedValue.equals(cachedValue)) {
-                    numOfCacheMissFlags++;
-                }
-            }
-        }
+                    // Log the number of flags that are changed and different as their values in the
+                    // cache.
+                    int numOfCacheMissFlags = 0;
+                    for (String flagName : changedFlagNameSet) {
+                        if (!cachedFlagNameSet.contains(flagName)) {
+                            numOfCacheMissFlags++;
+                        } else {
+                            // Compare the string value of the flag, despite the type of its actual
+                            // usage.
+                            String changedValue =
+                                    changedProperties.getString(
+                                            flagName, DEFAULT_STRING_FLAG_VALUE);
+                            String cachedValue =
+                                    cachedProperties.getString(flagName, DEFAULT_STRING_FLAG_VALUE);
+                            if (!changedValue.equals(cachedValue)) {
+                                numOfCacheMissFlags++;
+                            }
+                        }
+                    }
 
-        LogUtil.d(
-                "The number of flags updated to a different value as the process stable flag cache:"
-                        + " %d",
-                numOfCacheMissFlags);
-        mStatsdLogger.logAdServicesFlagsUpdateEvent(numOfCacheMissFlags);
+                    LogUtil.d(
+                            "The number of flags updated to a different value as the process stable"
+                                    + " flag cache: %d",
+                            numOfCacheMissFlags);
+                    mStatsdLogger.logAdServicesFlagsUpdateEvent(numOfCacheMissFlags);
+                });
     }
 
     // Base flag framework, may get refactored later to use the DeviceConfigFlagsHelper.
