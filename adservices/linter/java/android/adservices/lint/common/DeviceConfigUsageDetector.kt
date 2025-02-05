@@ -25,30 +25,47 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
+import java.util.EnumSet
 import org.jetbrains.uast.UCallExpression
 
 class DeviceConfigUsageDetector : Detector(), SourceCodeScanner {
     override fun getApplicableMethodNames(): List<String> {
-        return listOf("getString", "getBoolean", "getInt", "getLong", "getFloat", "getProperty", "getProperties")
+        return listOf(
+            "getString",
+            "getBoolean",
+            "getInt",
+            "getLong",
+            "getFloat",
+            "getProperty",
+            "getProperties",
+        )
     }
 
     override fun visitMethodCall(context: JavaContext, node: UCallExpression, method: PsiMethod) {
         // TODO(b/325135083): ideally check below should be just for qualifiedName = ...
         // But somehow it doesn't work when getApplicableMethodNames() returns more than one method
-        if (method.name in getApplicableMethodNames() &&
-            method.containingClass?.qualifiedName == "android.provider.DeviceConfig") {
-            context.report(issue = ISSUE, location = context.getNameLocation(node),
-                    message = "DO NOT CALL android.provider.DeviceConfig methods directly, but "
-                            + "adservices-specifc helpers instead. For example, on PhFlags.java,"
-                            + " you should call getDeviceConfigFlag(name, defaultValue).")
+        if (
+            method.name in getApplicableMethodNames() &&
+                method.containingClass?.qualifiedName == "android.provider.DeviceConfig"
+        ) {
+            context.report(
+                issue = ISSUE,
+                location = context.getNameLocation(node),
+                message =
+                    "DO NOT CALL android.provider.DeviceConfig methods directly, but " +
+                        "adservices-specifc helpers instead. For example, on PhFlags.java," +
+                        " you should call getDeviceConfigFlag(name, defaultValue).",
+            )
         }
     }
 
     companion object {
-        val ISSUE = Issue.create(
+        val ISSUE =
+            Issue.create(
                 id = "AvoidDeviceConfigUsage",
                 briefDescription = "DO NOT CALL android.provider.DeviceConfig methods directly",
-                explanation = """
+                explanation =
+                    """
                       DO NOT CALL android.provider.DeviceConfig methods directly, use
                       adservices-specific helpers instead, as they provide additional abstractions
                       (like checking SystemProperties first) and make it easier to migrate to
@@ -56,6 +73,12 @@ class DeviceConfigUsageDetector : Detector(), SourceCodeScanner {
                     """,
                 category = Category.COMPLIANCE,
                 severity = Severity.ERROR,
-                implementation = Implementation(DeviceConfigUsageDetector::class.java, Scope.JAVA_FILE_SCOPE))
+                implementation =
+                    Implementation(
+                        DeviceConfigUsageDetector::class.java,
+                        EnumSet.of(Scope.JAVA_FILE, Scope.TEST_SOURCES),
+                        Scope.JAVA_FILE_SCOPE,
+                    ),
+            )
     }
 }

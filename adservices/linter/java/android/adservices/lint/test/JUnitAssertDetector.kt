@@ -25,6 +25,7 @@ import com.android.tools.lint.detector.api.Scope
 import com.android.tools.lint.detector.api.Severity
 import com.android.tools.lint.detector.api.SourceCodeScanner
 import com.intellij.psi.PsiMethod
+import java.util.EnumSet
 import org.jetbrains.uast.UCallExpression
 
 class JUnitAssertDetector : Detector(), SourceCodeScanner {
@@ -62,7 +63,11 @@ class JUnitAssertDetector : Detector(), SourceCodeScanner {
                 category = Category.COMPLIANCE,
                 severity = Severity.WARNING,
                 implementation =
-                    Implementation(JUnitAssertDetector::class.java, Scope.JAVA_FILE_SCOPE),
+                    Implementation(
+                        JUnitAssertDetector::class.java,
+                        EnumSet.of(Scope.JAVA_FILE, Scope.TEST_SOURCES),
+                        Scope.JAVA_FILE_SCOPE,
+                    ),
             )
     }
 }

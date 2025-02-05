@@ -49,7 +49,12 @@ public class DexParserImpl implements DexParser {
 
         // If multi-apk directory, find a base apk and zero or more split apks
         if (apkPathFile.isDirectory()) {
-            for (File apkFile : apkPathFile.listFiles()) {
+            File[] apkFiles = apkPathFile.listFiles();
+            if (apkFiles == null) {
+                throw new IOException(
+                        "Error reading apk for SDK verification: " + apkPathFile.getAbsolutePath());
+            }
+            for (File apkFile : apkFiles) {
                 if (apkFile.isFile() && apkFile.getName().endsWith(".apk")) {
                     apkList.add(apkFile);
                 }

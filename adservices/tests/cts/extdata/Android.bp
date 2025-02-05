@@ -45,7 +45,6 @@ android_test {
     manifest: "AndroidManifest.xml",
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
-        test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
 
@@ -79,6 +78,5 @@ android_test {
     manifest: "AndroidManifestExtServices.xml",
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
-        test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }

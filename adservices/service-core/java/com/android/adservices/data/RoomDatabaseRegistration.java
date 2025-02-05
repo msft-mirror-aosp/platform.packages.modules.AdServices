@@ -20,6 +20,7 @@ import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionDebugReportingDatabase;
 import com.android.adservices.data.adselection.AdSelectionServerDatabase;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
+import com.android.adservices.data.configdelivery.ConfigurationDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.kanon.KAnonDatabase;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
@@ -36,4 +37,5 @@ class RoomDatabaseRegistration {
     ProtectedSignalsDatabase mProtectedSignalsDatabase;
     CacheDatabase mCacheDatabase;
     KAnonDatabase mKAnonDatabase;
+    ConfigurationDatabase mConfigurationDatabase;
 }
