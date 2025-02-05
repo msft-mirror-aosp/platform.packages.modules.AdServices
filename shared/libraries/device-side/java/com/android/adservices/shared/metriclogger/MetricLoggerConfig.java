@@ -67,6 +67,7 @@ public abstract class MetricLoggerConfig<L> {
     public abstract @Nullable PerDeviceSamplingConfig getPerDeviceSamplingConfig();
 
     /** Returns a generic builder. */
+    @SuppressWarnings("AvoidStaticContext") // Method shared across modules
     public static <L> Builder<L> builder(
             MetricId metricId,
             LogSamplingConfig config,

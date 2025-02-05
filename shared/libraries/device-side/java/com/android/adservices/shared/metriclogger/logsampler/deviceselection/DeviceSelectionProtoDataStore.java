@@ -40,6 +40,7 @@ final class DeviceSelectionProtoDataStore implements DeviceSelectionDataStore {
     /**
      * @return The instance of {@link DeviceSelectionDataStore}.
      */
+    @SuppressWarnings("AvoidStaticContext") // Method shared across modules
     public static DeviceSelectionDataStore getInstance(
             Context context, Executor backgroundExecutor) {
         if (sInstance == null) {
