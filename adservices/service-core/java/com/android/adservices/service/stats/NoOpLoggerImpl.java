@@ -264,4 +264,12 @@ public class NoOpLoggerImpl implements AdServicesLogger {
     @Override
     public void logScheduledCustomAudienceUpdatePerformedFailureStats(
             ScheduledCustomAudienceUpdatePerformedFailureStats stats) {}
+
+    @Override
+    public void logNumberOfTypesOfReportingUrlsReceivedStats(
+            NumberOfTypesOfReportingUrlsReceivedStats stats) {}
+
+    @Override
+    public void logReportingWithDestinationPerformedStats(
+            ReportingWithDestinationPerformedStats stats) {}
 }
