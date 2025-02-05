@@ -45,4 +45,8 @@ android_test {
     ],
     min_sdk_version: "33",
     target_sdk_version: "33",
+    visibility: [
+        "//packages/modules/AdServices:__subpackages__",
+        "//platform_testing:__subpackages__",
+    ],
 }
