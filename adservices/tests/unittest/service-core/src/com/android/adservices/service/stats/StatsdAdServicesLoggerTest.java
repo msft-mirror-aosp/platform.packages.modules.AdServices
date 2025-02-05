@@ -61,7 +61,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_INI
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.NUMBER_OF_TYPES_OF_REPORTING_URL_RECEIVED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.PERSIST_AD_SELECTION_RESULT_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.REPORTING_WITH_DESTINATION_PERFORMED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_SCORING_PROCESS_REPORTED;
@@ -79,6 +81,9 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.BACKG
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_TOO_BIG;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_API_REPORT_EVENT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_DESTINATION_COMPONENT_SELLER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_STATUS_FAILURE_HTTP_REDIRECTION;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_SCHEDULE_CA_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_TYPE_JSON_ERROR;
@@ -2590,6 +2595,61 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                             SCHEDULED_CUSTOM_AUDIENCE_UPDATE_PERFORMED_ATTEMPTED_FAILURE_REPORTED,
                             stats.getFailureType(),
                             stats.getFailureAction());
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogNumberOfTypesOfReportingUrlsReceivedStats_success() {
+        doNothing()
+                .when(
+                        () ->
+                                AdServicesStatsLog.write(
+                                        anyInt(), anyInt(), anyInt(), anyInt(), anyInt(), anyInt(),
+                                        anyInt()));
+        NumberOfTypesOfReportingUrlsReceivedStats stats =
+                NumberOfTypesOfReportingUrlsReceivedStats.builder()
+                        .setNumberOfTopLevelSellerReportingUrl(1)
+                        .setNumberOfBuyerReportingUrl(2)
+                        .setNumberOfComponentSellerReportingUrl(3)
+                        .setNumberOfComponentSellerEventReportingUrl(4)
+                        .setNumberOfTopLevelSellerEventReportingUrl(5)
+                        .setNumberOfBuyerEventReportingUrl(6)
+                        .build();
+        mLogger.logNumberOfTypesOfReportingUrlsReceivedStats(stats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                NUMBER_OF_TYPES_OF_REPORTING_URL_RECEIVED,
+                                stats.getNumberOfTopLevelSellerReportingUrl(),
+                                stats.getNumberOfBuyerReportingUrl(),
+                                stats.getNumberOfComponentSellerReportingUrl(),
+                                stats.getNumberOfBuyerEventReportingUrl(),
+                                stats.getNumberOfTopLevelSellerEventReportingUrl(),
+                                stats.getNumberOfComponentSellerEventReportingUrl());
+        verify(writeInvocation);
+        verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
+    }
+
+    @Test
+    public void testLogReportingWithDestinationPerformedStats_success() {
+        doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt(), anyInt()));
+        ReportingWithDestinationPerformedStats stats =
+                ReportingWithDestinationPerformedStats.builder()
+                        .setDestination(REPORTING_CALL_DESTINATION_COMPONENT_SELLER)
+                        .setStatus(REPORTING_CALL_STATUS_FAILURE_HTTP_REDIRECTION)
+                        .setReportingType(REPORTING_API_REPORT_EVENT)
+                        .build();
+        mLogger.logReportingWithDestinationPerformedStats(stats);
+
+        MockedVoidMethod writeInvocation =
+                () ->
+                        AdServicesStatsLog.write(
+                                REPORTING_WITH_DESTINATION_PERFORMED,
+                                stats.getReportingType(),
+                                stats.getDestination(),
+                                stats.getStatus());
         verify(writeInvocation);
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));
     }
