@@ -80,7 +80,6 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
     static {
         sTestsToSkip =
                 ImmutableSet.of(
-                        "aggregatable_debug_reports_trigger.json",
                         "aggregatable_report_window.json",
                         "aggregatable_reports_fake_source.json",
                         "aggregation_coordinator_origin.json",
@@ -91,6 +90,7 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                         "attribution_scopes_parsing_failures.json",
                         "custom_trigger_data.json",
                         "destination_limit.json",
+                        "destination_public_suffix.json",
                         "destination_rate_limit.json",
                         "destination_validation.json",
                         "event_level_report_time.json",
@@ -272,6 +272,9 @@ public class E2EInteropMockTest extends E2EAbstractMockTest {
                             "true"),
                     entry(
                             FlagsConstants.KEY_MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS,
+                            "true"),
+                    entry(
+                            FlagsConstants.KEY_MEASUREMENT_ENABLE_UNBOUNDED_REPORTS_WITH_TRIGGER_CONTEXT_ID,
                             "true"));
 
     @Parameterized.Parameters(name = "{3}")

@@ -18,6 +18,7 @@ package com.android.server.sdksandbox.verifier;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
+import static org.junit.Assert.assertThrows;
 
 import android.Manifest;
 import android.content.Context;
@@ -34,6 +35,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -113,6 +115,34 @@ public class DexParserUnitTest extends DeviceSupportedBaseTest {
         }
 
         assertThat(foundAbsentApi).isFalse();
+    }
+
+    @Test
+    public void apkFileInvalid_throwsException() throws Exception {
+        File apkPathFile = new File("");
+        IOException thrown = assertThrows(
+                IOException.class,
+                () -> mDexParser.getDexFilePaths(apkPathFile));
+        assertThat(thrown).hasMessageThat().contains("is not a valid DEX container file");
+    }
+
+  @Test
+    public void apkPathListFilesNull_throwsException() throws Exception {
+        File faultykApkPathFile = new File("") {
+            @Override
+            public boolean isDirectory() {
+                return true;
+            }
+
+            @Override
+            public File[] listFiles() {
+                return null;
+            }
+        };
+        IOException thrown = assertThrows(
+                IOException.class,
+                () -> mDexParser.getDexFilePaths(faultykApkPathFile));
+        assertThat(thrown).hasMessageThat().contains("Error reading apk for SDK verification: ");
     }
 
     private File getAppFile(String packageName) throws Exception {

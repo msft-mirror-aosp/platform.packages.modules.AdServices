@@ -18,13 +18,35 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
 import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_ERROR_FETCHING_BUYER_SCRIPT_FROM_URI;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_HTTP_GET_REPORTING_URL_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_INTERACTION_KEY_SIZE_EXCEEDS_MAX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_INTERACTION_REPORTING_URI_SIZE_EXCEEDS_MAX;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_INVALID_BUYER_REPORTING_URI;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_INVALID_INTERACTION_URI;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_INVALID_JSON_BUYER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_INVALID_JSON_SELLER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_INVALID_SELLER_REPORTING_URI;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_FAILURE_INTERNAL_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_FAILURE_INVALID_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_FAILURE_TO_CALLER_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_SUCCESS_TO_CALLER_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_IMPRESSION;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.ReportEventRequest;
@@ -51,6 +73,7 @@ import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.data.adselection.datahandlers.ReportingComputationData;
 import com.android.adservices.data.adselection.datahandlers.ReportingData;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -104,6 +127,8 @@ public class ImpressionReporter {
 
     private static final String REPORTING_URI_FIELD_NAME = "reporting URI";
     private static final String EVENT_URI_FIELD_NAME = "event URI";
+    private static final int CEL_PPAPI_NAME =
+            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_IMPRESSION;
 
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final CustomAudienceDao mCustomAudienceDao;
@@ -278,7 +303,8 @@ public class ImpressionReporter {
                                 return Futures.immediateFuture(
                                         new ReportingUris(
                                                 reportingData.getBuyerWinReportingUri(),
-                                                reportingData.getSellerWinReportingUri()));
+                                                reportingData.getSellerWinReportingUri(),
+                                                reportingData.getComponentSellerWinReportingUri()));
                             } else {
                                 // TODO(b/291957376): Move computation into selectAds in phase 2 of
                                 //  go/rb-rm-unified-flow-reporting
@@ -352,7 +378,8 @@ public class ImpressionReporter {
      */
     private boolean isReportingUrisPresent(ReportingData reportingData) {
         return !Objects.isNull(reportingData.getBuyerWinReportingUri())
-                || !Objects.isNull(reportingData.getSellerWinReportingUri());
+                || !Objects.isNull(reportingData.getSellerWinReportingUri())
+                || !Objects.isNull(reportingData.getComponentSellerWinReportingUri());
     }
 
     private FluentFuture<Pair<ReportingUris, ReportingContext>> computeReportingUris(
@@ -417,6 +444,10 @@ public class ImpressionReporter {
         } catch (IllegalArgumentException e) {
             sLogger.v("Seller reporting URI is not valid");
             reportingUris.sellerReportingUri = Uri.EMPTY;
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_INVALID_SELLER_REPORTING_URI,
+                    CEL_PPAPI_NAME);
         }
 
         // Validate buyer uri before reporting
@@ -431,6 +462,10 @@ public class ImpressionReporter {
         } catch (IllegalArgumentException e) {
             sLogger.v("Buyer reporting URI is not valid");
             reportingUris.buyerReportingUri = Uri.EMPTY;
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_INVALID_BUYER_REPORTING_URI,
+                    CEL_PPAPI_NAME);
         }
         return reportingUris;
     }
@@ -440,13 +475,13 @@ public class ImpressionReporter {
                 .addCallback(
                         new FutureCallback<>() {
                             @Override
-                            public void onSuccess(List<Void> result) {
+                            public void onSuccess(Void result) {
                                 sLogger.d("Reporting finished successfully!");
                                 mAdServicesLogger.logFledgeApiCallStats(
                                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                                         mCallerAppPackageName,
                                         STATUS_SUCCESS,
-                                        /*latencyMs=*/ 0);
+                                        /* latencyMs= */ 0);
                             }
 
                             @Override
@@ -459,32 +494,33 @@ public class ImpressionReporter {
                                             AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                                             mCallerAppPackageName,
                                             STATUS_IO_ERROR,
-                                            /*latencyMs=*/ 0);
+                                            /* latencyMs= */ 0);
                                 }
                                 mAdServicesLogger.logFledgeApiCallStats(
                                         AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                                         mCallerAppPackageName,
                                         STATUS_INTERNAL_ERROR,
-                                        /*latencyMs=*/ 0);
+                                        /* latencyMs= */ 0);
                             }
                         },
                         mLightweightExecutorService);
     }
 
     @NonNull
-    private FluentFuture<List<Void>> doReport(ReportingUris reportingUris) {
+    private FluentFuture<Void> doReport(ReportingUris reportingUris) {
         sLogger.v("Do report.");
         Uri sellerReportingUri = reportingUris.sellerReportingUri;
         Uri buyerReportingUri = reportingUris.buyerReportingUri;
+        Uri componentSellerReportingUri = reportingUris.componentSellerReportingUri;
 
         // We don't need to verify enrollment since that is done during request filtering
         // Perform reporting if no exception was thrown
-        ListenableFuture<Void> sellerFuture = bestEffortReporting(sellerReportingUri);
+        ListenableFuture<Void> sellerReportingFuture = bestEffortReporting(sellerReportingUri);
 
-        ListenableFuture<Void> buyerFuture;
+        ListenableFuture<Void> buyerReportingFuture;
         if (buyerReportingUri == null || buyerReportingUri.getHost() == null) {
             sLogger.w("Buyer reporting URI not found, skipping reporting");
-            buyerFuture = Futures.immediateVoidFuture();
+            buyerReportingFuture = Futures.immediateVoidFuture();
         } else {
             try {
                 if (!mFlags.getDisableFledgeEnrollmentCheck()) {
@@ -493,13 +529,27 @@ public class ImpressionReporter {
                             AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                             API_AD_SELECTION);
                 }
-                buyerFuture = bestEffortReporting(buyerReportingUri);
+                buyerReportingFuture = bestEffortReporting(buyerReportingUri);
             } catch (FledgeAuthorizationFilter.AdTechNotAllowedException e) {
-                buyerFuture = Futures.immediateVoidFuture();
+                buyerReportingFuture = Futures.immediateVoidFuture();
             }
         }
 
-        return FluentFuture.from(Futures.allAsList(sellerFuture, buyerFuture));
+        ListenableFuture<Void> componentSellerReportingFuture = Futures.immediateVoidFuture();
+        if (mFlags.getEnableReportEventForComponentSeller()
+                && componentSellerReportingUri != null
+                && componentSellerReportingUri.getHost() != null) {
+            // We don't need to check the adtech enrollment here because component seller reporting
+            // urls were validated before persisting in the persistAdSelectionResultAPI.
+            componentSellerReportingFuture = bestEffortReporting(componentSellerReportingUri);
+        }
+
+        return FluentFuture.from(
+                Futures.whenAllComplete(
+                                sellerReportingFuture,
+                                buyerReportingFuture,
+                                componentSellerReportingFuture)
+                        .call(() -> null, mLightweightExecutorService));
     }
 
     private ListenableFuture<Void> bestEffortReporting(Uri reportingUri) {
@@ -510,6 +560,10 @@ public class ImpressionReporter {
                         Exception.class,
                         e -> {
                             sLogger.d(e, "GET failed for reporting URL '%s'!", reportingUri);
+                            ErrorLogUtil.e(
+                                    e,
+                                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_HTTP_GET_REPORTING_URL_FAILED,
+                                    CEL_PPAPI_NAME);
                             return null;
                         },
                         mLightweightExecutorService);
@@ -578,6 +632,10 @@ public class ImpressionReporter {
                             sellerResult -> Pair.create(sellerResult, ctx),
                             mLightweightExecutorService);
         } catch (JSONException e) {
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_INVALID_JSON_SELLER,
+                    CEL_PPAPI_NAME);
             throw new IllegalArgumentException("Invalid JSON data", e);
         }
     }
@@ -618,8 +676,16 @@ public class ImpressionReporter {
                                             ctx),
                             mLightweightExecutorService);
         } catch (JSONException e) {
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_INVALID_JSON_BUYER,
+                    CEL_PPAPI_NAME);
             throw new IllegalArgumentException("Invalid JSON args", e);
         } catch (InterruptedException | ExecutionException e) {
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_ERROR_FETCHING_BUYER_SCRIPT_FROM_URI,
+                    CEL_PPAPI_NAME);
             throw new IllegalStateException(
                     "Error while fetching buyer script from uri: "
                             + ctx.mComputationData.getBuyerDecisionLogicUri());
@@ -651,6 +717,10 @@ public class ImpressionReporter {
                     mCallerAppPackageName,
                     AdServicesStatusUtils.STATUS_CALLBACK_SHUTDOWN,
                     0);
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_SUCCESS_TO_CALLER_FAILED,
+                    CEL_PPAPI_NAME);
         }
     }
 
@@ -668,7 +738,7 @@ public class ImpressionReporter {
         } else {
             resultCode = STATUS_INTERNAL_ERROR;
         }
-
+        logCelByResultCodeAndError(t, resultCode);
         // Skip logging if a FilterException occurs.
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
         // Note: Failure is logged before the callback to ensure deterministic testing.
@@ -693,6 +763,10 @@ public class ImpressionReporter {
                     mCallerAppPackageName,
                     AdServicesStatusUtils.STATUS_CALLBACK_SHUTDOWN,
                     0);
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_FAILURE_TO_CALLER_FAILED,
+                    CEL_PPAPI_NAME);
         }
     }
 
@@ -705,13 +779,23 @@ public class ImpressionReporter {
     private static final class ReportingUris {
         @Nullable public Uri buyerReportingUri;
         @NonNull public Uri sellerReportingUri;
+        @Nullable public Uri componentSellerReportingUri;
 
-        private ReportingUris(@Nullable Uri buyerReportingUri, @NonNull Uri sellerReportingUri) {
-            /* buyer could be empty in case of contextual ad */
+        private ReportingUris(
+                @Nullable Uri buyerReportingUri,
+                @NonNull Uri sellerReportingUri,
+                @Nullable Uri componentSellerReportingUri) {
+            /* buyer could be empty in case of contextual ad and component seller reporting uri can
+            be null if the flag is disabled. */
             Objects.requireNonNull(sellerReportingUri);
 
             this.buyerReportingUri = buyerReportingUri;
             this.sellerReportingUri = sellerReportingUri;
+            this.componentSellerReportingUri = componentSellerReportingUri;
+        }
+
+        private ReportingUris(@Nullable Uri buyerReportingUri, @NonNull Uri sellerReportingUri) {
+            this(buyerReportingUri, sellerReportingUri, null);
         }
     }
 
@@ -740,6 +824,34 @@ public class ImpressionReporter {
 
         FluentFuture<Pair<ReportingUris, ReportingContext>> commitBuyerRegisteredEvents(
                 ReportingResults reportingResults, ReportingContext ctx);
+    }
+
+    private void logCelByResultCodeAndError(Throwable t, int resultCode) {
+        int celEnum =
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_FAILURE_INTERNAL_ERROR;
+        switch (resultCode) {
+            case STATUS_BACKGROUND_CALLER:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER;
+                break;
+            case STATUS_CALLER_NOT_ALLOWED:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED;
+                break;
+            case STATUS_UNAUTHORIZED:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED;
+                break;
+            case STATUS_RATE_LIMIT_REACHED:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
+                break;
+            case STATUS_INVALID_ARGUMENT:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_FAILURE_INVALID_ARGUMENT;
+                break;
+        }
+        ErrorLogUtil.e(t, celEnum, CEL_PPAPI_NAME);
     }
 
     private class RegisterAdBeaconSupportHelperEnabled implements RegisterAdBeaconSupportHelper {
@@ -850,6 +962,9 @@ public class ImpressionReporter {
                         > maxInteractionKeySize) {
                     sLogger.v(
                             "InteractionKey size exceeds the maximum allowed! Skipping this entry");
+                    ErrorLogUtil.e(
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_INTERACTION_KEY_SIZE_EXCEEDS_MAX,
+                            CEL_PPAPI_NAME);
                     continue;
                 }
 
@@ -862,6 +977,9 @@ public class ImpressionReporter {
                     sLogger.v(
                             "Interaction reporting uri size exceeds the maximum allowed! Skipping"
                                     + " this entry");
+                    ErrorLogUtil.e(
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_INTERACTION_REPORTING_URI_SIZE_EXCEEDS_MAX,
+                            CEL_PPAPI_NAME);
                     continue;
                 }
 
@@ -881,6 +999,10 @@ public class ImpressionReporter {
                             "Uri %s failed validation! Skipping persistence of this interaction URI"
                                     + " pair.",
                             uriToValidate);
+                    ErrorLogUtil.e(
+                            e,
+                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_INVALID_INTERACTION_URI,
+                            CEL_PPAPI_NAME);
                 }
             }
             mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(

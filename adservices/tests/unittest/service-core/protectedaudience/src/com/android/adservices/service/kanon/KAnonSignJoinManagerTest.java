@@ -16,6 +16,10 @@
 
 package com.android.adservices.service.kanon;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS;
 import static com.android.adservices.spe.AdServicesJobInfo.FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -36,15 +40,15 @@ import com.android.adservices.data.kanon.DBKAnonMessage;
 import com.android.adservices.data.kanon.KAnonDatabase;
 import com.android.adservices.data.kanon.KAnonMessageConstants;
 import com.android.adservices.data.kanon.KAnonMessageDao;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
@@ -54,19 +58,20 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 
+@SetIntegerFlag(name = KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS, value = 100)
+@SetLongFlag(name = KEY_FLEDGE_KANON_MESSAGE_TTL_SECONDS, value = 10000)
 public final class KAnonSignJoinManagerTest extends AdServicesExtendedMockitoTestCase {
     private KAnonSignJoinManager mKAnonSignJoinManager;
     private KAnonMessageManager mKAnonMessageManager;
     private KAnonMessageDao mKAnonMessageDao;
-    private Flags mFakeFlags;
-    @Mock private Clock mockClock;
-    @Mock private KAnonCaller mockKanonCaller;
+    @Mock private Clock mMockClock;
+    @Mock private KAnonCaller mMockKanonCaller;
     @Captor private ArgumentCaptor<List<KAnonMessageEntity>> kanonMessageEntityArgumentCaptor;
 
     @Captor
     private ArgumentCaptor<KAnonCallerImpl.KAnonCallerSource> kanonCallerSourceArgumentCaptor;
 
-    @Mock private AdServicesLogger mockAdServicesLogger;
+    @Mock private AdServicesLogger mMockAdServicesLogger;
     private KAnonSignJoinBackgroundJobService mKAnonSignJoinBackgroundJobServiceSpy;
     private JobScheduler mJobScheduler;
     private static final int FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB_ID =
@@ -95,9 +100,8 @@ public final class KAnonSignJoinManagerTest extends AdServicesExtendedMockitoTes
                 Room.inMemoryDatabaseBuilder(mContext, KAnonDatabase.class)
                         .build()
                         .kAnonMessageDao();
-        when(mockClock.instant()).thenReturn(FIXED_TIME);
-        mFakeFlags = new KanonSignJoinManagerTestFlags(100);
-        mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mFakeFlags, mockClock);
+        when(mMockClock.instant()).thenReturn(FIXED_TIME);
+        mKAnonMessageManager = new KAnonMessageManager(mKAnonMessageDao, mFakeFlags, mMockClock);
         mJobScheduler = mContext.getSystemService(JobScheduler.class);
         mKAnonSignJoinBackgroundJobServiceSpy = spy(new KAnonSignJoinBackgroundJobService());
     }
@@ -108,16 +112,16 @@ public final class KAnonSignJoinManagerTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS, value = 0)
     public void processNewMessage_immediateJoinValueZero_shouldSaveMessageInDatabase() {
-        Flags testFlags = new KanonSignJoinManagerTestFlags(0);
         mKAnonSignJoinManager =
                 new KAnonSignJoinManager(
                         mContext,
-                        mockKanonCaller,
+                        mMockKanonCaller,
                         mKAnonMessageManager,
-                        testFlags,
-                        mockClock,
-                        mockAdServicesLogger);
+                        mFakeFlags,
+                        mMockClock,
+                        mMockAdServicesLogger);
         KAnonMessageEntity kAnonMessageEntity =
                 mKAnonMessageEntityBuilder
                         .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
@@ -135,16 +139,16 @@ public final class KAnonSignJoinManagerTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS, value = 100)
     public void processNewMessage_immediateJoinValueHundred_shouldImmediatelyProcessMessage() {
-        Flags testFlags = new KanonSignJoinManagerTestFlags(100);
         mKAnonSignJoinManager =
                 new KAnonSignJoinManager(
                         mContext,
-                        mockKanonCaller,
+                        mMockKanonCaller,
                         mKAnonMessageManager,
-                        testFlags,
-                        mockClock,
-                        mockAdServicesLogger);
+                        mFakeFlags,
+                        mMockClock,
+                        mMockAdServicesLogger);
         KAnonMessageEntity kAnonMessageEntity =
                 mKAnonMessageEntityBuilder
                         .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
@@ -153,7 +157,7 @@ public final class KAnonSignJoinManagerTest extends AdServicesExtendedMockitoTes
 
         mKAnonSignJoinManager.processNewMessages(newMessages);
 
-        verify(mockKanonCaller, times(1))
+        verify(mMockKanonCaller, times(1))
                 .signAndJoinMessages(
                         kanonMessageEntityArgumentCaptor.capture(),
                         kanonCallerSourceArgumentCaptor.capture());
@@ -163,16 +167,16 @@ public final class KAnonSignJoinManagerTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS, value = 100)
     public void processNewMessage_messageSignedWithActiveClientParams_shouldNotProcessMessage() {
-        Flags testFlags = new KanonSignJoinManagerTestFlags(100);
         mKAnonSignJoinManager =
                 new KAnonSignJoinManager(
                         mContext,
-                        mockKanonCaller,
+                        mMockKanonCaller,
                         mKAnonMessageManager,
-                        testFlags,
-                        mockClock,
-                        mockAdServicesLogger);
+                        mFakeFlags,
+                        mMockClock,
+                        mMockAdServicesLogger);
         DBKAnonMessage dbkAnonMessageAlreadyJoined =
                 mDbkAnonMessageBuilder
                         .setStatus(KAnonMessageConstants.MessageStatus.JOINED)
@@ -193,23 +197,23 @@ public final class KAnonSignJoinManagerTest extends AdServicesExtendedMockitoTes
 
         List<KAnonMessageEntity> messagesInDB =
                 mKAnonMessageManager.fetchKAnonMessageEntityWithMessage(HASH_SET_1);
-        verify(mockKanonCaller, times(0))
+        verify(mMockKanonCaller, times(0))
                 .signAndJoinMessages(
                         newMessages, KAnonCaller.KAnonCallerSource.IMMEDIATE_SIGN_JOIN);
         assertThat(messagesInDB.size()).isEqualTo(1); // new messages was not inserted.
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS, value = 100)
     public void processNewMessage_messageSignedWithExpiredClientParams_shouldProcessMessage() {
-        Flags testFlags = new KanonSignJoinManagerTestFlags(100);
         mKAnonSignJoinManager =
                 new KAnonSignJoinManager(
                         mContext,
-                        mockKanonCaller,
+                        mMockKanonCaller,
                         mKAnonMessageManager,
-                        testFlags,
-                        mockClock,
-                        mockAdServicesLogger);
+                        mFakeFlags,
+                        mMockClock,
+                        mMockAdServicesLogger);
         DBKAnonMessage dbkAnonMessageAlreadyJoined =
                 mDbkAnonMessageBuilder
                         .setStatus(KAnonMessageConstants.MessageStatus.JOINED)
@@ -228,7 +232,7 @@ public final class KAnonSignJoinManagerTest extends AdServicesExtendedMockitoTes
 
         mKAnonSignJoinManager.processNewMessages(newMessages);
 
-        verify(mockKanonCaller, times(1))
+        verify(mMockKanonCaller, times(1))
                 .signAndJoinMessages(
                         kanonMessageEntityArgumentCaptor.capture(),
                         kanonCallerSourceArgumentCaptor.capture());
@@ -247,28 +251,28 @@ public final class KAnonSignJoinManagerTest extends AdServicesExtendedMockitoTes
         mKAnonSignJoinManager =
                 new KAnonSignJoinManager(
                         mContext,
-                        mockKanonCaller,
+                        mMockKanonCaller,
                         mKAnonMessageManager,
                         mFakeFlags,
-                        mockClock,
-                        mockAdServicesLogger);
+                        mMockClock,
+                        mMockAdServicesLogger);
 
         mKAnonSignJoinManager.processMessagesFromDatabase(10);
 
-        verify(mockKanonCaller, times(1)).signAndJoinMessages(anyList(), any());
+        verify(mMockKanonCaller, times(1)).signAndJoinMessages(anyList(), any());
     }
 
     @Test
+    @SetIntegerFlag(name = KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS, value = 0)
     public void processNewMessage_immediateJoinValueZero_isProcessedByProcessMessageFromDB() {
-        Flags testFlags = new KanonSignJoinManagerTestFlags(0);
         mKAnonSignJoinManager =
                 new KAnonSignJoinManager(
                         mContext,
-                        mockKanonCaller,
+                        mMockKanonCaller,
                         mKAnonMessageManager,
-                        testFlags,
-                        mockClock,
-                        mockAdServicesLogger);
+                        mFakeFlags,
+                        mMockClock,
+                        mMockAdServicesLogger);
         KAnonMessageEntity kAnonMessageEntity =
                 mKAnonMessageEntityBuilder
                         .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
@@ -276,29 +280,28 @@ public final class KAnonSignJoinManagerTest extends AdServicesExtendedMockitoTes
 
         mKAnonSignJoinManager.processNewMessages(List.of(kAnonMessageEntity));
 
-        verify(mockKanonCaller, times(0)).signAndJoinMessages(anyList(), any());
+        verify(mMockKanonCaller, times(0)).signAndJoinMessages(anyList(), any());
 
         mKAnonSignJoinManager.processMessagesFromDatabase(100);
 
-        verify(mockKanonCaller, times(1)).signAndJoinMessages(anyList(), any());
+        verify(mMockKanonCaller, times(1)).signAndJoinMessages(anyList(), any());
     }
 
     @Test
-    @Ignore("b/327172045")
     @MockStatic(FlagsFactory.class)
+    @SetFlagTrue(KEY_FLEDGE_KANON_BACKGROUND_PROCESS_ENABLED)
+    @SetLongFlag(name = KEY_FLEDGE_KANON_BACKGROUND_TIME_PERIOD_IN_MS, value = 100_000L)
     public void processNewMessage_noBackgroundJobRunning_schedulesBackgroundService() {
-        when(mMockFlags.getFledgeKAnonBackgroundProcessEnabled()).thenReturn(true);
-        when(mMockFlags.getFledgeKAnonBackgroundProcessTimePeriodInMs()).thenReturn(100000L);
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
+        mocker.mockGetFlags(mFakeFlags);
 
         mKAnonSignJoinManager =
                 new KAnonSignJoinManager(
                         mContext,
-                        mockKanonCaller,
+                        mMockKanonCaller,
                         mKAnonMessageManager,
-                        mMockFlags,
-                        mockClock,
-                        mockAdServicesLogger);
+                        mFakeFlags,
+                        mMockClock,
+                        mMockAdServicesLogger);
             KAnonMessageEntity kAnonMessageEntity =
                     mKAnonMessageEntityBuilder
                             .setStatus(KAnonMessageEntity.KanonMessageEntityStatus.NOT_PROCESSED)
@@ -309,23 +312,5 @@ public final class KAnonSignJoinManagerTest extends AdServicesExtendedMockitoTes
 
             assertThat(mJobScheduler.getPendingJob(FLEDGE_KANON_SIGN_JOIN_BACKGROUND_JOB_ID))
                     .isNotNull();
-    }
-
-    private static class KanonSignJoinManagerTestFlags implements Flags {
-        private final int percentageImmediateSignJoinCalls;
-
-        private KanonSignJoinManagerTestFlags(int percentageImmediateSignJoinCalls) {
-            this.percentageImmediateSignJoinCalls = percentageImmediateSignJoinCalls;
-        }
-
-        @Override
-        public int getFledgeKAnonPercentageImmediateSignJoinCalls() {
-            return percentageImmediateSignJoinCalls;
-        }
-
-        @Override
-        public long getFledgeKAnonMessageTtlSeconds() {
-            return 10000;
-        }
     }
 }

@@ -21,10 +21,16 @@ import static com.android.adservices.service.Flags.APPSEARCH_ONLY;
 import static com.android.adservices.service.Flags.COBALT__IGNORED_REPORT_ID_LIST;
 import static com.android.adservices.service.Flags.COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES;
 import static com.android.adservices.service.Flags.DEFAULT_ADID_CACHE_TTL_MS;
+import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG;
+import static com.android.adservices.service.Flags.DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG;
 import static com.android.adservices.service.Flags.DEFAULT_BLOCKED_TOPICS_SOURCE_OF_TRUTH;
 import static com.android.adservices.service.Flags.DEFAULT_CONSENT_SOURCE_OF_TRUTH;
+import static com.android.adservices.service.Flags.DEFAULT_ENABLE_LOG_SAMPLING_INFRA;
 import static com.android.adservices.service.Flags.DEFAULT_JOB_SCHEDULING_LOGGING_SAMPLING_RATE;
 import static com.android.adservices.service.Flags.DEFAULT_MDD_PACKAGE_DENY_REGISTRY_MANIFEST_FILE_URL;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW;
+import static com.android.adservices.service.Flags.DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK;
 import static com.android.adservices.service.Flags.DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST;
 import static com.android.adservices.service.Flags.DEFAULT_PACKAGE_DENY_BACKGROUND_JOB_PERIOD_MILLIS;
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SCRIPT_DOWNLOAD_CONNECTION_TIMEOUT_MS;
@@ -34,6 +40,7 @@ import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_
 import static com.android.adservices.service.Flags.DEFAULT_PAS_SIGNALS_DOWNLOAD_READ_TIMEOUT_MS;
 import static com.android.adservices.service.Flags.ENABLE_APPSEARCH_CONSENT_DATA;
 import static com.android.adservices.service.Flags.ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
+import static com.android.adservices.service.Flags.ENABLE_PAS_COMPONENT_ADS;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.Flags.ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE;
@@ -73,6 +80,7 @@ import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_PER_D
 import static com.android.adservices.service.Flags.MEASUREMENT_DESTINATION_RATE_LIMIT_WINDOW;
 import static com.android.adservices.service.Flags.MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_ADR_COUNT_PER_SOURCE;
+import static com.android.adservices.service.Flags.MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_FILTERING_ID_MAX_BYTES;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_LENGTH_PER_BUDGET_NAME;
 import static com.android.adservices.service.Flags.MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION;
@@ -453,6 +461,21 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getMeasurementMaxNamedBudgetsPerSourceRegistration()",
                 MEASUREMENT_MAX_NAMED_BUDGETS_PER_SOURCE_REGISTRATION,
                 Flags::getMeasurementMaxNamedBudgetsPerSourceRegistration);
+    }
+
+    @Test
+    public void testGetMeasurementMaxAggregateReportsPerSource() {
+        testFlag(
+                "getMeasurementMaxAggregateReportsPerSource()",
+                MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE,
+                Flags::getMeasurementMaxAggregateReportsPerSource);
+    }
+
+    @Test
+    public void testGetMeasurementEnableUnboundedReportsWithTriggerContextId() {
+        testFeatureFlag(
+                "MEASUREMENT_ENABLE_UNBOUNDED_REPORTS_WITH_TRIGGER_CONTEXT_ID",
+                Flags::getMeasurementEnableUnboundedReportsWithTriggerContextId);
     }
 
     @Test
@@ -1076,6 +1099,30 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetMeasurementEnablePackageNameUidCheck() {
+        testFlag(
+                "getMeasurementEnablePackageNameUidCheck",
+                DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK,
+                Flags::getMeasurementEnablePackageNameUidCheck);
+    }
+
+    @Test
+    public void testGetMeasurementEnableAdIdsPerDevicePerWindow() {
+        testFlag(
+                "getMeasurementEnableAdIdsPerDevicePerWindow",
+                DEFAULT_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW,
+                Flags::getMeasurementEnableAdIdsPerDevicePerWindow);
+    }
+
+    @Test
+    public void testMeasurementAdIdsPerDevicePerWindowPeriodMs() {
+        testFlag(
+                "getMeasurementAdIdsPerDevicePerWindowPeriodMs",
+                DEFAULT_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS,
+                Flags::getMeasurementAdIdsPerDevicePerWindowPeriodMs);
+    }
+
+    @Test
     public void testGetFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests() {
         testFeatureFlag(
                 "FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS",
@@ -1230,6 +1277,12 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     // Internal helpers and tests - do not add new tests for flags following this point.          //
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
+    /* NOTE: to enable this test locally, run:
+
+    find $ANDROID_BUILD_TOP/packages/modules/AdServices/shared/libraries/device-side/java/com/android/adservices/shared/common/flags/  -type f -iname "*.java" -exec sed -i.bak 's/SOURCE/RUNTIME/g' "{}" + && rm -rf `find $ANDROID_BUILD_TOP/packages/modules/AdServices/shared/libraries/device-side/java/com/android/adservices/shared/common/flags/ -name *.java.bak|xargs`
+
+    */
+
     @Test
     public void testAllFlagsAreProperlyAnnotated() throws Exception {
         requireFlagAnnotationsRuntimeRetention();
@@ -1250,7 +1303,9 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 fieldsMissingAnnotation.add(name);
             }
         }
-        expect.withMessage("fields missing @FeatureFlag or @ConfigFlag annotation")
+        expect.withMessage(
+                        "%s (out of %s) fields missing @FeatureFlag or @ConfigFlag annotation",
+                        fieldsMissingAnnotation.size(), allFields.size())
                 .that(fieldsMissingAnnotation)
                 .isEmpty();
     }
@@ -1313,6 +1368,14 @@ public final class FlagsTest extends AdServicesUnitTestCase {
     }
 
     @Test
+    public void testGetEnablePasComponentAds() {
+        testFlag(
+                "getEnablePasComponentAds",
+                ENABLE_PAS_COMPONENT_ADS,
+                Flags::getEnablePasComponentAds);
+    }
+
+    @Test
     public void testGetMaxComponentAdsPerCustomAudience() {
         testFlag(
                 "getMaxComponentAdsPerCustomAudience",
@@ -1334,6 +1397,30 @@ public final class FlagsTest extends AdServicesUnitTestCase {
                 "getEnableMsmtRegisterSourcePackageDenyList",
                 DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST,
                 Flags::getEnableMsmtRegisterSourcePackageDenyList);
+    }
+
+    @Test
+    public void testGetEnableLogSamplingInfra() {
+        testFlag(
+                "getEnableLogSamplingInfra",
+                DEFAULT_ENABLE_LOG_SAMPLING_INFRA,
+                Flags::getEnableLogSamplingInfra);
+    }
+
+    @Test
+    public void testGetAdServicesJobExecutionSamplingConfig() {
+        testFlag(
+                "getAdServicesJobExecutionSamplingConfig",
+                DEFAULT_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG,
+                Flags::getAdServicesJobExecutionSamplingConfig);
+    }
+
+    @Test
+    public void testGetAdServicesJobSchedulingSamplingConfig() {
+        testFlag(
+                "getAdServicesJobSchedulingSamplingConfig",
+                DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG,
+                Flags::getAdServicesJobSchedulingSamplingConfig);
     }
 
     private boolean hasAnnotation(Field field, Class<? extends Annotation> annotationClass) {

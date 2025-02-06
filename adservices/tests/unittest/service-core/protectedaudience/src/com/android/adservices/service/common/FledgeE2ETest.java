@@ -167,6 +167,7 @@ import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.kanon.KAnonSignJoinFactory;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
 import com.android.adservices.testutils.FetchCustomAudienceTestSyncCallback;
@@ -213,6 +214,8 @@ import java.util.stream.Collectors;
 @MockStatic(DebugReportSenderJobService.class)
 @MockStatic(BackgroundFetchJob.class)
 @SetFlagDisabled(KEY_FLEDGE_MEASUREMENT_REPORT_AND_REGISTER_EVENT_API_ENABLED)
+// TODO (b/384952360): refine CEL related verifications later
+@SkipLoggingUsageRule(reason = "b/384952360")
 public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
     public static final String CUSTOM_AUDIENCE_SEQ_1 = "/ca1";
     public static final String CUSTOM_AUDIENCE_SEQ_2 = "/ca2";
@@ -375,8 +378,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
     @Before
     public void setUp() throws Exception {
         mocker.mockGetFlags(DEFAULT_FLAGS);
-        mocker.mockGetDebugFlags(mMockDebugFlags);
-        mocker.mockGetConsentNotificationDebugMode(false);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
+        mockGetConsentNotificationDebugMode(false);
 
         mFledgeAllowListsFilterSpy =
                 spy(new FledgeAllowListsFilter(DEFAULT_FLAGS, mAdServicesLoggerMock));
@@ -1274,7 +1277,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mSpyContext,
                         mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -1437,7 +1440,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mSpyContext,
                         mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -3560,7 +3563,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mSpyContext,
                         mAdServicesLoggerMock,
                         DEFAULT_FLAGS,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,
@@ -5005,7 +5008,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mAdServicesLoggerMock,
                         mAppImportanceFilterMock,
                         flags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mSpyContext,
@@ -5045,7 +5048,7 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                         mSpyContext,
                         mAdServicesLoggerMock,
                         flags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         mFledgeAuthorizationFilterMock,
                         mAdSelectionServiceFilterMock,

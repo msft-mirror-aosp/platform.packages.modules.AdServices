@@ -65,7 +65,9 @@ public final class AdServicesApiShellCommandFactory implements ShellCommandFacto
                 ImmutableSet.of(
                         new EnableAdServicesCommand(),
                         new ResetConsentCommand(),
-                        new DevSessionCommand(devSessionSetter));
+                        new DevSessionCommand(devSessionSetter),
+                        new SetUserChoicesCommand(),
+                        new SetModuleStatesCommand());
         mAllCommandsMap =
                 allCommands.stream()
                         .collect(
@@ -89,6 +91,7 @@ public final class AdServicesApiShellCommandFactory implements ShellCommandFacto
                                                 FlagsFactory.getFlags())
                                         .getFrequencyCapDataClearer(),
                                 ProtectedSignalsDatabase.getInstance().protectedSignalsDao(),
+                                ProtectedSignalsDatabase.getInstance().getEncodedPayloadDao(),
                                 datastoreManager,
                                 AdServicesExecutors.getBackgroundExecutor()),
                         DevSessionDataStoreFactory.get(),

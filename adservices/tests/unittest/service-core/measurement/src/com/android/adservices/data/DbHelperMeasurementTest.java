@@ -21,67 +21,28 @@ import static com.android.adservices.common.DbTestUtil.doesIndexExist;
 import static com.android.adservices.common.DbTestUtil.doesTableExistAndColumnCountMatch;
 import static com.android.adservices.data.DbHelper.DATABASE_VERSION_7;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
 
-import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 
-import androidx.test.core.app.ApplicationProvider;
-
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.data.measurement.MeasurementTables;
-import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.service.Flags;
-import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.FileCompatUtils;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.MockitoSession;
-import org.mockito.junit.MockitoJUnitRunner;
-import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
 
-@RunWith(MockitoJUnitRunner.class)
-public class DbHelperMeasurementTest {
-    protected static final Context sContext = ApplicationProvider.getApplicationContext();
-
-    private MockitoSession mStaticMockSession;
-
-    @Mock private Flags mMockFlags;
-
-    @Before
-    public void setup() {
-        MockitoAnnotations.initMocks(this);
-        mStaticMockSession =
-                ExtendedMockito.mockitoSession()
-                        .spyStatic(FlagsFactory.class)
-                        .spyStatic(ErrorLogUtil.class)
-                        .strictness(Strictness.WARN)
-                        .startMocking();
-        ExtendedMockito.doReturn(mMockFlags).when(FlagsFactory::getFlags);
-    }
-
-    @After
-    public void teardown() {
-        mStaticMockSession.finishMocking();
-    }
-
+public final class DbHelperMeasurementTest extends AdServicesUnitTestCase {
     @Test
     public void testOnUpgrade_measurementMigration_tablesExist() {
         String dbName = FileCompatUtils.getAdservicesFilename("test_db");
-        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, dbName, 1);
+        DbHelperV1 dbHelperV1 = new DbHelperV1(mContext, dbName, 1);
         SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
 
-        assertEquals(1, db.getVersion());
+        assertThat(db.getVersion()).isEqualTo(1);
 
-        DbHelper dbHelper = new DbHelper(sContext, dbName, DATABASE_VERSION_7);
+        DbHelper dbHelper = new DbHelper(mContext, dbName, DATABASE_VERSION_7);
         dbHelper.onUpgrade(db, 1, DATABASE_VERSION_7);
         assertMeasurementSchema(db);
     }
@@ -89,13 +50,13 @@ public class DbHelperMeasurementTest {
     @Test
     public void testOnUpgrade_measurementMigration_tablesDoNotExist() {
         String dbName = FileCompatUtils.getAdservicesFilename("test_db_2");
-        DbHelperV1 dbHelperV1 = new DbHelperV1(sContext, dbName, 1);
+        DbHelperV1 dbHelperV1 = new DbHelperV1(mContext, dbName, 1);
         SQLiteDatabase db = dbHelperV1.safeGetWritableDatabase();
 
-        assertEquals(1, db.getVersion());
+        assertThat(db.getVersion()).isEqualTo(1);
         Arrays.stream(MeasurementTables.V1_TABLES).forEach((table) -> dropTable(db, table));
 
-        DbHelper dbHelper = new DbHelper(sContext, dbName, DATABASE_VERSION_7);
+        DbHelper dbHelper = new DbHelper(mContext, dbName, DATABASE_VERSION_7);
         dbHelper.onUpgrade(db, 1, DATABASE_VERSION_7);
         assertMeasurementTablesDoNotExist(db);
     }
@@ -105,21 +66,23 @@ public class DbHelperMeasurementTest {
     }
 
     private void assertMeasurementSchema(SQLiteDatabase db) {
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_source", 31));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 19));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 18));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 17));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_attribution", 10));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 14));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_encryption_key", 4));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "enrollment_data", 8));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_debug_report", 4));
-        assertTrue(doesTableExistAndColumnCountMatch(db, "msmt_xna_ignored_sources", 2));
-        assertTrue(doesIndexExist(db, "idx_msmt_source_ad_ei_et"));
-        assertTrue(doesIndexExist(db, "idx_msmt_source_p_ad_wd_s_et"));
-        assertTrue(doesIndexExist(db, "idx_msmt_trigger_ad_ei_tt"));
-        assertTrue(doesIndexExist(db, "idx_msmt_source_et"));
-        assertTrue(doesIndexExist(db, "idx_msmt_trigger_tt"));
-        assertTrue(doesIndexExist(db, "idx_msmt_attribution_ss_so_ds_do_ei_tt"));
+        assertThat(doesTableExistAndColumnCountMatch(db, "msmt_source", 31)).isTrue();
+        assertThat(doesTableExistAndColumnCountMatch(db, "msmt_trigger", 19)).isTrue();
+        assertThat(doesTableExistAndColumnCountMatch(db, "msmt_async_registration_contract", 18))
+                .isTrue();
+        assertThat(doesTableExistAndColumnCountMatch(db, "msmt_event_report", 17)).isTrue();
+        assertThat(doesTableExistAndColumnCountMatch(db, "msmt_attribution", 10)).isTrue();
+        assertThat(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_report", 14)).isTrue();
+        assertThat(doesTableExistAndColumnCountMatch(db, "msmt_aggregate_encryption_key", 4))
+                .isTrue();
+        assertThat(doesTableExistAndColumnCountMatch(db, "enrollment_data", 8)).isTrue();
+        assertThat(doesTableExistAndColumnCountMatch(db, "msmt_debug_report", 4)).isTrue();
+        assertThat(doesTableExistAndColumnCountMatch(db, "msmt_xna_ignored_sources", 2)).isTrue();
+        assertThat(doesIndexExist(db, "idx_msmt_source_ad_ei_et")).isTrue();
+        assertThat(doesIndexExist(db, "idx_msmt_source_p_ad_wd_s_et")).isTrue();
+        assertThat(doesIndexExist(db, "idx_msmt_trigger_ad_ei_tt")).isTrue();
+        assertThat(doesIndexExist(db, "idx_msmt_source_et")).isTrue();
+        assertThat(doesIndexExist(db, "idx_msmt_trigger_tt")).isTrue();
+        assertThat(doesIndexExist(db, "idx_msmt_attribution_ss_so_ds_do_ei_tt")).isTrue();
     }
 }

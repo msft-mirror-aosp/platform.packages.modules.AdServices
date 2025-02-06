@@ -62,7 +62,7 @@ public final class DebugReport {
             return false;
         }
         return Objects.equals(mType, key.mType)
-                && Objects.equals(mBody, key.mBody)
+                && Objects.equals(mBody.toString(), key.mBody.toString())
                 && Objects.equals(mEnrollmentId, key.mEnrollmentId)
                 && Objects.equals(mRegistrationOrigin, key.mRegistrationOrigin)
                 && Objects.equals(mReferenceId, key.mReferenceId)

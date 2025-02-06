@@ -53,7 +53,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_INI
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_JOIN_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_KEY_ATTESTATION_STATUS_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.K_ANON_SIGN_STATUS_REPORTED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.NUMBER_OF_TYPES_OF_REPORTING_URL_RECEIVED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.PERSIST_AD_SELECTION_RESULT_CALLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.REPORTING_WITH_DESTINATION_PERFORMED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_IMPRESSION_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.REPORT_INTERACTION_API_CALLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.RUN_AD_BIDDING_PER_CA_PROCESS_REPORTED;
@@ -1028,6 +1030,29 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 SCHEDULED_CUSTOM_AUDIENCE_UPDATE_PERFORMED_ATTEMPTED_FAILURE_REPORTED,
                 stats.getFailureType(),
                 stats.getFailureAction());
+    }
+
+    @Override
+    public void logNumberOfTypesOfReportingUrlsReceivedStats(
+            NumberOfTypesOfReportingUrlsReceivedStats stats) {
+        AdServicesStatsLog.write(
+                NUMBER_OF_TYPES_OF_REPORTING_URL_RECEIVED,
+                stats.getNumberOfTopLevelSellerReportingUrl(),
+                stats.getNumberOfBuyerReportingUrl(),
+                stats.getNumberOfComponentSellerReportingUrl(),
+                stats.getNumberOfBuyerEventReportingUrl(),
+                stats.getNumberOfTopLevelSellerEventReportingUrl(),
+                stats.getNumberOfComponentSellerEventReportingUrl());
+    }
+
+    @Override
+    public void logReportingWithDestinationPerformedStats(
+            ReportingWithDestinationPerformedStats stats) {
+        AdServicesStatsLog.write(
+                REPORTING_WITH_DESTINATION_PERFORMED,
+                stats.getReportingType(),
+                stats.getDestination(),
+                stats.getStatus());
     }
 
     @NonNull

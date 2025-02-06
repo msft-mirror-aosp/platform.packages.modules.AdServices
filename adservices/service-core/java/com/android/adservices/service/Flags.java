@@ -64,9 +64,9 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Topics Epoch Job Flex. Note the minimum value system allows is 5 minutes
-     * or 5% of background job interval time, whichever is greater.
-     * Topics epoch job interval time is 7 days, so the minimum flex time should be 8.4 hours.
+     * Topics Epoch Job Flex. Note the minimum value system allows is 5 minutes or 5% of background
+     * job interval time, whichever is greater. Topics epoch job interval time is 7 days, so the
+     * minimum flex time should be 8.4 hours.
      */
     @ConfigFlag long TOPICS_EPOCH_JOB_FLEX_MS = 9 * 60 * 60 * 1000; // 9 hours.
 
@@ -211,8 +211,8 @@ public interface Flags extends ModuleSharedFlags {
     }
 
     /**
-     * Flag to enable cleaning Topics database when the settings of Topics epoch job
-     * is changed from server side.
+     * Flag to enable cleaning Topics database when the settings of Topics epoch job is changed from
+     * server side.
      */
     @FeatureFlag boolean TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED = false;
 
@@ -1003,12 +1003,18 @@ public interface Flags extends ModuleSharedFlags {
             24 * 60 * 60 * 1000; // 24 hours in ms
 
     @FeatureFlag boolean ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS = false;
+    @FeatureFlag boolean ENABLE_PAS_COMPONENT_ADS = false;
     @ConfigFlag int MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE = 40;
     @ConfigFlag int COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES = 12;
 
     /** Returns true if the component ads feature is enabled for custom audiences. */
     default boolean getEnableCustomAudienceComponentAds() {
         return ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
+    }
+
+    /** Returns true if the component ads feature is enabled for protected app signals. */
+    default boolean getEnablePasComponentAds() {
+        return ENABLE_PAS_COMPONENT_ADS;
     }
 
     /** Returns the maximum number of component ads per custom audience. */
@@ -3827,6 +3833,23 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_MEASUREMENT_PLATFORM_DEBUG_AD_ID_MATCHING_LIMIT;
     }
 
+    /** Default value for the feature to enable AdIDs per device per window. */
+    @FeatureFlag boolean DEFAULT_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW = false;
+
+    /** Returns true if the AdIDs per device per window feature is enabled. */
+    default boolean getMeasurementEnableAdIdsPerDevicePerWindow() {
+        return DEFAULT_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW;
+    }
+
+    /** Default value for the AdIDs per device per window period in milliseconds. */
+    @ConfigFlag
+    long DEFAULT_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS = TimeUnit.DAYS.toMillis(7);
+
+    /** Returns true if the AdIDs per device per window feature is enabled. */
+    default long getMeasurementAdIdsPerDevicePerWindowPeriodMs() {
+        return DEFAULT_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS;
+    }
+
     /** Kill switch to guard backward-compatible logging. See go/rbc-ww-logging */
     @SuppressWarnings("AvoidKillSwitchFlagUsage") // Legacy kill switch flag
     boolean COMPAT_LOGGING_KILL_SWITCH = false;
@@ -4065,6 +4088,14 @@ public interface Flags extends ModuleSharedFlags {
     /** Returns maximum Aggregate Reports per source. */
     default int getMeasurementMaxAggregateReportsPerSource() {
         return MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE;
+    }
+
+    /** Enable unbounded reports with trigger context id. */
+    @FeatureFlag boolean MEASUREMENT_ENABLE_UNBOUNDED_REPORTS_WITH_TRIGGER_CONTEXT_ID = false;
+
+    /** Returns if Measurement has enabled unbounded reports with trigger context ID. */
+    default boolean getMeasurementEnableUnboundedReportsWithTriggerContextId() {
+        return MEASUREMENT_ENABLE_UNBOUNDED_REPORTS_WITH_TRIGGER_CONTEXT_ID;
     }
 
     /** Maximum number of aggregation keys allowed during source registration. */
@@ -6080,11 +6111,49 @@ public interface Flags extends ModuleSharedFlags {
         return DEFAULT_ENABLE_RB_ATRACE;
     }
 
-    boolean DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST = false;
+    @FeatureFlag boolean DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST = false;
 
     /** Returns if the use of package deny list in msmt register source api */
     default boolean getEnableMsmtRegisterSourcePackageDenyList() {
         return DEFAULT_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST;
+    }
+
+    @FeatureFlag boolean DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK = true;
+
+    /**
+     * Feature flag to check that the package name from the request belongs to the calling package's
+     * uid.
+     */
+    default boolean getMeasurementEnablePackageNameUidCheck() {
+        return DEFAULT_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK;
+    }
+
+    /** Feature flag to enable log sampling infra. */
+    @FeatureFlag boolean DEFAULT_ENABLE_LOG_SAMPLING_INFRA = false;
+
+    /** Returns if log sampling infra is enabled. */
+    default boolean getEnableLogSamplingInfra() {
+        return DEFAULT_ENABLE_LOG_SAMPLING_INFRA;
+    }
+
+    /**
+     * Default value for the base64 encoded LogSamplingConfig proto for AdServices job execution.
+     */
+    @ConfigFlag String DEFAULT_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG = "";
+
+    /** Returns the base64 encoded LogSamplingConfig for AdServices job execution. */
+    default String getAdServicesJobExecutionSamplingConfig() {
+        return DEFAULT_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG;
+    }
+
+    /**
+     * Default value for the base64 encoded LogSamplingConfig proto for AdServices job scheduling.
+     */
+    @ConfigFlag String DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG = "";
+
+    /** Returns the base64 encoded LogSamplingConfig for AdServices job scheduling. */
+    default String getAdServicesJobSchedulingSamplingConfig() {
+        return DEFAULT_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG;
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////

@@ -24,16 +24,33 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B;
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH;
 import static com.android.adservices.service.adselection.EventReporter.INTERACTION_DATA_SIZE_MAX_EXCEEDED;
 import static com.android.adservices.service.adselection.EventReporter.INTERACTION_KEY_SIZE_MAX_EXCEEDED;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_INVALID_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_AND_REGISTER_EVENT_FALLBACK_IMPL_FAILED_DUE_TO_INTERNAL_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_AND_REGISTER_EVENT_FALLBACK_IMPL_FAILED_DUE_TO_IO_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_AND_REGISTER_EVENT_IMPL_REGISTER_EVENT_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -67,6 +84,9 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.annotations.SetMsmtApiAppAllowList;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -95,6 +115,9 @@ import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
 import com.android.adservices.shared.testing.AnswerSyncCallback;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackFactory;
 import com.android.adservices.shared.testing.concurrency.SyncCallbackSettings;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
@@ -118,6 +141,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.Spy;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -126,6 +150,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 @MockStatic(PermissionHelper.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(DebugFlags.class)
+@SetMsmtApiAppAllowList
+@SetFlagTrue(KEY_GA_UX_FEATURE_ENABLED)
+@SetFlagTrue(KEY_FLEDGE_BEACON_REPORTING_METRICS_ENABLED)
+@SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_FLEDGE_REPORT_INTERACTION)
+@SetErrorLogUtilDefaultParams(
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION)
 public final class ReportAndRegisterEventFallbackImplTest
         extends AdServicesExtendedMockitoTestCase {
     private static final Instant ACTIVATION_TIME = Instant.now();
@@ -162,14 +192,7 @@ public final class ReportAndRegisterEventFallbackImplTest
     private final ListeningExecutorService mBackgroundExecutorService =
             AdServicesExecutors.getBackgroundExecutor();
     @Mock FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
-    private Flags mFakeFlags = new ReportEventTestFlags();
-    private static final Flags FLAGS_ENROLLMENT_CHECK =
-            new ReportEventTestFlags() {
-                @Override
-                public boolean getDisableFledgeEnrollmentCheck() {
-                    return false;
-                }
-            };
+
     private final long mMaxRegisteredAdBeaconsTotalCount =
             mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsTotalCount();
     private final long mMaxRegisteredAdBeaconsPerDestination =
@@ -288,6 +311,10 @@ public final class ReportAndRegisterEventFallbackImplTest
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_AND_REGISTER_EVENT_FALLBACK_IMPL_FAILED_DUE_TO_INTERNAL_ERROR,
+            throwable = IllegalStateException.class)
     public void testImplDoesNotCrashAfterSellerReportingThrowsAnException() throws Exception {
         enableARA();
         persistReportingArtifacts();
@@ -349,6 +376,14 @@ public final class ReportAndRegisterEventFallbackImplTest
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_AND_REGISTER_EVENT_IMPL_REGISTER_EVENT_FAILED,
+            throwable = IllegalStateException.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_AND_REGISTER_EVENT_FALLBACK_IMPL_FAILED_DUE_TO_INTERNAL_ERROR,
+            throwable = IllegalStateException.class)
     public void testImplDoesNotCrashAfterSellerReportingAndRegisteringThrowsAnException()
             throws Exception {
         enableARA();
@@ -409,6 +444,10 @@ public final class ReportAndRegisterEventFallbackImplTest
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_AND_REGISTER_EVENT_FALLBACK_IMPL_FAILED_DUE_TO_INTERNAL_ERROR,
+            throwable = IllegalStateException.class)
     public void testImplDoesNotCrashAfterBuyerReportingThrowsAnException() throws Exception {
         enableARA();
         persistReportingArtifacts();
@@ -470,6 +509,14 @@ public final class ReportAndRegisterEventFallbackImplTest
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_AND_REGISTER_EVENT_IMPL_REGISTER_EVENT_FAILED,
+            throwable = IOException.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_AND_REGISTER_EVENT_FALLBACK_IMPL_FAILED_DUE_TO_IO_EXCEPTION,
+            throwable = IOException.class)
     public void testImplDoesNotCrashAfterBuyerReportingAndRegisteringThrowsAnException()
             throws Exception {
         enableARA();
@@ -498,7 +545,8 @@ public final class ReportAndRegisterEventFallbackImplTest
         AnswerSyncCallback<Void> sellerCallback =
                 syncRegisterEvent(SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT, input);
         AnswerSyncCallback<Void> buyerCallback =
-                AnswerSyncCallback.forSingleFailure(Void.class, mRuntimeException);
+                AnswerSyncCallback.forSingleFailure(
+                        Void.class, new IOException("Exception for test!"));
         doAnswer(buyerCallback)
                 .when(mMeasurementServiceMock)
                 .registerEvent(eq(reportingUri), any(), any(), anyBoolean(), any(), any(), any());
@@ -517,7 +565,7 @@ public final class ReportAndRegisterEventFallbackImplTest
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INTERNAL_ERROR),
+                        eq(STATUS_IO_ERROR),
                         anyInt());
 
         // Verify the mock server handled both buyer and seller reporting requests with exact paths.
@@ -620,6 +668,7 @@ public final class ReportAndRegisterEventFallbackImplTest
     }
 
     @Test
+    @SetFlagFalse(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testImplReturnsOnlyReportsUriThatPassesEnrollmentCheck() throws Exception {
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
@@ -629,7 +678,7 @@ public final class ReportAndRegisterEventFallbackImplTest
         persistReportingArtifacts();
 
         // Re-initialize event reporter.
-        mEventReporter = getReportAndRegisterEventFallbackImpl(FLAGS_ENROLLMENT_CHECK);
+        mEventReporter = getReportAndRegisterEventFallbackImpl(mFakeFlags);
 
         // Allow the first call and filter the second.
         doNothing()
@@ -689,6 +738,7 @@ public final class ReportAndRegisterEventFallbackImplTest
     }
 
     @Test
+    @SetFlagFalse(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testImplReturnsSuccessButDoesNotDoReportingWhenBothFailEnrollmentCheck()
             throws Exception {
         // Uses ArgumentCaptor to capture the logs in the tests.
@@ -699,7 +749,7 @@ public final class ReportAndRegisterEventFallbackImplTest
         persistReportingArtifacts();
 
         // Re-initialize event reporter.
-        mEventReporter = getReportAndRegisterEventFallbackImpl(FLAGS_ENROLLMENT_CHECK);
+        mEventReporter = getReportAndRegisterEventFallbackImpl(mFakeFlags);
 
         // Filter the call.
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
@@ -748,6 +798,10 @@ public final class ReportAndRegisterEventFallbackImplTest
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED,
+            throwable = FilterException.class)
     public void testImplFailsWithInvalidPackageName() throws Exception {
         enableARA();
         persistReportingArtifacts();
@@ -799,6 +853,10 @@ public final class ReportAndRegisterEventFallbackImplTest
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER,
+            throwable = FilterException.class)
     public void testImplFailsWhenForegroundCheckFails() throws Exception {
         enableARA();
         persistReportingArtifacts();
@@ -852,6 +910,10 @@ public final class ReportAndRegisterEventFallbackImplTest
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED,
+            throwable = FilterException.class)
     public void testImplFailsWhenThrottled() throws Exception {
         enableARA();
         persistReportingArtifacts();
@@ -937,6 +999,10 @@ public final class ReportAndRegisterEventFallbackImplTest
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED,
+            throwable = FilterException.class)
     public void testImplFailsWhenAppNotInAllowList() throws Exception {
         enableARA();
         persistReportingArtifacts();
@@ -1029,6 +1095,10 @@ public final class ReportAndRegisterEventFallbackImplTest
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_INVALID_ARGUMENT,
+            throwable = IllegalArgumentException.class)
     public void testImplFailsWithUnknownAdSelectionId() throws Exception {
         enableARA();
         persistReportingArtifacts();
@@ -1094,6 +1164,10 @@ public final class ReportAndRegisterEventFallbackImplTest
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_INVALID_ARGUMENT,
+            throwable = IllegalArgumentException.class)
     public void testImplFailsWhenEventDataExceedsMaxSize() throws Exception {
         enableARA();
         persistReportingArtifacts();
@@ -1127,6 +1201,14 @@ public final class ReportAndRegisterEventFallbackImplTest
     }
 
     @Test
+    // Instantiate flags with small max interaction data size.
+    @SetIntegerFlag(
+            name = KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B,
+            value = 1)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_INVALID_ARGUMENT,
+            throwable = IllegalArgumentException.class)
     public void testImplFailsWhenInteractionKeyExceedsMaxSize() throws Exception {
         enableARA();
         persistReportingArtifacts();
@@ -1141,18 +1223,8 @@ public final class ReportAndRegisterEventFallbackImplTest
                     }
                 });
 
-        // Instantiate flags with small max interaction data size.
-        Flags flags =
-                new ReportEventTestFlags() {
-                    @Override
-                    public long
-                            getFledgeReportImpressionRegisteredAdBeaconsMaxInteractionKeySizeB() {
-                        return 1;
-                    }
-                };
-
         // Re-initialize event reporter with new flags.
-        mEventReporter = getReportAndRegisterEventFallbackImpl(flags);
+        mEventReporter = getReportAndRegisterEventFallbackImpl(mFakeFlags);
 
         // Call report event with input.
         ReportInteractionInput input = mInputBuilder.build();
@@ -1171,21 +1243,14 @@ public final class ReportAndRegisterEventFallbackImplTest
     }
 
     @Test
+    // Instantiate flags with kill switch turned on.
+    @SetFlagTrue(KEY_MEASUREMENT_API_REGISTER_SOURCE_KILL_SWITCH)
     public void testImpl_onlyReportsEvent_measurementKillSwitchEnabled() throws Exception {
         enableARA();
         persistReportingArtifacts();
 
-        // Instantiate flags with kill switch turned on.
-        Flags flags =
-                new ReportEventTestFlags() {
-                    @Override
-                    public boolean getMeasurementApiRegisterSourceKillSwitch() {
-                        return true;
-                    }
-                };
-
         // Re init interaction reporter with new flags
-        mEventReporter = getReportAndRegisterEventFallbackImpl(flags);
+        mEventReporter = getReportAndRegisterEventFallbackImpl(mFakeFlags);
 
         // Mock server to report the event in addition to being registered by measurement.
         MockWebServer server =
@@ -1221,21 +1286,14 @@ public final class ReportAndRegisterEventFallbackImplTest
     }
 
     @Test
+    // Instantiate flags with no allow list.
+    @SetMsmtApiAppAllowList(AllowLists.ALLOW_NONE)
     public void testImpl_onlyReportsEvent_appIsNotInMeasurementAllowlisted() throws Exception {
         enableARA();
         persistReportingArtifacts();
 
-        // Instantiate flags with no allow list.
-        Flags flags =
-                new ReportEventTestFlags() {
-                    @Override
-                    public String getMsmtApiAppAllowList() {
-                        return AllowLists.ALLOW_NONE;
-                    }
-                };
-
         // Re-initialize event reporter with new flags.
-        mEventReporter = getReportAndRegisterEventFallbackImpl(flags);
+        mEventReporter = getReportAndRegisterEventFallbackImpl(mFakeFlags);
 
         // Mock server to report the event in addition to being registered by measurement.
         MockWebServer server =
@@ -1363,6 +1421,11 @@ public final class ReportAndRegisterEventFallbackImplTest
     }
 
     @Test
+    @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_INVALID_ARGUMENT,
+            throwable = IllegalArgumentException.class)
     public void testReportEventImplFailsWithUnknownAdSelectionId_serverAuctionEnabled()
             throws Exception {
         enableARA();
@@ -1375,16 +1438,8 @@ public final class ReportAndRegisterEventFallbackImplTest
         ReportInteractionInput inputParams =
                 mInputBuilder.setAdSelectionId(AD_SELECTION_ID_2 + 1).build();
 
-        Flags flags =
-                new ReportEventTestFlags() {
-                    @Override
-                    public boolean getFledgeAuctionServerEnabledForReportEvent() {
-                        return true;
-                    }
-                };
-
         // Re init interaction reporter
-        mEventReporter = getReportAndRegisterEventFallbackImpl(flags);
+        mEventReporter = getReportAndRegisterEventFallbackImpl(mFakeFlags);
         ReportEventTestCallback callback = callReportEvent(inputParams, true);
 
         callback.assertErrorReceived(STATUS_INVALID_ARGUMENT);
@@ -1405,8 +1460,28 @@ public final class ReportAndRegisterEventFallbackImplTest
 
         enableARA();
         persistReportingArtifactsForServerAuction(AD_SELECTION_ID_2);
+
         Flags flags =
-                new ReportEventTestFlags() {
+                new Flags() {
+                    @Override
+                    public boolean getMeasurementApiRegisterSourceKillSwitch() {
+                        return false;
+                    }
+
+                    @Override
+                    public String getMsmtApiAppAllowList() {
+                        return AllowLists.ALLOW_ALL;
+                    }
+
+                    @Override
+                    public boolean getFledgeBeaconReportingMetricsEnabled() {
+                        return true;
+                    }
+
+                    // TODO(b/388097793): should use mFakeFlags instead (with test annotated as
+                    // @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT), but that
+                    // does not work (most likely because the same flag used by different objects in
+                    // a conflicting way)
                     @Override
                     public boolean getFledgeAuctionServerEnabledForReportEvent() {
                         return true;
@@ -1541,7 +1616,7 @@ public final class ReportAndRegisterEventFallbackImplTest
                 mBackgroundExecutorService,
                 mAdServicesLoggerMock,
                 flags,
-                mMockDebugFlags,
+                mFakeDebugFlags,
                 mAdSelectionServiceFilterMock,
                 MY_UID,
                 mFledgeAuthorizationFilterMock,
@@ -1597,34 +1672,5 @@ public final class ReportAndRegisterEventFallbackImplTest
                         input.getAdId());
 
         return callback;
-    }
-
-
-
-    private static class ReportEventTestFlags implements Flags {
-        @Override
-        public boolean getMeasurementApiRegisterSourceKillSwitch() {
-            return false;
-        }
-
-        @Override
-        public String getMsmtApiAppAllowList() {
-            return AllowLists.ALLOW_ALL;
-        }
-
-        @Override
-        public boolean getGaUxFeatureEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getFledgeBeaconReportingMetricsEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getEnforceForegroundStatusForFledgeReportInteraction() {
-            return true;
-        }
     }
 }

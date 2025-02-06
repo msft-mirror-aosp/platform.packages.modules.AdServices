@@ -78,7 +78,8 @@ public final class EnableAdServicesCommand extends AbstractShellCommand {
                     HELP_ENABLE_ADSERVICES, err, ShellCommandStats.COMMAND_ENABLE_ADSERVICES, args);
         }
         ImmutableMap<String, String> paramMap =
-                ShellCommandArgParserHelper.parseCliArguments(args, ARG_PARSE_START_INDEX);
+                ShellCommandArgParserHelper.parseCliArguments(
+                        args, ARG_PARSE_START_INDEX, /* removeKeyPrefix= */ true);
 
         AdServicesCommonManager commonManager =
                 AdServicesCommonManager.get(ApplicationContextSingleton.get());

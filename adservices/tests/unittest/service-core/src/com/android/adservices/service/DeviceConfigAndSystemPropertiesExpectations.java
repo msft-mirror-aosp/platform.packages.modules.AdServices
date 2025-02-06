@@ -30,20 +30,100 @@ import android.os.SystemProperties;
 import android.provider.DeviceConfig;
 import android.util.Log;
 
+import com.android.adservices.common.DeviceConfigUtil;
+import com.android.adservices.shared.testing.flags.TestableFlagsBackend;
+
 import com.google.errorprone.annotations.FormatMethod;
 import com.google.errorprone.annotations.FormatString;
 
+@SuppressWarnings("AvoidDeviceConfigUsage") // Helper / infra class
 final class DeviceConfigAndSystemPropertiesExpectations {
 
     private static final String TAG =
             DeviceConfigAndSystemPropertiesExpectations.class.getSimpleName();
 
+    private static final TestableFlagsBackend sFlagsBackend =
+            new TestableFlagsBackend() {
+
+                @Override
+                public String getFlag(String name) {
+                    // NOTE: implement once / if needed
+                    throw new UnsupportedOperationException(
+                            "getFlag(" + name + ") not used in any test yet");
+                }
+
+                @Override
+                public void setFlag(String name, String value) {
+                    logV("setFlag(name=%s, value=%s)", name, value);
+                    mockOnlyGetAdServicesFlag(name, value);
+                    DeviceConfigUtil.setAdservicesFlag(name, value);
+                }
+
+                @Override
+                public void setFlag(String name, boolean value) {
+                    logV("setFlag(name=%s, value=%s)", name, value);
+                    mockOnlyGetAdServicesFlag(name, value);
+                    DeviceConfigUtil.setAdservicesFlag(name, value);
+                }
+
+                @Override
+                public void setFlag(String name, int value) {
+                    logV("setFlag(name=%s, value=%s)", name, value);
+                    mockOnlyGetAdServicesFlag(name, value);
+                    DeviceConfigUtil.setAdservicesFlag(name, value);
+                }
+
+                @Override
+                public void setFlag(String name, long value) {
+                    logV("setFlag(name=%s, value=%s)", name, value);
+                    mockOnlyGetAdServicesFlag(name, value);
+                    DeviceConfigUtil.setAdservicesFlag(name, value);
+                }
+
+                @Override
+                public void setFlag(String name, float value) {
+                    // NOTE: implement once / if needed (there's no DeviceConfigUtil setter for
+                    // that)
+                    throw new UnsupportedOperationException(
+                            "setFlag("
+                                    + name
+                                    + ", (float) "
+                                    + value
+                                    + ") not used in any test yet");
+                }
+
+                @Override
+                public String toString() {
+                    return "DeviceConfigAndSystemPropertiesExpectations.FlagsBackendForTests"
+                            + " singleton";
+                }
+
+                @Override
+                public void onGetFlagThrows(String name, String reason) {
+                    throw new UnsupportedOperationException(
+                            "onGetFlagThrows(" + name + ", " + reason + ": cannot do that");
+                }
+            };
+
+    /** Gets the {@link TestableFlagsBackend} singleton. */
+    public static TestableFlagsBackend getFlagsBackendForTests() {
+        return sFlagsBackend;
+    }
+
     /**
      * Mocks a call to {@code DeviceConfig.getBoolean()} using the AdServices namespace and
      * returning {@code value}.
+     *
+     * @deprecated should use {@link #getFlagsBackendForTests()} instead.
      */
+    @Deprecated
     public static void mockGetAdServicesFlag(String name, boolean value) {
         logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        mockOnlyGetAdServicesFlag(name, value);
+    }
+
+    // don't log
+    private static void mockOnlyGetAdServicesFlag(String name, boolean value) {
         doReturn(value)
                 .when(
                         () ->
@@ -56,9 +136,17 @@ final class DeviceConfigAndSystemPropertiesExpectations {
     /**
      * Mocks a call to {@code DeviceConfig.getString()} using the AdServices namespace and returning
      * {@code value}.
+     *
+     * @deprecated should use {@link #getFlagsBackendForTests()} instead.
      */
+    @Deprecated
     public static void mockGetAdServicesFlag(String name, String value) {
         logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        mockOnlyGetAdServicesFlag(name, value);
+    }
+
+    // don't log
+    private static void mockOnlyGetAdServicesFlag(String name, String value) {
         doReturn(value)
                 .when(
                         () ->
@@ -71,9 +159,17 @@ final class DeviceConfigAndSystemPropertiesExpectations {
     /**
      * Mocks a call to {@code DeviceConfig.getInt()} using the AdServices namespace and returning
      * {@code value}.
+     *
+     * @deprecated should use {@link #getFlagsBackendForTests()} instead.
      */
+    @Deprecated
     public static void mockGetAdServicesFlag(String name, int value) {
         logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        mockOnlyGetAdServicesFlag(name, value);
+    }
+
+    // don't log
+    private static void mockOnlyGetAdServicesFlag(String name, int value) {
         doReturn(value)
                 .when(
                         () ->
@@ -86,9 +182,17 @@ final class DeviceConfigAndSystemPropertiesExpectations {
     /**
      * Mocks a call to {@code DeviceConfig.getLong()} using the AdServices namespace and returning
      * {@code value}.
+     *
+     * @deprecated should use {@link #getFlagsBackendForTests()} instead.
      */
+    @Deprecated
     public static void mockGetAdServicesFlag(String name, long value) {
         logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        mockOnlyGetAdServicesFlag(name, value);
+    }
+
+    // don't log
+    private static void mockOnlyGetAdServicesFlag(String name, long value) {
         doReturn(value)
                 .when(
                         () ->
@@ -101,9 +205,17 @@ final class DeviceConfigAndSystemPropertiesExpectations {
     /**
      * Mocks a call to {@code DeviceConfig.getFloat()} using the AdServices namespace and returning
      * {@code value}.
+     *
+     * @deprecated should use {@link #getFlagsBackendForTests()} instead.
      */
+    @Deprecated
     public static void mockGetAdServicesFlag(String name, float value) {
         logV("mockGetAdServicesFlag(name=%s, value=%s)", name, value);
+        mockOnlyGetAdServicesFlag(name, value);
+    }
+
+    // don't log
+    private static void mockOnlyGetAdServicesFlag(String name, float value) {
         doReturn(value)
                 .when(
                         () ->

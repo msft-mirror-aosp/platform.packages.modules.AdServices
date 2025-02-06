@@ -16,6 +16,7 @@
 
 package com.android.adservices.data.signals;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.data.signals.EncoderLogicHandler.EMPTY_ADTECH_ID;
 import static com.android.adservices.data.signals.EncoderLogicHandler.ENCODER_VERSION_RESPONSE_HEADER;
 import static com.android.adservices.data.signals.EncoderLogicHandler.FALLBACK_VERSION;
@@ -45,7 +46,6 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientResponse;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
@@ -83,7 +83,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 @RequiresSdkLevelAtLeastT
 @SetErrorLogUtilDefaultParams(
-        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS)
 @SetFlagTrue(KEY_PAS_EXTENDED_METRICS_ENABLED)
 public final class EncoderLogicHandlerTest extends AdServicesExtendedMockitoTestCase {
@@ -102,8 +102,6 @@ public final class EncoderLogicHandlerTest extends AdServicesExtendedMockitoTest
     private final ListeningExecutorService mExecutorService =
             MoreExecutors.newDirectExecutorService();
     private final ExecutorService mService = Executors.newFixedThreadPool(5);
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
 
     private EncoderLogicHandler mEncoderLogicHandler;
 

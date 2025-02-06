@@ -55,10 +55,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__OVERRIDE_CUSTOM_AUDIENCE_REMOTE_INFO;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REMOVE_CUSTOM_AUDIENCE_REMOTE_INFO_OVERRIDE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__RESET_ALL_CUSTOM_AUDIENCE_OVERRIDES;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NO_MATCH_PACKAGE_NAME;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE;
-import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE;
@@ -106,8 +102,6 @@ import androidx.room.Room;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
-import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.AppInstallDao;
@@ -125,6 +119,7 @@ import com.android.adservices.data.enrollment.EnrollmentDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.measurement.MeasurementDbHelper;
 import com.android.adservices.data.measurement.SQLDatastoreManager;
+import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.DebugFlags;
@@ -154,6 +149,7 @@ import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerform
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdatePerformedStats;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
 import com.android.adservices.shared.errorlogging.AdServicesErrorLogger;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.concurrency.FailableOnResultSyncCallback;
 import com.android.adservices.testutils.DevSessionHelper;
 import com.android.adservices.testutils.FetchCustomAudienceTestSyncCallback;
@@ -193,6 +189,8 @@ import java.util.stream.Collectors;
 @SpyStatic(DebugFlags.class)
 @SpyStatic(ScheduleCustomAudienceUpdateJobService.class)
 @MockStatic(BackgroundFetchJob.class)
+// TODO (b/384952360): refine CEL related verifications later
+@SkipLoggingUsageRule(reason = "b/384952360")
 public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedMockitoTestCase {
 
     @Rule(order = 11)
@@ -331,8 +329,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
 
     @Before
     public void setup() {
-        doReturn(new CustomAudienceServiceE2ETestFlags()).when(FlagsFactory::getFlags);
-
+        mocker.mockGetFlags(new CustomAudienceServiceE2ETestFlags());
         mFetchUri = mMockWebServerRule.uriForPath("/fetch");
 
         mCustomAudienceDao =
@@ -354,6 +351,10 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                 Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
                         .build()
                         .protectedSignalsDao();
+        EncodedPayloadDao encodedPayloadDao =
+                Room.inMemoryDatabaseBuilder(mContext, ProtectedSignalsDatabase.class)
+                        .build()
+                        .getEncodedPayloadDao();
 
         mMeasurementDatastoreManager =
                 new SQLDatastoreManager(
@@ -366,6 +367,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAppInstallDao,
                         mFrequencyCapDao,
                         protectedSignalsDao,
+                        encodedPayloadDao,
                         mMeasurementDatastoreManager);
 
         mCustomAudienceValidator =
@@ -416,7 +418,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -472,11 +474,6 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     }
 
     @Test
-    @ExpectErrorLogUtilWithExceptionCall(
-            errorCode =
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
-            throwable = IllegalStateException.class)
     public void testJoinCustomAudience_notInBinderThread_fail() {
         CustomAudienceQuantityChecker customAudienceQuantityChecker =
                 new CustomAudienceQuantityChecker(
@@ -510,7 +507,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -545,10 +542,6 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     }
 
     @Test
-    @ExpectErrorLogUtilCall(
-            errorCode =
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NO_MATCH_PACKAGE_NAME,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
     public void testJoinCustomAudience_callerPackageNameMismatch_fail() {
         String otherOwnerPackageName = "other_owner";
         // Bypass the permission check since it's enforced before the package name check
@@ -1372,11 +1365,6 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     }
 
     @Test
-    @ExpectErrorLogUtilWithExceptionCall(
-            errorCode =
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE,
-            throwable = IllegalStateException.class)
     public void testLeaveCustomAudience_notInBinderThread_fail() {
         CustomAudienceQuantityChecker customAudienceQuantityChecker =
                 new CustomAudienceQuantityChecker(
@@ -1410,7 +1398,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         COMMON_FLAGS_WITH_FILTERS_ENABLED,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierFailureImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -1441,10 +1429,6 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     }
 
     @Test
-    @ExpectErrorLogUtilCall(
-            errorCode =
-                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FLEDGE_AUTHORIZATION_FILTER_NO_MATCH_PACKAGE_NAME,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE)
     public void testLeaveCustomAudience_callerPackageNameMismatch_fail() {
         String otherOwnerPackageName = "other_owner";
         // Bypass the permission check since it's enforced before the package name check
@@ -4838,7 +4822,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 mAdServicesLoggerMock,
                                 mAppImportanceFilter,
                                 flagsWithLowRateLimit,
-                                mMockDebugFlags,
+                                mFakeDebugFlags,
                                 CallingAppUidSupplierProcessImpl.create(),
                                 new CustomAudienceServiceFilter(
                                         mContext,
@@ -5022,7 +5006,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         flags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,
@@ -5204,7 +5188,7 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         mAdServicesLoggerMock,
                         mAppImportanceFilter,
                         flags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         CallingAppUidSupplierProcessImpl.create(),
                         new CustomAudienceServiceFilter(
                                 mContext,

@@ -27,6 +27,7 @@ import static com.android.adservices.tests.ui.libs.UiUtils.sysuiResSelector;
 import static com.google.common.truth.Truth.assertThat;
 
 import android.content.Context;
+import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.test.uiautomator.By;
@@ -289,5 +290,56 @@ public class NotificationPages {
             assertThat(rightControlButton).isNotNull();
             assertThat(moreButton).isNull();
         }
+    }
+
+    /**
+     * Verifies the notification card. The new logic, we only check the notification card shows. The
+     * landing page is moved away from adservices.
+     */
+    public static void verifyNotificationV2(
+            Context context, UiDevice device, UiConstants.NotificationMode notificationMode)
+            throws Exception {
+        device.openNotification();
+        SystemClock.sleep(LAUNCH_TIMEOUT);
+
+        int notificationTitle = -1;
+        int notificationHeader = -1;
+        switch (notificationMode) {
+            case REGULAR:
+                notificationTitle = R.string.notificationUI_notification_ga_title_v2;
+                notificationHeader = R.string.notificationUI_header_ga_title_v2;
+                break;
+            case UPDATED_FIRST_TIME:
+                notificationTitle = R.string.notificationUI_pas_notification_title;
+                notificationHeader = R.string.notificationUI_pas_header_title;
+                break;
+            case UPDATED_RENOTIFY:
+                notificationTitle = R.string.notificationUI_pas_re_notification_title;
+                notificationHeader = R.string.notificationUI_pas_renotify_header_title;
+                break;
+            case LIMITED:
+                notificationTitle = R.string.notificationUI_u18_notification_title;
+                notificationHeader = R.string.notificationUI_u18_header_title;
+                break;
+        }
+
+        Log.d(
+                "adservices",
+                "Expected notification card title is: " + getString(context, notificationTitle));
+        Log.d(
+                "adservices",
+                "Expected notification landing page title is: "
+                        + getString(context, notificationHeader));
+
+        UiObject2 scroller =
+                device.wait(
+                        Until.findObject(sysuiResSelector(NOTIFICATION_SCROLLER)), LAUNCH_TIMEOUT);
+
+        UiObject2 notificationCard =
+                scroller.findObject(By.textContains(getString(context, notificationTitle)));
+
+        assertThat(notificationCard).isNotNull();
+        notificationCard.click();
+        SystemClock.sleep(LAUNCH_TIMEOUT);
     }
 }

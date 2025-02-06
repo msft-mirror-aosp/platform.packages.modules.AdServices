@@ -16,6 +16,7 @@
 package com.android.adservices.shared.testing;
 
 import static com.android.adservices.shared.testing.AndroidSdk.Level.ANY;
+import static com.android.adservices.shared.testing.AndroidSdk.Level.B;
 import static com.android.adservices.shared.testing.AndroidSdk.Level.DEV;
 import static com.android.adservices.shared.testing.AndroidSdk.Level.R;
 import static com.android.adservices.shared.testing.AndroidSdk.Level.S;
@@ -59,6 +60,9 @@ public final class AndroidSdkLevelTest extends SharedSidelessTestCase {
         Level for35 = Level.forLevel(35);
         expect.withMessage("level 35").that(for35).isSameInstanceAs(V);
 
+        Level for36 = Level.forLevel(36);
+        expect.withMessage("level 36").that(for36).isSameInstanceAs(B);
+
         IllegalArgumentException e =
                 assertThrows(IllegalArgumentException.class, () -> Level.forLevel(29));
         expect.that(e).hasMessageThat().contains("29");
@@ -74,6 +78,7 @@ public final class AndroidSdkLevelTest extends SharedSidelessTestCase {
         expect.withMessage("level of T").that(T.getLevel()).isEqualTo(33);
         expect.withMessage("level of U").that(U.getLevel()).isEqualTo(34);
         expect.withMessage("level of V").that(V.getLevel()).isEqualTo(35);
+        expect.withMessage("level of B").that(B.getLevel()).isEqualTo(36);
     }
 
     @Test
@@ -86,6 +91,7 @@ public final class AndroidSdkLevelTest extends SharedSidelessTestCase {
         expect.withMessage("ANY.isAtLeast(T)").that(ANY.isAtLeast(T)).isFalse();
         expect.withMessage("ANY.isAtLeast(U)").that(ANY.isAtLeast(U)).isFalse();
         expect.withMessage("ANY.isAtLeast(V)").that(ANY.isAtLeast(V)).isFalse();
+        expect.withMessage("ANY.isAtLeast(B)").that(ANY.isAtLeast(B)).isFalse();
 
         expect.withMessage("DEV.isAtLeast(DEV)").that(DEV.isAtLeast(DEV)).isTrue();
         expect.withMessage("DEV.isAtLeast(ANY)").that(DEV.isAtLeast(ANY)).isTrue();
@@ -95,6 +101,7 @@ public final class AndroidSdkLevelTest extends SharedSidelessTestCase {
         expect.withMessage("DEV.isAtLeast(T)").that(DEV.isAtLeast(T)).isTrue();
         expect.withMessage("DEV.isAtLeast(U)").that(DEV.isAtLeast(U)).isTrue();
         expect.withMessage("DEV.isAtLeast(V)").that(DEV.isAtLeast(V)).isTrue();
+        expect.withMessage("DEV.isAtLeast(B)").that(DEV.isAtLeast(B)).isTrue();
 
         expect.withMessage("S.isAtLeast(DEV)").that(S.isAtLeast(DEV)).isFalse();
         expect.withMessage("R.isAtLeast(ANY)").that(R.isAtLeast(ANY)).isTrue();
@@ -104,6 +111,7 @@ public final class AndroidSdkLevelTest extends SharedSidelessTestCase {
         expect.withMessage("R.isAtLeast(T)").that(R.isAtLeast(T)).isFalse();
         expect.withMessage("R.isAtLeast(U)").that(R.isAtLeast(U)).isFalse();
         expect.withMessage("R.isAtLeast(V)").that(R.isAtLeast(V)).isFalse();
+        expect.withMessage("R.isAtLeast(B)").that(R.isAtLeast(B)).isFalse();
 
         expect.withMessage("S.isAtLeast(DEV)").that(S.isAtLeast(DEV)).isFalse();
         expect.withMessage("S.isAtLeast(ANY)").that(S.isAtLeast(ANY)).isTrue();
@@ -113,6 +121,7 @@ public final class AndroidSdkLevelTest extends SharedSidelessTestCase {
         expect.withMessage("S.isAtLeast(T)").that(S.isAtLeast(T)).isFalse();
         expect.withMessage("S.isAtLeast(U)").that(S.isAtLeast(U)).isFalse();
         expect.withMessage("S.isAtLeast(V)").that(S.isAtLeast(V)).isFalse();
+        expect.withMessage("S.isAtLeast(B)").that(S.isAtLeast(B)).isFalse();
 
         expect.withMessage("T.isAtLeast(DEV)").that(T.isAtLeast(DEV)).isFalse();
         expect.withMessage("T.isAtLeast(ANY)").that(T.isAtLeast(ANY)).isTrue();
@@ -122,6 +131,7 @@ public final class AndroidSdkLevelTest extends SharedSidelessTestCase {
         expect.withMessage("T.isAtLeast(T)").that(T.isAtLeast(T)).isTrue();
         expect.withMessage("T.isAtLeast(U)").that(T.isAtLeast(U)).isFalse();
         expect.withMessage("T.isAtLeast(V)").that(T.isAtLeast(V)).isFalse();
+        expect.withMessage("T.isAtLeast(B)").that(T.isAtLeast(B)).isFalse();
 
         expect.withMessage("U.isAtLeast(DEV)").that(U.isAtLeast(DEV)).isFalse();
         expect.withMessage("U.isAtLeast(ANY)").that(U.isAtLeast(ANY)).isTrue();
@@ -131,6 +141,7 @@ public final class AndroidSdkLevelTest extends SharedSidelessTestCase {
         expect.withMessage("U.isAtLeast(T)").that(U.isAtLeast(T)).isTrue();
         expect.withMessage("U.isAtLeast(U)").that(U.isAtLeast(U)).isTrue();
         expect.withMessage("U.isAtLeast(V)").that(U.isAtLeast(V)).isFalse();
+        expect.withMessage("U.isAtLeast(B)").that(U.isAtLeast(B)).isFalse();
 
         expect.withMessage("V.isAtLeast(DEV)").that(V.isAtLeast(DEV)).isFalse();
         expect.withMessage("V.isAtLeast(ANY)").that(V.isAtLeast(ANY)).isTrue();
@@ -140,5 +151,16 @@ public final class AndroidSdkLevelTest extends SharedSidelessTestCase {
         expect.withMessage("V.isAtLeast(T)").that(V.isAtLeast(T)).isTrue();
         expect.withMessage("V.isAtLeast(U)").that(V.isAtLeast(U)).isTrue();
         expect.withMessage("V.isAtLeast(V)").that(V.isAtLeast(V)).isTrue();
+        expect.withMessage("V.isAtLeast(B)").that(V.isAtLeast(B)).isFalse();
+
+        expect.withMessage("B.isAtLeast(DEV)").that(B.isAtLeast(DEV)).isFalse();
+        expect.withMessage("B.isAtLeast(ANY)").that(B.isAtLeast(ANY)).isTrue();
+        expect.withMessage("B.isAtLeast(R)").that(B.isAtLeast(R)).isTrue();
+        expect.withMessage("B.isAtLeast(S)").that(B.isAtLeast(S)).isTrue();
+        expect.withMessage("B.isAtLeast(S2)").that(B.isAtLeast(S2)).isTrue();
+        expect.withMessage("B.isAtLeast(T)").that(B.isAtLeast(T)).isTrue();
+        expect.withMessage("B.isAtLeast(U)").that(B.isAtLeast(U)).isTrue();
+        expect.withMessage("B.isAtLeast(V)").that(B.isAtLeast(V)).isTrue();
+        expect.withMessage("B.isAtLeast(B)").that(B.isAtLeast(B)).isTrue();
     }
 }

@@ -23,6 +23,9 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSEN
 
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
 import static com.android.adservices.common.CommonFlagsValues.EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SELECT_ADS_FROM_OUTCOMES;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
@@ -71,6 +74,8 @@ import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLogger;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
@@ -90,6 +95,12 @@ import java.util.stream.Collectors;
 
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(DebugFlags.class)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS)
+@SetLongFlag(
+        name = KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS,
+        value = EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS)
 public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoTestCase {
     private static final int CALLER_UID = Process.myUid();
     private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
@@ -125,7 +136,6 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
     private AdSelectionEntryDao mAdSelectionEntryDao;
     @Mock private AdOutcomeSelector mAdOutcomeSelectorMock;
     private OutcomeSelectionRunner mOutcomeSelectionRunner;
-    private Flags mFakeFlags;
     private final AdServicesLogger mAdServicesLoggerMock =
             ExtendedMockito.mock(AdServicesLoggerImpl.class);
     private ListeningExecutorService mBlockingExecutorService;
@@ -143,8 +153,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                                 AdSelectionDatabase.class)
                         .build()
                         .adSelectionEntryDao();
-        mFakeFlags = new OutcomeSelectionRunnerTestFlags();
-        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
         mOutcomeSelectionRunner =
                 new OutcomeSelectionRunner(
                         CALLER_UID,
@@ -156,7 +165,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                         mAdServicesLoggerMock,
                         mContext,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilter,
                         DevContext.createForDevOptionsDisabled(),
                         false);
@@ -267,7 +276,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
 
     @Test
     public void testRunOutcomeSelectionRevokedUserConsentEmptyResult_UXNotificationNotEnforced() {
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
 
         doThrow(new FilterException(new ConsentManager.RevokedConsentException()))
                 .when(mAdSelectionServiceFilter)
@@ -308,7 +317,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                         mAdServicesLoggerMock,
                         mContext,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilter,
                         DevContext.createForDevOptionsDisabled(),
                         false);
@@ -348,25 +357,10 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
     }
 
     @Test
+    @SetLongFlag(name = KEY_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS, value = 300)
+    @SetLongFlag(name = KEY_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS, value = 100)
+    @SetFlagTrue(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testRunOutcomeSelectionOrchestrationTimeoutFailure() {
-        mFakeFlags =
-                new OutcomeSelectionRunnerTestFlags() {
-                    @Override
-                    public long getAdSelectionSelectingOutcomeTimeoutMs() {
-                        return 300;
-                    }
-
-                    @Override
-                    public boolean getDisableFledgeEnrollmentCheck() {
-                        return true;
-                    }
-
-                    @Override
-                    public long getAdSelectionFromOutcomesOverallTimeoutMs() {
-                        return 100;
-                    }
-                };
-
         List<AdSelectionResultBidAndUri> adSelectionIdWithBidAndRenderUris =
                 List.of(AD_SELECTION_WITH_BID_1, AD_SELECTION_WITH_BID_2, AD_SELECTION_WITH_BID_3);
         for (AdSelectionResultBidAndUri idWithBid : adSelectionIdWithBidAndRenderUris) {
@@ -401,7 +395,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                         mAdServicesLoggerMock,
                         mContext,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilter,
                         DevContext.createForDevOptionsDisabled(),
                         false);
@@ -485,7 +479,7 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
                 });
     }
 
-    static class AdSelectionTestCallback extends AdSelectionCallback.Stub {
+    private static final class AdSelectionTestCallback extends AdSelectionCallback.Stub {
 
         final CountDownLatch mCountDownLatch;
         boolean mIsSuccess = false;
@@ -513,7 +507,8 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
         }
     }
 
-    static class GenericListMatcher implements ArgumentMatcher<List<AdSelectionResultBidAndUri>> {
+    private static final class GenericListMatcher
+            implements ArgumentMatcher<List<AdSelectionResultBidAndUri>> {
         private final List<AdSelectionResultBidAndUri> mTruth;
 
         GenericListMatcher(List<AdSelectionResultBidAndUri> truth) {
@@ -524,18 +519,6 @@ public final class OutcomeSelectionRunnerTest extends AdServicesExtendedMockitoT
         public boolean matches(List<AdSelectionResultBidAndUri> argument) {
             return mTruth.size() == argument.size()
                     && new HashSet<>(mTruth).equals(new HashSet<>(argument));
-        }
-    }
-
-    private static class OutcomeSelectionRunnerTestFlags implements Flags {
-        @Override
-        public long getAdSelectionSelectingOutcomeTimeoutMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_SELECTING_OUTCOME_TIMEOUT_MS;
-        }
-
-        @Override
-        public long getAdSelectionFromOutcomesOverallTimeoutMs() {
-            return EXTENDED_FLEDGE_AD_SELECTION_FROM_OUTCOMES_OVERALL_TIMEOUT_MS;
         }
     }
 }

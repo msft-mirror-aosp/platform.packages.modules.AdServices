@@ -17,11 +17,14 @@
 package com.android.adservices.service.adselection.encryption;
 
 import static com.android.adservices.service.adselection.encryption.AdSelectionEncryptionKey.AdSelectionEncryptionKeyType.AUCTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_CONTEXT_NOT_FOUND;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.DBEncryptionContext;
 import com.android.adservices.data.adselection.EncryptionContextDao;
 import com.android.adservices.data.adselection.EncryptionKeyConstants;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.ohttp.EncapsulatedSharedSecret;
 import com.android.adservices.ohttp.ObliviousHttpKeyConfig;
 import com.android.adservices.ohttp.ObliviousHttpRequestContext;
@@ -60,6 +63,11 @@ public class ObliviousHttpRequestContextMarshaller {
                             "Encryption context cannot be found for the given id: %s",
                             contextId);
             sLogger.e(err);
+            // Illegal argument exception is only thrown when encryption context is not found in the
+            // database.
+            ErrorLogUtil.e(
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__OBLIVIOUS_HTTP_ENCRYPTOR_CONTEXT_NOT_FOUND,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
             throw new IllegalArgumentException(err);
         }
         return ObliviousHttpRequestContext.create(

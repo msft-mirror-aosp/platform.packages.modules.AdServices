@@ -520,14 +520,6 @@
       ]
     },
     {
-      "name": "AdExtServicesTestUtilityTests",
-      "options": [
-        {
-          "exclude-annotation": "androidx.test.filters.FlakyTest"
-        }
-      ]
-    },
-    {
       "name": "CtsAdExtServicesDeviceTestCases",
       "options": [
         {

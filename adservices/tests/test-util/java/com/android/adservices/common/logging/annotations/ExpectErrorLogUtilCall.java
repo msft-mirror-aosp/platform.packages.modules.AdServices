@@ -24,7 +24,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Used to specify expected {@code ErrorLogUtil.e(int, int)} calls over test methods.
+ * Used to specify expected {@code ErrorLogUtil.e(int, int)} calls over test methods. This
+ * annotation can be used for verifying background calls as well.
  *
  * <ol>
  *   <li>To verify ErrorLogUtil.e(int, int) calls: @ExpectErrorLogUtilCall(X, Y)

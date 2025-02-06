@@ -51,12 +51,10 @@ import com.android.adservices.service.PhFlags;
 import com.android.adservices.shared.testing.AndroidLogger;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.Logger.RealLogger;
-import com.android.adservices.shared.testing.NameValuePair;
+import com.android.adservices.shared.testing.NameValuePairSetter;
 import com.android.modules.utils.build.SdkLevel;
 
 import com.google.common.annotations.VisibleForTesting;
-
-import java.util.function.Consumer;
 
 public final class AdServicesFlagsSetterRule
         extends AbstractAdServicesFlagsSetterRule<AdServicesFlagsSetterRule> {
@@ -76,7 +74,7 @@ public final class AdServicesFlagsSetterRule
     }
 
     @VisibleForTesting
-    AdServicesFlagsSetterRule(RealLogger logger, Consumer<NameValuePair> flagsSetter) {
+    AdServicesFlagsSetterRule(RealLogger logger, NameValuePairSetter flagsSetter) {
         super(logger, flagsSetter);
         mAdoptShellPermissions = false;
     }

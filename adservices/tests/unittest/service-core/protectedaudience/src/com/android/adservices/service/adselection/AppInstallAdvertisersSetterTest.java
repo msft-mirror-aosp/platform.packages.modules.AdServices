@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED;
 import static com.android.adservices.service.adselection.AppInstallAdvertisersSetter.FILTERING_IS_DISABLED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SET_APP_INSTALL_ADVERTISERS;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
@@ -46,7 +47,6 @@ import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.DBAppInstallPermissions;
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -56,15 +56,15 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.util.concurrent.ListeningExecutorService;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 import org.mockito.verification.VerificationMode;
 
 import java.util.Arrays;
@@ -73,9 +73,9 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
-@RunWith(MockitoJUnitRunner.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(DebugFlags.class)
+@SetFlagTrue(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
 public class AppInstallAdvertisersSetterTest extends AdServicesExtendedMockitoTestCase {
 
     private static final int UID = 42;
@@ -103,16 +103,14 @@ public class AppInstallAdvertisersSetterTest extends AdServicesExtendedMockitoTe
 
     @Before
     public void setup() {
-        boolean filteringEnabled = true;
-        Flags flags = new AppInstallAdvertisersSetterTestFlags(filteringEnabled);
-        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
         mAppInstallAdvertisersSetter =
                 new AppInstallAdvertisersSetter(
                         mAppInstallDaoMock,
                         mExecutorService,
                         mAdServicesLogger,
-                        flags,
-                        mMockDebugFlags,
+                        mFakeFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilter,
                         mConsentManager,
                         UID,
@@ -146,15 +144,14 @@ public class AppInstallAdvertisersSetterTest extends AdServicesExtendedMockitoTe
     @Test
     public void testSetAppInstallAdvertisersSuccessWithUxNotificationEnforcementDisabled()
             throws Exception {
-        Flags flags = new AppInstallAdvertisersSetterTestFlags(true);
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
         AppInstallAdvertisersSetter appInstallAdvertisersSetter =
                 new AppInstallAdvertisersSetter(
                         mAppInstallDaoMock,
                         mExecutorService,
                         mAdServicesLogger,
-                        flags,
-                        mMockDebugFlags,
+                        mFakeFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilter,
                         mConsentManager,
                         UID,
@@ -182,9 +179,8 @@ public class AppInstallAdvertisersSetterTest extends AdServicesExtendedMockitoTe
     }
 
     @Test
+    @SetFlagFalse(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED)
     public void testSetAppInstallAdvertisersDisabledFailure() throws Exception {
-        boolean filteringEnabled = false;
-        Flags flags = new AppInstallAdvertisersSetterTestFlags(filteringEnabled);
         when(mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(any()))
                 .thenReturn(false);
         AppInstallAdvertisersSetter appInstallAdvertisersSetter =
@@ -192,8 +188,8 @@ public class AppInstallAdvertisersSetterTest extends AdServicesExtendedMockitoTe
                         mAppInstallDaoMock,
                         mExecutorService,
                         mAdServicesLogger,
-                        flags,
-                        mMockDebugFlags,
+                        mFakeFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilter,
                         mConsentManager,
                         UID,
@@ -397,7 +393,7 @@ public class AppInstallAdvertisersSetterTest extends AdServicesExtendedMockitoTe
                 .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME_1);
     }
 
-    public static class SetAppInstallAdvertisersTestCallback
+    public static final class SetAppInstallAdvertisersTestCallback
             extends SetAppInstallAdvertisersCallback.Stub {
         private final CountDownLatch mCountDownLatch;
         boolean mIsSuccess = false;
@@ -417,19 +413,6 @@ public class AppInstallAdvertisersSetterTest extends AdServicesExtendedMockitoTe
         public void onFailure(FledgeErrorResponse fledgeErrorResponse) {
             mFledgeErrorResponse = fledgeErrorResponse;
             mCountDownLatch.countDown();
-        }
-    }
-
-    private static class AppInstallAdvertisersSetterTestFlags implements Flags {
-        private final boolean mAppInstallFilteringEnabled;
-
-        AppInstallAdvertisersSetterTestFlags(boolean filteringEnabled) {
-            mAppInstallFilteringEnabled = filteringEnabled;
-        }
-
-        @Override
-        public boolean getFledgeAppInstallFilteringEnabled() {
-            return mAppInstallFilteringEnabled;
         }
     }
 }

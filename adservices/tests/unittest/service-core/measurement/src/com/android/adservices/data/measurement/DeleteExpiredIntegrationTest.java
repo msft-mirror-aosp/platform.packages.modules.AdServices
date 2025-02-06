@@ -30,11 +30,9 @@ import java.io.InputStream;
 import java.util.Collection;
 import java.util.Map;
 
-/**
- * Tests for {@link MeasurementDao} app deletion that affect the database.
- */
+/** Tests for {@link MeasurementDao} app deletion that affect the database. */
 @RunWith(Parameterized.class)
-public class DeleteExpiredIntegrationTest extends AbstractDbIntegrationTest {
+public final class DeleteExpiredIntegrationTest extends AbstractDbIntegrationTest {
 
     @Parameterized.Parameters(name = "{3}")
     public static Collection<Object[]> data() throws IOException, JSONException {

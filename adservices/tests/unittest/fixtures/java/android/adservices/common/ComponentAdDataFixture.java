@@ -52,4 +52,12 @@ public final class ComponentAdDataFixture {
         return new ComponentAdData(
                 getValidRenderUriByBuyer(buyer, sequenceNumber), AdDataFixture.VALID_RENDER_ID);
     }
+
+    /**
+     * @return a component ad with a specified render id.
+     */
+    public static ComponentAdData getValidComponentAdDataWithAdRenderId(
+            AdTechIdentifier buyer, int sequenceNumber, String adRenderId) {
+        return new ComponentAdData(getValidRenderUriByBuyer(buyer, sequenceNumber), adRenderId);
+    }
 }

@@ -18,11 +18,11 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.common.CommonFixture.VALID_WINNING_SELLER_2;
 
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.adselection.AuctionResultValidator.BUYER_EMPTY;
 import static com.android.adservices.service.adselection.AuctionResultValidator.BUYER_ENROLLMENT;
 import static com.android.adservices.service.adselection.AuctionResultValidator.NEGATIVE_BID;
 import static com.android.adservices.service.adselection.AuctionResultValidator.NEGATIVE_SCORE;
-import static com.android.adservices.service.adselection.AuctionResultValidator.WINNING_SELLER_EMPTY;
 import static com.android.adservices.service.adselection.AuctionResultValidator.WINNING_SELLER_ENROLLMENT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AUCTION_RESULT_VALIDATOR_AD_TECH_NOT_ALLOWED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
@@ -53,7 +53,7 @@ import java.util.Collection;
 import java.util.Locale;
 
 @SetErrorLogUtilDefaultParams(
-        throwable = ExpectErrorLogUtilWithExceptionCall.Any.class,
+        throwable = Any.class,
         ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE)
 public class AuctionResultValidatorTest extends AdServicesExtendedMockitoTestCase {
     private static final AdTechIdentifier WINNER_BUYER = CommonFixture.VALID_BUYER_1;
@@ -158,15 +158,6 @@ public class AuctionResultValidatorTest extends AdServicesExtendedMockitoTestCas
     }
 
     @Test
-    public void testValidate_winningSellerEmpty() {
-        Collection<String> violations =
-                mAuctionResultValidatorWithWinningSellerInAdSelectionOutcome
-                        .getValidationViolations(
-                                getValidAuctionResultBuilder().setWinningSeller("").build());
-        ValidatorTestUtil.assertViolationContainsOnly(violations, WINNING_SELLER_EMPTY);
-    }
-
-    @Test
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AUCTION_RESULT_VALIDATOR_AD_TECH_NOT_ALLOWED)
@@ -179,7 +170,10 @@ public class AuctionResultValidatorTest extends AdServicesExtendedMockitoTestCas
                 mAuctionResultValidatorWithWinningSellerInAdSelectionOutcome
                         .getValidationViolations(
                                 getValidAuctionResultBuilder()
-                                        .setWinningSeller(VALID_WINNING_SELLER_2.toString())
+                                        .setAuctionParams(
+                                                AuctionResult.AuctionParams.newBuilder()
+                                                        .setComponentSeller(
+                                                                VALID_WINNING_SELLER_2.toString()))
                                         .build());
 
         ValidatorTestUtil.assertViolationContainsOnly(
@@ -198,7 +192,9 @@ public class AuctionResultValidatorTest extends AdServicesExtendedMockitoTestCas
                 new AuctionResultValidator(mFledgeAuthorizationFilterMock, true, false);
         validationWithWinningSellerInAdSelectionOutcomeDisabled.validate(
                 getValidAuctionResultBuilder()
-                        .setWinningSeller(VALID_WINNING_SELLER_2.toString())
+                        .setAuctionParams(
+                                AuctionResult.AuctionParams.newBuilder()
+                                        .setComponentSeller(VALID_WINNING_SELLER_2.toString()))
                         .build());
     }
 }

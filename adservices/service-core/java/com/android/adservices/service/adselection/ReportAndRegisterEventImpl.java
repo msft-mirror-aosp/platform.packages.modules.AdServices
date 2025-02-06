@@ -20,6 +20,11 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ER
 import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_AND_REGISTER_EVENT_IMPL_FAILED_DUE_TO_INTERNAL_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_AND_REGISTER_EVENT_IMPL_FAILED_DUE_TO_IO_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_AND_REGISTER_EVENT_IMPL_REGISTER_EVENT_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION;
+
 import android.adservices.adselection.ReportInteractionCallback;
 import android.adservices.adselection.ReportInteractionInput;
 import android.annotation.NonNull;
@@ -29,6 +34,7 @@ import android.net.Uri;
 import android.os.Build;
 
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -59,6 +65,8 @@ import java.util.concurrent.ExecutorService;
 /** Implements an {@link EventReporter} that reports and registers an event. */
 @RequiresApi(Build.VERSION_CODES.S)
 class ReportAndRegisterEventImpl extends EventReporter {
+    private static final int CEL_PPAPI_NAME =
+            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION;
     @NonNull private final MeasurementImpl mMeasurementService;
     @NonNull final ConsentManager mConsentManager;
     @NonNull final Context mContext;
@@ -169,7 +177,7 @@ class ReportAndRegisterEventImpl extends EventReporter {
                                         LOGGING_API_NAME,
                                         input.getCallerPackageName(),
                                         STATUS_SUCCESS,
-                                        /*latencyMs=*/ 0);
+                                        /* latencyMs= */ 0);
                             }
 
                             @Override
@@ -180,13 +188,21 @@ class ReportAndRegisterEventImpl extends EventReporter {
                                             LOGGING_API_NAME,
                                             input.getCallerPackageName(),
                                             STATUS_IO_ERROR,
-                                            /*latencyMs=*/ 0);
+                                            /* latencyMs= */ 0);
+                                    ErrorLogUtil.e(
+                                            t,
+                                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_AND_REGISTER_EVENT_IMPL_FAILED_DUE_TO_IO_EXCEPTION,
+                                            CEL_PPAPI_NAME);
                                 } else {
                                     mAdServicesLogger.logFledgeApiCallStats(
                                             LOGGING_API_NAME,
                                             input.getCallerPackageName(),
                                             STATUS_INTERNAL_ERROR,
-                                            /*latencyMs=*/ 0);
+                                            /* latencyMs= */ 0);
+                                    ErrorLogUtil.e(
+                                            t,
+                                            AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_AND_REGISTER_EVENT_IMPL_FAILED_DUE_TO_INTERNAL_ERROR,
+                                            CEL_PPAPI_NAME);
                                 }
                             }
                         },
@@ -254,6 +270,10 @@ class ReportAndRegisterEventImpl extends EventReporter {
                                                     input.getAdId());
                                         } catch (Exception e) {
                                             sLogger.d(e, "registerEvent() call failed.");
+                                            ErrorLogUtil.e(
+                                                    e,
+                                                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_AND_REGISTER_EVENT_IMPL_REGISTER_EVENT_FAILED,
+                                                    CEL_PPAPI_NAME);
                                             throw e;
                                         }
                                         return null;

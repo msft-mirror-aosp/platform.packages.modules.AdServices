@@ -47,6 +47,7 @@ import org.json.JSONException;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -164,7 +165,9 @@ public class MeasurementDataDeleter {
         dao.updateSourceStatus(sourceIdsUninstall.second, Source.Status.MARKED_TO_DELETE);
         dao.updateTriggerStatus(triggerIdsUninstall.second, Trigger.Status.MARKED_TO_DELETE);
 
-        deleteInternal(dao, deletionParam, sourceIdsUninstall.first, triggerIdsUninstall.first);
+        // Mutable set, deleteInternal may need to add to triggerIds if full flex
+        Set<String> triggerIdsMutable = new HashSet<>(triggerIdsUninstall.first);
+        deleteInternal(dao, deletionParam, sourceIdsUninstall.first, triggerIdsMutable);
         return true;
     }
 

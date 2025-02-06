@@ -42,6 +42,5 @@ android_test {
     min_sdk_version: "Tiramisu",
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
-        test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }

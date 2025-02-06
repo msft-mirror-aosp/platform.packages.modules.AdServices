@@ -16,6 +16,8 @@
 
 package com.android.adservices.signals;
 
+import static com.android.adservices.service.FlagsConstants.KEY_GA_UX_FEATURE_ENABLED;
+import static com.android.adservices.service.FlagsConstants.KEY_PROTECTED_SIGNALS_ENABLED;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
@@ -33,11 +35,8 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.IBinder;
 
-import androidx.test.core.app.ApplicationProvider;
-
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.download.MddJob;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.PackageChangedReceiver;
 import com.android.adservices.service.consent.AdServicesApiConsent;
 import com.android.adservices.service.consent.AdServicesApiType;
@@ -47,40 +46,31 @@ import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnitRunner;
 
 /** Service tests for protected signals */
 @SpyStatic(ConsentManager.class)
 @SpyStatic(ProtectedSignalsServiceImpl.class)
 @SpyStatic(PackageChangedReceiver.class)
 @SpyStatic(MddJob.class)
-@RunWith(MockitoJUnitRunner.class)
 public final class ProtectedSignalsServiceTest extends AdServicesExtendedMockitoTestCase {
 
-    private final Flags mFlagsWithKillSwitchOnGaUxDisabled =
-            new FlagsWithKillSwitchOnGaUxDisabled();
-    private final Flags mFlagsWithKillSwitchOnGaUxEnabled = new FlagsWithKillSwitchOnGaUxEnabled();
-    private final Flags mFlagsWithKillSwitchOffGaUxEnabled =
-            new FlagsWithKillSwitchOffGaUxEnabled();
-
     @Mock private ProtectedSignalsServiceImpl mMockProtectedSignalsServiceImpl;
-    @Mock private ConsentManager mConsentManagerMock;
-    @Mock private PackageManager mPackageManagerMock;
+    @Mock private ConsentManager mMockConsentManager;
+    @Mock private PackageManager mMockPackageManager;
 
     /**
      * Test whether the service is not bindable when the kill switch is off with the GA UX flag off.
      */
     @Test
     public void testBindableProtectedSignalsServiceKillSwitchOnGaUxDisabled() {
-        ProtectedSignalsService protectedSignalsService =
-                new ProtectedSignalsService(mFlagsWithKillSwitchOnGaUxDisabled);
+        setFlagsWithKillSwitchOnGaUxDisabled();
+        ProtectedSignalsService protectedSignalsService = new ProtectedSignalsService(mFakeFlags);
         protectedSignalsService.onCreate();
         IBinder binder = protectedSignalsService.onBind(getIntentForProtectedSignalsService());
         assertNull(binder);
 
-        verifyZeroInteractions(mConsentManagerMock);
+        verifyZeroInteractions(mMockConsentManager);
         verify(MddJob::scheduleAllMddJobs, never());
     }
 
@@ -89,13 +79,13 @@ public final class ProtectedSignalsServiceTest extends AdServicesExtendedMockito
      */
     @Test
     public void testBindableProtectedSignalsServiceKillSwitchOnGaUxEnabled() {
-        ProtectedSignalsService protectedSignalsService =
-                new ProtectedSignalsService(mFlagsWithKillSwitchOnGaUxEnabled);
+        setFlagsWithKillSwitchOnGaUxEnabled();
+        ProtectedSignalsService protectedSignalsService = new ProtectedSignalsService(mFakeFlags);
         protectedSignalsService.onCreate();
         IBinder binder = protectedSignalsService.onBind(getIntentForProtectedSignalsService());
         assertNull(binder);
 
-        verifyZeroInteractions(mConsentManagerMock);
+        verifyZeroInteractions(mMockConsentManager);
         verify(MddJob::scheduleAllMddJobs, never());
     }
 
@@ -107,68 +97,47 @@ public final class ProtectedSignalsServiceTest extends AdServicesExtendedMockito
     public void testBindableProtectedSignalsServiceKillSwitchOffGaUxEnabled() {
         doReturn(mMockProtectedSignalsServiceImpl)
                 .when(() -> ProtectedSignalsServiceImpl.create(any(Context.class)));
-        doReturn(mConsentManagerMock).when(() -> ConsentManager.getInstance());
+        doReturn(mMockConsentManager).when(() -> ConsentManager.getInstance());
         doReturn(AdServicesApiConsent.GIVEN)
-                .when(mConsentManagerMock)
+                .when(mMockConsentManager)
                 .getConsent(eq(AdServicesApiType.FLEDGE));
         ExtendedMockito.doReturn(true)
                 .when(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
         doNothing().when(MddJob::scheduleAllMddJobs);
 
+        setFlagsWithKillSwitchOffGaUxEnabled();
         ProtectedSignalsService protectedSignalsServiceSpy =
-                new ProtectedSignalsService(mFlagsWithKillSwitchOffGaUxEnabled);
+                new ProtectedSignalsService(mFakeFlags);
 
         spyOn(protectedSignalsServiceSpy);
-        doReturn(mPackageManagerMock).when(protectedSignalsServiceSpy).getPackageManager();
+        doReturn(mMockPackageManager).when(protectedSignalsServiceSpy).getPackageManager();
 
         protectedSignalsServiceSpy.onCreate();
         IBinder binder = protectedSignalsServiceSpy.onBind(getIntentForProtectedSignalsService());
         assertNotNull(binder);
 
-        verify(mConsentManagerMock, never()).getConsent();
-        verify(mConsentManagerMock).getConsent(eq(AdServicesApiType.FLEDGE));
+        verify(mMockConsentManager, never()).getConsent();
+        verify(mMockConsentManager).getConsent(eq(AdServicesApiType.FLEDGE));
         verify(() -> PackageChangedReceiver.enableReceiver(any(Context.class), any()));
         verify(MddJob::scheduleAllMddJobs);
     }
 
     private Intent getIntentForProtectedSignalsService() {
-        return new Intent(
-                ApplicationProvider.getApplicationContext(), ProtectedSignalsService.class);
+        return new Intent(mAppContext, ProtectedSignalsService.class);
     }
 
-    private static class FlagsWithKillSwitchOnGaUxDisabled implements Flags {
-        @Override
-        public boolean getProtectedSignalsEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean getGaUxFeatureEnabled() {
-            return false;
-        }
+    private void setFlagsWithKillSwitchOnGaUxDisabled() {
+        flags.setFlag(KEY_PROTECTED_SIGNALS_ENABLED, false);
+        flags.setFlag(KEY_GA_UX_FEATURE_ENABLED, false);
     }
 
-    private static class FlagsWithKillSwitchOnGaUxEnabled implements Flags {
-        @Override
-        public boolean getProtectedSignalsEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean getGaUxFeatureEnabled() {
-            return true;
-        }
+    private void setFlagsWithKillSwitchOnGaUxEnabled() {
+        flags.setFlag(KEY_PROTECTED_SIGNALS_ENABLED, false);
+        flags.setFlag(KEY_GA_UX_FEATURE_ENABLED, true);
     }
 
-    private static class FlagsWithKillSwitchOffGaUxEnabled implements Flags {
-        @Override
-        public boolean getProtectedSignalsEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean getGaUxFeatureEnabled() {
-            return true;
-        }
+    private void setFlagsWithKillSwitchOffGaUxEnabled() {
+        flags.setFlag(KEY_PROTECTED_SIGNALS_ENABLED, true);
+        flags.setFlag(KEY_GA_UX_FEATURE_ENABLED, true);
     }
 }

@@ -293,4 +293,11 @@ public interface AdServicesLogger {
     /** Logs stats for ScheduledCustomAudienceUpdatePerformedFailure */
     void logScheduledCustomAudienceUpdatePerformedFailureStats(
             ScheduledCustomAudienceUpdatePerformedFailureStats stats);
+
+    /** Logs stats for NumberOfTypesOfReportingUrlsReceivedStats */
+    void logNumberOfTypesOfReportingUrlsReceivedStats(
+            NumberOfTypesOfReportingUrlsReceivedStats stats);
+
+    /** Logs stats for ReportingWithDestinationPerformedStats */
+    void logReportingWithDestinationPerformedStats(ReportingWithDestinationPerformedStats stats);
 }

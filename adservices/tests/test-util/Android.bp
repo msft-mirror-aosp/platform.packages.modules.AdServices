@@ -70,6 +70,7 @@ android_library {
         "adservices-service-core",
         "adservices-shared-mockito-expectations", // TODO(b/338132355): should not be needed if mocker is split
         "adservices-shared-testing",
+        "adservices-shared-flags-backend", // TODO(b/391406689): should be provided by adservices-service-core"
         "androidx.test.runner",
         "compatibility-device-util-axt",
         "modules-utils-preconditions",
@@ -130,10 +131,8 @@ filegroup {
         "java/com/android/adservices/mockito/AdServicesMockitoJobMocker.java",
         // Flags-related - interface and implementation
         "java/com/android/adservices/mockito/AdServicesFlagsMocker.java",
-        "java/com/android/adservices/mockito/AdServicesDebugFlagsMocker.java",
         // ... and implementation
         "java/com/android/adservices/mockito/AdServicesMockitoFlagsMocker.java",
-        "java/com/android/adservices/mockito/AdServicesMockitoDebugFlagsMocker.java",
     ],
     path: "java",
     visibility: [

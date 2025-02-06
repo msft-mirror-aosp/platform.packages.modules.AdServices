@@ -33,6 +33,14 @@ public class ShellCommandArgParserHelper {
      * @return An unmodifiable map of key, value parsing args from the provided start index.
      */
     public static ImmutableMap<String, String> parseCliArguments(String[] args, int startIndex) {
+        return parseCliArguments(args, startIndex, false);
+    }
+
+    /**
+     * @return An unmodifiable map of key, value parsing args from the provided start index.
+     */
+    public static ImmutableMap<String, String> parseCliArguments(
+            String[] args, int startIndex, boolean removeKeyPrefix) {
         Map<String, String> argsMap = new HashMap<>();
         for (int i = startIndex; i < args.length; i += 2) {
             String key = args[i];
@@ -50,6 +58,9 @@ public class ShellCommandArgParserHelper {
                     key,
                     value);
             Log.d(TAG, String.format("arg value for arg %s is %s", key, value));
+            if (removeKeyPrefix) {
+                key = key.replace("--", "");
+            }
             argsMap.put(key, value);
         }
         return ImmutableMap.copyOf(argsMap);

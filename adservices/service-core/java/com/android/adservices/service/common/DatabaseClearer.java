@@ -20,6 +20,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.signals.EncodedPayloadDao;
 import com.android.adservices.data.signals.ProtectedSignalsDao;
 import com.android.adservices.service.adselection.FrequencyCapDataClearer;
 
@@ -38,6 +39,7 @@ public final class DatabaseClearer {
     private final AppInstallDao mAppInstallDao;
     private final ProtectedSignalsDao mProtectedSignalsDao;
     private final FrequencyCapDataClearer mFrequencyCapDataClearer;
+    private final EncodedPayloadDao mEncodedPayloadDao;
     private final DatastoreManager mDatastoreManager;
     private final ListeningExecutorService mBackgroundExecutor;
 
@@ -46,6 +48,7 @@ public final class DatabaseClearer {
             AppInstallDao appInstallDao,
             FrequencyCapDataClearer frequencyCapDataClearer,
             ProtectedSignalsDao protectedSignalsDao,
+            EncodedPayloadDao encodedPayloadDao,
             DatastoreManager datastoreManager,
             ListeningExecutorService backgroundExecutor) {
         Objects.requireNonNull(customAudienceDao);
@@ -57,6 +60,7 @@ public final class DatabaseClearer {
         mAppInstallDao = appInstallDao;
         mProtectedSignalsDao = protectedSignalsDao;
         mFrequencyCapDataClearer = frequencyCapDataClearer;
+        mEncodedPayloadDao = encodedPayloadDao;
         mDatastoreManager = datastoreManager;
         mBackgroundExecutor = backgroundExecutor;
     }
@@ -89,6 +93,7 @@ public final class DatabaseClearer {
                     }
                     if (deleteProtectedSignals) {
                         mProtectedSignalsDao.deleteAllSignals();
+                        mEncodedPayloadDao.deleteAllEncodedPayloads();
                     }
                     sLogger.v(
                             "DatabaseClearer: Completed Protected Audience and App Signals"

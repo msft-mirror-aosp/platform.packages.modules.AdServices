@@ -91,4 +91,6 @@ public final class DebugFlagsConstants {
 
     public static final String KEY_FORCED_ENCODING_JOB_COMPLETE_BROADCAST_ENABLED =
             "fledge_forced_encoding_complete_broadcast_enabled";
+    public static final String KEY_ATTRIBUTION_REPORTING_CLI_ENABLED =
+            "measurement_attribution_reporting_cli_enabled";
 }

@@ -232,7 +232,6 @@ import java.util.stream.Collectors;
 @MockStatic(ConsentManager.class)
 @MockStatic(AppImportanceFilter.class)
 @MockStatic(FlagsFactory.class)
-@SkipLoggingUsageRule(reason = "b/355696393")
 @SetIntegerFlag(name = KEY_FLEDGE_KANON_PERCENTAGE_IMMEDIATE_SIGN_JOIN_CALLS, value = 100)
 @SetFlagTrue(KEY_FLEDGE_KANON_SIGN_JOIN_LOGGING_ENABLED)
 @SetFlagFalse(KEY_FLEDGE_KANON_KEY_ATTESTATION_ENABLED)
@@ -244,6 +243,8 @@ import java.util.stream.Collectors;
 @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION)
 @SetFlagTrue(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
 @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION)
+// TODO (b/384952360): refine CEL related verifications later
+@SkipLoggingUsageRule(reason = "b/384952360")
 public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
@@ -314,9 +315,6 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private AdServicesHttpsClient mAdServicesHttpsClientSpy;
     private AdServicesLogger mAdServicesLoggerMock;
-
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
 
     @Rule(order = 2)
     public final MockWebServerRule mockWebServerRule = MockWebServerRuleFactory.createForHttps();
@@ -1749,7 +1747,7 @@ public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
                 mContext,
                 mAdServicesLoggerMock,
                 mFakeFlags,
-                mMockDebugFlags,
+                mFakeDebugFlags,
                 CallingAppUidSupplierProcessImpl.create(),
                 mFledgeAuthorizationFilterMock,
                 mAdSelectionServiceFilterMock,

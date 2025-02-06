@@ -17,6 +17,7 @@
 <configuration description="Config for Ad Services Settings App test cases in ExtServices">
     <option name="test-tag" value="AdExtServicesApkUISettingsGaOtaTests"/>
     <option name="config-descriptor:metadata" key="parameter" value="not_secondary_user"/>
+    <option name="config-descriptor:metadata" key="parameter" value="not_multi_abi"/>
 
     <!-- Prevent test from running on Android T+ -->
     <object type="module_controller"

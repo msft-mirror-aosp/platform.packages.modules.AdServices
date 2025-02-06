@@ -21,6 +21,7 @@ import static android.adservices.customaudience.CustomAudience.PRIORITY_DEFAULT;
 
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.ComponentAdData;
 import android.adservices.customaudience.CustomAudience;
 
 import androidx.annotation.NonNull;
@@ -89,6 +90,13 @@ public abstract class CustomAudienceUpdatableData {
     /** Returns the bitfield of auction server request flags. */
     @CustomAudience.AuctionServerRequestFlag
     public abstract int getAuctionServerRequestFlags();
+
+    /**
+     * @return the list of component ads that were sent in the update response. If no valid ads were
+     *     sent, returns {@code null}.
+     */
+    @Nullable
+    public abstract List<ComponentAdData> getComponentAds();
 
     /**
      * @return the priority value that was sent in the update response. If no value was sent,
@@ -205,7 +213,9 @@ public abstract class CustomAudienceUpdatableData {
                         flags.getFledgeFrequencyCapFilteringEnabled(),
                         flags.getFledgeAppInstallFilteringEnabled(),
                         flags.getFledgeAuctionServerAdRenderIdEnabled(),
-                        flags.getFledgeAuctionServerAdRenderIdMaxLength());
+                        flags.getFledgeAuctionServerAdRenderIdMaxLength(),
+                        flags.getComponentAdRenderIdMaxLengthBytes(),
+                        flags.getMaxComponentAdsPerCustomAudience());
 
         ReadStatus userBiddingSignalsReadStatus =
                 readUserBiddingSignals(reader, responseHash, dataBuilder);
@@ -223,6 +233,11 @@ public abstract class CustomAudienceUpdatableData {
             priorityValueStatus = readPriority(reader, responseHash, dataBuilder);
         }
 
+        ReadStatus componentAdValueStatus = ReadStatus.STATUS_UNKNOWN;
+        if (flags.getEnableCustomAudienceComponentAds()) {
+            componentAdValueStatus = readComponentAds(reader, responseHash, dataBuilder);
+        }
+
         // If there were no useful fields found, or if there was something useful found and
         // successfully updated, then this object should signal a successful update.
         boolean containsSuccessfulUpdate =
@@ -233,7 +248,8 @@ public abstract class CustomAudienceUpdatableData {
                                 && trustedBiddingDataReadStatus == ReadStatus.STATUS_NOT_FOUND
                                 && adsReadStatus == ReadStatus.STATUS_NOT_FOUND)
                         || auctionServerFlagStatus == ReadStatus.STATUS_FOUND_VALID
-                        || priorityValueStatus == ReadStatus.STATUS_FOUND_VALID;
+                        || priorityValueStatus == ReadStatus.STATUS_FOUND_VALID
+                        || componentAdValueStatus == ReadStatus.STATUS_FOUND_VALID;
         sLogger.v(
                 "%s Completed parsing JSON response with containsSuccessfulUpdate = %b",
                 responseHash, containsSuccessfulUpdate);
@@ -382,6 +398,38 @@ public abstract class CustomAudienceUpdatableData {
         }
     }
 
+    @VisibleForTesting
+    static ReadStatus readComponentAds(
+            CustomAudienceUpdatableDataReader reader,
+            String responseHash,
+            CustomAudienceUpdatableData.Builder dataBuilder) {
+        try {
+            List<ComponentAdData> componentAdDataList = reader.getComponentAdsFromJsonObject();
+            dataBuilder.setComponentAds(componentAdDataList);
+            if (componentAdDataList == null) {
+                return ReadStatus.STATUS_NOT_FOUND;
+            } else {
+                return ReadStatus.STATUS_FOUND_VALID;
+            }
+        } catch (JSONException | NullPointerException exception) {
+            sLogger.e(
+                    exception,
+                    INVALID_JSON_TYPE_ERROR_FORMAT,
+                    responseHash,
+                    CustomAudienceUpdatableDataReader.COMPONENT_ADS_KEY);
+            dataBuilder.setComponentAds(null);
+            return ReadStatus.STATUS_FOUND_INVALID;
+        } catch (IllegalArgumentException exception) {
+            sLogger.e(
+                    exception,
+                    VALIDATION_FAILED_ERROR_FORMAT,
+                    responseHash,
+                    CustomAudienceUpdatableDataReader.COMPONENT_ADS_KEY);
+            dataBuilder.setComponentAds(null);
+            return ReadStatus.STATUS_FOUND_INVALID;
+        }
+    }
+
     /**
      * Gets a Builder to make {@link #createFromResponseString(Instant, AdTechIdentifier,
      * BackgroundFetchRunner.UpdateResultType, String, Flags, boolean)} easier.
@@ -391,7 +439,8 @@ public abstract class CustomAudienceUpdatableData {
     public static CustomAudienceUpdatableData.Builder builder() {
         return new AutoValue_CustomAudienceUpdatableData.Builder()
                 .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_DEFAULT)
-                .setPriority(PRIORITY_DEFAULT);
+                .setPriority(PRIORITY_DEFAULT)
+                .setComponentAds(null);
     }
 
     /**
@@ -422,6 +471,9 @@ public abstract class CustomAudienceUpdatableData {
         @NonNull
         public abstract Builder setAuctionServerRequestFlags(
                 @CustomAudience.AuctionServerRequestFlag int auctionServerRequestFlags);
+
+        /** Sets component ads. */
+        public abstract Builder setComponentAds(@Nullable List<ComponentAdData> componentAds);
 
         /** Sets the priority value found in the response string. */
         @NonNull
@@ -459,7 +511,8 @@ public abstract class CustomAudienceUpdatableData {
                     updatableData.getContainsSuccessfulUpdate()
                             || (updatableData.getUserBiddingSignals() == null
                                     && updatableData.getTrustedBiddingData() == null
-                                    && updatableData.getAds() == null),
+                                    && updatableData.getAds() == null
+                                    && updatableData.getComponentAds() == null),
                     "CustomAudienceUpdatableData should not contain non-null updatable fields if"
                             + " the object does not represent a successful update");
 

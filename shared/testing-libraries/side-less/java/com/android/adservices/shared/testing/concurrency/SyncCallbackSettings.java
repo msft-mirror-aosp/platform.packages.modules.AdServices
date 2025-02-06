@@ -163,14 +163,14 @@ public final class SyncCallbackSettings implements Identifiable {
 
         /** See {@link SyncCallbackSettings#getExpectedNumberCalls()}. */
         public Builder setExpectedNumberCalls(int value) {
-            assertIsPositive(value);
+            assertNonNegative(value);
             mExpectedNumberCalls = value;
             return this;
         }
 
         /** See {@link SyncCallbackSettings#getMaxTimeoutMs(long)}. */
         public Builder setMaxTimeoutMs(long value) {
-            assertIsPositive(value);
+            assertNonNegative(value);
             mMaxTimeoutMs = value;
             return this;
         }
@@ -187,9 +187,9 @@ public final class SyncCallbackSettings implements Identifiable {
         }
     }
 
-    private static void assertIsPositive(long value) {
-        if (value <= 0) {
-            throw new IllegalArgumentException("must be a positive value");
+    private static void assertNonNegative(long value) {
+        if (value < 0) {
+            throw new IllegalArgumentException("value must be >= 0");
         }
     }
 }

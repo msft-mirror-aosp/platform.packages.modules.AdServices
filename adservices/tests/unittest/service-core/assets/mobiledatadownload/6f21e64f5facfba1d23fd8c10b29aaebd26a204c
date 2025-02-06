@@ -1,0 +1,13 @@
+[
+  {
+    "keyType": "Encryption",
+    "enrollmentId": "ptb",
+    "reportingOrigin": "https://ptb-fledge-static-5jyy5ulagq-uc.a.run.app",
+    "encryptionKeyUrl": "https://ptb-fledge-static-5jyy5ulagq-uc.a.run.app/.well-knonwn/encryption-keys",
+    "protocolType": "HPKE",
+    "keyId": 101,
+    "body": "kUQCXNXPUEnNQp2V7++n57oaiWBUzbHWyTuseRNLH18=",
+    "expiration": 1746672305000,
+    "version": 3
+  }
+]

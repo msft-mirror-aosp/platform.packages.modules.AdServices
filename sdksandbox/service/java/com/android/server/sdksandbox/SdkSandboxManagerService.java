@@ -30,7 +30,6 @@ import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 import static com.android.adservices.flags.Flags.sdksandboxDumpEffectiveTargetSdkVersion;
 import static com.android.adservices.flags.Flags.sdksandboxInvalidateEffectiveTargetSdkVersionCache;
 import static com.android.adservices.flags.Flags.sdksandboxUseEffectiveTargetSdkVersionForRestrictions;
-import static com.android.sdksandbox.flags.Flags.sandboxActivitySdkBasedContext;
 import static com.android.sdksandbox.flags.Flags.serviceRestrictionPackageNameLogicUpdated;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION;
 import static com.android.server.sdksandbox.SdkSandboxStorageManager.StorageDirInfo;
@@ -220,6 +219,13 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
 
     private static final String WEBVIEW_SAFE_MODE_CONTENT_PROVIDER = "SafeModeContentProvider";
 
+    private final Object mPackageAddedBroadcastReceiverLock = new Object();
+
+    // TODO(b/390624441): Needed to handle when flag value changes for
+    // getEnableHsumSupportForSdkStorage() flag. Remove during clean up.
+    @GuardedBy("mPackageAddedBroadcastReceiverLock")
+    private BroadcastReceiver mPackageAddedBroadcastReceiver;
+
     // If AdServices register itself as binder service, dump() will ignore the --AdServices option
     @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
     static final String DUMP_AD_SERVICES_MESSAGE_HANDLED_BY_AD_SERVICES_ITSELF =
@@ -352,9 +358,9 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         handlerThread.start();
         mHandler = new Handler(handlerThread.getLooper());
 
+        mSdkSandboxSettingsListener = new SdkSandboxSettingsListener(mContext, this);
         registerBroadcastReceivers();
 
-        mSdkSandboxSettingsListener = new SdkSandboxSettingsListener(mContext, this);
         mSdkSandboxPulledAtoms.initialize(mContext);
 
         if (SdkLevel.isAtLeastU()) {
@@ -367,7 +373,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         registerVerifierBroadcastReceiver();
     }
 
-    private void registerPackageUpdateBroadcastReceiver() {
+    // TODO(b/390624441): Make method private again during clean up.
+    void registerPackageUpdateBroadcastReceiver() {
         // Register for package addition and update
         IntentFilter packageAddedIntentFilter = new IntentFilter();
         packageAddedIntentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
@@ -394,11 +401,30 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                         }
                     }
                 };
-        mContext.registerReceiver(
-                packageAddedIntentReceiver,
-                packageAddedIntentFilter,
-                /*broadcastPermission=*/ null,
-                mHandler);
+
+        synchronized (mPackageAddedBroadcastReceiverLock) {
+            // First unregister any existing receiver
+            if (mPackageAddedBroadcastReceiver != null) {
+                mContext.unregisterReceiver(mPackageAddedBroadcastReceiver);
+            }
+
+            if (mSdkSandboxSettingsListener.getEnableHsumSupportForSdkStorage()) {
+                mContext.registerReceiverForAllUsers(
+                        packageAddedIntentReceiver,
+                        packageAddedIntentFilter,
+                        /* broadcastPermission= */ null,
+                        mHandler,
+                        Context.RECEIVER_EXPORTED);
+            } else {
+                mContext.registerReceiver(
+                        packageAddedIntentReceiver,
+                        packageAddedIntentFilter,
+                        /* broadcastPermission= */ null,
+                        mHandler);
+            }
+
+            mPackageAddedBroadcastReceiver = packageAddedIntentReceiver;
+        }
     }
 
     private void invalidateCachePostW(int appUid) {
@@ -1988,28 +2014,6 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
                 == PackageManager.PERMISSION_GRANTED;
     }
 
-    // TODO(b/300059435): remove once the {@link
-    // SdkSandboxActivityAuthority#isSdkSandboxActivityIntent} API is stable.
-    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
-    boolean isSdkSandboxActivity(Intent intent) {
-        if (intent == null) {
-            return false;
-        }
-        if (intent.getAction() != null
-                && intent.getAction().equals(ACTION_START_SANDBOXED_ACTIVITY)) {
-            return true;
-        }
-        final String sandboxPackageName = mContext.getPackageManager().getSdkSandboxPackageName();
-        if (intent.getPackage() != null && intent.getPackage().equals(sandboxPackageName)) {
-            return true;
-        }
-        if (intent.getComponent() != null
-                && intent.getComponent().getPackageName().equals(sandboxPackageName)) {
-            return true;
-        }
-        return false;
-    }
-
     /** @hide */
     public static class Lifecycle extends SystemService {
         @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
@@ -2051,10 +2055,7 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
             }
 
             boolean isSdkSandboxActivity =
-                    (sandboxActivitySdkBasedContext())
-                            ? SdkSandboxActivityAuthority.isSdkSandboxActivityIntent(
-                                    mContext, intent)
-                            : isSdkSandboxActivity(intent);
+                    SdkSandboxActivityAuthority.isSdkSandboxActivityIntent(mContext, intent);
             if (isSdkSandboxActivity) {
                 final String sdkSandboxPackageName =
                         mContext.getPackageManager().getSdkSandboxPackageName();

@@ -16,54 +16,34 @@
 
 package com.android.adservices.service.measurement.access;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static com.google.common.truth.Truth.assertThat;
+
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import android.content.Context;
-
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
-import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.service.common.AdPackageDenyResolver;
 
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-public class PackageDenyAccessResolverTest {
-
+public final class PackageDenyAccessResolverTest extends AdServicesExtendedMockitoTestCase {
     private final Set<String> mApiGroups = Set.of("Measurement");
-    @Mock private Context mContext;
+
     @Mock private AdPackageDenyResolver mMockAdPackageDenyResolver;
 
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(ErrorLogUtil.class)
-                    .spyStatic(AdPackageDenyResolver.class)
-                    .build();
-
-    @Before
-    public void setup() {
-        MockitoAnnotations.initMocks(this);
-    }
-
     @Test
-    public void testEnablePackageDeny_Allowed() throws Exception {
+    public void testEnablePackageDeny_Allowed() {
         String appName = "testApp";
         String sdkName = "testSdk";
         ListenableFuture<Boolean> future = Futures.immediateFuture(false);
@@ -74,11 +54,11 @@ public class PackageDenyAccessResolverTest {
                 new PackageDenyAccessResolver(
                         true, mMockAdPackageDenyResolver, appName, sdkName, mApiGroups);
 
-        assertTrue(resolver.getAccessInfo(mContext).isAllowedAccess());
+        assertThat(resolver.getAccessInfo(mContext).isAllowedAccess()).isTrue();
     }
 
     @Test
-    public void testEnablePackageDeny_Denied() throws Exception {
+    public void testEnablePackageDeny_Denied() {
         String appName = "testApp";
         String sdkName = "testSdk";
         ListenableFuture<Boolean> future = Futures.immediateFuture(true);
@@ -89,11 +69,11 @@ public class PackageDenyAccessResolverTest {
                 new PackageDenyAccessResolver(
                         true, mMockAdPackageDenyResolver, appName, sdkName, mApiGroups);
 
-        assertFalse(resolver.getAccessInfo(mContext).isAllowedAccess());
+        assertThat(resolver.getAccessInfo(mContext).isAllowedAccess()).isFalse();
     }
 
     @Test
-    public void testEnablePackageDeny_Exception() throws Exception {
+    public void testEnablePackageDeny_Exception() {
         String appName = "testApp";
         String sdkName = "testSdk";
         ListenableFuture<Boolean> future =
@@ -105,10 +85,9 @@ public class PackageDenyAccessResolverTest {
                 new PackageDenyAccessResolver(
                         true, mMockAdPackageDenyResolver, appName, sdkName, mApiGroups);
 
-        assertFalse(resolver.getAccessInfo(mContext).isAllowedAccess());
-        assertEquals(
-                "Package app testApp for sdk testSdk is denied for measurement",
-                resolver.getErrorMessage());
+        assertThat(resolver.getAccessInfo(mContext).isAllowedAccess()).isFalse();
+        assertThat(resolver.getErrorMessage())
+                .isEqualTo("Package app testApp for sdk testSdk is denied for measurement");
     }
 
     @Test
@@ -120,7 +99,7 @@ public class PackageDenyAccessResolverTest {
                 new PackageDenyAccessResolver(
                         false, mMockAdPackageDenyResolver, appName, sdkName, mApiGroups);
 
-        assertTrue(resolver.getAccessInfo(mContext).isAllowedAccess());
+        assertThat(resolver.getAccessInfo(mContext).isAllowedAccess()).isTrue();
         verify(mMockAdPackageDenyResolver, never())
                 .shouldDenyPackage(anyString(), anyString(), anySet());
     }
@@ -143,9 +122,8 @@ public class PackageDenyAccessResolverTest {
                 new PackageDenyAccessResolver(
                         true, mMockAdPackageDenyResolver, appName, sdkName, mApiGroups);
         verify(mMockAdPackageDenyResolver).shouldDenyPackage(anyString(), anyString(), anySet());
-        assertFalse(resolver.getAccessInfo(mContext).isAllowedAccess());
-        assertEquals(
-                "Package app testApp for sdk testSdk is denied for measurement",
-                resolver.getErrorMessage());
+        assertThat(resolver.getAccessInfo(mContext).isAllowedAccess()).isFalse();
+        assertThat(resolver.getErrorMessage())
+                .isEqualTo("Package app testApp for sdk testSdk is denied for measurement");
     }
 }

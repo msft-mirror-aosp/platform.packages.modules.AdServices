@@ -16,18 +16,21 @@
 
 package com.android.adservices.service.shell.adselection;
 
+import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
 import com.android.adservices.data.adselection.CustomAudienceSignals;
-import com.android.adservices.data.adselection.DBAdSelectionEntry;
+import com.android.adservices.data.adselection.DBAuctionServerAdSelection;
+import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.data.adselection.datahandlers.RegisteredAdInteraction;
 import com.android.adservices.data.adselection.datahandlers.ReportingData;
+import com.android.adservices.data.adselection.datahandlers.WinningCustomAudience;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.AuctionResult;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
 
 import java.util.List;
 
-/** Helper for parting {@link DBAdSelectionEntry} objects into protobuf. */
+/** Helper for parsing {@link DBAuctionServerAdSelection} objects into protobuf. */
 public class AdSelectionEntryHelper {
 
     /**
@@ -35,33 +38,29 @@ public class AdSelectionEntryHelper {
      *
      * @param adSelectionEntry Data for ad selection.
      * @param reportingUris Data for reporting.
-     * @return Valid proto.
+     * @return Valid proto
      */
-    static AuctionResult getAuctionResultFromAdSelectionEntry(
-            DBAdSelectionEntry adSelectionEntry,
+    static AuctionResult createAuctionResultFromAdSelectionData(
+            AdSelectionResultBidAndUri adSelection,
+            AdTechIdentifier winningBuyer,
+            WinningCustomAudience winningCustomAudience,
             ReportingData reportingUris,
             List<RegisteredAdInteraction> buyerAdInteractions,
             List<RegisteredAdInteraction> sellerAdInteractions) {
-        AuctionResult.Builder auctionResult =
-                AuctionResult.newBuilder()
-                        .setBid(
-                                Float.parseFloat(
-                                        Double.toString(adSelectionEntry.getWinningAdBid())))
-                        .setAdRenderUrl(adSelectionEntry.getWinningAdRenderUri().toString())
-                        .setIsChaff(false)
-                        .setWinReportingUrls(
-                                getWinReportingUrls(
-                                        reportingUris, buyerAdInteractions, sellerAdInteractions));
-
-        if (adSelectionEntry.getCustomAudienceSignals() != null) {
-            CustomAudienceSignals signals = adSelectionEntry.getCustomAudienceSignals();
-            auctionResult
-                    .setBuyer(signals.getBuyer().toString())
-                    .setCustomAudienceOwner(signals.getOwner())
-                    .setCustomAudienceName(signals.getName());
+        AuctionResult.Builder builder = AuctionResult.newBuilder()
+                .setAdRenderUrl(adSelection.getWinningAdRenderUri().toString())
+                .setBid((float) adSelection.getWinningAdBid())
+                .setBuyer(winningBuyer.toString())
+                .setIsChaff(false)
+                .setWinReportingUrls(
+                        getWinReportingUrls(
+                                reportingUris, buyerAdInteractions, sellerAdInteractions));
+      if (winningCustomAudience != null) {
+            builder
+                    .setCustomAudienceName(winningCustomAudience.getName())
+                    .setCustomAudienceOwner(winningCustomAudience.getOwner());
         }
-
-        return auctionResult.build();
+        return builder.build();
     }
 
     private static WinReportingUrls getWinReportingUrls(

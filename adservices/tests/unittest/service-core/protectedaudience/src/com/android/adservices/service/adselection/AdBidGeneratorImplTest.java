@@ -84,7 +84,7 @@ import androidx.room.Room;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
-import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.adselection.CustomAudienceSignals;
@@ -95,6 +95,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.adselection.debug.DebugReport;
 import com.android.adservices.service.adselection.debug.DebugReporting;
 import com.android.adservices.service.adselection.debug.DebugReportingScriptDisabledStrategy;
@@ -110,10 +111,12 @@ import com.android.adservices.service.stats.AdServicesLoggerUtil;
 import com.android.adservices.service.stats.FetchProcessLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.adservices.service.stats.RunAdBiddingPerCAProcessReportedStats;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.adservices.shared.testing.annotations.SetLongFlag;
 import com.android.adservices.shared.util.Clock;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -146,6 +149,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.stream.Collectors;
 
+@MockStatic(FlagsFactory.class)
 @SetLongFlag(
         name = KEY_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS,
         value = EXTENDED_FLEDGE_AD_SELECTION_BIDDING_TIMEOUT_PER_CA_MS)
@@ -156,7 +160,9 @@ import java.util.stream.Collectors;
 @SetFlagTrue(KEY_FLEDGE_CPC_BILLING_METRICS_ENABLED)
 @SetFlagTrue(KEY_FLEDGE_DATA_VERSION_HEADER_METRICS_ENABLED)
 @SetFlagTrue(KEY_FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED)
-public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
+// TODO (b/384952360): refine CEL related verifications later
+@SkipLoggingUsageRule(reason = "b/384952360")
+public final class AdBidGeneratorImplTest extends AdServicesExtendedMockitoTestCase {
     private static final List<Double> BIDS =
             new ArrayList<>(ImmutableList.of(-10.0, 0.0, 1.0, 5.4, -1.0));
     private static final List<AdData> ADS =
@@ -366,8 +372,6 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
     private CustomAudienceBiddingInfo mCustomAudienceBiddingInfo;
     private DevContext mDevContext;
     private CustomAudienceDao mCustomAudienceDao;
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
     private MockWebServerRule.RequestMatcher<String> mRequestMatcherExactMatch;
     private IsolateSettings mIsolateSettings;
     private RunAdBiddingPerCAExecutionLogger mRunAdBiddingPerCAExecutionLogger;
@@ -391,6 +395,7 @@ public final class AdBidGeneratorImplTest extends AdServicesMockitoTestCase {
 
     @Before
     public void setUp() throws Exception {
+        mocker.mockGetFlags(mFakeFlags);
         mDevContext = DevContext.createForDevOptionsDisabled();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();

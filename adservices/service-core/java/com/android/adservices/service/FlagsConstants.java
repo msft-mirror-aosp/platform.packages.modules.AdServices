@@ -84,8 +84,7 @@ public final class FlagsConstants {
             "topics_job_scheduler_reschedule_enabled";
     public static final String KEY_TOPICS_EPOCH_JOB_BATTERY_NOT_LOW_INSTEAD_OF_CHARGING =
             "topics_epoch_job_battery_not_low_instead_of_charging";
-    public static final String
-            KEY_TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED =
+    public static final String KEY_TOPICS_CLEAN_DB_WHEN_EPOCH_JOB_SETTINGS_CHANGED =
             "Topics__clean_db_when_epoch_job_settings_changed";
     public static final String KEY_NUMBER_OF_EPOCHS_TO_KEEP_IN_HISTORY =
             "topics_number_of_epochs_to_keep_in_history";
@@ -513,6 +512,8 @@ public final class FlagsConstants {
             "measurement_default_destination_limit_algorithm";
     public static final String KEY_MEASUREMENT_ENABLE_DESTINATION_LIMIT_ALGORITHM_FIELD =
             "measurement_enable_destination_limit_algorithm_field";
+    public static final String KEY_MEASUREMENT_ENABLE_PACKAGE_NAME_UID_CHECK =
+            "Measurement__enable_package_name_uid_check";
     // FLEDGE Custom Audience keys
     public static final String KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT =
             "fledge_custom_audience_max_count";
@@ -854,6 +855,7 @@ public final class FlagsConstants {
 
     public static final String KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS =
             "Fledge__enable_custom_audience_component_ads";
+    public static final String KEY_ENABLE_PAS_COMPONENT_ADS = "Fledge__enable_pas_component_ads";
     public static final String KEY_MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE =
             "Fledge__max_component_ads_per_custom_audience";
     public static final String KEY_COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES =
@@ -1250,6 +1252,10 @@ public final class FlagsConstants {
             "measurement_debug_key_ad_id_matching_limit";
     public static final String KEY_MEASUREMENT_DEBUG_KEY_AD_ID_MATCHING_ENROLLMENT_BLOCKLIST =
             "measurement_debug_key_ad_id_matching_enrollment_blocklist";
+    public static final String KEY_MEASUREMENT_ENABLE_AD_IDS_PER_DEVICE_PER_WINDOW =
+            "Measurement__enable_adids_per_device_per_window";
+    public static final String KEY_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS =
+            "Measurement__adids_per_device_per_window_period_ms";
 
     public static final String KEY_MEASUREMENT_ENABLE_AGGREGATABLE_NAMED_BUDGETS =
             "Measurement__enable_aggregatable_named_budgets";
@@ -1326,6 +1332,9 @@ public final class FlagsConstants {
 
     public static final String KEY_MEASUREMENT_MAX_AGGREGATE_REPORTS_PER_SOURCE =
             "measurement_max_aggregate_reports_per_source";
+
+    public static final String KEY_MEASUREMENT_ENABLE_UNBOUNDED_REPORTS_WITH_TRIGGER_CONTEXT_ID =
+            "Measurement__enable_unbounded_reports_with_trigger_context_id";
 
     public static final String KEY_MEASUREMENT_MAX_AGGREGATE_KEYS_PER_SOURCE_REGISTRATION =
             "measurement_max_aggregate_keys_per_source_registration";
@@ -1740,7 +1749,19 @@ public final class FlagsConstants {
     /** Key to enable the AdServices latency metrics {@code RbATrace}. */
     public static final String KEY_ENABLE_RB_ATRACE = "enable_rb_atrace";
 
-    /** Key to enable prod debug feature in server auctions */
+    /** Key to enable the package deny list for source registration */
     public static final String KEY_MSMT_REGISTER_SOURCE_PACKAGE_DENY_LIST =
             "Measurement__enable_register_source_package_deny_list";
+
+    /** Key to enable log sampling infra. */
+    public static final String KEY_ENABLE_LOG_SAMPLING_INFRA =
+            "LogSampling__enable_log_sampling_infra";
+
+    /** Key for AdServices' Job Execution Sampling Config. */
+    public static final String KEY_AD_SERVICES_JOB_EXECUTION_SAMPLING_CONFIG =
+            "Spe__ad_services_job_execution_sampling_config";
+
+    /** Key for AdServices' Job Scheduling Sampling Config. */
+    public static final String KEY_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG =
+            "Spe__ad_services_job_scheduling_sampling_config";
 }

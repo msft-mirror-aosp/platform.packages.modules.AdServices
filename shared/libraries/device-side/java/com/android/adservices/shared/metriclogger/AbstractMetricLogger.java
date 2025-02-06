@@ -47,11 +47,13 @@ public abstract class AbstractMetricLogger<L> implements MetricLogger<L> {
 
     // Use supplier to lazily instantiate it and avoid log sampler instantiation in the constructor.
     private final Supplier<LogSampler<L>> mPerEventSampling;
+    private final Supplier<LogSampler<L>> mPerDeviceSampling;
     private final MetricLoggerConfig<L> mConfig;
 
     public AbstractMetricLogger(MetricLoggerConfig<L> config) {
         mConfig = config;
         mPerEventSampling = Suppliers.memoize(config::createPerEventSampling);
+        mPerDeviceSampling = Suppliers.memoize(config::createPerDeviceSampling);
     }
 
     @Override
@@ -61,18 +63,29 @@ public abstract class AbstractMetricLogger<L> implements MetricLogger<L> {
 
     @Override
     public void log(Supplier<L> logSupplier) {
+        if (!mPerDeviceSampling.get().shouldLog()) {
+            return;
+        }
         if (mPerEventSampling.get().shouldLog()) {
             mConfig.getLogUploader().accept(logSupplier.get(), getMetadata());
         }
     }
 
     private SamplingMetadata getMetadata() {
-        // If sampling config is null, perform no per-event sampling (i.e. all events are logged).
+        // If per-device sampling config is null, perform no per-device sampling (i.e. all events
+        // are logged).
+        double perDeviceSamplingRate =
+                mConfig.getPerDeviceSamplingConfig() == null
+                        ? 1.0
+                        : mConfig.getPerDeviceSamplingConfig().getSamplingRate();
+
+        // If per-event sampling config is null, perform no per-event sampling (i.e. all events are
+        // logged).
         double perEventSampling =
                 mConfig.getPerEventSamplingConfig() == null
                         ? 1.0
                         : mConfig.getPerEventSamplingConfig().getSamplingRate();
 
-        return new SamplingMetadata(perEventSampling);
+        return new SamplingMetadata(perDeviceSamplingRate, perEventSampling);
     }
 }

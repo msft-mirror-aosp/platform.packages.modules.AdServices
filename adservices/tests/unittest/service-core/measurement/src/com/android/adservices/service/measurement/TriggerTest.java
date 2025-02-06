@@ -30,6 +30,7 @@ import android.net.Uri;
 
 import com.android.adservices.common.WebUtil;
 import com.android.adservices.service.Flags;
+import com.android.adservices.service.measurement.TriggerFixture.ValidTriggerParams;
 import com.android.adservices.service.measurement.aggregation.AggregatableAttributionTrigger;
 import com.android.adservices.service.measurement.aggregation.AggregatableKeyValue;
 import com.android.adservices.service.measurement.aggregation.AggregatableValuesConfig;
@@ -1248,6 +1249,82 @@ public class TriggerTest {
                                         Arrays.asList(debugData1, debugData2, debugData3),
                                         Uri.parse("https://aws.example"))
                                 .build());
+    }
+
+    @Test
+    public void hasAggregatableData_aggregateValuesAndDataNonEmpty_success() throws JSONException {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setAggregateTriggerData(ValidTriggerParams.AGGREGATE_TRIGGER_DATA)
+                        .setAggregateValuesString(ValidTriggerParams.AGGREGATE_VALUES_STRING)
+                        .build();
+        assertThat(trigger.hasAggregatableData(mFlags)).isTrue();
+    }
+
+    @Test
+    public void hasAggregatableData_aggregateDataNonEmptyAggregateValuesEmptyArray_success()
+            throws JSONException {
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setAggregateValuesString("[]")
+                        .setAggregateTriggerData(ValidTriggerParams.AGGREGATE_TRIGGER_DATA)
+                        .build();
+        assertThat(trigger.hasAggregatableData(mFlags)).isTrue();
+    }
+
+    @Test
+    public void hasAggregatableData_aggregateDataNonEmptyAggregateValuesEmptyObject_success()
+            throws JSONException {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setAggregateValuesString("{}")
+                        .setAggregateTriggerData(ValidTriggerParams.AGGREGATE_TRIGGER_DATA)
+                        .build();
+        assertThat(trigger.hasAggregatableData(mFlags)).isTrue();
+    }
+
+    @Test
+    public void hasAggregatableData_aggregateValuesPresent_success() throws JSONException {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setAggregateValuesString(ValidTriggerParams.AGGREGATE_VALUES_STRING)
+                        .setAggregateTriggerData("[]")
+                        .build();
+        assertThat(trigger.hasAggregatableData(mFlags)).isTrue();
+    }
+
+    @Test
+    public void hasAggregatableData_aggregateValuesAndDataNotPresent_fail() throws JSONException {
+        Trigger trigger = TriggerFixture.getValidTriggerBuilder().setId("triggerId1").build();
+        assertThat(trigger.hasAggregatableData(mFlags)).isFalse();
+    }
+
+    @Test
+    public void hasAggregatableData_aggregateValuesObjectAndDataEmpty_fail() throws JSONException {
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setAggregateValuesString("{}")
+                        .setAggregateTriggerData("[]")
+                        .build();
+        assertThat(trigger.hasAggregatableData(mFlags)).isFalse();
+    }
+
+    @Test
+    public void hasAggregatableData_aggregateValuesArrayAndDataEmpty_fail() throws JSONException {
+        when(mFlags.getMeasurementEnableAggregateValueFilters()).thenReturn(true);
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setId("triggerId1")
+                        .setAggregateValuesString("[]")
+                        .setAggregateTriggerData("[]")
+                        .build();
+        assertThat(trigger.hasAggregatableData(mFlags)).isFalse();
     }
 
     private void assertInvalidTriggerArguments(

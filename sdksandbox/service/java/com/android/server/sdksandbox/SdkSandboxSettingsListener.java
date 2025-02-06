@@ -91,6 +91,15 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
             "sdksandbox_activity_allowlist_per_targetSdkVersion";
     private static final String PROPERTY_NEXT_ACTIVITY_ALLOWLIST =
             "sdksandbox_next_activity_allowlist";
+
+    // Bug fix for b/372475678. Adds support for HSUM in SDK storage tests
+    @VisibleForTesting(visibility = VisibleForTesting.Visibility.PRIVATE)
+    static final String PROPERTY_ENABLE_HSUM_SUPPORT_FOR_SDK_STORAGE =
+            "SdkSandbox__enable_hsum_support_for_sdk_storage";
+
+    // Trivial bug fix. Enabled by default.
+    private static final boolean DEFAULT_VALUE_ENABLE_HSUM_SUPPORT_FOR_SDK_STORAGE = true;
+
     private final Context mContext;
     private final Object mLock = new Object();
     private final SdkSandboxManagerService mSdkSandboxManagerService;
@@ -183,6 +192,13 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
             getNextActivityDeviceConfigAllowlist(
                     DeviceConfig.getProperty(
                             DeviceConfig.NAMESPACE_ADSERVICES, PROPERTY_NEXT_ACTIVITY_ALLOWLIST));
+
+    @GuardedBy("mLock")
+    private boolean mEnableHsumSupportForSdkStorage =
+            DeviceConfig.getBoolean(
+                    DeviceConfig.NAMESPACE_ADSERVICES,
+                    PROPERTY_ENABLE_HSUM_SUPPORT_FOR_SDK_STORAGE,
+                    DEFAULT_VALUE_ENABLE_HSUM_SUPPORT_FOR_SDK_STORAGE);
 
     SdkSandboxSettingsListener(Context context, SdkSandboxManagerService sdkSandboxManagerService) {
         mContext = context;
@@ -282,6 +298,16 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
                                         properties.getString(
                                                 PROPERTY_NEXT_ACTIVITY_ALLOWLIST, null));
                         break;
+                    case PROPERTY_ENABLE_HSUM_SUPPORT_FOR_SDK_STORAGE:
+                        boolean previousValue = mEnableHsumSupportForSdkStorage;
+                        mEnableHsumSupportForSdkStorage =
+                                properties.getBoolean(
+                                        PROPERTY_ENABLE_HSUM_SUPPORT_FOR_SDK_STORAGE,
+                                        DEFAULT_VALUE_ENABLE_HSUM_SUPPORT_FOR_SDK_STORAGE);
+                        if (mEnableHsumSupportForSdkStorage != previousValue) {
+                            mSdkSandboxManagerService.registerPackageUpdateBroadcastReceiver();
+                        }
+                        break;
                     default:
                 }
                 if (propertyIsLogged) {
@@ -374,6 +400,12 @@ class SdkSandboxSettingsListener implements DeviceConfig.OnPropertiesChangedList
     public ArraySet<String> getNextActivityAllowlist() {
         synchronized (mLock) {
             return mNextActivityAllowlist;
+        }
+    }
+
+    public boolean getEnableHsumSupportForSdkStorage() {
+        synchronized (mLock) {
+            return mEnableHsumSupportForSdkStorage;
         }
     }
 

@@ -25,6 +25,7 @@ import android.adservices.lint.test.ErrorLogUtilMockingUsageDetector.Constants.S
 import com.android.tools.lint.client.api.UElementHandler
 import com.android.tools.lint.detector.api.*
 import com.intellij.psi.PsiMethod
+import java.util.EnumSet
 import org.jetbrains.uast.*
 
 class ErrorLogUtilMockingUsageDetector : Detector(), SourceCodeScanner {
@@ -55,7 +56,7 @@ class ErrorLogUtilMockingUsageDetector : Detector(), SourceCodeScanner {
                 MOCKING_INVOCATION_ISSUE,
                 node,
                 context.getLocation(node),
-                INVALID_MOCKING_MESSAGE
+                INVALID_MOCKING_MESSAGE,
             )
         }
     }
@@ -75,7 +76,7 @@ class ErrorLogUtilMockingUsageDetector : Detector(), SourceCodeScanner {
                                 INVALID_ANNOTATION_ISSUE,
                                 node,
                                 context.getLocation(node),
-                                INVALID_ANNOTATION_MESSAGE
+                                INVALID_ANNOTATION_MESSAGE,
                             )
                         }
                     }
@@ -139,8 +140,9 @@ class ErrorLogUtilMockingUsageDetector : Detector(), SourceCodeScanner {
                 implementation =
                     Implementation(
                         ErrorLogUtilMockingUsageDetector::class.java,
-                        Scope.JAVA_FILE_SCOPE
-                    )
+                        EnumSet.of(Scope.JAVA_FILE, Scope.TEST_SOURCES),
+                        Scope.JAVA_FILE_SCOPE,
+                    ),
             )
 
         val MOCKING_INVOCATION_ISSUE =
@@ -162,8 +164,9 @@ class ErrorLogUtilMockingUsageDetector : Detector(), SourceCodeScanner {
                 implementation =
                     Implementation(
                         ErrorLogUtilMockingUsageDetector::class.java,
-                        Scope.JAVA_FILE_SCOPE
-                    )
+                        EnumSet.of(Scope.JAVA_FILE, Scope.TEST_SOURCES),
+                        Scope.JAVA_FILE_SCOPE,
+                    ),
             )
     }
 }

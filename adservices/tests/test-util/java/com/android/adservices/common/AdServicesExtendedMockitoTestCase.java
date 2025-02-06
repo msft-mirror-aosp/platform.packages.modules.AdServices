@@ -20,7 +20,6 @@ import com.android.adservices.common.logging.AdServicesLoggingUsageRule;
 import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.StaticClassChecker;
-import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -49,15 +48,14 @@ public abstract class AdServicesExtendedMockitoTestCase
         extends AdServicesMockerLessExtendedMockitoTestCase<Mocker> {
 
     @Override
-    protected final Mocker newMocker(
-            AdServicesExtendedMockitoRule rule, Flags mockFlags, DebugFlags mockDebugFlags) {
-        return new Mocker(rule, mockFlags, mockDebugFlags);
+    protected final Mocker newMocker(AdServicesExtendedMockitoRule rule, Flags mockFlags) {
+        return new Mocker(rule, mockFlags);
     }
 
     public static final class Mocker
             extends AdServicesMockerLessExtendedMockitoTestCase.InternalMocker {
-        private Mocker(StaticClassChecker checker, Flags flags, DebugFlags mockDebugFlags) {
-            super(checker, flags, mockDebugFlags);
+        private Mocker(StaticClassChecker checker, Flags flags) {
+            super(checker, flags);
         }
 
         // Factory methods below are used by AdServicesExtendedMockitoTestCaseXYZMockerTest - there
@@ -66,49 +64,35 @@ public abstract class AdServicesExtendedMockitoTestCase
 
         @VisibleForTesting
         static Mocker forSharedMockerTests() {
-            return new Mocker(/* checker= */ null, /* flags= */ null, /* mockDebugFlags= */ null);
+            return new Mocker(/* checker= */ null, /* flags= */ null);
         }
 
         @VisibleForTesting
         static Mocker forAndroidMockerTests() {
-            return new Mocker(/* checker= */ null, /* flags= */ null, /* mockDebugFlags= */ null);
+            return new Mocker(/* checker= */ null, /* flags= */ null);
         }
 
         @VisibleForTesting
         static Mocker forAndroidStaticMockerTests(StaticClassChecker checker) {
             return new Mocker(
-                    Objects.requireNonNull(checker, "checker cannot be null"),
-                    /* flags= */ null,
-                    /* mockDebugFlags= */ null);
+                    Objects.requireNonNull(checker, "checker cannot be null"), /* flags= */ null);
         }
 
         @VisibleForTesting
         static Mocker forAdServicesPragmaticMockerTests() {
-            return new Mocker(/* checker= */ null, /* flags= */ null, /* mockDebugFlags= */ null);
+            return new Mocker(/* checker= */ null, /* flags= */ null);
         }
 
         @VisibleForTesting
         static Mocker forAdServicesFlagsMockerTests(Flags flags) {
             return new Mocker(
-                    /* checker= */ null,
-                    Objects.requireNonNull(flags, "flags cannot be null"),
-                    /* mockDebugFlags= */ null);
-        }
-
-        @VisibleForTesting
-        static Mocker forAdServicesDebugFlagsMockerTests(DebugFlags debugFlags) {
-            return new Mocker(
-                    /* checker= */ null,
-                    /* flags= */ null,
-                    Objects.requireNonNull(debugFlags, "DebugFlags cannot be null"));
+                    /* checker= */ null, Objects.requireNonNull(flags, "flags cannot be null"));
         }
 
         @VisibleForTesting
         static Mocker forAdServicesStaticMockerTests(StaticClassChecker checker) {
             return new Mocker(
-                    Objects.requireNonNull(checker, "checker cannot be null"),
-                    /* flags= */ null,
-                    /* mockDebugFlags= */ null);
+                    Objects.requireNonNull(checker, "checker cannot be null"), /* flags= */ null);
         }
     }
 }

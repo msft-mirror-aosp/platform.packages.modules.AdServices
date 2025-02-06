@@ -19,10 +19,24 @@ package com.android.adservices.service.adselection;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 import static android.adservices.adselection.ReportEventRequest.REPORT_EVENT_MAX_INTERACTION_DATA_SIZE_B;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 
 import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.common.FledgeAuthorizationFilter.AdTechNotAllowedException;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_INTERNAL_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_INVALID_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_TO_CALLER_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_SUCCESS_TO_CALLER_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION;
 
 import static java.util.Locale.ENGLISH;
 
@@ -41,6 +55,7 @@ import androidx.annotation.RequiresApi;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -51,6 +66,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.internal.util.Preconditions;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -78,6 +94,9 @@ public abstract class EventReporter {
     @ReportEventRequest.ReportingDestination
     private static final int[] POSSIBLE_DESTINATIONS =
             new int[] {FLAG_REPORTING_DESTINATION_SELLER, FLAG_REPORTING_DESTINATION_BUYER};
+
+    private static final int CEL_PPAPI_NAME =
+            AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION;
 
     @NonNull private final AdSelectionEntryDao mAdSelectionEntryDao;
     @NonNull private final AdServicesHttpsClient mAdServicesHttpsClient;
@@ -265,6 +284,10 @@ public abstract class EventReporter {
         try {
             callback.onSuccess();
         } catch (RemoteException e) {
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_SUCCESS_TO_CALLER_FAILED,
+                    CEL_PPAPI_NAME);
             sLogger.e(e, "Unable to send successful result to the callback");
         }
     }
@@ -284,7 +307,7 @@ public abstract class EventReporter {
         } else {
             resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
         }
-
+        logExceptionCel(t, resultCode);
         // Skip logging if a FilterException occurs.
         // AdSelectionServiceFilter ensures the failing assertion is logged internally.
         // Note: Failure is logged before the callback to ensure deterministic testing.
@@ -300,6 +323,11 @@ public abstract class EventReporter {
                             .setErrorMessage(t.getMessage())
                             .build());
         } catch (RemoteException e) {
+            // A ReportEventDisabledImpl can reach below from a binder thread.
+            AdsRelevanceStatusUtils.logCelInsideBinderThread(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_TO_CALLER_FAILED,
+                    CEL_PPAPI_NAME);
             sLogger.e(e, "Unable to send failed result to the callback");
         }
     }
@@ -325,5 +353,34 @@ public abstract class EventReporter {
             @ReportEventRequest.ReportingDestination int bit,
             @ReportEventRequest.ReportingDestination int bitSet) {
         return (bit & bitSet) != 0;
+    }
+
+    private void logExceptionCel(Throwable exception, int resultCode) {
+        int celEnum =
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_INTERNAL_ERROR;
+        switch (resultCode) {
+            case STATUS_BACKGROUND_CALLER:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER;
+                break;
+            case STATUS_CALLER_NOT_ALLOWED:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED;
+                break;
+            case STATUS_UNAUTHORIZED:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED;
+                break;
+            case STATUS_RATE_LIMIT_REACHED:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
+                break;
+            case STATUS_INVALID_ARGUMENT:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_INVALID_ARGUMENT;
+                break;
+        }
+        // A ReportEventDisabledImpl can reach below from a binder thread.
+        AdsRelevanceStatusUtils.logCelInsideBinderThread(exception, celEnum, CEL_PPAPI_NAME);
     }
 }

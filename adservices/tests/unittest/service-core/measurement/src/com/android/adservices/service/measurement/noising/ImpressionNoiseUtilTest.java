@@ -23,21 +23,19 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
-import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
-import com.android.adservices.service.FakeFlagsFactory;
+import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.TriggerSpecsUtil;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
+import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.quality.Strictness;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -48,13 +46,8 @@ import java.util.concurrent.TimeUnit;
 
 /** Unit tests for ImpressionNoiseUtil class. */
 @SuppressWarnings("ParameterName")
-public class ImpressionNoiseUtilTest {
-    @Rule
-    public final AdServicesExtendedMockitoRule adServicesExtendedMockitoRule =
-            new AdServicesExtendedMockitoRule.Builder(this)
-                    .spyStatic(ImpressionNoiseUtil.class)
-                    .setStrictness(Strictness.LENIENT)
-                    .build();
+@SpyStatic(ImpressionNoiseUtil.class)
+public final class ImpressionNoiseUtilTest extends AdServicesExtendedMockitoTestCase {
 
     private final ImpressionNoiseUtil mImpressionNoiseUtil = new ImpressionNoiseUtil();
 
@@ -337,7 +330,7 @@ public class ImpressionNoiseUtilTest {
     @Test
     public void
             selectFlexEventReportRandomStateAndGenerateReportConfigs_singleDestinationType_equal()
-                    throws JSONException {
+                    throws Exception {
         TriggerSpecs testTriggerSpecsObject = getValidTriggerSpecsForRandomOrderTest();
 
         ExtendedMockito.doReturn(3L).when(() -> ImpressionNoiseUtil.nextLong(any(), anyLong()));
@@ -360,7 +353,7 @@ public class ImpressionNoiseUtilTest {
     @Test
     public void
             selectFlexEventReportRandomStateAndGenerateReportConfigs_doubleDestinationType_equal()
-                    throws JSONException {
+                    throws Exception {
         ExtendedMockito.doReturn(16L).when(() -> ImpressionNoiseUtil.nextLong(any(), anyLong()));
 
         mStateSelectionTesterFlexEvent.apply(
@@ -438,11 +431,11 @@ public class ImpressionNoiseUtilTest {
      * @return TriggerSpecs for test
      * @throws JSONException JSON syntax error
      */
-    private static TriggerSpecs getValidTriggerSpecsForRandomOrderTest() throws JSONException {
+    private TriggerSpecs getValidTriggerSpecsForRandomOrderTest() throws JSONException {
         Source source = SourceFixture.getMinimalValidSourceBuilder().build();
         TriggerSpecs triggerSpecs = new TriggerSpecs(getValidTriggerSpecArray(), 3, source);
         // Oblige building privacy parameters for the trigger specs
-        triggerSpecs.getInformationGain(source, FakeFlagsFactory.getFlagsForTest());
+        triggerSpecs.getInformationGain(source, mFakeFlags);
         return triggerSpecs;
     }
 }

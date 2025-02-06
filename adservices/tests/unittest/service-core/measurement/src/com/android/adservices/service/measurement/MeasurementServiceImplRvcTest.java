@@ -250,7 +250,7 @@ public final class MeasurementServiceImplRvcTest extends AdServicesExtendedMocki
                 mMockConsentManager,
                 mMockThrottler,
                 new CachedFlags(mMockFlags),
-                mMockDebugFlags,
+                mFakeDebugFlags,
                 mMockAdServicesLogger,
                 mMockAppImportanceFilter,
                 mDevContextFilter,

@@ -275,6 +275,9 @@ public class AggregateReportingJobHandler {
         reportingStatus.setReportingDelay(
                 mTimeSource.currentTimeMillis() - aggregateReport.getScheduledReportTime());
         reportingStatus.setSourceRegistrant(getAppPackageName(aggregateReport));
+        if (aggregateReport.getApi().equals(AggregateDebugReportApi.AGGREGATE_DEBUG_REPORT_API)) {
+            reportingStatus.setReportType(ReportingStatus.ReportType.AGGREGATE_DEBUG_REPORT);
+        }
         if (mIsDebugInstance
                 && aggregateReport.getDebugReportStatus()
                         != AggregateReport.DebugReportStatus.PENDING) {

@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_OUTCOME_SELECTION_WATERFALL_MEDIATION_TRUNCATION_JS;
 import static com.android.adservices.service.adselection.PrebuiltLogicGenerator.AD_SELECTION_FROM_OUTCOMES_USE_CASE;
@@ -49,7 +50,6 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpClientRequest;
@@ -60,6 +60,7 @@ import com.android.adservices.service.devapi.CustomAudienceDevOverridesHelper;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.stats.RunAdBiddingPerCAExecutionLogger;
 import com.android.adservices.service.stats.SelectAdsFromOutcomesExecutionLoggerNoLoggingImpl;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
@@ -81,6 +82,7 @@ import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 
 @SpyStatic(FlagsFactory.class)
+@SetFlagTrue(KEY_FLEDGE_AD_SELECTION_PREBUILT_URI_ENABLED)
 public final class JsFetcherTest extends AdServicesExtendedMockitoTestCase {
     private static final String BIDDING_LOGIC_OVERRIDE = "js_override.";
     private static final String BIDDING_LOGIC = "js";
@@ -121,14 +123,12 @@ public final class JsFetcherTest extends AdServicesExtendedMockitoTestCase {
     @Mock private RunAdBiddingPerCAExecutionLogger mRunAdBiddingPerCAExecutionLoggerMock;
     private Uri mFetchJsUri;
     private AdServicesHttpClientRequest mFetchJsRequest;
-    private Flags mFakeFlags;
     private JsFetcher mJsFetcher;
 
     @Before
     public void setUp() throws Exception {
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
-        mFakeFlags = new JsFetcherTestFlags(true);
         mWebClient =
                 new AdServicesHttpsClient(
                         AdServicesExecutors.getBlockingExecutor(),
@@ -373,18 +373,5 @@ public final class JsFetcherTest extends AdServicesExtendedMockitoTestCase {
 
     interface ThrowingSupplier<T> {
         T get() throws Exception;
-    }
-
-    private static class JsFetcherTestFlags implements Flags {
-        private final boolean mPrebuiltLogicEnabled;
-
-        JsFetcherTestFlags(boolean prebuiltLogicEnabled) {
-            mPrebuiltLogicEnabled = prebuiltLogicEnabled;
-        }
-
-        @Override
-        public boolean getFledgeAdSelectionPrebuiltUriEnabled() {
-            return mPrebuiltLogicEnabled;
-        }
     }
 }

@@ -15,6 +15,7 @@
  */
 package com.android.adservices.service.common;
 
+import static com.android.adservices.service.DebugFlagsConstants.KEY_DEVELOPER_SESSION_FEATURE_ENABLED;
 import static com.android.adservices.service.common.AdServicesInternalProvider.DUMP_ARG_FULL_QUIET;
 import static com.android.adservices.service.common.AdServicesInternalProvider.DUMP_ARG_SHORT_QUIET;
 import static com.android.adservices.shared.testing.common.DumpHelper.dump;
@@ -33,7 +34,6 @@ import android.content.Context;
 import android.content.pm.ProviderInfo;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.adservices.shared.testing.mockito.MockitoHelper;
@@ -64,7 +64,7 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
     public void setFixtures() {
         mProvider =
                 new AdServicesInternalProvider(
-                        mMockFlags, mMockThrottler, mMockConsentManager, mMockDebugFlags);
+                        mMockFlags, mMockThrottler, mMockConsentManager, mFakeDebugFlags);
     }
 
     @Test
@@ -169,10 +169,8 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
     }
 
     @Test
-    @MockStatic(DebugFlags.class)
     public void testDump_includesDebugFlagsDump() throws Exception {
-        String expectedDump = "The Bug is on the Table";
-        mockDebugFlagsDump(expectedDump);
+        String expectedDump = dump(pw -> mFakeDebugFlags.dump(pw));
 
         String dump = dump(pw -> mProvider.dump(/* fd= */ null, pw, /* args= */ null));
 
@@ -211,13 +209,11 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
     }
 
     @Test
-    @MockStatic(DebugFlags.class)
     public void testDump_argShortQuiet() throws Exception {
         testDumpQuiet(DUMP_ARG_SHORT_QUIET);
     }
 
     @Test
-    @MockStatic(DebugFlags.class)
     public void testDump_argFullQuiet() throws Exception {
         testDumpQuiet(DUMP_ARG_FULL_QUIET);
     }
@@ -225,8 +221,7 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
     private void testDumpQuiet(String arg) throws Exception {
         String flagsDump = "Don't bother me, I'm flaggy";
         mockFlagsDump(flagsDump);
-        String debugFlagsDump = "Don't bother me, I'm debuggy";
-        mockDebugFlagsDump(debugFlagsDump);
+        String debugFlagsDump = dump(pw -> mFakeDebugFlags.dump(pw));
         String throttlerDump = "Don't bother me, I'm throttled";
         mockThrottlerDump(throttlerDump);
 
@@ -244,22 +239,11 @@ public final class AdServicesInternalProviderTest extends AdServicesExtendedMock
     }
 
     private void mockAdservicesApplicationContextFlagEnabled(boolean value) {
-        mocker.mockGetDeveloperSessionFeatureEnabled(value);
+        debugFlags.setDebugFlag(KEY_DEVELOPER_SESSION_FEATURE_ENABLED, value);
     }
 
     // TODO(b/371064777): Ideally we should have a DumpHelper.mockDump() method that could be used
     // below...
-
-    private void mockDebugFlagsDump(String dump) {
-        doAnswer(
-                        (inv) -> {
-                            mLog.d("%s", MockitoHelper.toString(inv));
-                            ((PrintWriter) inv.getArgument(0)).println(dump);
-                            return null;
-                        })
-                .when(mMockDebugFlags)
-                .dump(any());
-    }
 
     private void mockFlagsDump(String dump, @Nullable String... args) {
         doAnswer(

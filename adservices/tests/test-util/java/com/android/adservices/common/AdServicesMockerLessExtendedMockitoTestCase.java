@@ -16,11 +16,11 @@
 package com.android.adservices.common;
 
 import static com.android.adservices.mockito.ExtendedMockitoInlineCleanerRule.Mode.CLEAR_AFTER_TEST_CLASS;
+import static com.android.adservices.service.DebugFlagsConstants.KEY_CONSENT_NOTIFICATION_DEBUG_MODE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.mock;
 
 import android.annotation.CallSuper;
 import android.annotation.Nullable;
@@ -34,11 +34,9 @@ import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.errorlogging.ErrorLogUtil;
-import com.android.adservices.mockito.AdServicesDebugFlagsMocker;
 import com.android.adservices.mockito.AdServicesExtendedMockitoMocker;
 import com.android.adservices.mockito.AdServicesExtendedMockitoRule;
 import com.android.adservices.mockito.AdServicesFlagsMocker;
-import com.android.adservices.mockito.AdServicesMockitoDebugFlagsMocker;
 import com.android.adservices.mockito.AdServicesMockitoFlagsMocker;
 import com.android.adservices.mockito.AdServicesMockitoMocker;
 import com.android.adservices.mockito.AdServicesPragmaticMocker;
@@ -64,7 +62,7 @@ import com.android.adservices.shared.testing.concurrency.ResultSyncCallback;
 import com.android.adservices.shared.util.Clock;
 import com.android.adservices.spe.AdServicesJobScheduler;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
-import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
+import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -80,13 +78,11 @@ import org.mockito.quality.Strictness;
  * @param <M> mocker type
  */
 @ClearInlineMocksMode(CLEAR_AFTER_TEST_CLASS)
-@SpyStatic(ErrorLogUtil.class)
+@MockStatic(ErrorLogUtil.class)
 public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends InternalMocker>
         extends AdServicesUnitTestCase {
 
     @Mock protected Context mMockContext;
-
-    protected final DebugFlags mMockDebugFlags = mock(DebugFlags.class);
 
     /** Spy the {@link AdServicesUnitTestCase#mContext} */
     @Spy protected final Context mSpyContext = mContext;
@@ -116,7 +112,7 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
             AdServicesLoggingUsageRule.errorLogUtilUsageRule();
 
     /** Provides common expectations. */
-    public final M mocker = newMocker(extendedMockito, mMockFlags, mMockDebugFlags);
+    public final M mocker = newMocker(extendedMockito, mMockFlags);
 
     /**
      * Gets the {@link AdServicesExtendedMockitoRule} that will be set as the {@code
@@ -137,8 +133,7 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
     }
 
     /** Returns the object that will be referenced by {@code mocker}. */
-    protected abstract M newMocker(
-            AdServicesExtendedMockitoRule rule, Flags mockFlags, DebugFlags mockDebugFlags);
+    protected abstract M newMocker(AdServicesExtendedMockitoRule rule, Flags mockFlags);
 
     /**
      * Creates a new {@link AdServicesExtendedMockitoRule.Builder} with the default properties.
@@ -161,6 +156,19 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         checkProhibitedMockitoFields(AdServicesMockerLessExtendedMockitoTestCase.class, this);
     }
 
+    /**
+     * @deprecated TODO(b/338067482): temporary method, ideally it should be inlined or replaced
+     *     by @EnableDebugFlag / @DisableDebugFlag; if not, then it should be unit tested (on
+     *     AdServicesExtendedMockitoTestCaseTest)
+     */
+    @Deprecated
+    protected void mockGetConsentNotificationDebugMode(boolean mode) {
+        mLog.v(
+                "mockGetConsentNotificationDebugMode(%b): delegating to debugFlags rule (%s)",
+                mode, debugFlags);
+        debugFlags.setDebugFlag(KEY_CONSENT_NOTIFICATION_DEBUG_MODE, mode);
+    }
+
     private static final String REASON_SESSION_MANAGED_BY_RULE =
             "mockito session is automatically managed by a @Rule";
 
@@ -169,7 +177,6 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
                     AndroidStaticMocker,
                     AdServicesPragmaticMocker,
                     AdServicesFlagsMocker,
-                    AdServicesDebugFlagsMocker,
                     AdServicesStaticMocker,
                     SharedMocker {
 
@@ -177,11 +184,10 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
         private final SharedMocker mSharedMocker = new SharedMockitoMocker();
         private final AdServicesPragmaticMocker mAdServicesMocker = new AdServicesMockitoMocker();
         @Nullable private final AdServicesFlagsMocker mAdServicesFlagsMocker;
-        @Nullable private final AdServicesDebugFlagsMocker mAdServicesDebugFlagsMocker;
         @Nullable private final AndroidStaticMocker mAndroidStaticMocker;
         @Nullable private final AdServicesStaticMocker mAdServicesStaticMocker;
 
-        protected InternalMocker(StaticClassChecker checker, Flags flags, DebugFlags debugFlags) {
+        protected InternalMocker(StaticClassChecker checker, Flags flags) {
             if (checker != null) {
                 mAndroidStaticMocker = new AndroidExtendedMockitoMocker(checker);
                 mAdServicesStaticMocker = new AdServicesExtendedMockitoMocker(checker);
@@ -190,8 +196,6 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
                 mAdServicesStaticMocker = null;
             }
             mAdServicesFlagsMocker = flags != null ? new AdServicesMockitoFlagsMocker(flags) : null;
-            mAdServicesDebugFlagsMocker =
-                    debugFlags != null ? new AdServicesMockitoDebugFlagsMocker(debugFlags) : null;
         }
 
         // AndroidMocker methods
@@ -308,32 +312,11 @@ public abstract class AdServicesMockerLessExtendedMockitoTestCase<M extends Inte
             mAdServicesFlagsMocker.mockAllCobaltLoggingFlags(enabled);
         }
 
-        @Override
-        public void mockGetDeveloperSessionFeatureEnabled(boolean value) {
-            mAdServicesDebugFlagsMocker.mockGetDeveloperSessionFeatureEnabled(value);
-        }
-
-        // AdServicesDebugFlagsMocker methods
-        @Override
-        public void mockGetConsentManagerDebugMode(boolean value) {
-            mAdServicesDebugFlagsMocker.mockGetConsentManagerDebugMode(value);
-        }
-
-        @Override
-        public void mockGetConsentNotificationDebugMode(boolean value) {
-            mAdServicesDebugFlagsMocker.mockGetConsentNotificationDebugMode(value);
-        }
-
         // AdServicesStaticMocker methods
 
         @Override
         public void mockGetFlags(Flags mockedFlags) {
             mAdServicesStaticMocker.mockGetFlags(mockedFlags);
-        }
-
-        @Override
-        public void mockGetFlagsForTesting() {
-            mAdServicesStaticMocker.mockGetFlagsForTesting();
         }
 
         @Override

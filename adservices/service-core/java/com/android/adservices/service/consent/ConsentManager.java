@@ -98,6 +98,7 @@ import com.android.adservices.service.appsearch.AppSearchConsentManager;
 import com.android.adservices.service.common.BackgroundJobsManager;
 import com.android.adservices.service.common.UserProfileIdManager;
 import com.android.adservices.service.common.feature.PrivacySandboxFeatureType;
+import com.android.adservices.service.consent.ConsentConstants.EndUserUx;
 import com.android.adservices.service.measurement.MeasurementImpl;
 import com.android.adservices.service.measurement.WipeoutStatus;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
@@ -566,6 +567,33 @@ public final class ConsentManager {
                 () ->
                         AdServicesApiConsent.getConsent(
                                 mAppSearchConsentManager.getConsent(apiType.toPpApiDatastoreKey())),
+                (e) ->
+                        ErrorLogUtil.e(
+                                e,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_WHILE_GET_CONSENT,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__UX));
+    }
+
+    /**
+     * Retrieves the nullable consent per API.
+     *
+     * @param apiType apiType for which the consent should be provided
+     * @return Boolean indicating consent is given (true) or revoked (false). null if unknown.
+     */
+    @SuppressLint("MissingPermission")
+    public Boolean getConsentNullable(AdServicesApiType apiType) {
+        return executeGettersByConsentSourceOfTruth(
+                /* defaultReturn= */ null,
+                () -> mDatastore.getBoolean(apiType.toPpApiDatastoreKey()),
+                () -> {
+                    ConsentParcel parcel =
+                            mAdServicesManager.getConsent(apiType.toConsentApiType());
+                    if (parcel == null) {
+                        return null;
+                    }
+                    return parcel.isIsGiven();
+                },
+                () -> mAppSearchConsentManager.getConsentNullable(apiType.toPpApiDatastoreKey()),
                 (e) ->
                         ErrorLogUtil.e(
                                 e,
@@ -1917,7 +1945,7 @@ public final class ConsentManager {
 
         try {
             switch (apiType) {
-                case MEASUREMENT -> consent = getConsent(AdServicesApiType.MEASUREMENTS).isGiven();
+                case MEASUREMENT -> consent = getConsentNullable(AdServicesApiType.MEASUREMENTS);
                 case ON_DEVICE_PERSONALIZATION, PROTECTED_APP_SIGNALS -> {
                     boolean isEuDevice =
                             DeviceRegionProvider.isEuDevice(ApplicationContextSingleton.get());
@@ -1928,11 +1956,12 @@ public final class ConsentManager {
                                     && mFlags.getPasUxEnabled()
                                     && wasPasNotificationDisplayed();
                     if (isOnboardedEeaPasUser || isOnboardedRowPasUser) {
-                        consent = getConsent(AdServicesApiType.FLEDGE).isGiven();
+                        // true since this consent is combined with toggles for final user choice.
+                        consent = true;
                     }
                 }
-                case PROTECTED_AUDIENCE -> consent = getConsent(AdServicesApiType.FLEDGE).isGiven();
-                case TOPICS -> consent = getConsent(AdServicesApiType.TOPICS).isGiven();
+                case PROTECTED_AUDIENCE -> consent = getConsentNullable(AdServicesApiType.FLEDGE);
+                case TOPICS -> consent = getConsentNullable(AdServicesApiType.TOPICS);
                 default -> consent = null;
             }
         } catch (NullPointerException e) {
@@ -2427,6 +2456,65 @@ public final class ConsentManager {
         return UNSUPPORTED_UX;
     }
 
+    /**
+     * Determines what UX should be displayed to the end user currently.
+     *
+     * @return UX for end user.
+     */
+    public EndUserUx determineEndUserSettingsUxFromEnrollmentData() {
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
+        int[] allModules =
+                new int[] {
+                    MODULE_TOPICS,
+                    MODULE_PROTECTED_AUDIENCE,
+                    MODULE_MEASUREMENT,
+                    MODULE_PROTECTED_APP_SIGNALS,
+                    MODULE_ON_DEVICE_PERSONALIZATION
+                };
+        boolean isAnyModuleEnabled = false;
+        boolean isNotFirstTimeUser = false;
+        boolean isPersonalizedAdsModuleEnabled = false;
+        boolean isPasOdpModuleEnabled = false;
+        boolean isPasOdpModuleOptedIn = false;
+        for (int apiModule : allModules) {
+            int state = data.getModuleState(apiModule);
+            int userChoice = data.getUserChoice(apiModule);
+            if (state == MODULE_STATE_ENABLED) {
+                isAnyModuleEnabled = true;
+                if (apiModule != MODULE_MEASUREMENT) {
+                    isPersonalizedAdsModuleEnabled = true;
+                }
+                if (apiModule == MODULE_PROTECTED_APP_SIGNALS
+                        || apiModule == MODULE_ON_DEVICE_PERSONALIZATION) {
+                    isPasOdpModuleEnabled = true;
+                }
+            }
+            if (userChoice != USER_CHOICE_UNKNOWN) {
+                isNotFirstTimeUser = true;
+            }
+            if (userChoice == USER_CHOICE_OPTED_IN
+                    && (apiModule == MODULE_PROTECTED_APP_SIGNALS
+                            || apiModule == MODULE_ON_DEVICE_PERSONALIZATION)) {
+                isPasOdpModuleOptedIn = true;
+            }
+        }
+
+        // whether PAS/ODP APIs are being enabled with other APIs for the first time, OR PAS/ODP
+        // APIs have been activated via System API setting user choice to opted-in, which does not
+        // signify user has opted-in, as the final consent needs to be combined with the toggle
+        // consents.
+        boolean PasOdpFirstTimeOrActivated =
+                isPasOdpModuleEnabled && (!isNotFirstTimeUser || isPasOdpModuleOptedIn);
+        if (PasOdpFirstTimeOrActivated) {
+            return EndUserUx.GA_WITH_PAS;
+        } else if (isPersonalizedAdsModuleEnabled) {
+            return EndUserUx.GA;
+        } else if (isAnyModuleEnabled) {
+            return EndUserUx.U18;
+        }
+        return EndUserUx.GA;
+    }
+
     /** Set the current UX to storage based on consent_source_of_truth. */
     public void setUx(PrivacySandboxUxCollection ux) {
         if (FlagsFactory.getFlags().getEnableConsentManagerV2()) {
@@ -2438,6 +2526,19 @@ public final class ConsentManager {
                 () -> mAdServicesManager.setUx(ux.toString()),
                 () -> mAppSearchConsentManager.setUx(ux),
                 /* errorLogger= */ null);
+    }
+
+    /** Returns if any module sate is enabled. */
+    public boolean getIsAnyModuleStateEnabled() {
+        EnrollmentData data = EnrollmentData.deserialize(getModuleEnrollmentState());
+        SparseIntArray states = data.getModuleStates();
+        boolean isAnyModuleStateEnabled = false;
+        for (int i = 0; i < states.size(); i++) {
+            if (states.valueAt(i) == MODULE_STATE_ENABLED) {
+                isAnyModuleStateEnabled = true;
+            }
+        }
+        return isAnyModuleStateEnabled;
     }
 
     /**
@@ -2544,8 +2645,8 @@ public final class ConsentManager {
         setModuleEnrollmentData(EnrollmentData.serialize(data));
     }
 
-    /** Set module enrollment data to storage based on consent_source_of_truth. */
-    String getModuleEnrollmentState() {
+    /** Sets module enrollment data to storage based on consent_source_of_truth. */
+    public String getModuleEnrollmentState() {
         return executeGettersByConsentSourceOfTruth(
                 "",
                 () -> mDatastore.getString(ConsentConstants.MODULE_ENROLLMENT_STATE),

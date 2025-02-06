@@ -102,7 +102,7 @@ public final class AdServicesEnrollmentCtsRootTest extends AdServicesCtsTestCase
                                     new AdServicesOutcomeReceiver<>() {
                                         @Override
                                         public void onResult(Void result) {
-                                            completer.set(null);
+                                            completer.set(AdServicesStatusUtils.STATUS_SUCCESS);
                                         }
 
                                         @Override

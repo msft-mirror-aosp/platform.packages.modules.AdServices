@@ -43,11 +43,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Tests for {@link MeasurementDao} browser deletion that affect the database.
- */
+/** Tests for {@link MeasurementDao} browser deletion that affect the database. */
 @RunWith(Parameterized.class)
-public class DeleteApiIntegrationTest extends AbstractDbIntegrationTest {
+public final class DeleteApiIntegrationTest extends AbstractDbIntegrationTest {
     private static final String TEST_DIR = "msmt_browser_deletion_tests";
     private final JSONObject mParam;
     private final AdServicesLogger mLogger;

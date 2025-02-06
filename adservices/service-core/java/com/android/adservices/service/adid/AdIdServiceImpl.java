@@ -27,6 +27,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.StatusCode;
 import static android.adservices.common.AdServicesStatusUtils.isSuccess;
 
+import static com.android.adservices.service.profiling.RbATraceProvider.FeatureNames.AD_ID_API;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_CLASS__ADID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__GET_ADID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__API_CALLBACK_ERROR;
@@ -56,6 +57,7 @@ import com.android.adservices.service.common.PermissionHelper;
 import com.android.adservices.service.common.SdkRuntimeUtil;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.compat.ProcessCompatUtils;
+import com.android.adservices.service.profiling.RbATraceProvider;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.ApiCallStats;
@@ -130,6 +132,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                 () -> {
                     int resultCode = STATUS_UNSET;
                     try {
+                        RbATraceProvider.beginSection(AD_ID_API, "AdIdService", "getAdId");
                         resultCode =
                                 canCallerInvokeAdIdService(
                                         hasAdIdPermission, adIdParam, callingUid, callback);
@@ -162,6 +165,7 @@ public class AdIdServiceImpl extends IAdIdService.Stub {
                                         .setLatencyMillisecond(apiLatency)
                                         .setResultCode(resultCode)
                                         .build());
+                        RbATraceProvider.endSection();
                     }
                 });
     }

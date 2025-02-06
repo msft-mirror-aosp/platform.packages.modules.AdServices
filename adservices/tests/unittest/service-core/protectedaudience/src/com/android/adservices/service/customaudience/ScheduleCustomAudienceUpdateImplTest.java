@@ -61,7 +61,6 @@ import com.android.adservices.data.customaudience.CustomAudienceDatabase;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
@@ -126,15 +125,12 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     private DevContext mDevContext;
     private CustomAudienceDao mCustomAudienceDao;
 
-    // TODO(b/384949821): move to superclass
-    private final Flags mFakeFlags = flags.getFlags();
-
     @Before
     public void setup() {
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mCallingAppUid = CallingAppUidSupplierProcessImpl.create().getCallingAppUid();
         mocker.mockGetFlags(flags.getFlags());
-        mocker.mockGetDebugFlags(mMockDebugFlags);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
                 .thenReturn(false);
         mDevContext = DevContext.builder(PACKAGE).setDeviceDevOptionsEnabled(false).build();
@@ -161,12 +157,12 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mConsentManagerMock,
                         mCallingAppUid,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
                         mCustomAudienceServiceFilterMock,
                         mCustomAudienceDaoMock);
-        mocker.mockGetConsentNotificationDebugMode(false);
+        mockGetConsentNotificationDebugMode(false);
 
         doNothing()
                 .when(
@@ -220,7 +216,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     public void
             testScheduleCustomAudienceUpdate_withShouldReplacePendingUpdateFalse_SuccessWithUXNotificationEnforcementDisabled()
                     throws Exception {
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
 
         when(mCustomAudienceServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(UPDATE_URI),
@@ -278,7 +274,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     public void
             testScheduleCustomAudienceUpdate_withShouldReplacePendingUpdateFalse_WithAdditionalScheduleRequestsTrue()
                     throws Exception {
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
 
         when(mCustomAudienceServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(UPDATE_URI),
@@ -299,7 +295,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mConsentManagerMock,
                         mCallingAppUid,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
                         mCustomAudienceServiceFilterMock,
@@ -349,7 +345,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     public void
             testScheduleCustomAudienceUpdate_withShouldReplacePendingUpdateFalse_SuccessWithAdditionalScheduleRequestsFalse()
                     throws Exception {
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
 
         when(mCustomAudienceServiceFilterMock.filterRequestAndExtractIdentifier(
                         eq(UPDATE_URI),
@@ -452,7 +448,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mConsentManagerMock,
                         mCallingAppUid,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
                         mCustomAudienceServiceFilterMock,
@@ -493,7 +489,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mConsentManagerMock,
                         mCallingAppUid,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
                         mCustomAudienceServiceFilterMock,
@@ -548,7 +544,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mConsentManagerMock,
                         mCallingAppUid,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
                         mCustomAudienceServiceFilterMock,
@@ -605,7 +601,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mConsentManagerMock,
                         mCallingAppUid,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
                         mCustomAudienceServiceFilterMock,
@@ -656,7 +652,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mConsentManagerMock,
                         mCallingAppUid,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
                         mCustomAudienceServiceFilterMock,
@@ -773,7 +769,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mConsentManagerMock,
                         mCallingAppUid,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
                         mCustomAudienceServiceFilterMock,
@@ -818,7 +814,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mConsentManagerMock,
                         mCallingAppUid,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
                         mCustomAudienceServiceFilterMock,
@@ -853,7 +849,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mConsentManagerMock,
                         mCallingAppUid,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdServicesLoggerMock,
                         mBackgroundExecutorService,
                         mCustomAudienceServiceFilterMock,

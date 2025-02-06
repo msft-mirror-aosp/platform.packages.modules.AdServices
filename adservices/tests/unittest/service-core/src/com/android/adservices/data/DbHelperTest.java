@@ -20,6 +20,7 @@ import static com.android.adservices.common.DbTestUtil.assertMeasurementTablesDo
 import static com.android.adservices.common.DbTestUtil.doesTableExist;
 import static com.android.adservices.common.DbTestUtil.doesTableExistAndColumnCountMatch;
 import static com.android.adservices.common.DbTestUtil.getDbHelperForTest;
+import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.data.DbHelper.DATABASE_VERSION_7;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION;
@@ -28,8 +29,6 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 
@@ -38,10 +37,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
-import com.android.adservices.errorlogging.ErrorLogUtil;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.FileCompatUtils;
-import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import org.junit.Before;
@@ -49,6 +48,9 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 @SpyStatic(FlagsFactory.class)
+@SetErrorLogUtilDefaultParams(
+        throwable = Any.class,
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON)
 public final class DbHelperTest extends AdServicesExtendedMockitoTestCase {
     @Before
     public void setup() {
@@ -114,38 +116,28 @@ public final class DbHelperTest extends AdServicesExtendedMockitoTestCase {
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION)
     public void testSafeGetReadableDatabase_exceptionOccurs_validatesErrorLogging() {
         DbHelper dbHelper = spy(getDbHelperForTest());
         Throwable tr = new SQLiteException();
         Mockito.doThrow(tr).when(dbHelper).getReadableDatabase();
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
 
         SQLiteDatabase db = dbHelper.safeGetReadableDatabase();
 
         assertNull(db);
-        ExtendedMockito.verify(
-                () ->
-                        ErrorLogUtil.e(
-                                tr,
-                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_READ_EXCEPTION,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON));
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION)
     public void testSafeGetWriteDatabase_exceptionOccurs_validatesErrorLogging() {
         DbHelper dbHelper = spy(getDbHelperForTest());
         Throwable tr = new SQLiteException();
         Mockito.doThrow(tr).when(dbHelper).getWritableDatabase();
-        ExtendedMockito.doNothing().when(() -> ErrorLogUtil.e(any(), anyInt(), anyInt()));
 
         SQLiteDatabase db = dbHelper.safeGetWritableDatabase();
 
         assertNull(db);
-        ExtendedMockito.verify(
-                () ->
-                        ErrorLogUtil.e(
-                                tr,
-                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__DATABASE_WRITE_EXCEPTION,
-                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON));
     }
 }

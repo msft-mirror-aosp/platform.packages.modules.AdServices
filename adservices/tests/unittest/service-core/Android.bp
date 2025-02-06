@@ -81,7 +81,7 @@ java_defaults {
     ],
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
-        test: false, // TODO(b/343741206): remove when checks will run on android_test
+        test: true,
     },
 }
 
@@ -137,15 +137,18 @@ android_test {
     instrumentation_for: "AdServicesApk",
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
-        test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
 
 android_test {
-    // This test need network connection and download files so it could be more flaky and run longer.
+    // To avoid flakiness and timeouts related to network calls, this test uses
+    // local file downloader.
     name: "AdServicesMddIntegrationTests",
     srcs: [
         "src/com/android/adservices/download/MobileDataDownloadTest.java",
+    ],
+    asset_dirs: [
+        "assets/mobiledatadownload",
     ],
     defaults: ["AdServices-ServiceCoreUnitTest-Defaults"],
     sdk_version: "module_current",
@@ -160,6 +163,7 @@ android_test {
         "adservices-assets",
         "adservices-test-fixtures",
         "mobile_data_downloader_lib",
+        "mdd-robolectric-library",
     ],
     libs: [
         "android.test.base.stubs.system",
@@ -176,7 +180,6 @@ android_test {
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
         baseline_filename: "lint-baseline-adservices-mdd.xml",
-        test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
 
@@ -242,7 +245,8 @@ java_defaults {
     ],
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
-        test: false, // TODO(b/343741206): remove when checks will run on android_test
+        // TODO(b/358643466): Readd when existing issues are fixed
+        // test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
 
@@ -300,15 +304,18 @@ android_test {
     instrumentation_for: "ExtServices-sminus",
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
-        test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
 
 android_test {
-    // This test need network connection and download files so it could be more flaky and run longer.
+    // To avoid flakiness and timeouts related to network calls, this test uses
+    // local file downloader.
     name: "AdExtServicesMddIntegrationTests",
     srcs: [
         "src/com/android/adservices/download/MobileDataDownloadTest.java",
+    ],
+    asset_dirs: [
+        "assets/mobiledatadownload",
     ],
     defaults: ["AdServices-ServiceCoreUnitTest-Defaults"],
     sdk_version: "module_current",
@@ -322,6 +329,7 @@ android_test {
         "androidx.test.rules",
         "compatibility-device-util-axt",
         "mobile_data_downloader_lib",
+        "mdd-robolectric-library",
         "mockito-target-extended-minus-junit4",
         "truth",
     ],
@@ -341,7 +349,6 @@ android_test {
     lint: {
         extra_check_modules: ["AdServicesTestLintChecker"],
         baseline_filename: "lint-baseline-adextservices-mdd.xml",
-        test: false, // TODO(b/343741206): remove when checks will run on android_test
     },
 }
 

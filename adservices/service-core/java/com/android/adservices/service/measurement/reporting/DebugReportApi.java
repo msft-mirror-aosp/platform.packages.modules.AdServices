@@ -225,15 +225,22 @@ public class DebugReportApi {
         Objects.requireNonNull(trigger, "trigger cannot be null");
         Objects.requireNonNull(type, "type cannot be null");
 
-        if (isTriggerDebugFlagDisabled(type)) {
+        if (isTriggerDebugFlagDisabled(type, trigger, source)) {
             return false;
         }
-        if (isAdTechNotOptIn(trigger.isDebugReporting(), type)) {
+        if (isAdTechNotOptIn(trigger.isDebugReporting(), type, source, trigger)) {
             return false;
         }
 
         if (!isSourceAndTriggerPermissionsGranted(source, trigger)) {
-            LoggerFactory.getMeasurementLogger().d("Skipping trigger debug report %s", type);
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "DebugReportApi: Skipping trigger debug report %s. Trigger ID: %s,"
+                                    + " Enrollment ID: %s%s",
+                            type,
+                            trigger.getId(),
+                            trigger.getEnrollmentId(),
+                            maybeGetSourceInfo(source));
             return false;
         }
 
@@ -350,10 +357,14 @@ public class DebugReportApi {
     /** Schedules the Source Destination limit type Debug Report */
     private void scheduleSourceDestinationLimitDebugReport(
             Source source, String limit, Type type, IMeasurementDao dao) {
-        if (isSourceDebugFlagDisabled(Type.SOURCE_DESTINATION_LIMIT)) {
+        if (isSourceDebugFlagDisabled(Type.SOURCE_DESTINATION_LIMIT, source)) {
             return;
         }
-        if (isAdTechNotOptIn(source.isDebugReporting(), Type.SOURCE_DESTINATION_LIMIT)) {
+        if (isAdTechNotOptIn(
+                source.isDebugReporting(),
+                Type.SOURCE_DESTINATION_LIMIT,
+                source,
+                /* trigger= */ null)) {
             return;
         }
         try {
@@ -374,7 +385,12 @@ public class DebugReportApi {
                     source.getRegistrant(),
                     dao);
         } catch (JSONException e) {
-            LoggerFactory.getMeasurementLogger().e(e, "Json error in debug report %s", type);
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            e,
+                            "DebugReportApi: JSON error in debug report %s. Enrollment ID: %s",
+                            type,
+                            source.getEnrollmentId());
         }
     }
 
@@ -401,7 +417,11 @@ public class DebugReportApi {
                     dao);
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
-                    .e(e, "Json error in debug report %s", Type.HEADER_PARSING_ERROR);
+                    .e(
+                            e,
+                            "DebugReportApi: JSON error in debug report %s. Enrollment ID: %s",
+                            Type.HEADER_PARSING_ERROR,
+                            enrollmentId);
         }
     }
 
@@ -426,22 +446,34 @@ public class DebugReportApi {
         JSONObject body = generateSourceDebugReportBody(source, additionalBodyParams);
         Objects.requireNonNull(body, "debug report body cannot be null");
 
-        if (isSourceDebugFlagDisabled(type)) {
+        if (isSourceDebugFlagDisabled(type, source)) {
             return;
         }
-        if (isAdTechNotOptIn(source.isDebugReporting(), type)) {
+        if (isAdTechNotOptIn(source.isDebugReporting(), type, source, /* trigger= */ null)) {
             return;
         }
         if (!isSourcePermissionGranted(source)) {
-            LoggerFactory.getMeasurementLogger().d("Skipping source debug report %s", type);
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "DebugReportApi: Skipping source debug report %s. Source ID: %s, Source"
+                                    + " Event ID: %s, Enrollment ID: %s",
+                            type, source.getId(), source.getEventId(), source.getEnrollmentId());
             return;
         }
         if (body.length() == 0) {
-            LoggerFactory.getMeasurementLogger().d("Empty debug report found %s", type);
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "DebugReportApi: Empty debug report found %s. Source ID: %s, Source"
+                                    + " Event ID: %s, Enrollment ID: %s",
+                            type, source.getId(), source.getEventId(), source.getEnrollmentId());
             return;
         }
         if (enrollmentId.isEmpty()) {
-            LoggerFactory.getMeasurementLogger().d("Empty enrollment found %s", type);
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "DebugReportApi: Empty enrollment found %s. Source ID: %s, Source Event"
+                                    + " ID: %s",
+                            type, source.getId(), source.getEventId());
             return;
         }
 
@@ -459,9 +491,25 @@ public class DebugReportApi {
             dao.insertDebugReport(debugReport);
         } catch (DatastoreException e) {
             LoggerFactory.getMeasurementLogger()
-                    .e(e, "Failed to insert source debug report %s", type);
+                    .e(
+                            e,
+                            "DebugReportApi: Failed to insert source debug report %s. Enrollment"
+                                    + " ID: %s",
+                            type,
+                            enrollmentId);
+            LoggerFactory.getMeasurementLogger()
+                    .d("Source ID: %s, Source Event ID: %s", source.getId(), source.getEventId());
         }
 
+        LoggerFactory.getMeasurementLogger()
+                .d(
+                        "DebugReportApi: Successfully scheduled source debug report %s. Report ID:"
+                                + " %s, Enrollment ID: %s, Source ID: %s, Source Event ID: %s",
+                        type,
+                        debugReport.getId(),
+                        enrollmentId,
+                        source.getId(),
+                        source.getEventId());
         VerboseDebugReportingJobService.scheduleIfNeeded(mContext, /* forceSchedule= */ false);
     }
 
@@ -508,10 +556,20 @@ public class DebugReportApi {
         try {
             dao.insertDebugReport(debugReport);
         } catch (DatastoreException e) {
-            LoggerFactory.getMeasurementLogger().e(e, "Failed to insert debug report %s", type);
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            e,
+                            "DebugReportApi: Failed to insert debug report %s. Enrollment ID: %s",
+                            type,
+                            enrollmentId);
         }
 
-        VerboseDebugReportingJobService.scheduleIfNeeded(mContext, /*forceSchedule=*/ false);
+        LoggerFactory.getMeasurementLogger()
+                .d(
+                        "DebugReportApi: Successfully scheduled debug report %s. Report ID: %s,"
+                                + " Enrollment ID: %s",
+                        type, debugReport.getId(), enrollmentId);
+        VerboseDebugReportingJobService.scheduleIfNeeded(mContext, /* forceSchedule= */ false);
     }
 
     /** Get AdIdPermission State from Source */
@@ -520,7 +578,11 @@ public class DebugReportApi {
             if (source.hasAdIdPermission()) {
                 return PermissionState.GRANTED;
             } else {
-                LoggerFactory.getMeasurementLogger().d("Source doesn't have AdId permission");
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "DebugReportApi: Source doesn't have AdId permission. Source ID:"
+                                        + " %s, Source Event ID: %s, Enrollment ID: %s",
+                                source.getId(), source.getEventId(), source.getEnrollmentId());
                 return PermissionState.DENIED;
             }
         }
@@ -533,7 +595,11 @@ public class DebugReportApi {
             if (source.hasArDebugPermission()) {
                 return PermissionState.GRANTED;
             } else {
-                LoggerFactory.getMeasurementLogger().d("Source doesn't have ArDebug permission");
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "DebugReportApi: Source doesn't have ArDebug permission. Source ID:"
+                                        + " %s, Source Event ID: %s, Enrollment ID: %s",
+                                source.getId(), source.getEventId(), source.getEnrollmentId());
                 return PermissionState.DENIED;
             }
         }
@@ -545,7 +611,11 @@ public class DebugReportApi {
             if (trigger.hasAdIdPermission()) {
                 return PermissionState.GRANTED;
             } else {
-                LoggerFactory.getMeasurementLogger().d("Trigger doesn't have AdId permission");
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "DebugReportApi: Trigger doesn't have AdId permission. Trigger ID:"
+                                        + " %s, Enrollment ID: %s",
+                                trigger.getId(), trigger.getEnrollmentId());
                 return PermissionState.DENIED;
             }
         }
@@ -557,7 +627,11 @@ public class DebugReportApi {
             if (trigger.hasArDebugPermission()) {
                 return PermissionState.GRANTED;
             } else {
-                LoggerFactory.getMeasurementLogger().d("Trigger doesn't have ArDebug permission");
+                LoggerFactory.getMeasurementLogger()
+                        .d(
+                                "DebugReportApi: Trigger doesn't have ArDebug permission. Trigger"
+                                        + " ID: %s, Enrollment ID: %s",
+                                trigger.getId(), trigger.getEnrollmentId());
                 return PermissionState.DENIED;
             }
         }
@@ -585,10 +659,22 @@ public class DebugReportApi {
     }
 
     /** Get is Ad tech not op-in and log */
-    private boolean isAdTechNotOptIn(boolean optIn, DebugReportApi.Type type) {
+    private boolean isAdTechNotOptIn(
+            boolean optIn,
+            DebugReportApi.Type type,
+            @Nullable Source source,
+            @Nullable Trigger trigger) {
         if (!optIn) {
+            String enrollmentId =
+                    source != null ? source.getEnrollmentId() : trigger.getEnrollmentId();
             LoggerFactory.getMeasurementLogger()
-                    .d("Ad-tech not opt-in. Skipping debug report %s", type);
+                    .d(
+                            "DebugReportApi: Ad-tech not opt-in. Skipping debug report %s."
+                                    + " Enrollment ID: %s%s%s",
+                            type,
+                            enrollmentId,
+                            maybeGetSourceInfo(source),
+                            maybeGetTriggerInfo(trigger));
         }
         return !optIn;
     }
@@ -610,7 +696,11 @@ public class DebugReportApi {
 
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
-                    .e(e, "Json error while generating source debug report body.");
+                    .e(e, "DebugReportApi: JSON error while generating source debug report body.");
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Source ID: %s, Source Event ID: %s, Enrollment ID: %s",
+                            source.getId(), source.getEventId(), source.getEnrollmentId());
         }
         return body;
     }
@@ -656,7 +746,11 @@ public class DebugReportApi {
             body.put(Body.SOURCE_SITE, generateSourceSite(source));
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
-                    .e(e, "Json error while generating trigger debug report body.");
+                    .e(e, "DebugReportApi: JSON error while generating trigger debug report body.");
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Trigger ID: %s, Enrollment ID: %s%s",
+                            trigger.getId(), trigger.getEnrollmentId(), maybeGetSourceInfo(source));
         }
         return body;
     }
@@ -683,7 +777,14 @@ public class DebugReportApi {
             body.put(Body.SOURCE_SITE, generateSourceSite(source));
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
-                    .e(e, "Json error while generating trigger debug report body.");
+                    .e(e, "DebugReportApi: JSON error while generating trigger debug report body.");
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Trigger ID: %s, Enrollment ID: %s, Source ID: %s, Source Event ID: %s",
+                            trigger.getId(),
+                            trigger.getEnrollmentId(),
+                            source.getId(),
+                            source.getEventId());
         }
         return body;
     }
@@ -724,30 +825,61 @@ public class DebugReportApi {
             }
         } catch (JSONException e) {
             LoggerFactory.getMeasurementLogger()
-                    .e(e, "Json error while generating trigger debug report body with all fields.");
+                    .e(
+                            e,
+                            "DebugReportApi: JSON error while generating trigger debug report body"
+                                    + " with all fields.");
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "Trigger ID: %s, Enrollment ID: %s, Source ID: %s, Source Event ID: %s",
+                            trigger.getId(),
+                            trigger.getEnrollmentId(),
+                            source.getId(),
+                            source.getEventId());
         }
         return body;
     }
 
     /** Checks flags for source debug reports. */
-    private boolean isSourceDebugFlagDisabled(DebugReportApi.Type type) {
+    private boolean isSourceDebugFlagDisabled(DebugReportApi.Type type, Source source) {
         if (!mFlags.getMeasurementEnableDebugReport()
                 || !mFlags.getMeasurementEnableSourceDebugReport()) {
             LoggerFactory.getMeasurementLogger()
-                    .d("Source flag is disabled for %s debug report", type);
+                    .d(
+                            "DebugReportApi: Source flag is disabled for %s debug report. Source"
+                                    + " ID: %s, Source Event ID: %s, Enrollment ID: %s",
+                            type, source.getId(), source.getEventId(), source.getEnrollmentId());
             return true;
         }
         return false;
     }
 
     /** Checks flags for trigger debug reports. */
-    private boolean isTriggerDebugFlagDisabled(DebugReportApi.Type type) {
+    private boolean isTriggerDebugFlagDisabled(
+            DebugReportApi.Type type, Trigger trigger, @Nullable Source source) {
         if (!mFlags.getMeasurementEnableDebugReport()
                 || !mFlags.getMeasurementEnableTriggerDebugReport()) {
             LoggerFactory.getMeasurementLogger()
-                    .d("Trigger flag is disabled for %s debug report", type);
+                    .d(
+                            "DebugReportApi: Trigger flag is disabled for %s debug report. Trigger"
+                                    + " ID: %s, Enrollment ID: %s%s",
+                            type,
+                            trigger.getId(),
+                            trigger.getEnrollmentId(),
+                            maybeGetSourceInfo(source));
             return true;
         }
         return false;
+    }
+
+    private String maybeGetSourceInfo(@Nullable Source source) {
+        return source != null
+                ? String.format(
+                        ", Source ID: %s, Source Event ID: %s", source.getId(), source.getEventId())
+                : "";
+    }
+
+    private String maybeGetTriggerInfo(@Nullable Trigger trigger) {
+        return trigger != null ? String.format(", Trigger ID: %s", trigger.getId()) : "";
     }
 }

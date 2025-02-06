@@ -26,7 +26,6 @@ import static org.mockito.Mockito.when;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.mockito.AbstractStaticMocker.ClassNotSpiedOrMockedException;
-import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.shared.spe.logging.JobSchedulingLogger;
 import com.android.adservices.spe.AdServicesJobServiceFactory;
@@ -55,7 +54,6 @@ public abstract class AdServicesJobMockerTestCase<T extends AdServicesJobMocker>
             new UnsupportedOperationException("D'OH!");
 
     @Mock private Flags mMockFlags;
-    @Mock private DebugFlags mMockDebugFlags;
     @Mock private AdServicesJobServiceFactory mMockFactory;
     @Mock private AdServicesJobServiceLogger mAdServicesJobServiceLogger;
 
@@ -63,11 +61,10 @@ public abstract class AdServicesJobMockerTestCase<T extends AdServicesJobMocker>
     public final AdServicesExtendedMockitoRule extendedMockito =
             new AdServicesExtendedMockitoRule.Builder(this).build();
 
-    protected abstract T getMocker(
-            StaticClassChecker checker, Flags mockFlags, DebugFlags mockDebugFlags);
+    protected abstract T getMocker(StaticClassChecker checker, Flags mockFlags);
 
     private T getMocker() {
-        return getMocker(extendedMockito, mMockFlags, mMockDebugFlags);
+        return getMocker(extendedMockito, mMockFlags);
     }
 
     @Before

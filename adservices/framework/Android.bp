@@ -38,9 +38,9 @@ java_sdk_library {
         "framework-sdksandbox.impl",
         "androidx.annotation_annotation",
         "error_prone_annotations",
-        "adservices_flags_lib",
     ],
     static_libs: [
+        "adservices_flags_lib",
         "adservices-shared-exceptions",
     ],
     sdk_version: "module_current",
@@ -96,6 +96,7 @@ java_library {
     min_sdk_version: "30",
     max_sdk_version: "32",
     visibility: [
+        "//device/google:__subpackages__",
         "//external/chromium-webview:__subpackages__",
         "//packages/modules/AdServices:__subpackages__",
         "//packages/modules/ExtServices:__subpackages__",

@@ -22,16 +22,30 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_
 import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
+import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT;
+import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B;
 import static com.android.adservices.service.adselection.EventReporter.INTERACTION_DATA_SIZE_MAX_EXCEEDED;
 import static com.android.adservices.service.adselection.EventReporter.INTERACTION_KEY_SIZE_MAX_EXCEEDED;
 import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_INVALID_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_TO_CALLER_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_SUCCESS_TO_CALLER_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_EVENT_IMPL_FAILED_DUE_TO_INTERNAL_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_EVENT_IMPL_FAILED_DUE_TO_IO_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.any;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
@@ -47,6 +61,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 
@@ -70,6 +85,8 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -77,8 +94,8 @@ import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAdSelection;
 import com.android.adservices.data.adselection.DBRegisteredAdInteraction;
 import com.android.adservices.data.adselection.datahandlers.RegisteredAdInteraction;
+import com.android.adservices.flags.SetFakeFlagsFactoryFlags;
 import com.android.adservices.service.DebugFlags;
-import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.AdSelectionServiceFilter;
@@ -93,6 +110,9 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportInteractionApiCalledStats;
+import com.android.adservices.shared.testing.annotations.SetFlagFalse;
+import com.android.adservices.shared.testing.annotations.SetFlagTrue;
+import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
 import com.google.common.collect.ImmutableList;
@@ -114,6 +134,7 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.stubbing.Answer;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -121,6 +142,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(DebugFlags.class)
+@SetFakeFlagsFactoryFlags
+@SetErrorLogUtilDefaultParams(
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION)
 public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase {
     private static final Instant ACTIVATION_TIME = Instant.now();
     private static final int MY_UID = Process.myUid();
@@ -157,15 +181,6 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
             AdServicesExecutors.getBackgroundExecutor();
 
     @Mock FledgeAuthorizationFilter mFledgeAuthorizationFilterMock;
-    private Flags mFakeFlags = FakeFlagsFactory.getFlagsForTest();
-
-    private static final Flags FLAGS_ENROLLMENT_CHECK =
-            new Flags() {
-                @Override
-                public boolean getDisableFledgeEnrollmentCheck() {
-                    return false;
-                }
-            };
 
     private long mMaxRegisteredAdBeaconsTotalCount;
 
@@ -184,9 +199,8 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
 
     @Before
     public void setup() throws Exception {
-        mFakeFlags = FakeFlagsFactory.getFlagsForTest();
-        mocker.mockGetDebugFlags(mMockDebugFlags);
-        mocker.mockGetConsentNotificationDebugMode(false);
+        mocker.mockGetDebugFlags(mFakeDebugFlags);
+        mockGetConsentNotificationDebugMode(false);
         mMaxRegisteredAdBeaconsPerDestination =
                 mFakeFlags.getFledgeReportImpressionMaxRegisteredAdBeaconsPerAdTechCount();
         mMaxRegisteredAdBeaconsTotalCount =
@@ -206,12 +220,12 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
                         DevContext.createForDevOptionsDisabled(),
-                        false);
+                        /* shouldUseUnifiedTables= */ false);
 
         Uri baseBuyerUri = mMockWebServerRule.uriForPath(BUYER_INTERACTION_REPORTING_PATH);
 
@@ -325,7 +339,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     public void
             testImplSuccessfullyReportsRegisteredInteractionsWithUXNotificationEnforcementDisabled()
                     throws Exception {
-        mocker.mockGetConsentNotificationDebugMode(true);
+        mockGetConsentNotificationDebugMode(true);
         mEventReporter =
                 new ReportEventImpl(
                         mAdSelectionEntryDao,
@@ -334,12 +348,12 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
                         DevContext.createForDevOptionsDisabled(),
-                        false);
+                        /* shouldUseUnifiedTables= */ false);
 
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -403,6 +417,10 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_EVENT_IMPL_FAILED_DUE_TO_INTERNAL_ERROR,
+            throwable = IllegalStateException.class)
     public void testImplDoesNotCrashAfterSellerReportingThrowsAnException() throws Exception {
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
@@ -488,6 +506,10 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__REPORT_EVENT_IMPL_FAILED_DUE_TO_IO_EXCEPTION,
+            throwable = IOException.class)
     public void testImplDoesNotCrashAfterBuyerReportingThrowsAnException() throws Exception {
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
@@ -512,7 +534,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
         ListenableFuture<Void> failedFuture =
                 Futures.submit(
                         () -> {
-                            throw new IllegalStateException("Exception for test!");
+                            throw new IOException("Exception for test!");
                         },
                         mLightweightExecutorService);
 
@@ -556,7 +578,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                 .logFledgeApiCallStats(
                         eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
                         eq(TEST_PACKAGE_NAME),
-                        eq(STATUS_INTERNAL_ERROR),
+                        eq(STATUS_IO_ERROR),
                         anyInt());
 
         // Assert seller reporting was done
@@ -715,6 +737,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
+    @SetFlagFalse(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testImplReturnsOnlyReportsUriThatPassesEnrollmentCheck() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -731,8 +754,6 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                 mMaxRegisteredAdBeaconsPerDestination,
                 SELLER_DESTINATION);
 
-        mFakeFlags = FLAGS_ENROLLMENT_CHECK;
-
         // Re init interaction reporter
         mEventReporter =
                 new ReportEventImpl(
@@ -742,12 +763,12 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
                         DevContext.createForDevOptionsDisabled(),
-                        false);
+                        /* shouldUseUnifiedTables= */ false);
 
         // Allow the first call and filter the second
         doNothing()
@@ -802,6 +823,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
+    @SetFlagFalse(KEY_DISABLE_FLEDGE_ENROLLMENT_CHECK)
     public void testImplReturnsSuccessButDoesNotDoReportingWhenBothFailEnrollmentCheck()
             throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
@@ -819,8 +841,6 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                 mMaxRegisteredAdBeaconsPerDestination,
                 SELLER_DESTINATION);
 
-        mFakeFlags = FLAGS_ENROLLMENT_CHECK;
-
         // Re init event reporter
         mEventReporter =
                 new ReportEventImpl(
@@ -830,12 +850,12 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         mFakeFlags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
                         DevContext.createForDevOptionsDisabled(),
-                        false);
+                        /* shouldUseUnifiedTables= */ false);
 
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mFledgeAuthorizationFilterMock)
@@ -876,6 +896,10 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED,
+            throwable = FilterException.class)
     public void testImplFailsWithInvalidPackageName() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -943,6 +967,10 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER,
+            throwable = FilterException.class)
     public void testImplFailsWhenForegroundCheckFails() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -1011,6 +1039,10 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED,
+            throwable = FilterException.class)
     public void testImplFailsWhenThrottled() throws Exception {
         // Uses ArgumentCaptor to capture the logs in the tests.
         ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
@@ -1121,6 +1153,10 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED,
+            throwable = FilterException.class)
     public void testImplFailsWhenAppNotInAllowList() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -1246,6 +1282,10 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_INVALID_ARGUMENT,
+            throwable = IllegalArgumentException.class)
     public void testImplFailsWithUnknownAdSelectionId() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -1294,6 +1334,10 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_INVALID_ARGUMENT,
+            throwable = IllegalArgumentException.class)
     public void testReportEventImplFailsWithUnknownAdSelectionId_serverAuctionEnabled()
             throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
@@ -1349,12 +1393,12 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         flags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
                         DevContext.createForDevOptionsDisabled(),
-                        false);
+                        /* shouldUseUnifiedTables= */ false);
         ReportInteractionTestCallback callback = callReportInteraction(inputParams);
 
         assertFalse(callback.mIsSuccess);
@@ -1418,6 +1462,10 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_INVALID_ARGUMENT,
+            throwable = IllegalArgumentException.class)
     public void testImplFailsWhenInteractionDataExceedsMaxSize() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -1485,12 +1533,12 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         flags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
                         DevContext.createForDevOptionsDisabled(),
-                        false);
+                        /* shouldUseUnifiedTables= */ false);
 
         MockWebServer server =
                 mMockWebServerRule.startMockWebServer(
@@ -1527,6 +1575,10 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_INVALID_ARGUMENT,
+            throwable = IllegalArgumentException.class)
     public void testReportInteractionFailsWhenInteractionKeyExceedsMaxSize() throws Exception {
         mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
         mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
@@ -1573,12 +1625,12 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         mBackgroundExecutorService,
                         mAdServicesLoggerMock,
                         flags,
-                        mMockDebugFlags,
+                        mFakeDebugFlags,
                         mAdSelectionServiceFilterMock,
                         MY_UID,
                         mFledgeAuthorizationFilterMock,
                         DevContext.createForDevOptionsDisabled(),
-                        false);
+                        /* shouldUseUnifiedTables= */ false);
 
         // Count down callback + log interaction.
         ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);
@@ -1594,6 +1646,57 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         eq(TEST_PACKAGE_NAME),
                         eq(STATUS_INVALID_ARGUMENT),
                         anyInt());
+    }
+
+    @Test
+    @SetIntegerFlag(
+            name = KEY_FLEDGE_REPORT_IMPRESSION_REGISTERED_AD_BEACONS_MAX_INTERACTION_KEY_SIZE_B,
+            value = 1)
+    @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_INVALID_ARGUMENT,
+            throwable = IllegalArgumentException.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_FAILURE_TO_CALLER_FAILED,
+            throwable = RemoteException.class)
+    public void testReportInteraction_reportFailureFailed_logCels() throws Exception {
+        mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
+        ReportInteractionInput inputParams =
+                new ReportInteractionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .setInteractionKey(CLICK_EVENT)
+                        .setInteractionData(mInteractionData)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .build();
+        ReportInteractionCallback mockCallback = mock(ReportInteractionCallback.class);
+        doThrow(new RemoteException()).when(mockCallback).onFailure(any());
+
+        mEventReporter.reportInteraction(inputParams, mockCallback);
+    }
+
+    @Test
+    @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_EVENT)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__EVENT_REPORTER_NOTIFY_SUCCESS_TO_CALLER_FAILED,
+            throwable = RemoteException.class)
+    public void testReportInteraction_reportSuccessFailed_logCel() throws Exception {
+        mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
+        ReportInteractionInput inputParams =
+                new ReportInteractionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .setInteractionKey(CLICK_EVENT)
+                        .setInteractionData(mInteractionData)
+                        .setReportingDestinations(BUYER_DESTINATION | SELLER_DESTINATION)
+                        .build();
+        ReportInteractionCallback mockCallback = mock(ReportInteractionCallback.class);
+        doThrow(new RemoteException()).when(mockCallback).onSuccess();
+
+        mEventReporter.reportInteraction(inputParams, mockCallback);
     }
 
     private ReportInteractionTestCallback callReportInteraction(ReportInteractionInput inputParams)

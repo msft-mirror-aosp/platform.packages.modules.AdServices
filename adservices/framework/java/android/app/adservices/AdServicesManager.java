@@ -137,6 +137,16 @@ public final class AdServicesManager {
         }
     }
 
+    /** Return the nullable User Consent */
+    @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
+    public ConsentParcel getConsentNullable(@ConsentParcel.ConsentApiType int consentApiType) {
+        try {
+            return mService.getConsentNullable(consentApiType);
+        } catch (RemoteException e) {
+            throw e.rethrowFromSystemServer();
+        }
+    }
+
     /** Set the User Consent */
     @RequiresPermission(ACCESS_ADSERVICES_MANAGER)
     public void setConsent(ConsentParcel consentParcel) {

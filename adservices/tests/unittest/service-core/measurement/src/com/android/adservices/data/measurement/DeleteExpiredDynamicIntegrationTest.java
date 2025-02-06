@@ -37,11 +37,11 @@ import java.util.Collection;
 import java.util.Map;
 
 /**
- * Tests for {@link MeasurementDao} app deletion that affect the database, and
- * set variables that change from test to test (hence the name, "dynamic").
+ * Tests for {@link MeasurementDao} app deletion that affect the database, and set variables that
+ * change from test to test (hence the name, "dynamic").
  */
 @RunWith(Parameterized.class)
-public class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTest {
+public final class DeleteExpiredDynamicIntegrationTest extends AbstractDbIntegrationTest {
     private final DatastoreManager mDatastoreManager;
 
     @Parameterized.Parameters(name = "{3}")

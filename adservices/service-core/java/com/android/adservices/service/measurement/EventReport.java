@@ -281,6 +281,14 @@ public class EventReport {
         }
     }
 
+    /**
+     * Returns true if this EventReport is randomized.
+     * Randomized EventReports are not triggered by a specific event.
+     */
+    public boolean isRandomized() {
+        return mTriggerId == null;
+    }
+
     /** Builder for {@link EventReport} */
     public static final class Builder {
 
