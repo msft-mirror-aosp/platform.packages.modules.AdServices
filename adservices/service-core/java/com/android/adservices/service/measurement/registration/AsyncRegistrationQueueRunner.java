@@ -55,6 +55,8 @@ import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.errorprone.annotations.concurrent.GuardedBy;
 
+import org.json.JSONException;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -544,8 +546,10 @@ public final class AsyncRegistrationQueueRunner {
                         .d(
                                 "Enrollment ID: %s, Trigger ID: %s",
                                 trigger.getEnrollmentId(), trigger.getId());
-                mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
-                        trigger, dao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
+                if (isTriggerReportAllowed(trigger, mFlags)) {
+                    mDebugReportApi.scheduleTriggerNoMatchingSourceDebugReport(
+                            trigger, dao, DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR);
+                }
                 throw new DatastoreException(
                         "Insert trigger to DB error, generate trigger-unknown-error report");
             }
@@ -1064,6 +1068,21 @@ public final class AsyncRegistrationQueueRunner {
         }
         return triggerInsertedPerDestination
                 < FlagsFactory.getFlags().getMeasurementMaxTriggersPerDestination();
+    }
+
+    static boolean isTriggerReportAllowed(Trigger trigger, Flags flags) {
+        try {
+            return (trigger.hasAggregatableData(flags)
+                    || !trigger.parseEventTriggers(flags).isEmpty());
+        } catch (JSONException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .e(
+                            e,
+                            "JSONException when checking if trigger verbose debug report can be"
+                                    + " sent  trigger with ID: "
+                                    + trigger.getId());
+        }
+        return false;
     }
 
     private boolean destinationExceedsGlobalRateLimit(

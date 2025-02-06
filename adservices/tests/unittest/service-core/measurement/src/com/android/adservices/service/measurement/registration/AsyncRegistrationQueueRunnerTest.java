@@ -39,6 +39,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
@@ -80,6 +81,7 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.Trigger;
 import com.android.adservices.service.measurement.TriggerFixture;
+import com.android.adservices.service.measurement.TriggerFixture.ValidTriggerParams;
 import com.android.adservices.service.measurement.TriggerSpec;
 import com.android.adservices.service.measurement.TriggerSpecs;
 import com.android.adservices.service.measurement.TriggerSpecsUtil;
@@ -5967,6 +5969,174 @@ public final class AsyncRegistrationQueueRunnerTest extends AdServicesExtendedMo
                         additionalParamsCaptor.capture(),
                         eq(mMeasurementDao));
         assertNull(additionalParamsCaptor.getValue());
+    }
+
+    @Test
+    public void storeTrigger_triggerUknownDebugReport_hasAggregatableData_schedule()
+            throws DatastoreException {
+        // Setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppTrigger();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .setAggregateTriggerData(ValidTriggerParams.AGGREGATE_TRIGGER_DATA)
+                        .setAggregateValuesString(ValidTriggerParams.AGGREGATE_VALUES_STRING)
+                        .build();
+
+        Answer<?> answerAsyncTriggerFetcher =
+                invocation -> {
+                    AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    return Optional.of(trigger);
+                };
+        doAnswer(answerAsyncTriggerFetcher)
+                .when(mAsyncTriggerFetcher)
+                .fetchTrigger(any(), any(), any());
+
+        doThrow(
+                        new DatastoreException(
+                                "Insert trigger to DB error, generate trigger-unknown-error"
+                                        + " report"))
+                .when(mMeasurementDao)
+                .insertTrigger(any(Trigger.class));
+
+        when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
+
+        // Execution
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+
+        // Assertions
+        assertThat(result).isEqualTo(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED);
+        verify(mAsyncTriggerFetcher, times(1))
+                .fetchTrigger(any(AsyncRegistration.class), any(), any());
+        verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
+        verify(mMeasurementDao, never()).insertAsyncRegistration(any(AsyncRegistration.class));
+        verify(mMeasurementDao, never()).getKeyValueData(anyString(), any());
+        verify(mMeasurementDao, never()).deleteAsyncRegistration(any(String.class));
+
+        verify(mDebugReportApi)
+                .scheduleTriggerNoMatchingSourceDebugReport(
+                        any(Trigger.class),
+                        any(IMeasurementDao.class),
+                        eq(DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR));
+    }
+
+    @Test
+    public void storeTrigger_triggerUknownDebugReport_hasEventData_schedule()
+            throws DatastoreException {
+        // Setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppTrigger();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .setEventTriggers(ValidTriggerParams.EVENT_TRIGGERS)
+                        .build();
+
+        Answer<?> answerAsyncTriggerFetcher =
+                invocation -> {
+                    AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    return Optional.of(trigger);
+                };
+        doAnswer(answerAsyncTriggerFetcher)
+                .when(mAsyncTriggerFetcher)
+                .fetchTrigger(any(), any(), any());
+
+        doThrow(
+                        new DatastoreException(
+                                "Insert trigger to DB error, generate trigger-unknown-error"
+                                        + " report"))
+                .when(mMeasurementDao)
+                .insertTrigger(any(Trigger.class));
+
+        when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
+
+        // Execution
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+
+        // Assertions
+        assertThat(result).isEqualTo(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED);
+        verify(mAsyncTriggerFetcher, times(1))
+                .fetchTrigger(any(AsyncRegistration.class), any(), any());
+        verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
+        verify(mMeasurementDao, never()).insertAsyncRegistration(any(AsyncRegistration.class));
+        verify(mMeasurementDao, never()).getKeyValueData(anyString(), any());
+        verify(mMeasurementDao, never()).deleteAsyncRegistration(any(String.class));
+
+        verify(mDebugReportApi)
+                .scheduleTriggerNoMatchingSourceDebugReport(
+                        any(Trigger.class),
+                        any(IMeasurementDao.class),
+                        eq(DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR));
+    }
+
+    @Test
+    public void storeTrigger_triggerUknownDebugReport_noAggregatableOrEventData_dontSchedule()
+            throws DatastoreException {
+        // Setup
+        AsyncRegistrationQueueRunner asyncRegistrationQueueRunner =
+                getSpyAsyncRegistrationQueueRunner();
+
+        AsyncRegistration validAsyncRegistration = createAsyncRegistrationForAppTrigger();
+        Trigger trigger =
+                TriggerFixture.getValidTriggerBuilder()
+                        .setAttributionDestination(APP_DESTINATION)
+                        .setDestinationType(EventSurfaceType.APP)
+                        .setEventTriggers("[]")
+                        .setAggregateTriggerData("[]")
+                        .setAggregateValuesString("[]")
+                        .build();
+
+        Answer<?> answerAsyncTriggerFetcher =
+                invocation -> {
+                    AsyncFetchStatus asyncFetchStatus = invocation.getArgument(1);
+                    asyncFetchStatus.setResponseStatus(AsyncFetchStatus.ResponseStatus.SUCCESS);
+                    return Optional.of(trigger);
+                };
+        doAnswer(answerAsyncTriggerFetcher)
+                .when(mAsyncTriggerFetcher)
+                .fetchTrigger(any(), any(), any());
+
+        doThrow(
+                        new DatastoreException(
+                                "Insert trigger to DB error, generate trigger-unknown-error"
+                                        + " report"))
+                .when(mMeasurementDao)
+                .insertTrigger(any(Trigger.class));
+
+        when(mMeasurementDao.fetchNextQueuedAsyncRegistration(anyInt(), any()))
+                .thenReturn(validAsyncRegistration)
+                .thenReturn(null);
+
+        // Execution
+        ProcessingResult result = asyncRegistrationQueueRunner.runAsyncRegistrationQueueWorker();
+
+        // Assertions
+        assertThat(result).isEqualTo(ProcessingResult.SUCCESS_ALL_RECORDS_PROCESSED);
+        verify(mAsyncTriggerFetcher, times(1))
+                .fetchTrigger(any(AsyncRegistration.class), any(), any());
+        verify(mMeasurementDao, times(1)).insertTrigger(any(Trigger.class));
+        verify(mMeasurementDao, never()).insertAsyncRegistration(any(AsyncRegistration.class));
+        verify(mMeasurementDao, never()).getKeyValueData(anyString(), any());
+        verify(mMeasurementDao, never()).deleteAsyncRegistration(any(String.class));
+
+        verify(mDebugReportApi, never())
+                .scheduleTriggerNoMatchingSourceDebugReport(
+                        any(Trigger.class),
+                        any(IMeasurementDao.class),
+                        eq(DebugReportApi.Type.TRIGGER_UNKNOWN_ERROR));
     }
 
     private static KeyValueData getKeyValueDataRedirectCount() {

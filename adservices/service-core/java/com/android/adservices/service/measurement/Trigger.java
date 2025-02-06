@@ -698,6 +698,25 @@ public class Trigger {
         return mAggregateDebugReporting;
     }
 
+    /** Returns if the trigger has non-empty aggregatable values or non-empty aggregatable data */
+    public boolean hasAggregatableData(Flags flags) throws JSONException {
+        Optional<AggregatableAttributionTrigger> aggregatableAttributionTriggerOpt =
+                getAggregatableAttributionTrigger(flags);
+        if (aggregatableAttributionTriggerOpt.isEmpty()) {
+            return false;
+        }
+
+        AggregatableAttributionTrigger aggregatableAttributionTrigger =
+                aggregatableAttributionTriggerOpt.get();
+        for (AggregatableValuesConfig aggValuesConfig :
+                aggregatableAttributionTrigger.getValueConfigs()) {
+            if (!aggValuesConfig.getValues().isEmpty()) {
+                return true;
+            }
+        }
+        return !aggregatableAttributionTrigger.getTriggerData().isEmpty();
+    }
+
     /** Builder for {@link Trigger}. */
     public static final class Builder {
 

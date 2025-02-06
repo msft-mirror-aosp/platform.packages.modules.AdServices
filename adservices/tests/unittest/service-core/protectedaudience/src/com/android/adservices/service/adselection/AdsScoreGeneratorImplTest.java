@@ -157,7 +157,6 @@ import java.util.stream.Collectors;
 @SetFlagTrue(KEY_FLEDGE_JS_SCRIPT_RESULT_CODE_METRICS_ENABLED)
 // TODO (b/384952360): refine CEL related verifications later
 @SkipLoggingUsageRule(reason = "b/384952360")
-@SuppressWarnings("DoNotMockErrorLogUtilBehavior") // TODO(b/384952360)
 public final class AdsScoreGeneratorImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final AdTechIdentifier BUYER_1 = AdSelectionConfigFixture.BUYER_1;
@@ -207,9 +206,6 @@ public final class AdsScoreGeneratorImplTest extends AdServicesExtendedMockitoTe
 
     @Before
     public void setUp() throws Exception {
-        // TODO (b/384952360): Delete doNothingOnErrorLogUtilError when all CEL logs in this test
-        // are captured properly.
-        doNothingOnErrorLogUtilError();
         mocker.mockGetFlags(mFakeFlags);
         mDevContext = DevContext.createForDevOptionsDisabled();
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();

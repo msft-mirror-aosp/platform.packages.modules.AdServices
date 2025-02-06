@@ -282,6 +282,28 @@ public class AdsRelevanceStatusUtils {
     /** Buckets for signal size in the encoding JS execution process. */
     public static final long[] ENCODING_JS_EXECUTION_SIGNAL_SIZE_BUCKETS = {10, 100, 500, 5000};
 
+    /* Constants for status in the ReportingWithDestinationPerformed stats. */
+    public static final int REPORTING_CALL_STATUS_UNSET = 0;
+    public static final int REPORTING_CALL_STATUS_SUCCESSFUL = 1;
+    public static final int REPORTING_CALL_STATUS_FAILURE_HTTP_TOO_MANY_REQUESTS = 2;
+    public static final int REPORTING_CALL_STATUS_FAILURE_HTTP_REDIRECTION = 3;
+    public static final int REPORTING_CALL_STATUS_FAILURE_HTTP_CLIENT_ERROR = 4;
+    public static final int REPORTING_CALL_STATUS_FAILURE_HTTP_SERVER_ERROR = 5;
+    public static final int REPORTING_CALL_STATUS_FAILURE_HTTP_IO_EXCEPTION = 6;
+    public static final int REPORTING_CALL_STATUS_FAILURE_HTTP_NETWORK_NOT_AVAILABLE = 7;
+    public static final int REPORTING_CALL_STATUS_FAILURE_UNKNOWN = 8;
+
+    /* Constants for destination in the ReportingWithDestinationPerformed stats. */
+    public static final int REPORTING_CALL_DESTINATION_UNSET = 0;
+    public static final int REPORTING_CALL_DESTINATION_SELLER = 1;
+    public static final int REPORTING_CALL_DESTINATION_BUYER = 2;
+    public static final int REPORTING_CALL_DESTINATION_COMPONENT_SELLER = 3;
+
+    /* Constants for type of reporting api in the ReportingWithDestinationPerformed stats. */
+    public static final int REPORTING_API_UNSET = 0;
+    public static final int REPORTING_API_REPORT_IMPRESSION = 1;
+    public static final int REPORTING_API_REPORT_EVENT = 2;
+
     /** The kind of winner did the beacon come from. */
     @IntDef(
             prefix = {"BEACON_SOURCE_"},
@@ -506,6 +528,46 @@ public class AdsRelevanceStatusUtils {
             })
     @Retention(RetentionPolicy.SOURCE)
     public @interface TopicsEpochJobBatteryConstraint {}
+
+    /**
+     * Reporting call status. This represents the status of report impression and report event call.
+     */
+    @IntDef(
+            prefix = {"REPORTING_CALL_STATUS_"},
+            value = {
+                REPORTING_CALL_STATUS_UNSET,
+                REPORTING_CALL_STATUS_SUCCESSFUL,
+                REPORTING_CALL_STATUS_FAILURE_HTTP_TOO_MANY_REQUESTS,
+                REPORTING_CALL_STATUS_FAILURE_HTTP_REDIRECTION,
+                REPORTING_CALL_STATUS_FAILURE_HTTP_CLIENT_ERROR,
+                REPORTING_CALL_STATUS_FAILURE_HTTP_SERVER_ERROR,
+                REPORTING_CALL_STATUS_FAILURE_HTTP_IO_EXCEPTION,
+                REPORTING_CALL_STATUS_FAILURE_HTTP_NETWORK_NOT_AVAILABLE,
+                REPORTING_CALL_STATUS_FAILURE_UNKNOWN
+            })
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface ReportingCallStatsStatus {}
+
+    /** Enum to determine the destination in the reporting event / reporting impression call. */
+    @IntDef(
+            prefix = {"REPORTING_CALL_DESTINATION_"},
+            value = {
+                REPORTING_CALL_DESTINATION_UNSET,
+                REPORTING_CALL_DESTINATION_SELLER,
+                REPORTING_CALL_DESTINATION_BUYER,
+                REPORTING_CALL_DESTINATION_COMPONENT_SELLER
+            })
+    public @interface ReportingCallStatsDestination {}
+
+    /** Enum to determine the type of reporting api in telemetry. */
+    @IntDef(
+            prefix = {"REPORTING_CALL_DESTINATION_"},
+            value = {
+                REPORTING_API_UNSET,
+                REPORTING_API_REPORT_IMPRESSION,
+                REPORTING_API_REPORT_EVENT,
+            })
+    public @interface ReportingApiType {}
 
     /**
      * Returns the Cel PP API name ID from AdServices API name ID.

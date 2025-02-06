@@ -465,6 +465,18 @@ public final class AdServicesLoggerImpl implements AdServicesLogger {
         mStatsdAdServicesLogger.logScheduledCustomAudienceUpdatePerformedFailureStats(stats);
     }
 
+    @Override
+    public void logNumberOfTypesOfReportingUrlsReceivedStats(
+            NumberOfTypesOfReportingUrlsReceivedStats stats) {
+        mStatsdAdServicesLogger.logNumberOfTypesOfReportingUrlsReceivedStats(stats);
+    }
+
+    @Override
+    public void logReportingWithDestinationPerformedStats(
+            ReportingWithDestinationPerformedStats stats) {
+        mStatsdAdServicesLogger.logReportingWithDestinationPerformedStats(stats);
+    }
+
     /** Logs api call error status using {@code CobaltLogger}. */
     @VisibleForTesting
     // used by testCobaltLogAppNameApiError_nullPackageName only

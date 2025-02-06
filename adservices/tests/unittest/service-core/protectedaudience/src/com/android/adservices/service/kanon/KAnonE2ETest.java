@@ -166,6 +166,7 @@ import com.android.adservices.service.stats.kanon.KAnonInitializeStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonJoinStatusStats;
 import com.android.adservices.service.stats.kanon.KAnonSignJoinStatsConstants;
 import com.android.adservices.service.stats.kanon.KAnonSignStatusStats;
+import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
 import com.android.adservices.shared.testing.annotations.SetFlagTrue;
 import com.android.adservices.shared.testing.annotations.SetIntegerFlag;
@@ -242,6 +243,8 @@ import java.util.stream.Collectors;
 @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_SELECT_ADS_MEDIATION)
 @SetFlagTrue(KEY_FLEDGE_REGISTER_AD_BEACON_ENABLED)
 @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_ENABLED_FOR_REPORT_IMPRESSION)
+// TODO (b/384952360): refine CEL related verifications later
+@SkipLoggingUsageRule(reason = "b/384952360")
 public final class KAnonE2ETest extends AdServicesExtendedMockitoTestCase {
 
     private static final String CALLER_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;

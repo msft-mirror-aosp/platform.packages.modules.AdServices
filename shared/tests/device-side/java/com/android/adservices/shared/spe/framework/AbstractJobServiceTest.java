@@ -37,7 +37,6 @@ import static com.google.common.truth.Truth.assertWithMessage;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
@@ -138,14 +137,26 @@ public final class AbstractJobServiceTest extends SharedMockitoTestCase {
     }
 
     @Test
-    public void testOnStartJob_nullJob() {
-        doReturn(null).when(mSpyJobService).getJobWorker(any(), anyInt(), anyString());
+    public void testOnStartJob_nullJobWorker() throws Exception {
+        mFactory =
+                new TestJobServiceFactory(
+                        /* jobWorker= */ null,
+                        mMockLogger,
+                        MODULE_JOB_POLICY,
+                        mMockErrorLogger,
+                        mMockJobSchedulingLogger);
+        doReturn(mFactory).when(mSpyJobService).getJobServiceFactory();
+        mSpyJobService.onCreate();
+        JobServiceCallback callback = new JobServiceCallback().expectJobFinished(mSpyJobService);
 
-        assertWithMessage("The incorrect Job configuration's execution succeeding")
+        assertWithMessage("The incorrect Job configuration's execution completing")
                 .that(mSpyJobService.onStartJob(mMockParameters))
-                .isFalse();
+                .isTrue();
+
+        callback.assertJobFinished();
 
         verify(mMockLogger).recordOnStartJob(JOB_ID_1);
+        verify(mMockLogger).recordJobSkipped(JOB_ID_1, SKIP_REASON_JOB_NOT_CONFIGURED);
     }
 
     @Test

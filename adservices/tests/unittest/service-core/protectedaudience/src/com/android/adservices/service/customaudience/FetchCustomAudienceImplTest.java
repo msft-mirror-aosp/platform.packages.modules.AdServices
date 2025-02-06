@@ -79,8 +79,28 @@ import static com.android.adservices.service.customaudience.FetchCustomAudienceR
 import static com.android.adservices.service.customaudience.FetchCustomAudienceReader.EXPIRATION_TIME_KEY;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceReader.NAME_KEY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_RETRIABLE_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_CUSTOM_AUDIENCE_PER_OWNER;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_TOTAL_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_DISABLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_FUSED_CUSTOM_AUDIENCE_EXCEEDS_SIZE_LIMIT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_INCOMPLETE_FUSED_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_INVALID_JSON_RESPONSE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_ILLEGAL_ARGUMENT_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_INTERNAL_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_INVALID_OBJECT_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_SERVER_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_QUARANTINED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_REQUEST_CUSTOM_HEADER_EXCEEDS_SIZE_LIMIT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_UNABLE_TO_SEND_FAILURE_TO_CALLBACK;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_UNABLE_TO_SEND_SUCCESSFUL_RESULT_TO_CALLBACK;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.anyInt;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doAnswer;
@@ -106,6 +126,8 @@ import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceCallback;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
+import android.adservices.exceptions.AdServicesNetworkException;
+import android.adservices.exceptions.RetryableAdServicesNetworkException;
 import android.adservices.http.MockWebServerRule;
 import android.net.Uri;
 import android.os.LimitExceededException;
@@ -115,6 +137,8 @@ import android.os.RemoteException;
 import com.android.adservices.MockWebServerRuleFactory;
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
@@ -138,6 +162,7 @@ import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
 import com.android.adservices.testutils.FetchCustomAudienceTestSyncCallback;
@@ -152,6 +177,7 @@ import com.google.mockwebserver.MockResponse;
 import com.google.mockwebserver.MockWebServer;
 import com.google.mockwebserver.RecordedRequest;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Assert;
 import org.junit.Before;
@@ -162,6 +188,7 @@ import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.stubbing.Answer;
 
+import java.io.InvalidObjectException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.util.List;
@@ -173,6 +200,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @MockStatic(ConsentManager.class)
 @SpyStatic(FlagsFactory.class)
 @SpyStatic(DebugFlags.class)
+@SetErrorLogUtilDefaultParams(
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE)
 @MockStatic(BackgroundFetchJob.class)
 public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockitoTestCase {
     private static final int API_NAME =
@@ -275,6 +304,13 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_INTERNAL_ERROR,
+            throwable = IllegalStateException.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_DISABLED,
+            throwable = IllegalStateException.class)
     public void testImpl_disabled() throws Exception {
         // Use flag value to disable the API.
         mFetchCustomAudienceImpl =
@@ -305,6 +341,10 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED,
+            throwable = FilterException.class)
     public void testImpl_invalidPackageName_throws() throws Exception {
         String otherPackageName = VALID_OWNER + "incorrectPackage";
 
@@ -342,6 +382,10 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED,
+            throwable = FilterException.class)
     public void testImpl_throttled_throws() throws Exception {
         doThrow(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE))
                 .when(mCustomAudienceServiceFilterMock)
@@ -377,6 +421,10 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER,
+            throwable = FilterException.class)
     public void testImpl_failedForegroundCheck_throws() throws Exception {
         doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
                 .when(mCustomAudienceServiceFilterMock)
@@ -413,6 +461,10 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED,
+            throwable = FilterException.class)
     public void testImpl_failedEnrollmentCheck_throws() throws Exception {
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
                 .when(mCustomAudienceServiceFilterMock)
@@ -450,6 +502,10 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED,
+            throwable = FilterException.class)
     public void testImpl_appCannotUsePPAPI_throws() throws Exception {
         doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
                 .when(mCustomAudienceServiceFilterMock)
@@ -570,11 +626,17 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
 
     @Test
     @ExpectErrorLogUtilCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_TOTAL_CUSTOM_AUDIENCE,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_TOTAL_CUSTOM_AUDIENCE,
             ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE)
     @ExpectErrorLogUtilCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_CUSTOM_AUDIENCE_PER_OWNER,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_QUANTITY_CHECKER_REACHED_MAX_NUMBER_OF_CUSTOM_AUDIENCE_PER_OWNER,
             ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_ILLEGAL_ARGUMENT_ERROR,
+            throwable = IllegalArgumentException.class)
     public void testImpl_invalidRequest_quotaExhausted_throws() throws Exception {
         // Use flag values with a clearly small quota limits.
         mFetchCustomAudienceImpl =
@@ -618,6 +680,10 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_ILLEGAL_ARGUMENT_ERROR,
+            throwable = IllegalArgumentException.class)
     public void testImpl_invalidRequest_invalidName_throws() throws Exception {
         // Use flag value with a clearly small size limit.
         mFetchCustomAudienceImpl =
@@ -655,6 +721,10 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_ILLEGAL_ARGUMENT_ERROR,
+            throwable = IllegalArgumentException.class)
     public void testImpl_invalidRequest_invalidActivationTime_throws() throws Exception {
         mInputBuilder.setActivationTime(INVALID_DELAYED_ACTIVATION_TIME);
 
@@ -689,6 +759,10 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_ILLEGAL_ARGUMENT_ERROR,
+            throwable = IllegalArgumentException.class)
     public void testImpl_invalidRequest_invalidExpirationTime_throws() throws Exception {
         mInputBuilder.setExpirationTime(INVALID_BEYOND_MAX_EXPIRATION_TIME);
 
@@ -720,6 +794,10 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_ILLEGAL_ARGUMENT_ERROR,
+            throwable = IllegalArgumentException.class)
     public void testImpl_invalidRequest_invalidUserBiddingSignals_throws() throws Exception {
         // Use flag value with a clearly small size limit.
         mFetchCustomAudienceImpl =
@@ -757,6 +835,14 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_REQUEST_CUSTOM_HEADER_EXCEEDS_SIZE_LIMIT,
+            throwable = IllegalArgumentException.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_ILLEGAL_ARGUMENT_ERROR,
+            throwable = IllegalArgumentException.class)
     public void testImpl_customHeaderExceedsLimit_throws() throws Exception {
         // Use flag value with a clearly small size limit.
         mFetchCustomAudienceImpl =
@@ -784,6 +870,14 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_INVALID_JSON_RESPONSE,
+            throwable = JSONException.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_INVALID_OBJECT_ERROR,
+            throwable = InvalidObjectException.class)
     public void testImpl_invalidResponse_invalidJSONObject() throws Exception {
         String jsonString = "Not[A]VALID[JSON]";
         MockWebServer mockWebServer =
@@ -809,6 +903,14 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_INCOMPLETE_FUSED_CUSTOM_AUDIENCE,
+            throwable = InvalidObjectException.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_INVALID_OBJECT_ERROR,
+            throwable = InvalidObjectException.class)
     public void testImpl_invalidFused_missingField() throws Exception {
         // Remove ads from the response, resulting in an incomplete fused custom audience.
         JSONObject validResponse =
@@ -837,6 +939,14 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_INCOMPLETE_FUSED_CUSTOM_AUDIENCE,
+            throwable = InvalidObjectException.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_INVALID_OBJECT_ERROR,
+            throwable = InvalidObjectException.class)
     public void testImpl_invalidFused_missingFieldAuctionServerFlagsEnabled() throws Exception {
         enableAuctionServerRequestFlags();
 
@@ -867,6 +977,14 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_INCOMPLETE_FUSED_CUSTOM_AUDIENCE,
+            throwable = InvalidObjectException.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_INVALID_OBJECT_ERROR,
+            throwable = InvalidObjectException.class)
     public void testImpl_invalidFused_missingFieldSellerConfigurationFlagEnabled()
             throws Exception {
         enableSellerConfigurationFlag();
@@ -898,6 +1016,10 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_ILLEGAL_ARGUMENT_ERROR,
+            throwable = IllegalArgumentException.class)
     public void testImpl_invalidFused_invalidField() throws Exception {
         // Replace buyer to cause mismatch.
         JSONObject validResponse =
@@ -946,6 +1068,14 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_FUSED_CUSTOM_AUDIENCE_EXCEEDS_SIZE_LIMIT,
+            throwable = InvalidObjectException.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_INVALID_OBJECT_ERROR,
+            throwable = InvalidObjectException.class)
     public void testImpl_invalidFused_exceedsSizeLimit() throws Exception {
         // Use flag value with a clearly small size limit.
         mFetchCustomAudienceImpl =
@@ -1072,6 +1202,10 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_UNABLE_TO_SEND_SUCCESSFUL_RESULT_TO_CALLBACK,
+            throwable = RemoteException.class)
     public void testImpl_runNormally_CallbackThrowsException() throws Exception {
         // Respond with a complete custom audience including the request values as is.
         MockWebServer mockWebServer =
@@ -1094,6 +1228,14 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_UNABLE_TO_SEND_FAILURE_TO_CALLBACK,
+            throwable = RemoteException.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED,
+            throwable = FilterException.class)
     public void testImpl_runWithFailure_CallbackThrowsException() throws Exception {
 
         // Just want the service to throw an exception so we trigger the failure callback
@@ -1412,6 +1554,10 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_ILLEGAL_ARGUMENT_ERROR,
+            throwable = IllegalArgumentException.class)
     public void testImpl_withAdRenderId_onlyInvalidAdRenderIds_fail() throws Exception {
         // Enable server auction Ad Render Ids
         mFetchCustomAudienceImpl =
@@ -1554,6 +1700,15 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_INTERNAL_ERROR,
+            throwable = AdServicesNetworkException.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_ERROR,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON,
+            throwable = AdServicesNetworkException.class)
     public void testImpl_requestRejectedByServer() throws Exception {
         // Respond with a 403
         MockWebServer mockWebServer =
@@ -1574,6 +1729,15 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_SERVER_RATE_LIMIT_REACHED,
+            throwable = RetryableAdServicesNetworkException.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_RETRIABLE_ERROR,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON,
+            throwable = RetryableAdServicesNetworkException.class)
     public void testImpl_AddsToQuarantineTableWhenServerReturns429() throws Exception {
         // Respond with a 429
         MockWebServer mockWebServer =
@@ -1598,6 +1762,14 @@ public final class FetchCustomAudienceImplTest extends AdServicesExtendedMockito
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_QUARANTINED,
+            throwable = LimitExceededException.class)
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_SERVER_RATE_LIMIT_REACHED,
+            throwable = LimitExceededException.class)
     public void testImpl_ReturnsServerRateLimitReachedWhenEntryIsInQuarantineTable()
             throws Exception {
         doReturn(true)

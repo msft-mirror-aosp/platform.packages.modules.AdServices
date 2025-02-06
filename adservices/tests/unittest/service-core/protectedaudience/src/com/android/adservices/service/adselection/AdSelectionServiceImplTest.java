@@ -263,7 +263,6 @@ import java.util.concurrent.TimeUnit;
 @SetFlagFalse(KEY_FLEDGE_ON_DEVICE_AUCTION_SHOULD_USE_UNIFIED_TABLES)
 // TODO (b/384952360): refine CEL related verifications later
 @SkipLoggingUsageRule(reason = "b/384952360")
-@SuppressWarnings("DoNotMockErrorLogUtilBehavior") // TODO(b/384952360)
 public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoTestCase {
 
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
@@ -389,9 +388,6 @@ public final class AdSelectionServiceImplTest extends AdServicesExtendedMockitoT
 
     @Before
     public void setUp() {
-        // TODO (b/384952360): Delete doNothingOnErrorLogUtilError when all CEL logs in this test
-        // are captured properly.
-        doNothingOnErrorLogUtilError();
         mocker.mockGetFlags(mFakeFlags);
         mocker.mockGetDebugFlags(mFakeDebugFlags);
         mockGetConsentNotificationDebugMode(false);

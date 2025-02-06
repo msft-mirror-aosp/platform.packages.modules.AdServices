@@ -179,7 +179,6 @@ import java.util.concurrent.ScheduledThreadPoolExecutor;
 @SetFlagTrue(KEY_FLEDGE_APP_PACKAGE_NAME_LOGGING_ENABLED)
 // TODO (b/384952360): refine CEL related verifications later
 @SkipLoggingUsageRule(reason = "b/384952360")
-@SuppressWarnings("DoNotMockErrorLogUtilBehavior") // TODO(b/384952360)
 public final class ReportAndRegisterEventIntegrationTest extends AdServicesExtendedMockitoTestCase {
     private final DevContext mDevContext = DevContext.createForDevOptionsDisabled();
 
@@ -300,9 +299,6 @@ public final class ReportAndRegisterEventIntegrationTest extends AdServicesExten
     @Before
     public void setup() throws Exception {
         mRequestMatcherPrefixMatch = (a, b) -> !b.isEmpty() && a.startsWith(b);
-        // TODO (b/384952360): Delete doNothingOnErrorLogUtilError when all CEL logs in this test
-        // are captured properly.
-        doNothingOnErrorLogUtilError();
         mocker.mockGetFlags(mFakeFlags);
         mCustomAudienceDao =
                 Room.inMemoryDatabaseBuilder(mContext, CustomAudienceDatabase.class)

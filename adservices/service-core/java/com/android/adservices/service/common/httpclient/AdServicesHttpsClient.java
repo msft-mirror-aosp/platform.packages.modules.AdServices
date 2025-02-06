@@ -18,6 +18,12 @@ package com.android.adservices.service.common.httpclient;
 
 import static android.adservices.exceptions.RetryableAdServicesNetworkException.DEFAULT_RETRY_AFTER_VALUE;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_RETRIABLE_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_OPENING_URL_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_TIMEOUT_READING_RESPONSE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_URI_IS_MALFORMED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_NETWORK_FAILURE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_TIMEOUT;
@@ -31,6 +37,7 @@ import android.annotation.SuppressLint;
 import android.net.Uri;
 
 import com.android.adservices.LogUtil;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.common.ValidatorUtil;
 import com.android.adservices.service.common.WebAddresses;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
@@ -93,6 +100,7 @@ public class AdServicesHttpsClient {
 
     public static final long DEFAULT_MAX_BYTES = 1048576;
     public static final int DEFAULT_TIMEOUT_MS = 5000;
+    private static final int CEL_PPAPI_NAME = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON;
     // Setting default max content size to 1024 * 1024 which is ~ 1MB
     private static final String CONTENT_SIZE_ERROR = "Content size exceeds limit!";
     private static final String RETRY_AFTER_HEADER_FIELD = "Retry-After";
@@ -530,6 +538,10 @@ public class AdServicesHttpsClient {
             urlConnection = setupConnection(url, devContext);
         } catch (IOException e) {
             LogUtil.d(e, "Failed to open URL");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_OPENING_URL_FAILED,
+                    CEL_PPAPI_NAME);
             throw new IllegalArgumentException("Failed to open URL!");
         }
 
@@ -546,6 +558,10 @@ public class AdServicesHttpsClient {
             }
             return null;
         } catch (SocketTimeoutException e) {
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_TIMEOUT_READING_RESPONSE,
+                    CEL_PPAPI_NAME);
             throw new IOException("Connection timed out while reading response!", e);
         } finally {
             maybeDisconnect(urlConnection);
@@ -586,9 +602,12 @@ public class AdServicesHttpsClient {
 
         try {
             urlConnection = setupPostConnectionWithPlainText(url, devContext);
-
         } catch (IOException e) {
             LogUtil.d(e, "Failed to open URL");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_OPENING_URL_FAILED,
+                    CEL_PPAPI_NAME);
             throw new IllegalArgumentException("Failed to open URL!");
         }
 
@@ -612,6 +631,10 @@ public class AdServicesHttpsClient {
             }
             return null;
         } catch (SocketTimeoutException e) {
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_TIMEOUT_READING_RESPONSE,
+                    CEL_PPAPI_NAME);
             throw new IOException("Connection timed out while reading response!", e);
         } finally {
             maybeDisconnect(urlConnection);
@@ -694,6 +717,10 @@ public class AdServicesHttpsClient {
             urlConnection.setRequestMethod(request.getHttpMethodType().name());
         } catch (IOException e) {
             LogUtil.e(e, "Failed to open URL");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_OPENING_URL_FAILED,
+                    CEL_PPAPI_NAME);
             throw new IllegalArgumentException("Failed to open URL!");
         }
 
@@ -816,8 +843,16 @@ public class AdServicesHttpsClient {
                         RetryableAdServicesNetworkException.UNSET_RETRY_AFTER_VALUE)
                 <= 0) {
             exception = new AdServicesNetworkException(errorCode);
+            ErrorLogUtil.e(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_ERROR,
+                    CEL_PPAPI_NAME);
         } else {
             exception = new RetryableAdServicesNetworkException(errorCode, retryAfterDuration);
+            ErrorLogUtil.e(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_HTTP_REQUEST_RETRIABLE_ERROR,
+                    CEL_PPAPI_NAME);
         }
         LogUtil.e("Throwing %s.", exception.toString());
         throw exception;
@@ -946,6 +981,10 @@ public class AdServicesHttpsClient {
                 url = new URL(uri.toString());
             } catch (MalformedURLException e) {
                 LogUtil.d(e, "Uri is malformed! ");
+                ErrorLogUtil.e(
+                        e,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__AD_SERVICES_HTTPS_CLIENT_URI_IS_MALFORMED,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__COMMON);
                 throw new IllegalArgumentException("Uri is malformed!");
             }
             return url;

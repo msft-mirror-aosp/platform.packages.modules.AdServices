@@ -16,12 +16,38 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_OBJECT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SERVER_RATE_LIMIT_REACHED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+import static android.adservices.common.AdServicesStatusUtils.StatusCode;
+
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_FETCH_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.common.ValidatorUtil.AD_TECH_ROLE_BUYER;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.AUCTION_SERVER_REQUEST_FLAGS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.PRIORITY_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.USER_BIDDING_SIGNALS_KEY;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_DISABLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_FUSED_CUSTOM_AUDIENCE_EXCEEDS_SIZE_LIMIT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_INCOMPLETE_FUSED_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_INVALID_JSON_RESPONSE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_ILLEGAL_ARGUMENT_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_INTERNAL_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_INVALID_OBJECT_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_SERVER_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_QUARANTINED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_REQUEST_CUSTOM_HEADER_EXCEEDS_SIZE_LIMIT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_UNABLE_TO_SEND_FAILURE_TO_CALLBACK;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_UNABLE_TO_SEND_SUCCESSFUL_RESULT_TO_CALLBACK;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
@@ -48,6 +74,7 @@ import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceQuarantine;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AdRenderIdValidator;
@@ -275,7 +302,13 @@ public class FetchCustomAudienceImpl {
             // Failing fast and silently if fetchCustomAudience is disabled.
             if (!mFledgeFetchCustomAudienceEnabled) {
                 sLogger.v("fetchCustomAudience is disabled.");
-                throw new IllegalStateException("fetchCustomAudience is disabled.");
+                IllegalStateException exception =
+                        new IllegalStateException("fetchCustomAudience is disabled.");
+                ErrorLogUtil.e(
+                        exception,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_DISABLED,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
+                throw exception;
             } else {
                 sLogger.v("fetchCustomAudience is enabled.");
                 // TODO(b/282017342): Evaluate correctness of futures chain.
@@ -382,7 +415,13 @@ public class FetchCustomAudienceImpl {
 
         // Validate size of headers.
         if (jsonString.getBytes(UTF_8).length > mFledgeCustomAudienceMaxCustomHeaderSizeB) {
-            throw new IllegalArgumentException(REQUEST_CUSTOM_HEADER_EXCEEDS_SIZE_LIMIT_MESSAGE);
+            IllegalArgumentException exception =
+                    new IllegalArgumentException(REQUEST_CUSTOM_HEADER_EXCEEDS_SIZE_LIMIT_MESSAGE);
+            ErrorLogUtil.e(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_REQUEST_CUSTOM_HEADER_EXCEEDS_SIZE_LIMIT,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
+            throw exception;
         }
 
         // Custom headers under X-CUSTOM-AUDIENCE-DATA
@@ -405,12 +444,15 @@ public class FetchCustomAudienceImpl {
                     mCustomAudienceDao.getCustomAudienceQuarantineExpiration(mOwner, mBuyer);
             Instant now = mClock.instant();
             if (now.isBefore(expiration)) {
-                sLogger.d(
-                        String.format(
-                                "Combination of owner:%s and buyer%s is quarantined!",
-                                mOwner, mBuyer.toString()));
-                throw new LimitExceededException(
-                        "This combination of owner and buyer is quarantined!");
+                sLogger.d("Combination of owner:%s and buyer%s is quarantined!", mOwner, mBuyer);
+                LimitExceededException exception =
+                        new LimitExceededException(
+                                "This combination of owner and buyer is quarantined!");
+                ErrorLogUtil.e(
+                        exception,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_QUARANTINED,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
+                throw exception;
             } else {
                 sLogger.v("Clearing stale quarantine entry");
                 mCustomAudienceDao.deleteQuarantineEntry(mOwner, mBuyer);
@@ -430,6 +472,10 @@ public class FetchCustomAudienceImpl {
                             try {
                                 responseJson = new JSONObject(responseJsonString);
                             } catch (JSONException exception) {
+                                ErrorLogUtil.e(
+                                        exception,
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_INVALID_JSON_RESPONSE,
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
                                 throw new InvalidObjectException(exception.getMessage());
                             }
                             // Populate the response custom audience from the valid JSON response.
@@ -445,8 +491,14 @@ public class FetchCustomAudienceImpl {
                                     mRequestCustomAudience.asJSONObject());
                             // Validate the fused custom audience has values for all fields.
                             if (!isComplete(mFusedCustomAudience)) {
-                                throw new InvalidObjectException(
-                                        FUSED_CUSTOM_AUDIENCE_INCOMPLETE_MESSAGE);
+                                InvalidObjectException exception =
+                                        new InvalidObjectException(
+                                                FUSED_CUSTOM_AUDIENCE_INCOMPLETE_MESSAGE);
+                                ErrorLogUtil.e(
+                                        exception,
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_INCOMPLETE_FUSED_CUSTOM_AUDIENCE,
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
+                                throw exception;
                             }
                             // Validate the fields of the fused custom audience
                             mCustomAudienceBlobValidator.validate(mFusedCustomAudience);
@@ -458,8 +510,14 @@ public class FetchCustomAudienceImpl {
                                             .getBytes(UTF_8)
                                             .length
                                     > mFledgeCustomAudienceMaxCustomAudienceSizeB) {
-                                throw new InvalidObjectException(
-                                        FUSED_CUSTOM_AUDIENCE_EXCEEDS_SIZE_LIMIT_MESSAGE);
+                                InvalidObjectException exception =
+                                        new InvalidObjectException(
+                                                FUSED_CUSTOM_AUDIENCE_EXCEEDS_SIZE_LIMIT_MESSAGE);
+                                ErrorLogUtil.e(
+                                        exception,
+                                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_FUSED_CUSTOM_AUDIENCE_EXCEEDS_SIZE_LIMIT,
+                                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
+                                throw exception;
                             }
                             return null;
                         }));
@@ -592,7 +650,7 @@ public class FetchCustomAudienceImpl {
                 sLogger.d(t, "Unexpected error during operation");
                 resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
             }
-
+            logExceptionCel(t, resultCode);
             // Skip logging if a FilterException occurs.
             // AdSelectionServiceFilter ensures the failing assertion is logged internally.
             // Note: Failure is logged before the callback to ensure deterministic testing.
@@ -613,6 +671,10 @@ public class FetchCustomAudienceImpl {
                     mCallerAppPackageName,
                     AdServicesStatusUtils.STATUS_CALLBACK_SHUTDOWN,
                     0);
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_UNABLE_TO_SEND_FAILURE_TO_CALLBACK,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
         }
     }
 
@@ -629,6 +691,10 @@ public class FetchCustomAudienceImpl {
                     mCallerAppPackageName,
                     AdServicesStatusUtils.STATUS_CALLBACK_SHUTDOWN,
                     0);
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_UNABLE_TO_SEND_SUCCESSFUL_RESULT_TO_CALLBACK,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
         }
     }
 
@@ -644,5 +710,44 @@ public class FetchCustomAudienceImpl {
             currentKeySet.remove(PRIORITY_KEY);
         }
         return currentKeySet.size() == expectedKeysSet.size();
+    }
+
+    private void logExceptionCel(Throwable exception, @StatusCode int resultCode) {
+        int celEnum =
+                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_INTERNAL_ERROR;
+        switch (resultCode) {
+            case STATUS_BACKGROUND_CALLER:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER;
+                break;
+            case STATUS_CALLER_NOT_ALLOWED:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED;
+                break;
+            case STATUS_UNAUTHORIZED:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED;
+                break;
+            case STATUS_INVALID_OBJECT:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_INVALID_OBJECT_ERROR;
+                break;
+            case STATUS_RATE_LIMIT_REACHED:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
+                break;
+            case STATUS_INVALID_ARGUMENT:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_ILLEGAL_ARGUMENT_ERROR;
+                break;
+            case STATUS_SERVER_RATE_LIMIT_REACHED:
+                celEnum =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__FETCH_CUSTOM_AUDIENCE_IMPL_NOTIFY_FAILURE_SERVER_RATE_LIMIT_REACHED;
+                break;
+        }
+        ErrorLogUtil.e(
+                exception,
+                celEnum,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE);
     }
 }

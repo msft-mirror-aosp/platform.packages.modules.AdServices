@@ -20,10 +20,19 @@ import static com.android.adservices.service.enrollment.EnrollmentUtil.ENROLLMEN
 import static com.android.adservices.service.stats.AdServicesEnrollmentTransactionStats.Builder;
 import static com.android.adservices.service.stats.AdServicesEnrollmentTransactionStats.TransactionStatus;
 import static com.android.adservices.service.stats.AdServicesEnrollmentTransactionStats.TransactionType;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_GET_FLEDGE_ENROLLMENT_DATA_FROM_DB_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_GET_PAS_ENROLLMENT_DATA_FROM_DB_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_PRIVACY_API_INVALID;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_URI_ENROLLMENT_MATCH_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_URI_INVALID;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_DELETE_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DATA_INSERT_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_SHARED_PREFERENCES_SEED_SAVE_FAILURE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
 
 import android.adservices.common.AdTechIdentifier;
 import android.content.ContentValues;
@@ -52,6 +61,7 @@ import com.android.adservices.service.enrollment.EnrollmentUtil;
 import com.android.adservices.service.proto.PrivacySandboxApi;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.shared.common.ApplicationContextSingleton;
 import com.android.internal.annotations.VisibleForTesting;
 
@@ -789,6 +799,10 @@ public class EnrollmentDao implements IEnrollmentDao {
                     TransactionStatus.DATASTORE_EXCEPTION,
                     getEnrollmentRecordCountForLogging());
             LogUtil.e(e, "Failed to get fledge enrollment data from DB.");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_GET_FLEDGE_ENROLLMENT_DATA_FROM_DB_FAILED,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
             return null;
         }
     }
@@ -860,6 +874,10 @@ public class EnrollmentDao implements IEnrollmentDao {
                     TransactionStatus.DATASTORE_EXCEPTION,
                     getEnrollmentRecordCountForLogging());
             LogUtil.e(e, "Failed to get enrollment data from DB.");
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_GET_PAS_ENROLLMENT_DATA_FROM_DB_FAILED,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS);
             return null;
         }
     }
@@ -1607,6 +1625,16 @@ public class EnrollmentDao implements IEnrollmentDao {
 
         if (originalUri == null || privacySandboxApi == null) {
             LogUtil.e("OriginalUri or PrivacySandboxApi is not valid");
+            if (privacySandboxApi == null) {
+                ErrorLogUtil.e(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_PRIVACY_API_INVALID,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE);
+            }
+            if (originalUri == null) {
+                logCelBySandboxApi(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_URI_INVALID,
+                        privacySandboxApi);
+            }
             return null;
         }
         String privacySandboxApiString = privacySandboxApi.name();
@@ -1647,6 +1675,9 @@ public class EnrollmentDao implements IEnrollmentDao {
                         privacySandboxApiString, originalUri.toString());
                 mEnrollmentUtil.logEnrollmentMatchStats(
                         mLogger, /* isSuccessful= */ false, buildId);
+                logCelBySandboxApi(
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ENROLLMENT_DAO_URI_ENROLLMENT_MATCH_FAILED,
+                        privacySandboxApi);
                 return null;
             }
 
@@ -1734,5 +1765,27 @@ public class EnrollmentDao implements IEnrollmentDao {
     @SuppressWarnings({"AvoidSharedPreferences"}) // Legacy usage
     private SharedPreferences getPrefs() {
         return mContext.getSharedPreferences(ENROLLMENT_SHARED_PREF, Context.MODE_PRIVATE);
+    }
+
+    private void logCelBySandboxApi(int errorCode, PrivacySandboxApi privacySandboxApi) {
+        int celPpapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PPAPI_NAME_UNSPECIFIED;
+        if (privacySandboxApi == null) {
+            celPpapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
+        } else {
+            switch (privacySandboxApi) {
+                case PRIVACY_SANDBOX_API_TOPICS:
+                    celPpapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__TOPICS;
+                    break;
+                case PRIVACY_SANDBOX_API_PROTECTED_AUDIENCE:
+                    celPpapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
+                    break;
+                case PRIVACY_SANDBOX_API_PROTECTED_APP_SIGNALS:
+                    celPpapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PAS;
+                    break;
+                default:
+                    break;
+            }
+        }
+        AdsRelevanceStatusUtils.checkPpapiNameAndLogCel(null, errorCode, celPpapiName);
     }
 }

@@ -44,6 +44,7 @@ import com.android.adservices.shared.util.LogUtil;
 import com.android.internal.annotations.VisibleForTesting;
 
 import com.google.common.util.concurrent.FluentFuture;
+import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import java.util.Map;
@@ -112,26 +113,45 @@ public abstract class AbstractJobService extends JobService {
 
         LogUtil.v("Running onStartJob() for %s, jobId = %d.", jobName, jobId);
 
-        JobWorker worker = getJobWorker(params, jobId, jobName);
-        if (worker == null) {
-            return false;
-        }
-
-        JobUtil.logV("Begin job execution for %s...", jobName);
-        ListenableFuture<ExecutionResult> executionFuture = mRunningFuturesMap.get(jobId);
-        // Cancel the unfinished future for the same job. This should rarely happen due to
-        // JobScheduler doesn't call onStartJob() again before the end of previous call on the same
-        // job (with the same job ID). Nevertheless, do the defensive programming here.
-        safelyCancelFuture(executionFuture);
-
-        executionFuture = worker.getExecutionFuture(this, convertJobParameters(params));
-        mRunningFuturesMap.put(jobId, executionFuture);
-
-        // Add Logging callback.
         // TODO(b/331285831): Standardize the usage of unused future.
         ListenableFuture<Void> unusedFuture =
-                onJobPostExecution(
-                        executionFuture, jobId, jobName, params, worker.getBackoffPolicy());
+                FluentFuture.from(
+                                Futures.submit(
+                                        () -> getJobWorker(params, jobId, jobName), mExecutor))
+                        .transform(
+                                worker -> {
+                                    if (worker == null) {
+                                        return null;
+                                    }
+
+                                    JobUtil.logV("Begin job execution for %s...", jobName);
+                                    ListenableFuture<ExecutionResult> executionFuture =
+                                            mRunningFuturesMap.get(jobId);
+                                    // Cancel the unfinished future for the same job. This should
+                                    // rarely happen due to JobScheduler doesn't call onStartJob()
+                                    // again before the end of previous call on the same job (with
+                                    // the same job ID). Nevertheless, do the defensive programming
+                                    // here.
+                                    safelyCancelFuture(executionFuture);
+
+                                    executionFuture =
+                                            worker.getExecutionFuture(
+                                                    this, convertJobParameters(params));
+                                    mRunningFuturesMap.put(jobId, executionFuture);
+
+                                    // Add Logging callback.
+                                    // TODO(b/331285831): Standardize the usage of unused future.
+                                    ListenableFuture<Void> unused =
+                                            onJobPostExecution(
+                                                    executionFuture,
+                                                    jobId,
+                                                    jobName,
+                                                    params,
+                                                    worker.getBackoffPolicy());
+
+                                    return null;
+                                },
+                                mExecutor);
 
         return true;
     }

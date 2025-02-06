@@ -51,6 +51,9 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.ENCODING_FETCH_STATUS_SUCCESS;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JSON_PROCESSING_STATUS_TOO_BIG;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.JS_RUN_STATUS_OUTPUT_NON_ZERO_RESULT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_API_REPORT_EVENT;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_DESTINATION_COMPONENT_SELLER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_STATUS_FAILURE_HTTP_REDIRECTION;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_DEFAULT;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_LARGE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SIZE_MEDIUM;
@@ -1062,6 +1065,33 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .build();
         mAdservicesLogger.logScheduledCustomAudienceUpdatePerformedStats(stats);
         verify(mStatsdLoggerMock).logScheduledCustomAudienceUpdatePerformedStats(eq(stats));
+    }
+
+    @Test
+    public void testLogReportingWithDestinationPerformedStats() {
+        ReportingWithDestinationPerformedStats stats =
+                ReportingWithDestinationPerformedStats.builder()
+                        .setDestination(REPORTING_CALL_DESTINATION_COMPONENT_SELLER)
+                        .setStatus(REPORTING_CALL_STATUS_FAILURE_HTTP_REDIRECTION)
+                        .setReportingType(REPORTING_API_REPORT_EVENT)
+                        .build();
+        mAdservicesLogger.logReportingWithDestinationPerformedStats(stats);
+        verify(mStatsdLoggerMock).logReportingWithDestinationPerformedStats(eq(stats));
+    }
+
+    @Test
+    public void testLogNumberOfTypesOfReportingUrlsReceivedStats() {
+        NumberOfTypesOfReportingUrlsReceivedStats stats =
+                NumberOfTypesOfReportingUrlsReceivedStats.builder()
+                        .setNumberOfTopLevelSellerReportingUrl(1)
+                        .setNumberOfBuyerReportingUrl(2)
+                        .setNumberOfComponentSellerReportingUrl(3)
+                        .setNumberOfComponentSellerEventReportingUrl(4)
+                        .setNumberOfTopLevelSellerEventReportingUrl(5)
+                        .setNumberOfBuyerEventReportingUrl(6)
+                        .build();
+        mAdservicesLogger.logNumberOfTypesOfReportingUrlsReceivedStats(stats);
+        verify(mStatsdLoggerMock).logNumberOfTypesOfReportingUrlsReceivedStats(eq(stats));
     }
 
     private void mockCobaltLoggingEnabled() {
