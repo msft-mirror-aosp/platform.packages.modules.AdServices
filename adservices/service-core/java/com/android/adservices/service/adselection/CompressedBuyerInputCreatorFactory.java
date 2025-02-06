@@ -21,6 +21,7 @@ import android.annotation.NonNull;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.signals.EncodedPayloadDao;
+import com.android.adservices.service.customaudience.ComponentAdsStrategy;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 
 import java.time.Clock;
@@ -37,6 +38,7 @@ public class CompressedBuyerInputCreatorFactory {
     private final int mMaxNumRecompressions;
     private final int mPasMaxPerBuyerSizeBytes;
     private final Clock mClock;
+    private final ComponentAdsStrategy mComponentAdsStrategy;
 
     public CompressedBuyerInputCreatorFactory(
             CompressedBuyerInputCreatorHelper compressedBuyerInputCreatorHelper,
@@ -47,7 +49,8 @@ public class CompressedBuyerInputCreatorFactory {
             int compressedBuyerInputCreatorVersion,
             int maxNumRecompressions,
             int pasMaxPerBuyerSizeBytes,
-            Clock clock) {
+            Clock clock,
+            boolean componentAdsEnabled) {
         mCompressedBuyerInputCreatorHelper = compressedBuyerInputCreatorHelper;
         mDataCompressor = dataCompressor;
         mSellerConfigurationEnabled = sellerConfigurationEnabled;
@@ -57,6 +60,7 @@ public class CompressedBuyerInputCreatorFactory {
         mMaxNumRecompressions = maxNumRecompressions;
         mPasMaxPerBuyerSizeBytes = pasMaxPerBuyerSizeBytes;
         mClock = clock;
+        mComponentAdsStrategy = ComponentAdsStrategy.createInstance(componentAdsEnabled);
     }
 
     /** Returns an implementation for the {@link CompressedBuyerInputCreator} */
@@ -112,5 +116,15 @@ public class CompressedBuyerInputCreatorFactory {
         return mSellerConfigurationEnabled
                 ? new BuyerInputGeneratorArgumentsPreparerSellerConfigurationEnabled()
                 : new BuyerInputGeneratorArgumentsPreparerSellerConfigurationDisabled();
+    }
+
+    /** Returns the custom audience dao. */
+    public CustomAudienceDao getCustomAudienceDao() {
+        return mCustomAudienceDao;
+    }
+
+    /** Returns the component ad strategy depending on the component ads enabled flag. */
+    public ComponentAdsStrategy getComponentAdsStrategy() {
+        return mComponentAdsStrategy;
     }
 }

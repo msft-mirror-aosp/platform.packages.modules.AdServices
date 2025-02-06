@@ -24,6 +24,7 @@ import android.util.Pair;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.DBEncodedPayload;
+import com.android.adservices.service.customaudience.CustomAudienceWithComponentAds;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
@@ -153,9 +154,16 @@ public class BuyerInputGenerator {
                 mCompressedBuyerInputCreatorFactory.createCompressedBuyerInputCreator(
                         payloadOptimizationContext, statsBuilder);
 
+        List<CustomAudienceWithComponentAds> customAudienceWithComponentAds =
+                mCompressedBuyerInputCreatorFactory
+                        .getComponentAdsStrategy()
+                        .getCustomAudiencesWithComponentAds(
+                                mCompressedBuyerInputCreatorFactory.getCustomAudienceDao(),
+                                dbCustomAudiences);
+
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedInputs =
                 compressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                        dbCustomAudiences, encodedPayloadMap);
+                        customAudienceWithComponentAds, encodedPayloadMap);
         Tracing.endAsyncSection(Tracing.GET_COMPRESSED_BUYERS_INPUTS, traceCookie);
         return compressedInputs;
     }

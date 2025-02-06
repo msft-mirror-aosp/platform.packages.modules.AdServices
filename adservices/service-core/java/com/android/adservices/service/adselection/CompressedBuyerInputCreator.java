@@ -18,8 +18,8 @@ package com.android.adservices.service.adselection;
 
 import android.adservices.common.AdTechIdentifier;
 
-import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.DBEncodedPayload;
+import com.android.adservices.service.customaudience.CustomAudienceWithComponentAds;
 
 import java.util.List;
 import java.util.Map;
@@ -28,6 +28,6 @@ public interface CompressedBuyerInputCreator {
     /** Constructs compressed buyer inputs using PA and PAS data. */
     Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>
             generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                    List<DBCustomAudience> dbCustomAudiences,
+                    List<CustomAudienceWithComponentAds> customAudienceWithComponentAds,
                     Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap);
 }

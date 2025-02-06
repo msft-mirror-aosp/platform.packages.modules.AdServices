@@ -16,7 +16,6 @@
 
 package com.android.adservices.service.customaudience;
 
-import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 
 import android.adservices.common.ComponentAdData;
 import android.net.Uri;
@@ -39,47 +38,9 @@ public interface ComponentAdsStrategy {
             boolean debuggable,
             List<ComponentAdData> componentAdDataList);
 
-    /**
-     * Returns an implementation for the {@link ComponentAdsStrategy} depending on whether the
-     * component ads feature is enabled.
-     */
-    static ComponentAdsStrategy createInstance(boolean componentAdsEnabled) {
-        if (componentAdsEnabled) {
-            return new ComponentAdsStrategyEnabled();
-        } else {
-            return new ComponentAdsStrategy() {
-                @Override
-                public void persistCustomAudiencesWithComponentAds(
-                        CustomAudienceDao customAudienceDao,
-                        DBCustomAudience customAudience,
-                        Uri dailyUpdateUri,
-                        boolean debuggable,
-                        List<ComponentAdData> componentAdDataList) {
-                    customAudienceDao.insertOrOverwriteCustomAudience(
-                            customAudience, dailyUpdateUri, debuggable, List.of());
-                }
-
-                @Override
-                public void incrementNumCustomAudiencesWithComponentAds(
-                        BuyerInputGeneratorIntermediateStats stats) {
-                    // Do nothing.
-                }
-
-                @Override
-                public void setNumComponentAdsInPersistAdSelectionResultWinnerType(
-                        PersistAdSelectionResultCalledStats.Builder builder, int numComponentAds) {
-                    // Sets numComponentAds to FIELD_UNSET when component ads disabled.
-                    builder.setNumComponentAds(FIELD_UNSET);
-                }
-
-                @Override
-                public int getNumCustomAudiencesWithComponentAds(
-                        BuyerInputGeneratorIntermediateStats stats) {
-                    return FIELD_UNSET;
-                }
-            };
-        }
-    }
+    /** Returns a list of custom audiences with component ads attached. */
+    List<CustomAudienceWithComponentAds> getCustomAudiencesWithComponentAds(
+            CustomAudienceDao customAudienceDao, List<DBCustomAudience> dbCustomAudiences);
 
     /** Increments the number of custom audiences for this buyer sending component ads. */
     void incrementNumCustomAudiencesWithComponentAds(BuyerInputGeneratorIntermediateStats stats);
@@ -90,4 +51,16 @@ public interface ComponentAdsStrategy {
 
     /** Returns the number of custom audiences for this buyer sending component ads. */
     int getNumCustomAudiencesWithComponentAds(BuyerInputGeneratorIntermediateStats stats);
+
+    /**
+     * Returns an implementation for the {@link ComponentAdsStrategy} depending on whether the
+     * component ads feature is enabled.
+     */
+    static ComponentAdsStrategy createInstance(boolean componentAdsEnabled) {
+        if (componentAdsEnabled) {
+            return new ComponentAdsStrategyEnabled();
+        } else {
+            return new ComponentAdsStrategyDisabled();
+        }
+    }
 }

@@ -22,8 +22,8 @@ import android.annotation.Nullable;
 import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.DBEncodedPayload;
+import com.android.adservices.service.customaudience.CustomAudienceWithComponentAds;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
@@ -68,7 +68,7 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
     @Override
     public Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>
             generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                    List<DBCustomAudience> dbCustomAudiences,
+                    List<CustomAudienceWithComponentAds> customAudienceWithComponentAds,
                     Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_COMPRESSED_BUYERS_INPUTS);
 
@@ -80,14 +80,14 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
                         AdTechIdentifier,
                         List<
                                 Pair<
-                                        DBCustomAudience,
+                                        CustomAudienceWithComponentAds,
                                         BiddingAuctionServers.BuyerInput.CustomAudience>>>
                 customAudiencesInPayload = new HashMap<>();
 
         // create map of buyers and their custom audiences
         // sort per buyer CAs by priority in descending order (highest -> lowest)
-        Map<AdTechIdentifier, List<DBCustomAudience>> perBuyerDBCAs =
-                buildAndSortPerBuyerDBCAs(dbCustomAudiences);
+        Map<AdTechIdentifier, List<CustomAudienceWithComponentAds>> perBuyerDBCAs =
+                buildAndSortPerBuyerDBCAs(customAudienceWithComponentAds);
 
         // prepare custom audiences in payload map for stat tracking
         for (AdTechIdentifier adTechIdentifier : perBuyerDBCAs.keySet()) {
@@ -199,15 +199,16 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
                             AdTechIdentifier,
                             List<
                                     Pair<
-                                            DBCustomAudience,
+                                            CustomAudienceWithComponentAds,
                                             BiddingAuctionServers.BuyerInput.CustomAudience>>>
                     customAudiencesInPayload,
-            Map<AdTechIdentifier, List<DBCustomAudience>> perBuyerDBCAs,
+            Map<AdTechIdentifier, List<CustomAudienceWithComponentAds>> perBuyerDBCAs,
             Map<AdTechIdentifier, Double> rateOfCompressionPerBuyer,
             int totalPASBytesUsed) {
         // remaining CAs per buyer in will be descending order, so index 0 will have highest
         // priority per buyer
-        Map<AdTechIdentifier, List<DBCustomAudience>> remainingDBCAsPerBuyer = new HashMap<>();
+        Map<AdTechIdentifier, List<CustomAudienceWithComponentAds>> remainingDBCAsPerBuyer =
+                new HashMap<>();
 
         if (mSellerMaxSizeBytes <= 0) {
             sLogger.v("Max Size is invalid, seller max size: %d", mSellerMaxSizeBytes);
@@ -219,9 +220,10 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
         sLogger.v("Initial estimated size after PAS" + totalEstimatedBytesUsed);
 
         // Add CAs per buyer, respecting per buyer limits
-        for (Map.Entry<AdTechIdentifier, List<DBCustomAudience>> entry : perBuyerDBCAs.entrySet()) {
+        for (Map.Entry<AdTechIdentifier, List<CustomAudienceWithComponentAds>> entry :
+                perBuyerDBCAs.entrySet()) {
             AdTechIdentifier buyerName = entry.getKey();
-            List<DBCustomAudience> dbCustomAudienceList = entry.getValue();
+            List<CustomAudienceWithComponentAds> customAudienceWithComponentAds = entry.getValue();
             int perBuyerLimit = (int) (mPerBuyerLimits.get(buyerName) * PAYLOAD_UTILIZATION_GOAL);
 
             // Prepare for overflow CAs to be added for utilization of remaining payload size (if
@@ -233,9 +235,10 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
             }
 
             // iterate from beginning to end, since list is sorted in descending order by priority
-            for (int i = 0; i < dbCustomAudienceList.size(); i++) {
+            for (int i = 0; i < customAudienceWithComponentAds.size(); i++) {
                 // get the CA with the ith highest priority
-                DBCustomAudience dbCustomAudience = dbCustomAudienceList.get(i);
+                CustomAudienceWithComponentAds dbCustomAudience =
+                        customAudienceWithComponentAds.get(i);
                 BiddingAuctionServers.BuyerInput.CustomAudience customAudienceProto =
                         mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(
                                 dbCustomAudience);
@@ -266,8 +269,9 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
                 } else {
                     // Since there is probably not enough space to add any remaining potential CAs,
                     // add the remaining CAs for utilizing remaining payload space, end loop
-                    List<DBCustomAudience> sublist =
-                            dbCustomAudienceList.subList(i, dbCustomAudienceList.size());
+                    List<CustomAudienceWithComponentAds> sublist =
+                            customAudienceWithComponentAds.subList(
+                                    i, customAudienceWithComponentAds.size());
                     remainingDBCAsPerBuyer.get(buyerName).addAll(sublist);
                     break;
                 }
@@ -278,7 +282,8 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
         // utilization goal
         if (totalEstimatedBytesUsed <= mSellerMaxSizeBytes * PAYLOAD_UTILIZATION_GOAL) {
             sLogger.v("Building remaining DBCA list");
-            List<DBCustomAudience> remainingDBCAs = buildRemainingDBCAsList(remainingDBCAsPerBuyer);
+            List<CustomAudienceWithComponentAds> remainingDBCAs =
+                    buildRemainingDBCAsList(remainingDBCAsPerBuyer);
 
             sLogger.v(
                     "Utilizing rest of payload with greedy function, estimated remaining size: %d",
@@ -295,13 +300,14 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
     }
 
     private Map<AdTechIdentifier, Double> buildEstimatedRateOfCompressionPerBuyer(
-            Map<AdTechIdentifier, List<DBCustomAudience>> perBuyerCAs,
+            Map<AdTechIdentifier, List<CustomAudienceWithComponentAds>> perBuyerCAs,
             Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap) {
         Map<AdTechIdentifier, Double> rateOfCompressionPerBuyer = new HashMap<>();
 
-        for (Map.Entry<AdTechIdentifier, List<DBCustomAudience>> entry : perBuyerCAs.entrySet()) {
+        for (Map.Entry<AdTechIdentifier, List<CustomAudienceWithComponentAds>> entry :
+                perBuyerCAs.entrySet()) {
             AdTechIdentifier buyerName = entry.getKey();
-            List<DBCustomAudience> customAudienceList = entry.getValue();
+            List<CustomAudienceWithComponentAds> customAudienceList = entry.getValue();
             if (encodedPayloadMap.containsKey(buyerName)) {
                 DBEncodedPayload encodedPayload = encodedPayloadMap.get(buyerName);
                 rateOfCompressionPerBuyer.put(
@@ -317,7 +323,7 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
 
     /** Compresses data, divide over decompressed size to get a compression ratio */
     private double getCompressionRatio(
-            List<DBCustomAudience> customAudienceList,
+            List<CustomAudienceWithComponentAds> customAudienceList,
             @Nullable DBEncodedPayload dbEncodedPayload) {
         BiddingAuctionServers.BuyerInput.Builder buyerInput =
                 BiddingAuctionServers.BuyerInput.newBuilder();
@@ -331,10 +337,10 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
                     mCompressedBuyerInputCreatorHelper.buildProtectedSignalsProtoFrom(
                             dbEncodedPayload));
         }
-        for (DBCustomAudience dbCustomAudience : customAudienceList) {
+        for (CustomAudienceWithComponentAds customAudienceWithComponentAds : customAudienceList) {
             BiddingAuctionServers.BuyerInput.CustomAudience customAudienceProto =
                     mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(
-                            dbCustomAudience);
+                            customAudienceWithComponentAds);
             buyerInput.addCustomAudiences(customAudienceProto);
         }
 
@@ -390,10 +396,10 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
     }
 
     /** Split up custom audiences with their buyers */
-    private Map<AdTechIdentifier, List<DBCustomAudience>> buildAndSortPerBuyerDBCAs(
-            List<DBCustomAudience> customAudiences) {
+    private Map<AdTechIdentifier, List<CustomAudienceWithComponentAds>> buildAndSortPerBuyerDBCAs(
+            List<CustomAudienceWithComponentAds> dbCustomAudiencesWithComponentAds) {
         // customAudiences is in descending order by priority
-        Map<AdTechIdentifier, List<DBCustomAudience>> perBuyerDBCAs = new HashMap<>();
+        Map<AdTechIdentifier, List<CustomAudienceWithComponentAds>> perBuyerDBCAs = new HashMap<>();
 
         for (AdTechIdentifier buyerName : mPerBuyerLimits.keySet()) {
             if (!perBuyerDBCAs.containsKey(buyerName)) {
@@ -401,16 +407,26 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
             }
         }
 
-        for (DBCustomAudience dbCustomAudience : customAudiences) {
-            AdTechIdentifier caBuyerName = dbCustomAudience.getBuyer();
+        for (CustomAudienceWithComponentAds customAudienceWithComponentAds :
+                dbCustomAudiencesWithComponentAds) {
+            AdTechIdentifier caBuyerName =
+                    customAudienceWithComponentAds.getDBCustomAudience().getBuyer();
             if (perBuyerDBCAs.containsKey(caBuyerName)) {
                 // CAs are added in descending order per buyer by priority
-                perBuyerDBCAs.get(caBuyerName).add(dbCustomAudience);
+                perBuyerDBCAs.get(caBuyerName).add(customAudienceWithComponentAds);
             }
         }
 
-        for (List<DBCustomAudience> buyerDBCAs : perBuyerDBCAs.values()) {
-            buyerDBCAs.sort(Comparator.comparingDouble(DBCustomAudience::getPriority).reversed());
+        for (List<CustomAudienceWithComponentAds> customAudienceWithComponentAdsList :
+                perBuyerDBCAs.values()) {
+            customAudienceWithComponentAdsList.sort(
+                    Comparator.comparingDouble(
+                                    (CustomAudienceWithComponentAds
+                                                    customAudienceWithComponentAds) ->
+                                            customAudienceWithComponentAds
+                                                    .getDBCustomAudience()
+                                                    .getPriority())
+                            .reversed());
         }
         return perBuyerDBCAs;
     }
@@ -419,10 +435,10 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
      * Build list given remaining buyers, with structure [buyer1P1, buyer2P1, ..., buyerNP1,
      * buyer1P2 ... buyerNPN]
      */
-    private List<DBCustomAudience> buildRemainingDBCAsList(
-            Map<AdTechIdentifier, List<DBCustomAudience>> remainingDBCAsPerBuyer) {
+    private List<CustomAudienceWithComponentAds> buildRemainingDBCAsList(
+            Map<AdTechIdentifier, List<CustomAudienceWithComponentAds>> remainingDBCAsPerBuyer) {
 
-        List<DBCustomAudience> remainingDBCAList = new ArrayList<>();
+        List<CustomAudienceWithComponentAds> remainingDBCAList = new ArrayList<>();
         int currentIndex = 0;
         boolean customAudiencesStillRemain = true;
 
@@ -430,9 +446,9 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
         while (customAudiencesStillRemain) {
             customAudiencesStillRemain =
                     false; // set back to true if there are CAs that still need to be added
-            for (Map.Entry<AdTechIdentifier, List<DBCustomAudience>> entry :
+            for (Map.Entry<AdTechIdentifier, List<CustomAudienceWithComponentAds>> entry :
                     remainingDBCAsPerBuyer.entrySet()) {
-                List<DBCustomAudience> dbCustomAudienceList = entry.getValue();
+                List<CustomAudienceWithComponentAds> dbCustomAudienceList = entry.getValue();
                 if (currentIndex < dbCustomAudienceList.size()) {
                     remainingDBCAList.add(dbCustomAudienceList.get(currentIndex));
                     customAudiencesStillRemain = true;
@@ -451,13 +467,13 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
      * hit a target goal: (sellerMaxSizeBytes * PAYLOAD_UTILIZATION_GOAL)
      */
     private void utilizeRemainingPayloadSpace(
-            List<DBCustomAudience> remainingDBCAs,
+            List<CustomAudienceWithComponentAds> remainingDBCAs,
             Map<AdTechIdentifier, BiddingAuctionServers.BuyerInput.Builder> buyerInputs,
             Map<
                             AdTechIdentifier,
                             List<
                                     Pair<
-                                            DBCustomAudience,
+                                            CustomAudienceWithComponentAds,
                                             BiddingAuctionServers.BuyerInput.CustomAudience>>>
                     customAudiencesInPayload,
             Map<AdTechIdentifier, Double> rateOfCompressionPerBuyer,
@@ -467,8 +483,8 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
         int totalSize = currentSizeOfPayload; // avoid reassigning parameter
         int goalSize = (int) (sellerMaxSizeBytes * PAYLOAD_UTILIZATION_GOAL);
 
-        for (DBCustomAudience dbCustomAudience : remainingDBCAs) {
-            AdTechIdentifier buyerName = dbCustomAudience.getBuyer();
+        for (CustomAudienceWithComponentAds dbCustomAudience : remainingDBCAs) {
+            AdTechIdentifier buyerName = dbCustomAudience.getDBCustomAudience().getBuyer();
 
             BiddingAuctionServers.BuyerInput.CustomAudience customAudienceProto =
                     mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(
@@ -503,7 +519,7 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
                             AdTechIdentifier,
                             List<
                                     Pair<
-                                            DBCustomAudience,
+                                            CustomAudienceWithComponentAds,
                                             BiddingAuctionServers.BuyerInput.CustomAudience>>>
                     customAudiencesInPayload,
             int overflowSize,
@@ -562,7 +578,7 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
                             AdTechIdentifier,
                             List<
                                     Pair<
-                                            DBCustomAudience,
+                                            CustomAudienceWithComponentAds,
                                             BiddingAuctionServers.BuyerInput.CustomAudience>>>
                     customAudiencesInPayload) {
         Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> perBuyerStats = new HashMap<>();
@@ -571,18 +587,23 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImpl
                         AdTechIdentifier,
                         List<
                                 Pair<
-                                        DBCustomAudience,
+                                        CustomAudienceWithComponentAds,
                                         BiddingAuctionServers.BuyerInput.CustomAudience>>>
                 entry : customAudiencesInPayload.entrySet()) {
-            List<Pair<DBCustomAudience, BiddingAuctionServers.BuyerInput.CustomAudience>>
+            List<
+                            Pair<
+                                    CustomAudienceWithComponentAds,
+                                    BiddingAuctionServers.BuyerInput.CustomAudience>>
                     customAudiences = entry.getValue();
-            for (Pair<DBCustomAudience, BiddingAuctionServers.BuyerInput.CustomAudience>
+            for (Pair<
+                            CustomAudienceWithComponentAds,
+                            BiddingAuctionServers.BuyerInput.CustomAudience>
                     customAudiencePair : customAudiences) {
                 BiddingAuctionServers.BuyerInput.CustomAudience customAudienceProto =
                         customAudiencePair.second;
-                DBCustomAudience dbCustomAudience = customAudiencePair.first;
+                CustomAudienceWithComponentAds dbCustomAudience = customAudiencePair.first;
                 mCompressedBuyerInputCreatorHelper.addToBuyerIntermediateStats(
-                        perBuyerStats, dbCustomAudience, customAudienceProto);
+                        perBuyerStats, dbCustomAudience.getDBCustomAudience(), customAudienceProto);
             }
         }
         return perBuyerStats;

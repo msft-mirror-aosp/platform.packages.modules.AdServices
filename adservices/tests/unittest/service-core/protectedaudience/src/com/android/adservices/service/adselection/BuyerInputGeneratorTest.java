@@ -40,6 +40,8 @@ import static org.mockito.Mockito.when;
 import android.adservices.adselection.AdSelectionConfigFixture;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
+import android.adservices.common.ComponentAdData;
+import android.adservices.common.ComponentAdDataFixture;
 import android.adservices.customaudience.CustomAudience;
 import android.net.Uri;
 
@@ -59,6 +61,7 @@ import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.customaudience.ComponentAdsStrategy;
+import com.android.adservices.service.customaudience.CustomAudienceWithComponentAds;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAppSignals;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -1091,6 +1094,110 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
         verify(mAppInstallAdFiltererMock).filterCustomAudiences(any());
     }
 
+    @Test
+    public void
+            testBuyerInputGenerator_returnsBuyerInputsWithComponentAdsEnabled_onlyCAsWithRenderIdReturned_success()
+                    throws Exception {
+        // Enable component ads
+        when(mCompressedBuyerInputCreatorFactoryMock.getComponentAdsStrategy())
+                .thenReturn(ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ true));
+
+        // Set AdFiltering to return all custom audiences in the input argument.
+        when(mFrequencyCapAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
+        when(mAppInstallAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
+
+        Map<String, AdTechIdentifier> nameAndBuyersMap =
+                Map.of(
+                        "ShoesB1_", BUYER_1,
+                        "ShirtsB2_", BUYER_1,
+                        "ShoesB2_", BUYER_2);
+        Set<AdTechIdentifier> buyers = new HashSet<>(nameAndBuyersMap.values());
+        Map<String, CustomAudienceWithComponentAds> namesAndCustomAudiences =
+                createAndPersistDBCustomAudiencesWithAdRenderIdAndComponentAds(nameAndBuyersMap);
+
+        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
+                mBuyerInputGenerator
+                        .createCompressedBuyerInputs(
+                                PAYLOAD_OPTIMIZATION_CONTEXT_DISABLED, mStatsBuilderMock)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.MILLISECONDS);
+
+        Assert.assertEquals(buyers, buyerAndBuyerInputs.keySet());
+
+        for (AdTechIdentifier buyer : buyerAndBuyerInputs.keySet()) {
+            BuyerInput buyerInput =
+                    BuyerInput.parseFrom(
+                            mDataCompressor.decompress(buyerAndBuyerInputs.get(buyer)).getData());
+            for (BuyerInput.CustomAudience buyerInputsCA : buyerInput.getCustomAudiencesList()) {
+                String buyerInputsCAName = buyerInputsCA.getName();
+                expect.that(nameAndBuyersMap).containsKey(buyerInputsCAName);
+                DBCustomAudience deviceCA =
+                        namesAndCustomAudiences.get(buyerInputsCAName).getDBCustomAudience();
+                expect.that(deviceCA.getName()).isEqualTo(buyerInputsCAName);
+                expect.that(deviceCA.getBuyer()).isEqualTo(buyer);
+                assertEqual(buyerInputsCA, deviceCA, /* compareAds= */ true);
+                expect.that(buyerInputsCA.getComponentAdsList())
+                        .isEqualTo(
+                                namesAndCustomAudiences
+                                        .get(buyerInputsCAName)
+                                        .getComponentAdRenderIds());
+            }
+        }
+        verify(mFrequencyCapAdFiltererMock).filterCustomAudiences(any());
+        verify(mAppInstallAdFiltererMock).filterCustomAudiences(any());
+    }
+
+    @Test
+    public void
+            testBuyerInputGenerator_returnsBuyerInputsWithComponentAdsDisabled_onlyCAsWithRenderIdReturned_success()
+                    throws Exception {
+        // Enable component ads
+        when(mCompressedBuyerInputCreatorFactoryMock.getComponentAdsStrategy())
+                .thenReturn(ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false));
+
+        // Set AdFiltering to return all custom audiences in the input argument.
+        when(mFrequencyCapAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
+        when(mAppInstallAdFiltererMock.filterCustomAudiences(any()))
+                .thenAnswer(i -> i.getArguments()[0]);
+
+        Map<String, AdTechIdentifier> nameAndBuyersMap =
+                Map.of(
+                        "ShoesB1", BUYER_1,
+                        "ShirtsB2", BUYER_1,
+                        "ShoesB2", BUYER_2);
+        Set<AdTechIdentifier> buyers = new HashSet<>(nameAndBuyersMap.values());
+        Map<String, CustomAudienceWithComponentAds> namesAndCustomAudiences =
+                createAndPersistDBCustomAudiencesWithAdRenderIdAndComponentAds(nameAndBuyersMap);
+
+        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
+                mBuyerInputGenerator
+                        .createCompressedBuyerInputs(
+                                PAYLOAD_OPTIMIZATION_CONTEXT_DISABLED, mStatsBuilderMock)
+                        .get(API_RESPONSE_TIMEOUT_SECONDS, TimeUnit.MILLISECONDS);
+
+        Assert.assertEquals(buyers, buyerAndBuyerInputs.keySet());
+
+        for (AdTechIdentifier buyer : buyerAndBuyerInputs.keySet()) {
+            BuyerInput buyerInput =
+                    BuyerInput.parseFrom(
+                            mDataCompressor.decompress(buyerAndBuyerInputs.get(buyer)).getData());
+            for (BuyerInput.CustomAudience buyerInputsCA : buyerInput.getCustomAudiencesList()) {
+                String buyerInputsCAName = buyerInputsCA.getName();
+                expect.that(nameAndBuyersMap).containsKey(buyerInputsCAName);
+                DBCustomAudience deviceCA =
+                        namesAndCustomAudiences.get(buyerInputsCAName).getDBCustomAudience();
+                expect.that(deviceCA.getName()).isEqualTo(buyerInputsCAName);
+                expect.that(deviceCA.getBuyer()).isEqualTo(buyer);
+                assertEqual(buyerInputsCA, deviceCA, /* compareAds= */ true);
+                expect.that(buyerInputsCA.getComponentAdsList()).isEmpty();
+            }
+        }
+        verify(mFrequencyCapAdFiltererMock).filterCustomAudiences(any());
+        verify(mAppInstallAdFiltererMock).filterCustomAudiences(any());
+    }
+
     /**
      * Asserts if a {@link BuyerInput.CustomAudience} and {@link DBCustomAudience} objects are
      * equal.
@@ -1150,6 +1257,10 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
                 .thenReturn(
                         new BuyerInputDataFetcherAllBuyersImpl(
                                 mCustomAudienceDao, mEncodedPayloadDao));
+        when(mCompressedBuyerInputCreatorFactoryMock.getCustomAudienceDao())
+                .thenReturn(mCustomAudienceDao);
+        when(mCompressedBuyerInputCreatorFactoryMock.getComponentAdsStrategy())
+                .thenReturn(ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false));
     }
 
     private void assertAdsEqual(
@@ -1174,6 +1285,29 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
             customAudiences.put(name, thisCustomAudience);
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
                     thisCustomAudience, Uri.EMPTY, false, List.of());
+        }
+        return customAudiences;
+    }
+
+    private Map<String, CustomAudienceWithComponentAds>
+            createAndPersistDBCustomAudiencesWithAdRenderIdAndComponentAds(
+                    Map<String, AdTechIdentifier> nameAndBuyers) {
+        Map<String, CustomAudienceWithComponentAds> customAudiences = new HashMap<>();
+        for (Map.Entry<String, AdTechIdentifier> entry : nameAndBuyers.entrySet()) {
+            AdTechIdentifier buyer = entry.getValue();
+            String name = entry.getKey();
+            DBCustomAudience thisCustomAudience =
+                    DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(buyer, name)
+                            .build();
+            List<String> adRenderIds = List.of(name + "1", name + "2");
+            CustomAudienceWithComponentAds customAudienceWithComponentAds =
+                    CustomAudienceWithComponentAds.create(thisCustomAudience, adRenderIds);
+            customAudiences.put(name, customAudienceWithComponentAds);
+            List<ComponentAdData> componentAds =
+                    ComponentAdDataFixture.getValidComponentAdsByBuyerAndRenderId(
+                            buyer, adRenderIds);
+            mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                    thisCustomAudience, Uri.EMPTY, false, componentAds);
         }
         return customAudiences;
     }
