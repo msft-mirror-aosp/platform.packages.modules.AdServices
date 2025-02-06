@@ -41,4 +41,13 @@ public final class Clock {
     public long currentTimeMillis() {
         return System.currentTimeMillis();
     }
+
+    /**
+     * Wrapper for {@link System#nanoTime()}
+     *
+     * @return current time in nanoseconds. (1 millisecond = 1,000,000 nanoseconds)
+     */
+    public long nanoTime() {
+        return System.nanoTime();
+    }
 }
