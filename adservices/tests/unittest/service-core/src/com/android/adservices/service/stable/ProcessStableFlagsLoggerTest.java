@@ -39,7 +39,7 @@ import java.util.concurrent.Executors;
 
 /** Unit tests for {@link ProcessStableFlagsLogger}. */
 public final class ProcessStableFlagsLoggerTest extends AdServicesMockitoTestCase {
-    private static final long TEST_LATENCY = 1L;
+    private static final long TEST_LATENCY_MICROSECOND = 1L;
     private static final String TEST_NAMESPACE = "adservices_test";
     private static final ExecutorService sExecutor = Executors.newCachedThreadPool();
 
@@ -73,25 +73,28 @@ public final class ProcessStableFlagsLoggerTest extends AdServicesMockitoTestCas
     }
 
     @Test
-    public void testLogBatchReadFromDeviceConfigLatencyMs_enabled() throws Exception {
+    public void testLogBatchReadFromDeviceConfigLatencyMircoSecond_enabled() throws Exception {
         mockIsProcessStableFlagsLoggingEnabled(/* isEnabled= */ true);
 
         AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
         doAnswer(callback)
                 .when(mMockStatsdLogger)
-                .logBatchReadFromDeviceConfigLatencyMs(TEST_LATENCY);
+                .logBatchReadFromDeviceConfigLatencyMicroSecond(TEST_LATENCY_MICROSECOND);
 
-        mSpyProcessStableFlagsLogger.logBatchReadFromDeviceConfigLatencyMs(TEST_LATENCY);
+        mSpyProcessStableFlagsLogger.logBatchReadFromDeviceConfigLatencyMicroSecond(
+                TEST_LATENCY_MICROSECOND);
 
         callback.assertCalled();
     }
 
     @Test
-    public void testLogBatchReadFromDeviceConfigLatencyMs_disabled() {
+    public void testLogBatchReadFromDeviceConfigLatencyMircoSecond_disabled() {
         mockIsProcessStableFlagsLoggingEnabled(/* isEnabled= */ false);
 
-        mSpyProcessStableFlagsLogger.logBatchReadFromDeviceConfigLatencyMs(TEST_LATENCY);
-        verify(mMockStatsdLogger, never()).logBatchReadFromDeviceConfigLatencyMs(anyLong());
+        mSpyProcessStableFlagsLogger.logBatchReadFromDeviceConfigLatencyMicroSecond(
+                TEST_LATENCY_MICROSECOND);
+        verify(mMockStatsdLogger, never())
+                .logBatchReadFromDeviceConfigLatencyMicroSecond(anyLong());
     }
 
     @Test
@@ -140,6 +143,24 @@ public final class ProcessStableFlagsLoggerTest extends AdServicesMockitoTestCas
         mockIsProcessStableFlagsLoggingEnabled(/* isEnabled= */ true);
 
         Properties cachedProperties = new Properties(TEST_NAMESPACE, Map.of());
+        Properties changedProperties = new Properties(TEST_NAMESPACE, Map.of("key1", "val1"));
+
+        AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();
+        doAnswer(callback)
+                .when(mMockStatsdLogger)
+                .logAdServicesFlagsUpdateEvent(/* numOfCacheMissFlags= */ 1);
+
+        mSpyProcessStableFlagsLogger.logAdServicesFlagsUpdateEvent(
+                cachedProperties, changedProperties);
+
+        callback.assertCalled();
+    }
+
+    @Test
+    public void testLogAdServicesFlagsUpdateEvent_enabled_nullCachedProperties() throws Exception {
+        mockIsProcessStableFlagsLoggingEnabled(/* isEnabled= */ true);
+
+        Properties cachedProperties = new Properties(TEST_NAMESPACE, /* keyValueMap= */ null);
         Properties changedProperties = new Properties(TEST_NAMESPACE, Map.of("key1", "val1"));
 
         AnswerSyncCallback<Void> callback = AnswerSyncCallback.forSingleVoidAnswer();

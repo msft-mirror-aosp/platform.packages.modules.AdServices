@@ -47,15 +47,15 @@ public final class ProcessStableFlagsStatsdLoggerTest extends AdServicesExtended
     }
 
     @Test
-    public void testLogBatchReadFromDeviceConfigLatencyMs() {
-        long latencyMs = 1L;
+    public void testLogBatchReadFromDeviceConfigLatencyMicroSecond() {
+        long latencyUs = 1L;
 
-        mStatsdLogger.logBatchReadFromDeviceConfigLatencyMs(latencyMs);
+        mStatsdLogger.logBatchReadFromDeviceConfigLatencyMicroSecond(latencyUs);
 
         verify(
                 () ->
                         AdServicesStatsLog.write(
-                                AD_SERVICES_PROCESS_STABLE_FLAGS_REPORTED, latencyMs));
+                                AD_SERVICES_PROCESS_STABLE_FLAGS_REPORTED, latencyUs));
     }
 
     @Test
