@@ -32,8 +32,8 @@ public final class ProcessStableFlagsStatsdLogger {
                 AD_SERVICES_PROCESS_LIFECYCLE_REPORTED__EVENT_TYPE__RESTART);
     }
 
-    void logBatchReadFromDeviceConfigLatencyMs(long latencyMs) {
-        AdServicesStatsLog.write(AD_SERVICES_PROCESS_STABLE_FLAGS_REPORTED, latencyMs);
+    void logBatchReadFromDeviceConfigLatencyMicroSecond(long latencyUs) {
+        AdServicesStatsLog.write(AD_SERVICES_PROCESS_STABLE_FLAGS_REPORTED, latencyUs);
     }
 
     void logAdServicesProcessLowMemoryLevel() {
