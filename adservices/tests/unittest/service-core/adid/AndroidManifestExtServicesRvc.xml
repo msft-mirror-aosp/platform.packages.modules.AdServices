@@ -22,7 +22,7 @@
         <uses-library android:name="android.ext.adservices" android:required="false" />
         <provider
             android:name="com.android.adservices.common.AdServicesTestingProvider"
-            android:authorities="com.android.adservices.provider.testing"
+            android:authorities="${applicationId}.com.android.adservices.provider.testing"
             android:exported="false"
         />
     </application>
