@@ -59,13 +59,17 @@ public abstract class GetAdSelectionDataBuyerInputGeneratedStats {
     /** Returns min size of encoded signals payloads */
     public abstract int getEncodedSignalsSizeMin();
 
+    /** Returns number of custom audiences in this buyer input sending component ads */
+    public abstract int getNumCustomAudiencesWithComponentAds();
+
     /** Returns a generic builder. */
     public static Builder builder() {
         return new AutoValue_GetAdSelectionDataBuyerInputGeneratedStats.Builder()
                 .setNumEncodedSignals(FIELD_UNSET)
                 .setEncodedSignalsSizeMax(FIELD_UNSET)
                 .setEncodedSignalsSizeMin(FIELD_UNSET)
-                .setEncodedSignalsSizeMean(FIELD_UNSET);
+                .setEncodedSignalsSizeMean(FIELD_UNSET)
+                .setNumCustomAudiencesWithComponentAds(FIELD_UNSET);
     }
 
     /** Builder class for GetAdSelectionDataBuyerInputGeneratedStats. */
@@ -111,6 +115,10 @@ public abstract class GetAdSelectionDataBuyerInputGeneratedStats {
 
         /** Sets min size of encoded signals payloads */
         public abstract Builder setEncodedSignalsSizeMin(int encodedSignalsSizeMin);
+
+        /** Sets number of custom audiences in this buyer input sending component ads */
+        public abstract Builder setNumCustomAudiencesWithComponentAds(
+                int numCustomAudiencesWithComponentAds);
 
         /** Builds the {@link GetAdSelectionDataBuyerInputGeneratedStats} object. */
         public abstract GetAdSelectionDataBuyerInputGeneratedStats build();

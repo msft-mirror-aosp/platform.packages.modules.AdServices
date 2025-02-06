@@ -23,6 +23,7 @@ import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UN
 import android.adservices.common.AdTechIdentifier;
 
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.customaudience.ComponentAdsStrategy;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
@@ -36,13 +37,16 @@ public class AuctionServerPayloadMetricsStrategyEnabled
         implements AuctionServerPayloadMetricsStrategy {
     private final AdServicesLogger mAdServicesLogger;
     private final SellerConfigurationMetricsStrategy mSellerConfigurationMetricsStrategy;
+    private final ComponentAdsStrategy mComponentAdsStrategy;
 
     /** Constructs a {@link AuctionServerPayloadMetricsStrategyEnabled} instance. */
     public AuctionServerPayloadMetricsStrategyEnabled(
             AdServicesLogger adServicesLogger,
-            SellerConfigurationMetricsStrategy sellerConfigurationMetricsStrategy) {
+            SellerConfigurationMetricsStrategy sellerConfigurationMetricsStrategy,
+            ComponentAdsStrategy componentAdsStrategy) {
         mAdServicesLogger = adServicesLogger;
         mSellerConfigurationMetricsStrategy = sellerConfigurationMetricsStrategy;
+        mComponentAdsStrategy = componentAdsStrategy;
     }
 
     @Override
@@ -103,6 +107,9 @@ public class AuctionServerPayloadMetricsStrategyEnabled
                     GetAdSelectionDataBuyerInputGeneratedStats.builder()
                             .setNumCustomAudiences(buyerStats.getNumCustomAudiences())
                             .setNumCustomAudiencesOmitAds(buyerStats.getNumCustomAudiencesOmitAds())
+                            .setNumCustomAudiencesWithComponentAds(
+                                    mComponentAdsStrategy.getNumCustomAudiencesWithComponentAds(
+                                            buyerStats))
                             .setCustomAudienceSizeMeanB(buyerStats.getCustomAudienceSizeMeanB())
                             .setCustomAudienceSizeVarianceB(
                                     buyerStats.getCustomAudienceSizeVarianceB())
@@ -148,6 +155,7 @@ public class AuctionServerPayloadMetricsStrategyEnabled
                     GetAdSelectionDataBuyerInputGeneratedStats.builder()
                             .setNumCustomAudiences(FIELD_UNSET)
                             .setNumCustomAudiencesOmitAds(FIELD_UNSET)
+                            .setNumCustomAudiencesWithComponentAds(FIELD_UNSET)
                             .setCustomAudienceSizeMeanB(FIELD_UNSET)
                             .setCustomAudienceSizeVarianceB(FIELD_UNSET)
                             .setTrustedBiddingSignalsKeysSizeMeanB(FIELD_UNSET)
@@ -167,6 +175,9 @@ public class AuctionServerPayloadMetricsStrategyEnabled
                                 .setNumCustomAudiences(buyerStats.getNumCustomAudiences())
                                 .setNumCustomAudiencesOmitAds(
                                         buyerStats.getNumCustomAudiencesOmitAds())
+                                // Change to the real value after implementing
+                                // component ads in PAS.
+                                .setNumCustomAudiencesWithComponentAds(FIELD_UNSET)
                                 .setCustomAudienceSizeMeanB(buyerStats.getCustomAudienceSizeMeanB())
                                 .setCustomAudienceSizeVarianceB(
                                         buyerStats.getCustomAudienceSizeVarianceB())
@@ -215,6 +226,9 @@ public class AuctionServerPayloadMetricsStrategyEnabled
                     dbCustomAudience.getUserBiddingSignals().getSizeInBytes());
         } else {
             stats.addUserBiddingSignalsSize(0);
+        }
+        if (customAudience.getComponentAdsCount() > 0) {
+            mComponentAdsStrategy.incrementNumCustomAudiencesWithComponentAds(stats);
         }
     }
 

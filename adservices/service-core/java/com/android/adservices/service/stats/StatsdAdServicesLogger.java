@@ -754,7 +754,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
                 stats.getNumEncodedSignals(),
                 stats.getEncodedSignalsSizeMean(),
                 stats.getEncodedSignalsSizeMax(),
-                stats.getEncodedSignalsSizeMin());
+                stats.getEncodedSignalsSizeMin(),
+                stats.getNumCustomAudiencesWithComponentAds());
     }
 
     @Override
@@ -930,7 +931,8 @@ public class StatsdAdServicesLogger implements AdServicesLogger {
     public void logPersistAdSelectionResultCalledStats(PersistAdSelectionResultCalledStats stats) {
         AdServicesStatsLog.write(
                 PERSIST_AD_SELECTION_RESULT_CALLED,
-                stats.getWinnerType());
+                stats.getWinnerType(),
+                stats.getNumComponentAds());
     }
 
     @Override
