@@ -36,6 +36,7 @@ import com.android.adservices.service.devapi.DevSessionDataStore;
 import com.android.adservices.service.devapi.DevSessionState;
 import com.android.adservices.service.measurement.aggregation.AggregateReport;
 import com.android.adservices.service.measurement.aggregation.AggregateReportFixture;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.shell.ShellCommandTestCase;
 
 import org.json.JSONArray;
@@ -53,7 +54,9 @@ public class AttributionReportingListAggregatableReportsCommandTest
         extends ShellCommandTestCase<AttributionReportingListAggregatableReportsCommand> {
     public static final String STATUS = "status";
     private static final String TRIGGER_TIME = "trigger_time";
-
+    private static final String SCHEMA_FULL = "full";
+    private static final String SCHEMA_PARTIAL = "partial";
+    private static final String SCHEMA_SUB_COMMAND = "--schema";
     DatastoreManager mDatastoreManager = Mockito.mock(DatastoreManager.class);
     @Mock
     private DevSessionDataStore mDevSessionDataStore;
@@ -63,6 +66,18 @@ public class AttributionReportingListAggregatableReportsCommandTest
 
     AggregateReport aggregatableReport2 =
             AggregateReportFixture.getValidAggregateReportBuilder().setId("report2").build();
+
+    AggregateReport aggregatableReport3 =
+            AggregateReportFixture.getValidAggregateReportBuilder()
+                    .setId("report1")
+                    .setApiVersion(AggregateReportFixture.ValidAggregateReportParams.API_VERSION)
+                    .build();
+
+    AggregateReport aggregatableReport4 =
+            AggregateReportFixture.getValidAggregateReportBuilder()
+                    .setId("report1")
+                    .setApiVersion(AggregateReportFixture.ValidAggregateReportParams.API_VERSION)
+                    .build();
 
     @Before
     public void setUp() {
@@ -120,9 +135,12 @@ public class AttributionReportingListAggregatableReportsCommandTest
 
         for (int i = 0; i < registrationsArray.length(); i++) {
             String id = "report" + (i + 1);
+            JSONObject registrationsObject = registrationsArray.getJSONObject(i);
             AggregateReport outputAggregatableReport =
-                    getAggregatableReportFromJson(registrationsArray.getJSONObject(i), id).build();
+                    getAggregatableReportFromJson(registrationsObject, id, SCHEMA_PARTIAL).build();
             assertThat(outputAggregatableReport).isEqualTo(expectedAggregatableReports.get(i));
+            assertAggregatableReportJson(
+                    registrationsObject, outputAggregatableReport, SCHEMA_PARTIAL);
         }
     }
 
@@ -150,8 +168,77 @@ public class AttributionReportingListAggregatableReportsCommandTest
 
         expectSuccess(result, COMMAND_ATTRIBUTION_REPORTING_LIST_AGGREGATABLE_REPORTS);
 
-        assertThat(result.mOut)
-                .isEqualTo("Error in retrieving aggregatable reports from database.");
+        assertThat(result.mOut).isEqualTo("Error in retrieving aggregatable reports from database");
+    }
+
+    @Test
+    public void testRunListAggregatableReports_singleAggregatableReportsPartialSchemaJson()
+            throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_PARTIAL};
+        List<AggregateReport> aggregatableReports = List.of(aggregatableReport1);
+        testRunListAggregatableReportsWithSchema(aggregatableReports, args);
+    }
+
+    @Test
+    public void testRunListAggregatableReports_multipleAggregatableReportsPartialSchemaJson()
+            throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_PARTIAL};
+        List<AggregateReport> aggregatableReports =
+                List.of(aggregatableReport1, aggregatableReport2);
+        testRunListAggregatableReportsWithSchema(aggregatableReports, args);
+    }
+
+    @Test
+    public void testRunListAggregatableReports_singleAggregatableReportsFullSchemaJson()
+            throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_FULL};
+        List<AggregateReport> aggregatableReports = List.of(aggregatableReport3);
+        testRunListAggregatableReportsWithSchema(aggregatableReports, args);
+    }
+
+    @Test
+    public void testRunListAggregatableReports_multipleAggregatableReportsFullSchemaJson()
+            throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_FULL};
+        List<AggregateReport> aggregatableReports =
+                List.of(aggregatableReport3, aggregatableReport4);
+        testRunListAggregatableReportsWithSchema(aggregatableReports, args);
+    }
+
+    private void testRunListAggregatableReportsWithSchema(
+            List<AggregateReport> aggregatableReports, String[] schema) throws JSONException {
+        doReturn(Optional.ofNullable(aggregatableReports))
+                .when(mDatastoreManager)
+                .runInTransactionWithResult(any());
+
+        Result result = runCommandAndGetResult(schema);
+
+        expectSuccess(result, COMMAND_ATTRIBUTION_REPORTING_LIST_AGGREGATABLE_REPORTS);
+
+        JSONObject jsonOutput = new JSONObject(result.mOut);
+        JSONArray registrationsArray = jsonOutput.getJSONArray("attribution_reporting");
+
+        for (int i = 0; i < registrationsArray.length(); i++) {
+            JSONObject registrationsObject = registrationsArray.getJSONObject(i);
+            String id = "report" + (i + 3);
+            AggregateReport aggregatableReport =
+                    getAggregatableReportFromJson(registrationsObject, id, schema[1]).build();
+            assertThat(aggregatableReport).isEqualTo(aggregatableReports.get(i));
+            assertAggregatableReportJson(registrationsObject, aggregatableReport, schema[1]);
+        }
+    }
+
+    private Result runCommandAndGetResult(String[] args) {
+        String[] stringArray = new String[2 + args.length];
+        stringArray[0] = AttributionReportingShellCommandFactory.COMMAND_PREFIX;
+        stringArray[1] = AttributionReportingListAggregatableReportsCommand.CMD;
+        for (int i = 0; i < args.length; i++) {
+            stringArray[i + 1] = args[i];
+        }
+        return run(
+                new AttributionReportingListAggregatableReportsCommand(
+                        mDatastoreManager, mDevSessionDataStore),
+                stringArray);
     }
 
     private Result runCommandAndGetResult() {
@@ -167,7 +254,7 @@ public class AttributionReportingListAggregatableReportsCommandTest
      * values.
      */
     private static AggregateReport.Builder getAggregatableReportFromJson(
-            JSONObject jsonObject, String id) throws JSONException {
+            JSONObject jsonObject, String id, String schema) throws JSONException {
         AggregateReport.Builder builder =
                 new AggregateReport.Builder()
                         .setId(id)
@@ -211,6 +298,78 @@ public class AttributionReportingListAggregatableReportsCommandTest
                                 AggregateReportFixture.ValidAggregateReportParams
                                         .AGGREGATABLE_FILTERING_ID_MAX_BYTES)
                         .setTriggerTime(jsonObject.getLong(TRIGGER_TIME));
+
+        if (schema.equals(SCHEMA_FULL)) {
+            builder.setApi(jsonObject.getString(MeasurementTables.AggregateReport.API))
+                    .setId(jsonObject.getString(MeasurementTables.AggregateReport.ID))
+                    .setDebugReportStatus(
+                            jsonObject.getInt(
+                                    MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS))
+                    .setPublisher(
+                            Uri.parse(
+                                    jsonObject.getString(
+                                            MeasurementTables.AggregateReport.PUBLISHER)))
+                    .setApiVersion(
+                            jsonObject.getString(MeasurementTables.AggregateReport.API_VERSION))
+                    .setSourceDebugKey(
+                            new UnsignedLong(
+                                    jsonObject.getLong(
+                                            MeasurementTables.AggregateReport.SOURCE_DEBUG_KEY)))
+                    .setTriggerDebugKey(
+                            new UnsignedLong(
+                                    jsonObject.getLong(
+                                            MeasurementTables.AggregateReport.TRIGGER_DEBUG_KEY)));
+        }
+
         return builder;
+    }
+
+    private void assertAggregatableReportJson(
+            JSONObject reportJson, AggregateReport report, String schema) throws JSONException {
+        assertThat(reportJson.getString(MeasurementTables.AggregateReport.ATTRIBUTION_DESTINATION))
+                .isEqualTo(report.getAttributionDestination().toString());
+        assertThat(reportJson.getLong(MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME))
+                .isEqualTo(report.getScheduledReportTime());
+        assertThat(reportJson.getInt(MeasurementTables.AggregateReport.STATUS))
+                .isEqualTo(report.getStatus());
+        assertThat(reportJson.getString(MeasurementTables.AggregateReport.TRIGGER_CONTEXT_ID))
+                .isEqualTo(report.getTriggerContextId());
+        assertThat(reportJson.getLong(TRIGGER_TIME)).isEqualTo(report.getTriggerTime());
+        assertThat(
+                        reportJson.getString(
+                                MeasurementTables.AggregateReport.AGGREGATION_COORDINATOR_ORIGIN))
+                .isEqualTo(report.getAggregationCoordinatorOrigin().toString());
+        assertThat(reportJson.getString(MeasurementTables.AggregateReport.DEBUG_CLEARTEXT_PAYLOAD))
+                .isEqualTo(report.getDebugCleartextPayload());
+        assertThat(reportJson.getString(MeasurementTables.AggregateReport.REGISTRATION_ORIGIN))
+                .isEqualTo(report.getRegistrationOrigin().toString());
+
+        if (schema.equals(SCHEMA_FULL)) {
+            assertThat(reportJson.getString(MeasurementTables.AggregateReport.API))
+                    .isEqualTo(report.getApi());
+            assertThat(reportJson.getString(MeasurementTables.AggregateReport.ID))
+                    .isEqualTo(report.getId());
+            assertThat(reportJson.getInt(MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS))
+                    .isEqualTo(report.getDebugReportStatus());
+            assertThat(reportJson.getString(MeasurementTables.AggregateReport.PUBLISHER))
+                    .isEqualTo(report.getPublisher().toString());
+            assertThat(reportJson.getString(MeasurementTables.AggregateReport.API_VERSION))
+                    .isEqualTo(report.getApiVersion());
+            assertThat(reportJson.getString(MeasurementTables.AggregateReport.SOURCE_DEBUG_KEY))
+                    .isEqualTo(report.getSourceDebugKey().toString());
+            assertThat(reportJson.getString(MeasurementTables.AggregateReport.TRIGGER_DEBUG_KEY))
+                    .isEqualTo(report.getTriggerDebugKey().toString());
+        } else if (schema.equals(SCHEMA_PARTIAL)) {
+            assertThat(reportJson.has(MeasurementTables.AggregateReport.API)).isFalse();
+            assertThat(reportJson.has(MeasurementTables.AggregateReport.ID)).isFalse();
+            assertThat(reportJson.has(MeasurementTables.AggregateReport.DEBUG_REPORT_STATUS))
+                    .isFalse();
+            assertThat(reportJson.has(MeasurementTables.AggregateReport.PUBLISHER)).isFalse();
+            assertThat(reportJson.has(MeasurementTables.AggregateReport.API_VERSION)).isFalse();
+            assertThat(reportJson.has(MeasurementTables.AggregateReport.SOURCE_DEBUG_KEY))
+                    .isFalse();
+            assertThat(reportJson.has(MeasurementTables.AggregateReport.TRIGGER_DEBUG_KEY))
+                    .isFalse();
+        }
     }
 }

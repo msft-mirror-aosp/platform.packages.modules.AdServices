@@ -170,6 +170,9 @@ public final class SourceFixture {
                         + "}"
                         + "]}";
         public static final int AGGREGATE_DEBUG_REPORT_CONTRIBUTIONS = 100;
+        public static final int MAX_EVENT_LEVEL_REPORTS = 5;
+        public static final Source.TriggerDataMatching TRIGGER_DATA_MATCHING =
+                Source.TriggerDataMatching.MODULUS;
 
         public static final String buildAggregateSource() {
             try {

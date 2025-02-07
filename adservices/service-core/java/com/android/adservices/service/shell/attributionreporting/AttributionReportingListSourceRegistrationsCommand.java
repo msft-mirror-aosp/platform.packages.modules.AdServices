@@ -56,7 +56,9 @@ public final class AttributionReportingListSourceRegistrationsCommand extends Ab
                     + " "
                     + CMD
                     + " "
-                    + "\n List Source Registration";
+                    + "[--schema {partial[DEFAULT]|full}]"
+                    + " "
+                    + "\n List Source Registrations. Default schema is 'partial'.";
 
     private final DatastoreManager mDatastoreManager;
     private final DevSessionDataStore mDevSessionDataStore;
@@ -81,23 +83,37 @@ public final class AttributionReportingListSourceRegistrationsCommand extends Ab
                     COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS);
         }
 
+        String schema;
+        String output;
+        try {
+            schema = AttributionReportingArgParserHelper.parseAttributionReportingSchema(args);
+        } catch (IllegalArgumentException exception) {
+            output = "IllegalArgumentException while running list-source-registrations command";
+            Log.e(TAG, output, exception);
+            out.print(output);
+            out.flush();
+            return invalidArgsError(
+                    HELP, err, COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS, args);
+        }
+
         try {
             ListenableFuture<Optional<List<Source>>> futureResult =
                     queryForListSourceRegistrationsCommand();
             Optional<List<Source>> result = futureResult.get(TIMEOUT_SEC, SECONDS);
-            String output;
             if (result.isPresent()) {
-                output = createOutputJson(result).toString();
+                output = createOutputJson(result, schema).toString();
             } else {
-                output = "Error in retrieving sources from database.";
+                output = "Error in retrieving sources from database";
             }
             out.print(output);
             out.flush();
             return toShellCommandResult(
                     RESULT_SUCCESS, COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS);
         } catch (Exception e) {
-            Log.e(TAG, String.format("Failed to generate JSON: %s", e.getMessage()));
-
+            output = "Failed to generate JSON: " + e.getMessage();
+            Log.e(TAG, String.format(output));
+            out.print(output);
+            out.flush();
             return toShellCommandResult(
                     ShellCommandStats.RESULT_GENERIC_ERROR,
                     COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS);
@@ -129,13 +145,13 @@ public final class AttributionReportingListSourceRegistrationsCommand extends Ab
                                         (dao) -> dao.fetchAllSourceRegistrations()));
     }
 
-    private static JSONObject createOutputJson(Optional<List<Source>> sources)
+    private static JSONObject createOutputJson(Optional<List<Source>> sources, String schema)
             throws JSONException {
         JSONObject jsonObject = new JSONObject();
         JSONArray jsonArray = new JSONArray();
 
         for (Source source : sources.get()) {
-            jsonArray.put(AttributionReportingHelper.sourceToJson(source));
+            jsonArray.put(AttributionReportingHelper.sourceToJson(source, schema));
         }
 
         jsonObject.put("attribution_reporting", jsonArray);

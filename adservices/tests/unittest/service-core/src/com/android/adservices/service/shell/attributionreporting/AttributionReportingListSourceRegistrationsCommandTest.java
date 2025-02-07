@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.shell.attributionreporting;
 
+import static com.android.adservices.service.shell.attributionreporting.AttributionReportingHelper.STATUS_MAP;
+import static com.android.adservices.service.shell.attributionreporting.AttributionReportingHelper.replaceWithAggregatable;
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_DEV_MODE_UNCONFIRMED;
 
@@ -29,6 +31,7 @@ import static org.mockito.Mockito.when;
 import android.net.Uri;
 
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.MeasurementTables.SourceContract;
 import com.android.adservices.devapi.DevSessionFixture;
 import com.android.adservices.service.devapi.DevSession;
 import com.android.adservices.service.devapi.DevSessionDataStore;
@@ -37,6 +40,8 @@ import com.android.adservices.service.measurement.Source;
 import com.android.adservices.service.measurement.SourceFixture;
 import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.shell.ShellCommandTestCase;
+
+import com.google.common.collect.ImmutableMap;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -59,12 +64,15 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
     private static final String EVENT_TIME = "event_time";
     private static final String EXPIRY_TIME = "expiry_time";
     private static final String DEBUG_KEY = "debug_key";
-    private static final String ATTRIBUTION_MODE = "attribution_mode";
     private static final String APP_DESTINATION = "app_destination";
     private static final String WEB_DESTINATION = "web_destination";
+    private static final String ATTRIBUTION_MODE = "attribution_mode";
     private static final String ACTIVE = "active";
     private static final String IGNORED = "ignored";
     private static final String MARKED_TO_DELETE = "marked_to_delete";
+    private static final String SCHEMA_FULL = "full";
+    private static final String SCHEMA_PARTIAL = "partial";
+    private static final String SCHEMA_SUB_COMMAND = "--schema";
     DatastoreManager mDatastoreManager = Mockito.mock(DatastoreManager.class);
     @Mock
     private DevSessionDataStore mDevSessionDataStore;
@@ -115,6 +123,9 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
                     .setDebugKey(SourceFixture.ValidSourceParams.DEBUG_KEY)
                     .build();
 
+    private static Source source5 = getValidSourceWithFullSchema().setId("reg5").build();
+    private static Source source6 = getValidSourceWithFullSchema().setId("reg6").build();
+
     @Before
     public void setUp() {
         when(mDevSessionDataStore.get()).thenReturn(immediateFuture(DevSessionFixture.IN_DEV));
@@ -154,7 +165,7 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
     }
 
     @Test
-    public void testRunListSourceRegistrations_singleSourceWithAppDestWithOneWebDestJSON()
+    public void testRunListSourceRegistrations_singleSourceWithAppDestWithOneWebDestJson()
             throws JSONException {
         doReturn(Optional.ofNullable(List.of(source1)))
                 .when(mDatastoreManager)
@@ -168,13 +179,13 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
         JSONArray registrationsArray = jsonOutput.getJSONArray("attribution_reporting");
         JSONObject registrationObject = registrationsArray.getJSONObject(0);
 
-        Source outputSource = getSourceFromJson(registrationObject);
+        Source outputSource = getSourceFromJson(registrationObject, "");
 
         assertThat(outputSource).isEqualTo(source1);
     }
 
     @Test
-    public void testRunListSourceRegistrations_singleSourceWithAppDestWithMultipleWebDestJSON()
+    public void testRunListSourceRegistrations_singleSourceWithAppDestWithMultipleWebDestJson()
             throws JSONException {
         doReturn(Optional.ofNullable(List.of(source2)))
                 .when(mDatastoreManager)
@@ -188,13 +199,13 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
         JSONArray registrationsArray = jsonOutput.getJSONArray("attribution_reporting");
         JSONObject registrationObject = registrationsArray.getJSONObject(0);
 
-        Source outputSource = getSourceFromJson(registrationObject);
+        Source outputSource = getSourceFromJson(registrationObject, "");
 
         assertThat(outputSource).isEqualTo(source2);
     }
 
     @Test
-    public void testRunListSourceRegistrations_singleSourceWithAppDestNoWebDestJSON()
+    public void testRunListSourceRegistrations_singleSourceWithAppDestNoWebDestJson()
             throws JSONException {
         doReturn(Optional.ofNullable(List.of(source3)))
                 .when(mDatastoreManager)
@@ -208,13 +219,13 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
         JSONArray registrationsArray = jsonOutput.getJSONArray("attribution_reporting");
         JSONObject registrationObject = registrationsArray.getJSONObject(0);
 
-        Source outputSource = getSourceFromJson(registrationObject);
+        Source outputSource = getSourceFromJson(registrationObject, "");
 
         assertThat(outputSource).isEqualTo(source3);
     }
 
     @Test
-    public void testRunListSourceRegistrations_singleSourceNoAppDestWithOneWebDestJSON()
+    public void testRunListSourceRegistrations_singleSourceNoAppDestWithOneWebDestJson()
             throws JSONException {
         doReturn(Optional.ofNullable(List.of(source4)))
                 .when(mDatastoreManager)
@@ -228,7 +239,7 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
         JSONArray registrationsArray = jsonOutput.getJSONArray("attribution_reporting");
         JSONObject registrationObject = registrationsArray.getJSONObject(0);
 
-        Source outputSource = getSourceFromJson(registrationObject);
+        Source outputSource = getSourceFromJson(registrationObject, "");
 
         assertThat(outputSource).isEqualTo(source4);
     }
@@ -249,13 +260,15 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
         List<Source> expectedSources = List.of(source1, source2, source3, source4);
 
         for (int i = 0; i < registrationsArray.length(); i++) {
-            Source outputSource = getSourceFromJson(registrationsArray.getJSONObject(i));
+            JSONObject registrationsObject = registrationsArray.getJSONObject(i);
+            Source outputSource = getSourceFromJson(registrationsObject, "");
             assertThat(outputSource).isEqualTo(expectedSources.get(i));
+            assertSourceJson(registrationsObject, outputSource, SCHEMA_PARTIAL);
         }
     }
 
     @Test
-    public void testRunListSourceRegistrations_emptyListSources() throws JSONException {
+    public void testRunListSourceRegistrations_noSourcesJSON() throws JSONException {
         doReturn(Optional.ofNullable(List.of()))
                 .when(mDatastoreManager)
                 .runInTransactionWithResult(any());
@@ -278,7 +291,72 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
 
         expectSuccess(result, COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS);
 
-        assertThat(result.mOut).isEqualTo("Error in retrieving sources from database.");
+        assertThat(result.mOut).isEqualTo("Error in retrieving sources from database");
+    }
+
+    @Test
+    public void testRunListSourceRegistrations_singleSourcePartialSchemaJSON()
+            throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_PARTIAL};
+        List<Source> sources = List.of(source1);
+        testRunListSourceRegistrationsWithSchema(sources, args);
+    }
+
+    @Test
+    public void testRunListSourceRegistrations_multipleSourcesPartialSchemaJSON()
+            throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_PARTIAL};
+        List<Source> sources = List.of(source1, source2);
+        testRunListSourceRegistrationsWithSchema(sources, args);
+    }
+
+    @Test
+    public void testRunListSourceRegistrations_singleSourceFullSchemaJSON() throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_FULL};
+        List<Source> sources = List.of(source5);
+        testRunListSourceRegistrationsWithSchema(sources, args);
+    }
+
+    @Test
+    public void testRunListSourceRegistrations_multipleSourcesFullSchemaJSON()
+            throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_FULL};
+        List<Source> sources = List.of(source5, source6);
+        testRunListSourceRegistrationsWithSchema(sources, args);
+    }
+
+    private void testRunListSourceRegistrationsWithSchema(List<Source> sources, String[] schema)
+            throws JSONException {
+        doReturn(Optional.ofNullable(sources))
+                .when(mDatastoreManager)
+                .runInTransactionWithResult(any());
+
+        Result result = runCommandAndGetResult(schema);
+
+        expectSuccess(result, COMMAND_ATTRIBUTION_REPORTING_LIST_SOURCE_REGISTRATIONS);
+
+        JSONObject jsonOutput = new JSONObject(result.mOut);
+        JSONArray registrationsArray = jsonOutput.getJSONArray("attribution_reporting");
+
+        for (int i = 0; i < registrationsArray.length(); i++) {
+            JSONObject registrationsObject = registrationsArray.getJSONObject(i);
+            Source outputSource = getSourceFromJson(registrationsObject, schema[1]);
+            assertThat(outputSource).isEqualTo(sources.get(i));
+            assertSourceJson(registrationsObject, outputSource, schema[1]);
+        }
+    }
+
+    private Result runCommandAndGetResult(String[] args) {
+        String[] stringArray = new String[2 + args.length];
+        stringArray[0] = AttributionReportingShellCommandFactory.COMMAND_PREFIX;
+        stringArray[1] = AttributionReportingListSourceRegistrationsCommand.CMD;
+        for (int i = 0; i < args.length; i++) {
+            stringArray[i + 1] = args[i];
+        }
+        return run(
+                new AttributionReportingListSourceRegistrationsCommand(
+                        mDatastoreManager, mDevSessionDataStore),
+                stringArray);
     }
 
     private Result runCommandAndGetResult() {
@@ -289,8 +367,8 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
                 AttributionReportingListSourceRegistrationsCommand.CMD);
     }
 
-    /** Creates a Source.Builder from JSON. Missing fields are populated with default values. */
-    private static Source getSourceFromJson(JSONObject jsonObject) throws JSONException {
+    private static Source getSourceFromJson(JSONObject jsonObject, String schema)
+            throws JSONException {
         Source.Builder builder =
                 new Source.Builder()
                         .setId(jsonObject.getString(ID))
@@ -300,12 +378,12 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
                         .setRegistrant(Uri.parse(jsonObject.getString(REGISTRANT)))
                         .setEventTime(jsonObject.getLong(EVENT_TIME))
                         .setExpiryTime(jsonObject.getLong(EXPIRY_TIME))
-                        .setDebugKey(new UnsignedLong(jsonObject.getLong(DEBUG_KEY)))
                         .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
                         .setEnrollmentId(SourceFixture.ValidSourceParams.ENROLLMENT_ID)
                         .setAttributionMode(
                                 getAttributionModeFromString(
                                         jsonObject.getString(ATTRIBUTION_MODE)));
+        ;
 
         if (jsonObject.has(APP_DESTINATION)) {
             List<Uri> fetchedAppDestinations =
@@ -317,8 +395,43 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
                     parseDestinations(jsonObject.getString(WEB_DESTINATION));
             builder.setWebDestinations(fetchedWebDestinations);
         }
+
+        if (jsonObject.has(DEBUG_KEY)) {
+            builder.setDebugKey(new UnsignedLong(jsonObject.getLong(DEBUG_KEY)));
+        }
+
+        if (schema.equals(SCHEMA_FULL)) {
+            String aggregatableDebugReporting =
+                    replaceWithAggregatable(SourceContract.AGGREGATE_DEBUG_REPORTING);
+
+            builder.setAggregatableReportWindow(
+                    jsonObject.getLong(SourceContract.AGGREGATABLE_REPORT_WINDOW));
+            builder.setSharedAggregationKeys(
+                    jsonObject.getString(SourceContract.SHARED_AGGREGATION_KEYS));
+            builder.setAggregateDebugReportingString(
+                    jsonObject.getString(aggregatableDebugReporting));
+            builder.setDestinationLimitPriority(
+                    jsonObject.getLong(SourceContract.DESTINATION_LIMIT_PRIORITY));
+            builder.setEventLevelEpsilon(jsonObject.getDouble(SourceContract.EVENT_LEVEL_EPSILON));
+            builder.setFilterDataString(jsonObject.getString(SourceContract.FILTER_DATA));
+            builder.setMaxEventLevelReports(
+                    jsonObject.getInt(SourceContract.MAX_EVENT_LEVEL_REPORTS));
+            builder.setPriority(jsonObject.getLong(SourceContract.PRIORITY));
+            builder.setTriggerDataMatching(
+                    STRING_MATCHING_TRIGGER_DATA_IMMUTABLE_MAP.get(
+                            jsonObject.get(SourceContract.TRIGGER_DATA_MATCHING)));
+        }
+
         return builder.build();
     }
+
+    public static final ImmutableMap<String, Source.TriggerDataMatching>
+            STRING_MATCHING_TRIGGER_DATA_IMMUTABLE_MAP =
+                    ImmutableMap.of(
+                            "Modulus",
+                            Source.TriggerDataMatching.MODULUS,
+                            "EXACT",
+                            Source.TriggerDataMatching.EXACT);
 
     private static List<Uri> parseDestinations(String destinationsString) {
         List<Uri> destinations = new ArrayList<>();
@@ -356,6 +469,106 @@ public final class AttributionReportingListSourceRegistrationsCommandTest
         } else {
             throw new IllegalArgumentException(
                     "Invalid attribution mode: " + attributionModeString);
+        }
+    }
+
+    private static Source.Builder getValidSourceWithFullSchema() {
+        return new Source.Builder()
+                .setPublisher(SourceFixture.ValidSourceParams.PUBLISHER)
+                .setAppDestinations(SourceFixture.ValidSourceParams.ATTRIBUTION_DESTINATIONS)
+                .setEnrollmentId(SourceFixture.ValidSourceParams.ENROLLMENT_ID)
+                .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
+                .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN)
+                .setId("reg")
+                .setStatus(SourceFixture.ValidSourceParams.STATUS)
+                .setRegistrationOrigin(SourceFixture.ValidSourceParams.REGISTRATION_ORIGIN)
+                .setRegistrant(SourceFixture.ValidSourceParams.REGISTRANT)
+                .setEventTime(SourceFixture.ValidSourceParams.SOURCE_EVENT_TIME)
+                .setExpiryTime(SourceFixture.ValidSourceParams.EXPIRY_TIME)
+                .setSourceType(SourceFixture.ValidSourceParams.SOURCE_TYPE)
+                .setAttributionMode(SourceFixture.ValidSourceParams.ATTRIBUTION_MODE)
+                .setDebugKey(SourceFixture.ValidSourceParams.DEBUG_KEY)
+                .setAggregatableReportWindow(SourceFixture.ValidSourceParams.EXPIRY_TIME)
+                .setSharedAggregationKeys(SourceFixture.ValidSourceParams.SHARED_AGGREGATE_KEYS)
+                .setAggregateDebugReportingString(
+                        SourceFixture.ValidSourceParams.AGGREGATE_DEBUG_REPORT)
+                .setDestinationLimitPriority(
+                        SourceFixture.ValidSourceParams.DESTINATION_LIMIT_PRIORITY)
+                .setEventLevelEpsilon(SourceFixture.ValidSourceParams.EVENT_LEVEL_EPSILON)
+                .setFilterDataString(SourceFixture.ValidSourceParams.buildFilterDataString())
+                .setMaxEventLevelReports(SourceFixture.ValidSourceParams.MAX_EVENT_LEVEL_REPORTS)
+                .setPriority(SourceFixture.ValidSourceParams.PRIORITY)
+                .setTriggerDataMatching(SourceFixture.ValidSourceParams.TRIGGER_DATA_MATCHING)
+                .setWebDestinations(SourceFixture.ValidSourceParams.WEB_DESTINATIONS);
+    }
+
+    private void assertSourceJson(JSONObject sourceJson, Source source, String schema)
+            throws JSONException {
+        assertThat(sourceJson.getString(ID)).isEqualTo(source.getId());
+        assertThat(sourceJson.getString(STATUS)).isEqualTo(STATUS_MAP.get(source.getStatus()));
+        assertThat(sourceJson.getString(REGISTRATION_ORIGIN))
+                .isEqualTo(source.getRegistrationOrigin().toString());
+        assertThat(sourceJson.getString(REGISTRANT)).isEqualTo(source.getRegistrant().toString());
+        assertThat(sourceJson.getLong(EVENT_TIME)).isEqualTo(source.getEventTime());
+        assertThat(sourceJson.getLong(EXPIRY_TIME)).isEqualTo(source.getExpiryTime());
+        assertThat(getAttributionModeFromString(sourceJson.getString(ATTRIBUTION_MODE)))
+                .isEqualTo(source.getAttributionMode());
+
+        if (source.getAppDestinations() != null) {
+            List<Uri> fetchedAppDestinations =
+                    parseDestinations(sourceJson.getString(APP_DESTINATION));
+            assertThat(fetchedAppDestinations).isEqualTo(source.getAppDestinations());
+        } else {
+            assertThat(sourceJson.has(APP_DESTINATION)).isFalse();
+        }
+
+        if (source.getWebDestinations() != null) {
+            List<Uri> fetchedWebDestinations =
+                    parseDestinations(sourceJson.getString(WEB_DESTINATION));
+            assertThat(fetchedWebDestinations).isEqualTo(source.getWebDestinations());
+        } else {
+            assertThat(sourceJson.has(WEB_DESTINATION)).isFalse();
+        }
+
+        if (source.getDebugKey() != null) {
+            assertThat(sourceJson.getString(DEBUG_KEY)).isEqualTo(source.getDebugKey().toString());
+        } else {
+            assertThat(sourceJson.has(DEBUG_KEY)).isFalse();
+        }
+
+        if (schema.equals(SCHEMA_FULL)) {
+            String aggregatableDebugReporting =
+                    replaceWithAggregatable(SourceContract.AGGREGATE_DEBUG_REPORTING);
+            assertThat(sourceJson.getLong(SourceContract.AGGREGATABLE_REPORT_WINDOW))
+                    .isEqualTo(source.getAggregatableReportWindow());
+            assertThat(sourceJson.getString(SourceContract.SHARED_AGGREGATION_KEYS))
+                    .isEqualTo(source.getSharedAggregationKeys());
+            assertThat(sourceJson.getString(aggregatableDebugReporting))
+                    .isEqualTo(source.getAggregateDebugReportingString());
+            assertThat(sourceJson.getLong(SourceContract.DESTINATION_LIMIT_PRIORITY))
+                    .isEqualTo(source.getDestinationLimitPriority());
+            assertThat(sourceJson.getDouble(SourceContract.EVENT_LEVEL_EPSILON))
+                    .isEqualTo(source.getEventLevelEpsilon());
+            assertThat(sourceJson.getString(SourceContract.FILTER_DATA))
+                    .isEqualTo(source.getFilterDataString());
+            assertThat(sourceJson.getInt(SourceContract.MAX_EVENT_LEVEL_REPORTS))
+                    .isEqualTo(source.getMaxEventLevelReports());
+            assertThat(sourceJson.getLong(SourceContract.PRIORITY)).isEqualTo(source.getPriority());
+            assertThat(
+                            STRING_MATCHING_TRIGGER_DATA_IMMUTABLE_MAP.get(
+                                    sourceJson.getString(SourceContract.TRIGGER_DATA_MATCHING)))
+                    .isEqualTo(source.getTriggerDataMatching());
+
+        } else if (schema.equals(SCHEMA_PARTIAL)) {
+            assertThat(sourceJson.has(SourceContract.AGGREGATABLE_REPORT_WINDOW)).isFalse();
+            assertThat(sourceJson.has(SourceContract.SHARED_AGGREGATION_KEYS)).isFalse();
+            assertThat(sourceJson.has(SourceContract.AGGREGATE_DEBUG_REPORTING)).isFalse();
+            assertThat(sourceJson.has(SourceContract.DESTINATION_LIMIT_PRIORITY)).isFalse();
+            assertThat(sourceJson.has(SourceContract.EVENT_LEVEL_EPSILON)).isFalse();
+            assertThat(sourceJson.has(SourceContract.FILTER_DATA)).isFalse();
+            assertThat(sourceJson.has(SourceContract.MAX_EVENT_LEVEL_REPORTS)).isFalse();
+            assertThat(sourceJson.has(SourceContract.PRIORITY)).isFalse();
+            assertThat(sourceJson.has(SourceContract.TRIGGER_DATA_MATCHING)).isFalse();
         }
     }
 }

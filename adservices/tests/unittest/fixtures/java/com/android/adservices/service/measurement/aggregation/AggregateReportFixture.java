@@ -84,6 +84,7 @@ public final class AggregateReportFixture {
         public static final String TRIGGER_CONTEXT_ID = "trigger_context_id";
         public static final String API = "attribution-reporting";
         public static final int AGGREGATABLE_FILTERING_ID_MAX_BYTES = 1;
+        public static final String API_VERSION = "1452";
 
         public static final String getDebugPayload() {
             List<AggregateHistogramContribution> contributions = new ArrayList<>();

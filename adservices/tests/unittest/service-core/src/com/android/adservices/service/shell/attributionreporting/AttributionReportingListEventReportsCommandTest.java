@@ -30,12 +30,15 @@ import static org.mockito.Mockito.when;
 import android.net.Uri;
 
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.MeasurementTables.EventReportContract;
 import com.android.adservices.devapi.DevSessionFixture;
 import com.android.adservices.service.devapi.DevSession;
 import com.android.adservices.service.devapi.DevSessionDataStore;
 import com.android.adservices.service.devapi.DevSessionState;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventReportFixture;
+import com.android.adservices.service.measurement.Source;
+import com.android.adservices.service.measurement.util.UnsignedLong;
 import com.android.adservices.service.shell.ShellCommandTestCase;
 
 import org.json.JSONArray;
@@ -55,6 +58,9 @@ public class AttributionReportingListEventReportsCommandTest
     private static final String TRIGGER_TIME = "trigger_time";
     private static final String REPORT_TIME = "report_time";
     private static final String REGISTRATION_ORIGIN = "registration_origin";
+    private static final String SCHEMA_FULL = "full";
+    private static final String SCHEMA_PARTIAL = "partial";
+    private static final String SCHEMA_SUB_COMMAND = "--schema";
     DatastoreManager mDatastoreManager = Mockito.mock(DatastoreManager.class);
     @Mock
     private DevSessionDataStore mDevSessionDataStore;
@@ -71,6 +77,22 @@ public class AttributionReportingListEventReportsCommandTest
                     .setId("eventReport2")
                     .setSourceId(ValidEventReportParams.SOURCE_ID)
                     .setTriggerId(ValidEventReportParams.TRIGGER_ID)
+                    .build();
+
+    private static EventReport eventReport3 =
+            EventReportFixture.getBaseEventReportBuild()
+                    .setId("eventReport3")
+                    .setSourceId(ValidEventReportParams.SOURCE_ID)
+                    .setTriggerId(ValidEventReportParams.TRIGGER_ID)
+                    .setTriggerData(new UnsignedLong(1L))
+                    .build();
+
+    private static EventReport eventReport4 =
+            EventReportFixture.getBaseEventReportBuild()
+                    .setId("eventReport4")
+                    .setSourceId(ValidEventReportParams.SOURCE_ID)
+                    .setTriggerId(ValidEventReportParams.TRIGGER_ID)
+                    .setTriggerData(new UnsignedLong(2L))
                     .build();
 
     @Before
@@ -124,16 +146,15 @@ public class AttributionReportingListEventReportsCommandTest
         JSONObject jsonOutput = new JSONObject(result.mOut);
         JSONArray registrationsArray = jsonOutput.getJSONArray("attribution_reporting");
 
-        List<EventReport> expectedEventReports = List.of(eventReport1, eventReport2);
+        List<EventReport> eventReports = List.of(eventReport1, eventReport2);
 
         for (int i = 0; i < registrationsArray.length(); i++) {
             String id = "eventReport" + (i + 1);
+            JSONObject registrationsObject = registrationsArray.getJSONObject(i);
             EventReport outputEventReport =
-                    getEventReportFromJson(registrationsArray.getJSONObject(i), id).build();
-            boolean outputEventReportRandomized = outputEventReport.isRandomized();
-            assertThat(outputEventReport).isEqualTo(expectedEventReports.get(i));
-            assertThat(outputEventReportRandomized)
-                    .isEqualTo(expectedEventReports.get(i).isRandomized());
+                    getEventReportFromJson(registrationsArray.getJSONObject(i), id, "").build();
+            assertThat(outputEventReport).isEqualTo(eventReports.get(i));
+            assertEventReportJson(registrationsObject, outputEventReport, SCHEMA_PARTIAL);
         }
     }
 
@@ -154,14 +175,79 @@ public class AttributionReportingListEventReportsCommandTest
     }
 
     @Test
-    public void testRunListEventReports_nullEventReportsJSON() {
+    public void testRunListEventReports_nullEventReportsJson() {
         doReturn(Optional.empty()).when(mDatastoreManager).runInTransactionWithResult(any());
 
         Result result = runCommandAndGetResult();
 
         expectSuccess(result, COMMAND_ATTRIBUTION_REPORTING_LIST_EVENT_REPORTS);
 
-        assertThat(result.mOut).isEqualTo("Error in retrieving event reports from database.");
+        assertThat(result.mOut).isEqualTo("Error in retrieving event reports from database");
+    }
+
+    @Test
+    public void testRunListEventReports_singleEventReportsPartialSchemaJson() throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_PARTIAL};
+        List<EventReport> eventReports = List.of(eventReport1);
+        testRunListEventReportsWithSchema(eventReports, args);
+    }
+
+    @Test
+    public void testRunListEventReports_multipleEventReportsPartialSchemaJson()
+            throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_PARTIAL};
+        List<EventReport> eventReports = List.of(eventReport1, eventReport2);
+        testRunListEventReportsWithSchema(eventReports, args);
+    }
+
+    @Test
+    public void testRunListEventReports_singleEventReportsFullSchemaJson() throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_FULL};
+        List<EventReport> eventReports = List.of(eventReport3);
+        testRunListEventReportsWithSchema(eventReports, args);
+    }
+
+    @Test
+    public void testRunListEventReports_multipleEventReportsFullSchemaJson() throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_FULL};
+        List<EventReport> eventReports = List.of(eventReport3, eventReport4);
+        testRunListEventReportsWithSchema(eventReports, args);
+    }
+
+    private void testRunListEventReportsWithSchema(List<EventReport> eventReports, String[] schema)
+            throws JSONException {
+        doReturn(Optional.ofNullable(eventReports))
+                .when(mDatastoreManager)
+                .runInTransactionWithResult(any());
+
+        Result result = runCommandAndGetResult(schema);
+
+        expectSuccess(result, COMMAND_ATTRIBUTION_REPORTING_LIST_EVENT_REPORTS);
+
+        JSONObject jsonOutput = new JSONObject(result.mOut);
+        JSONArray registrationsArray = jsonOutput.getJSONArray("attribution_reporting");
+
+        for (int i = 0; i < registrationsArray.length(); i++) {
+            String id = "eventReport" + (i + 3);
+            JSONObject registrationsObject = registrationsArray.getJSONObject(i);
+            EventReport outputEventReport =
+                    getEventReportFromJson(registrationsObject, id, schema[1]).build();
+            assertThat(outputEventReport).isEqualTo(eventReports.get(i));
+            assertEventReportJson(registrationsObject, outputEventReport, schema[1]);
+        }
+    }
+
+    private Result runCommandAndGetResult(String[] args) {
+        String[] stringArray = new String[2 + args.length];
+        stringArray[0] = AttributionReportingShellCommandFactory.COMMAND_PREFIX;
+        stringArray[1] = AttributionReportingListEventReportsCommand.CMD;
+        for (int i = 0; i < args.length; i++) {
+            stringArray[i + 1] = args[i];
+        }
+        return run(
+                new AttributionReportingListEventReportsCommand(
+                        mDatastoreManager, mDevSessionDataStore),
+                stringArray);
     }
 
     private Result runCommandAndGetResult() {
@@ -175,14 +261,13 @@ public class AttributionReportingListEventReportsCommandTest
     /**
      * Creates a EventReport.Builder from JSON. Missing fields are populated with default values.
      */
-    private static EventReport.Builder getEventReportFromJson(JSONObject jsonObject, String id)
-            throws JSONException {
+    private static EventReport.Builder getEventReportFromJson(
+            JSONObject jsonObject, String id, String schema) throws JSONException {
         String attributionDestinationString = jsonObject.getString("attribution_destination");
         String cleanedAttributionDestinationString =
                 attributionDestinationString.substring(
                         1, attributionDestinationString.length() - 1);
         List<Uri> attributionDestinations = List.of(Uri.parse(cleanedAttributionDestinationString));
-
         EventReport.Builder builder =
                 new EventReport.Builder()
                         .setId(id)
@@ -201,6 +286,79 @@ public class AttributionReportingListEventReportsCommandTest
                         .setTriggerId(ValidEventReportParams.TRIGGER_ID)
                         .setRegistrationOrigin(Uri.parse(jsonObject.getString(REGISTRATION_ORIGIN)))
                         .setTriggerSummaryBucket(ValidEventReportParams.TRIGGER_SUMMARY_BUCKET);
+
+        if (schema.equals(SCHEMA_FULL)) {
+            builder.setId(jsonObject.getString(EventReportContract.ID))
+                    .setSourceDebugKey(
+                            new UnsignedLong(
+                                    jsonObject.getLong(EventReportContract.SOURCE_DEBUG_KEY)))
+                    .setSourceEventId(
+                            new UnsignedLong(
+                                    jsonObject.getLong(EventReportContract.SOURCE_EVENT_ID)))
+                    .setSourceType(
+                            getSourceTypeFromString(
+                                    jsonObject.getString(EventReportContract.SOURCE_TYPE)))
+                    .setTriggerData(
+                            new UnsignedLong(jsonObject.getLong(EventReportContract.TRIGGER_DATA)))
+                    .setTriggerDebugKey(
+                            new UnsignedLong(
+                                    jsonObject.getLong(EventReportContract.TRIGGER_DEBUG_KEY)));
+        }
+
         return builder;
     }
+
+    private static Source.SourceType getSourceTypeFromString(String sourceTypeString) {
+        if (sourceTypeString.equals(Source.SourceType.EVENT.getValue())) {
+            return Source.SourceType.EVENT;
+        } else if (sourceTypeString.equals(Source.SourceType.NAVIGATION.getValue())) {
+            return Source.SourceType.NAVIGATION;
+        } else {
+            throw new IllegalArgumentException("Invalid SourceType: " + sourceTypeString);
+        }
+    }
+
+    private void assertEventReportJson(JSONObject reportJson, EventReport report, String schema)
+            throws JSONException {
+        assertThat(reportJson.getInt(STATUS)).isEqualTo(report.getStatus());
+        assertThat(reportJson.getString(EventReportContract.ATTRIBUTION_DESTINATION))
+                .isEqualTo(report.getAttributionDestinations().toString());
+        assertThat(reportJson.getLong(TRIGGER_TIME)).isEqualTo(report.getTriggerTime());
+        assertThat(reportJson.getLong(REPORT_TIME)).isEqualTo(report.getReportTime());
+        assertThat(reportJson.getLong(EventReportContract.TRIGGER_PRIORITY))
+                .isEqualTo(report.getTriggerPriority());
+        assertThat(reportJson.getLong(EventReportContract.TRIGGER_PRIORITY))
+                .isEqualTo(report.getTriggerPriority());
+        assertThat(reportJson.getDouble(EventReportContract.RANDOMIZED_TRIGGER_RATE))
+                .isEqualTo(report.getRandomizedTriggerRate());
+        assertThat(reportJson.getString(REGISTRATION_ORIGIN))
+                .isEqualTo(report.getRegistrationOrigin().toString());
+
+        if (schema.equals(SCHEMA_FULL)) {
+            assertThat(reportJson.getString(EventReportContract.ID)).isEqualTo(report.getId());
+            assertThat(reportJson.getString(EventReportContract.SOURCE_DEBUG_KEY))
+                    .isEqualTo(report.getSourceDebugKey().toString());
+            assertThat(reportJson.getString(EventReportContract.SOURCE_EVENT_ID))
+                    .isEqualTo(report.getSourceEventId().toString());
+            assertThat(reportJson.getString(EventReportContract.SOURCE_TYPE))
+                    .isEqualTo(report.getSourceType().getValue());
+            if (report.getTriggerData() != null) {
+                assertThat(reportJson.getString(EventReportContract.TRIGGER_DATA))
+                        .isEqualTo(report.getTriggerData().toString());
+            } else {
+                assertThat(reportJson.has(EventReportContract.TRIGGER_DATA)).isFalse();
+            }
+            assertThat(reportJson.getString(EventReportContract.TRIGGER_DEBUG_KEY))
+                    .isEqualTo(report.getTriggerDebugKey().toString());
+        } else if (schema.equals(SCHEMA_PARTIAL)) {
+            assertThat(reportJson.has(EventReportContract.ID)).isFalse();
+            assertThat(reportJson.has(EventReportContract.SOURCE_DEBUG_KEY)).isFalse();
+            assertThat(reportJson.has(EventReportContract.SOURCE_EVENT_ID)).isFalse();
+            assertThat(reportJson.has(EventReportContract.SOURCE_TYPE)).isFalse();
+            assertThat(reportJson.has(EventReportContract.TRIGGER_DATA)).isFalse();
+            assertThat(reportJson.has(EventReportContract.TRIGGER_DEBUG_KEY)).isFalse();
+        }
+    }
 }
+
+
