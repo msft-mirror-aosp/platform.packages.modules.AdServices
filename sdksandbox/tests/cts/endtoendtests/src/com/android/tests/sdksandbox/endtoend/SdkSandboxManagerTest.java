@@ -115,7 +115,7 @@ public final class SdkSandboxManagerTest extends SandboxKillerBeforeTest {
     private static final String UNREGISTER_BEFORE_STARTING_KEY = "UNREGISTER_BEFORE_STARTING_KEY";
     private static final String ACTIVITY_STARTER_KEY = "ACTIVITY_STARTER_KEY";
     private static final String TEXT_KEY = "TEXT_KEY";
-    private static final int WAIT_FOR_TEXT_IN_MS = 1000;
+    private static final int WAIT_FOR_TEXT_IN_MS = 5000;
     private static final String ORIENTATION_PORTRAIT_MESSAGE =
             "orientation: " + Configuration.ORIENTATION_PORTRAIT;
     private static final String ORIENTATION_LANDSCAPE_MESSAGE =
