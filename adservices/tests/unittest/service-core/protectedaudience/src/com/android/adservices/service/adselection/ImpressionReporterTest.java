@@ -46,7 +46,13 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_FAILURE_TO_CALLER_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_SUCCESS_TO_CALLER_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_IMPRESSION;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_API_REPORT_IMPRESSION;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_DESTINATION_COMPONENT_SELLER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_DESTINATION_SELLER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_STATUS_FAILURE_HTTP_SERVER_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_STATUS_SUCCESSFUL;
 
+import static com.google.common.truth.Truth.assertWithMessage;
 import static com.google.common.util.concurrent.Futures.immediateFailedFuture;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
 import static com.google.common.util.concurrent.Futures.immediateVoidFuture;
@@ -74,6 +80,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
 import android.adservices.common.FledgeErrorResponse;
+import android.adservices.exceptions.AdServicesNetworkException;
 import android.net.Uri;
 import android.os.IBinder;
 import android.os.LimitExceededException;
@@ -111,6 +118,7 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
+import com.android.adservices.service.stats.ReportingWithDestinationPerformedStats;
 import com.android.adservices.shared.testing.SupportedByConditionRule;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
@@ -125,9 +133,12 @@ import org.json.JSONException;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 @SpyStatic(FlagsFactory.class)
@@ -629,6 +640,7 @@ public final class ImpressionReporterTest extends AdServicesExtendedMockitoTestC
         return mockDao;
     }
 
+    @Test
     public void testReportImpression_componentSellerEnabled_makesReportingCall() throws Exception {
         when(mMockAdServicesHttpsClient.getAndReadNothing(any(), any()))
                 .thenReturn(immediateVoidFuture());
@@ -715,6 +727,31 @@ public final class ImpressionReporterTest extends AdServicesExtendedMockitoTestC
                         anyInt());
         // verify 2 http calls were made. 1 for seller and 1 for component seller
         verify(mMockAdServicesHttpsClient, times(2)).getAndReadNothing(any(), any());
+
+        ArgumentCaptor<ReportingWithDestinationPerformedStats> argumentCaptorReportingPerformed =
+                ArgumentCaptor.forClass(ReportingWithDestinationPerformedStats.class);
+        Mockito.verify(mMockAdServicesLogger, times(2))
+                .logReportingWithDestinationPerformedStats(
+                        argumentCaptorReportingPerformed.capture());
+
+        List<ReportingWithDestinationPerformedStats> actualStatus =
+                argumentCaptorReportingPerformed.getAllValues();
+        ReportingWithDestinationPerformedStats firstExpectedStats =
+                ReportingWithDestinationPerformedStats.builder()
+                        .setStatus(REPORTING_CALL_STATUS_SUCCESSFUL)
+                        .setDestination(REPORTING_CALL_DESTINATION_SELLER)
+                        .setReportingType(REPORTING_API_REPORT_IMPRESSION)
+                        .build();
+        ReportingWithDestinationPerformedStats secondExpectedStats =
+                ReportingWithDestinationPerformedStats.builder()
+                        .setStatus(REPORTING_CALL_STATUS_SUCCESSFUL)
+                        .setDestination(REPORTING_CALL_DESTINATION_COMPONENT_SELLER)
+                        .setReportingType(REPORTING_API_REPORT_IMPRESSION)
+                        .build();
+
+        assertWithMessage("Reporting with destination performed stats")
+                .that(actualStatus)
+                .containsExactly(firstExpectedStats, secondExpectedStats);
     }
 
     @Test
@@ -755,12 +792,12 @@ public final class ImpressionReporterTest extends AdServicesExtendedMockitoTestC
 
                     @Override
                     public boolean getFledgeAuctionServerEnabledForReportImpression() {
-                        return true;
+                        return false;
                     }
 
                     @Override
                     public boolean getEnableReportEventForComponentSeller() {
-                        return true;
+                        return false;
                     }
                 };
         ImpressionReporter reporter =
@@ -801,8 +838,138 @@ public final class ImpressionReporterTest extends AdServicesExtendedMockitoTestC
                         anyString(),
                         eq(STATUS_SUCCESS),
                         anyInt());
-        // verify 2 http calls were made. 1 for seller and 1 for component seller
-        verify(mMockAdServicesHttpsClient, times(2)).getAndReadNothing(any(), any());
+        // verify only 1 http calls was made for seller
+        verify(mMockAdServicesHttpsClient).getAndReadNothing(any(), any());
+
+        ArgumentCaptor<ReportingWithDestinationPerformedStats> argumentCaptorReportingPerformed =
+                ArgumentCaptor.forClass(ReportingWithDestinationPerformedStats.class);
+
+        Mockito.verify(mMockAdServicesLogger)
+                .logReportingWithDestinationPerformedStats(
+                        argumentCaptorReportingPerformed.capture());
+
+        ReportingWithDestinationPerformedStats expectedStats =
+                ReportingWithDestinationPerformedStats.builder()
+                        .setStatus(REPORTING_CALL_STATUS_SUCCESSFUL)
+                        .setDestination(REPORTING_CALL_DESTINATION_SELLER)
+                        .setReportingType(REPORTING_API_REPORT_IMPRESSION)
+                        .build();
+
+        assertWithMessage("Reporting with destination performed stats")
+                .that(argumentCaptorReportingPerformed.getValue())
+                .isEqualTo(expectedStats);
+    }
+
+    @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = AdServicesNetworkException.class,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_HTTP_GET_REPORTING_URL_FAILED)
+    public void testReportImpression_httpClientThrowsError_logsProperly() throws Exception {
+        when(mMockAdServicesHttpsClient.getAndReadNothing(any(), any()))
+                .thenReturn(
+                        immediateFailedFuture(
+                                new AdServicesNetworkException(
+                                        AdServicesNetworkException.ERROR_SERVER)));
+        AdSelectionInitialization initialization =
+                AdSelectionInitialization.builder()
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .setCreationInstant(CommonFixture.FIXED_NOW)
+                        .setSeller(CommonFixture.VALID_BUYER_1)
+                        .build();
+        ReportingData reportingData =
+                ReportingData.builder()
+                        .setBuyerWinReportingUri(Uri.EMPTY)
+                        .setSellerWinReportingUri(
+                                CommonFixture.getUriWithValidSubdomain(
+                                        CommonFixture.VALID_BUYER_1.toString(), "/report/seller"))
+                        .setComponentSellerWinReportingUri(
+                                CommonFixture.getUriWithValidSubdomain(
+                                        CommonFixture.VALID_BUYER_2.toString(),
+                                        "/report/componentSeller"))
+                        .build();
+        mAdSelectionEntryDao.persistAdSelectionInitialization(AD_SELECTION_ID, initialization);
+        mAdSelectionEntryDao.persistReportingData(AD_SELECTION_ID, reportingData);
+        Flags flagsWithAuctionServerAndComponentSellerEnabled =
+                new Flags() {
+                    @Override
+                    public boolean getFledgeAuctionServerKillSwitch() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getFledgeAuctionServerEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeAuctionServerEnabledForReportImpression() {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean getEnableReportEventForComponentSeller() {
+                        return false;
+                    }
+                };
+        ImpressionReporter reporter =
+                new ImpressionReporter(
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getScheduler(),
+                        mAdSelectionEntryDao,
+                        mCustomAudienceDao,
+                        mMockAdServicesHttpsClient,
+                        DevContext.createForDevOptionsDisabled(),
+                        mMockAdServicesLogger,
+                        flagsWithAuctionServerAndComponentSellerEnabled,
+                        mFakeDebugFlags,
+                        mMockAdSelectionServiceFilter,
+                        mMockFledgeAuthorizationFilter,
+                        new FrequencyCapAdDataValidatorNoOpImpl(),
+                        Process.myUid(),
+                        new NoOpRetryStrategyImpl(),
+                        /* shouldUseUnifiedTables= */ true,
+                        mMockReportImpressionExecutionLogger);
+        SyncReportImpressionCallback callback = new SyncReportImpressionCallback();
+        ReportImpressionInput input =
+                new ReportImpressionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setAdSelectionConfig(
+                                AdSelectionConfigFixture.anAdSelectionConfig(
+                                        CommonFixture.VALID_BUYER_1))
+                        .setCallerPackageName(CommonFixture.TEST_PACKAGE_NAME)
+                        .build();
+
+        reporter.reportImpression(input, callback);
+        callback.assertResultReceived();
+
+        verify(mMockAdServicesLogger, timeout(LOGGING_TIMEOUT_MS))
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION),
+                        anyString(),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+        // verify only 1 http calls was made for seller
+        verify(mMockAdServicesHttpsClient).getAndReadNothing(any(), any());
+
+        ArgumentCaptor<ReportingWithDestinationPerformedStats> argumentCaptorReportingPerformed =
+                ArgumentCaptor.forClass(ReportingWithDestinationPerformedStats.class);
+
+        Mockito.verify(mMockAdServicesLogger)
+                .logReportingWithDestinationPerformedStats(
+                        argumentCaptorReportingPerformed.capture());
+
+        ReportingWithDestinationPerformedStats expectedStats =
+                ReportingWithDestinationPerformedStats.builder()
+                        .setStatus(REPORTING_CALL_STATUS_FAILURE_HTTP_SERVER_ERROR)
+                        .setDestination(REPORTING_CALL_DESTINATION_SELLER)
+                        .setReportingType(REPORTING_API_REPORT_IMPRESSION)
+                        .build();
+
+        assertWithMessage("Reporting with destination performed stats")
+                .that(argumentCaptorReportingPerformed.getValue())
+                .isEqualTo(expectedStats);
     }
 
     private static final class SyncReportImpressionCallback

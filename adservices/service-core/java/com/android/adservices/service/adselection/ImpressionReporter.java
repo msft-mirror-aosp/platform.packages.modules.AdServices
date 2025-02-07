@@ -26,6 +26,10 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_IO_ERROR;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+import static android.adservices.exceptions.AdServicesNetworkException.ERROR_CLIENT;
+import static android.adservices.exceptions.AdServicesNetworkException.ERROR_REDIRECTION;
+import static android.adservices.exceptions.AdServicesNetworkException.ERROR_SERVER;
+import static android.adservices.exceptions.AdServicesNetworkException.ERROR_TOO_MANY_REQUESTS;
 
 import static com.android.adservices.service.common.AppManifestConfigCall.API_AD_SELECTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION;
@@ -47,6 +51,17 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_FAILURE_TO_CALLER_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__IMPRESSION_REPORTER_NOTIFY_SUCCESS_TO_CALLER_FAILED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_IMPRESSION;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_API_REPORT_IMPRESSION;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_DESTINATION_BUYER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_DESTINATION_COMPONENT_SELLER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_DESTINATION_SELLER;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_STATUS_FAILURE_HTTP_CLIENT_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_STATUS_FAILURE_HTTP_NETWORK_NOT_AVAILABLE;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_STATUS_FAILURE_HTTP_REDIRECTION;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_STATUS_FAILURE_HTTP_SERVER_ERROR;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_STATUS_FAILURE_HTTP_TOO_MANY_REQUESTS;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_STATUS_FAILURE_UNKNOWN;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.REPORTING_CALL_STATUS_SUCCESSFUL;
 
 import android.adservices.adselection.AdSelectionConfig;
 import android.adservices.adselection.ReportEventRequest;
@@ -56,6 +71,7 @@ import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.FledgeErrorResponse;
+import android.adservices.exceptions.AdServicesNetworkException;
 import android.annotation.NonNull;
 import android.annotation.Nullable;
 import android.net.Uri;
@@ -93,7 +109,9 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.stats.AdServicesLogger;
+import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.ReportImpressionExecutionLogger;
+import com.android.adservices.service.stats.ReportingWithDestinationPerformedStats;
 import com.android.internal.util.Preconditions;
 
 import com.google.common.util.concurrent.FluentFuture;
@@ -515,7 +533,8 @@ public class ImpressionReporter {
 
         // We don't need to verify enrollment since that is done during request filtering
         // Perform reporting if no exception was thrown
-        ListenableFuture<Void> sellerReportingFuture = bestEffortReporting(sellerReportingUri);
+        ListenableFuture<Void> sellerReportingFuture =
+                bestEffortReporting(sellerReportingUri, REPORTING_CALL_DESTINATION_SELLER);
 
         ListenableFuture<Void> buyerReportingFuture;
         if (buyerReportingUri == null || buyerReportingUri.getHost() == null) {
@@ -529,7 +548,8 @@ public class ImpressionReporter {
                             AD_SERVICES_API_CALLED__API_NAME__REPORT_IMPRESSION,
                             API_AD_SELECTION);
                 }
-                buyerReportingFuture = bestEffortReporting(buyerReportingUri);
+                buyerReportingFuture =
+                        bestEffortReporting(buyerReportingUri, REPORTING_CALL_DESTINATION_BUYER);
             } catch (FledgeAuthorizationFilter.AdTechNotAllowedException e) {
                 buyerReportingFuture = Futures.immediateVoidFuture();
             }
@@ -541,7 +561,10 @@ public class ImpressionReporter {
                 && componentSellerReportingUri.getHost() != null) {
             // We don't need to check the adtech enrollment here because component seller reporting
             // urls were validated before persisting in the persistAdSelectionResultAPI.
-            componentSellerReportingFuture = bestEffortReporting(componentSellerReportingUri);
+            componentSellerReportingFuture =
+                    bestEffortReporting(
+                            componentSellerReportingUri,
+                            REPORTING_CALL_DESTINATION_COMPONENT_SELLER);
         }
 
         return FluentFuture.from(
@@ -552,13 +575,34 @@ public class ImpressionReporter {
                         .call(() -> null, mLightweightExecutorService));
     }
 
-    private ListenableFuture<Void> bestEffortReporting(Uri reportingUri) {
+    private ListenableFuture<Void> bestEffortReporting(
+            Uri reportingUri,
+            @AdsRelevanceStatusUtils.ReportingCallStatsDestination int destination) {
         sLogger.v("Best effort reporting for: '%s'", reportingUri);
         return FluentFuture.from(
                         mAdServicesHttpsClient.getAndReadNothing(reportingUri, mDevContext))
+                .transformAsync(
+                        ignoredVoid -> {
+                            ReportingWithDestinationPerformedStats stats =
+                                    ReportingWithDestinationPerformedStats.builder()
+                                            .setReportingType(REPORTING_API_REPORT_IMPRESSION)
+                                            .setStatus(REPORTING_CALL_STATUS_SUCCESSFUL)
+                                            .setDestination(destination)
+                                            .build();
+                            mAdServicesLogger.logReportingWithDestinationPerformedStats(stats);
+                            return Futures.immediateVoidFuture();
+                        },
+                        mLightweightExecutorService)
                 .catching(
                         Exception.class,
                         e -> {
+                            ReportingWithDestinationPerformedStats stats =
+                                    ReportingWithDestinationPerformedStats.builder()
+                                            .setReportingType(REPORTING_API_REPORT_IMPRESSION)
+                                            .setStatus(getStatusFromException(e))
+                                            .setDestination(destination)
+                                            .build();
+                            mAdServicesLogger.logReportingWithDestinationPerformedStats(stats);
                             sLogger.d(e, "GET failed for reporting URL '%s'!", reportingUri);
                             ErrorLogUtil.e(
                                     e,
@@ -567,6 +611,27 @@ public class ImpressionReporter {
                             return null;
                         },
                         mLightweightExecutorService);
+    }
+
+    private int getStatusFromException(Exception exception) {
+        if (exception instanceof IOException) {
+            return REPORTING_CALL_STATUS_FAILURE_HTTP_NETWORK_NOT_AVAILABLE;
+        }
+        if (exception instanceof AdServicesNetworkException networkException) {
+            if (networkException.getErrorCode() == ERROR_SERVER) {
+                return REPORTING_CALL_STATUS_FAILURE_HTTP_SERVER_ERROR;
+            }
+            if (networkException.getErrorCode() == ERROR_REDIRECTION) {
+                return REPORTING_CALL_STATUS_FAILURE_HTTP_REDIRECTION;
+            }
+            if (networkException.getErrorCode() == ERROR_CLIENT) {
+                return REPORTING_CALL_STATUS_FAILURE_HTTP_CLIENT_ERROR;
+            }
+            if (networkException.getErrorCode() == ERROR_TOO_MANY_REQUESTS) {
+                return REPORTING_CALL_STATUS_FAILURE_HTTP_TOO_MANY_REQUESTS;
+            }
+        }
+        return REPORTING_CALL_STATUS_FAILURE_UNKNOWN;
     }
 
     private FluentFuture<Pair<String, ReportingContext>> fetchSellerDecisionLogic(
