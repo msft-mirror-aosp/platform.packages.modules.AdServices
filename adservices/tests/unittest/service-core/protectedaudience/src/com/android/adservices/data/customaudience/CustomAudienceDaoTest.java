@@ -18,8 +18,10 @@ package com.android.adservices.data.customaudience;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_DAO_FAILED_DUE_TO_PENDING_SCHEDULE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_DAO_QUARANTINE_TABLE_MAX_REACHED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE;
@@ -57,6 +59,7 @@ import androidx.room.Room;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
 import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
@@ -3290,6 +3293,11 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_DAO_FAILED_DUE_TO_PENDING_SCHEDULE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE,
+            throwable = PersistScheduleCAUpdateException.class)
     public void testInsertScheduledCAUpdateInFuture_withShouldRemoveUpdatesFalse_throwsException() {
         DBScheduledCustomAudienceUpdate anUpdate =
                 DB_SCHEDULED_CUSTOM_AUDIENCE_UPDATE_BUILDER.setUpdateId(null).build();
