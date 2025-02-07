@@ -17,59 +17,69 @@
 package com.android.adservices.service.customaudience;
 
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
 
 import android.adservices.common.CommonFixture;
+import android.adservices.common.ComponentAdData;
 import android.adservices.common.ComponentAdDataFixture;
-import android.adservices.customaudience.CustomAudience;
-import android.adservices.customaudience.CustomAudienceFixture;
+import android.net.Uri;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.DBCustomAudience;
 
 import org.junit.Test;
 import org.mockito.Mock;
+
+import java.util.List;
 
 public class ComponentAdsStrategyTest extends AdServicesMockitoTestCase {
     private final ComponentAdsStrategy mComponentAdsStrategyEnabled =
             ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ true);
     private final ComponentAdsStrategy mComponentAdsStrategyDisabled =
             ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+    private static final List<ComponentAdData> COMPONENT_AD_DATA_LIST =
+            ComponentAdDataFixture.getValidComponentAdsByBuyer(CommonFixture.VALID_BUYER_1);
 
-    @Mock private CustomAudienceDao mCustomAudienceDao;
+    @Mock private CustomAudienceDao mCustomAudienceDaoMock;
 
     @Test
-    public void testEnabledStrategyPersistComponentAdsInvokesDaoMethod() {
-        CustomAudience customAudience =
-                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
-                        .setComponentAds(
-                                ComponentAdDataFixture.getValidComponentAdsByBuyer(
-                                        CommonFixture.VALID_BUYER_1))
-                        .build();
+    public void testEnabledStrategyPersistCustomAudiencesWithComponentAdsAddsComponentAds() {
+        DBCustomAudience customAudience =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
+        Uri dailyUpdateUri = Uri.parse("https://example.com");
 
-        mComponentAdsStrategyEnabled.persistComponentAds(
-                customAudience, CommonFixture.TEST_PACKAGE_NAME, mCustomAudienceDao);
+        boolean debuggable = true;
 
-        verify(mCustomAudienceDao)
-                .insertAndOverwriteComponentAds(
-                        customAudience.getComponentAds(),
-                        CommonFixture.TEST_PACKAGE_NAME,
-                        CommonFixture.VALID_BUYER_1,
-                        customAudience.getName());
+        mComponentAdsStrategyEnabled.persistCustomAudiencesWithComponentAds(
+                mCustomAudienceDaoMock,
+                customAudience,
+                dailyUpdateUri,
+                debuggable,
+                COMPONENT_AD_DATA_LIST);
+
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        customAudience, dailyUpdateUri, debuggable, COMPONENT_AD_DATA_LIST);
     }
 
     @Test
-    public void testDisabledStrategyPersistComponentAdsDoesNothing() {
-        CustomAudience customAudience =
-                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
-                        .setComponentAds(
-                                ComponentAdDataFixture.getValidComponentAdsByBuyer(
-                                        CommonFixture.VALID_BUYER_1))
-                        .build();
+    public void testDisabledStrategyPersistCustomAudiencesWithComponentAdsOnlyAddsCA() {
+        DBCustomAudience customAudience =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
+        Uri dailyUpdateUri = Uri.parse("https://example.com");
 
-        mComponentAdsStrategyDisabled.persistComponentAds(
-                customAudience, CommonFixture.TEST_PACKAGE_NAME, mCustomAudienceDao);
+        boolean debuggable = true;
 
-        verifyZeroInteractions(mCustomAudienceDao);
+        mComponentAdsStrategyDisabled.persistCustomAudiencesWithComponentAds(
+                mCustomAudienceDaoMock,
+                customAudience,
+                dailyUpdateUri,
+                debuggable,
+                COMPONENT_AD_DATA_LIST);
+
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        customAudience, dailyUpdateUri, debuggable, List.of());
     }
 }

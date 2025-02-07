@@ -32,7 +32,9 @@ import static android.adservices.customaudience.CustomAudienceFixture.getValidBi
 import static android.adservices.customaudience.CustomAudienceFixture.getValidDailyUpdateUriByBuyer;
 import static android.adservices.customaudience.TrustedBiddingDataFixture.getValidTrustedBiddingDataByBuyer;
 
+import static com.android.adservices.service.Flags.COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH;
+import static com.android.adservices.service.Flags.MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.AUCTION_SERVER_REQUEST_FLAGS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.OMIT_ADS_VALUE;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.PRIORITY_KEY;
@@ -48,11 +50,14 @@ import static org.junit.Assert.assertTrue;
 import android.adservices.common.AdData;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.ComponentAdData;
+import android.adservices.common.ComponentAdDataFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.FetchAndJoinCustomAudienceInput;
 import android.adservices.customaudience.TrustedBiddingData;
 import android.net.Uri;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.common.DBAdDataFixture;
 import com.android.adservices.customaudience.DBTrustedBiddingDataFixture;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
@@ -71,7 +76,7 @@ import java.time.Instant;
 import java.util.List;
 
 @RunWith(MockitoJUnitRunner.class)
-public class CustomAudienceBlobTest {
+public class CustomAudienceBlobTest extends AdServicesUnitTestCase {
     private FetchAndJoinCustomAudienceInput.Builder mFetchAndJoinCustomAudienceInput =
             new FetchAndJoinCustomAudienceInput.Builder(
                             CustomAudienceFixture.getValidFetchUriByBuyer(VALID_BUYER_1),
@@ -182,6 +187,7 @@ public class CustomAudienceBlobTest {
         assertEquals(
                 mCustomAudienceBlob.getAds().toString(),
                 getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1).toString());
+        expect.that(mCustomAudienceBlob.getComponentAds()).isEmpty();
     }
 
     @Test
@@ -196,7 +202,17 @@ public class CustomAudienceBlobTest {
     @Test
     public void testOverrideFromJSONObject_validValuesWithAuctionServerRequestFlagsEnabled()
             throws JSONException {
-        CustomAudienceBlob blob = new CustomAudienceBlob(true, true, true, 12L, true, false);
+        CustomAudienceBlob blob =
+                new CustomAudienceBlob(
+                        /* frequencyCapFilteringEnabled= */ true,
+                        /* appInstallFilteringEnabled= */ true,
+                        /* adRenderIdEnabled= */ true,
+                        /* adRenderIdMaxLength= */ 12L,
+                        /* auctionServerRequestFlagsEnabled= */ true,
+                        /* sellerConfigurationEnabled= */ false,
+                        /* componentAdsEnabled= */ false,
+                        COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
+                        MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
 
         JSONObject jsonObject =
                 CustomAudienceBlobFixture.asJSONObject(
@@ -240,7 +256,17 @@ public class CustomAudienceBlobTest {
     @Test
     public void testOverrideFromJSONObject_invalidValuesWithAuctionServerRequestFlagsEnabled()
             throws JSONException {
-        CustomAudienceBlob blob = new CustomAudienceBlob(true, true, true, 12L, true, false);
+        CustomAudienceBlob blob =
+                new CustomAudienceBlob(
+                        /* frequencyCapFilteringEnabled= */ true,
+                        /* appInstallFilteringEnabled= */ true,
+                        /* adRenderIdEnabled= */ true,
+                        /* adRenderIdMaxLength= */ 12L,
+                        /* auctionServerRequestFlagsEnabled= */ true,
+                        /* sellerConfigurationEnabled= */ false,
+                        /* componentAdsEnabled= */ false,
+                        COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
+                        MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
 
         JSONObject jsonObject =
                 CustomAudienceBlobFixture.asJSONObject(
@@ -286,7 +312,17 @@ public class CustomAudienceBlobTest {
     @Test
     public void testOverrideFromJSONObject_UnexpectedValuesWithAuctionServerRequestFlagsEnabled()
             throws JSONException {
-        CustomAudienceBlob blob = new CustomAudienceBlob(true, true, true, 12L, true, false);
+        CustomAudienceBlob blob =
+                new CustomAudienceBlob(
+                        /* frequencyCapFilteringEnabled= */ true,
+                        /* appInstallFilteringEnabled= */ true,
+                        /* adRenderIdEnabled= */ true,
+                        /* adRenderIdMaxLength= */ 12L,
+                        /* auctionServerRequestFlagsEnabled= */ true,
+                        /* sellerConfigurationEnabled= */ false,
+                        /* componentAdsEnabled= */ false,
+                        COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
+                        MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
 
         JSONObject jsonObject =
                 CustomAudienceBlobFixture.asJSONObject(
@@ -383,7 +419,17 @@ public class CustomAudienceBlobTest {
     @Test
     public void testOverrideFromJSONObject_validValuesWithSellerConfigurationEnabled()
             throws JSONException {
-        CustomAudienceBlob blob = new CustomAudienceBlob(true, true, true, 12L, false, true);
+        CustomAudienceBlob blob =
+                new CustomAudienceBlob(
+                        /* frequencyCapFilteringEnabled= */ true,
+                        /* appInstallFilteringEnabled= */ true,
+                        /* adRenderIdEnabled= */ true,
+                        /* adRenderIdMaxLength= */ 12L,
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ true,
+                        /* componentAdsEnabled= */ false,
+                        COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
+                        MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
 
         JSONObject JsonObject =
                 CustomAudienceBlobFixture.asJSONObject(
@@ -434,7 +480,10 @@ public class CustomAudienceBlobTest {
                         /* adRenderIdEnabled= */ true,
                         /* adRenderIdMaxLength= */ FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH,
                         /* auctionServerRequestFlagsEnabled= */ false,
-                        /* sellerConfigurationEnabled= */ false);
+                        /* sellerConfigurationEnabled= */ false,
+                        /* componentAdsEnabled= */ false,
+                        COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
+                        MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
 
         JSONObject JsonObject =
                 CustomAudienceBlobFixture.asJSONObject(
@@ -486,7 +535,10 @@ public class CustomAudienceBlobTest {
                         /* adRenderIdEnabled= */ true,
                         /* adRenderIdMaxLength= */ FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH,
                         /* auctionServerRequestFlagsEnabled= */ false,
-                        /* sellerConfigurationEnabled= */ true);
+                        /* sellerConfigurationEnabled= */ true,
+                        /* componentAdsEnabled= */ false,
+                        COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
+                        MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
 
         JSONObject jsonObject =
                 CustomAudienceBlobFixture.asJSONObject(
@@ -538,7 +590,10 @@ public class CustomAudienceBlobTest {
                         /* adRenderId */ true,
                         /* adRenderIdMaxLength */ FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH,
                         /* auctionServerRequestFlags */ false,
-                        /* sellerConfiguration */ true);
+                        /* sellerConfiguration */ true,
+                        /* componentAdsEnabled= */ false,
+                        COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
+                        MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
 
         JSONObject jsonObject =
                 CustomAudienceBlobFixture.asJSONObject(
@@ -562,6 +617,127 @@ public class CustomAudienceBlobTest {
         customAudienceBlob.setPriority(VALID_PRIORITY_2);
 
         assertEquals(0, Double.compare(VALID_PRIORITY_2, customAudienceBlob.getPriority()));
+    }
+
+    @Test
+    public void testOverrideFromJSONObjectWithComponentAdsComponentAdsEnabled()
+            throws JSONException {
+
+        CustomAudienceBlob blob =
+                new CustomAudienceBlob(
+                        /* frequencyCapFilteringEnabled= */ true,
+                        /* appInstallFilteringEnabled= */ true,
+                        /* adRenderIdEnabled= */ true,
+                        /* adRenderIdMaxLength= */ FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH,
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false,
+                        /* componentAdsEnabled= */ true,
+                        COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
+                        MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
+
+        JSONObject jsonObject =
+                CustomAudienceBlobFixture.asJSONObject(
+                        VALID_OWNER,
+                        VALID_BUYER_1,
+                        VALID_NAME,
+                        VALID_ACTIVATION_TIME,
+                        VALID_EXPIRATION_TIME,
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(VALID_BUYER_1),
+                        getValidBiddingLogicUriByBuyer(VALID_BUYER_1),
+                        VALID_USER_BIDDING_SIGNALS.toString(),
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(VALID_BUYER_1).build(),
+                        DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(VALID_BUYER_1),
+                        /* shouldAddHarmlessJunk= */ false);
+
+        List<ComponentAdData> componentAdDataList =
+                ComponentAdDataFixture.getValidComponentAdsByBuyer(VALID_BUYER_1);
+
+        JSONObject jsonObjectWithComponentAds =
+                CustomAudienceBlobFixture.addComponentAds(jsonObject, componentAdDataList);
+
+        blob.overrideFromJSONObject(jsonObjectWithComponentAds);
+
+        assertDefaultExpectedBlobValues(blob);
+        expect.that(blob.getComponentAds()).containsExactlyElementsIn(componentAdDataList);
+    }
+
+    @Test
+    public void
+            testOverrideFromJSONObjectWithComponentAdsComponentAdsEnabledNoComponentAdsInResponse()
+                    throws JSONException {
+
+        CustomAudienceBlob blob =
+                new CustomAudienceBlob(
+                        /* frequencyCapFilteringEnabled= */ true,
+                        /* appInstallFilteringEnabled= */ true,
+                        /* adRenderIdEnabled= */ true,
+                        /* adRenderIdMaxLength= */ FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH,
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false,
+                        /* componentAdsEnabled= */ true,
+                        COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
+                        MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
+
+        JSONObject jsonObject =
+                CustomAudienceBlobFixture.asJSONObject(
+                        VALID_OWNER,
+                        VALID_BUYER_1,
+                        VALID_NAME,
+                        VALID_ACTIVATION_TIME,
+                        VALID_EXPIRATION_TIME,
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(VALID_BUYER_1),
+                        getValidBiddingLogicUriByBuyer(VALID_BUYER_1),
+                        VALID_USER_BIDDING_SIGNALS.toString(),
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(VALID_BUYER_1).build(),
+                        DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(VALID_BUYER_1),
+                        /* shouldAddHarmlessJunk= */ false);
+
+        blob.overrideFromJSONObject(jsonObject);
+
+        assertDefaultExpectedBlobValues(blob);
+        expect.that(blob.getComponentAds()).isEmpty();
+    }
+
+    @Test
+    public void testOverrideFromJSONObjectWithComponentAdsComponentAdsDisabled()
+            throws JSONException {
+
+        CustomAudienceBlob blob =
+                new CustomAudienceBlob(
+                        /* frequencyCapFilteringEnabled= */ true,
+                        /* appInstallFilteringEnabled= */ true,
+                        /* adRenderIdEnabled= */ true,
+                        /* adRenderIdMaxLength= */ FLEDGE_AUCTION_SERVER_AD_RENDER_ID_MAX_LENGTH,
+                        /* auctionServerRequestFlagsEnabled= */ false,
+                        /* sellerConfigurationEnabled= */ false,
+                        /* componentAdsEnabled= */ false,
+                        COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
+                        MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
+
+        JSONObject jsonObject =
+                CustomAudienceBlobFixture.asJSONObject(
+                        VALID_OWNER,
+                        VALID_BUYER_1,
+                        VALID_NAME,
+                        VALID_ACTIVATION_TIME,
+                        VALID_EXPIRATION_TIME,
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(VALID_BUYER_1),
+                        getValidBiddingLogicUriByBuyer(VALID_BUYER_1),
+                        VALID_USER_BIDDING_SIGNALS.toString(),
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(VALID_BUYER_1).build(),
+                        DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(VALID_BUYER_1),
+                        /* shouldAddHarmlessJunk= */ false);
+
+        List<ComponentAdData> componentAdDataList =
+                ComponentAdDataFixture.getValidComponentAdsByBuyer(VALID_BUYER_1);
+
+        JSONObject jsonObjectWithComponentAds =
+                CustomAudienceBlobFixture.addComponentAds(jsonObject, componentAdDataList);
+
+        blob.overrideFromJSONObject(jsonObjectWithComponentAds);
+
+        assertDefaultExpectedBlobValues(blob);
+        expect.that(blob.getComponentAds()).isEmpty();
     }
 
     @Test
@@ -1000,5 +1176,22 @@ public class CustomAudienceBlobTest {
         mCustomAudienceBlob.setAds(overriddenAds);
 
         assertEquals(mCustomAudienceBlob.getAds().toString(), overriddenAds.toString());
+    }
+
+    private void assertDefaultExpectedBlobValues(CustomAudienceBlob blob) {
+        expect.that(blob.getOwner()).isEqualTo(VALID_OWNER);
+        expect.that(blob.getBuyer()).isEqualTo(VALID_BUYER_1);
+        expect.that(blob.getName()).isEqualTo(VALID_NAME);
+        expect.that(blob.getActivationTime()).isEqualTo(VALID_ACTIVATION_TIME);
+        expect.that(blob.getExpirationTime()).isEqualTo(VALID_EXPIRATION_TIME);
+        expect.that(blob.getDailyUpdateUri())
+                .isEqualTo(CustomAudienceFixture.getValidDailyUpdateUriByBuyer(VALID_BUYER_1));
+        expect.that(blob.getBiddingLogicUri())
+                .isEqualTo(getValidBiddingLogicUriByBuyer(VALID_BUYER_1));
+        expect.that(blob.getUserBiddingSignals()).isEqualTo(VALID_USER_BIDDING_SIGNALS);
+        expect.that(blob.getTrustedBiddingData().toString())
+                .isEqualTo(getValidTrustedBiddingDataByBuyer(VALID_BUYER_1).toString());
+        expect.that(blob.getAds().toString())
+                .isEqualTo(getValidFilterAdsWithAdRenderIdByBuyer(VALID_BUYER_1).toString());
     }
 }

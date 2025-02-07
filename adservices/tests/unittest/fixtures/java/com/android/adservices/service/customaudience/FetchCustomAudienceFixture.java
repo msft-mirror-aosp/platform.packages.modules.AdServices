@@ -20,6 +20,7 @@ import static com.android.adservices.service.customaudience.CustomAudienceBlob.O
 
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
+import android.adservices.common.ComponentAdData;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
 
@@ -31,6 +32,8 @@ import com.google.common.collect.ImmutableList;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.List;
 
 public class FetchCustomAudienceFixture {
 
@@ -121,6 +124,26 @@ public class FetchCustomAudienceFixture {
         return result;
     }
 
+    /** Returns a successful full JSON response with component ads. */
+    public static JSONObject getFullSuccessfulJsonResponseWithComponentAds(
+            List<ComponentAdData> componentAdDataList, AdTechIdentifier buyer)
+            throws JSONException {
+        JSONObject result =
+                CustomAudienceBlobFixture.asJSONObject(
+                        CustomAudienceFixture.VALID_OWNER,
+                        buyer,
+                        CustomAudienceFixture.VALID_NAME,
+                        CustomAudienceFixture.VALID_ACTIVATION_TIME,
+                        CustomAudienceFixture.VALID_EXPIRATION_TIME,
+                        CustomAudienceFixture.getValidDailyUpdateUriByBuyer(buyer),
+                        CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer),
+                        CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS.toString(),
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build(),
+                        DBAdDataFixture.getValidDbAdDataListByBuyer(buyer),
+                        /* shouldAddHarmlessJunk= */ false);
+        result = CustomAudienceBlobFixture.addComponentAds(result, componentAdDataList);
+        return result;
+    }
 
     public static DBCustomAudience getFullSuccessfulDBCustomAudience() throws JSONException {
         return new DBCustomAudience.Builder()

@@ -467,7 +467,8 @@ public final class OnDeviceAdSelectionFailureIntegrationTest
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
                 dBCustomAudienceForBuyer1,
                 CustomAudienceFixture.getValidDailyUpdateUriByBuyer(mBuyer),
-                false);
+                false,
+                List.of());
         sLogger.d("calling ad selection");
         // Ad selection should fail gracefully and not crash
         SyncAdSelectionCallback resultsCallback =

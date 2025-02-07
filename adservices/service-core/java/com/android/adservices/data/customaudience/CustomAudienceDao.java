@@ -105,7 +105,8 @@ public abstract class CustomAudienceDao {
             DBCustomAudienceQuarantine dbCustomAudienceQuarantine);
 
     /**
-     * Adds or updates a given custom audience and background fetch data in a single transaction.
+     * Adds or updates a given custom audience, background fetch data, and component ads in a single
+     * transaction.
      *
      * <p>This transaction is separate in order to minimize the critical region while locking the
      * database. It is not meant to be exposed or used by itself; use {@link
@@ -114,9 +115,17 @@ public abstract class CustomAudienceDao {
     @Transaction
     protected void insertOrOverwriteCustomAudienceAndBackgroundFetchData(
             @NonNull DBCustomAudience customAudience,
-            @NonNull DBCustomAudienceBackgroundFetchData fetchData) {
+            @NonNull DBCustomAudienceBackgroundFetchData fetchData,
+            List<ComponentAdData> componentAds) {
         persistCustomAudience(customAudience);
         persistCustomAudienceBackgroundFetchData(fetchData);
+
+        sLogger.v("Inserting Component Ads in the DB: %s", componentAds);
+        insertAndOverwriteComponentAds(
+                componentAds,
+                customAudience.getOwner(),
+                customAudience.getBuyer(),
+                customAudience.getName());
     }
 
     /**
@@ -127,11 +136,14 @@ public abstract class CustomAudienceDao {
      * <p>Background fetch data is also created based on the given {@code customAudience} and {@code
      * dailyUpdateUri} and overwrites any existing background fetch data. This method assumes the
      * input parameters have already been validated and are correct.
+     *
+     * <p>Also adds component ads.
      */
     public void insertOrOverwriteCustomAudience(
             @NonNull DBCustomAudience customAudience,
             @NonNull Uri dailyUpdateUri,
-            boolean debuggable) {
+            boolean debuggable,
+            List<ComponentAdData> componentAds) {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(dailyUpdateUri);
 
@@ -158,7 +170,8 @@ public abstract class CustomAudienceDao {
                         .setIsDebuggable(debuggable)
                         .build();
 
-        insertOrOverwriteCustomAudienceAndBackgroundFetchData(customAudience, fetchData);
+        insertOrOverwriteCustomAudienceAndBackgroundFetchData(
+                customAudience, fetchData, componentAds);
     }
 
     /**

@@ -24,6 +24,7 @@ import static com.android.adservices.service.customaudience.CustomAudienceUpdata
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_COUNTERS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_FILTERS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.AD_RENDER_ID_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.COMPONENT_ADS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.METADATA_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.RENDER_URI_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.TRUSTED_BIDDING_DATA_KEY;
@@ -37,6 +38,7 @@ import static com.android.adservices.service.customaudience.FetchCustomAudienceR
 import static com.android.adservices.service.customaudience.FetchCustomAudienceReader.NAME_KEY;
 
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.ComponentAdData;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
@@ -358,6 +360,27 @@ public class CustomAudienceBlobFixture {
             JSONObject json, Double priority, boolean shouldAddHarmlessJunk) throws JSONException {
         if (priority != null) {
             return addToJSONObject(json, PRIORITY_KEY, priority, shouldAddHarmlessJunk);
+        }
+        return json;
+    }
+
+    /**
+     * Converts a list of {@link ComponentAdData} into a JSONObject with a keyed field for component
+     * ads.
+     */
+    public static JSONObject addComponentAds(
+            JSONObject json, List<ComponentAdData> componentAdDataList) throws JSONException {
+        if (componentAdDataList != null) {
+            JSONArray componentAdsJson = new JSONArray();
+
+            for (ComponentAdData componentAdData : componentAdDataList) {
+                JSONObject componentAdJson = new JSONObject();
+
+                componentAdJson.put(RENDER_URI_KEY, componentAdData.getRenderUri().toString());
+                componentAdJson.put(AD_RENDER_ID_KEY, componentAdData.getAdRenderId());
+                componentAdsJson.put(componentAdJson);
+            }
+            json.put(COMPONENT_ADS_KEY, componentAdsJson);
         }
         return json;
     }
