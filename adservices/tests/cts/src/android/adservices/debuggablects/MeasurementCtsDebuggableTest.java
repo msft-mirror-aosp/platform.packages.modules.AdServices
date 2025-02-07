@@ -30,6 +30,7 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_JOB_
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REGISTRATION_JOB_QUEUE_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_REPORTING_JOB_SERVICE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_WEB_CONTEXT_CLIENT_ALLOW_LIST;
@@ -338,6 +339,10 @@ public final class MeasurementCtsDebuggableTest extends AdServicesDebuggableTest
     }
 
     private void executeAsyncRegistrationJob() {
+        // In rare cases the job can already be running in the background when we attempt to start,
+        // preventing the call to executeJob from actually executing. Stopping the job is safe even
+        // when the job is not running.
+        stopJob(ASYNC_REGISTRATION_QUEUE_JOB_ID);
         executeJob(ASYNC_REGISTRATION_QUEUE_JOB_ID);
     }
 
@@ -349,6 +354,16 @@ public final class MeasurementCtsDebuggableTest extends AdServicesDebuggableTest
         } catch (IOException e) {
             throw new IllegalStateException(
                     String.format("Error while executing job %d", jobId), e);
+        }
+    }
+
+    private void stopJob(int jobId) {
+        String packageName = AdServicesSupportHelper.getInstance().getAdServicesPackageName();
+        String cmd = "cmd jobscheduler stop " + packageName + " " + jobId;
+        try {
+            getUiDevice().executeShellCommand(cmd);
+        } catch (IOException e) {
+            throw new IllegalStateException(String.format("Error while stopping job %d", jobId), e);
         }
     }
 
@@ -599,10 +614,11 @@ public final class MeasurementCtsDebuggableTest extends AdServicesDebuggableTest
                 .setFlag(KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_EXCL_SOURCE_REGISTRATION_TIME, "0.0")
                 .setFlag(KEY_MEASUREMENT_NULL_AGG_REPORT_RATE_INCL_SOURCE_REGISTRATION_TIME, "0.0")
                 .setFlag(KEY_MEASUREMENT_JOB_ATTRIBUTION_KILL_SWITCH, false)
-                // Avoid reporting jobs acquiring lock
+                // Avoid jobs acquiring lock
                 .setFlag(KEY_MEASUREMENT_JOB_EVENT_FALLBACK_REPORTING_KILL_SWITCH, true)
                 .setFlag(KEY_MEASUREMENT_JOB_AGGREGATE_FALLBACK_REPORTING_KILL_SWITCH, true)
                 .setFlag(KEY_MEASUREMENT_JOB_IMMEDIATE_AGGREGATE_REPORTING_KILL_SWITCH, true)
+                .setFlag(KEY_MEASUREMENT_REGISTRATION_FALLBACK_JOB_KILL_SWITCH, true)
                 .setFlag(KEY_MEASUREMENT_REPORTING_JOB_SERVICE_ENABLED, false);
 
         sleep();
