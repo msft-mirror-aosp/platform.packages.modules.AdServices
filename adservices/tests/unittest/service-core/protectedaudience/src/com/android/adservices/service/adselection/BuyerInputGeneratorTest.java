@@ -58,6 +58,7 @@ import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.adservices.service.customaudience.ComponentAdsStrategy;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAppSignals;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -1130,7 +1131,9 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
                 auctionServerMetricsEnabled
                         ? new AuctionServerPayloadMetricsStrategyEnabled(
                                 mAdServicesLoggerMock,
-                                new SellerConfigurationMetricsStrategyDisabled())
+                                new SellerConfigurationMetricsStrategyDisabled(),
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false))
                         : mAuctionServerPayloadMetricsStrategyDisabled;
         CompressedBuyerInputCreatorHelper helper =
                 new CompressedBuyerInputCreatorHelper(

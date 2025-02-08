@@ -781,7 +781,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
     }
 
     @Test
-    public void testlogGetAdSelectionDataBuyerInputGeneratedStats() {
+    public void testLogGetAdSelectionDataBuyerInputGeneratedStats() {
         GetAdSelectionDataBuyerInputGeneratedStats stats =
                 GetAdSelectionDataBuyerInputGeneratedStats.builder()
                         .setNumCustomAudiences(2)
@@ -796,6 +796,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
                         .setEncodedSignalsSizeMean(30)
                         .setEncodedSignalsSizeMax(31)
                         .setEncodedSignalsSizeMin(32)
+                        .setNumCustomAudiencesWithComponentAds(5)
                         .build();
         mAdservicesLogger.logGetAdSelectionDataBuyerInputGeneratedStats(stats);
         verify(mStatsdLoggerMock).logGetAdSelectionDataBuyerInputGeneratedStats(eq(stats));
@@ -960,6 +961,7 @@ public final class AdServicesLoggerImplTest extends AdServicesExtendedMockitoTes
         PersistAdSelectionResultCalledStats stats =
                 PersistAdSelectionResultCalledStats.builder()
                         .setWinnerType(WINNER_TYPE_PAS_WINNER)
+                        .setNumComponentAds(5)
                         .build();
         mAdservicesLogger.logPersistAdSelectionResultCalledStats(stats);
         verify(mStatsdLoggerMock).logPersistAdSelectionResultCalledStats(eq(stats));

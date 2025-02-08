@@ -1805,7 +1805,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
     }
 
     @Test
-    public void testlogGetAdSelectionDataBuyerInputGeneratedStats_success() {
+    public void testLogGetAdSelectionDataBuyerInputGeneratedStats_success() {
         GetAdSelectionDataBuyerInputGeneratedStats stats =
                 GetAdSelectionDataBuyerInputGeneratedStats.builder()
                         .setNumCustomAudiences(2)
@@ -1820,6 +1820,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                         .setEncodedSignalsSizeMean(30)
                         .setEncodedSignalsSizeMax(31)
                         .setEncodedSignalsSizeMin(32)
+                        .setNumCustomAudiencesWithComponentAds(5)
                         .build();
         doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt(), anyInt()));
 
@@ -1842,7 +1843,8 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                                 eq(29),
                                 eq(30),
                                 eq(31),
-                                eq(32));
+                                eq(32),
+                                eq(5));
 
         verify(writeInvocation);
 
@@ -2219,6 +2221,7 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
         PersistAdSelectionResultCalledStats stats =
                 PersistAdSelectionResultCalledStats.builder()
                         .setWinnerType(WINNER_TYPE_PAS_WINNER)
+                        .setNumComponentAds(5)
                         .build();
         doNothing().when(() -> AdServicesStatsLog.write(anyInt(), anyInt()));
 
@@ -2229,7 +2232,8 @@ public final class StatsdAdServicesLoggerTest extends AdServicesExtendedMockitoT
                 () ->
                         AdServicesStatsLog.write(
                                 eq(PERSIST_AD_SELECTION_RESULT_CALLED),
-                                eq(WINNER_TYPE_PAS_WINNER));
+                                eq(WINNER_TYPE_PAS_WINNER),
+                                eq(5));
 
         verify(writeInvocation);
         verifyNoMoreInteractions(staticMockMarker(AdServicesStatsLog.class));

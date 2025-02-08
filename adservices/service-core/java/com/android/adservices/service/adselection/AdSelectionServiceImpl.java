@@ -109,6 +109,7 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.customaudience.ComponentAdsStrategy;
 import com.android.adservices.service.devapi.AdSelectionOverrider;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
@@ -715,10 +716,16 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
             }
             if (flags.getFledgeAuctionServerKeyFetchMetricsEnabled()) {
                 return new AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled(
-                        mAdServicesLogger, sellerConfigurationMetricsStrategy);
+                        mAdServicesLogger,
+                        sellerConfigurationMetricsStrategy,
+                        ComponentAdsStrategy.createInstance(
+                                flags.getEnableCustomAudienceComponentAds()));
             }
             return new AuctionServerPayloadMetricsStrategyEnabled(
-                    mAdServicesLogger, sellerConfigurationMetricsStrategy);
+                    mAdServicesLogger,
+                    sellerConfigurationMetricsStrategy,
+                    ComponentAdsStrategy.createInstance(
+                            flags.getEnableCustomAudienceComponentAds()));
         }
         return new AuctionServerPayloadMetricsStrategyDisabled();
     }

@@ -28,6 +28,7 @@ import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
 
 import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__PERSIST_AD_SELECTION_RESULT;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_AUCTION_RESULT_HAS_ERROR;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_INTERACTION_URI_EXCEEDS_MAXIMUM_LIMIT;
@@ -721,7 +722,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
 
-        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_CA_WINNER);
+        verifyPersistAdSelectionResultWinnerType(
+                WINNER_TYPE_CA_WINNER, /* numComponentAds= */ FIELD_UNSET);
     }
 
     @Test
@@ -1251,7 +1253,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
 
-        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_PAS_WINNER);
+        verifyPersistAdSelectionResultWinnerType(
+                WINNER_TYPE_PAS_WINNER, /* numComponentAds= */ FIELD_UNSET);
     }
 
     @Test
@@ -1361,7 +1364,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
 
-        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_CA_WINNER);
+        verifyPersistAdSelectionResultWinnerType(
+                WINNER_TYPE_CA_WINNER, /* numComponentAds= */ FIELD_UNSET);
     }
 
     @Test
@@ -1470,7 +1474,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
 
-        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_PAS_WINNER);
+        verifyPersistAdSelectionResultWinnerType(
+                WINNER_TYPE_PAS_WINNER, /* numComponentAds= */ FIELD_UNSET);
     }
 
     @Test
@@ -1579,7 +1584,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
 
-        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_CA_WINNER);
+        verifyPersistAdSelectionResultWinnerType(
+                WINNER_TYPE_CA_WINNER, /* numComponentAds= */ FIELD_UNSET);
     }
 
     // TODO(b/291680065): Remove the test when owner field is returned from B&A
@@ -1675,7 +1681,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
 
-        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_CA_WINNER);
+        verifyPersistAdSelectionResultWinnerType(
+                WINNER_TYPE_CA_WINNER, /* numComponentAds= */ FIELD_UNSET);
     }
 
     // TODO(b/291680065): Remove the test when owner field is returned from B&A
@@ -1775,7 +1782,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
 
-        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_CA_WINNER);
+        verifyPersistAdSelectionResultWinnerType(
+                WINNER_TYPE_CA_WINNER, /* numComponentAds= */ FIELD_UNSET);
     }
 
     @Test
@@ -1827,7 +1835,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_SUCCESS);
 
-        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
+        verifyPersistAdSelectionResultWinnerType(
+                WINNER_TYPE_NO_WINNER, /* numComponentAds= */ FIELD_UNSET);
     }
 
     @Test
@@ -1863,7 +1872,8 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
         verifyPersistAdSelectionResultApiUsageLog(STATUS_INVALID_ARGUMENT);
 
-        verifyPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
+        verifyPersistAdSelectionResultWinnerType(
+                WINNER_TYPE_NO_WINNER, /* numComponentAds= */ FIELD_UNSET);
     }
 
     @Test
@@ -3204,12 +3214,17 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
     }
 
     private void verifyPersistAdSelectionResultWinnerType(
-            @AdsRelevanceStatusUtils.WinnerType int winnerType) {
+            @AdsRelevanceStatusUtils.WinnerType int winnerType, int numComponentAds) {
         verify(mAdServicesLoggerSpy)
                 .logPersistAdSelectionResultCalledStats(
                         mPersistAdSelectionResultCalledStatsArgumentCaptor.capture());
         PersistAdSelectionResultCalledStats stats =
                 mPersistAdSelectionResultCalledStatsArgumentCaptor.getValue();
-        assertThat(stats.getWinnerType()).isEqualTo(winnerType);
+        expect.withMessage("PersistAdSelectionResultCalledStats.getWinnerType()")
+                .that(stats.getWinnerType())
+                .isEqualTo(winnerType);
+        expect.withMessage("PersistAdSelectionResultCalledStats.getNumComponentAds()")
+                .that(stats.getNumComponentAds())
+                .isEqualTo(numComponentAds);
     }
 }

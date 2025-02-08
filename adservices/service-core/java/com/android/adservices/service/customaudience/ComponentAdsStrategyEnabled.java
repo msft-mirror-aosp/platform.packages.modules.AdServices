@@ -21,6 +21,8 @@ import android.net.Uri;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 
 import java.util.List;
 
@@ -35,5 +37,22 @@ public class ComponentAdsStrategyEnabled implements ComponentAdsStrategy {
             List<ComponentAdData> componentAdDataList) {
         customAudienceDao.insertOrOverwriteCustomAudience(
                 customAudience, dailyUpdateUri, debuggable, componentAdDataList);
+    }
+
+    @Override
+    public void incrementNumCustomAudiencesWithComponentAds(
+            BuyerInputGeneratorIntermediateStats stats) {
+        stats.incrementNumCustomAudiencesWithComponentAds();
+    }
+
+    @Override
+    public void setNumComponentAdsInPersistAdSelectionResultWinnerType(
+            PersistAdSelectionResultCalledStats.Builder builder, int numComponentAds) {
+        builder.setNumComponentAds(numComponentAds);
+    }
+
+    @Override
+    public int getNumCustomAudiencesWithComponentAds(BuyerInputGeneratorIntermediateStats stats) {
+        return stats.getNumCustomAudiencesWithComponentAds();
     }
 }

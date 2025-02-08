@@ -18,6 +18,7 @@ package com.android.adservices.service.adselection;
 
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -34,6 +35,7 @@ import android.adservices.common.AdTechIdentifier;
 
 import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.customaudience.ComponentAdsStrategy;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
@@ -57,6 +59,7 @@ public class AuctionServerPayloadMetricsStrategyEnabledTest {
     @Mock private GetAdSelectionDataApiCalledStats.Builder mBuilderMock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
     @Mock private SellerConfigurationMetricsStrategy mSellerConfigurationMetricsStrategyMock;
+    @Mock private ComponentAdsStrategy mComponentAdsStrategyMock;
     private AuctionServerPayloadMetricsStrategy mAuctionServerPayloadMetricsStrategy;
 
     @Before
@@ -64,7 +67,9 @@ public class AuctionServerPayloadMetricsStrategyEnabledTest {
         MockitoAnnotations.initMocks(this);
         mAuctionServerPayloadMetricsStrategy =
                 new AuctionServerPayloadMetricsStrategyEnabled(
-                        mAdServicesLoggerMock, mSellerConfigurationMetricsStrategyMock);
+                        mAdServicesLoggerMock,
+                        mSellerConfigurationMetricsStrategyMock,
+                        mComponentAdsStrategyMock);
     }
 
     @Test
@@ -149,6 +154,8 @@ public class AuctionServerPayloadMetricsStrategyEnabledTest {
                 buyerStats);
         verify(mAdServicesLoggerMock, times(2))
                 .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+        verify(mComponentAdsStrategyMock, times(2))
+                .getNumCustomAudiencesWithComponentAds(any());
     }
 
     @Test
@@ -158,8 +165,12 @@ public class AuctionServerPayloadMetricsStrategyEnabledTest {
         Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> buyerStats = new HashMap<>();
         BuyerInputGeneratorIntermediateStats stats1 = new BuyerInputGeneratorIntermediateStats();
         stats1.incrementNumCustomAudiences();
+        stats1.incrementNumCustomAudiencesWithComponentAds();
+        stats1.incrementNumCustomAudiencesWithComponentAds();
         BuyerInputGeneratorIntermediateStats stats2 = new BuyerInputGeneratorIntermediateStats();
         stats2.incrementNumCustomAudiences();
+        stats2.incrementNumCustomAudiencesWithComponentAds();
+        stats2.incrementNumCustomAudiencesWithComponentAds();
         buyerStats.put(AdTechIdentifier.fromString("hello"), stats1);
         buyerStats.put(AdTechIdentifier.fromString("hello2"), stats2);
 
@@ -177,6 +188,7 @@ public class AuctionServerPayloadMetricsStrategyEnabledTest {
                         encodedSignalsMinSizeInBytes);
         verify(mAdServicesLoggerMock, times(2))
                 .logGetAdSelectionDataBuyerInputGeneratedStats(argumentCaptor.capture());
+        verifyZeroInteractions(mComponentAdsStrategyMock);
 
         GetAdSelectionDataBuyerInputGeneratedStats stats = argumentCaptor.getAllValues().get(0);
         assertThat(stats.getNumEncodedSignals()).isEqualTo(encodedSignalsCount);
@@ -184,6 +196,7 @@ public class AuctionServerPayloadMetricsStrategyEnabledTest {
                 .isEqualTo(encodedSignalsTotalSizeInBytes / encodedSignalsCount);
         assertThat(stats.getEncodedSignalsSizeMax()).isEqualTo(encodedSignalsMaxSizeInBytes);
         assertThat(stats.getEncodedSignalsSizeMin()).isEqualTo(encodedSignalsMinSizeInBytes);
+        assertThat(stats.getNumCustomAudiencesWithComponentAds()).isEqualTo(FIELD_UNSET);
     }
 
     @Test
@@ -214,6 +227,7 @@ public class AuctionServerPayloadMetricsStrategyEnabledTest {
                 .isEqualTo(encodedSignalsTotalSizeInBytes / encodedSignalsCount);
         assertThat(stats.getEncodedSignalsSizeMax()).isEqualTo(encodedSignalsMaxSizeInBytes);
         assertThat(stats.getEncodedSignalsSizeMin()).isEqualTo(encodedSignalsMinSizeInBytes);
+        assertThat(stats.getNumCustomAudiencesWithComponentAds()).isEqualTo(FIELD_UNSET);
     }
 
     @Test

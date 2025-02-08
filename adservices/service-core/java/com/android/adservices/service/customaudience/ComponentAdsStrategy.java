@@ -16,11 +16,15 @@
 
 package com.android.adservices.service.customaudience;
 
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
+
 import android.adservices.common.ComponentAdData;
 import android.net.Uri;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 
 import java.util.List;
 
@@ -54,7 +58,36 @@ public interface ComponentAdsStrategy {
                     customAudienceDao.insertOrOverwriteCustomAudience(
                             customAudience, dailyUpdateUri, debuggable, List.of());
                 }
+
+                @Override
+                public void incrementNumCustomAudiencesWithComponentAds(
+                        BuyerInputGeneratorIntermediateStats stats) {
+                    // Do nothing.
+                }
+
+                @Override
+                public void setNumComponentAdsInPersistAdSelectionResultWinnerType(
+                        PersistAdSelectionResultCalledStats.Builder builder, int numComponentAds) {
+                    // Sets numComponentAds to FIELD_UNSET when component ads disabled.
+                    builder.setNumComponentAds(FIELD_UNSET);
+                }
+
+                @Override
+                public int getNumCustomAudiencesWithComponentAds(
+                        BuyerInputGeneratorIntermediateStats stats) {
+                    return FIELD_UNSET;
+                }
             };
         }
     }
+
+    /** Increments the number of custom audiences for this buyer sending component ads. */
+    void incrementNumCustomAudiencesWithComponentAds(BuyerInputGeneratorIntermediateStats stats);
+
+    /** Sets number of component ads with persistAdSelectionResult winner type metric. */
+    void setNumComponentAdsInPersistAdSelectionResultWinnerType(
+            PersistAdSelectionResultCalledStats.Builder builder, int numComponentAds);
+
+    /** Returns the number of custom audiences for this buyer sending component ads. */
+    int getNumCustomAudiencesWithComponentAds(BuyerInputGeneratorIntermediateStats stats);
 }

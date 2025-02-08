@@ -20,6 +20,7 @@ import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVE
 
 import static org.mockito.Mockito.verify;
 
+import com.android.adservices.service.customaudience.ComponentAdsStrategy;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 
@@ -41,7 +42,9 @@ public class AuctionServerPayloadMetricsStrategyWithKeyFetchEnabledTest {
         mBuilder = Mockito.spy(GetAdSelectionDataApiCalledStats.builder());
         mAuctionServerPayloadMetricsStrategy =
                 new AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled(
-                        mAdServicesLoggerMock, new SellerConfigurationMetricsStrategyDisabled());
+                        mAdServicesLoggerMock,
+                        new SellerConfigurationMetricsStrategyDisabled(),
+                        ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false));
     }
 
     @Test

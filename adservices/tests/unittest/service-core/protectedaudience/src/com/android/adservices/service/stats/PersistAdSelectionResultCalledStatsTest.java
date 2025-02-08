@@ -29,8 +29,12 @@ public class PersistAdSelectionResultCalledStatsTest extends AdServicesUnitTestC
     @Test
     public void testBuildPersistAdSelectionResultCalledStats() {
         PersistAdSelectionResultCalledStats stats =
-                PersistAdSelectionResultCalledStats.builder().setWinnerType(WINNER_TYPE).build();
+                PersistAdSelectionResultCalledStats.builder()
+                        .setWinnerType(WINNER_TYPE)
+                        .setNumComponentAds(5)
+                        .build();
 
         expect.that(stats.getWinnerType()).isEqualTo(WINNER_TYPE);
+        expect.that(stats.getNumComponentAds()).isEqualTo(5);
     }
 }
