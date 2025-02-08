@@ -390,7 +390,9 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
                                     AdDataConversionStrategyFactory.getAdDataConversionStrategy(
                                             mFlags.getFledgeFrequencyCapFilteringEnabled(),
                                             mFlags.getFledgeAppInstallFilteringEnabled(),
-                                            mFlags.getFledgeAuctionServerAdRenderIdEnabled()));
+                                            mFlags.getFledgeAuctionServerAdRenderIdEnabled()),
+                                    ComponentAdsStrategy.createInstance(
+                                            mFlags.getEnableCustomAudienceComponentAds()));
 
                     impl.doFetchCustomAudience(input, callback, devContext);
                 });
@@ -588,6 +590,10 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
         } catch (Exception exception) {
             sLogger.e(exception, "Unable to send result to the callback");
             resultCode = STATUS_INTERNAL_ERROR;
+            ErrorLogUtil.e(
+                    exception,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_SUCCESS_TO_CALLER_FAILED,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE);
         } finally {
             if (shouldLog) {
                 mAdServicesLogger.logFledgeApiCallStats(
@@ -806,9 +812,7 @@ public class CustomAudienceServiceImpl extends ICustomAudienceService.Stub {
     }
 
     private void logExceptionCel(
-            Exception exception,
-            @StatusCode int resultCode,
-            int celPpapiNameId) {
+            Exception exception, @StatusCode int resultCode, int celPpapiNameId) {
         int celEnum =
                 AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_INTERNAL_ERROR;
         switch (resultCode) {

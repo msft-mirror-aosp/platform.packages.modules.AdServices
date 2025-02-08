@@ -54,6 +54,18 @@ public class BuyerInputGeneratorIntermediateStatsTest {
     }
 
     @Test
+    public void testIncrementNumCustomAudiencesWithComponentAds() {
+        assertThat(mBuyerInputGeneratorIntermediateStats.getNumCustomAudiencesWithComponentAds())
+                .isEqualTo(0);
+        mBuyerInputGeneratorIntermediateStats.incrementNumCustomAudiencesWithComponentAds();
+        assertThat(mBuyerInputGeneratorIntermediateStats.getNumCustomAudiencesWithComponentAds())
+                .isEqualTo(1);
+        mBuyerInputGeneratorIntermediateStats.incrementNumCustomAudiencesWithComponentAds();
+        assertThat(mBuyerInputGeneratorIntermediateStats.getNumCustomAudiencesWithComponentAds())
+                .isEqualTo(2);
+    }
+
+    @Test
     public void testAddCustomAudienceSize() {
         assertThat(mBuyerInputGeneratorIntermediateStats.getCustomAudienceSizes()).isEmpty();
         mBuyerInputGeneratorIntermediateStats.addCustomAudienceSize(1);

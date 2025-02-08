@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.stats.pas;
 
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
+
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 
 import com.google.auto.value.AutoValue;
@@ -27,16 +29,25 @@ public abstract class PersistAdSelectionResultCalledStats {
     @AdsRelevanceStatusUtils.WinnerType
     public abstract int getWinnerType();
 
-    /** Returns generic builder */
+    /** Returns number of component ads in winner. */
+    public abstract int getNumComponentAds();
+
+    /** Returns generic builder. */
     public static Builder builder() {
-        return new AutoValue_PersistAdSelectionResultCalledStats.Builder();
+        return new AutoValue_PersistAdSelectionResultCalledStats.Builder()
+                .setNumComponentAds(FIELD_UNSET);
     }
 
     /** Builder class for PersistAdSelectionResultCalledStats. */
     @AutoValue.Builder
     public abstract static class Builder {
+        /** Sets the type of auction winner. */
         public abstract Builder setWinnerType(@AdsRelevanceStatusUtils.WinnerType int value);
 
+        /** Sets number of component ads in winner. */
+        public abstract Builder setNumComponentAds(int value);
+
+        /** Builds the {@link PersistAdSelectionResultCalledStats} object. */
         public abstract PersistAdSelectionResultCalledStats build();
     }
 }

@@ -66,14 +66,15 @@ public final class ProcessStableFlagsLogger {
     /**
      * Logs the latency in milliseconds when reading all process stable flags from Device Config.
      *
-     * @param latencyMs the latency in milliseconds.
+     * @param latencyUs the latency in microseconds.
      */
-    void logBatchReadFromDeviceConfigLatencyMs(long latencyMs) {
+    void logBatchReadFromDeviceConfigLatencyMicroSecond(long latencyUs) {
         if (!isProcessStableFlagsLoggingEnabled()) {
             return;
         }
 
-        mExecutor.execute(() -> mStatsdLogger.logBatchReadFromDeviceConfigLatencyMs(latencyMs));
+        mExecutor.execute(
+                () -> mStatsdLogger.logBatchReadFromDeviceConfigLatencyMicroSecond(latencyUs));
     }
 
     /**
@@ -101,7 +102,8 @@ public final class ProcessStableFlagsLogger {
         mExecutor.execute(
                 () -> {
                     Set<String> changedFlagNameSet = changedProperties.getKeyset();
-                    Set<String> cachedFlagNameSet = cachedProperties.getKeyset();
+                    Set<String> cachedFlagNameSet =
+                            cachedProperties != null ? cachedProperties.getKeyset() : Set.of();
 
                     // Log the number of flags that are changed and different as their values in the
                     // cache.

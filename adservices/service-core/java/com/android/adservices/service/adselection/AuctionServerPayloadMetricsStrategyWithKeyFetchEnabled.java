@@ -16,6 +16,7 @@
 
 package com.android.adservices.service.adselection;
 
+import com.android.adservices.service.customaudience.ComponentAdsStrategy;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdsRelevanceStatusUtils;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
@@ -25,8 +26,9 @@ public class AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled
     /** Constructs a {@link AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled} instance. */
     public AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled(
             AdServicesLogger adServicesLogger,
-            SellerConfigurationMetricsStrategy sellerConfigurationMetricsStrategy) {
-        super(adServicesLogger, sellerConfigurationMetricsStrategy);
+            SellerConfigurationMetricsStrategy sellerConfigurationMetricsStrategy,
+            ComponentAdsStrategy componentAdsStrategy) {
+        super(adServicesLogger, sellerConfigurationMetricsStrategy, componentAdsStrategy);
     }
 
     @Override

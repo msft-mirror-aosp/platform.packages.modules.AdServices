@@ -20,6 +20,7 @@ package com.android.adservices.service.customaudience;
 import static com.android.adservices.service.common.ValidatorUtil.AD_TECH_ROLE_BUYER;
 import static com.android.adservices.service.common.httpclient.AdServicesHttpsClient.DEFAULT_TIMEOUT_MS;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.AUCTION_SERVER_REQUEST_FLAGS_KEY;
+import static com.android.adservices.service.customaudience.CustomAudienceBlob.COMPONENT_ADS_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceBlob.PRIORITY_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceUpdatableDataReader.USER_BIDDING_SIGNALS_KEY;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_PERFORMED_FAILURE_ACTION_HTTP_CALL;
@@ -166,6 +167,10 @@ public final class ScheduledUpdatesHandler {
     private final boolean mAuctionServerRequestFlagsEnabled;
     private final boolean mSellerConfigurationEnabled;
     private final long mFledgeAuctionServerAdRenderIdMaxLength;
+    private final ComponentAdsStrategy mComponentAdsStrategy;
+    private final boolean mComponentAdsEnabled;
+    private final int mComponentAdRenderIdMaxLength;
+    private final int mMaxNumComponentAds;
 
     @NonNull
     private final ScheduleCustomAudienceUpdateStrategy mScheduleCustomAudienceUpdateStrategy;
@@ -184,7 +189,8 @@ public final class ScheduledUpdatesHandler {
             @NonNull CustomAudienceImpl customAudienceImpl,
             @NonNull CustomAudienceQuantityChecker customAudienceQuantityChecker,
             @NonNull ScheduleCustomAudienceUpdateStrategy scheduleCustomAudienceUpdateStrategy,
-            @NonNull AdServicesLogger adServicesLogger) {
+            @NonNull AdServicesLogger adServicesLogger,
+            ComponentAdsStrategy componentAdsStrategy) {
         mCustomAudienceDao = customAudienceDao;
         mHttpClient = adServicesHttpsClient;
         mFlags = flags;
@@ -240,6 +246,10 @@ public final class ScheduledUpdatesHandler {
         mCustomAudienceImpl = customAudienceImpl;
         mScheduleCustomAudienceUpdateStrategy = scheduleCustomAudienceUpdateStrategy;
         mAdServicesLogger = adServicesLogger;
+        mComponentAdsEnabled = flags.getEnableCustomAudienceComponentAds();
+        mComponentAdRenderIdMaxLength = flags.getComponentAdRenderIdMaxLengthBytes();
+        mMaxNumComponentAds = flags.getMaxComponentAdsPerCustomAudience();
+        mComponentAdsStrategy = componentAdsStrategy;
     }
 
     public ScheduledUpdatesHandler(@NonNull Context context) {
@@ -281,7 +291,9 @@ public final class ScheduledUpdatesHandler {
                                 .getFledgeEnableScheduleCustomAudienceUpdateAdditionalScheduleRequests(),
                         FlagsFactory.getFlags().getDisableFledgeEnrollmentCheck(),
                         AdServicesLoggerImpl.getInstance()),
-                AdServicesLoggerImpl.getInstance());
+                AdServicesLoggerImpl.getInstance(),
+                ComponentAdsStrategy.createInstance(
+                        FlagsFactory.getFlags().getEnableCustomAudienceComponentAds()));
     }
 
     /** Performs Custom Audience Updates for delayed events in the schedule */
@@ -354,7 +366,10 @@ public final class ScheduledUpdatesHandler {
                             mFledgeAuctionServerAdRenderIdEnabled,
                             mFledgeAuctionServerAdRenderIdMaxLength,
                             mAuctionServerRequestFlagsEnabled,
-                            mSellerConfigurationEnabled);
+                            mSellerConfigurationEnabled,
+                            mComponentAdsEnabled,
+                            mComponentAdRenderIdMaxLength,
+                            mMaxNumComponentAds);
 
             blob.overrideFromPartialCustomAudience(
                     update.getOwner(),
@@ -539,7 +554,10 @@ public final class ScheduledUpdatesHandler {
                             mFledgeAuctionServerAdRenderIdEnabled,
                             mFledgeAuctionServerAdRenderIdMaxLength,
                             mAuctionServerRequestFlagsEnabled,
-                            mSellerConfigurationEnabled);
+                            mSellerConfigurationEnabled,
+                            mComponentAdsEnabled,
+                            mComponentAdRenderIdMaxLength,
+                            mMaxNumComponentAds);
             try {
                 fusedBlob.overrideFromJSONObject(customAudience);
                 if (customAudienceOverrideMap.containsKey(fusedBlob.getName())) {
@@ -663,10 +681,12 @@ public final class ScheduledUpdatesHandler {
                                     DBCustomAudience customAudience = customAudienceBuilder.build();
 
                                     // Persist response
-                                    mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                                    mComponentAdsStrategy.persistCustomAudiencesWithComponentAds(
+                                            mCustomAudienceDao,
                                             customAudience,
                                             fusedCustomAudienceBlob.getDailyUpdateUri(),
-                                            isDebuggableCustomAudience);
+                                            isDebuggableCustomAudience,
+                                            fusedCustomAudienceBlob.getComponentAds());
                                 }))
                 .transformAsync(ignored -> immediateVoidFuture(), mLightWeightExecutor)
                 .catchingAsync(
@@ -749,6 +769,10 @@ public final class ScheduledUpdatesHandler {
 
         if (mSellerConfigurationEnabled) {
             currentKeySet.remove(PRIORITY_KEY);
+        }
+
+        if (mComponentAdsEnabled) {
+            currentKeySet.remove(COMPONENT_ADS_KEY);
         }
         return currentKeySet.size() == expectedKeysSet.size();
     }

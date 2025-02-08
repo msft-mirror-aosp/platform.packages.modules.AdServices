@@ -16,8 +16,10 @@
 
 package com.android.adservices.data.customaudience;
 
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_DAO_FAILED_DUE_TO_PENDING_SCHEDULE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_DAO_QUARANTINE_TABLE_MAX_REACHED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FLEDGE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE;
@@ -103,7 +105,8 @@ public abstract class CustomAudienceDao {
             DBCustomAudienceQuarantine dbCustomAudienceQuarantine);
 
     /**
-     * Adds or updates a given custom audience and background fetch data in a single transaction.
+     * Adds or updates a given custom audience, background fetch data, and component ads in a single
+     * transaction.
      *
      * <p>This transaction is separate in order to minimize the critical region while locking the
      * database. It is not meant to be exposed or used by itself; use {@link
@@ -112,9 +115,17 @@ public abstract class CustomAudienceDao {
     @Transaction
     protected void insertOrOverwriteCustomAudienceAndBackgroundFetchData(
             @NonNull DBCustomAudience customAudience,
-            @NonNull DBCustomAudienceBackgroundFetchData fetchData) {
+            @NonNull DBCustomAudienceBackgroundFetchData fetchData,
+            List<ComponentAdData> componentAds) {
         persistCustomAudience(customAudience);
         persistCustomAudienceBackgroundFetchData(fetchData);
+
+        sLogger.v("Inserting Component Ads in the DB: %s", componentAds);
+        insertAndOverwriteComponentAds(
+                componentAds,
+                customAudience.getOwner(),
+                customAudience.getBuyer(),
+                customAudience.getName());
     }
 
     /**
@@ -125,11 +136,14 @@ public abstract class CustomAudienceDao {
      * <p>Background fetch data is also created based on the given {@code customAudience} and {@code
      * dailyUpdateUri} and overwrites any existing background fetch data. This method assumes the
      * input parameters have already been validated and are correct.
+     *
+     * <p>Also adds component ads.
      */
     public void insertOrOverwriteCustomAudience(
             @NonNull DBCustomAudience customAudience,
             @NonNull Uri dailyUpdateUri,
-            boolean debuggable) {
+            boolean debuggable,
+            List<ComponentAdData> componentAds) {
         Objects.requireNonNull(customAudience);
         Objects.requireNonNull(dailyUpdateUri);
 
@@ -156,7 +170,8 @@ public abstract class CustomAudienceDao {
                         .setIsDebuggable(debuggable)
                         .build();
 
-        insertOrOverwriteCustomAudienceAndBackgroundFetchData(customAudience, fetchData);
+        insertOrOverwriteCustomAudienceAndBackgroundFetchData(
+                customAudience, fetchData, componentAds);
     }
 
     /**
@@ -849,12 +864,18 @@ public abstract class CustomAudienceDao {
             } else {
                 statsBuilder.setExistingUpdateStatus(
                         SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE);
-                throw new PersistScheduleCAUpdateException(
-                        String.format(
-                                Locale.ENGLISH,
-                                "Failed to persist scheduled update due to %d existing pending"
-                                        + " update(s)",
-                                pendingUpdates));
+                PersistScheduleCAUpdateException exception =
+                        new PersistScheduleCAUpdateException(
+                                String.format(
+                                        Locale.ENGLISH,
+                                        "Failed to persist scheduled update due to %d existing"
+                                                + " pending update(s)",
+                                        pendingUpdates));
+                ErrorLogUtil.e(
+                        exception,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_DAO_FAILED_DUE_TO_PENDING_SCHEDULE,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE);
+                throw exception;
             }
         } else {
             statsBuilder.setExistingUpdateStatus(

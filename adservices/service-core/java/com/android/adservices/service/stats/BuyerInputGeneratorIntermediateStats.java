@@ -26,6 +26,7 @@ import java.util.List;
 public class BuyerInputGeneratorIntermediateStats {
     private int mNumCustomAudiences;
     private int mNumCustomAudiencesOmitAds;
+    private int mNumCustomAudiencesWithComponentAds;
     List<Integer> mCustomAudienceSizes;
     List<Integer> mTrustedBiddingSignalsKeysSizes;
     List<Integer> mUserBiddingSignalsSizes;
@@ -68,6 +69,11 @@ public class BuyerInputGeneratorIntermediateStats {
     /** Returns the current number of custom audiences omitting ads for this buyer input. */
     public int getNumCustomAudiencesOmitAds() {
         return mNumCustomAudiencesOmitAds;
+    }
+
+    /** Returns the current number of custom audiences for this buyer sending component ads. */
+    public int getNumCustomAudiencesWithComponentAds() {
+        return mNumCustomAudiencesWithComponentAds;
     }
 
     /** Returns the list of custom audience sizes for this buyer input. */
@@ -123,6 +129,11 @@ public class BuyerInputGeneratorIntermediateStats {
     /** Increments the number of custom audiences omitting ads for this buyer input by one. */
     public void incrementNumCustomAudiencesOmitAds() {
         mNumCustomAudiencesOmitAds++;
+    }
+
+    /** Increments the number of custom audiences for this buyer sending component ads. */
+    public void incrementNumCustomAudiencesWithComponentAds() {
+        mNumCustomAudiencesWithComponentAds++;
     }
 
     /** Increments the custom audiences size list by the given size. */

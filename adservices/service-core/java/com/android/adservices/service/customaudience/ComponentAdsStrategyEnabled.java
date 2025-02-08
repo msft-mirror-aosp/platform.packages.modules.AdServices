@@ -16,20 +16,43 @@
 
 package com.android.adservices.service.customaudience;
 
-import android.adservices.customaudience.CustomAudience;
+import android.adservices.common.ComponentAdData;
+import android.net.Uri;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
+
+import java.util.List;
 
 public class ComponentAdsStrategyEnabled implements ComponentAdsStrategy {
+
     @Override
-    public void persistComponentAds(
-            CustomAudience customAudience,
-            String callerPackageName,
-            CustomAudienceDao customAudienceDao) {
-        customAudienceDao.insertAndOverwriteComponentAds(
-                customAudience.getComponentAds(),
-                callerPackageName,
-                customAudience.getBuyer(),
-                customAudience.getName());
+    public void persistCustomAudiencesWithComponentAds(
+            CustomAudienceDao customAudienceDao,
+            DBCustomAudience customAudience,
+            Uri dailyUpdateUri,
+            boolean debuggable,
+            List<ComponentAdData> componentAdDataList) {
+        customAudienceDao.insertOrOverwriteCustomAudience(
+                customAudience, dailyUpdateUri, debuggable, componentAdDataList);
+    }
+
+    @Override
+    public void incrementNumCustomAudiencesWithComponentAds(
+            BuyerInputGeneratorIntermediateStats stats) {
+        stats.incrementNumCustomAudiencesWithComponentAds();
+    }
+
+    @Override
+    public void setNumComponentAdsInPersistAdSelectionResultWinnerType(
+            PersistAdSelectionResultCalledStats.Builder builder, int numComponentAds) {
+        builder.setNumComponentAds(numComponentAds);
+    }
+
+    @Override
+    public int getNumCustomAudiencesWithComponentAds(BuyerInputGeneratorIntermediateStats stats) {
+        return stats.getNumCustomAudiencesWithComponentAds();
     }
 }

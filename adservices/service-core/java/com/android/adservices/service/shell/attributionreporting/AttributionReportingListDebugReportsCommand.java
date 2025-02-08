@@ -56,7 +56,9 @@ public class AttributionReportingListDebugReportsCommand extends AbstractShellCo
                     + " "
                     + CMD
                     + " "
-                    + "\n List Verbose Debug Reports";
+                    + "[--schema {partial[DEFAULT]|full}]"
+                    + " "
+                    + "\n List Verbose Debug Reports. Default schema is 'partial'.";
 
     private final DatastoreManager mDatastoreManager;
     private final DevSessionDataStore mDevSessionDataStore;
@@ -80,23 +82,37 @@ public class AttributionReportingListDebugReportsCommand extends AbstractShellCo
                     RESULT_DEV_MODE_UNCONFIRMED, COMMAND_ATTRIBUTION_REPORTING_LIST_DEBUG_REPORTS);
         }
 
+        String schema;
+        String output;
+        try {
+            schema = AttributionReportingArgParserHelper.parseAttributionReportingSchema(args);
+        } catch (IllegalArgumentException exception) {
+            output = "IllegalArgumentException while running list-verbose-debug-reports command";
+            Log.e(TAG, output, exception);
+            out.print(output);
+            out.flush();
+            return invalidArgsError(
+                    HELP, err, COMMAND_ATTRIBUTION_REPORTING_LIST_DEBUG_REPORTS, args);
+        }
+
         try {
             ListenableFuture<Optional<List<DebugReport>>> futureResult =
                     queryForListDebugReportsCommand();
             Optional<List<DebugReport>> result = futureResult.get(TIMEOUT_SEC, SECONDS);
-            String output;
             if (result.isPresent()) {
-                output = createOutputJson(result).toString();
+                output = createOutputJson(result, schema).toString();
             } else {
-                output = "Error in retrieving verbose debug reports from database.";
+                output = "Error in retrieving verbose debug reports from database";
             }
             out.print(output);
             out.flush();
             return toShellCommandResult(
                     RESULT_SUCCESS, COMMAND_ATTRIBUTION_REPORTING_LIST_DEBUG_REPORTS);
         } catch (Exception e) {
-            Log.e(TAG, String.format("Failed to generate JSON: %s", e.getMessage()));
-
+            output = "Failed to generate JSON: " + e.getMessage();
+            Log.e(TAG, String.format(output));
+            out.print(output);
+            out.flush();
             return toShellCommandResult(
                     ShellCommandStats.RESULT_GENERIC_ERROR,
                     COMMAND_ATTRIBUTION_REPORTING_LIST_DEBUG_REPORTS);
@@ -128,13 +144,13 @@ public class AttributionReportingListDebugReportsCommand extends AbstractShellCo
                                         (dao) -> dao.fetchAllDebugReports()));
     }
 
-    private static JSONObject createOutputJson(Optional<List<DebugReport>> debugReports)
-            throws JSONException {
+    private static JSONObject createOutputJson(
+            Optional<List<DebugReport>> debugReports, String schema) throws JSONException {
         JSONObject jsonObject = new JSONObject();
         JSONArray jsonArray = new JSONArray();
 
         for (DebugReport debugReport : debugReports.get()) {
-            jsonArray.put(AttributionReportingHelper.debugReportToJson(debugReport));
+            jsonArray.put(AttributionReportingHelper.debugReportToJson(debugReport, schema));
         }
 
         jsonObject.put("attribution_reporting", jsonArray);

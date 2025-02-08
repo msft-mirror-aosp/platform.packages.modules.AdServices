@@ -8,4 +8,5 @@ option java_package = "com.android.adservices.shared.proto";
 enum MetricId {
   UNKNOWN = 0;
   EXAMPLE_STATS = 1; // Used by the tests
+  BACKGROUND_JOBS_EXECUTION_REPORTED_STATS = 2;
 }

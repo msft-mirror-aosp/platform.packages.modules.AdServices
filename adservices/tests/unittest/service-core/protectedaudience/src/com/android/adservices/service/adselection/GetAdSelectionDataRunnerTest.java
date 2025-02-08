@@ -97,6 +97,7 @@ import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.customaudience.ComponentAdsStrategy;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
@@ -418,7 +419,9 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                                 mObliviousHttpEncryptorMock),
                         new AuctionServerPayloadMetricsStrategyEnabled(
                                 mAdServicesLoggerSpy,
-                                new SellerConfigurationMetricsStrategyEnabled()));
+                                new SellerConfigurationMetricsStrategyEnabled(),
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)));
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -475,10 +478,12 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
         GetAdSelectionDataBuyerInputGeneratedStats stats1 = stats.get(0);
         assertThat(stats1.getNumCustomAudiences()).isEqualTo(2);
         assertThat(stats1.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+        assertThat(stats1.getNumCustomAudiencesWithComponentAds()).isEqualTo(FIELD_UNSET);
 
         GetAdSelectionDataBuyerInputGeneratedStats stats2 = stats.get(1);
         assertThat(stats2.getNumCustomAudiences()).isEqualTo(1);
         assertThat(stats2.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+        assertThat(stats2.getNumCustomAudiencesWithComponentAds()).isEqualTo(FIELD_UNSET);
 
         verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
 
@@ -539,7 +544,9 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                                 mObliviousHttpEncryptorMock),
                         new AuctionServerPayloadMetricsStrategyEnabled(
                                 mAdServicesLoggerSpy,
-                                new SellerConfigurationMetricsStrategyEnabled()));
+                                new SellerConfigurationMetricsStrategyEnabled(),
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)));
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -596,10 +603,12 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
         GetAdSelectionDataBuyerInputGeneratedStats stats1 = stats.get(0);
         assertThat(stats1.getNumCustomAudiences()).isEqualTo(2);
         assertThat(stats1.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+        assertThat(stats1.getNumCustomAudiencesWithComponentAds()).isEqualTo(FIELD_UNSET);
 
         GetAdSelectionDataBuyerInputGeneratedStats stats2 = stats.get(1);
         assertThat(stats2.getNumCustomAudiences()).isEqualTo(1);
         assertThat(stats2.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+        assertThat(stats2.getNumCustomAudiencesWithComponentAds()).isEqualTo(FIELD_UNSET);
 
         verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
 
@@ -654,7 +663,9 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                                 mObliviousHttpEncryptorMock),
                         new AuctionServerPayloadMetricsStrategyEnabled(
                                 mAdServicesLoggerSpy,
-                                new SellerConfigurationMetricsStrategyDisabled()));
+                                new SellerConfigurationMetricsStrategyDisabled(),
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)));
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -710,10 +721,12 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
         GetAdSelectionDataBuyerInputGeneratedStats stats1 = stats.get(0);
         assertThat(stats1.getNumCustomAudiences()).isEqualTo(2);
         assertThat(stats1.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+        assertThat(stats1.getNumCustomAudiencesWithComponentAds()).isEqualTo(FIELD_UNSET);
 
         GetAdSelectionDataBuyerInputGeneratedStats stats2 = stats.get(1);
         assertThat(stats2.getNumCustomAudiences()).isEqualTo(1);
         assertThat(stats2.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+        assertThat(stats2.getNumCustomAudiencesWithComponentAds()).isEqualTo(FIELD_UNSET);
 
         verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
 
@@ -757,7 +770,9 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                                 mObliviousHttpEncryptorMock),
                         new AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled(
                                 mAdServicesLoggerSpy,
-                                new SellerConfigurationMetricsStrategyDisabled()));
+                                new SellerConfigurationMetricsStrategyDisabled(),
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)));
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -814,10 +829,12 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
         GetAdSelectionDataBuyerInputGeneratedStats stats1 = stats.get(0);
         assertThat(stats1.getNumCustomAudiences()).isEqualTo(2);
         assertThat(stats1.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+        assertThat(stats1.getNumCustomAudiencesWithComponentAds()).isEqualTo(FIELD_UNSET);
 
         GetAdSelectionDataBuyerInputGeneratedStats stats2 = stats.get(1);
         assertThat(stats2.getNumCustomAudiences()).isEqualTo(1);
         assertThat(stats2.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+        assertThat(stats2.getNumCustomAudiencesWithComponentAds()).isEqualTo(FIELD_UNSET);
 
         verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
 
@@ -863,7 +880,9 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                                 mObliviousHttpEncryptorMock, ALLOW_LIST_COORDINATORS),
                         new AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled(
                                 mAdServicesLoggerSpy,
-                                new SellerConfigurationMetricsStrategyDisabled()));
+                                new SellerConfigurationMetricsStrategyDisabled(),
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false)));
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -921,10 +940,12 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
         GetAdSelectionDataBuyerInputGeneratedStats stats1 = stats.get(0);
         assertThat(stats1.getNumCustomAudiences()).isEqualTo(2);
         assertThat(stats1.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+        assertThat(stats1.getNumCustomAudiencesWithComponentAds()).isEqualTo(FIELD_UNSET);
 
         GetAdSelectionDataBuyerInputGeneratedStats stats2 = stats.get(1);
         assertThat(stats2.getNumCustomAudiences()).isEqualTo(1);
         assertThat(stats2.getNumCustomAudiencesOmitAds()).isEqualTo(0);
+        assertThat(stats2.getNumCustomAudiencesWithComponentAds()).isEqualTo(FIELD_UNSET);
 
         verifyGetAdSelectionDataApiUsageLog(STATUS_SUCCESS);
 
@@ -1470,7 +1491,7 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                     DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(buyer, name)
                             .build();
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                    thisCustomAudience, Uri.EMPTY, false);
+                    thisCustomAudience, Uri.EMPTY, false, List.of());
         }
     }
 

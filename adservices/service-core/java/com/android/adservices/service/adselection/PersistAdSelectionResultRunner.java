@@ -29,6 +29,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZE
 import static android.adservices.common.AdServicesStatusUtils.STATUS_UNSET;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_USER_CONSENT_REVOKED;
 
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_ADSERVICES_EXCEPTION;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_AUCTION_RESULT_HAS_ERROR;
@@ -102,6 +103,7 @@ import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.ValidatorUtil;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.customaudience.ComponentAdsStrategy;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.kanon.KAnonMessageEntity;
@@ -194,6 +196,9 @@ public class PersistAdSelectionResultRunner {
     @NonNull private final AdsRelevanceExecutionLogger mAdsRelevanceExecutionLogger;
     @NonNull KAnonSignJoinFactory mKAnonSignJoinFactory;
 
+    private ComponentAdsStrategy mComponentAdsStrategy;
+    private boolean mCustomAudienceComponentAdsEnabled;
+
     public PersistAdSelectionResultRunner(
             @NonNull final ObliviousHttpEncryptor obliviousHttpEncryptor,
             @NonNull final AdSelectionEntryDao adSelectionEntryDao,
@@ -250,6 +255,9 @@ public class PersistAdSelectionResultRunner {
         mAdServicesLogger = adServicesLogger;
         mAdsRelevanceExecutionLogger = adsRelevanceExecutionLogger;
         mKAnonSignJoinFactory = kAnonSignJoinFactory;
+        mCustomAudienceComponentAdsEnabled = mFlags.getEnableCustomAudienceComponentAds();
+        mComponentAdsStrategy =
+                ComponentAdsStrategy.createInstance(mCustomAudienceComponentAdsEnabled);
     }
 
     /** Orchestrates PersistAdSelectionResultRunner process. */
@@ -389,28 +397,33 @@ public class PersistAdSelectionResultRunner {
                                 ErrorLogUtil.e(
                                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_AUCTION_RESULT_HAS_ERROR,
                                         AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
-                                logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
+                                logPersistAdSelectionResultWinnerType(
+                                        WINNER_TYPE_NO_WINNER, /* numComponentAds= */ FIELD_UNSET);
                                 throw new IllegalArgumentException(err);
                             } else if (auctionResult.getIsChaff()) {
                                 sLogger.v("Result is chaff, truncating persistAdSelectionResult");
                                 ErrorLogUtil.e(
                                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_RESULT_IS_CHAFF,
                                         AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
-                                logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
+                                logPersistAdSelectionResultWinnerType(
+                                        WINNER_TYPE_NO_WINNER, /* numComponentAds= */ FIELD_UNSET);
                             } else if (auctionResult.getAdType() == AuctionResult.AdType.UNKNOWN) {
                                 String err = "AuctionResult type is unknown";
                                 sLogger.e(err);
                                 ErrorLogUtil.e(
                                         AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_AUCTION_RESULT_UNKNOWN,
                                         AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
-                                logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
+                                logPersistAdSelectionResultWinnerType(
+                                        WINNER_TYPE_NO_WINNER, /* numComponentAds= */ FIELD_UNSET);
                                 throw new IllegalArgumentException(err);
                             } else {
                                 makeKAnonSignJoin(auctionResult, adSelectionId);
                                 try {
                                     mAuctionResultValidator.validate(auctionResult);
                                 } catch (IllegalArgumentException e) {
-                                    logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
+                                    logPersistAdSelectionResultWinnerType(
+                                            WINNER_TYPE_NO_WINNER,
+                                            /* numComponentAds= */ FIELD_UNSET);
                                     String err = "Invalid object of Auction Result";
                                     sLogger.e(err);
                                     ErrorLogUtil.e(
@@ -452,10 +465,13 @@ public class PersistAdSelectionResultRunner {
         DBAdData winningAd;
         if (auctionResult.getAdType() == AuctionResult.AdType.REMARKETING_AD) {
             winningAd = fetchRemarketingAd(auctionResult);
-            logPersistAdSelectionResultWinnerType(WINNER_TYPE_CA_WINNER);
+            logPersistAdSelectionResultWinnerType(
+                    WINNER_TYPE_CA_WINNER, auctionResult.getAdComponentRenderUrlsCount());
         } else if (auctionResult.getAdType() == AuctionResult.AdType.APP_INSTALL_AD) {
             winningAd = fetchAppInstallAd(auctionResult);
-            logPersistAdSelectionResultWinnerType(WINNER_TYPE_PAS_WINNER);
+            // Change numComponentAds to the real value after implementing component ads in PAS.
+            logPersistAdSelectionResultWinnerType(
+                    WINNER_TYPE_PAS_WINNER, /* numComponentAds= */ FIELD_UNSET);
         } else {
             String err =
                     String.format(
@@ -466,7 +482,8 @@ public class PersistAdSelectionResultRunner {
             ErrorLogUtil.e(
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__PERSIST_AD_SELECTION_RESULT_RUNNER_UNDEFINED_AD_TYPE,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__PERSIST_AD_SELECTION_RESULT);
-            logPersistAdSelectionResultWinnerType(WINNER_TYPE_NO_WINNER);
+            logPersistAdSelectionResultWinnerType(
+                    WINNER_TYPE_NO_WINNER, /* numComponentAds= */ FIELD_UNSET);
             throw new IllegalArgumentException(err);
         }
         return winningAd;
@@ -1148,12 +1165,16 @@ public class PersistAdSelectionResultRunner {
     }
 
     private void logPersistAdSelectionResultWinnerType(
-            @AdsRelevanceStatusUtils.WinnerType int winnerType) {
-        if (mFlags.getPasExtendedMetricsEnabled()) {
-            mAdServicesLogger.logPersistAdSelectionResultCalledStats(
-                    PersistAdSelectionResultCalledStats.builder()
-                            .setWinnerType(winnerType)
-                            .build());
+            @AdsRelevanceStatusUtils.WinnerType int winnerType, int numComponentAds) {
+        PersistAdSelectionResultCalledStats.Builder statsBuilder =
+                PersistAdSelectionResultCalledStats.builder().setWinnerType(winnerType);
+
+        mComponentAdsStrategy
+                .setNumComponentAdsInPersistAdSelectionResultWinnerType(
+                        statsBuilder, numComponentAds);
+
+        if (mFlags.getPasExtendedMetricsEnabled() || mCustomAudienceComponentAdsEnabled) {
+            mAdServicesLogger.logPersistAdSelectionResultCalledStats(statsBuilder.build());
         }
     }
 

@@ -21,7 +21,10 @@ import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERV
 import static android.adservices.customaudience.CustomAudience.PRIORITY_DEFAULT;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_PRIORITY_1;
 
+import static com.android.adservices.service.Flags.COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES;
 import static com.android.adservices.service.Flags.FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_MIN_DELAY_MINS_OVERRIDE;
+import static com.android.adservices.service.Flags.MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_REQUEST_FLAGS_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_COUNT;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_CUSTOM_AUDIENCE_MAX_OWNER_COUNT;
@@ -46,6 +49,7 @@ import static com.android.adservices.service.customaudience.ScheduleCustomAudien
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.VALID_BIDDING_SIGNALS;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayload;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadInvalidJoinCA;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithComponentAds;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithInvalidExpirationTime;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithScheduleRequests;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithoutJoinCA;
@@ -91,6 +95,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
+import android.adservices.common.ComponentAdData;
+import android.adservices.common.ComponentAdDataFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.adservices.customaudience.PartialCustomAudience;
 import android.adservices.http.MockWebServerRule;
@@ -240,6 +246,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     private ScheduledUpdatesHandler mHandler;
     @Mock private ScheduleCustomAudienceUpdateStrategy mStrategyMock;
     @Mock private AdServicesLogger mAdServicesLoggerMock;
+    @Mock private ComponentAdsStrategy mComponentAdsStrategyMock;
 
     @Mock
     private ScheduledCustomAudienceUpdateScheduleAttemptedStats.Builder mScheduleAttemptedBuilder;
@@ -278,7 +285,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         mStrategyMock,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
 
         mFledgeFrequencyCapFilteringEnabled = mFakeFlags.getFledgeFrequencyCapFilteringEnabled();
         mFledgeAppInstallFilteringEnabled = mFakeFlags.getFledgeAppInstallFilteringEnabled();
@@ -353,7 +361,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
 
-        mockDisabledStrategy(
+        mockAdditionalScheduleRequestsDisabledStrategy(
                 beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
 
         Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
@@ -374,9 +382,13 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         verify(mCustomAudienceImplMock)
                 .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_2);
 
-        verify(mCustomAudienceDaoMock, times(2))
-                .insertOrOverwriteCustomAudience(
-                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+        verify(mComponentAdsStrategyMock, times(2))
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
 
         List<DBCustomAudience> joinedCustomAudiences = mInsertCustomAudienceCaptor.getAllValues();
 
@@ -421,7 +433,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         mStrategyMock,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
 
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
@@ -499,9 +512,13 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         verify(mCustomAudienceImplMock)
                 .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_2);
 
-        verify(mCustomAudienceDaoMock, times(2))
-                .insertOrOverwriteCustomAudience(
-                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+        verify(mComponentAdsStrategyMock, times(2))
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
 
         List<DBCustomAudience> joinedCustomAudiences = mInsertCustomAudienceCaptor.getAllValues();
 
@@ -549,6 +566,9 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         CustomAudienceQuantityChecker customAudienceQuantityChecker =
                 new CustomAudienceQuantityChecker(mCustomAudienceDao, mFakeFlags);
 
+        ComponentAdsStrategy componentAdsStrategy =
+                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
@@ -563,7 +583,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         customAudienceQuantityChecker,
                         mStrategyMock,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        componentAdsStrategy);
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(UPDATE);
 
         Instant beforeTime = UPDATE.getScheduledTime().plusSeconds(1000);
@@ -595,7 +616,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
 
-        mockDisabledStrategy(
+        mockAdditionalScheduleRequestsDisabledStrategy(
                 beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
 
         Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
@@ -634,6 +655,9 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         CustomAudienceQuantityChecker customAudienceQuantityChecker =
                 new CustomAudienceQuantityChecker(mCustomAudienceDao, mFakeFlags);
 
+        ComponentAdsStrategy componentAdsStrategy =
+                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
@@ -648,7 +672,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         customAudienceQuantityChecker,
                         mStrategyMock,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        componentAdsStrategy);
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(UPDATE);
 
         JSONObject responseJson = new JSONObject();
@@ -666,7 +691,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
                 DBScheduledCustomAudienceUpdateRequest.builder().setUpdate(UPDATE).build();
 
-        mockDisabledStrategy(beforeTime, scheduledUpdateRequest, responseJson, new JSONArray());
+        mockAdditionalScheduleRequestsDisabledStrategy(
+                beforeTime, scheduledUpdateRequest, responseJson, new JSONArray());
 
         ListenableFuture<AdServicesHttpClientResponse> response =
                 Futures.immediateFuture(
@@ -729,7 +755,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         customAudienceQuantityChecker,
                         mStrategyMock,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(UPDATE);
 
         Instant beforeTime = UPDATE.getScheduledTime().plusSeconds(1000);
@@ -761,7 +788,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
 
-        mockDisabledStrategy(
+        mockAdditionalScheduleRequestsDisabledStrategy(
                 beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
 
         Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
@@ -823,7 +850,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
 
-        mockDisabledStrategy(
+        mockAdditionalScheduleRequestsDisabledStrategy(
                 beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
 
         Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
@@ -844,9 +871,13 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         verify(mCustomAudienceImplMock)
                 .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_2);
 
-        verify(mCustomAudienceDaoMock, times(2))
-                .insertOrOverwriteCustomAudience(
-                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+        verify(mComponentAdsStrategyMock, times(2))
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
 
         List<DBCustomAudience> joinedCustomAudiences = mInsertCustomAudienceCaptor.getAllValues();
 
@@ -916,7 +947,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
 
-        mockDisabledStrategy(
+        mockAdditionalScheduleRequestsDisabledStrategy(
                 beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
 
         Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
@@ -937,9 +968,13 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         verify(mCustomAudienceImplMock)
                 .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_2);
 
-        verify(mCustomAudienceDaoMock, times(2))
-                .insertOrOverwriteCustomAudience(
-                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+        verify(mComponentAdsStrategyMock, times(2))
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
 
         List<DBCustomAudience> joinedCustomAudiences = mInsertCustomAudienceCaptor.getAllValues();
 
@@ -1015,7 +1050,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
 
-        mockDisabledStrategy(
+        mockAdditionalScheduleRequestsDisabledStrategy(
                 beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
 
         Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
@@ -1036,9 +1071,13 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         verify(mCustomAudienceImplMock)
                 .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_2);
 
-        verify(mCustomAudienceDaoMock, times(2))
-                .insertOrOverwriteCustomAudience(
-                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+        verify(mComponentAdsStrategyMock, times(2))
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
 
         List<DBCustomAudience> joinedCustomAudiences = mInsertCustomAudienceCaptor.getAllValues();
 
@@ -1066,6 +1105,204 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 "Auction server flags should equal 0 since json response did not have flags",
                 0,
                 joinedCustomAudiences.get(1).getAuctionServerRequestFlags());
+
+        verifyDisabledStrategy(beforeTime, UPDATE, responseJson, partialCustomAudienceJsonArray);
+    }
+
+    @Test
+    public void testPerformScheduledUpdates_SuccessWithComponentAdsEnabled() throws Exception {
+        enableComponentAds();
+
+        List<ComponentAdData> componentAdDataList1 =
+                List.of(
+                        ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER, 0),
+                        ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER, 1));
+
+        List<ComponentAdData> componentAdDataList2 =
+                List.of(
+                        ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER, 2),
+                        ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER, 3));
+
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
+
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+
+        Instant beforeTime = Instant.now();
+
+        JSONArray partialCustomAudienceJsonArray =
+                createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
+
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
+
+        JSONObject responseJson =
+                createJsonResponsePayloadWithComponentAds(
+                        UPDATE.getBuyer(),
+                        UPDATE.getOwner(),
+                        partialCustomAudienceList.stream()
+                                .map(ca -> ca.getName())
+                                .collect(Collectors.toList()),
+                        List.of(LEAVE_CA_1, LEAVE_CA_2),
+                        List.of(componentAdDataList1, componentAdDataList2));
+
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseJson.toString())
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        mockAdditionalScheduleRequestsDisabledStrategy(
+                beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
+
+        Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesHttpsClientMock)
+                .performRequestGetResponseInPlainString(mRequestCaptor.capture());
+        assertEquals(
+                "Request method should have been POST",
+                AdServicesHttpUtil.HttpMethodType.POST,
+                mRequestCaptor.getValue().getHttpMethodType());
+        assertEquals(
+                "Sent payload mismatch",
+                expectedRequestBody,
+                new String(mRequestCaptor.getValue().getBodyInBytes()));
+
+        verify(mCustomAudienceImplMock)
+                .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_1);
+        verify(mCustomAudienceImplMock)
+                .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_2);
+
+        verify(mComponentAdsStrategyMock)
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(componentAdDataList1));
+
+        verify(mComponentAdsStrategyMock)
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(componentAdDataList2));
+
+        List<DBCustomAudience> joinedCustomAudiences = mInsertCustomAudienceCaptor.getAllValues();
+
+        verify(mCustomAudienceDaoMock).deleteScheduledCustomAudienceUpdate(UPDATE);
+
+        assertTrue(
+                "Joined Custom Audiences should have all the CAs in response",
+                joinedCustomAudiences.stream()
+                        .map(ca -> ca.getName())
+                        .collect(Collectors.toList())
+                        .containsAll(
+                                partialCustomAudienceList.stream()
+                                        .map(ca -> ca.getName())
+                                        .collect(Collectors.toList())));
+
+        verifyDisabledStrategy(beforeTime, UPDATE, responseJson, partialCustomAudienceJsonArray);
+    }
+
+    @Test
+    public void testPerformScheduledUpdates_SuccessWithComponentAdsDisabled() throws Exception {
+        disableComponentAds();
+
+        List<ComponentAdData> componentAdDataList1 =
+                List.of(
+                        ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER, 0),
+                        ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER, 1));
+
+        List<ComponentAdData> componentAdDataList2 =
+                List.of(
+                        ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER, 2),
+                        ComponentAdDataFixture.getValidComponentAdDataByBuyer(BUYER, 3));
+
+        List<DBPartialCustomAudience> partialCustomAudienceList =
+                List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
+
+        DBScheduledCustomAudienceUpdateRequest scheduledUpdateRequest =
+                DBScheduledCustomAudienceUpdateRequest.builder()
+                        .setUpdate(UPDATE)
+                        .setPartialCustomAudienceList(partialCustomAudienceList)
+                        .build();
+
+        Instant beforeTime = Instant.now();
+
+        JSONArray partialCustomAudienceJsonArray =
+                createJsonArrayFromPartialCustomAudienceList(partialCustomAudienceList);
+
+        String expectedRequestBody =
+                createRequestBodyWithOnlyPartialCustomAudiences(partialCustomAudienceJsonArray);
+
+        JSONObject responseJson =
+                createJsonResponsePayloadWithComponentAds(
+                        UPDATE.getBuyer(),
+                        UPDATE.getOwner(),
+                        partialCustomAudienceList.stream()
+                                .map(ca -> ca.getName())
+                                .collect(Collectors.toList()),
+                        List.of(LEAVE_CA_1, LEAVE_CA_2),
+                        List.of(componentAdDataList1, componentAdDataList2));
+
+        ListenableFuture<AdServicesHttpClientResponse> response =
+                Futures.immediateFuture(
+                        AdServicesHttpClientResponse.builder()
+                                .setResponseBody(responseJson.toString())
+                                .build());
+        when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
+                .thenReturn(response);
+
+        mockAdditionalScheduleRequestsDisabledStrategy(
+                beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
+
+        Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
+
+        verify(mAdServicesHttpsClientMock)
+                .performRequestGetResponseInPlainString(mRequestCaptor.capture());
+        assertEquals(
+                "Request method should have been POST",
+                AdServicesHttpUtil.HttpMethodType.POST,
+                mRequestCaptor.getValue().getHttpMethodType());
+        assertEquals(
+                "Sent payload mismatch",
+                expectedRequestBody,
+                new String(mRequestCaptor.getValue().getBodyInBytes()));
+
+        verify(mCustomAudienceImplMock)
+                .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_1);
+        verify(mCustomAudienceImplMock)
+                .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_2);
+
+        verify(mComponentAdsStrategyMock, times(2))
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
+
+        List<DBCustomAudience> joinedCustomAudiences = mInsertCustomAudienceCaptor.getAllValues();
+
+        verify(mCustomAudienceDaoMock).deleteScheduledCustomAudienceUpdate(UPDATE);
+
+        assertTrue(
+                "Joined Custom Audiences should have all the CAs in response",
+                joinedCustomAudiences.stream()
+                        .map(ca -> ca.getName())
+                        .collect(Collectors.toList())
+                        .containsAll(
+                                partialCustomAudienceList.stream()
+                                        .map(ca -> ca.getName())
+                                        .collect(Collectors.toList())));
 
         verifyDisabledStrategy(beforeTime, UPDATE, responseJson, partialCustomAudienceJsonArray);
     }
@@ -1109,15 +1346,19 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
 
-        mockDisabledStrategy(
+        mockAdditionalScheduleRequestsDisabledStrategy(
                 beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
 
         Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
 
         // Verify custom audiences were not inserted since field is missing
-        verify(mCustomAudienceDaoMock, never())
-                .insertOrOverwriteCustomAudience(
-                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+        verify(mComponentAdsStrategyMock, never())
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
 
         verifyDisabledStrategy(beforeTime, UPDATE, responseJson, partialCustomAudienceJsonArray);
     }
@@ -1165,15 +1406,19 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
 
-        mockDisabledStrategy(
+        mockAdditionalScheduleRequestsDisabledStrategy(
                 beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
 
         Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
 
         // Verify custom audiences were not inserted since field is missing
-        verify(mCustomAudienceDaoMock, never())
-                .insertOrOverwriteCustomAudience(
-                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+        verify(mComponentAdsStrategyMock, never())
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
 
         verifyDisabledStrategy(beforeTime, UPDATE, responseJson, partialCustomAudienceJsonArray);
     }
@@ -1219,7 +1464,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
 
-        mockDisabledStrategy(
+        mockAdditionalScheduleRequestsDisabledStrategy(
                 beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
 
         Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
@@ -1240,9 +1485,13 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         verify(mCustomAudienceImplMock)
                 .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_2);
 
-        verify(mCustomAudienceDaoMock, times(2))
-                .insertOrOverwriteCustomAudience(
-                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+        verify(mComponentAdsStrategyMock, times(2))
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
 
         List<DBCustomAudience> joinedCustomAudiences = mInsertCustomAudienceCaptor.getAllValues();
 
@@ -1315,7 +1564,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
 
-        mockDisabledStrategy(
+        mockAdditionalScheduleRequestsDisabledStrategy(
                 beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
 
         Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
@@ -1336,9 +1585,13 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         verify(mCustomAudienceImplMock)
                 .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_2);
 
-        verify(mCustomAudienceDaoMock, times(2))
-                .insertOrOverwriteCustomAudience(
-                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+        verify(mComponentAdsStrategyMock, times(2))
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
 
         List<DBCustomAudience> joinedCustomAudiences = mInsertCustomAudienceCaptor.getAllValues();
 
@@ -1419,7 +1672,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
 
-        mockDisabledStrategy(
+        mockAdditionalScheduleRequestsDisabledStrategy(
                 beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
 
         Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
@@ -1440,9 +1693,13 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         verify(mCustomAudienceImplMock)
                 .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_2);
 
-        verify(mCustomAudienceDaoMock, times(2))
-                .insertOrOverwriteCustomAudience(
-                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+        verify(mComponentAdsStrategyMock, times(2))
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
 
         List<DBCustomAudience> joinedCustomAudiences = mInsertCustomAudienceCaptor.getAllValues();
 
@@ -1510,7 +1767,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
 
-        mockDisabledStrategy(
+        mockAdditionalScheduleRequestsDisabledStrategy(
                 beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
 
         Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
@@ -1520,9 +1777,13 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         verify(mCustomAudienceImplMock)
                 .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_2);
 
-        verify(mCustomAudienceDaoMock, times(3))
-                .insertOrOverwriteCustomAudience(
-                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+        verify(mComponentAdsStrategyMock, times(3))
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
 
         List<DBCustomAudience> joinedCustomAudiences = mInsertCustomAudienceCaptor.getAllValues();
 
@@ -1601,7 +1862,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
 
-        mockDisabledStrategy(
+        mockAdditionalScheduleRequestsDisabledStrategy(
                 beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
 
         Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
@@ -1613,9 +1874,13 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         verify(mCustomAudienceImplMock)
                 .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_2);
 
-        verify(mCustomAudienceDaoMock, times(2))
-                .insertOrOverwriteCustomAudience(
-                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+        verify(mComponentAdsStrategyMock, times(2))
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
 
         List<DBCustomAudience> joinedCustomAudiences = mInsertCustomAudienceCaptor.getAllValues();
 
@@ -1683,7 +1948,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
 
-        mockDisabledStrategy(
+        mockAdditionalScheduleRequestsDisabledStrategy(
                 beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
 
         Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
@@ -1704,9 +1969,13 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         verify(mCustomAudienceImplMock)
                 .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_2);
 
-        verify(mCustomAudienceDaoMock, times(1))
-                .insertOrOverwriteCustomAudience(
-                        mInsertCustomAudienceCaptor.capture(), any(Uri.class), anyBoolean());
+        verify(mComponentAdsStrategyMock, times(1))
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
 
         List<DBCustomAudience> joinedCustomAudiences = mInsertCustomAudienceCaptor.getAllValues();
 
@@ -1761,7 +2030,7 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
 
-        mockDisabledStrategy(
+        mockAdditionalScheduleRequestsDisabledStrategy(
                 beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
 
         // The small permissible size of incoming CA would prevent any new CA to be inserted
@@ -1779,7 +2048,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         mStrategyMock,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
         Void ignored =
                 handlerWithSmallSizeLimits
                         .performScheduledUpdates(beforeTime)
@@ -1790,9 +2060,13 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         verify(mCustomAudienceImplMock)
                 .leaveCustomAudience(UPDATE.getOwner(), UPDATE.getBuyer(), LEAVE_CA_2);
 
-        verify(mCustomAudienceDaoMock, times(0))
-                .insertOrOverwriteCustomAudience(
-                        any(DBCustomAudience.class), any(Uri.class), anyBoolean());
+        verify(mComponentAdsStrategyMock, never())
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
 
         verifyDisabledStrategy(beforeTime, UPDATE, responseJson, partialCustomAudienceJsonArray);
     }
@@ -1824,15 +2098,19 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         when(mAdServicesHttpsClientMock.performRequestGetResponseInPlainString(any()))
                 .thenReturn(response);
 
-        mockDisabledStrategy(
+        mockAdditionalScheduleRequestsDisabledStrategy(
                 beforeTime, scheduledUpdateRequest, responseJson, partialCustomAudienceJsonArray);
 
         Void ignored = mHandler.performScheduledUpdates(beforeTime).get(10, TimeUnit.SECONDS);
 
         verifyNoMoreInteractions(mCustomAudienceImplMock);
-        verify(mCustomAudienceDaoMock, times(0))
-                .insertOrOverwriteCustomAudience(
-                        any(DBCustomAudience.class), any(Uri.class), anyBoolean());
+        verify(mComponentAdsStrategyMock, never())
+                .persistCustomAudiencesWithComponentAds(
+                        any(),
+                        mInsertCustomAudienceCaptor.capture(),
+                        any(Uri.class),
+                        anyBoolean(),
+                        eq(List.of()));
 
         verifyDisabledStrategy(beforeTime, UPDATE, responseJson, partialCustomAudienceJsonArray);
     }
@@ -1862,6 +2140,9 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
 
+        ComponentAdsStrategy componentAdsStrategy =
+                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
@@ -1876,7 +2157,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        componentAdsStrategy);
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(UPDATE);
 
         String responsePayload =
@@ -1938,7 +2220,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         mEnabledStrategy,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
         DBScheduledCustomAudienceUpdate updateWithAllowScheduleInResponseTrue =
                 DBScheduledCustomAudienceUpdate.builder()
                         .setUpdateId(UPDATE_ID)
@@ -2047,7 +2330,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         mEnabledStrategy,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
         DBScheduledCustomAudienceUpdate updateWithAllowScheduleInResponseTrue =
                 DBScheduledCustomAudienceUpdate.builder()
                         .setUpdateId(UPDATE_ID)
@@ -2151,7 +2435,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         mEnabledStrategy,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
         DBScheduledCustomAudienceUpdate updateWithAllowScheduleInResponseTrue =
                 DBScheduledCustomAudienceUpdate.builder()
                         .setUpdateId(UPDATE_ID)
@@ -2281,7 +2566,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         mEnabledStrategy,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
         DBScheduledCustomAudienceUpdate updateWithAllowScheduleInResponseTrue =
                 DBScheduledCustomAudienceUpdate.builder()
                         .setUpdateId(UPDATE_ID)
@@ -2411,7 +2697,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         mEnabledStrategy,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
         DBScheduledCustomAudienceUpdate updateWithAllowScheduleInResponseTrue =
                 DBScheduledCustomAudienceUpdate.builder()
                         .setUpdateId(UPDATE_ID)
@@ -2511,7 +2798,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         mEnabledStrategy,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
         DBScheduledCustomAudienceUpdate updateWithAllowScheduleInResponseTrue =
                 DBScheduledCustomAudienceUpdate.builder()
                         .setUpdateId(UPDATE_ID)
@@ -2625,7 +2913,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         mEnabledStrategy,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
         DBScheduledCustomAudienceUpdate updateWithAllowScheduleInResponseTrue =
                 DBScheduledCustomAudienceUpdate.builder()
                         .setUpdateId(UPDATE_ID)
@@ -2736,7 +3025,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
 
         MockResponse mockResponse = new MockResponse().setResponseCode(429);
         MockWebServer server =
@@ -2792,7 +3082,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
 
         String responsePayload =
                 createJsonResponsePayload(
@@ -2911,7 +3202,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
 
         String responsePayload =
                 createJsonResponsePayload(
@@ -3040,7 +3332,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
 
         MockResponse mockResponse = new MockResponse().setResponseCode(429);
         MockWebServer server =
@@ -3094,7 +3387,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
 
         // Setting the response code to 400 for bad request client error.
         MockResponse mockResponse = new MockResponse().setResponseCode(400);
@@ -3149,7 +3443,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
         // Setting the response code to 500 for server error.
         MockResponse mockResponse = new MockResponse().setResponseCode(500);
         MockWebServer server =
@@ -3189,6 +3484,9 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     @Test
     public void testPerformScheduledUpdates_IOException_logsCorrectly() throws Exception {
+        ComponentAdsStrategy componentAdsStrategy =
+                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
@@ -3203,7 +3501,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        componentAdsStrategy);
         DBScheduledCustomAudienceUpdate updateWithCorrectUri =
                 DBScheduledCustomAudienceUpdate.builder()
                         .setUpdateId(UPDATE_ID)
@@ -3239,6 +3538,9 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
 
     @Test
     public void testPerformScheduledUpdates_ContentSizeException_logsCorrectly() throws Exception {
+        ComponentAdsStrategy componentAdsStrategy =
+                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
@@ -3253,7 +3555,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        componentAdsStrategy);
         DBScheduledCustomAudienceUpdate updateWithCorrectUri =
                 DBScheduledCustomAudienceUpdate.builder()
                         .setUpdateId(UPDATE_ID)
@@ -3293,6 +3596,9 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
 
+        ComponentAdsStrategy componentAdsStrategy =
+                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
@@ -3307,7 +3613,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        componentAdsStrategy);
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(UPDATE);
 
         String responsePayload =
@@ -3394,7 +3701,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
         // Setting the response code to 500 for server error.
         MockResponse mockResponse = new MockResponse().setResponseCode(300);
         MockWebServer server =
@@ -3459,7 +3767,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDaoMock),
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
 
         when(mCustomAudienceDaoMock.getScheduledCustomAudienceUpdateRequests(any(Instant.class)))
                 .thenReturn(List.of(updateRequest));
@@ -3542,6 +3851,9 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
 
+        ComponentAdsStrategy componentAdsStrategy =
+                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
@@ -3556,7 +3868,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        componentAdsStrategy);
 
         List<PartialCustomAudience> dbPartialCustomAudienceList =
                 partialCustomAudienceList.stream()
@@ -3652,6 +3965,9 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1);
 
+        ComponentAdsStrategy componentAdsStrategy =
+                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
@@ -3666,7 +3982,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        componentAdsStrategy);
         List<PartialCustomAudience> dbPartialCustomAudienceList =
                 partialCustomAudienceList.stream()
                         .map(DBPartialCustomAudience::getPartialCustomAudience)
@@ -3748,6 +4065,9 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
         List<DBPartialCustomAudience> partialCustomAudienceList =
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1);
 
+        ComponentAdsStrategy componentAdsStrategy =
+                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+
         mHandler =
                 new ScheduledUpdatesHandler(
                         mCustomAudienceDao,
@@ -3762,7 +4082,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         new AdditionalScheduleRequestsDisabledStrategy(mCustomAudienceDao),
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        componentAdsStrategy);
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(
                 UPDATE,
                 Collections.emptyList(),
@@ -3851,7 +4172,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         mStrategyMock,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
 
         MockResponse mockResponse =
                 new MockResponse().setBody("larger than 1 byte").setResponseCode(200);
@@ -3909,7 +4231,10 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                             mFledgeAuctionServerAdRenderIdEnabled,
                             mFledgeAuctionServerAdRenderIdMaxLength,
                             mAuctionServerRequestFlags,
-                            mSellerConfigurationEnabled);
+                            mSellerConfigurationEnabled,
+                            /* componentAdsEnabled= */ false,
+                            COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES,
+                            MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
             blob.overrideFromPartialCustomAudience(
                     OWNER,
                     BUYER,
@@ -3944,7 +4269,50 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         mStrategyMock,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
+    }
+
+    private void enableComponentAds() {
+        // Enable component ads
+        flags.setFlag(KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS, true);
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDaoMock,
+                        mAdServicesHttpsClientMock,
+                        mFakeFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        mStrategyMock,
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
+    }
+
+    private void disableComponentAds() {
+        // Disable component ads
+        flags.setFlag(KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS, false);
+        mHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDaoMock,
+                        mAdServicesHttpsClientMock,
+                        mFakeFlags,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        mAdFilteringFeatureFactory.getFrequencyCapAdDataValidator(),
+                        mAdRenderIdValidator,
+                        AD_DATA_CONVERSION_STRATEGY,
+                        mCustomAudienceImplMock,
+                        mCustomAudienceQuantityCheckerMock,
+                        mStrategyMock,
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
     }
 
     private void enableSellerConfigurationFlag() {
@@ -3964,7 +4332,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         mStrategyMock,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
     }
 
     private void disableSellerConfigurationFlag() {
@@ -3985,10 +4354,11 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                         mCustomAudienceImplMock,
                         mCustomAudienceQuantityCheckerMock,
                         mStrategyMock,
-                        mAdServicesLoggerMock);
+                        mAdServicesLoggerMock,
+                        mComponentAdsStrategyMock);
     }
 
-    private void mockDisabledStrategy(
+    private void mockAdditionalScheduleRequestsDisabledStrategy(
             Instant beforeTime,
             DBScheduledCustomAudienceUpdateRequest request,
             JSONObject responseJson,

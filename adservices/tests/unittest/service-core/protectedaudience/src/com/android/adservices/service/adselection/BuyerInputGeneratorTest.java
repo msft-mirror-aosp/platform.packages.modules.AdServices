@@ -58,6 +58,7 @@ import com.android.adservices.data.signals.ProtectedSignalsDatabase;
 import com.android.adservices.service.FakeFlagsFactory;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.compat.PackageManagerCompatUtils;
+import com.android.adservices.service.customaudience.ComponentAdsStrategy;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.BuyerInput;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.ProtectedAppSignals;
 import com.android.adservices.service.stats.AdServicesLogger;
@@ -172,7 +173,10 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
                 createAndPersistDBCustomAudiencesWithAdRenderId(nameAndBuyersMap);
         // Insert a CA without ad render id. This should get filtered out.
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER_3).build(), Uri.EMPTY, false);
+                DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER_3).build(),
+                Uri.EMPTY,
+                false,
+                List.of());
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
@@ -378,7 +382,10 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
                 createAndPersistDBCustomAudiencesWithAdRenderId(nameAndBuyersMap);
         // Insert a CA without ad render id. This should get filtered out.
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER_3).build(), Uri.EMPTY, false);
+                DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER_3).build(),
+                Uri.EMPTY,
+                false,
+                List.of());
 
         setupCompressedBuyerInputCreatorHelper(
                 /* auctionServerMetricsEnabled= */ true,
@@ -827,7 +834,10 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
                 createAndPersistDBCustomAudiencesWithAdRenderId(nameAndBuyersMap);
         // Insert a CA without ad render id. This should get filtered out.
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER_3).build(), Uri.EMPTY, false);
+                DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER_3).build(),
+                Uri.EMPTY,
+                false,
+                List.of());
 
         // Signals
         Map<AdTechIdentifier, DBEncodedPayload> encodedPayloads =
@@ -916,7 +926,10 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
                 createAndPersistDBCustomAudiencesWithAdRenderId(nameAndBuyersMap);
         // Insert a CA without ad render id. This should get filtered out.
         mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER_3).build(), Uri.EMPTY, false);
+                DBCustomAudienceFixture.getValidBuilderByBuyer(BUYER_3).build(),
+                Uri.EMPTY,
+                false,
+                List.of());
 
         BuyerInputGenerator buyerInputGeneratorSignalsDisabled =
                 new BuyerInputGenerator(
@@ -983,7 +996,8 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(BUYER_1, "testCA")
                         .build(),
                 Uri.EMPTY,
-                false);
+                false,
+                List.of());
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> buyerAndBuyerInputs =
                 mBuyerInputGenerator
                         .createCompressedBuyerInputs(
@@ -1006,8 +1020,10 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
         DBCustomAudience customAudienceBuyer2 =
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(BUYER_2, "testCA2")
                         .build();
-        mCustomAudienceDao.insertOrOverwriteCustomAudience(customAudienceBuyer1, Uri.EMPTY, false);
-        mCustomAudienceDao.insertOrOverwriteCustomAudience(customAudienceBuyer2, Uri.EMPTY, false);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                customAudienceBuyer1, Uri.EMPTY, false, List.of());
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                customAudienceBuyer2, Uri.EMPTY, false, List.of());
 
         // Set Frequency cap AdFiltering to return only one custom audience.
         when(mFrequencyCapAdFiltererMock.filterCustomAudiences(any()))
@@ -1045,8 +1061,10 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
         DBCustomAudience customAudienceBuyer2 =
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(BUYER_2, "testCA2")
                         .build();
-        mCustomAudienceDao.insertOrOverwriteCustomAudience(customAudienceBuyer1, Uri.EMPTY, false);
-        mCustomAudienceDao.insertOrOverwriteCustomAudience(customAudienceBuyer2, Uri.EMPTY, false);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                customAudienceBuyer1, Uri.EMPTY, false, List.of());
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                customAudienceBuyer2, Uri.EMPTY, false, List.of());
 
         // Set App install AdFiltering to return only one custom audience.
         when(mAppInstallAdFiltererMock.filterCustomAudiences(any()))
@@ -1113,7 +1131,9 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
                 auctionServerMetricsEnabled
                         ? new AuctionServerPayloadMetricsStrategyEnabled(
                                 mAdServicesLoggerMock,
-                                new SellerConfigurationMetricsStrategyDisabled())
+                                new SellerConfigurationMetricsStrategyDisabled(),
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ false))
                         : mAuctionServerPayloadMetricsStrategyDisabled;
         CompressedBuyerInputCreatorHelper helper =
                 new CompressedBuyerInputCreatorHelper(
@@ -1153,7 +1173,7 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
                             .build();
             customAudiences.put(name, thisCustomAudience);
             mCustomAudienceDao.insertOrOverwriteCustomAudience(
-                    thisCustomAudience, Uri.EMPTY, false);
+                    thisCustomAudience, Uri.EMPTY, false, List.of());
         }
         return customAudiences;
     }
@@ -1163,7 +1183,8 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
         DBCustomAudience thisCustomAudience =
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithOmitAdsEnabled(buyer, name)
                         .build();
-        mCustomAudienceDao.insertOrOverwriteCustomAudience(thisCustomAudience, Uri.EMPTY, false);
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                thisCustomAudience, Uri.EMPTY, false, List.of());
         return thisCustomAudience;
     }
 

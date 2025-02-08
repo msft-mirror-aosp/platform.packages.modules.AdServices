@@ -16,60 +16,135 @@
 
 package com.android.adservices.service.customaudience;
 
+import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
+import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_CA_WINNER;
+
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyZeroInteractions;
 
 import android.adservices.common.CommonFixture;
+import android.adservices.common.ComponentAdData;
 import android.adservices.common.ComponentAdDataFixture;
-import android.adservices.customaudience.CustomAudience;
-import android.adservices.customaudience.CustomAudienceFixture;
+import android.net.Uri;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
+import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
+import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 
 import org.junit.Test;
 import org.mockito.Mock;
 
-public class ComponentAdsStrategyTest extends AdServicesMockitoTestCase {
+import java.util.List;
+
+public final class ComponentAdsStrategyTest extends AdServicesMockitoTestCase {
     private final ComponentAdsStrategy mComponentAdsStrategyEnabled =
             ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ true);
     private final ComponentAdsStrategy mComponentAdsStrategyDisabled =
             ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+    private static final List<ComponentAdData> COMPONENT_AD_DATA_LIST =
+            ComponentAdDataFixture.getValidComponentAdsByBuyer(CommonFixture.VALID_BUYER_1);
 
-    @Mock private CustomAudienceDao mCustomAudienceDao;
+    @Mock private CustomAudienceDao mCustomAudienceDaoMock;
 
     @Test
-    public void testEnabledStrategyPersistComponentAdsInvokesDaoMethod() {
-        CustomAudience customAudience =
-                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
-                        .setComponentAds(
-                                ComponentAdDataFixture.getValidComponentAdsByBuyer(
-                                        CommonFixture.VALID_BUYER_1))
-                        .build();
+    public void testEnabledStrategyPersistCustomAudiencesWithComponentAdsAddsComponentAds() {
+        DBCustomAudience customAudience =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
+        Uri dailyUpdateUri = Uri.parse("https://example.com");
 
-        mComponentAdsStrategyEnabled.persistComponentAds(
-                customAudience, CommonFixture.TEST_PACKAGE_NAME, mCustomAudienceDao);
+        boolean debuggable = true;
 
-        verify(mCustomAudienceDao)
-                .insertAndOverwriteComponentAds(
-                        customAudience.getComponentAds(),
-                        CommonFixture.TEST_PACKAGE_NAME,
-                        CommonFixture.VALID_BUYER_1,
-                        customAudience.getName());
+        mComponentAdsStrategyEnabled.persistCustomAudiencesWithComponentAds(
+                mCustomAudienceDaoMock,
+                customAudience,
+                dailyUpdateUri,
+                debuggable,
+                COMPONENT_AD_DATA_LIST);
+
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        customAudience, dailyUpdateUri, debuggable, COMPONENT_AD_DATA_LIST);
     }
 
     @Test
-    public void testDisabledStrategyPersistComponentAdsDoesNothing() {
-        CustomAudience customAudience =
-                CustomAudienceFixture.getValidBuilderForBuyer(CommonFixture.VALID_BUYER_1)
-                        .setComponentAds(
-                                ComponentAdDataFixture.getValidComponentAdsByBuyer(
-                                        CommonFixture.VALID_BUYER_1))
-                        .build();
+    public void testDisabledStrategyPersistCustomAudiencesWithComponentAdsOnlyAddsCA() {
+        DBCustomAudience customAudience =
+                DBCustomAudienceFixture.getValidBuilderByBuyer(CommonFixture.VALID_BUYER_1).build();
+        Uri dailyUpdateUri = Uri.parse("https://example.com");
 
-        mComponentAdsStrategyDisabled.persistComponentAds(
-                customAudience, CommonFixture.TEST_PACKAGE_NAME, mCustomAudienceDao);
+        boolean debuggable = true;
 
-        verifyZeroInteractions(mCustomAudienceDao);
+        mComponentAdsStrategyDisabled.persistCustomAudiencesWithComponentAds(
+                mCustomAudienceDaoMock,
+                customAudience,
+                dailyUpdateUri,
+                debuggable,
+                COMPONENT_AD_DATA_LIST);
+
+        verify(mCustomAudienceDaoMock)
+                .insertOrOverwriteCustomAudience(
+                        customAudience, dailyUpdateUri, debuggable, List.of());
+    }
+
+    @Test
+    public void testEnabledStrategyIncrementNumCustomAudiencesWithComponentAds() {
+        BuyerInputGeneratorIntermediateStats stats = new BuyerInputGeneratorIntermediateStats();
+        mComponentAdsStrategyEnabled.incrementNumCustomAudiencesWithComponentAds(stats);
+        expect.that(stats.getNumCustomAudiencesWithComponentAds()).isEqualTo(1);
+        mComponentAdsStrategyEnabled.incrementNumCustomAudiencesWithComponentAds(stats);
+        expect.that(stats.getNumCustomAudiencesWithComponentAds()).isEqualTo(2);
+    }
+
+    @Test
+    public void testDisabledStrategyNoIncrementNumCustomAudiencesWithComponentAds() {
+        BuyerInputGeneratorIntermediateStats stats = new BuyerInputGeneratorIntermediateStats();
+        mComponentAdsStrategyDisabled.incrementNumCustomAudiencesWithComponentAds(stats);
+        expect.that(stats.getNumCustomAudiencesWithComponentAds()).isEqualTo(0);
+        mComponentAdsStrategyDisabled.incrementNumCustomAudiencesWithComponentAds(stats);
+        expect.that(stats.getNumCustomAudiencesWithComponentAds()).isEqualTo(0);
+    }
+
+    @Test
+    public void testEnabledStrategySetNumComponentAdsInPersistAdSelectionResultWinnerType() {
+        PersistAdSelectionResultCalledStats.Builder builder =
+                PersistAdSelectionResultCalledStats.builder().setWinnerType(WINNER_TYPE_CA_WINNER);
+        mComponentAdsStrategyEnabled.setNumComponentAdsInPersistAdSelectionResultWinnerType(
+                builder, 1);
+        expect.that(builder.build().getNumComponentAds()).isEqualTo(1);
+    }
+
+    @Test
+    public void testDisabledStrategyUnsetNumComponentAdsInPersistAdSelectionResultWinnerType() {
+        PersistAdSelectionResultCalledStats.Builder builder =
+                PersistAdSelectionResultCalledStats.builder().setWinnerType(WINNER_TYPE_CA_WINNER);
+        mComponentAdsStrategyDisabled.setNumComponentAdsInPersistAdSelectionResultWinnerType(
+                builder, 1);
+        expect.that(builder.build().getNumComponentAds()).isEqualTo(FIELD_UNSET);
+    }
+
+    @Test
+    public void testEnabledStrategyGetNumCustomAudiencesWithComponentAds() {
+        BuyerInputGeneratorIntermediateStats stats = new BuyerInputGeneratorIntermediateStats();
+        expect.that(mComponentAdsStrategyEnabled.getNumCustomAudiencesWithComponentAds(stats))
+                .isEqualTo(0);
+        expect.that(mComponentAdsStrategyEnabled.getNumCustomAudiencesWithComponentAds(stats))
+                .isEqualTo(0);
+
+        mComponentAdsStrategyEnabled.incrementNumCustomAudiencesWithComponentAds(stats);
+
+        expect.that(stats.getNumCustomAudiencesWithComponentAds()).isEqualTo(1);
+        expect.that(mComponentAdsStrategyEnabled.getNumCustomAudiencesWithComponentAds(stats))
+                .isEqualTo(1);
+    }
+
+    @Test
+    public void testDisabledStrategyGetNumCustomAudiencesWithComponentAds() {
+        BuyerInputGeneratorIntermediateStats stats = new BuyerInputGeneratorIntermediateStats();
+        mComponentAdsStrategyDisabled.incrementNumCustomAudiencesWithComponentAds(stats);
+        expect.that(stats.getNumCustomAudiencesWithComponentAds()).isEqualTo(0);
+        expect.that(mComponentAdsStrategyDisabled.getNumCustomAudiencesWithComponentAds(stats))
+                .isEqualTo(FIELD_UNSET);
     }
 }

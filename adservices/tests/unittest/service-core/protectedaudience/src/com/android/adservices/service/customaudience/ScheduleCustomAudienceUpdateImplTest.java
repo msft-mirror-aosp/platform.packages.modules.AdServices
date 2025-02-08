@@ -21,9 +21,25 @@ import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROU
 import static com.android.adservices.service.FlagsConstants.KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_ENABLE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ADDITIONAL_SCHEDULE_REQUESTS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED;
+import static com.android.adservices.service.common.FledgeAuthorizationFilter.CallerMismatchException;
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.ScheduleUpdateTestCallback;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_DAO_FAILED_DUE_TO_PENDING_SCHEDULE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_DISABLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_FILTER_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_INTERNAL_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_INVALID_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_SERVER_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_TO_CALLER_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_UPDATE_ALREADY_PENDING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_SUCCESS_TO_CALLER_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_USER_CONSENT_REVOKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_DID_OVERWRITE_EXISTING_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_NO_EXISTING_UPDATE;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SCHEDULE_CA_UPDATE_EXISTING_UPDATE_STATUS_REJECTED_BY_EXISTING_UPDATE;
@@ -39,7 +55,9 @@ import static junit.framework.Assert.assertTrue;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -49,12 +67,18 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.PartialCustomAudience;
+import android.adservices.customaudience.ScheduleCustomAudienceUpdateCallback;
 import android.adservices.customaudience.ScheduleCustomAudienceUpdateInput;
 import android.net.Uri;
+import android.os.LimitExceededException;
+import android.os.RemoteException;
 
 import androidx.room.Room;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilCall;
+import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
+import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -62,10 +86,13 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.FlagsFactory;
+import com.android.adservices.service.common.AppImportanceFilter;
 import com.android.adservices.service.common.CustomAudienceServiceFilter;
+import com.android.adservices.service.common.FledgeAllowListsFilter;
 import com.android.adservices.service.common.FledgeAuthorizationFilter;
 import com.android.adservices.service.consent.ConsentManager;
 import com.android.adservices.service.devapi.DevContext;
+import com.android.adservices.service.exception.PersistScheduleCAUpdateException;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.ScheduledCustomAudienceUpdateScheduleAttemptedStats;
 import com.android.adservices.shared.testing.annotations.SetFlagFalse;
@@ -98,6 +125,8 @@ import java.util.concurrent.CountDownLatch;
 @SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_SIGNALS)
 // NOTE: flag below was not set initially, when test was using mocks
 @SetFlagFalse(KEY_ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE)
+@SetErrorLogUtilDefaultParams(
+        ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE)
 public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtendedMockitoTestCase {
     private static final int API_NAME =
             AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
@@ -108,6 +137,14 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     private static final AdTechIdentifier BUYER = AdTechIdentifier.fromString("example.com");
     private static final AdSelectionSignals USER_BIDDING_SIGNALS_1 =
             AdSelectionSignals.fromString("{\"ExampleBiddingSignal1\":1}");
+    private static final ScheduleCustomAudienceUpdateInput DEFAULT_INPUT =
+            new ScheduleCustomAudienceUpdateInput.Builder(
+                            UPDATE_URI,
+                            PACKAGE,
+                            Duration.ofMinutes(MIN_DELAY_IN_MINUTES),
+                            Collections.emptyList())
+                    .setShouldReplacePendingUpdates(false)
+                    .build();
     @Captor private ArgumentCaptor<DBScheduledCustomAudienceUpdate> mUpdateCaptor;
     @Captor private ArgumentCaptor<List<PartialCustomAudience>> mPartialCaListArgumentCaptor;
     @Captor private ArgumentCaptor<List<String>> mCaToLeaveListArgumentCaptor;
@@ -129,7 +166,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     public void setup() {
         mBackgroundExecutorService = AdServicesExecutors.getBackgroundExecutor();
         mCallingAppUid = CallingAppUidSupplierProcessImpl.create().getCallingAppUid();
-        mocker.mockGetFlags(flags.getFlags());
+        mocker.mockGetFlags(mFakeFlags);
         mocker.mockGetDebugFlags(mFakeDebugFlags);
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
                 .thenReturn(false);
@@ -174,17 +211,8 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     @Test
     public void testScheduleCustomAudienceUpdate_withShouldReplacePendingUpdateFalse_Success()
             throws Exception {
-        ScheduleCustomAudienceUpdateInput input =
-                new ScheduleCustomAudienceUpdateInput.Builder(
-                                UPDATE_URI,
-                                PACKAGE,
-                                Duration.ofMinutes(MIN_DELAY_IN_MINUTES),
-                                Collections.emptyList())
-                        .setShouldReplacePendingUpdates(false)
-                        .build();
-
         ScheduleUpdateTestCallback callback =
-                callScheduleUpdate(input, mScheduleCustomAudienceUpdateImpl);
+                callScheduleUpdate(DEFAULT_INPUT, mScheduleCustomAudienceUpdateImpl);
 
         verify(mCustomAudienceServiceFilterMock)
                 .filterRequestAndExtractIdentifier(
@@ -231,17 +259,8 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         eq(mDevContext)))
                 .thenReturn(BUYER);
 
-        ScheduleCustomAudienceUpdateInput input =
-                new ScheduleCustomAudienceUpdateInput.Builder(
-                                UPDATE_URI,
-                                PACKAGE,
-                                Duration.ofMinutes(MIN_DELAY_IN_MINUTES),
-                                Collections.emptyList())
-                        .setShouldReplacePendingUpdates(false)
-                        .build();
-
         ScheduleUpdateTestCallback callback =
-                callScheduleUpdate(input, mScheduleCustomAudienceUpdateImpl);
+                callScheduleUpdate(DEFAULT_INPUT, mScheduleCustomAudienceUpdateImpl);
 
         verify(mCustomAudienceServiceFilterMock)
                 .filterRequestAndExtractIdentifier(
@@ -481,6 +500,13 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = CallerMismatchException.class,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_FILTER_EXCEPTION)
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED)
     public void testScheduleCAUpdate_failingWithFilteringException_LogsStatsCorrectly()
             throws Exception {
         ScheduleCustomAudienceUpdateImpl scheduleCustomAudienceUpdateImplWithActualDao =
@@ -593,6 +619,15 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_DAO_FAILED_DUE_TO_PENDING_SCHEDULE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE,
+            throwable = PersistScheduleCAUpdateException.class)
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_UPDATE_ALREADY_PENDING_ERROR,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE)
     public void testScheduleCAUpdate_rejectedByExistingUpdate_LogsStatsCorrectly()
             throws Exception {
         ScheduleCustomAudienceUpdateImpl scheduleCustomAudienceUpdateImplWithActualDao =
@@ -616,17 +651,8 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         .build();
         mCustomAudienceDao.insertScheduledCustomAudienceUpdate(scheduledUpdate);
 
-        ScheduleCustomAudienceUpdateInput input =
-                new ScheduleCustomAudienceUpdateInput.Builder(
-                                UPDATE_URI,
-                                PACKAGE,
-                                Duration.ofMinutes(MIN_DELAY_IN_MINUTES),
-                                Collections.emptyList())
-                        .setShouldReplacePendingUpdates(false)
-                        .build();
-
         ScheduleUpdateTestCallback callback =
-                callScheduleUpdate(input, scheduleCustomAudienceUpdateImplWithActualDao);
+                callScheduleUpdate(DEFAULT_INPUT, scheduleCustomAudienceUpdateImplWithActualDao);
 
         verify(mAdServicesLoggerMock)
                 .logScheduledCustomAudienceUpdateScheduleAttemptedStats(mStatsCaptor.capture());
@@ -695,6 +721,9 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_INVALID_ARGUMENT)
     public void testScheduleCustomAudienceUpdate_OverDelay_Failure() throws Exception {
         ScheduleCustomAudienceUpdateInput input =
                 new ScheduleCustomAudienceUpdateInput.Builder(
@@ -729,6 +758,9 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_INTERNAL_ERROR)
     public void testScheduleCustomAudienceUpdate_NullInput_Failure() throws Exception {
         ScheduleCustomAudienceUpdateInput input = null;
 
@@ -741,6 +773,9 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_INTERNAL_ERROR)
     public void testScheduleCustomAudienceUpdate_MissingBuyer_Failure() throws Exception {
         ScheduleCustomAudienceUpdateInput input =
                 new ScheduleCustomAudienceUpdateInput.Builder(
@@ -795,16 +830,15 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = ConsentManager.RevokedConsentException.class,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_USER_CONSENT_REVOKED)
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = ConsentManager.RevokedConsentException.class,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_FILTER_EXCEPTION)
     public void testScheduleCustomAudienceUpdate_MissingConsent_SilentFailure() throws Exception {
-        ScheduleCustomAudienceUpdateInput input =
-                new ScheduleCustomAudienceUpdateInput.Builder(
-                                UPDATE_URI,
-                                PACKAGE,
-                                Duration.ofMinutes(MIN_DELAY_IN_MINUTES),
-                                Collections.emptyList())
-                        .setShouldReplacePendingUpdates(false)
-                        .build();
-
         when(mConsentManagerMock.isFledgeConsentRevokedForAppAfterSettingFledgeUse(eq(PACKAGE)))
                 .thenReturn(true);
 
@@ -820,7 +854,7 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         mCustomAudienceServiceFilterMock,
                         mCustomAudienceDaoMock);
 
-        ScheduleUpdateTestCallback callback = callScheduleUpdate(input, impl);
+        ScheduleUpdateTestCallback callback = callScheduleUpdate(DEFAULT_INPUT, impl);
 
         verifyNoMoreInteractions(mCustomAudienceServiceFilterMock);
         verifyNoMoreInteractions(mCustomAudienceDaoMock);
@@ -828,6 +862,9 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
     }
 
     @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_INTERNAL_ERROR)
     @SetFlagTrue(KEY_ENFORCE_FOREGROUND_STATUS_SCHEDULE_CUSTOM_AUDIENCE)
     public void testScheduleCAUpdate_ForegroundEnforcement_FiltersRequest() throws Exception {
         when(mCustomAudienceServiceFilterMock.filterRequestAndExtractIdentifier(
@@ -881,6 +918,144 @@ public final class ScheduleCustomAudienceUpdateImplTest extends AdServicesExtend
                         eq(mDevContext));
         verifyNoMoreInteractions(mCustomAudienceDaoMock);
         expect.withMessage("callback.isSuccess()").that(callback.isSuccess()).isFalse();
+    }
+
+    @Test
+    @SetFlagFalse(KEY_FLEDGE_SCHEDULE_CUSTOM_AUDIENCE_UPDATE_ENABLED)
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = IllegalStateException.class,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_DISABLED)
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_INTERNAL_ERROR)
+    public void testScheduleCustomAudienceUpdate_apiDisabled_logCel() throws Exception {
+        callScheduleUpdate(DEFAULT_INPUT, mScheduleCustomAudienceUpdateImpl);
+    }
+
+    @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = AppImportanceFilter.WrongCallingApplicationStateException.class,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_FILTER_EXCEPTION)
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER)
+    public void testScheduleCAUpdate_failingWithBackgroundCaller_logCel() throws Exception {
+        doThrow(new AppImportanceFilter.WrongCallingApplicationStateException())
+                .when(mCustomAudienceServiceFilterMock)
+                .filterRequestAndExtractIdentifier(
+                        any(),
+                        any(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyInt(),
+                        anyInt(),
+                        any(),
+                        any());
+
+        callScheduleUpdate(DEFAULT_INPUT, mScheduleCustomAudienceUpdateImpl);
+    }
+
+    @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = FledgeAllowListsFilter.AppNotAllowedException.class,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_FILTER_EXCEPTION)
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED)
+    public void testScheduleCAUpdate_callerNotAllowed_logCel() throws Exception {
+        doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
+                .when(mCustomAudienceServiceFilterMock)
+                .filterRequestAndExtractIdentifier(
+                        any(),
+                        any(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyInt(),
+                        anyInt(),
+                        any(),
+                        any());
+
+        callScheduleUpdate(DEFAULT_INPUT, mScheduleCustomAudienceUpdateImpl);
+    }
+
+    @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = LimitExceededException.class,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_FILTER_EXCEPTION)
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED)
+    public void testScheduleCAUpdate_rateLimitReached_logCel() throws Exception {
+        doThrow(new LimitExceededException())
+                .when(mCustomAudienceServiceFilterMock)
+                .filterRequestAndExtractIdentifier(
+                        any(),
+                        any(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyBoolean(),
+                        anyInt(),
+                        anyInt(),
+                        any(),
+                        any());
+
+        callScheduleUpdate(DEFAULT_INPUT, mScheduleCustomAudienceUpdateImpl);
+    }
+
+    @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_SERVER_RATE_LIMIT_REACHED)
+    public void testScheduleCAUpdate_serverRateLimitReached_logCel() throws Exception {
+        doThrow(new LimitExceededException())
+                .when(mCustomAudienceDaoMock)
+                .insertScheduledCustomAudienceUpdate(any(), any(), any(), anyBoolean(), any());
+
+        callScheduleUpdate(DEFAULT_INPUT, mScheduleCustomAudienceUpdateImpl);
+    }
+
+    @Test
+    @ExpectErrorLogUtilCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_SERVER_RATE_LIMIT_REACHED)
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = RemoteException.class,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_TO_CALLER_FAILED)
+    public void testScheduleCAUpdate_failedToNotifyCallerOfServerRateLimitReached_logCels()
+            throws Exception {
+        doThrow(new LimitExceededException())
+                .when(mCustomAudienceDaoMock)
+                .insertScheduledCustomAudienceUpdate(any(), any(), any(), anyBoolean(), any());
+        ScheduleCustomAudienceUpdateCallback mockCallback =
+                mock(ScheduleCustomAudienceUpdateCallback.class);
+        doThrow(new RemoteException()).when(mockCallback).onFailure(any());
+
+        mScheduleCustomAudienceUpdateImpl.doScheduleCustomAudienceUpdate(
+                DEFAULT_INPUT, mockCallback, mDevContext);
+    }
+
+    @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            throwable = RemoteException.class,
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_SUCCESS_TO_CALLER_FAILED)
+    public void testScheduleCAUpdate_failedToNotifyCallerSuccess_logCel() throws Exception {
+        ScheduleCustomAudienceUpdateCallback mockCallback =
+                mock(ScheduleCustomAudienceUpdateCallback.class);
+        doThrow(new RemoteException()).when(mockCallback).onSuccess();
+
+        mScheduleCustomAudienceUpdateImpl.doScheduleCustomAudienceUpdate(
+                DEFAULT_INPUT, mockCallback, mDevContext);
     }
 
     private ScheduleUpdateTestCallback callScheduleUpdate(

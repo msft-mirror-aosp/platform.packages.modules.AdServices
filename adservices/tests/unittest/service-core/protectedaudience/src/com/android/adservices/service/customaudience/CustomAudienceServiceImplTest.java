@@ -83,7 +83,6 @@ import android.os.RemoteException;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall;
-import com.android.adservices.common.logging.annotations.SetErrorLogUtilDefaultParams;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -105,7 +104,6 @@ import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.devapi.DevContextFilter;
 import com.android.adservices.service.stats.AdServicesLogger;
 import com.android.adservices.service.stats.AdServicesLoggerImpl;
-import com.android.adservices.shared.testing.SkipLoggingUsageRule;
 import com.android.dx.mockito.inline.extended.ExtendedMockito;
 import com.android.modules.utils.testing.ExtendedMockitoRule.MockStatic;
 
@@ -119,10 +117,6 @@ import org.mockito.Mockito;
 
 import java.util.concurrent.ExecutorService;
 
-// TODO (b/315812832) - Refactor test so strictness can be lenient and enable logging usage rule.
-@SkipLoggingUsageRule(reason = "Overrides mocking strictness to STRICT_STUBS.")
-@SuppressWarnings("DoNotMockErrorLogUtilBehavior") // TODO(b/384952360)
-@SetErrorLogUtilDefaultParams(throwable = ExpectErrorLogUtilWithExceptionCall.Any.class)
 @MockStatic(BackgroundFetchJob.class)
 @MockStatic(FlagsFactory.class)
 @MockStatic(DebugFlags.class)
@@ -162,9 +156,6 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     @Before
     public void setup() throws Exception {
-        // TODO (b/384952360): Delete doNothingOnErrorLogUtilError when all CEL logs in this test
-        // are captured properly.
-        doNothingOnErrorLogUtilError();
         mockGetConsentNotificationDebugMode(false);
         mocker.mockGetFlags(mFlagsWithAllCheckEnabled);
         mService =
@@ -380,8 +371,10 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = IllegalStateException.class)
     public void testJoinCustomAudience_notInBinderThread() {
         mService =
                 new CustomAudienceServiceImpl(
@@ -433,8 +426,10 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_UNAUTHORIZED,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_UNAUTHORIZED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = FledgeAuthorizationFilter.CallerMismatchException.class)
     public void testJoinCustomAudience_ownerAssertFailed() throws RemoteException {
         doThrow(new FledgeAuthorizationFilter.CallerMismatchException())
                 .when(mFledgeAuthorizationFilterMock)
@@ -469,7 +464,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = NullPointerException.class)
     public void testJoinCustomAudience_nullInput() {
         assertThrows(
                 NullPointerException.class,
@@ -491,7 +487,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = NullPointerException.class)
     public void testJoinCustomAudience_nullCallerPackageName() {
         assertThrows(
                 NullPointerException.class,
@@ -511,7 +508,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = NullPointerException.class)
     public void testJoinCustomAudience_nullCallback() {
         assertThrows(
                 NullPointerException.class,
@@ -529,10 +527,13 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_INVALID_ARGUMENT,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
-    public void testJoinCustomAudience_errorCreateCustomAudience_logCelIfNullPointerExceptionInCAImpl()
-            throws RemoteException {
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_INVALID_ARGUMENT,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = NullPointerException.class)
+    public void
+            testJoinCustomAudience_errorCreateCustomAudience_logCelIfNullPointerExceptionInCAImpl()
+                    throws RemoteException {
         String errorMessage = "Simulating Error creating Custom Audience";
         doThrow(new NullPointerException(errorMessage))
                 .when(mCustomAudienceImplMock)
@@ -549,8 +550,10 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_INTERNAL_ERROR,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_INTERNAL_ERROR,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = RuntimeException.class)
     public void testJoinCustomAudience_errorCreateCustomAudience() throws RemoteException {
         String errorMessage = "Simulating Error creating Custom Audience";
         doThrow(new RuntimeException(errorMessage))
@@ -615,8 +618,10 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_SUCCESS_TO_CALLER_FAILED,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_SUCCESS_TO_CALLER_FAILED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = RemoteException.class)
     public void testJoinCustomAudience_errorReturnCallback() throws RemoteException {
         doThrow(RemoteException.class).when(mICustomAudienceCallbackMock).onSuccess();
 
@@ -726,7 +731,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE)
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE,
+            throwable = NullPointerException.class)
     public void testFetchCustomAudience_nullCallback() {
         assertThrows(
                 NullPointerException.class,
@@ -750,7 +756,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE)
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE,
+            throwable = NullPointerException.class)
     public void testFetchCustomAudience_nullInput() {
         assertThrows(
                 NullPointerException.class,
@@ -767,8 +774,10 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE)
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__FETCH_AND_JOIN_CUSTOM_AUDIENCE,
+            throwable = IllegalStateException.class)
     public void testFetchAndJoinCustomAudience_notInBinderThread() {
         mService =
                 new CustomAudienceServiceImpl(
@@ -987,8 +996,10 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE)
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_GET_CALLING_UID_ILLEGAL_STATE,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE,
+            throwable = IllegalStateException.class)
     public void testLeaveCustomAudience_notInBinderThread() {
         mService =
                 new CustomAudienceServiceImpl(
@@ -1040,6 +1051,11 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_UNAUTHORIZED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE,
+            throwable = FledgeAuthorizationFilter.CallerMismatchException.class)
     public void testLeaveCustomAudience_ownerAssertFailed() throws RemoteException {
         doThrow(new FledgeAuthorizationFilter.CallerMismatchException())
                 .when(mFledgeAuthorizationFilterMock)
@@ -1075,7 +1091,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE)
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE,
+            throwable = NullPointerException.class)
     public void testLeaveCustomAudience_nullOwner() {
         assertThrows(
                 NullPointerException.class,
@@ -1098,7 +1115,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE)
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE,
+            throwable = NullPointerException.class)
     public void testLeaveCustomAudience_nullBuyer() {
         assertThrows(
                 NullPointerException.class,
@@ -1121,7 +1139,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE)
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE,
+            throwable = NullPointerException.class)
     public void testLeaveCustomAudience_nullName() {
         assertThrows(
                 NullPointerException.class,
@@ -1144,7 +1163,8 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     @ExpectErrorLogUtilWithExceptionCall(
             errorCode =
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NULL_ARGUMENT,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE)
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE,
+            throwable = NullPointerException.class)
     public void testLeaveCustomAudience_nullCallback() {
         assertThrows(
                 NullPointerException.class,
@@ -1221,6 +1241,11 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_SUCCESS_TO_CALLER_FAILED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE,
+            throwable = RemoteException.class)
     public void testLeaveCustomAudience_errorReturnCallback() throws RemoteException {
         doThrow(RemoteException.class).when(mICustomAudienceCallbackMock).onSuccess();
 
@@ -1273,8 +1298,10 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_BACKGROUND_CALLER,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_BACKGROUND_CALLER,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = WrongCallingApplicationStateException.class)
     public void testAppImportanceTestFails_joinCustomAudienceThrowsException()
             throws RemoteException {
         doThrow(new WrongCallingApplicationStateException())
@@ -1383,6 +1410,11 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_BACKGROUND_CALLER,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE,
+            throwable = WrongCallingApplicationStateException.class)
     public void testAppImportanceTestFails_leaveCustomAudienceThrowsException()
             throws RemoteException {
         doThrow(new WrongCallingApplicationStateException())
@@ -1990,8 +2022,10 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_CALLER_NOT_ALLOWED,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_CALLER_NOT_ALLOWED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = FledgeAuthorizationFilter.AdTechNotAllowedException.class)
     public void testEnrollmentCheckEnabledWithNoEnrollment_joinCustomAudience_fails()
             throws RemoteException {
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
@@ -2106,6 +2140,11 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_CALLER_NOT_ALLOWED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE,
+            throwable = FledgeAuthorizationFilter.AdTechNotAllowedException.class)
     public void testEnrollmentCheckEnabledWithNoEnrollment_leaveCustomAudience_fails()
             throws RemoteException {
         doThrow(new FledgeAuthorizationFilter.AdTechNotAllowedException())
@@ -2223,8 +2262,10 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_CALLER_NOT_ALLOWED,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_CALLER_NOT_ALLOWED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = FledgeAllowListsFilter.AppNotAllowedException.class)
     public void testNotInAllowList_joinCustomAudience_fail() throws RemoteException {
         doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
                 .when(mFledgeAllowListsFilterMock)
@@ -2270,6 +2311,11 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_CALLER_NOT_ALLOWED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE,
+            throwable = FledgeAllowListsFilter.AppNotAllowedException.class)
     public void testNotInAllowList_leaveCustomAudience_fail() throws RemoteException {
         doThrow(new FledgeAllowListsFilter.AppNotAllowedException())
                 .when(mFledgeAllowListsFilterMock)
@@ -2317,8 +2363,10 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
 
     @Test
     @ExpectErrorLogUtilWithExceptionCall(
-            errorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_RATE_LIMIT_REACHED,
-            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE)
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_RATE_LIMIT_REACHED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__JOIN_CUSTOM_AUDIENCE,
+            throwable = LimitExceededException.class)
     public void testJoinCustomAudience_throttledFailure() throws RemoteException {
         // Throttle Join Custom Audience
         doThrow(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE))
@@ -2353,6 +2401,11 @@ public final class CustomAudienceServiceImplTest extends AdServicesExtendedMocki
     }
 
     @Test
+    @ExpectErrorLogUtilWithExceptionCall(
+            errorCode =
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__CUSTOM_AUDIENCE_SERVICE_NOTIFY_FAILURE_RATE_LIMIT_REACHED,
+            ppapiName = AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__LEAVE_CUSTOM_AUDIENCE,
+            throwable = LimitExceededException.class)
     public void testLeaveCustomAudience_throttledFailure() throws RemoteException {
         // Throttle Leave Custom Audience
         doThrow(new LimitExceededException(RATE_LIMIT_REACHED_ERROR_MESSAGE))

@@ -25,6 +25,7 @@ import static com.android.adservices.service.customaudience.AdditionalScheduleRe
 import static com.android.adservices.service.customaudience.AdditionalScheduleRequestsEnabledStrategyHelper.UPDATE_URI_KEY;
 import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addActivationTime;
 import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addAuctionServerRequestFlags;
+import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addComponentAds;
 import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addExpirationTime;
 import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addName;
 import static com.android.adservices.service.customaudience.CustomAudienceBlobFixture.addPriority;
@@ -39,6 +40,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import android.adservices.common.AdSelectionSignals;
 import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CommonFixture;
+import android.adservices.common.ComponentAdData;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
@@ -196,6 +198,39 @@ public class ScheduleCustomAudienceUpdateTestUtils {
                                 CustomAudienceFixture.VALID_PRIORITY_1,
                                 /* shouldAddHarmlessJunk= */ false);
             }
+            joinCustomAudienceArray.put(i, generatedCa);
+        }
+
+        JSONArray leaveCustomAudienceArray = new JSONArray();
+        for (int i = 0; i < leaveCustomAudienceNames.size(); i++) {
+            leaveCustomAudienceArray.put(i, leaveCustomAudienceNames.get(i));
+        }
+
+        responseJson.put(JOIN_CUSTOM_AUDIENCE_KEY, joinCustomAudienceArray);
+        responseJson.put(LEAVE_CUSTOM_AUDIENCE_KEY, leaveCustomAudienceArray);
+
+        return responseJson;
+    }
+
+    /**
+     * Creates a JSON response that is expected to be returned from the server for update with
+     * component ads.
+     */
+    public static JSONObject createJsonResponsePayloadWithComponentAds(
+            AdTechIdentifier buyer,
+            String owner,
+            List<String> joinCustomAudienceNames,
+            List<String> leaveCustomAudienceNames,
+            List<List<ComponentAdData>> componentAds)
+            throws JSONException {
+
+        JSONObject responseJson = new JSONObject();
+
+        JSONArray joinCustomAudienceArray = new JSONArray();
+        for (int i = 0; i < joinCustomAudienceNames.size(); i++) {
+            JSONObject generatedCa =
+                    generateCustomAudienceWithName(buyer, owner, joinCustomAudienceNames.get(i));
+            generatedCa = addComponentAds(/* jsonObject */ generatedCa, componentAds.get(i));
             joinCustomAudienceArray.put(i, generatedCa);
         }
 

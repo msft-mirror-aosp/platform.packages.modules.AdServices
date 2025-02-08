@@ -16,8 +16,34 @@
 
 package com.android.adservices.service.customaudience;
 
+import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_CALLER_NOT_ALLOWED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_OBJECT;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_RATE_LIMIT_REACHED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_SERVER_RATE_LIMIT_REACHED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UNAUTHORIZED;
+import static android.adservices.common.AdServicesStatusUtils.STATUS_UPDATE_ALREADY_PENDING_ERROR;
+import static android.adservices.common.AdServicesStatusUtils.StatusCode;
+
 import static com.android.adservices.service.common.Throttler.ApiKey.FLEDGE_API_SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_API_CALLED__API_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_DISABLED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_FILTER_EXCEPTION;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_INTERNAL_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_INVALID_ARGUMENT;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_SERVER_RATE_LIMIT_REACHED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_TO_CALLER_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_UPDATE_ALREADY_PENDING_ERROR;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_SUCCESS_TO_CALLER_FAILED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_USER_CONSENT_REVOKED;
+import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE;
 
 import android.adservices.common.AdServicesStatusUtils;
 import android.adservices.common.AdTechIdentifier;
@@ -37,6 +63,7 @@ import androidx.annotation.RequiresApi;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBScheduledCustomAudienceUpdate;
+import com.android.adservices.errorlogging.ErrorLogUtil;
 import com.android.adservices.service.DebugFlags;
 import com.android.adservices.service.Flags;
 import com.android.adservices.service.common.AppImportanceFilter;
@@ -131,7 +158,13 @@ public class ScheduleCustomAudienceUpdateImpl {
 
             if (!mScheduleCustomAudienceUpdateEnabled) {
                 sLogger.v("scheduleCustomAudienceUpdate is disabled.");
-                throw new IllegalStateException("scheduleCustomAudienceUpdate is disabled.");
+                IllegalStateException exception =
+                        new IllegalStateException("scheduleCustomAudienceUpdate is disabled.");
+                ErrorLogUtil.e(
+                        exception,
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_DISABLED,
+                        AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE);
+                throw exception;
             }
             FluentFuture<AdTechIdentifier> buyerFuture =
                     FluentFuture.from(filterAndValidateRequest(input, devContext));
@@ -198,7 +231,13 @@ public class ScheduleCustomAudienceUpdateImpl {
                         if (mConsentManager.isFledgeConsentRevokedForAppAfterSettingFledgeUse(
                                 input.getCallerPackageName())) {
                             sLogger.v("Consent revoked");
-                            throw new ConsentManager.RevokedConsentException();
+                            ConsentManager.RevokedConsentException exception =
+                                    new ConsentManager.RevokedConsentException();
+                            ErrorLogUtil.e(
+                                    exception,
+                                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_USER_CONSENT_REVOKED,
+                                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE);
+                            throw exception;
                         }
                         // Extract buyer ad tech identifier and filter request
                         buyer =
@@ -222,6 +261,10 @@ public class ScheduleCustomAudienceUpdateImpl {
                             | FledgeAllowListsFilter.AppNotAllowedException
                             | LimitExceededException
                             | ConsentManager.RevokedConsentException t) {
+                        ErrorLogUtil.e(
+                                t,
+                                AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_FILTER_EXCEPTION,
+                                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE);
                         throw new FilterException(t);
                     }
                     sLogger.v("Completed scheduleCustomAudienceUpdate filterAndValidateRequest");
@@ -276,18 +319,18 @@ public class ScheduleCustomAudienceUpdateImpl {
             if (isFilterException) {
                 resultCode = FilterException.getResultCode(t);
             } else if (t instanceof InvalidObjectException) {
-                resultCode = AdServicesStatusUtils.STATUS_INVALID_OBJECT;
+                resultCode = STATUS_INVALID_OBJECT;
             } else if (t instanceof LimitExceededException) {
-                resultCode = AdServicesStatusUtils.STATUS_SERVER_RATE_LIMIT_REACHED;
+                resultCode = STATUS_SERVER_RATE_LIMIT_REACHED;
             } else if (t instanceof IllegalArgumentException) {
-                resultCode = AdServicesStatusUtils.STATUS_INVALID_ARGUMENT;
+                resultCode = STATUS_INVALID_ARGUMENT;
             } else if (t instanceof PersistScheduleCAUpdateException) {
-                resultCode = AdServicesStatusUtils.STATUS_UPDATE_ALREADY_PENDING_ERROR;
+                resultCode = STATUS_UPDATE_ALREADY_PENDING_ERROR;
             } else {
                 sLogger.d(t, "Unexpected error during operation");
-                resultCode = AdServicesStatusUtils.STATUS_INTERNAL_ERROR;
+                resultCode = STATUS_INTERNAL_ERROR;
             }
-
+            logCelByStatusCode(resultCode);
             // Skip logging if a FilterException occurs.
             // AdSelectionServiceFilter ensures the failing assertion is logged internally.
             // Note: Failure is logged before the callback to ensure deterministic testing.
@@ -304,10 +347,11 @@ public class ScheduleCustomAudienceUpdateImpl {
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send failed result to the callback");
             mAdServicesLogger.logFledgeApiCallStats(
-                    API_NAME,
-                    mCallerAppPackageName,
-                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    API_NAME, mCallerAppPackageName, STATUS_INTERNAL_ERROR, /* latencyMs= */ 0);
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_TO_CALLER_FAILED,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE);
         }
     }
 
@@ -318,15 +362,16 @@ public class ScheduleCustomAudienceUpdateImpl {
                     API_NAME,
                     mCallerAppPackageName,
                     AdServicesStatusUtils.STATUS_SUCCESS,
-                    /*latencyMs=*/ 0);
+                    /* latencyMs= */ 0);
             callback.onSuccess();
         } catch (RemoteException e) {
             sLogger.e(e, "Unable to send successful result to the callback");
             mAdServicesLogger.logFledgeApiCallStats(
-                    API_NAME,
-                    mCallerAppPackageName,
-                    AdServicesStatusUtils.STATUS_INTERNAL_ERROR,
-                    /*latencyMs=*/ 0);
+                    API_NAME, mCallerAppPackageName, STATUS_INTERNAL_ERROR, /* latencyMs= */ 0);
+            ErrorLogUtil.e(
+                    e,
+                    AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_SUCCESS_TO_CALLER_FAILED,
+                    AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE);
         }
     }
 
@@ -338,7 +383,51 @@ public class ScheduleCustomAudienceUpdateImpl {
         if (delayTime.toMinutes() < minTimeDelayMinutes
                 || delayTime.toMinutes() > MAX_DELAY_TIME_MINUTES) {
             sLogger.e("Delay Time not within permissible limits");
+            // TODO (b/329285478): add a CEL.
             throw new IllegalArgumentException("Delay Time not within permissible limits");
         }
+    }
+
+    private void logCelByStatusCode(@StatusCode int statusCode) {
+        int celErrorCode;
+        switch (statusCode) {
+            case STATUS_BACKGROUND_CALLER:
+                celErrorCode =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_BACKGROUND_CALLER;
+                break;
+            case STATUS_CALLER_NOT_ALLOWED:
+                celErrorCode =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_CALLER_NOT_ALLOWED;
+                break;
+            case STATUS_UNAUTHORIZED:
+                celErrorCode =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_UNAUTHORIZED;
+                break;
+            case STATUS_RATE_LIMIT_REACHED:
+                celErrorCode =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_FILTER_EXCEPTION_RATE_LIMIT_REACHED;
+                break;
+            case STATUS_SERVER_RATE_LIMIT_REACHED:
+                celErrorCode =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_SERVER_RATE_LIMIT_REACHED;
+                break;
+            case STATUS_INVALID_ARGUMENT:
+                celErrorCode =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_INVALID_ARGUMENT;
+                break;
+            case STATUS_UPDATE_ALREADY_PENDING_ERROR:
+                celErrorCode =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_UPDATE_ALREADY_PENDING_ERROR;
+                break;
+            case STATUS_INTERNAL_ERROR:
+                celErrorCode =
+                        AD_SERVICES_ERROR_REPORTED__ERROR_CODE__SCHEDULE_CUSTOM_AUDIENCE_UPDATE_IMPL_NOTIFY_FAILURE_INTERNAL_ERROR;
+                break;
+            default:
+                celErrorCode = AD_SERVICES_ERROR_REPORTED__ERROR_CODE__ERROR_CODE_UNSPECIFIED;
+        }
+        ErrorLogUtil.e(
+                celErrorCode,
+                AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__SCHEDULE_CUSTOM_AUDIENCE_UPDATE);
     }
 }

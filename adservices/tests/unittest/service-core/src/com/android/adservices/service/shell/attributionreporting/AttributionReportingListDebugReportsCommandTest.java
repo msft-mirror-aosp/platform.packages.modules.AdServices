@@ -53,6 +53,10 @@ public class AttributionReportingListDebugReportsCommandTest
     private static final String INSERTION_TIME = "insertion_time";
     private static final String REGISTRATION_ORIGIN = "registration_origin";
     private static final String TYPE = "type";
+    private static final String BODY = "body";
+    private static final String SCHEMA_FULL = "full";
+    private static final String SCHEMA_PARTIAL = "partial";
+    private static final String SCHEMA_SUB_COMMAND = "--schema";
     DatastoreManager mDatastoreManager = Mockito.mock(DatastoreManager.class);
     @Mock private DevSessionDataStore mDevSessionDataStore;
 
@@ -132,9 +136,11 @@ public class AttributionReportingListDebugReportsCommandTest
 
         for (int i = 0; i < registrationsArray.length(); i++) {
             String id = "report" + (i + 1);
+            JSONObject registrationsObject = registrationsArray.getJSONObject(i);
             DebugReport outputDebugReport =
-                    getDebugReportFromJson(registrationsArray.getJSONObject(i), id).build();
+                    getDebugReportFromJson(registrationsObject, id, "").build();
             assertThat(outputDebugReport).isEqualTo(expectedDebugReports.get(i));
+            assertDebugReportJson(registrationsObject, outputDebugReport, SCHEMA_PARTIAL);
         }
     }
 
@@ -155,15 +161,80 @@ public class AttributionReportingListDebugReportsCommandTest
     }
 
     @Test
-    public void testRunListDebugReports_nullDebugReportsJSON() {
+    public void testRunListDebugReports_nullDebugReportsJson() {
         doReturn(Optional.empty()).when(mDatastoreManager).runInTransactionWithResult(any());
 
         Result result = runCommandAndGetResult();
 
         expectSuccess(result, COMMAND_ATTRIBUTION_REPORTING_LIST_DEBUG_REPORTS);
 
-        assertThat(result.mOut).isEqualTo(
-                "Error in retrieving verbose debug reports from database.");
+        assertThat(result.mOut)
+                .isEqualTo("Error in retrieving verbose debug reports from database");
+    }
+
+    @Test
+    public void testRunListDebugReports_singleDebugReportsPartialSchemaJson() throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_PARTIAL};
+        List<DebugReport> debugReports = List.of(debugReport1);
+        testRunListDebugReportsWithSchema(debugReports, args);
+    }
+
+    @Test
+    public void testRunListDebugReports_multipleDebugReportsPartialSchemaJson()
+            throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_PARTIAL};
+        List<DebugReport> debugReports = List.of(debugReport1, debugReport2);
+        testRunListDebugReportsWithSchema(debugReports, args);
+    }
+
+    @Test
+    public void testRunListDebugReports_singleDebugReportsFullSchemaJson() throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_FULL};
+        List<DebugReport> debugReports = List.of(debugReport1);
+        testRunListDebugReportsWithSchema(debugReports, args);
+    }
+
+    @Test
+    public void testRunListDebugReports_multipleDebugReportsFullSchemaJson() throws JSONException {
+        String[] args = {SCHEMA_SUB_COMMAND, SCHEMA_FULL};
+        List<DebugReport> debugReports = List.of(debugReport1, debugReport2);
+        testRunListDebugReportsWithSchema(debugReports, args);
+    }
+
+    private void testRunListDebugReportsWithSchema(List<DebugReport> debugReports, String[] schema)
+            throws JSONException {
+        doReturn(Optional.ofNullable(debugReports))
+                .when(mDatastoreManager)
+                .runInTransactionWithResult(any());
+
+        Result result = runCommandAndGetResult(schema);
+
+        expectSuccess(result, COMMAND_ATTRIBUTION_REPORTING_LIST_DEBUG_REPORTS);
+
+        JSONObject jsonOutput = new JSONObject(result.mOut);
+        JSONArray registrationsArray = jsonOutput.getJSONArray("attribution_reporting");
+
+        for (int i = 0; i < registrationsArray.length(); i++) {
+            String id = "debugReport" + (i + 1);
+            JSONObject registrationsObject = registrationsArray.getJSONObject(i);
+            DebugReport outputDebugReport =
+                    getDebugReportFromJson(registrationsObject, id, schema[1]).build();
+            assertThat(outputDebugReport).isEqualTo(debugReports.get(i));
+            assertDebugReportJson(registrationsObject, outputDebugReport, schema[1]);
+        }
+    }
+
+    private Result runCommandAndGetResult(String[] args) {
+        String[] stringArray = new String[2 + args.length];
+        stringArray[0] = AttributionReportingShellCommandFactory.COMMAND_PREFIX;
+        stringArray[1] = AttributionReportingListDebugReportsCommand.CMD;
+        for (int i = 0; i < args.length; i++) {
+            stringArray[i + 1] = args[i];
+        }
+        return run(
+                new AttributionReportingListDebugReportsCommand(
+                        mDatastoreManager, mDevSessionDataStore),
+                stringArray);
     }
 
     private Result runCommandAndGetResult() {
@@ -177,8 +248,8 @@ public class AttributionReportingListDebugReportsCommandTest
     /**
      * Creates a DebugReport.Builder from JSON. Missing fields are populated with default values.
      */
-    private static DebugReport.Builder getDebugReportFromJson(JSONObject jsonObject, String id)
-            throws JSONException {
+    private static DebugReport.Builder getDebugReportFromJson(
+            JSONObject jsonObject, String id, String schema) throws JSONException {
         DebugReport.Builder builder =
                 new DebugReport.Builder()
                         .setId(id)
@@ -188,6 +259,24 @@ public class AttributionReportingListDebugReportsCommandTest
                         .setRegistrationOrigin(Uri.parse(jsonObject.getString(REGISTRATION_ORIGIN)))
                         .setInsertionTime(jsonObject.getLong(INSERTION_TIME))
                         .setRegistrant(ValidDebugReportParams.REGISTRANT);
+
+        if (schema.equals(SCHEMA_FULL)) {
+            builder.setBody(jsonObject.getString(BODY));
+        }
         return builder;
+    }
+
+    private void assertDebugReportJson(JSONObject reportJson, DebugReport report, String schema)
+            throws JSONException {
+        assertThat(reportJson.getString(TYPE)).isEqualTo(report.getType());
+        assertThat(reportJson.getString(REGISTRATION_ORIGIN))
+                .isEqualTo(report.getRegistrationOrigin().toString());
+        assertThat(reportJson.getLong(INSERTION_TIME)).isEqualTo(report.getInsertionTime());
+
+        if (schema.equals(SCHEMA_FULL)) {
+            assertThat(reportJson.getString(BODY)).isEqualTo(report.getBody().toString());
+        } else if (schema.equals(SCHEMA_PARTIAL)) {
+            assertThat(reportJson.has(BODY)).isFalse();
+        }
     }
 }
