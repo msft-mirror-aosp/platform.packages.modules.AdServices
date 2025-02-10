@@ -201,6 +201,13 @@ public abstract class CustomAudienceDao {
 
         persistCustomAudience(customAudience);
         persistCustomAudienceBackgroundFetchData(fetchData);
+        List<ComponentAdData> componentAds = updatableData.getComponentAds();
+        sLogger.v("Inserting Component Ads in the DB: %s", componentAds);
+        insertAndOverwriteComponentAds(
+                componentAds,
+                customAudience.getOwner(),
+                customAudience.getBuyer(),
+                customAudience.getName());
     }
 
     /** Returns total size of the {@code custom_audience_quarantine} table. */
@@ -1059,7 +1066,7 @@ public abstract class CustomAudienceDao {
     @Query(
             "SELECT * FROM component_ad_data WHERE owner = :owner AND buyer = :buyer AND name ="
                     + " :name ORDER BY rowId")
-    abstract List<DBComponentAdData> getComponentAdsByCustomAudienceInfo(
+    public abstract List<DBComponentAdData> getComponentAdsByCustomAudienceInfo(
             String owner, AdTechIdentifier buyer, String name);
 
     /**

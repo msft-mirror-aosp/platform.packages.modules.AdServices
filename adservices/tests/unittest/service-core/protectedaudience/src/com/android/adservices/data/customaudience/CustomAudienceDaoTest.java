@@ -307,6 +307,19 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                     .setContainsSuccessfulUpdate(true)
                     .build();
 
+    private static final CustomAudienceUpdatableData
+            CUSTOM_AUDIENCE_UPDATABLE_DATA_WITH_COMPONENT_ADS =
+                    CustomAudienceUpdatableData.builder()
+                            .setUserBiddingSignals(USER_BIDDING_SIGNALS_2)
+                            .setTrustedBiddingData(TRUSTED_BIDDING_DATA_2)
+                            .setAds(List.of(ADS_2))
+                            .setAttemptedUpdateTime(LAST_UPDATED_TIME_2)
+                            .setInitialUpdateResult(BackgroundFetchRunner.UpdateResultType.SUCCESS)
+                            .setContainsSuccessfulUpdate(true)
+                            .setComponentAds(
+                                    ComponentAdDataFixture.getValidComponentAdsByBuyer(BUYER_1))
+                            .build();
+
     private static final DBCustomAudience CUSTOM_AUDIENCE_1_UPDATED_FROM_UPDATABLE_DATA =
             new DBCustomAudience.Builder()
                     .setOwner(OWNER_1)
@@ -1509,6 +1522,46 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                 CUSTOM_AUDIENCE_BGF_DATA_1_UPDATED,
                 mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
                         OWNER_1, BUYER_1, NAME_1));
+    }
+
+    @Test
+    public void
+            testCreateOrUpdate_UpdateExistingCustomAudienceAndBackgroundFetchDataWithComponentAds() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_1, DAILY_UPDATE_URI_1, false, List.of());
+        expect.that(mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1))
+                .isEqualTo(CUSTOM_AUDIENCE_1);
+        expect.that(
+                        mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                                OWNER_1, BUYER_1, NAME_1))
+                .isEqualTo(CUSTOM_AUDIENCE_BGF_DATA_1);
+        expect.that(
+                        mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(
+                                OWNER_1, BUYER_1, NAME_1))
+                .isEmpty();
+
+        mCustomAudienceDao.updateCustomAudienceAndBackgroundFetchData(
+                CUSTOM_AUDIENCE_BGF_DATA_1_1, CUSTOM_AUDIENCE_UPDATABLE_DATA_WITH_COMPONENT_ADS);
+
+        expect.that(mCustomAudienceDao.getCustomAudienceByPrimaryKey(OWNER_1, BUYER_1, NAME_1))
+                .isEqualTo(CUSTOM_AUDIENCE_1_UPDATED_FROM_UPDATABLE_DATA);
+        expect.that(
+                        mCustomAudienceDao.getCustomAudienceBackgroundFetchDataByPrimaryKey(
+                                OWNER_1, BUYER_1, NAME_1))
+                .isEqualTo(CUSTOM_AUDIENCE_BGF_DATA_1_UPDATED);
+        List<DBComponentAdData> expectedComponentAds =
+                DBComponentAdDataFixture.getValidComponentAdsByBuyer(
+                        ComponentAdDataFixture.getValidComponentAdsByBuyer(BUYER_1),
+                        OWNER_1,
+                        BUYER_1,
+                        NAME_1);
+        expect.that(
+                        mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(
+                                OWNER_1, BUYER_1, NAME_1))
+                .containsExactlyElementsIn(expectedComponentAds)
+                .inOrder();
     }
 
     @Test

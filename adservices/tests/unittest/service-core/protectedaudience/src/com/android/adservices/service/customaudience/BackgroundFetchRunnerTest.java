@@ -712,7 +712,6 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                         List.of(new MockResponse().setBody(jsonResponseString)));
         CustomAudienceUpdatableData expectedUpdatableData =
                 CustomAudienceUpdatableDataFixture.getValidBuilderFullSuccessfulResponse()
-                        .setComponentAds(null)
                         .build();
 
         // Do not expect component ads as the flag is disabled
@@ -725,7 +724,7 @@ public final class BackgroundFetchRunnerTest extends AdServicesExtendedMockitoTe
                                         .getDeviceDevOptionsEnabled())
                         .get();
 
-        expect.withMessage("Updatable data").that(expectedUpdatableData).isEqualTo(updatableData);
+        expect.withMessage("Updatable data").that(updatableData).isEqualTo(expectedUpdatableData);
         expect.that(mockWebServer.getRequestCount()).isEqualTo(1);
 
         RecordedRequest fetchRequest = mockWebServer.takeRequest();

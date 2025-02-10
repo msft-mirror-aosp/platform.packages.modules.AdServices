@@ -421,7 +421,7 @@ public final class CustomAudienceUpdatableDataTest extends AdServicesUnitTestCas
                 .that(updatableDataFromResponseString)
                 .isEqualTo(expectedUpdatableDataFromBuilderWithoutComponentAds);
 
-        expect.that(updatableDataFromResponseString.getComponentAds()).isNull();
+        expect.that(updatableDataFromResponseString.getComponentAds()).isEmpty();
     }
 
     @Test
@@ -886,7 +886,7 @@ public final class CustomAudienceUpdatableDataTest extends AdServicesUnitTestCas
 
         expect.that(readStatus)
                 .isEqualTo(CustomAudienceUpdatableData.ReadStatus.STATUS_FOUND_INVALID);
-        expect.that(dataBuilder.build().getComponentAds()).isNull();
+        expect.that(dataBuilder.build().getComponentAds()).isEmpty();
     }
 
     @Test
@@ -905,7 +905,7 @@ public final class CustomAudienceUpdatableDataTest extends AdServicesUnitTestCas
 
         expect.that(readStatus)
                 .isEqualTo(CustomAudienceUpdatableData.ReadStatus.STATUS_FOUND_INVALID);
-        expect.that(dataBuilder.build().getComponentAds()).isNull();
+        expect.that(dataBuilder.build().getComponentAds()).isEmpty();
     }
 
     @Test
@@ -924,7 +924,7 @@ public final class CustomAudienceUpdatableDataTest extends AdServicesUnitTestCas
 
         expect.that(readStatus)
                 .isEqualTo(CustomAudienceUpdatableData.ReadStatus.STATUS_FOUND_INVALID);
-        expect.that(dataBuilder.build().getComponentAds()).isNull();
+        expect.that(dataBuilder.build().getComponentAds()).isEmpty();
     }
 
     @Test
@@ -942,7 +942,7 @@ public final class CustomAudienceUpdatableDataTest extends AdServicesUnitTestCas
                 readComponentAds(reader, "responseHash", dataBuilder);
 
         expect.that(readStatus).isEqualTo(CustomAudienceUpdatableData.ReadStatus.STATUS_NOT_FOUND);
-        expect.that(dataBuilder.build().getComponentAds()).isNull();
+        expect.that(dataBuilder.build().getComponentAds()).isEmpty();
     }
 
     @Test
