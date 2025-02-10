@@ -15,10 +15,8 @@
  */
 package com.android.adservices.cts;
 
-import android.adservices.measurement.MeasurementManager;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.OutcomeReceiver;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -37,8 +35,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class AppSearchWriterActivity extends AppCompatActivity {
@@ -46,8 +42,6 @@ public class AppSearchWriterActivity extends AppCompatActivity {
     private static final String NOTIFICATION_DATABASE_NAME = "adservices_notification";
     private static final String CONSENT_DATABASE_NAME = "adservices_consent";
     private static final String TOPICS_DATABASE_NAME = "adservices-topics";
-    private static final Executor EXECUTOR = Executors.newCachedThreadPool();
-
     private AppSearchDaoWriter mSearchDaoWriter;
 
     @Override
@@ -55,7 +49,7 @@ public class AppSearchWriterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
 
         Intent intent = getIntent();
-
+        Log.i(TAG, "Writing to appsearch");
         String userId = intent.getStringExtra("user-id");
         if (userId == null || userId.isBlank()) {
             Log.e(TAG, "Missing intent extra for user-id");
@@ -70,7 +64,6 @@ public class AppSearchWriterActivity extends AppCompatActivity {
         boolean msmtConsent = intent.getBooleanExtra("measurement-consent", true);
         boolean topicsConsent = intent.getBooleanExtra("topics-consent", true);
         boolean fledgeConsent = intent.getBooleanExtra("fledge-consent", false);
-        boolean triggerApis = intent.getBooleanExtra("call-api", true);
 
         int[] temp = intent.getIntArrayExtra("blocked-topics");
         // Add "Cartoons (10004)" and "Golf (10410)" as two blocked topics by default
@@ -87,9 +80,6 @@ public class AppSearchWriterActivity extends AppCompatActivity {
         setBlockedTopics(userId, blockedTopics);
 
         // Trigger consent migration by calling the apis if specified.
-        if (triggerApis) {
-            callMeasurementApi();
-        }
     }
 
     private void recordGaUxNotificationDisplayed(String userId, boolean wasNotificationDisplayed) {
@@ -143,23 +133,4 @@ public class AppSearchWriterActivity extends AppCompatActivity {
         mSearchDaoWriter.writeToAppSearch(dao, session, "blocked-topics");
     }
 
-    private void callMeasurementApi() {
-        Log.d(TAG, "Calling Measurement api");
-        MeasurementManager mgr = MeasurementManager.get(this);
-        mgr.getMeasurementApiStatus(EXECUTOR, getOutcomeReceiver("GetMeasurementStatus"));
-    }
-
-    private <T> OutcomeReceiver<T, Exception> getOutcomeReceiver(String prefix) {
-        return new OutcomeReceiver<>() {
-            @Override
-            public void onResult(T result) {
-                Log.d(TAG, prefix + " API call succeeded");
-            }
-
-            @Override
-            public void onError(@NonNull Exception e) {
-                Log.e(TAG, prefix + " API call failed", e);
-            }
-        };
-    }
 }

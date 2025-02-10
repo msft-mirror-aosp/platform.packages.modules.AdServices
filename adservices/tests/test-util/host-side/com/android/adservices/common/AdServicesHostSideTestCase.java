@@ -37,6 +37,8 @@ public abstract class AdServicesHostSideTestCase extends HostSideTestCase {
     public static final String CTS_TEST_PACKAGE = "com.android.adservices.cts";
     public static final String APPSEARCH_WRITER_ACTIVITY_CLASS = "AppSearchWriterActivity";
 
+    public static final String APPSEARCH_MIGRATION_ACTIVITY_CLASS = "AppSearchMigrationActivity";
+
     @ClassRule
     public static final AdServicesHostSideFlagsPreparerClassRule sFlagsPreparer =
             new AdServicesHostSideFlagsPreparerClassRule();

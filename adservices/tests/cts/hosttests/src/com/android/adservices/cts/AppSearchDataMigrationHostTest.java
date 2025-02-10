@@ -16,11 +16,14 @@
 
 package com.android.adservices.cts;
 
+import static com.android.adservices.common.AdServicesHostSideTestCase.APPSEARCH_MIGRATION_ACTIVITY_CLASS;
 import static com.android.adservices.common.AdServicesHostSideTestCase.APPSEARCH_WRITER_ACTIVITY_CLASS;
 import static com.android.adservices.common.AdServicesHostSideTestCase.CTS_TEST_PACKAGE;
+import static com.android.adservices.service.CommonFlagsConstants.KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_APPSEARCH_WRITER_ALLOW_LIST_OVERRIDE;
 import static com.android.adservices.service.FlagsConstants.KEY_DISABLE_TOPICS_ENROLLMENT_CHECK;
 import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_APPSEARCH_CONSENT_DATA;
+import static com.android.adservices.service.FlagsConstants.KEY_GLOBAL_KILL_SWITCH;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_KILL_SWITCH;
 import static com.android.adservices.shared.testing.TestDeviceHelper.runShellCommand;
 
@@ -36,6 +39,8 @@ import com.android.adservices.shared.testing.BackgroundLogReceiver;
 import com.android.adservices.shared.testing.Logger.LogLevel;
 import com.android.adservices.shared.testing.TestDeviceHelper;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastT;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.adservices.shared.testing.annotations.SetLogcatTag;
 import com.android.tradefed.device.DeviceNotAvailableException;
 import com.android.tradefed.log.LogUtil.CLog;
@@ -68,12 +73,15 @@ import java.util.stream.Collectors;
 // Measurement feature flags for calling the Measurement API
 @SetMsmtApiAppAllowList(CTS_TEST_PACKAGE)
 @SetMsmtWebContextClientAppAllowList(CTS_TEST_PACKAGE)
+@SetFlagDisabled(KEY_GLOBAL_KILL_SWITCH)
+@SetFlagEnabled(KEY_ADSERVICES_SYSTEM_SERVICE_ENABLED)
 // Logcat tags
 @SetAllLogcatTags
 @SetLogcatTag(tag = APPSEARCH_WRITER_ACTIVITY_CLASS)
+@SetLogcatTag(tag = APPSEARCH_MIGRATION_ACTIVITY_CLASS)
 public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTestCase {
     private static final long BOOT_COMPLETED_TIMEOUT = 60_000L;
-    private static final long LOG_RECEIVER_TIMEOUT_MS = 60_000L;
+    private static final long LOG_RECEIVER_TIMEOUT_MS = 120_000L;
     private static final int ACTIVITY_LAUNCH_TIMEOUT_MS = 30_000;
 
     private static final String ADSERVICES_APK_PACKAGE_NAME_SUFFIX = "android.adservices.api";
@@ -134,7 +142,8 @@ public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTest
         // because it gets processed before the start of the setup method.
         flags.setFlag(KEY_DISABLE_TOPICS_ENROLLMENT_CHECK, true)
                 .setLogcatTag("adservices", LogLevel.VERBOSE)
-                .setLogcatTag("AppSearchWriterActivity", LogLevel.VERBOSE);
+                .setLogcatTag(APPSEARCH_WRITER_ACTIVITY_CLASS, LogLevel.VERBOSE)
+                .setLogcatTag(APPSEARCH_MIGRATION_ACTIVITY_CLASS, LogLevel.VERBOSE);
 
         String migrationMsg = "Finished migrating Consent from AppSearch to PPAPI + System Service";
         Predicate<String[]> apiCompletedLogPresentPredicate =
@@ -144,13 +153,17 @@ public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTest
         BackgroundLogReceiver receiver =
                 new BackgroundLogReceiver.Builder()
                         .setDevice(mDevice)
-                        .setLogCatCommand("logcat -s AppSearchWriterActivity,adservices")
+                        .setLogCatCommand(
+                                "logcat -s "
+                                        + "AppSearchWriterActivity,"
+                                        + "AppSearchMigrationActivity,"
+                                        + "adservices")
                         .setEarlyStopCondition(apiCompletedLogPresentPredicate)
                         .build();
 
         receiver.startBackgroundCollection();
 
-        // Start the test helper app that will write consent data and trigger a migration
+        // Start the test helper app that will write consent data
         DeviceUtils.runActivity(
                 mDevice,
                 CTS_TEST_PACKAGE,
@@ -159,11 +172,24 @@ public final class AppSearchDataMigrationHostTest extends AdServicesHostSideTest
                 /* actionValue= */ Integer.toString(mCurrentUser),
                 ACTIVITY_LAUNCH_TIMEOUT_MS);
 
+        // Stop the adservices process to remove any locks on the files
+        runShellCommand("am force-stop %s", mAdServicesPackageName);
+        // Delete the files marking that consent has already migrated
+        runShellCommand(
+                "rm -f /data/user/%d/%s/shared_prefs/PPAPI_*",
+                mCurrentUser, mAdServicesPackageName);
+        // Start the test helper app that will trigger migration
+        DeviceUtils.runActivity(
+                mDevice,
+                CTS_TEST_PACKAGE,
+                APPSEARCH_MIGRATION_ACTIVITY_CLASS,
+                null,
+                null,
+                ACTIVITY_LAUNCH_TIMEOUT_MS);
         receiver.waitForLogs(LOG_RECEIVER_TIMEOUT_MS);
 
         List<String> logs = receiver.getCollectedLogs();
         CLog.d("Collected logs: %s", logs);
-
         // Verify that the logs contain the appropriate success messages
         expect.withMessage("Migration completed")
                 .that(logs.stream().anyMatch(s -> s.contains(migrationMsg)))
