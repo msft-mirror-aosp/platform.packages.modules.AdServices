@@ -18,6 +18,7 @@ package com.android.adservices.service.shell.attributionreporting;
 
 import static com.android.adservices.service.stats.ShellCommandStats.COMMAND_ATTRIBUTION_REPORTING_LIST_AGGREGATABLE_REPORTS;
 import static com.android.adservices.service.stats.ShellCommandStats.RESULT_DEV_MODE_UNCONFIRMED;
+import static com.android.adservices.service.stats.ShellCommandStats.RESULT_GENERIC_ERROR;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.util.concurrent.Futures.immediateFuture;
@@ -166,9 +167,14 @@ public class AttributionReportingListAggregatableReportsCommandTest
 
         Result result = runCommandAndGetResult();
 
-        expectSuccess(result, COMMAND_ATTRIBUTION_REPORTING_LIST_AGGREGATABLE_REPORTS);
-
-        assertThat(result.mOut).isEqualTo("Error in retrieving aggregatable reports from database");
+        String errorMessage =
+                "Failed to list aggregatable reports: Error in retrieving aggregatable reports from"
+                        + " database";
+        expectFailure(
+                result,
+                errorMessage,
+                COMMAND_ATTRIBUTION_REPORTING_LIST_AGGREGATABLE_REPORTS,
+                RESULT_GENERIC_ERROR);
     }
 
     @Test
@@ -205,6 +211,21 @@ public class AttributionReportingListAggregatableReportsCommandTest
         testRunListAggregatableReportsWithSchema(aggregatableReports, args);
     }
 
+    @Test
+    public void testRunListAggregatableReports_invalidSchema() {
+        String[] args = {SCHEMA_SUB_COMMAND, "invalid_schema"};
+        Result result = runCommandAndGetResult(args);
+
+        String errorMessage =
+                "Failed to list aggregatable reports: Invalid schema. The 'schema' parameter must"
+                        + " be either 'partial' or 'full'. Check for typos.";
+        expectFailure(
+                result,
+                errorMessage,
+                COMMAND_ATTRIBUTION_REPORTING_LIST_AGGREGATABLE_REPORTS,
+                RESULT_GENERIC_ERROR);
+    }
+
     private void testRunListAggregatableReportsWithSchema(
             List<AggregateReport> aggregatableReports, String[] schema) throws JSONException {
         doReturn(Optional.ofNullable(aggregatableReports))
@@ -233,7 +254,7 @@ public class AttributionReportingListAggregatableReportsCommandTest
         stringArray[0] = AttributionReportingShellCommandFactory.COMMAND_PREFIX;
         stringArray[1] = AttributionReportingListAggregatableReportsCommand.CMD;
         for (int i = 0; i < args.length; i++) {
-            stringArray[i + 1] = args[i];
+            stringArray[i + 2] = args[i];
         }
         return run(
                 new AttributionReportingListAggregatableReportsCommand(
@@ -260,14 +281,16 @@ public class AttributionReportingListAggregatableReportsCommandTest
                         .setId(id)
                         .setPublisher(AggregateReportFixture.ValidAggregateReportParams.PUBLISHER)
                         .setAttributionDestination(
-                                Uri.parse(jsonObject.getString(
-                                        MeasurementTables.AggregateReport
-                                                .ATTRIBUTION_DESTINATION)))
+                                Uri.parse(
+                                        jsonObject.getString(
+                                                MeasurementTables.AggregateReport
+                                                        .ATTRIBUTION_DESTINATION)))
                         .setSourceRegistrationTime(
                                 AggregateReportFixture.ValidAggregateReportParams
                                         .SOURCE_REGISTRATION_TIME)
-                        .setScheduledReportTime(jsonObject.getLong(
-                                MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME))
+                        .setScheduledReportTime(
+                                jsonObject.getLong(
+                                        MeasurementTables.AggregateReport.SCHEDULED_REPORT_TIME))
                         .setEnrollmentId(
                                 AggregateReportFixture.ValidAggregateReportParams.ENROLLMENT_ID)
                         .setSourceDebugKey(
