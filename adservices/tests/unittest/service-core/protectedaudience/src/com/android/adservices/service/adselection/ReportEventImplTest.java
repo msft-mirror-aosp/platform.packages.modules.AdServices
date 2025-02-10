@@ -154,12 +154,16 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
 
     private static final String SELLER_INTERACTION_REPORTING_PATH = "/seller/interactionReporting/";
     private static final String BUYER_INTERACTION_REPORTING_PATH = "/buyer/interactionReporting/";
+    private static final String COMPONENT_SELLER_INTERACTION_REPORTING_PATH =
+            "/buyer/componentSellerReporting/";
     private static final Uri RENDER_URI = Uri.parse("https://test.com/advert/");
 
     private static final int BUYER_DESTINATION =
             ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
     private static final int SELLER_DESTINATION =
             ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
+    private static final int COMPONENT_SELLER =
+            ReportEventRequest.FLAG_REPORTING_DESTINATION_COMPONENT_SELLER;
     private static final int SELLER_AND_BUYER_DESTINATION =
             ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER |
                     ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
@@ -193,6 +197,7 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
     private DBAdSelection mDBAdSelection;
     private DBRegisteredAdInteraction mDBRegisteredAdInteractionSellerClick;
     private DBRegisteredAdInteraction mDBRegisteredAdInteractionBuyerClick;
+    private DBRegisteredAdInteraction mDBRegisteredAdInteractionComponentSellerClick;
     private String mInteractionData;
 
     private AdTechIdentifier mAdTech = AdTechIdentifier.fromString("localhost");
@@ -267,6 +272,16 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
                         .setInteractionReportingUri(
                                 mMockWebServerRule.uriForPath(
                                         SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT))
+                        .build();
+
+        mDBRegisteredAdInteractionComponentSellerClick =
+                DBRegisteredAdInteraction.builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setInteractionKey(CLICK_EVENT)
+                        .setDestination(COMPONENT_SELLER)
+                        .setInteractionReportingUri(
+                                mMockWebServerRule.uriForPath(
+                                        COMPONENT_SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT))
                         .build();
 
         mInteractionData = new JSONObject().put("x", "10").put("y", "12").toString();
@@ -733,6 +748,86 @@ public final class ReportEventImplTest extends AdServicesExtendedMockitoTestCase
         ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
         assertThat(stats.getBeaconReportingDestinationType())
                 .isEqualTo(SELLER_DESTINATION);
+        assertThat(stats.getNumMatchingUris()).isEqualTo(1);
+    }
+
+    @Test
+    public void testImplOnlyReportsComponentSellerRegisteredInteractions() throws Exception {
+        // Uses ArgumentCaptor to capture the logs in the tests.
+        ArgumentCaptor<ReportInteractionApiCalledStats> argumentCaptor =
+                ArgumentCaptor.forClass(ReportInteractionApiCalledStats.class);
+
+        mAdSelectionEntryDao.persistAdSelection(mDBAdSelection);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionBuyerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                BUYER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                SELLER_DESTINATION);
+
+        mAdSelectionEntryDao.safelyInsertRegisteredAdInteractions(
+                AD_SELECTION_ID,
+                List.of(mDBRegisteredAdInteractionComponentSellerClick),
+                mMaxRegisteredAdBeaconsTotalCount,
+                mMaxRegisteredAdBeaconsPerDestination,
+                COMPONENT_SELLER);
+
+        MockWebServer server =
+                mMockWebServerRule.startMockWebServer(
+                        new Dispatcher() {
+                            @Override
+                            public MockResponse dispatch(RecordedRequest request) {
+                                if (request.getPath()
+                                        .equals(
+                                                COMPONENT_SELLER_INTERACTION_REPORTING_PATH
+                                                        + CLICK_EVENT)) {
+                                    return new MockResponse();
+                                } else {
+                                    throw new IllegalStateException(
+                                            "Only seller reporting can occur!");
+                                }
+                            }
+                        });
+
+        ReportInteractionInput inputParams =
+                new ReportInteractionInput.Builder()
+                        .setAdSelectionId(AD_SELECTION_ID)
+                        .setCallerPackageName(TEST_PACKAGE_NAME)
+                        .setInteractionKey(CLICK_EVENT)
+                        .setInteractionData(mInteractionData)
+                        .setReportingDestinations(COMPONENT_SELLER)
+                        .build();
+
+        // Count down callback + log interaction.
+        ReportInteractionTestCallback callback = callReportInteraction(inputParams, true);
+
+        assertTrue(callback.mIsSuccess);
+
+        verify(mAdServicesLoggerMock)
+                .logFledgeApiCallStats(
+                        eq(AD_SERVICES_API_CALLED__API_NAME__REPORT_INTERACTION),
+                        eq(TEST_PACKAGE_NAME),
+                        eq(STATUS_SUCCESS),
+                        anyInt());
+
+        // Assert seller reporting was done
+        assertEquals(
+                COMPONENT_SELLER_INTERACTION_REPORTING_PATH + CLICK_EVENT,
+                server.takeRequest().getPath());
+
+        // Verifies ReportInteractionApiCalledStats get the correct values.
+        Mockito.verify(mAdServicesLoggerMock)
+                .logReportInteractionApiCalledStats(argumentCaptor.capture());
+        ReportInteractionApiCalledStats stats = argumentCaptor.getValue();
+        assertThat(stats.getBeaconReportingDestinationType()).isEqualTo(COMPONENT_SELLER);
         assertThat(stats.getNumMatchingUris()).isEqualTo(1);
     }
 
