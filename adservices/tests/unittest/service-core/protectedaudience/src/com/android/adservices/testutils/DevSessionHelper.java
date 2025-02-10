@@ -101,7 +101,7 @@ public class DevSessionHelper {
         try {
             assertThat(
                             mDevSessionController
-                                    .startDevSession()
+                                    .startDevSession(false)
                                     .get(DEV_SESSION_TIMEOUT_SEC, TimeUnit.SECONDS))
                     .isEqualTo(SUCCESS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {

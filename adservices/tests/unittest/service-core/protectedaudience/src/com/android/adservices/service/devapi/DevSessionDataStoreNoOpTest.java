@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.devapi;
 
-import static org.junit.Assert.*;
+import static com.google.common.truth.Truth.assertThat;
 
 import com.android.adservices.common.AdServicesUnitTestCase;
 import com.android.adservices.devapi.DevSessionFixture;
@@ -34,19 +34,21 @@ public final class DevSessionDataStoreNoOpTest extends AdServicesUnitTestCase {
     public void testSet_returnsFutureWithInProdSession() {
         ListenableFuture<DevSession> future = mDataStore.set(DevSessionFixture.IN_DEV);
 
-        assertTrue(future.isDone());
+        assertThat(future.isDone()).isTrue();
 
         DevSession devSession = Futures.getUnchecked(future);
-        assertEquals(DevSessionState.IN_PROD, devSession.getState());
+        assertThat(DevSessionState.IN_PROD).isEqualTo(devSession.getState());
+        assertThat(devSession.isServerAuctionTestKeysEnabled()).isFalse();
     }
 
     @Test
     public void testGet_returnsFutureWithInProdSession() {
         ListenableFuture<DevSession> future = mDataStore.get();
 
-        assertTrue(future.isDone());
+        assertThat(future.isDone()).isTrue();
 
         DevSession devSession = Futures.getUnchecked(future);
-        assertEquals(DevSessionState.IN_PROD, devSession.getState());
+        assertThat(DevSessionState.IN_PROD).isEqualTo(devSession.getState());
+        assertThat(devSession.isServerAuctionTestKeysEnabled()).isFalse();
     }
 }

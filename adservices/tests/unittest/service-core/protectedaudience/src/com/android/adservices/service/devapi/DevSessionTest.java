@@ -40,6 +40,16 @@ public final class DevSessionTest extends AdServicesUnitTestCase {
         DevSession devSession = DevSession.builder().setState(IN_DEV).build();
 
         expect.that(devSession.getState()).isEqualTo(IN_DEV);
+        expect.that(devSession.isServerAuctionTestKeysEnabled()).isEqualTo(false);
+    }
+
+    @Test
+    public void testBuilder_withServerAuctionTestKeysEnabled() {
+        DevSession devSession =
+                DevSession.builder().setState(IN_DEV).setServerAuctionTestKeysEnabled(true).build();
+
+        expect.that(devSession.getState()).isEqualTo(IN_DEV);
+        expect.that(devSession.isServerAuctionTestKeysEnabled()).isEqualTo(true);
     }
 
     @Test

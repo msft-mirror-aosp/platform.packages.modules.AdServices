@@ -41,6 +41,9 @@ public abstract class DevSession {
     /** Returns the current state of the developer session. */
     public abstract DevSessionState getState();
 
+    /** Returns true if server auction test keys are enabled */
+    public abstract boolean isServerAuctionTestKeysEnabled();
+
     /**
      * Creates a new {@link DevSession} instance from the given proto.
      *
@@ -54,7 +57,10 @@ public abstract class DevSession {
         if (!proto.getIsStorageInitialized()) {
             throw new IllegalStateException("Cannot read DevSessionStorage when not initialized");
         }
-        return builder().setState(DevSessionState.values()[proto.getState().getNumber()]).build();
+        return builder()
+                .setState(DevSessionState.values()[proto.getState().getNumber()])
+                .setServerAuctionTestKeysEnabled(proto.getServerAuctionTestKeysEnabled())
+                .build();
     }
 
     /**
@@ -70,12 +76,13 @@ public abstract class DevSession {
                         com.android.adservices.service.proto.DevSessionStorage.State.forNumber(
                                 devSession.getState().ordinal()))
                 .setIsStorageInitialized(true)
+                .setServerAuctionTestKeysEnabled(devSession.isServerAuctionTestKeysEnabled())
                 .build();
     }
 
     /** Returns a new builder for creating a {@link DevSession} instance. */
     public static Builder builder() {
-        return new AutoValue_DevSession.Builder();
+        return new AutoValue_DevSession.Builder().setServerAuctionTestKeysEnabled(false);
     }
 
     /** Returns a {@link DevSession} for a newly initialized state, e.g. first read. */
@@ -88,6 +95,9 @@ public abstract class DevSession {
     public abstract static class Builder {
         /** Sets the state of the developer session. */
         public abstract Builder setState(DevSessionState state);
+
+        /** Enables/disables server auction test keys. */
+        public abstract Builder setServerAuctionTestKeysEnabled(boolean enabled);
 
         /** Creates a new {@link DevSession} instance with the configured properties. */
         public abstract DevSession build();
