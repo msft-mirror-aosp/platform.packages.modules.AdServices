@@ -89,6 +89,7 @@ package android.adservices.adselection {
     method @NonNull public long getAdSelectionId();
     method @FlaggedApi("com.android.adservices.flags.fledge_enable_custom_audience_component_ads") @NonNull public java.util.List<android.net.Uri> getComponentAdUris();
     method @NonNull public android.net.Uri getRenderUri();
+    method @FlaggedApi("com.android.adservices.flags.fledge_enable_winning_seller_id_in_ad_selection_outcome") @NonNull public android.adservices.common.AdTechIdentifier getWinningSeller();
     method public boolean hasOutcome();
     field @NonNull public static final android.adservices.adselection.AdSelectionOutcome NO_OUTCOME;
   }
@@ -211,6 +212,7 @@ package android.adservices.adselection {
     method @NonNull public String getKey();
     method public int getReportingDestinations();
     field public static final int FLAG_REPORTING_DESTINATION_BUYER = 2; // 0x2
+    field @FlaggedApi("com.android.adservices.flags.fledge_enable_report_event_for_component_seller") public static final int FLAG_REPORTING_DESTINATION_COMPONENT_SELLER = 4; // 0x4
     field public static final int FLAG_REPORTING_DESTINATION_SELLER = 1; // 0x1
   }
 
