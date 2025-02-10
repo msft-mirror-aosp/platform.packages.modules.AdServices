@@ -25,7 +25,6 @@ import com.android.adservices.flags.Flags;
 import com.android.adservices.shared.testing.EqualsTester;
 import com.android.adservices.shared.testing.annotations.RequiresSdkLevelAtLeastS;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.List;
@@ -63,7 +62,6 @@ public final class AdSelectionOutcomeTest extends CtsAdServicesDeviceTestCase {
     }
 
     @Test
-    @Ignore("b/388442254")
     @RequiresFlagsEnabled({
         Flags.FLAG_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME,
         Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS
@@ -90,7 +88,6 @@ public final class AdSelectionOutcomeTest extends CtsAdServicesDeviceTestCase {
     }
 
     @Test
-    @Ignore("b/388442254")
     @RequiresFlagsEnabled({
         Flags.FLAG_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME,
         Flags.FLAG_FLEDGE_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS
@@ -119,7 +116,6 @@ public final class AdSelectionOutcomeTest extends CtsAdServicesDeviceTestCase {
     }
 
     @Test
-    @Ignore("b/388442254")
     @RequiresFlagsEnabled(Flags.FLAG_FLEDGE_ENABLE_WINNING_SELLER_ID_IN_AD_SELECTION_OUTCOME)
     public void testBuildAdSelectionOutcome_withWinningSeller_buildsCorrectly() {
         AdSelectionOutcome adSelectionOutcome =

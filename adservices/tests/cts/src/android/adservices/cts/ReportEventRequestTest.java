@@ -32,7 +32,6 @@ import com.android.adservices.flags.Flags;
 
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public final class ReportEventRequestTest extends CtsAdServicesDeviceTestCase {
@@ -124,7 +123,6 @@ public final class ReportEventRequestTest extends CtsAdServicesDeviceTestCase {
     }
 
     @Test
-    @Ignore("b/388442254")
     @RequiresFlagsEnabled(Flags.FLAG_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER)
     public void testBuildReportEventRequestSuccess_withComponentSellerAsDestination_success() {
         long otherAdSelectionId = AD_SELECTION_ID + 1;
@@ -153,7 +151,6 @@ public final class ReportEventRequestTest extends CtsAdServicesDeviceTestCase {
     }
 
     @Test
-    @Ignore("b/388442254")
     @RequiresFlagsEnabled(Flags.FLAG_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER)
     public void testBuildReportEventRequestSuccess_withAllDestinationsIncludingComponentSeller() {
         int allDestinations =
