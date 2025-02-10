@@ -68,6 +68,7 @@ import java.util.concurrent.TimeUnit;
 
 public class AggregateReportingJobHandler {
     private static final int MAX_HTTP_SUCCESS_CODE = 299;
+    private static final String LOGGING_NAME = "AggregateReportingJobHandler";
 
     /** {@link Uri} where attribution-success aggregate reports are sent with a delay. */
     @VisibleForTesting
@@ -173,6 +174,7 @@ public class AggregateReportingJobHandler {
                         });
         if (pendingAggregateReportsInWindowOpt.isEmpty()) {
             // Failure during aggregate report retrieval
+            ReportUtil.logReportingFailure(LOGGING_NAME, "Pending Aggregatable Reports not found");
             return true;
         }
 
@@ -191,11 +193,8 @@ public class AggregateReportingJobHandler {
                     // job service will interrupt this thread.  If the thread has been interrupted,
                     // it will exit early.
                     if (Thread.currentThread().isInterrupted()) {
-                        LoggerFactory.getMeasurementLogger()
-                                .d(
-                                        "AggregateReportingJobHandler"
-                                            + " performScheduledPendingReports thread interrupted,"
-                                            + " exiting early.");
+                        ReportUtil.logReportingFailure(
+                                LOGGING_NAME, "Thread interrupted, exiting early");
                         return true;
                     }
 
@@ -261,7 +260,7 @@ public class AggregateReportingJobHandler {
                 mDatastoreManager.runInTransactionWithResult((dao)
                         -> dao.getAggregateReport(aggregateReportId));
         if (aggregateReportOpt.isEmpty()) {
-            LoggerFactory.getMeasurementLogger().d("Aggregate report not found");
+            ReportUtil.logReportingFailure(LOGGING_NAME, "Aggregatable report not found");
             setAndLogReportingStatus(
                     reportingStatus,
                     UploadStatus.FAILURE,
@@ -281,7 +280,12 @@ public class AggregateReportingJobHandler {
         if (mIsDebugInstance
                 && aggregateReport.getDebugReportStatus()
                         != AggregateReport.DebugReportStatus.PENDING) {
-            LoggerFactory.getMeasurementLogger().d("Debugging status is not pending");
+            ReportUtil.logReportingFailure(
+                    LOGGING_NAME,
+                    "Debugging status is not pending",
+                    aggregateReportId,
+                    enrollmentId,
+                    reportingStatus.getReportType().toString());
             setAndLogReportingStatus(
                     reportingStatus,
                     UploadStatus.FAILURE,
@@ -291,6 +295,12 @@ public class AggregateReportingJobHandler {
         }
 
         if (!mIsDebugInstance && aggregateReport.getStatus() != AggregateReport.Status.PENDING) {
+            ReportUtil.logReportingFailure(
+                    LOGGING_NAME,
+                    "Aggregatable report status is not pending",
+                    aggregateReportId,
+                    enrollmentId,
+                    reportingStatus.getReportType().toString());
             setAndLogReportingStatus(
                     reportingStatus,
                     UploadStatus.FAILURE,
@@ -334,6 +344,15 @@ public class AggregateReportingJobHandler {
 
             // Code outside [200, 299] is a failure according to HTTP protocol.
             if (returnCode < HttpURLConnection.HTTP_OK || returnCode > MAX_HTTP_SUCCESS_CODE) {
+                ReportUtil.logReportingFailure(
+                        LOGGING_NAME,
+                        String.format(
+                                "Sending aggregatable report resulted in non-success HTTP status"
+                                        + " code %s",
+                                returnCode),
+                        aggregateReportId,
+                        enrollmentId,
+                        reportingStatus.getReportType().toString());
                 setAndLogReportingStatus(
                         reportingStatus,
                         UploadStatus.FAILURE,
@@ -341,6 +360,13 @@ public class AggregateReportingJobHandler {
                         enrollmentId);
                 return;
             }
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "AggregateReportingJobHandler (SUCCESS): Aggregatable report sent!"
+                                    + " Report ID: %s, Enrollment ID: %s, Type: %s",
+                            aggregateReportId,
+                            enrollmentId,
+                            reportingStatus.getReportType().toString());
 
             boolean success =
                     mDatastoreManager.runInTransaction(
@@ -356,6 +382,12 @@ public class AggregateReportingJobHandler {
                                 }
                             });
             if (!success) {
+                ReportUtil.logReportingFailure(
+                        LOGGING_NAME,
+                        "Updating aggregatable report status failed",
+                        aggregateReportId,
+                        enrollmentId,
+                        reportingStatus.getReportType().toString());
                 setAndLogReportingStatus(
                         reportingStatus,
                         UploadStatus.FAILURE,
@@ -364,12 +396,24 @@ public class AggregateReportingJobHandler {
                 return;
             }
 
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "AggregateReportingJobHandler (SUCCESS): Aggregatable report status"
+                                    + " updated! Report ID: %s, Enrollment ID: %s, Type: %s",
+                            aggregateReportId,
+                            enrollmentId,
+                            reportingStatus.getReportType().toString());
             setAndLogReportingStatus(
                     reportingStatus, UploadStatus.SUCCESS, FailureStatus.UNKNOWN, enrollmentId);
 
         } catch (IOException e) {
-            LoggerFactory.getMeasurementLogger()
-                    .d(e, "Network error occurred when attempting to deliver aggregate report.");
+            ReportUtil.logReportingFailure(
+                    LOGGING_NAME,
+                    "Network error occurred when attempting to deliver aggregatable report",
+                    e,
+                    aggregateReportId,
+                    enrollmentId,
+                    reportingStatus.getReportType().toString());
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR,
@@ -377,8 +421,13 @@ public class AggregateReportingJobHandler {
             setAndLogReportingStatus(
                     reportingStatus, UploadStatus.FAILURE, FailureStatus.NETWORK, enrollmentId);
         } catch (JSONException e) {
-            LoggerFactory.getMeasurementLogger()
-                    .d(e, "Serialization error occurred at aggregate report delivery.");
+            ReportUtil.logReportingFailure(
+                    LOGGING_NAME,
+                    "Serialization error occurred at aggregatable report delivery",
+                    e,
+                    aggregateReportId,
+                    enrollmentId,
+                    reportingStatus.getReportType().toString());
             setAndLogReportingStatus(
                     reportingStatus,
                     UploadStatus.FAILURE,
@@ -390,6 +439,12 @@ public class AggregateReportingJobHandler {
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             if (mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException()) {
                 // Unrecoverable state - delete the report.
+                ReportUtil.logReportingFailure(
+                        LOGGING_NAME,
+                        "Unrecoverable state, deleting the aggregatable report",
+                        aggregateReportId,
+                        enrollmentId,
+                        reportingStatus.getReportType().toString());
                 mDatastoreManager.runInTransaction(
                         dao ->
                                 dao.markAggregateReportStatus(
@@ -406,6 +461,13 @@ public class AggregateReportingJobHandler {
             }
         } catch (CryptoException e) {
             LoggerFactory.getMeasurementLogger().e(e, e.toString());
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "%s Report ID: %s, Enrollment ID: %s, Type: %s",
+                            e.toString(),
+                            aggregateReportId,
+                            enrollmentId,
+                            reportingStatus.getReportType().toString());
             setAndLogReportingStatus(
                     reportingStatus,
                     UploadStatus.FAILURE,
@@ -422,6 +484,13 @@ public class AggregateReportingJobHandler {
             }
         } catch (Exception e) {
             LoggerFactory.getMeasurementLogger().e(e, e.toString());
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "%s Report ID: %s, Enrollment ID: %s, Type: %s",
+                            e.toString(),
+                            aggregateReportId,
+                            enrollmentId,
+                            reportingStatus.getReportType().toString());
             setAndLogReportingStatus(
                     reportingStatus, UploadStatus.FAILURE, FailureStatus.UNKNOWN, enrollmentId);
             ErrorLogUtil.e(

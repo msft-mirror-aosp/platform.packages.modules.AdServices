@@ -50,6 +50,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class DebugReportingJobHandler {
 
     private static final int MAX_HTTP_SUCCESS_CODE = 299;
+    private static final String LOGGING_NAME = "DebugReportingJobHandler";
     private final DatastoreManager mDatastoreManager;
     private final Flags mFlags;
     private ReportingStatus.UploadMethod mUploadMethod;
@@ -89,7 +90,7 @@ public class DebugReportingJobHandler {
         Optional<List<String>> pendingDebugReports =
                 mDatastoreManager.runInTransactionWithResult(IMeasurementDao::getDebugReportIds);
         if (!pendingDebugReports.isPresent()) {
-            LoggerFactory.getMeasurementLogger().d("Pending Debug Reports not found");
+            ReportUtil.logReportingFailure(LOGGING_NAME, "Pending Verbose Debug Reports not found");
             return;
         }
 
@@ -99,10 +100,7 @@ public class DebugReportingJobHandler {
             // service will interrupt this thread.  If the thread has been interrupted, it will exit
             // early.
             if (Thread.currentThread().isInterrupted()) {
-                LoggerFactory.getMeasurementLogger()
-                        .d(
-                                "DebugReportingJobHandler performScheduledPendingReports "
-                                        + "thread interrupted, exiting early.");
+                ReportUtil.logReportingFailure(LOGGING_NAME, "Thread interrupted, exiting early");
                 return;
             }
 
@@ -137,7 +135,8 @@ public class DebugReportingJobHandler {
                         (dao) -> dao.getDebugReport(debugReportId));
 
         if (debugReportOpt.isEmpty()) {
-            LoggerFactory.getMeasurementLogger().d("Reading Scheduled Debug Report failed");
+            ReportUtil.logReportingFailure(
+                    LOGGING_NAME, "Unable to read Scheduled Verbose Debug Report from database");
             reportingStatus.setReportType(ReportingStatus.ReportType.VERBOSE_DEBUG_UNKNOWN);
             setAndLogReportingStatus(
                     reportingStatus,
@@ -161,8 +160,15 @@ public class DebugReportingJobHandler {
 
             // Code outside [200, 299] is a failure according to HTTP protocol.
             if (returnCode < HttpURLConnection.HTTP_OK || returnCode > MAX_HTTP_SUCCESS_CODE) {
-                LoggerFactory.getMeasurementLogger()
-                        .d("Sending debug report failed with http error");
+                ReportUtil.logReportingFailure(
+                        LOGGING_NAME,
+                        String.format(
+                                "Sending verbose debug report resulted in non-success HTTP status"
+                                        + " code %s",
+                                returnCode),
+                        debugReportId,
+                        enrollmentId,
+                        debugReport.getType());
                 setAndLogReportingStatus(
                         reportingStatus,
                         UploadStatus.FAILURE,
@@ -170,6 +176,11 @@ public class DebugReportingJobHandler {
                         enrollmentId);
                 return;
             }
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "DebugReportingJobHandler (SUCCESS): Verbose debug report sent!"
+                                    + " Report ID: %s, Enrollment ID: %s, Type: %s",
+                            debugReportId, enrollmentId, debugReport.getType());
 
             boolean success =
                     mDatastoreManager.runInTransaction(
@@ -177,7 +188,12 @@ public class DebugReportingJobHandler {
                                 dao.deleteDebugReport(debugReport.getId());
                             });
             if (!success) {
-                LoggerFactory.getMeasurementLogger().d("Deleting debug report failed");
+                ReportUtil.logReportingFailure(
+                        LOGGING_NAME,
+                        "Deleting verbose debug report from database failed",
+                        debugReportId,
+                        enrollmentId,
+                        debugReport.getType());
                 setAndLogReportingStatus(
                         reportingStatus,
                         UploadStatus.FAILURE,
@@ -185,12 +201,22 @@ public class DebugReportingJobHandler {
                         enrollmentId);
                 return;
             }
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "DebugReportingJobHandler (SUCCESS): Verbose debug removed from"
+                                    + " database! Report ID: %s, Enrollment ID: %s, Type: %s",
+                            debugReportId, enrollmentId, debugReport.getType());
             setAndLogReportingStatus(
                     reportingStatus, UploadStatus.SUCCESS, FailureStatus.UNKNOWN, enrollmentId);
 
         } catch (IOException e) {
-            LoggerFactory.getMeasurementLogger()
-                    .d(e, "Network error occurred when attempting to deliver debug report.");
+            ReportUtil.logReportingFailure(
+                    LOGGING_NAME,
+                    "Network error occurred when attempting to deliver verbose debug report",
+                    e,
+                    debugReportId,
+                    enrollmentId,
+                    debugReport.getType());
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR,
@@ -198,8 +224,13 @@ public class DebugReportingJobHandler {
             setAndLogReportingStatus(
                     reportingStatus, UploadStatus.FAILURE, FailureStatus.NETWORK, enrollmentId);
         } catch (JSONException e) {
-            LoggerFactory.getMeasurementLogger()
-                    .d(e, "Serialization error occurred at debug report delivery.");
+            ReportUtil.logReportingFailure(
+                    LOGGING_NAME,
+                    "Serialization error occurred at verbose debug report delivery",
+                    e,
+                    debugReportId,
+                    enrollmentId,
+                    debugReport.getType());
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_PARSING_ERROR,
@@ -211,6 +242,12 @@ public class DebugReportingJobHandler {
                     enrollmentId);
             if (mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException()) {
                 // Unrecoverable state - delete the report.
+                ReportUtil.logReportingFailure(
+                        LOGGING_NAME,
+                        "Unrecoverable state, deleting the verbose debug report",
+                        debugReportId,
+                        enrollmentId,
+                        debugReport.getType());
                 mDatastoreManager.runInTransaction(dao -> dao.deleteDebugReport(debugReportId));
             }
             if (mFlags.getMeasurementEnableReportingJobsThrowJsonException()
@@ -222,7 +259,14 @@ public class DebugReportingJobHandler {
             }
         } catch (Exception e) {
             LoggerFactory.getMeasurementLogger()
-                    .e(e, "Unexpected exception occurred when attempting to deliver debug report.");
+                    .e(
+                            e,
+                            "DebugReportingJobHandler: Exception occurred when"
+                                    + " attempting to deliver verbose debug report.");
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "%s Report ID: %s, Enrollment ID: %s, Type: %s",
+                            e.toString(), debugReportId, enrollmentId, debugReport.getType());
             ErrorLogUtil.e(
                     e,
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_UNKNOWN_ERROR,
