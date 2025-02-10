@@ -25,6 +25,7 @@ import com.android.adservices.LoggerFactory;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AppInstallDao;
 import com.android.adservices.data.adselection.FrequencyCapDao;
+import com.android.adservices.data.adselection.ProtectedServersEncryptionConfigDao;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.measurement.DatastoreManager;
 import com.android.adservices.data.signals.EncodedPayloadDao;
@@ -74,7 +75,8 @@ public class DevSessionHelper {
             FrequencyCapDao frequencyCapDao,
             ProtectedSignalsDao protectedSignalsDao,
             EncodedPayloadDao encodedPayloadDao,
-            DatastoreManager measurementDatastoreManager) {
+            DatastoreManager measurementDatastoreManager,
+            ProtectedServersEncryptionConfigDao mProtectedServersEncryptionConfigDao) {
         this.mDevSessionController =
                 new DevSessionControllerImpl(
                         new DatabaseClearer(
@@ -86,6 +88,7 @@ public class DevSessionHelper {
                                 protectedSignalsDao,
                                 encodedPayloadDao,
                                 measurementDatastoreManager,
+                                mProtectedServersEncryptionConfigDao,
                                 AdServicesExecutors.getBackgroundExecutor()),
                         new DevSessionInMemoryDataStore(),
                         AdServicesExecutors.getLightWeightExecutor());

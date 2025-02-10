@@ -523,7 +523,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                         mFrequencyCapDaoSpy,
                         mProtectedSignalsDao,
                         mEncodedPayloadDaoSpy,
-                        mDatastoreManager);
+                        mDatastoreManager,
+                        mProtectedServersEncryptionConfigDao);
 
         mServerAuctionTestHelper =
                 ServerAuctionTestHelper.getDefaultInstance(mAdServicesLoggerMock);

@@ -112,7 +112,7 @@ public final class DevSessionControllerImpl implements DevSessionController {
                                 PROD_MODE_SERVER_AUCTION_TEST_KEYS_DISABLED))
                 .transformAsync(this::clearDatabase, mLightWeightExecutor)
                 .transformAsync(
-                        success ->
+                        ignoreVoid ->
                                 setDevSession(IN_PROD, PROD_MODE_SERVER_AUCTION_TEST_KEYS_DISABLED),
                         mLightWeightExecutor)
                 .transform(
@@ -139,7 +139,7 @@ public final class DevSessionControllerImpl implements DevSessionController {
                                 PROD_MODE_SERVER_AUCTION_TEST_KEYS_DISABLED))
                 .transformAsync(this::clearDatabase, mLightWeightExecutor)
                 .transformAsync(
-                        success -> setDevSession(IN_DEV, setServerAuctionTestKeysEnabled),
+                        ignoreVoid -> setDevSession(IN_DEV, setServerAuctionTestKeysEnabled),
                         mLightWeightExecutor)
                 .transform(
                         state -> {
@@ -168,15 +168,18 @@ public final class DevSessionControllerImpl implements DevSessionController {
                         .build());
     }
 
-    private ListenableFuture<Void> clearDatabase(DevSession unused) {
+    private ListenableFuture<Void> clearDatabase(DevSession devSession) {
         sLogger.d("Beginning clearDatabase()");
+        boolean shouldDeleteEncryptionConfigData =
+                devSession.getState() == DevSessionState.TRANSITIONING_DEV_TO_PROD;
         return FluentFuture.from(
-                        mDatabaseClearer.deleteProtectedAudienceAndAppSignalsData(
+                        mDatabaseClearer.deleteProtectedAudienceAppSignalsAndEncryptionConfigData(
                                 /* deleteCustomAudienceUpdate= */ true,
                                 /* deleteAppInstallFiltering= */ true,
-                                /* deleteProtectedSignals= */ true))
+                                /* deleteProtectedSignals= */ true,
+                                shouldDeleteEncryptionConfigData))
                 .transformAsync(
-                        deletionStatus -> mDatabaseClearer.deleteMeasurementData(),
+                        ignoreVoid -> mDatabaseClearer.deleteMeasurementData(),
                         mLightWeightExecutor);
     }
 }

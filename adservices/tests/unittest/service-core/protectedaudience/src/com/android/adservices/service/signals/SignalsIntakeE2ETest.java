@@ -56,6 +56,8 @@ import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
 import com.android.adservices.common.DbTestUtil;
 import com.android.adservices.common.annotations.SetPasAppAllowList;
 import com.android.adservices.concurrency.AdServicesExecutors;
+import com.android.adservices.data.adselection.AdSelectionServerDatabase;
+import com.android.adservices.data.adselection.ProtectedServersEncryptionConfigDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -175,6 +177,7 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
     private ListeningExecutorService mBackgroundExecutorService;
     private EnrollmentDao mEnrollmentDao;
     private ForcedEncoder mForcedEncoder;
+    private ProtectedServersEncryptionConfigDao mProtectedServersEncryptionConfigDao;
 
     @Before
     public void setup() {
@@ -260,6 +263,11 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
                         .customAudienceDao();
         SharedStorageDatabase sharedStorageDatabase =
                 Room.inMemoryDatabaseBuilder(mSpyContext, SharedStorageDatabase.class).build();
+
+        mProtectedServersEncryptionConfigDao =
+                Room.inMemoryDatabaseBuilder(mContext, AdSelectionServerDatabase.class)
+                        .build()
+                        .protectedServersEncryptionConfigDao();
         mDevSessionHelper =
                 new DevSessionHelper(
                         customAudienceDao,
@@ -267,7 +275,8 @@ public final class SignalsIntakeE2ETest extends AdServicesExtendedMockitoTestCas
                         sharedStorageDatabase.frequencyCapDao(),
                         mSignalsDao,
                         encodedPayloadDao,
-                        mDatastoreManager);
+                        mDatastoreManager,
+                        mProtectedServersEncryptionConfigDao);
         mProtectedSignalsServiceFilter =
                 new ProtectedSignalsServiceFilter(
                         mSpyContext,
