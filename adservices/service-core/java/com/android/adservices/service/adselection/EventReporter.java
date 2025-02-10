@@ -17,6 +17,7 @@
 package com.android.adservices.service.adselection;
 
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_BUYER;
+import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_COMPONENT_SELLER;
 import static android.adservices.adselection.ReportEventRequest.FLAG_REPORTING_DESTINATION_SELLER;
 import static android.adservices.adselection.ReportEventRequest.REPORT_EVENT_MAX_INTERACTION_DATA_SIZE_B;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_BACKGROUND_CALLER;
@@ -93,7 +94,11 @@ public abstract class EventReporter {
 
     @ReportEventRequest.ReportingDestination
     private static final int[] POSSIBLE_DESTINATIONS =
-            new int[] {FLAG_REPORTING_DESTINATION_SELLER, FLAG_REPORTING_DESTINATION_BUYER};
+            new int[] {
+                FLAG_REPORTING_DESTINATION_SELLER,
+                FLAG_REPORTING_DESTINATION_BUYER,
+                FLAG_REPORTING_DESTINATION_COMPONENT_SELLER
+            };
 
     private static final int CEL_PPAPI_NAME =
             AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__REPORT_INTERACTION;
