@@ -372,6 +372,7 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
     private ScheduledThreadPoolExecutor mScheduledExecutor;
     private AdServicesHttpsClient mAdServicesHttpsClientSpy;
     private AdServicesLogger mAdServicesLoggerMock;
+    private ServerAuctionTestHelper mServerAuctionTestHelper;
 
     @Rule(order = 2)
     public final MockWebServerRule mockWebServerRule = MockWebServerRuleFactory.createForHttps();
@@ -527,6 +528,9 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                         mProtectedSignalsDao,
                         mEncodedPayloadDaoSpy,
                         mDatastoreManager);
+
+        mServerAuctionTestHelper =
+                ServerAuctionTestHelper.getDefaultInstance(mAdServicesLoggerMock);
     }
 
     @After
@@ -3333,18 +3337,9 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
             value = AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS)
     @SetFlagTrue(KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED)
     public void testGetAdSelectionData_multiCloudOn_success() throws Exception {
-        String privateKeyHex = "e7b292f49df28b8065992cdeadbc9d032a0e09e8476cb6d8d507212e7be3b9b4";
-        OhttpGatewayPrivateKey privKey =
-                OhttpGatewayPrivateKey.create(
-                        BaseEncoding.base16().lowerCase().decode(privateKeyHex));
-        AuctionEncryptionKeyFixture.AuctionKey auctionKey =
-                AuctionEncryptionKeyFixture.AuctionKey.builder()
-                        .setKeyId("400bed24-c62f-46e0-a1ad-211361ad771a")
-                        .setPublicKey("87ey8XZPXAd+/+ytKv2GFUWW5j9zdepSJ2G4gebDwyM=")
-                        .build();
 
         AdServicesHttpClientResponse httpClientResponse =
-                AuctionEncryptionKeyFixture.mockAuctionKeyFetchResponseWithGivenKey(auctionKey);
+                mServerAuctionTestHelper.getPublicAuctionKeyHttpResponse();
         when(mMockHttpClient.fetchPayloadWithLogging(
                         eq(Uri.parse(COORDINATOR_URL)),
                         eq(DevContext.createForDevOptionsDisabled()),
@@ -3394,10 +3389,11 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
                         adSelectionId, ENCRYPTION_KEY_TYPE_AUCTION));
 
         ProtectedAuctionInput protectedAuctionInput =
-                getProtectedAuctionInputFromCipherText(
-                        callback.mGetAdSelectionDataResponse.getAdSelectionData(), privKey);
+                mServerAuctionTestHelper.decryptGetAdSelectionDataResponse(
+                        callback.mGetAdSelectionDataResponse);
 
-        Map<String, BuyerInput> buyerInputs = getDecompressedBuyerInputs(protectedAuctionInput);
+        Map<String, BuyerInput> buyerInputs =
+                mServerAuctionTestHelper.getDecompressedBuyerInputs(protectedAuctionInput);
 
         Assert.assertEquals(CALLER_PACKAGE_NAME, protectedAuctionInput.getPublisherName());
         Assert.assertEquals(1, buyerInputs.size());
@@ -3411,10 +3407,8 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
         // assert that we can decrypt server's response as well even when using non-default
         // coordinator
         byte[] encryptedServerResponse =
-                ObliviousHttpGateway.encrypt(
-                        privKey,
-                        callback.mGetAdSelectionDataResponse.getAdSelectionData(),
-                        prepareAuctionResultBytes());
+                mServerAuctionTestHelper.encryptServerAuctionResult(
+                        callback.mGetAdSelectionDataResponse, AUCTION_RESULT);
         PersistAdSelectionResultInput persistAdSelectionResultInput =
                 new PersistAdSelectionResultInput.Builder()
                         .setAdSelectionId(adSelectionId)

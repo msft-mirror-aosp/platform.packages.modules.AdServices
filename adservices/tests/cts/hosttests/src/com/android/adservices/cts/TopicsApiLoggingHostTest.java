@@ -53,6 +53,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Test to check that Topics API logging to StatsD
@@ -111,8 +112,19 @@ public final class TopicsApiLoggingHostTest extends AdServicesHostSideTestCase {
 
         callTopicsAPI(mTargetPackage, device);
 
-        // Fetch a list of happened log events and their data
-        List<EventMetricData> data = ReportUtils.getEventMetricDataList(device, registry);
+        // Fetch a list of happened log events and their data that took place because of the
+        // "com.android.adservices.cts" package
+        List<EventMetricData> data =
+                ReportUtils.getEventMetricDataList(device, registry).stream()
+                        .filter(
+                                it ->
+                                        it.getAtom()
+                                                .getExtension(
+                                                        AdservicesExtensionAtoms
+                                                                .adServicesApiCalled)
+                                                .getAppPackageName()
+                                                .equals(PACKAGE))
+                        .collect(Collectors.toList());
 
         // We trigger only one event from activity, should only see one event in the list
         assertThat(data).hasSize(1);
