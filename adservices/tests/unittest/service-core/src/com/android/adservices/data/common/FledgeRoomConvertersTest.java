@@ -34,6 +34,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Set;
 
 public final class FledgeRoomConvertersTest extends AdServicesUnitTestCase {
@@ -160,5 +161,104 @@ public final class FledgeRoomConvertersTest extends AdServicesUnitTestCase {
 
         assertThat(deserializeIntegerSet)
                 .containsExactlyElementsIn(AdDataFixture.getAdCounterKeys());
+    }
+
+    @Test
+    public void testUriListToString_nullInput_returnsNull() {
+        expect.that(FledgeRoomConverters.uriListToString(null)).isNull();
+    }
+
+    @Test
+    public void testUriListToString_emptyList_returnsEmptyString() {
+        expect.that(FledgeRoomConverters.uriListToString(List.of())).isEqualTo("");
+    }
+
+    @Test
+    public void testUriListToString_singleUri_returnsString() {
+        Uri uri = Uri.parse("https://example.com/test");
+        List<Uri> uriList = List.of(uri);
+        String expected = "https://example.com/test";
+        expect.that(FledgeRoomConverters.uriListToString(uriList)).isEqualTo(expected);
+    }
+
+    @Test
+    public void testUriListToString_multipleUris_returnsCommaSeparatedString() {
+        Uri uri1 = Uri.parse("https://example.com/test1");
+        Uri uri2 = Uri.parse("https://example.com/test2");
+        Uri uri3 = Uri.parse("https://example.com/test3");
+        List<Uri> uriList = List.of(uri1, uri2, uri3);
+
+        String expected =
+                "https://example.com/test1,https://example.com/test2,https://example.com/test3";
+        expect.that(FledgeRoomConverters.uriListToString(uriList)).isEqualTo(expected);
+    }
+
+    @Test
+    public void testUriListToString_uriWithComma() {
+        // Test to ensure that a comma in the URI is handled.
+        Uri uri1 = Uri.parse("https://example.com/test1,abc");
+        List<Uri> uriList = List.of(uri1);
+
+        String expected = "https://example.com/test1,abc";
+        expect.that(FledgeRoomConverters.uriListToString(uriList)).isEqualTo(expected);
+    }
+
+    @Test
+    public void testStringToUriList_nullInput_returnsNull() {
+        expect.that(FledgeRoomConverters.stringToUriList(null)).isNull();
+    }
+
+    @Test
+    public void testStringToUriList_emptyString_returnsEmptyList() {
+        expect.that(FledgeRoomConverters.stringToUriList("")).isEmpty();
+    }
+
+    @Test
+    public void testStringToUriList_emptyStringWithCommas_returnsEmptyList() {
+        expect.that(FledgeRoomConverters.stringToUriList(",,,")).isEmpty();
+    }
+
+    @Test
+    public void testStringToUriList_singleUriString_returnsList() {
+        String uriString = "https://example.com/test";
+        List<Uri> expected = List.of(Uri.parse(uriString));
+        expect.that(FledgeRoomConverters.stringToUriList(uriString))
+                .containsExactlyElementsIn(expected)
+                .inOrder();
+    }
+
+    @Test
+    public void testStringToUriList_multipleUriStrings_returnsList() {
+        String uriString =
+                "https://example.com/test1,https://example.com/test2,https://example.com/test3";
+        List<Uri> expected =
+                List.of(
+                        Uri.parse("https://example.com/test1"),
+                        Uri.parse("https://example.com/test2"),
+                        Uri.parse("https://example.com/test3"));
+        expect.that(FledgeRoomConverters.stringToUriList(uriString))
+                .containsExactlyElementsIn(expected)
+                .inOrder();
+    }
+
+    @Test
+    public void testUriListToStringAndStringToUriList_roundTrip() {
+        Uri uri1 = Uri.parse("https://example.com/test1");
+        Uri uri2 = Uri.parse("https://example.com/test2");
+        Uri uri3 = Uri.parse("https://example.com/test3");
+        List<Uri> originalUris = List.of(uri1, uri2, uri3);
+
+        String serialized = FledgeRoomConverters.uriListToString(originalUris);
+        List<Uri> deserialized = FledgeRoomConverters.stringToUriList(serialized);
+
+        expect.that(deserialized).containsExactlyElementsIn(originalUris).inOrder(); // Changed
+    }
+
+    @Test
+    public void testUriListToStringAndStringToUriList_emptyRoundTrip() {
+        List<Uri> originalUris = List.of();
+        String serialized = FledgeRoomConverters.uriListToString(originalUris);
+        List<Uri> deserialized = FledgeRoomConverters.stringToUriList(serialized);
+        expect.that(deserialized).isEmpty();
     }
 }

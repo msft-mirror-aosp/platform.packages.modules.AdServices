@@ -26,12 +26,18 @@ import androidx.room.TypeConverter;
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.service.profiling.Tracing;
 
+import com.google.common.base.Joiner;
+import com.google.common.base.Splitter;
+
 import org.json.JSONArray;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Room DB type converters for FLEDGE.
@@ -40,8 +46,36 @@ import java.util.Set;
  */
 public class FledgeRoomConverters {
     private static final LoggerFactory.Logger sLogger = LoggerFactory.getFledgeLogger();
+    private static final String URI_SEPARATOR = ",";
+    private static final Splitter sUriSplitter = Splitter.on(URI_SEPARATOR).omitEmptyStrings();
+    private static final Joiner sUriJoiner = Joiner.on(URI_SEPARATOR).skipNulls();
 
     private FledgeRoomConverters() {}
+
+    /** Converts a list of URIs to a comma separated string */
+    @TypeConverter
+    @Nullable
+    public static String uriListToString(@Nullable List<Uri> uris) {
+        if (uris == null) {
+            return null;
+        }
+        return sUriJoiner.join(uris.stream().map(Uri::toString).collect(Collectors.toList()));
+    }
+
+    /** Converts a comma separated string to a List of URIs. */
+    @TypeConverter
+    @Nullable
+    public static List<Uri> stringToUriList(@Nullable String string) {
+        if (string == null) {
+            return null;
+        }
+        List<String> stringList = sUriSplitter.splitToList(string);
+        List<Uri> uriList = new ArrayList<>();
+        for (String uriString : stringList) {
+            uriList.add(Uri.parse(uriString));
+        }
+        return uriList;
+    }
 
     /** Serialize {@link Instant} to Long. */
     @TypeConverter

@@ -34,6 +34,8 @@ import com.android.adservices.data.common.FledgeRoomConverters;
 
 import com.google.auto.value.AutoValue;
 
+import java.util.List;
+
 /** Table for records related to result of an ad selection run. */
 @AutoValue
 @AutoValue.CopyAnnotations
@@ -78,10 +80,16 @@ public abstract class DBAdSelectionResult {
     @Embedded(prefix = "winning_custom_audience_")
     public abstract DBWinningCustomAudience getWinningCustomAudience();
 
+    /** The component ad render URIs associated with the winning ad. */
+    @AutoValue.CopyAnnotations
+    @ColumnInfo(name = "component_ad_render_uris")
+    @NonNull
+    public abstract List<Uri> getComponentAdRenderUris();
+
     /** Returns an AutoValue builder for a {@link DBAdSelectionResult} entity. */
     @NonNull
     public static DBAdSelectionResult.Builder builder() {
-        return new AutoValue_DBAdSelectionResult.Builder();
+        return new AutoValue_DBAdSelectionResult.Builder().setComponentAdRenderUris(List.of());
     }
 
     /**
@@ -95,7 +103,8 @@ public abstract class DBAdSelectionResult {
             @Nullable AdTechIdentifier winningBuyer,
             double winningAdBid,
             @Nullable Uri winningAdRenderUri,
-            @Nullable DBWinningCustomAudience winningCustomAudience) {
+            @Nullable DBWinningCustomAudience winningCustomAudience,
+            @NonNull List<Uri> componentAdRenderUris) {
 
         return builder()
                 .setAdSelectionId(adSelectionId)
@@ -103,6 +112,7 @@ public abstract class DBAdSelectionResult {
                 .setWinningAdBid(winningAdBid)
                 .setWinningAdRenderUri(winningAdRenderUri)
                 .setWinningCustomAudience(winningCustomAudience)
+                .setComponentAdRenderUris(componentAdRenderUris)
                 .build();
     }
 
@@ -124,6 +134,9 @@ public abstract class DBAdSelectionResult {
         /** Sets the winning custom audience associated with this ad selection run */
         public abstract Builder setWinningCustomAudience(
                 @Nullable DBWinningCustomAudience winningCustomAudience);
+
+        /** Sets the component ad render URIs. */
+        public abstract Builder setComponentAdRenderUris(List<Uri> componentAdRenderUris);
 
         /** Builds a {@link DBAdSelectionResult} object. */
         public abstract DBAdSelectionResult build();

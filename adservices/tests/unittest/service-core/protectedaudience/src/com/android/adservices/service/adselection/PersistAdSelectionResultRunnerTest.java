@@ -73,6 +73,7 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 
 import android.adservices.adselection.AdSelectionConfigFixture;
+import android.adservices.adselection.DataHandlersFixture;
 import android.adservices.adselection.PersistAdSelectionResultCallback;
 import android.adservices.adselection.PersistAdSelectionResultInput;
 import android.adservices.adselection.PersistAdSelectionResultResponse;
@@ -804,18 +805,22 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
                 WINNER_AD_RENDER_URI, callback.mPersistAdSelectionResultResponse.getAdRenderUri());
         Assert.assertEquals(
                 AD_SELECTION_ID, callback.mPersistAdSelectionResultResponse.getAdSelectionId());
+        List<Uri> expectedComponentAdRenderUris =
+                List.of(
+                        Uri.parse(VALID_COMPONENT_RENDER_URIS.get(0)),
+                        Uri.parse(VALID_COMPONENT_RENDER_URIS.get(1)));
         expect.that(callback.mPersistAdSelectionResultResponse.getComponentAdUris())
-                .containsExactlyElementsIn(
-                        List.of(
-                                Uri.parse(VALID_COMPONENT_RENDER_URIS.get(0)),
-                                Uri.parse(VALID_COMPONENT_RENDER_URIS.get(1))))
+                .containsExactlyElementsIn(expectedComponentAdRenderUris)
                 .inOrder();
         verify(mObliviousHttpEncryptorMock, times(1))
                 .decryptBytes(CIPHER_TEXT_BYTES, AD_SELECTION_ID);
+        AdSelectionResultBidAndUri adSelectionResultBidAndUri =
+                DataHandlersFixture.getAdSelectionResultBidAndUriWithComponentAds(
+                        AD_SELECTION_ID, BID, WINNER_AD_RENDER_URI, expectedComponentAdRenderUris);
         verify(mAdSelectionEntryDao, times(1))
                 .persistAdSelectionResultForCustomAudience(
                         AD_SELECTION_ID,
-                        BID_AND_URI,
+                        adSelectionResultBidAndUri,
                         WINNER_BUYER,
                         WINNER_CUSTOM_AUDIENCE_WITH_AD_COUNTER_KEYS);
         verify(mAdSelectionEntryDao, times(1))
@@ -3126,7 +3131,7 @@ public final class PersistAdSelectionResultRunnerTest extends AdServicesExtended
 
         mPersistAdSelectionResultRunner.persistAuctionResults(
                 AUCTION_RESULT_WITH_WINNING_COMPONENT_SELLER.build(),
-                WINNING_AD,
+                new Pair<>(WINNING_AD, List.of()),
                 AD_SELECTION_ID,
                 SELLER);
 

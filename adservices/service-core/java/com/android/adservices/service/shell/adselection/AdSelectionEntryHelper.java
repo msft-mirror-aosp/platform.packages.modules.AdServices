@@ -19,7 +19,6 @@ package com.android.adservices.service.shell.adselection;
 import android.adservices.common.AdTechIdentifier;
 import android.net.Uri;
 
-import com.android.adservices.data.adselection.CustomAudienceSignals;
 import com.android.adservices.data.adselection.DBAuctionServerAdSelection;
 import com.android.adservices.data.adselection.datahandlers.AdSelectionResultBidAndUri;
 import com.android.adservices.data.adselection.datahandlers.RegisteredAdInteraction;
@@ -29,6 +28,7 @@ import com.android.adservices.service.proto.bidding_auction_servers.BiddingAucti
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers.WinReportingUrls;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /** Helper for parsing {@link DBAuctionServerAdSelection} objects into protobuf. */
 public class AdSelectionEntryHelper {
@@ -60,6 +60,10 @@ public class AdSelectionEntryHelper {
                     .setCustomAudienceName(winningCustomAudience.getName())
                     .setCustomAudienceOwner(winningCustomAudience.getOwner());
         }
+        builder.addAllAdComponentRenderUrls(
+                adSelection.getComponentAdRenderUris().stream()
+                        .map(Uri::toString)
+                        .collect(Collectors.toList()));
         return builder.build();
     }
 

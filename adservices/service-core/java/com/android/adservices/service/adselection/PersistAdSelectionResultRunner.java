@@ -444,8 +444,7 @@ public class PersistAdSelectionResultRunner {
                                 componentAdUris = pair.second;
                                 int persistingCookie =
                                         Tracing.beginAsyncSection(Tracing.PERSIST_AUCTION_RESULTS);
-                                persistAuctionResults(
-                                        auctionResult, pair.first, adSelectionId, seller);
+                                persistAuctionResults(auctionResult, pair, adSelectionId, seller);
                                 persistAdInteractionKeysAndUrls(
                                         auctionResult, adSelectionId, seller);
                                 Tracing.endAsyncSection(
@@ -683,9 +682,10 @@ public class PersistAdSelectionResultRunner {
     @VisibleForTesting
     void persistAuctionResults(
             AuctionResult auctionResult,
-            DBAdData winningAd,
+            Pair<DBAdData, List<Uri>> adAndComponentAdUris,
             long adSelectionId,
             AdTechIdentifier seller) {
+        List<Uri> componentAdRenderUris = adAndComponentAdUris.second;
         final WinReportingUrls winReportingUrls = auctionResult.getWinReportingUrls();
         final Uri buyerReportingUrl =
                 validateAdTechUriAndReturnEmptyIfInvalid(
@@ -709,7 +709,7 @@ public class PersistAdSelectionResultRunner {
                 WinningCustomAudience.builder()
                         .setOwner(auctionResult.getCustomAudienceOwner())
                         .setName(auctionResult.getCustomAudienceName())
-                        .setAdCounterKeys(winningAd.getAdCounterKeys())
+                        .setAdCounterKeys(adAndComponentAdUris.first.getAdCounterKeys())
                         .build();
 
         ReportingData.Builder reportingDataBuilder =
@@ -735,6 +735,7 @@ public class PersistAdSelectionResultRunner {
                         .setAdSelectionId(adSelectionId)
                         .setWinningAdBid(auctionResult.getBid())
                         .setWinningAdRenderUri(Uri.parse(auctionResult.getAdRenderUrl()))
+                        .setComponentAdRenderUris(componentAdRenderUris)
                         .build();
         sLogger.v("Persisting ad selection results for id: %s", adSelectionId);
         sLogger.v("AdSelectionResultBidAndUri: %s", resultBidAndUri);

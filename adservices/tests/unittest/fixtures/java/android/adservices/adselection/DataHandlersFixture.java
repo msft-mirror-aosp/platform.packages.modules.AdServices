@@ -42,6 +42,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Set;
 
 public class DataHandlersFixture {
@@ -49,12 +50,15 @@ public class DataHandlersFixture {
 
     public static final long AD_SELECTION_ID_1 = 1L;
     public static final long AD_SELECTION_ID_2 = 2L;
+    public static final long AD_SELECTION_ID_3 = 3L;
     public static final AdTechIdentifier SELLER_1 = AdTechIdentifier.fromString("seller1test.com");
     public static final AdTechIdentifier BUYER_1 = AdTechIdentifier.fromString("buyer1test.com");
     public static final String TEST_PACKAGE_NAME_1 = "android.adservices.tests1";
     public static final Instant CREATION_INSTANT_1 = CLOCK.instant().truncatedTo(ChronoUnit.MILLIS);
     public static final Instant CREATION_INSTANT_2 =
             CLOCK.instant().plusSeconds(10).truncatedTo(ChronoUnit.MILLIS);
+    public static final Instant CREATION_INSTANT_3 =
+            CLOCK.instant().plusSeconds(20).truncatedTo(ChronoUnit.MILLIS);
 
     public static final double WIN_BID_1 = 0.1;
     public static final Uri WIN_RENDER_URI_1 = AdDataFixture.getValidRenderUriByBuyer(BUYER_1, 1);
@@ -109,11 +113,22 @@ public class DataHandlersFixture {
                     .setCreationInstant(CREATION_INSTANT_2)
                     .build();
 
+    public static DBAdSelectionInitialization DB_AD_SELECTION_INITIALIZATION_3 =
+            DBAdSelectionInitialization.builder()
+                    .setAdSelectionId(AD_SELECTION_ID_3)
+                    .setSeller(AD_SELECTION_INITIALIZATION_1.getSeller())
+                    .setCallerPackageName(AD_SELECTION_INITIALIZATION_1.getCallerPackageName())
+                    .setCreationInstant(CREATION_INSTANT_3)
+                    .build();
+
     public static AdSelectionResultBidAndUri AD_SELECTION_RESULT_1 =
             getAdSelectionResultBidAndUri(AD_SELECTION_ID_1, WIN_BID_1, WIN_RENDER_URI_1);
 
     public static AdSelectionResultBidAndUri AD_SELECTION_RESULT_2 =
             getAdSelectionResultBidAndUri(AD_SELECTION_ID_2, WIN_BID_1, WIN_RENDER_URI_1);
+
+    public static AdSelectionResultBidAndUri AD_SELECTION_RESULT_3 =
+            getAdSelectionResultBidAndUri(AD_SELECTION_ID_3, WIN_BID_1, WIN_RENDER_URI_1);
 
     public static WinningCustomAudience WINNING_CUSTOM_AUDIENCE_ALL_FIELDS_SET =
             getWinningCustomAudience(TEST_WIN_CA_OWNER, "caAllFields", TEST_WIN_CA_COUNTER_KEYS);
@@ -208,7 +223,19 @@ public class DataHandlersFixture {
 
     public static DBAdSelectionResult getDBAdSelectionResultForCaAllFieldsWithId(
             long adSelectionId) {
-        return DB_AD_SELECTION_RESULT_FOR_CA_ALL_FIELDS.setAdSelectionId(adSelectionId).build();
+        return DB_AD_SELECTION_RESULT_FOR_CA_ALL_FIELDS
+                .setAdSelectionId(adSelectionId)
+                .setComponentAdRenderUris(List.of())
+                .build();
+    }
+
+    /** Returns a DBAdSelectionResult with all fields and component ads. */
+    public static DBAdSelectionResult getDBAdSelectionResultForCaAllFieldsWithIdAndComponentAds(
+            long adSelectionId, List<Uri> componentAdUris) {
+        return DB_AD_SELECTION_RESULT_FOR_CA_ALL_FIELDS
+                .setAdSelectionId(adSelectionId)
+                .setComponentAdRenderUris(componentAdUris)
+                .build();
     }
 
     public static DBAdSelectionResult getDBAdSelectionResultForCaOnlyNameWithId(
@@ -239,6 +266,17 @@ public class DataHandlersFixture {
                 .setAdSelectionId(adSelectionId)
                 .setWinningAdBid(bid)
                 .setWinningAdRenderUri(adRenderUri)
+                .build();
+    }
+
+    /** Returns a AdSelectionResultBidAndUri with component ads. */
+    public static AdSelectionResultBidAndUri getAdSelectionResultBidAndUriWithComponentAds(
+            long adSelectionId, double bid, Uri adRenderUri, List<Uri> componentAdRenderUris) {
+        return AdSelectionResultBidAndUri.builder()
+                .setAdSelectionId(adSelectionId)
+                .setWinningAdBid(bid)
+                .setWinningAdRenderUri(adRenderUri)
+                .setComponentAdRenderUris(componentAdRenderUris)
                 .build();
     }
 
