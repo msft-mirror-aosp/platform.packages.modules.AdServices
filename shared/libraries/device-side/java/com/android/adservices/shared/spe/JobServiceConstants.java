@@ -87,6 +87,18 @@ public final class JobServiceConstants {
     /** The number of milliseconds per minute. */
     public static final int MILLISECONDS_PER_MINUTE = 60 * 1000;
 
+    /** Minimum allowed interval for periodic jobs, in minutes. */
+    public static final long MIN_PERIODIC_INTERVAL_MINUTES = 15;
+
+    /** Minimum allowed flex interval for periodic jobs, in minutes. */
+    public static final long MIN_FLEX_INTERVAL_MINUTES = 5;
+
+    /**
+     * Minimum allowed flex interval for periodic jobs, expressed as a percentage of the periodic
+     * interval.
+     */
+    public static final double MIN_FLEX_INTERVAL_PERCENTAGE = 0.05;
+
     /** Maximum possible percentage for percentage variables. */
     public static final int MAX_PERCENTAGE = 100;
 

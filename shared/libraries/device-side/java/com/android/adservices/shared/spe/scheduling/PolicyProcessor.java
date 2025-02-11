@@ -20,6 +20,12 @@ import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_
 import static com.android.adservices.shared.spe.JobErrorMessage.ERROR_MESSAGE_JOB_PROCESSOR_INVALID_JOB_POLICY_CHARGING_IDLE;
 import static com.android.adservices.shared.spe.JobErrorMessage.ERROR_MESSAGE_JOB_PROCESSOR_INVALID_NETWORK_TYPE;
 import static com.android.adservices.shared.spe.JobErrorMessage.ERROR_MESSAGE_JOB_PROCESSOR_MISMATCHED_JOB_ID_WHEN_MERGING_JOB_POLICY;
+import static com.android.adservices.shared.spe.JobErrorMessage.ERROR_MESSAGE_POLICY_JOB_SCHEDULER_PERIODIC_JOB_INVALID_FLEX_INTERVAL;
+import static com.android.adservices.shared.spe.JobErrorMessage.ERROR_MESSAGE_POLICY_JOB_SCHEDULER_PERIODIC_JOB_INVALID_PERIODIC_INTERVAL;
+import static com.android.adservices.shared.spe.JobServiceConstants.MILLISECONDS_PER_MINUTE;
+import static com.android.adservices.shared.spe.JobServiceConstants.MIN_FLEX_INTERVAL_MINUTES;
+import static com.android.adservices.shared.spe.JobServiceConstants.MIN_FLEX_INTERVAL_PERCENTAGE;
+import static com.android.adservices.shared.spe.JobServiceConstants.MIN_PERIODIC_INTERVAL_MINUTES;
 
 import android.annotation.Nullable;
 import android.app.job.JobInfo;
@@ -130,6 +136,29 @@ public final class PolicyProcessor {
                 && jobPolicy.getBatteryType() == BATTERY_TYPE_REQUIRE_CHARGING) {
             throw new IllegalArgumentException(
                     ERROR_MESSAGE_JOB_PROCESSOR_INVALID_JOB_POLICY_CHARGING_IDLE);
+        }
+
+        // Periodic interval needs to be more than 15 minutes and flex interval needs to be
+        // at least 5 minutes or 5% of the periodic interval
+        if (jobPolicy.hasPeriodicJobParams()) {
+            PeriodicJobParams periodicJobParams = jobPolicy.getPeriodicJobParams();
+            if (!periodicJobParams.hasPeriodicIntervalMs()) {
+                throw new IllegalArgumentException(
+                        ERROR_MESSAGE_POLICY_JOB_SCHEDULER_PERIODIC_JOB_INVALID_PERIODIC_INTERVAL);
+            }
+            long periodicIntervalMs = periodicJobParams.getPeriodicIntervalMs();
+            if (periodicIntervalMs < MILLISECONDS_PER_MINUTE * MIN_PERIODIC_INTERVAL_MINUTES) {
+                throw new IllegalArgumentException(
+                        ERROR_MESSAGE_POLICY_JOB_SCHEDULER_PERIODIC_JOB_INVALID_PERIODIC_INTERVAL);
+            }
+            if (periodicJobParams.hasFlexInternalMs()) {
+                long flexIntervalMs = periodicJobParams.getFlexInternalMs();
+                if (flexIntervalMs < MILLISECONDS_PER_MINUTE * MIN_FLEX_INTERVAL_MINUTES
+                        || flexIntervalMs <= MIN_FLEX_INTERVAL_PERCENTAGE * periodicIntervalMs) {
+                    throw new IllegalArgumentException(
+                            ERROR_MESSAGE_POLICY_JOB_SCHEDULER_PERIODIC_JOB_INVALID_FLEX_INTERVAL);
+                }
+            }
         }
     }
 
