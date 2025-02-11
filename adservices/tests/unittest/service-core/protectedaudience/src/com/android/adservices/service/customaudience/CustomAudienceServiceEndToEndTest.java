@@ -18,6 +18,7 @@ package com.android.adservices.service.customaudience;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SERVER_RATE_LIMIT_REACHED;
 import static android.adservices.common.CommonFixture.FIXED_NOW;
+import static android.adservices.common.ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER;
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_ACTIVATION_TIME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME;
@@ -340,7 +341,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .customAudienceDao();
 
         mComponentAdsStrategy =
-                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+                ComponentAdsStrategy.createInstance(
+                        /* componentAdsEnabled= */ false, TEST_COMPONENT_ADS_FILTERER);
 
         SharedStorageDatabase sharedDb =
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class).build();
@@ -499,7 +501,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         new FledgeAuthorizationFilter(
                                 mContext.getPackageManager(),
                                 EnrollmentDao.getInstance(),
@@ -1390,7 +1393,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         new FledgeAuthorizationFilter(
                                 mContext.getPackageManager(),
                                 EnrollmentDao.getInstance(),
@@ -1796,7 +1800,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithAuctionServerRequestFlagsEnabled,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         mCustomAudienceQuantityChecker,
                         mStrategy,
                         mAdServicesLoggerMock,
@@ -1966,7 +1971,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithSellerConfigurationFlagEnabled,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         mCustomAudienceQuantityChecker,
                         mStrategy,
                         mAdServicesLoggerMock,
@@ -2368,7 +2374,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithCAQuantityCheckerFlags,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         new CustomAudienceQuantityChecker(
                                 mCustomAudienceDao, flagsWithCAQuantityCheckerFlags),
                         mStrategy,
@@ -2505,7 +2512,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithCAQuantityCheckerFlags,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         new CustomAudienceQuantityChecker(
                                 mCustomAudienceDao, flagsWithCAQuantityCheckerFlags),
                         mStrategy,
@@ -4818,7 +4826,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                         flagsWithLowRateLimit,
                                         ComponentAdsStrategy.createInstance(
-                                                /* componentAdsEnabled= */ false)),
+                                                /* componentAdsEnabled= */ false,
+                                                TEST_COMPONENT_ADS_FILTERER)),
                                 new FledgeAuthorizationFilter(
                                         mContext.getPackageManager(),
                                         EnrollmentDao.getInstance(),
@@ -5005,7 +5014,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flags,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         mFledgeAuthorizationFilterSpy,
                         mConsentManagerMock,
                         mDevContextFilter,
@@ -5187,7 +5197,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         mFledgeAuthorizationFilterSpy,
                         mConsentManagerMock,
                         mDevContextFilter,
@@ -5231,7 +5242,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flags,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         mCustomAudienceQuantityChecker,
                         mStrategy,
                         mAdServicesLoggerMock,

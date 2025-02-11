@@ -50,7 +50,7 @@ public class CompressedBuyerInputCreatorFactory {
             int maxNumRecompressions,
             int pasMaxPerBuyerSizeBytes,
             Clock clock,
-            boolean componentAdsEnabled) {
+            ComponentAdsStrategy componentAdsStrategy) {
         mCompressedBuyerInputCreatorHelper = compressedBuyerInputCreatorHelper;
         mDataCompressor = dataCompressor;
         mSellerConfigurationEnabled = sellerConfigurationEnabled;
@@ -60,7 +60,7 @@ public class CompressedBuyerInputCreatorFactory {
         mMaxNumRecompressions = maxNumRecompressions;
         mPasMaxPerBuyerSizeBytes = pasMaxPerBuyerSizeBytes;
         mClock = clock;
-        mComponentAdsStrategy = ComponentAdsStrategy.createInstance(componentAdsEnabled);
+        mComponentAdsStrategy = componentAdsStrategy;
     }
 
     /** Returns an implementation for the {@link CompressedBuyerInputCreator} */

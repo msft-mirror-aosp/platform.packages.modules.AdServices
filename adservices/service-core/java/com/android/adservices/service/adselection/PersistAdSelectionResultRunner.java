@@ -103,6 +103,7 @@ import com.android.adservices.service.common.AdTechUriValidator;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.ValidatorUtil;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.customaudience.ComponentAdsListValidator;
 import com.android.adservices.service.customaudience.ComponentAdsStrategy;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
@@ -257,7 +258,11 @@ public class PersistAdSelectionResultRunner {
         mKAnonSignJoinFactory = kAnonSignJoinFactory;
         mCustomAudienceComponentAdsEnabled = mFlags.getEnableCustomAudienceComponentAds();
         mComponentAdsStrategy =
-                ComponentAdsStrategy.createInstance(mCustomAudienceComponentAdsEnabled);
+                ComponentAdsStrategy.createInstance(
+                        mCustomAudienceComponentAdsEnabled,
+                        new ComponentAdsListValidator(
+                                mFlags.getComponentAdRenderIdMaxLengthBytes(),
+                                mFlags.getMaxComponentAdsPerCustomAudience()));
     }
 
     /** Orchestrates PersistAdSelectionResultRunner process. */

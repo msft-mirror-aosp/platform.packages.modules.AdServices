@@ -16,9 +16,13 @@
 
 package android.adservices.common;
 
+import static com.android.adservices.service.Flags.COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES;
+import static com.android.adservices.service.Flags.MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE;
+
 import android.net.Uri;
 
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.customaudience.ComponentAdsListValidator;
 import com.android.adservices.service.customaudience.CustomAudienceWithComponentAds;
 
 import com.google.common.collect.ImmutableList;
@@ -29,6 +33,10 @@ import java.util.stream.Collectors;
 
 /** Utility class supporting ad services API unit tests */
 public final class ComponentAdDataFixture {
+    public static final ComponentAdsListValidator TEST_COMPONENT_ADS_FILTERER =
+            new ComponentAdsListValidator(
+                    COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES, MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
+
     private ComponentAdDataFixture() {}
 
     /**

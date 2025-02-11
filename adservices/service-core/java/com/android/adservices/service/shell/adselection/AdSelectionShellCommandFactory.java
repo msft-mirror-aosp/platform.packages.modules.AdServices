@@ -43,6 +43,8 @@ import com.android.adservices.service.adselection.CompressedBuyerInputCreatorNoO
 import com.android.adservices.service.adselection.FrequencyCapAdFiltererNoOpImpl;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
+import com.android.adservices.service.customaudience.ComponentAdsListValidator;
+import com.android.adservices.service.customaudience.ComponentAdsStrategy;
 import com.android.adservices.service.devapi.DevSessionDataStore;
 import com.android.adservices.service.devapi.DevSessionDataStoreFactory;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
@@ -128,7 +130,11 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                         flags.getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions(),
                         flags.getProtectedSignalsEncodedPayloadMaxSizeBytes(),
                         Clock.systemUTC(),
-                        flags.getEnableCustomAudienceComponentAds());
+                        ComponentAdsStrategy.createInstance(
+                                flags.getEnableCustomAudienceComponentAds(),
+                                new ComponentAdsListValidator(
+                                        flags.getComponentAdRenderIdMaxLengthBytes(),
+                                        flags.getMaxComponentAdsPerCustomAudience())));
         BuyerInputGenerator buyerInputGenerator =
                 new BuyerInputGenerator(
                         new FrequencyCapAdFiltererNoOpImpl(),

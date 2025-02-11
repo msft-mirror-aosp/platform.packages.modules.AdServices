@@ -34,6 +34,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class ComponentAdsStrategyEnabled implements ComponentAdsStrategy {
+    private final ComponentAdsListValidator mComponentAdsListValidator;
+
+    public ComponentAdsStrategyEnabled(ComponentAdsListValidator componentAdsListValidator) {
+        mComponentAdsListValidator = componentAdsListValidator;
+    }
 
     @Override
     public void persistCustomAudiencesWithComponentAds(
@@ -44,6 +49,12 @@ public class ComponentAdsStrategyEnabled implements ComponentAdsStrategy {
             List<ComponentAdData> componentAdDataList) {
         customAudienceDao.insertOrOverwriteCustomAudience(
                 customAudience, dailyUpdateUri, debuggable, componentAdDataList);
+    }
+
+    @Override
+    public List<ComponentAdData> extractValidComponentAds(
+            AdTechIdentifier buyer, List<ComponentAdData> componentAds) {
+        return mComponentAdsListValidator.extractValidComponentAds(buyer, componentAds);
     }
 
     @Override

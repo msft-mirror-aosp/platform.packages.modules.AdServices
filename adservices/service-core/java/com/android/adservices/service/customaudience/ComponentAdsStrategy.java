@@ -16,7 +16,7 @@
 
 package com.android.adservices.service.customaudience;
 
-
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.ComponentAdData;
 import android.net.Uri;
 
@@ -38,6 +38,10 @@ public interface ComponentAdsStrategy {
             boolean debuggable,
             List<ComponentAdData> componentAdDataList);
 
+    /** Returns a list of valid component ads. */
+    List<ComponentAdData> extractValidComponentAds(
+            AdTechIdentifier buyer, List<ComponentAdData> componentAds);
+
     /** Returns a list of custom audiences with component ads attached. */
     List<CustomAudienceWithComponentAds> getCustomAudiencesWithComponentAds(
             CustomAudienceDao customAudienceDao, List<DBCustomAudience> dbCustomAudiences);
@@ -56,9 +60,10 @@ public interface ComponentAdsStrategy {
      * Returns an implementation for the {@link ComponentAdsStrategy} depending on whether the
      * component ads feature is enabled.
      */
-    static ComponentAdsStrategy createInstance(boolean componentAdsEnabled) {
+    static ComponentAdsStrategy createInstance(
+            boolean componentAdsEnabled, ComponentAdsListValidator componentAdsListValidator) {
         if (componentAdsEnabled) {
-            return new ComponentAdsStrategyEnabled();
+            return new ComponentAdsStrategyEnabled(componentAdsListValidator);
         } else {
             return new ComponentAdsStrategyDisabled();
         }

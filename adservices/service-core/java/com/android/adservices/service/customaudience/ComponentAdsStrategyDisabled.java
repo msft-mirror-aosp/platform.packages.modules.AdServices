@@ -18,6 +18,7 @@ package com.android.adservices.service.customaudience;
 
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.ComponentAdData;
 import android.net.Uri;
 
@@ -40,6 +41,12 @@ public class ComponentAdsStrategyDisabled implements ComponentAdsStrategy {
             List<ComponentAdData> componentAdDataList) {
         customAudienceDao.insertOrOverwriteCustomAudience(
                 customAudience, dailyUpdateUri, debuggable, List.of());
+    }
+
+    @Override
+    public List<ComponentAdData> extractValidComponentAds(
+            AdTechIdentifier buyer, List<ComponentAdData> componentAds) {
+        return componentAds;
     }
 
     @Override

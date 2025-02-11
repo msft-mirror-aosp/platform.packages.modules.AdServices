@@ -86,6 +86,8 @@ import com.android.adservices.service.common.AdSelectionServiceFilter;
 import com.android.adservices.service.common.CoordinatorOriginUriValidator;
 import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.customaudience.ComponentAdsListValidator;
+import com.android.adservices.service.customaudience.ComponentAdsStrategy;
 import com.android.adservices.service.devapi.DevContext;
 import com.android.adservices.service.exception.FilterException;
 import com.android.adservices.service.profiling.Tracing;
@@ -243,7 +245,11 @@ public class GetAdSelectionDataRunner {
                         mFlags.getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions(),
                         mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes(),
                         mClock,
-                        mFlags.getEnableCustomAudienceComponentAds());
+                        ComponentAdsStrategy.createInstance(
+                                mFlags.getEnableCustomAudienceComponentAds(),
+                                new ComponentAdsListValidator(
+                                        mFlags.getComponentAdRenderIdMaxLengthBytes(),
+                                        mFlags.getMaxComponentAdsPerCustomAudience())));
 
         mBuyerInputGeneratorArgumentsPreparer =
                 compressedBuyerInputCreatorFactory.getBuyerInputGeneratorArgumentsPreparer();
@@ -349,8 +355,11 @@ public class GetAdSelectionDataRunner {
                         mFlags.getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions(),
                         mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes(),
                         mClock,
-                        mFlags.getEnableCustomAudienceComponentAds());
-
+                        ComponentAdsStrategy.createInstance(
+                                mFlags.getEnableCustomAudienceComponentAds(),
+                                new ComponentAdsListValidator(
+                                        mFlags.getComponentAdRenderIdMaxLengthBytes(),
+                                        mFlags.getMaxComponentAdsPerCustomAudience())));
         mBuyerInputGeneratorArgumentsPreparer =
                 compressedBuyerInputCreatorFactory.getBuyerInputGeneratorArgumentsPreparer();
 

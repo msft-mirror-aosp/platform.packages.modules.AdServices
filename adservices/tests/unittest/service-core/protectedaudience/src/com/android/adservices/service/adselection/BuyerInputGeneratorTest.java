@@ -19,6 +19,7 @@ package com.android.adservices.service.adselection;
 import static android.adservices.adselection.AdSelectionConfigFixture.BUYER_3;
 import static android.adservices.adselection.SellerConfigurationFixture.PER_BUYER_CONFIGURATION_1;
 import static android.adservices.adselection.SellerConfigurationFixture.SELLER_CONFIGURATION;
+import static android.adservices.common.ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER;
 
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_COMPRESSION_ALGORITHM_VERSION;
 import static com.android.adservices.service.Flags.FLEDGE_CUSTOM_AUDIENCE_ACTIVE_TIME_WINDOW_MS;
@@ -1100,7 +1101,9 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
                     throws Exception {
         // Enable component ads
         when(mCompressedBuyerInputCreatorFactoryMock.getComponentAdsStrategy())
-                .thenReturn(ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ true));
+                .thenReturn(
+                        ComponentAdsStrategy.createInstance(
+                                /* componentAdsEnabled= */ true, TEST_COMPONENT_ADS_FILTERER));
 
         // Set AdFiltering to return all custom audiences in the input argument.
         when(mFrequencyCapAdFiltererMock.filterCustomAudiences(any()))
@@ -1154,7 +1157,9 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
                     throws Exception {
         // Enable component ads
         when(mCompressedBuyerInputCreatorFactoryMock.getComponentAdsStrategy())
-                .thenReturn(ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false));
+                .thenReturn(
+                        ComponentAdsStrategy.createInstance(
+                                /* componentAdsEnabled= */ false, TEST_COMPONENT_ADS_FILTERER));
 
         // Set AdFiltering to return all custom audiences in the input argument.
         when(mFrequencyCapAdFiltererMock.filterCustomAudiences(any()))
@@ -1240,7 +1245,8 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
                                 mAdServicesLoggerMock,
                                 new SellerConfigurationMetricsStrategyDisabled(),
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false))
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER))
                         : mAuctionServerPayloadMetricsStrategyDisabled;
         CompressedBuyerInputCreatorHelper helper =
                 new CompressedBuyerInputCreatorHelper(
@@ -1260,7 +1266,9 @@ public final class BuyerInputGeneratorTest extends AdServicesExtendedMockitoTest
         when(mCompressedBuyerInputCreatorFactoryMock.getCustomAudienceDao())
                 .thenReturn(mCustomAudienceDao);
         when(mCompressedBuyerInputCreatorFactoryMock.getComponentAdsStrategy())
-                .thenReturn(ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false));
+                .thenReturn(
+                        ComponentAdsStrategy.createInstance(
+                                /* componentAdsEnabled= */ false, TEST_COMPONENT_ADS_FILTERER));
     }
 
     private void assertAdsEqual(

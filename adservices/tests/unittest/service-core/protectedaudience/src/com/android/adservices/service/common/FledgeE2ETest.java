@@ -18,6 +18,7 @@ package com.android.adservices.service.common;
 
 import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_1;
 import static android.adservices.adselection.CustomAudienceBiddingInfoFixture.DATA_VERSION_2;
+import static android.adservices.common.ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_OWNER;
 
 import static com.android.adservices.data.adselection.AdSelectionDatabase.DATABASE_NAME;
@@ -5000,7 +5001,8 @@ public final class FledgeE2ETest extends AdServicesExtendedMockitoTestCase {
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flags,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         mFledgeAuthorizationFilterMock,
                         mConsentManagerMock,
                         mDevContextFilterMock,

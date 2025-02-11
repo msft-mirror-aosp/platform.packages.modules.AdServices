@@ -22,6 +22,7 @@ import static android.adservices.common.AdServicesStatusUtils.STATUS_INVALID_ARG
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SUCCESS;
 import static android.adservices.common.AdServicesStatusUtils.STATUS_TIMEOUT;
 import static android.adservices.common.CommonFixture.TEST_PACKAGE_NAME;
+import static android.adservices.common.ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER;
 
 import static com.android.adservices.common.logging.annotations.ExpectErrorLogUtilWithExceptionCall.Any;
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
@@ -420,7 +421,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                                 mAdServicesLoggerSpy,
                                 new SellerConfigurationMetricsStrategyEnabled(),
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ true)));
+                                        /* componentAdsEnabled= */ true,
+                                        TEST_COMPONENT_ADS_FILTERER)));
 
         createAndPersistDBCustomAudiencesWithAdRenderIdAndComponentAds();
         GetAdSelectionDataInput inputParams =
@@ -531,7 +533,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                                 mAdServicesLoggerSpy,
                                 new SellerConfigurationMetricsStrategyEnabled(),
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)));
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)));
 
         createAndPersistDBCustomAudiencesWithAdRenderIdAndComponentAds();
         GetAdSelectionDataInput inputParams =
@@ -645,7 +648,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                                 mAdServicesLoggerSpy,
                                 new SellerConfigurationMetricsStrategyEnabled(),
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)));
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)));
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -770,7 +774,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                                 mAdServicesLoggerSpy,
                                 new SellerConfigurationMetricsStrategyEnabled(),
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)));
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)));
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -889,7 +894,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                                 mAdServicesLoggerSpy,
                                 new SellerConfigurationMetricsStrategyDisabled(),
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)));
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)));
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -996,7 +1002,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                                 mAdServicesLoggerSpy,
                                 new SellerConfigurationMetricsStrategyDisabled(),
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)));
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)));
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =
@@ -1106,7 +1113,8 @@ public final class GetAdSelectionDataRunnerTest extends AdServicesExtendedMockit
                                 mAdServicesLoggerSpy,
                                 new SellerConfigurationMetricsStrategyDisabled(),
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)));
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)));
 
         createAndPersistDBCustomAudiencesWithAdRenderId();
         GetAdSelectionDataInput inputParams =

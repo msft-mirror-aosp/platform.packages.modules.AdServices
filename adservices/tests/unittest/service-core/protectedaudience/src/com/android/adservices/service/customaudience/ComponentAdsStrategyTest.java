@@ -40,6 +40,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 
@@ -49,14 +50,24 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public final class ComponentAdsStrategyTest extends AdServicesMockitoTestCase {
-    private final ComponentAdsStrategy mComponentAdsStrategyEnabled =
-            ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ true);
-    private final ComponentAdsStrategy mComponentAdsStrategyDisabled =
-            ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
     private static final List<ComponentAdData> COMPONENT_AD_DATA_LIST =
             ComponentAdDataFixture.getValidComponentAdsByBuyer(VALID_BUYER_1);
 
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
+    @Mock private ComponentAdsListValidator mComponentAdsListValidatorMock;
+
+    private ComponentAdsStrategy mComponentAdsStrategyEnabled;
+    private ComponentAdsStrategy mComponentAdsStrategyDisabled;
+
+    @Before
+    public void setup() {
+        mComponentAdsStrategyEnabled =
+                ComponentAdsStrategy.createInstance(
+                        /* componentAdsEnabled= */ true, mComponentAdsListValidatorMock);
+        mComponentAdsStrategyDisabled =
+                ComponentAdsStrategy.createInstance(
+                        /* componentAdsEnabled= */ false, mComponentAdsListValidatorMock);
+    }
 
     @Test
     public void testEnabledStrategyPersistCustomAudiencesWithComponentAdsAddsComponentAds() {
@@ -328,5 +339,28 @@ public final class ComponentAdsStrategyTest extends AdServicesMockitoTestCase {
         expect.that(result.get(0).getComponentAdRenderIds()).isEmpty();
         expect.that(result.get(1).getComponentAdRenderIds()).isEmpty();
         verifyZeroInteractions(mCustomAudienceDaoMock);
+    }
+
+    @Test
+    public void testExtractValidComponentAdsEnabled() {
+        List<ComponentAdData> componentAds =
+                ComponentAdDataFixture.getValidComponentAdsByBuyer(VALID_BUYER_1);
+
+        mComponentAdsStrategyEnabled.extractValidComponentAds(VALID_BUYER_1, componentAds);
+        verify(mComponentAdsListValidatorMock)
+                .extractValidComponentAds(VALID_BUYER_1, componentAds);
+    }
+
+    @Test
+    public void testExtractValidComponentAdsDisabled() {
+        List<ComponentAdData> unFilteredComponentAds =
+                ComponentAdDataFixture.getValidComponentAdsByBuyer(VALID_BUYER_1);
+
+        List<ComponentAdData> componentAds =
+                mComponentAdsStrategyDisabled.extractValidComponentAds(
+                        VALID_BUYER_1, unFilteredComponentAds);
+
+        expect.that(componentAds).containsExactlyElementsIn(unFilteredComponentAds).inOrder();
+        verifyZeroInteractions(mComponentAdsListValidatorMock);
     }
 }

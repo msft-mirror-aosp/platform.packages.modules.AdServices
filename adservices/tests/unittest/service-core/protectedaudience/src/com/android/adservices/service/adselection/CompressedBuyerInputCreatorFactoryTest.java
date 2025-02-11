@@ -22,6 +22,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 
 import android.adservices.adselection.PerBuyerConfiguration;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.ComponentAdDataFixture;
 
 import com.android.adservices.common.AdServicesMockitoTestCase;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
@@ -76,7 +77,9 @@ public class CompressedBuyerInputCreatorFactoryTest extends AdServicesMockitoTes
                         MAX_NUM_RECOMPRESSIONS,
                         PAS_MAX_SIZE,
                         FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        /* componentAdsEnabled= */ false);
+                        ComponentAdsStrategy.createInstance(
+                                /* componentAdsEnabled= */ false,
+                                ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER));
         CompressedBuyerInputCreator compressedBuyerInputCreator =
                 compressedBuyerInputCreatorFactory.createCompressedBuyerInputCreator(
                         PAYLOAD_OPTIMIZATION_CONTEXT_DISABLED,
@@ -99,7 +102,9 @@ public class CompressedBuyerInputCreatorFactoryTest extends AdServicesMockitoTes
                         MAX_NUM_RECOMPRESSIONS,
                         PAS_MAX_SIZE,
                         FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        /* componentAdsEnabled= */ false);
+                        ComponentAdsStrategy.createInstance(
+                                /* componentAdsEnabled= */ false,
+                                ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER));
         CompressedBuyerInputCreator compressedBuyerInputCreator =
                 compressedBuyerInputCreatorFactory.createCompressedBuyerInputCreator(
                         PAYLOAD_OPTIMIZATION_CONTEXT_ENABLED,
@@ -122,7 +127,9 @@ public class CompressedBuyerInputCreatorFactoryTest extends AdServicesMockitoTes
                         MAX_NUM_RECOMPRESSIONS,
                         PAS_MAX_SIZE,
                         FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        /* componentAdsEnabled= */ false);
+                        ComponentAdsStrategy.createInstance(
+                                /* componentAdsEnabled= */ false,
+                                ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER));
         CompressedBuyerInputCreator compressedBuyerInputCreator =
                 compressedBuyerInputCreatorFactory.createCompressedBuyerInputCreator(
                         PAYLOAD_OPTIMIZATION_CONTEXT_ENABLED,
@@ -145,7 +152,9 @@ public class CompressedBuyerInputCreatorFactoryTest extends AdServicesMockitoTes
                         anyInt(), // num recalculations is not used in per buyer limits impl
                         PAS_MAX_SIZE,
                         FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        /* componentAdsEnabled= */ false);
+                        ComponentAdsStrategy.createInstance(
+                                /* componentAdsEnabled= */ false,
+                                ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER));
         CompressedBuyerInputCreator compressedBuyerInputCreator =
                 compressedBuyerInputCreatorFactory.createCompressedBuyerInputCreator(
                         PAYLOAD_OPTIMIZATION_CONTEXT_ENABLED,
@@ -168,7 +177,9 @@ public class CompressedBuyerInputCreatorFactoryTest extends AdServicesMockitoTes
                         MAX_NUM_RECOMPRESSIONS,
                         PAS_MAX_SIZE,
                         FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        /* componentAdsEnabled= */ false);
+                        ComponentAdsStrategy.createInstance(
+                                /* componentAdsEnabled= */ false,
+                                ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER));
 
         BuyerInputDataFetcher buyerInputDataFetcher =
                 compressedBuyerInputCreatorFactory.getBuyerInputDataFetcher();
@@ -190,7 +201,9 @@ public class CompressedBuyerInputCreatorFactoryTest extends AdServicesMockitoTes
                         MAX_NUM_RECOMPRESSIONS,
                         PAS_MAX_SIZE,
                         FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        /* componentAdsEnabled= */ false);
+                        ComponentAdsStrategy.createInstance(
+                                /* componentAdsEnabled= */ false,
+                                ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER));
 
         BuyerInputDataFetcher buyerInputDataFetcher =
                 compressedBuyerInputCreatorFactory.getBuyerInputDataFetcher();
@@ -211,7 +224,9 @@ public class CompressedBuyerInputCreatorFactoryTest extends AdServicesMockitoTes
                         MAX_NUM_RECOMPRESSIONS,
                         PAS_MAX_SIZE,
                         FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        /* componentAdsEnabled= */ false);
+                        ComponentAdsStrategy.createInstance(
+                                /* componentAdsEnabled= */ false,
+                                ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER));
 
         BuyerInputGeneratorArgumentsPreparer argumentsPreparer =
                 compressedBuyerInputCreatorFactory.getBuyerInputGeneratorArgumentsPreparer();
@@ -234,7 +249,9 @@ public class CompressedBuyerInputCreatorFactoryTest extends AdServicesMockitoTes
                         MAX_NUM_RECOMPRESSIONS,
                         PAS_MAX_SIZE,
                         FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        /* componentAdsEnabled= */ false);
+                        ComponentAdsStrategy.createInstance(
+                                /* componentAdsEnabled= */ false,
+                                ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER));
         BuyerInputGeneratorArgumentsPreparer argumentsPreparer =
                 compressedBuyerInputCreatorFactory.getBuyerInputGeneratorArgumentsPreparer();
 
@@ -255,7 +272,9 @@ public class CompressedBuyerInputCreatorFactoryTest extends AdServicesMockitoTes
                         MAX_NUM_RECOMPRESSIONS,
                         PAS_MAX_SIZE,
                         FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        /* componentAdsEnabled= */ false);
+                        ComponentAdsStrategy.createInstance(
+                                /* componentAdsEnabled= */ false,
+                                ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER));
 
         CustomAudienceDao customAudienceDao =
                 compressedBuyerInputCreatorFactory.getCustomAudienceDao();
@@ -276,7 +295,9 @@ public class CompressedBuyerInputCreatorFactoryTest extends AdServicesMockitoTes
                         MAX_NUM_RECOMPRESSIONS,
                         PAS_MAX_SIZE,
                         FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        /* componentAdsEnabled= */ true);
+                        ComponentAdsStrategy.createInstance(
+                                /* componentAdsEnabled= */ true,
+                                ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER));
 
         ComponentAdsStrategy componentAdsStrategy =
                 compressedBuyerInputCreatorFactory.getComponentAdsStrategy();
@@ -297,7 +318,9 @@ public class CompressedBuyerInputCreatorFactoryTest extends AdServicesMockitoTes
                         MAX_NUM_RECOMPRESSIONS,
                         PAS_MAX_SIZE,
                         FIXED_CLOCK_TRUNCATED_TO_MILLI,
-                        /* componentAdsEnabled= */ false);
+                        ComponentAdsStrategy.createInstance(
+                                /* componentAdsEnabled= */ false,
+                                ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER));
 
         ComponentAdsStrategy componentAdsStrategy =
                 compressedBuyerInputCreatorFactory.getComponentAdsStrategy();
