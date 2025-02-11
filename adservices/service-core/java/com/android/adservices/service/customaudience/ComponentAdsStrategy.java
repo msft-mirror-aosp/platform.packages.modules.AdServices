@@ -22,6 +22,7 @@ import android.net.Uri;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 
@@ -41,6 +42,10 @@ public interface ComponentAdsStrategy {
     /** Returns a list of valid component ads. */
     List<ComponentAdData> extractValidComponentAds(
             AdTechIdentifier buyer, List<ComponentAdData> componentAds);
+
+    /** Extracts the component ad render uris that match ones on device. */
+    List<Uri> extractComponentAdsThatMatchOnDevice(
+            BiddingAuctionServers.AuctionResult auctionResult, CustomAudienceDao customAudienceDao);
 
     /** Returns a list of custom audiences with component ads attached. */
     List<CustomAudienceWithComponentAds> getCustomAudiencesWithComponentAds(

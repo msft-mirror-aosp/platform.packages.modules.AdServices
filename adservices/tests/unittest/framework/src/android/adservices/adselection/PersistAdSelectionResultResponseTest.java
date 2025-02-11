@@ -27,6 +27,8 @@ import com.android.adservices.shared.testing.EqualsTester;
 
 import org.junit.Test;
 
+import java.util.List;
+
 public final class PersistAdSelectionResultResponseTest extends AdServicesUnitTestCase {
     private static final Uri VALID_RENDER_URI =
             new Uri.Builder().path("valid.example.com/testing/hello").build();
@@ -38,6 +40,9 @@ public final class PersistAdSelectionResultResponseTest extends AdServicesUnitTe
             AdTechIdentifier.fromString("www.winningseller.com");
     private static final AdTechIdentifier WINNING_SELLER_SECOND =
             AdTechIdentifier.fromString("www.secondwillingseller.com");
+
+    private static final List<Uri> COMPONENT_AD_URIS =
+            List.of(Uri.parse("firstUri"), Uri.parse("secondUri"));
 
     @Test
     public void testBuildPersistAdSelectionResultResponse() {
@@ -53,6 +58,9 @@ public final class PersistAdSelectionResultResponseTest extends AdServicesUnitTe
         expect.withMessage("Ad render uri")
                 .that(persistAdSelectionResultResponse.getAdRenderUri())
                 .isEqualTo(VALID_RENDER_URI);
+        expect.withMessage("Component ad render uri")
+                .that(persistAdSelectionResultResponse.getComponentAdUris())
+                .isEmpty();
     }
 
     @Test
@@ -73,6 +81,9 @@ public final class PersistAdSelectionResultResponseTest extends AdServicesUnitTe
         expect.withMessage("Winning seller")
                 .that(persistAdSelectionResultResponse.getWinningSeller())
                 .isEqualTo(WINNING_SELLER_FIRST);
+        expect.withMessage("Component ad render uri")
+                .that(persistAdSelectionResultResponse.getComponentAdUris())
+                .isEmpty();
     }
 
     @Test
@@ -95,6 +106,9 @@ public final class PersistAdSelectionResultResponseTest extends AdServicesUnitTe
         expect.withMessage("Ad render uri")
                 .that(fromParcel.getAdRenderUri())
                 .isEqualTo(VALID_RENDER_URI);
+        expect.withMessage("Component ad render uri")
+                .that(persistAdSelectionResultResponse.getComponentAdUris())
+                .isEmpty();
     }
 
     @Test
@@ -121,6 +135,9 @@ public final class PersistAdSelectionResultResponseTest extends AdServicesUnitTe
         expect.withMessage("Winning seller")
                 .that(fromParcel.getWinningSeller())
                 .isEqualTo(WINNING_SELLER_FIRST);
+        expect.withMessage("Component ad render uri")
+                .that(persistAdSelectionResultResponse.getComponentAdUris())
+                .isEmpty();
     }
 
     @Test
@@ -131,6 +148,18 @@ public final class PersistAdSelectionResultResponseTest extends AdServicesUnitTe
                         new PersistAdSelectionResultResponse.Builder()
                                 // Not setting AdSelectionId making it null.
                                 .setAdRenderUri(VALID_RENDER_URI)
+                                .build());
+    }
+
+    @Test
+    public void testFailsToBuildWithNullComponentAdUris() {
+        assertThrows(
+                NullPointerException.class,
+                () ->
+                        new PersistAdSelectionResultResponse.Builder()
+                                .setAdSelectionId(TEST_AD_SELECTION_ID)
+                                .setAdRenderUri(VALID_RENDER_URI)
+                                .setComponentAdUris(null)
                                 .build());
     }
 
@@ -173,6 +202,26 @@ public final class PersistAdSelectionResultResponseTest extends AdServicesUnitTe
     }
 
     @Test
+    public void testPersistAdSelectionResultResponse_withComponentAdUrisWithSameValues_areEqual() {
+        PersistAdSelectionResultResponse obj1 =
+                new PersistAdSelectionResultResponse.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setAdRenderUri(VALID_RENDER_URI)
+                        .setComponentAdUris(COMPONENT_AD_URIS)
+                        .build();
+
+        PersistAdSelectionResultResponse obj2 =
+                new PersistAdSelectionResultResponse.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setAdRenderUri(VALID_RENDER_URI)
+                        .setComponentAdUris(COMPONENT_AD_URIS)
+                        .build();
+
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreEqual(obj1, obj2);
+    }
+
+    @Test
     public void testPersistAdSelectionResultResponseWithDifferentValuesAreNotEqual() {
         PersistAdSelectionResultResponse obj1 =
                 new PersistAdSelectionResultResponse.Builder()
@@ -199,6 +248,26 @@ public final class PersistAdSelectionResultResponseTest extends AdServicesUnitTe
     }
 
     @Test
+    public void
+            testPersistAdSelectionResultResponseWithDifferentValuesAreNotEqualForComponentAdUris() {
+        PersistAdSelectionResultResponse obj1 =
+                new PersistAdSelectionResultResponse.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setAdRenderUri(VALID_RENDER_URI)
+                        .setComponentAdUris(COMPONENT_AD_URIS)
+                        .build();
+
+        PersistAdSelectionResultResponse obj2 =
+                new PersistAdSelectionResultResponse.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setAdRenderUri(VALID_RENDER_URI)
+                        .build();
+
+        EqualsTester et = new EqualsTester(expect);
+        et.expectObjectsAreNotEqual(obj1, obj2);
+    }
+
+    @Test
     public void testPersistAdSelectionResultResponseDescribeContents() {
         PersistAdSelectionResultResponse obj =
                 new PersistAdSelectionResultResponse.Builder()
@@ -207,5 +276,47 @@ public final class PersistAdSelectionResultResponseTest extends AdServicesUnitTe
                         .build();
 
         expect.that(obj.describeContents()).isEqualTo(0);
+    }
+
+    @Test
+    public void testBuildPersistAdSelectionResultResponse_withComponentAds_buildsCorrectly() {
+        PersistAdSelectionResultResponse response =
+                new PersistAdSelectionResultResponse.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setAdRenderUri(VALID_RENDER_URI)
+                        .setWinningSeller(WINNING_SELLER_FIRST)
+                        .setComponentAdUris(COMPONENT_AD_URIS)
+                        .build();
+
+        expect.that(response.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
+        expect.that(response.getAdRenderUri()).isEqualTo(VALID_RENDER_URI);
+        expect.that(response.getWinningSeller()).isEqualTo(WINNING_SELLER_FIRST);
+        expect.that(response.getComponentAdUris())
+                .containsExactlyElementsIn(COMPONENT_AD_URIS)
+                .inOrder();
+    }
+
+    @Test
+    public void testParcelPersistAdSelectionResultResponse_withComponentAds() {
+        PersistAdSelectionResultResponse originalResponse =
+                new PersistAdSelectionResultResponse.Builder()
+                        .setAdSelectionId(TEST_AD_SELECTION_ID)
+                        .setAdRenderUri(VALID_RENDER_URI)
+                        .setWinningSeller(WINNING_SELLER_FIRST)
+                        .setComponentAdUris(COMPONENT_AD_URIS)
+                        .build();
+
+        Parcel parcel = Parcel.obtain();
+        originalResponse.writeToParcel(parcel, 0);
+        parcel.setDataPosition(0);
+        PersistAdSelectionResultResponse unparceledResponse =
+                PersistAdSelectionResultResponse.CREATOR.createFromParcel(parcel);
+
+        expect.that(unparceledResponse.getAdSelectionId()).isEqualTo(TEST_AD_SELECTION_ID);
+        expect.that(unparceledResponse.getAdRenderUri()).isEqualTo(VALID_RENDER_URI);
+        expect.that(unparceledResponse.getWinningSeller()).isEqualTo(WINNING_SELLER_FIRST);
+        expect.that(unparceledResponse.getComponentAdUris())
+                .containsExactlyElementsIn(COMPONENT_AD_URIS)
+                .inOrder();
     }
 }

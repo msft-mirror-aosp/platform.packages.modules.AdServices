@@ -18,6 +18,8 @@ package com.android.adservices.service.customaudience;
 
 import static android.adservices.common.CommonFixture.VALID_BUYER_1;
 import static android.adservices.common.CommonFixture.VALID_BUYER_2;
+import static android.adservices.customaudience.CustomAudienceFixture.VALID_NAME;
+import static android.adservices.customaudience.CustomAudienceFixture.VALID_OWNER;
 
 import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.WINNER_TYPE_CA_WINNER;
@@ -37,6 +39,7 @@ import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBComponentAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 
@@ -52,6 +55,14 @@ import java.util.stream.Collectors;
 public final class ComponentAdsStrategyTest extends AdServicesMockitoTestCase {
     private static final List<ComponentAdData> COMPONENT_AD_DATA_LIST =
             ComponentAdDataFixture.getValidComponentAdsByBuyer(VALID_BUYER_1);
+
+    private static final BiddingAuctionServers.AuctionResult AUCTION_RESULT_WITH_COMPONENT_ADS =
+            BiddingAuctionServers.AuctionResult.newBuilder()
+                    .addAllAdComponentRenderUrls(List.of("renderUri1", "renderUri2", "renderUri3"))
+                    .setCustomAudienceOwner(VALID_OWNER)
+                    .setBuyer(VALID_BUYER_1.toString())
+                    .setCustomAudienceName(VALID_NAME)
+                    .build();
 
     @Mock private CustomAudienceDao mCustomAudienceDaoMock;
     @Mock private ComponentAdsListValidator mComponentAdsListValidatorMock;
@@ -362,5 +373,55 @@ public final class ComponentAdsStrategyTest extends AdServicesMockitoTestCase {
 
         expect.that(componentAds).containsExactlyElementsIn(unFilteredComponentAds).inOrder();
         verifyZeroInteractions(mComponentAdsListValidatorMock);
+    }
+
+    @Test
+    public void testExtractComponentAdsThatMatchOnDeviceStrategyEnabledReturnsOnlyOnDevice() {
+        DBComponentAdData dbComponentAdData1 =
+                DBComponentAdData.create(
+                        VALID_OWNER,
+                        VALID_BUYER_1,
+                        VALID_NAME,
+                        Uri.parse("renderUri1"),
+                        "renderId1");
+        DBComponentAdData dbComponentAdData2 =
+                DBComponentAdData.create(
+                        VALID_OWNER,
+                        VALID_BUYER_1,
+                        VALID_NAME,
+                        Uri.parse("renderUri2"),
+                        "renderId2");
+
+        List<DBComponentAdData> dbComponentAdDataList =
+                List.of(dbComponentAdData1, dbComponentAdData2);
+
+        when(mCustomAudienceDaoMock.getComponentAdsByCustomAudienceInfo(
+                        VALID_OWNER, VALID_BUYER_1, VALID_NAME))
+                .thenReturn(dbComponentAdDataList);
+
+        List<Uri> result =
+                mComponentAdsStrategyEnabled.extractComponentAdsThatMatchOnDevice(
+                        AUCTION_RESULT_WITH_COMPONENT_ADS, mCustomAudienceDaoMock);
+
+        verify(mCustomAudienceDaoMock)
+                .getComponentAdsByCustomAudienceInfo(VALID_OWNER, VALID_BUYER_1, VALID_NAME);
+
+        expect.that(result)
+                .containsExactlyElementsIn(
+                        List.of(
+                                dbComponentAdData1.getRenderUri(),
+                                dbComponentAdData2.getRenderUri()))
+                .inOrder();
+    }
+
+    @Test
+    public void testExtractComponentAdsThatMatchOnDeviceStrategyDisabled() {
+
+        List<Uri> result =
+                mComponentAdsStrategyDisabled.extractComponentAdsThatMatchOnDevice(
+                        AUCTION_RESULT_WITH_COMPONENT_ADS, mCustomAudienceDaoMock);
+
+        expect.that(result).isEmpty();
+        verifyZeroInteractions(mCustomAudienceDaoMock);
     }
 }

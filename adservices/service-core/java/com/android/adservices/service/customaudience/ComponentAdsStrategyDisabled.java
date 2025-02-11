@@ -24,6 +24,7 @@ import android.net.Uri;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 
@@ -47,6 +48,13 @@ public class ComponentAdsStrategyDisabled implements ComponentAdsStrategy {
     public List<ComponentAdData> extractValidComponentAds(
             AdTechIdentifier buyer, List<ComponentAdData> componentAds) {
         return componentAds;
+    }
+
+    @Override
+    public List<Uri> extractComponentAdsThatMatchOnDevice(
+            BiddingAuctionServers.AuctionResult auctionResult,
+            CustomAudienceDao customAudienceDao) {
+        return List.of();
     }
 
     @Override

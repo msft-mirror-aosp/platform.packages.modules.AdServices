@@ -23,6 +23,7 @@ import android.net.Uri;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBComponentAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 
@@ -55,6 +56,32 @@ public class ComponentAdsStrategyEnabled implements ComponentAdsStrategy {
     public List<ComponentAdData> extractValidComponentAds(
             AdTechIdentifier buyer, List<ComponentAdData> componentAds) {
         return mComponentAdsListValidator.extractValidComponentAds(buyer, componentAds);
+    }
+
+    @Override
+    public List<Uri> extractComponentAdsThatMatchOnDevice(
+            BiddingAuctionServers.AuctionResult auctionResult,
+            CustomAudienceDao customAudienceDao) {
+        List<Uri> result = new ArrayList<>();
+        AdTechIdentifier buyer = AdTechIdentifier.fromString(auctionResult.getBuyer());
+        String name = auctionResult.getCustomAudienceName();
+        String owner = auctionResult.getCustomAudienceOwner();
+
+        List<DBComponentAdData> onDeviceComponentAds =
+                customAudienceDao.getComponentAdsByCustomAudienceInfo(owner, buyer, name);
+
+        Set<Uri> componentAdUris =
+                onDeviceComponentAds.stream()
+                        .map(DBComponentAdData::getRenderUri)
+                        .collect(Collectors.toSet());
+
+        for (String componentAdUriString : auctionResult.getAdComponentRenderUrlsList()) {
+            Uri componentAdUri = Uri.parse(componentAdUriString);
+            if (componentAdUris.contains(componentAdUri)) {
+                result.add(componentAdUri);
+            }
+        }
+        return result;
     }
 
     @Override

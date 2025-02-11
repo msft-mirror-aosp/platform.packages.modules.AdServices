@@ -27,6 +27,8 @@ import android.os.Parcelable;
 
 import com.android.internal.util.Preconditions;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -38,6 +40,7 @@ public final class PersistAdSelectionResultResponse implements Parcelable {
     private final long mAdSelectionId;
     private final Uri mAdRenderUri;
     private final AdTechIdentifier mWinningSeller;
+    private final List<Uri> mComponentAdUris;
 
     public static final Creator<PersistAdSelectionResultResponse> CREATOR =
             new Creator<>() {
@@ -55,12 +58,16 @@ public final class PersistAdSelectionResultResponse implements Parcelable {
             };
 
     private PersistAdSelectionResultResponse(
-            long adSelectionId, Uri adRenderUri, AdTechIdentifier winningSeller) {
+            long adSelectionId,
+            Uri adRenderUri,
+            AdTechIdentifier winningSeller,
+            List<Uri> componentAdUris) {
         Objects.requireNonNull(adRenderUri);
 
         this.mAdSelectionId = adSelectionId;
         this.mAdRenderUri = adRenderUri;
         this.mWinningSeller = winningSeller;
+        this.mComponentAdUris = componentAdUris;
     }
 
     private PersistAdSelectionResultResponse(Parcel in) {
@@ -69,6 +76,8 @@ public final class PersistAdSelectionResultResponse implements Parcelable {
         this.mAdSelectionId = in.readLong();
         this.mAdRenderUri = Uri.CREATOR.createFromParcel(in);
         this.mWinningSeller = AdTechIdentifier.CREATOR.createFromParcel(in);
+        this.mComponentAdUris = new ArrayList<>();
+        in.readTypedList(mComponentAdUris, Uri.CREATOR);
     }
 
     @Override
@@ -77,14 +86,15 @@ public final class PersistAdSelectionResultResponse implements Parcelable {
             PersistAdSelectionResultResponse response = (PersistAdSelectionResultResponse) o;
             return mAdSelectionId == response.mAdSelectionId
                     && Objects.equals(mAdRenderUri, response.mAdRenderUri)
-                    && Objects.equals(mWinningSeller, response.mWinningSeller);
+                    && Objects.equals(mWinningSeller, response.mWinningSeller)
+                    && Objects.equals(mComponentAdUris, response.mComponentAdUris);
         }
         return false;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(mAdSelectionId, mAdRenderUri, mWinningSeller);
+        return Objects.hash(mAdSelectionId, mAdRenderUri, mWinningSeller, mComponentAdUris);
     }
 
     @Override
@@ -107,6 +117,11 @@ public final class PersistAdSelectionResultResponse implements Parcelable {
         return mWinningSeller;
     }
 
+    /** Returns the list of component ad URIs. */
+    public List<Uri> getComponentAdUris() {
+        return mComponentAdUris;
+    }
+
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         Objects.requireNonNull(dest);
@@ -116,6 +131,7 @@ public final class PersistAdSelectionResultResponse implements Parcelable {
         dest.writeLong(mAdSelectionId);
         mAdRenderUri.writeToParcel(dest, flags);
         mWinningSeller.writeToParcel(dest, flags);
+        dest.writeTypedList(mComponentAdUris);
     }
 
     /**
@@ -127,6 +143,7 @@ public final class PersistAdSelectionResultResponse implements Parcelable {
         private long mAdSelectionId;
         private Uri mAdRenderUri;
         private AdTechIdentifier mWinningSeller;
+        private List<Uri> mComponentAdUris = List.of();
 
         public Builder() {
             mWinningSeller = AdTechIdentifier.UNSET_AD_TECH_IDENTIFIER;
@@ -153,6 +170,14 @@ public final class PersistAdSelectionResultResponse implements Parcelable {
             return this;
         }
 
+        /** Sets the list of component ad URIs. Takes a copy of the provided list. */
+        public PersistAdSelectionResultResponse.Builder setComponentAdUris(
+                List<Uri> componentAdUris) {
+            Objects.requireNonNull(componentAdUris);
+            this.mComponentAdUris = componentAdUris;
+            return this;
+        }
+
         /**
          * Builds a {@link PersistAdSelectionResultResponse} instance.
          *
@@ -168,7 +193,7 @@ public final class PersistAdSelectionResultResponse implements Parcelable {
                     mAdSelectionId != UNSET_AD_SELECTION_ID, UNSET_AD_SELECTION_ID_MESSAGE);
 
             return new PersistAdSelectionResultResponse(
-                    mAdSelectionId, mAdRenderUri, mWinningSeller);
+                    mAdSelectionId, mAdRenderUri, mWinningSeller, mComponentAdUris);
         }
     }
 }

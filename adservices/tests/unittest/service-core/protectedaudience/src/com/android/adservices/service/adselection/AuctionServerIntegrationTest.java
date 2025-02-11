@@ -30,6 +30,7 @@ import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERV
 import static com.android.adservices.common.DBAdDataFixture.getValidDbAdDataNoFiltersBuilder;
 import static com.android.adservices.data.adselection.EncryptionKeyConstants.EncryptionKeyType.ENCRYPTION_KEY_TYPE_AUCTION;
 import static com.android.adservices.service.Flags.FLEDGE_AUCTION_SERVER_OVERALL_TIMEOUT_MS;
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AD_ID_FETCHER_TIMEOUT_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_AUCTION_KEY_FETCH_URI;
@@ -125,6 +126,8 @@ import android.adservices.common.AppInstallFilters;
 import android.adservices.common.AssetFileDescriptorUtil;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
+import android.adservices.common.ComponentAdData;
+import android.adservices.common.ComponentAdDataFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.common.FrequencyCapFilters;
 import android.adservices.common.KeyedFrequencyCap;
@@ -829,6 +832,95 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
 
         // Assert that only ad remaining is the non filter one
         assertThat(adRenderIdsFromBuyerInput2.get(0)).isEqualTo(Integer.toString(sequenceNumber3));
+    }
+
+    @SetFlagTrue(KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS)
+    @Test
+    public void testAuctionServerFlow_withoutEncrypt_validRequest_ComponentAdsEnabled()
+            throws Exception {
+        setComponentAdsEnabled();
+        // Create the service again with new flags
+        AdSelectionService adSelectionService =
+                createAdSelectionService(mFakeFlags, mAdFilteringFeatureFactory);
+
+        when(mObliviousHttpEncryptorMock.encryptBytes(
+                        any(byte[].class), anyLong(), anyLong(), any(), any()))
+                .thenAnswer(
+                        invocation ->
+                                FluentFuture.from(immediateFuture(invocation.getArgument(0))));
+        when(mObliviousHttpEncryptorMock.decryptBytes(any(byte[].class), anyLong()))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        DBCustomAudience winningCustomAudience =
+                DBCustomAudienceFixture.getValidBuilderByBuyerNoFilters(
+                                WINNER_BUYER,
+                                WINNING_CUSTOM_AUDIENCE_NAME,
+                                WINNING_CUSTOM_AUDIENCE_OWNER)
+                        .build();
+        Assert.assertNotNull(winningCustomAudience.getAds());
+        List<ComponentAdData> componentAds =
+                ComponentAdDataFixture.getValidComponentAdsByBuyer(WINNER_BUYER);
+        mCustomAudienceDaoSpy.insertOrOverwriteCustomAudience(
+                winningCustomAudience, Uri.EMPTY, /* debuggable= */ false, componentAds);
+
+        GetAdSelectionDataInput input =
+                new GetAdSelectionDataInput.Builder()
+                        .setSeller(SELLER)
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        GetAdSelectionDataTestCallback getAdSelectionDataTestCallback =
+                invokeGetAdSelectionData(adSelectionService, input);
+        long adSelectionId =
+                getAdSelectionDataTestCallback.mGetAdSelectionDataResponse.getAdSelectionId();
+        assertTrue(getAdSelectionDataTestCallback.mIsSuccess);
+
+        AuctionResult auctionResultWithComponentAds =
+                AuctionResult.newBuilder()
+                        .setAdType(AuctionResult.AdType.REMARKETING_AD)
+                        .setAdRenderUrl(WINNER_AD_RENDER_URI.toString())
+                        .setCustomAudienceName(WINNING_CUSTOM_AUDIENCE_NAME)
+                        .setCustomAudienceOwner(WINNING_CUSTOM_AUDIENCE_OWNER)
+                        .setBuyer(WINNER_BUYER.toString())
+                        .setBid(BID)
+                        .setScore(SCORE)
+                        .setIsChaff(false)
+                        .setWinReportingUrls(WIN_REPORTING_URLS)
+                        .addAllAdComponentRenderUrls(
+                                List.of(
+                                        componentAds.get(0).getRenderUri().toString(),
+                                        componentAds.get(1).getRenderUri().toString(),
+                                        componentAds.get(2).getRenderUri().toString(),
+                                        componentAds.get(3).getRenderUri().toString()))
+                        .build();
+
+        PersistAdSelectionResultInput persistAdSelectionResultInput =
+                new PersistAdSelectionResultInput.Builder()
+                        .setAdSelectionId(adSelectionId)
+                        .setSeller(SELLER)
+                        .setAdSelectionResult(
+                                prepareAuctionResultBytes(auctionResultWithComponentAds))
+                        .setCallerPackageName(CALLER_PACKAGE_NAME)
+                        .build();
+
+        PersistAdSelectionResultTestCallback persistAdSelectionResultTestCallback =
+                invokePersistAdSelectionResult(adSelectionService, persistAdSelectionResultInput);
+
+        assertTrue(persistAdSelectionResultTestCallback.mIsSuccess);
+        expect.that(
+                        persistAdSelectionResultTestCallback.mPersistAdSelectionResultResponse
+                                .getAdRenderUri())
+                .isNotNull();
+        expect.that(
+                        persistAdSelectionResultTestCallback.mPersistAdSelectionResultResponse
+                                .getComponentAdUris())
+                .containsExactlyElementsIn(
+                        List.of(
+                                componentAds.get(0).getRenderUri(),
+                                componentAds.get(1).getRenderUri(),
+                                componentAds.get(2).getRenderUri(),
+                                componentAds.get(3).getRenderUri()))
+                .inOrder();
     }
 
     @Test
@@ -4546,6 +4638,18 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
         return formattedData.getData();
     }
 
+    private byte[] prepareAuctionResultBytes(AuctionResult auctionResult) {
+        byte[] auctionResultBytes = auctionResult.toByteArray();
+        AuctionServerDataCompressor.CompressedData compressedData =
+                mDataCompressor.compress(
+                        AuctionServerDataCompressor.UncompressedData.create(auctionResultBytes));
+        AuctionServerPayloadFormattedData formattedData =
+                mPayloadFormatter.apply(
+                        AuctionServerPayloadUnformattedData.create(compressedData.getData()),
+                        AuctionServerDataCompressorGzip.VERSION);
+        return formattedData.getData();
+    }
+
     private byte[] prepareAuctionResultBytesPas() {
         byte[] auctionResultBytes = AUCTION_RESULT_PAS.toByteArray();
         AuctionServerDataCompressor.CompressedData compressedData =
@@ -4706,6 +4810,10 @@ public final class AuctionServerIntegrationTest extends AdServicesExtendedMockit
     private void setFlagsWithBothFiltersEnabled() {
         flags.setFlag(KEY_FLEDGE_FREQUENCY_CAP_FILTERING_ENABLED, true);
         flags.setFlag(KEY_FLEDGE_APP_INSTALL_FILTERING_ENABLED, true);
+    }
+
+    private void setComponentAdsEnabled() {
+        flags.setFlag(KEY_ENABLE_CUSTOM_AUDIENCE_COMPONENT_ADS, true);
     }
 
     private static final class PersistAdSelectionResultTestCallback

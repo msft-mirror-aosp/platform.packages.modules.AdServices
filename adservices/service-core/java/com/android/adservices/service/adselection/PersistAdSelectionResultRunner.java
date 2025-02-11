@@ -83,6 +83,7 @@ import android.annotation.RequiresApi;
 import android.net.Uri;
 import android.os.Build;
 import android.os.RemoteException;
+import android.util.Pair;
 
 import com.android.adservices.LoggerFactory;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
@@ -301,7 +302,7 @@ public class PersistAdSelectionResultRunner {
                             },
                             mLightweightExecutorService);
 
-            ListenableFuture<AuctionResult> getAdSelectionDataResult =
+            ListenableFuture<Pair<AuctionResult, List<Uri>>> getAdSelectionDataResult =
                     FluentFuture.from(filteredRequest)
                             .transformAsync(
                                     ignoredVoid ->
@@ -312,7 +313,7 @@ public class PersistAdSelectionResultRunner {
                     getAdSelectionDataResult,
                     new FutureCallback<>() {
                         @Override
-                        public void onSuccess(AuctionResult result) {
+                        public void onSuccess(Pair<AuctionResult, List<Uri>> result) {
                             notifySuccessToCaller(result, adSelectionId, callback);
                         }
 
@@ -382,8 +383,8 @@ public class PersistAdSelectionResultRunner {
         }
     }
 
-    private ListenableFuture<AuctionResult> orchestratePersistAdSelectionResultRunner(
-            PersistAdSelectionResultInput request) {
+    private ListenableFuture<Pair<AuctionResult, List<Uri>>>
+            orchestratePersistAdSelectionResultRunner(PersistAdSelectionResultInput request) {
         int orchestrationCookie =
                 Tracing.beginAsyncSection(Tracing.ORCHESTRATE_PERSIST_AD_SELECTION_RESULT);
         long adSelectionId = request.getAdSelectionId();
@@ -392,6 +393,8 @@ public class PersistAdSelectionResultRunner {
                 .transform(this::parseAdSelectionResult, mLightweightExecutorService)
                 .transform(
                         auctionResult -> {
+                            List<Uri> componentAdUris = new ArrayList<>();
+
                             if (auctionResult.getError().getCode() != 0) {
                                 String err =
                                         String.format(
@@ -437,17 +440,18 @@ public class PersistAdSelectionResultRunner {
                                     throw new IllegalArgumentException(err);
                                 }
 
-                                DBAdData winningAd = fetchWinningAd(auctionResult);
+                                Pair<DBAdData, List<Uri>> pair = fetchWinningAd(auctionResult);
+                                componentAdUris = pair.second;
                                 int persistingCookie =
                                         Tracing.beginAsyncSection(Tracing.PERSIST_AUCTION_RESULTS);
                                 persistAuctionResults(
-                                        auctionResult, winningAd, adSelectionId, seller);
+                                        auctionResult, pair.first, adSelectionId, seller);
                                 persistAdInteractionKeysAndUrls(
                                         auctionResult, adSelectionId, seller);
                                 Tracing.endAsyncSection(
                                         Tracing.PERSIST_AUCTION_RESULTS, persistingCookie);
                             }
-                            return auctionResult;
+                            return new Pair<>(auctionResult, componentAdUris);
                         },
                         mBackgroundExecutorService)
                 .transform(
@@ -466,12 +470,15 @@ public class PersistAdSelectionResultRunner {
     }
 
     @NonNull
-    private DBAdData fetchWinningAd(AuctionResult auctionResult) {
+    private Pair<DBAdData, List<Uri>> fetchWinningAd(AuctionResult auctionResult) {
         DBAdData winningAd;
+        List<Uri> componentAdRenderUris = List.of();
         if (auctionResult.getAdType() == AuctionResult.AdType.REMARKETING_AD) {
-            winningAd = fetchRemarketingAd(auctionResult);
+            Pair<DBAdData, List<Uri>> pair = fetchRemarketingAd(auctionResult);
+            winningAd = pair.first;
+            componentAdRenderUris = pair.second;
             logPersistAdSelectionResultWinnerType(
-                    WINNER_TYPE_CA_WINNER, auctionResult.getAdComponentRenderUrlsCount());
+                    WINNER_TYPE_CA_WINNER, componentAdRenderUris.size());
         } else if (auctionResult.getAdType() == AuctionResult.AdType.APP_INSTALL_AD) {
             winningAd = fetchAppInstallAd(auctionResult);
             // Change numComponentAds to the real value after implementing component ads in PAS.
@@ -491,12 +498,11 @@ public class PersistAdSelectionResultRunner {
                     WINNER_TYPE_NO_WINNER, /* numComponentAds= */ FIELD_UNSET);
             throw new IllegalArgumentException(err);
         }
-        return winningAd;
+        return new Pair<>(winningAd, componentAdRenderUris);
     }
 
-
     @NonNull
-    private DBAdData fetchRemarketingAd(AuctionResult auctionResult) {
+    private Pair<DBAdData, List<Uri>> fetchRemarketingAd(AuctionResult auctionResult) {
         Uri adRenderUri = Uri.parse(auctionResult.getAdRenderUrl());
         AdTechIdentifier buyer = AdTechIdentifier.fromString(auctionResult.getBuyer());
         String name = auctionResult.getCustomAudienceName();
@@ -505,10 +511,16 @@ public class PersistAdSelectionResultRunner {
                 "Fetching winning CA with buyer='%s', name='%s', owner='%s', render uri='%s'",
                 buyer, name, owner, adRenderUri);
 
+        List<Uri> validComponentAdUris = List.of();
+
         DBAdData winningAd;
         if (!owner.isEmpty()) {
             DBCustomAudience winningCustomAudience =
                     mCustomAudienceDao.getCustomAudienceByPrimaryKey(owner, buyer, name);
+
+            validComponentAdUris =
+                    mComponentAdsStrategy.extractComponentAdsThatMatchOnDevice(
+                            auctionResult, mCustomAudienceDao);
 
             if (Objects.isNull(winningCustomAudience)) {
                 String err =
@@ -574,7 +586,7 @@ public class PersistAdSelectionResultRunner {
             throw new IllegalArgumentException(err);
         }
 
-        return winningAd;
+        return new Pair<>(winningAd, validComponentAdUris);
     }
 
     @NonNull
@@ -587,9 +599,8 @@ public class PersistAdSelectionResultRunner {
                 .build();
     }
 
-
     @Nullable
-    private AuctionResult handleTimeoutError(TimeoutException e) {
+    private Pair<AuctionResult, List<Uri>> handleTimeoutError(TimeoutException e) {
         sLogger.e(e, PERSIST_AD_SELECTION_RESULT_TIMED_OUT);
         ErrorLogUtil.e(
                 e,
@@ -1008,12 +1019,14 @@ public class PersistAdSelectionResultRunner {
 
     @VisibleForTesting
     PersistAdSelectionResultResponse createPersistAdSelectionResultResponse(
-            AuctionResult result, long adSelectionId) {
+            Pair<AuctionResult, List<Uri>> resultPair, long adSelectionId) {
+        AuctionResult result = resultPair.first;
         Uri adRenderUri = (result.getIsChaff()) ? Uri.EMPTY : Uri.parse(result.getAdRenderUrl());
         PersistAdSelectionResultResponse.Builder persistAdSelectionResponseBuilder =
                 new PersistAdSelectionResultResponse.Builder()
                         .setAdSelectionId(adSelectionId)
-                        .setAdRenderUri(adRenderUri);
+                        .setAdRenderUri(adRenderUri)
+                        .setComponentAdUris(resultPair.second);
         if (mFlags.getEnableWinningSellerIdInAdSelectionOutcome()) {
             AdTechIdentifier winningSeller =
                     result.getIsChaff()
@@ -1027,11 +1040,13 @@ public class PersistAdSelectionResultRunner {
     }
 
     private void notifySuccessToCaller(
-            AuctionResult result, long adSelectionId, PersistAdSelectionResultCallback callback) {
+            Pair<AuctionResult, List<Uri>> resultPair,
+            long adSelectionId,
+            PersistAdSelectionResultCallback callback) {
         int resultCode = STATUS_SUCCESS;
         try {
             PersistAdSelectionResultResponse response =
-                    createPersistAdSelectionResultResponse(result, adSelectionId);
+                    createPersistAdSelectionResultResponse(resultPair, adSelectionId);
             callback.onSuccess(response);
         } catch (RemoteException e) {
             sLogger.e(e, "Encountered exception during notifying PersistAdSelectionResultCallback");
