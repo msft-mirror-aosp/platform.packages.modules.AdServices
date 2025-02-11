@@ -21,8 +21,8 @@ import android.adservices.common.AdTechIdentifier;
 import androidx.annotation.NonNull;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.DBEncodedPayload;
+import com.android.adservices.service.customaudience.CustomAudienceWithComponentAds;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
@@ -57,7 +57,7 @@ public class CompressedBuyerInputCreatorNoOptimizations implements CompressedBuy
     @Override
     public Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>
             generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                    @NonNull List<DBCustomAudience> dbCustomAudiences,
+                    @NonNull List<CustomAudienceWithComponentAds> customAudienceWithComponentAds,
                     @NonNull Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap) {
         long startLatency = mClock.millis();
 
@@ -92,19 +92,23 @@ public class CompressedBuyerInputCreatorNoOptimizations implements CompressedBuy
 
         int buildCAProtoTraceCookie =
                 Tracing.beginAsyncSection(Tracing.COMPRESSED_INPUT_BUILD_CA_PROTO);
-        for (DBCustomAudience dBcustomAudience : dbCustomAudiences) {
-            final AdTechIdentifier buyerName = dBcustomAudience.getBuyer();
+        for (CustomAudienceWithComponentAds dBcustomAudienceWithComponentAds :
+                customAudienceWithComponentAds) {
+            final AdTechIdentifier buyerName =
+                    dBcustomAudienceWithComponentAds.getDBCustomAudience().getBuyer();
             if (!buyerInputs.containsKey(buyerName)) {
                 buyerInputs.put(buyerName, BiddingAuctionServers.BuyerInput.newBuilder());
             }
             BiddingAuctionServers.BuyerInput.CustomAudience customAudience =
                     mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(
-                            dBcustomAudience);
+                            dBcustomAudienceWithComponentAds);
 
             buyerInputs.get(buyerName).addCustomAudiences(customAudience);
 
             mCompressedBuyerInputCreatorHelper.addToBuyerIntermediateStats(
-                    perBuyerStats, dBcustomAudience, customAudience);
+                    perBuyerStats,
+                    dBcustomAudienceWithComponentAds.getDBCustomAudience(),
+                    customAudience);
         }
         Tracing.endAsyncSection(Tracing.COMPRESSED_INPUT_BUILD_CA_PROTO, buildCAProtoTraceCookie);
 

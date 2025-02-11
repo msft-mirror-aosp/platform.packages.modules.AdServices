@@ -28,6 +28,7 @@ import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 import static org.mockito.Mockito.when;
 
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.ComponentAdDataFixture;
 import android.util.Pair;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -35,6 +36,7 @@ import com.android.adservices.customaudience.DBCustomAudienceFixture;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncodedPayloadFixture;
+import com.android.adservices.service.customaudience.CustomAudienceWithComponentAds;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
 
@@ -109,7 +111,9 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
                 mCompressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                        dbCustomAudienceList, encodedPayloadMap);
+                        ComponentAdDataFixture.getCustomAudiencesWithEmptyComponentAds(
+                                dbCustomAudienceList),
+                        encodedPayloadMap);
 
         for (AdTechIdentifier buyer : buyersList) {
             BiddingAuctionServers.BuyerInput buyerInput =
@@ -126,6 +130,7 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
                 expect.that(deviceCA.getName()).isEqualTo(buyerInputsCAName);
                 expect.that(deviceCA.getBuyer()).isEqualTo(buyer);
                 assertCAsEqual(buyerInputsCA, deviceCA, true);
+                expect.that(buyerInputsCA.getComponentAdsList()).isEmpty();
             }
 
             BiddingAuctionServers.ProtectedAppSignals appSignals =
@@ -136,6 +141,75 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
                     .isEqualTo(appSignals.getAppInstallSignals());
         }
         verify(mAuctionServerPayloadMetricsStrategyMock, times(dbCustomAudienceList.size()))
+                .addToBuyerIntermediateStats(any(), any(), any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .logGetAdSelectionDataBuyerInputGeneratedStats(any());
+        verify(mAuctionServerPayloadMetricsStrategyMock)
+                .setInputGenerationLatencyMsAndBuyerCreatorVersion(
+                        mStatsBuilderMock,
+                        LATENCY_MS,
+                        CompressedBuyerInputCreatorNoOptimizations.VERSION);
+        verify(mClockMock, times(2)).millis();
+    }
+
+    @Test
+    @SuppressWarnings("ReturnValueIgnored")
+    public void
+            generateCompressedBuyerInputFromDBCAsAndEncodedSignalsReturnsCompressedInputsWithComponentAds()
+                    throws Exception {
+        Map<String, AdTechIdentifier> nameAndBuyersMap =
+                Map.of(
+                        "ShoesB1", BUYER_1,
+                        "ShirtsB1", BUYER_1,
+                        "ShoesB2", BUYER_2);
+
+        List<AdTechIdentifier> buyersList = ImmutableList.of(BUYER_1, BUYER_2);
+        Pair<List<CustomAudienceWithComponentAds>, Map<String, CustomAudienceWithComponentAds>>
+                resultPair = createCustomAudiencesWithComponentAds(nameAndBuyersMap);
+
+        List<CustomAudienceWithComponentAds> customAudienceWithComponentAds = resultPair.first;
+        Map<String, CustomAudienceWithComponentAds> namesToCustomAudience = resultPair.second;
+
+        Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap =
+                generateEncodedPayload(buyersList);
+
+        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
+                mCompressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
+                        customAudienceWithComponentAds, encodedPayloadMap);
+
+        for (AdTechIdentifier buyer : buyersList) {
+            BiddingAuctionServers.BuyerInput buyerInput =
+                    BiddingAuctionServers.BuyerInput.parseFrom(
+                            mAuctionServerDataCompressor
+                                    .decompress(compressedDataMap.get(buyer))
+                                    .getData());
+
+            for (BiddingAuctionServers.BuyerInput.CustomAudience buyerInputsCA :
+                    buyerInput.getCustomAudiencesList()) {
+                String buyerInputsCAName = buyerInputsCA.getName();
+                expect.that(nameAndBuyersMap).containsKey(buyerInputsCAName);
+                DBCustomAudience deviceCA =
+                        namesToCustomAudience.get(buyerInputsCAName).getDBCustomAudience();
+                expect.that(deviceCA.getName()).isEqualTo(buyerInputsCAName);
+                expect.that(deviceCA.getBuyer()).isEqualTo(buyer);
+                assertCAsEqual(buyerInputsCA, deviceCA, /* compareAds= */ true);
+                expect.that(buyerInputsCA.getComponentAdsList())
+                        .isEqualTo(
+                                namesToCustomAudience
+                                        .get(buyerInputsCAName)
+                                        .getComponentAdRenderIds());
+            }
+
+            BiddingAuctionServers.ProtectedAppSignals appSignals =
+                    buyerInput.getProtectedAppSignals();
+            expect.that(encodedPayloadMap.get(buyer).getVersion())
+                    .isEqualTo(appSignals.getEncodingVersion());
+            expect.that(ByteString.copyFrom(encodedPayloadMap.get(buyer).getEncodedPayload()))
+                    .isEqualTo(appSignals.getAppInstallSignals());
+        }
+        verify(
+                        mAuctionServerPayloadMetricsStrategyMock,
+                        times(customAudienceWithComponentAds.size()))
                 .addToBuyerIntermediateStats(any(), any(), any());
         verify(mAuctionServerPayloadMetricsStrategyMock)
                 .logGetAdSelectionDataBuyerInputGeneratedStats(any());
@@ -208,7 +282,9 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
                 mCompressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                        dbCustomAudienceList, ImmutableMap.of());
+                        ComponentAdDataFixture.getCustomAudiencesWithEmptyComponentAds(
+                                dbCustomAudienceList),
+                        ImmutableMap.of());
 
         for (AdTechIdentifier buyer : buyersList) {
             BiddingAuctionServers.BuyerInput buyerInput =
@@ -265,6 +341,24 @@ public class CompressedBuyerInputCreatorNoOptimizationsTest
                     DBCustomAudienceFixture.getValidBuilderByBuyer(buyer, name).build();
             namesToCustomAudiences.put(name, thisCustomAudience);
             customAudiences.add(thisCustomAudience);
+        }
+        return Pair.create(customAudiences, namesToCustomAudiences);
+    }
+
+    private Pair<List<CustomAudienceWithComponentAds>, Map<String, CustomAudienceWithComponentAds>>
+            createCustomAudiencesWithComponentAds(Map<String, AdTechIdentifier> nameAndBuyers) {
+        List<CustomAudienceWithComponentAds> customAudiences = new ArrayList<>();
+        Map<String, CustomAudienceWithComponentAds> namesToCustomAudiences = new HashMap<>();
+        for (Map.Entry<String, AdTechIdentifier> entry : nameAndBuyers.entrySet()) {
+            AdTechIdentifier buyer = entry.getValue();
+            String name = entry.getKey();
+            DBCustomAudience thisCustomAudience =
+                    DBCustomAudienceFixture.getValidBuilderByBuyer(buyer, name).build();
+            List<String> adRenderIds = List.of(name + "1", name + "2");
+            CustomAudienceWithComponentAds customAudienceWithComponentAds =
+                    CustomAudienceWithComponentAds.create(thisCustomAudience, adRenderIds);
+            namesToCustomAudiences.put(name, customAudienceWithComponentAds);
+            customAudiences.add(customAudienceWithComponentAds);
         }
         return Pair.create(customAudiences, namesToCustomAudiences);
     }

@@ -1062,6 +1062,13 @@ public abstract class CustomAudienceDao {
     abstract List<DBComponentAdData> getComponentAdsByCustomAudienceInfo(
             String owner, AdTechIdentifier buyer, String name);
 
+    /**
+     * Gets all the component ads matching a set of buyers. The component ads will be sorted by the
+     * order in which they were inserted.
+     */
+    @Query("SELECT * FROM component_ad_data WHERE buyer in (:buyerSet)")
+    public abstract List<DBComponentAdData> getComponentAdsByBuyers(Set<AdTechIdentifier> buyerSet);
+
     /** Deletes all component ads associated with the primary keys of a custom audience. */
     @Query(
             "DELETE FROM component_ad_data WHERE owner = :owner AND buyer = :buyer AND name ="

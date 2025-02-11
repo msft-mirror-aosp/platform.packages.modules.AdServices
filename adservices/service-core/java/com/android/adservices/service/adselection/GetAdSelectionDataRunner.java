@@ -242,7 +242,8 @@ public class GetAdSelectionDataRunner {
                         mFlags.getFledgeGetAdSelectionDataBuyerInputCreatorVersion(),
                         mFlags.getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions(),
                         mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes(),
-                        mClock);
+                        mClock,
+                        mFlags.getEnableCustomAudienceComponentAds());
 
         mBuyerInputGeneratorArgumentsPreparer =
                 compressedBuyerInputCreatorFactory.getBuyerInputGeneratorArgumentsPreparer();
@@ -347,7 +348,8 @@ public class GetAdSelectionDataRunner {
                         mFlags.getFledgeGetAdSelectionDataBuyerInputCreatorVersion(),
                         mFlags.getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions(),
                         mFlags.getProtectedSignalsEncodedPayloadMaxSizeBytes(),
-                        mClock);
+                        mClock,
+                        mFlags.getEnableCustomAudienceComponentAds());
 
         mBuyerInputGeneratorArgumentsPreparer =
                 compressedBuyerInputCreatorFactory.getBuyerInputGeneratorArgumentsPreparer();

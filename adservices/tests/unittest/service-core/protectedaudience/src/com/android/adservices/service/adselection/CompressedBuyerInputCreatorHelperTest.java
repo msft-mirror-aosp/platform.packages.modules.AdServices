@@ -34,6 +34,7 @@ import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBTrustedBiddingData;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncodedPayloadFixture;
+import com.android.adservices.service.customaudience.CustomAudienceWithComponentAds;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
@@ -72,8 +73,12 @@ public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMoc
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(BUYER_1, "buyer1")
                         .build();
 
+        CustomAudienceWithComponentAds customAudienceWithComponentAds =
+                CustomAudienceWithComponentAds.create(dbCustomAudience, List.of());
+
         BiddingAuctionServers.BuyerInput.CustomAudience customAudience =
-                mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(dbCustomAudience);
+                mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(
+                        customAudienceWithComponentAds);
 
         expect.that(customAudience.getName()).isEqualTo(dbCustomAudience.getName());
         expect.that(customAudience.getOwner()).isEqualTo(dbCustomAudience.getOwner());
@@ -81,6 +86,7 @@ public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMoc
                 .isEqualTo(dbCustomAudience.getTrustedBiddingData().getKeys().size());
         expect.that(customAudience.getAdRenderIdsCount())
                 .isEqualTo(2 /* from the DBCustomAudienceFixture */);
+        expect.that(customAudience.getComponentAdsCount()).isEqualTo(0);
     }
 
     @Test
@@ -88,15 +94,19 @@ public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMoc
         mCompressedBuyerInputCreatorHelper =
                 new CompressedBuyerInputCreatorHelper(
                         mAuctionServerPayloadMetricsStrategyMock,
-                        mPasExtendedMetricsEnabled, /* omitAdsEnabled */
-                        true);
+                        mPasExtendedMetricsEnabled,
+                        /* omitAdsEnabled */ true);
 
         DBCustomAudience dbCustomAudience =
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(BUYER_1, "buyer1")
                         .build();
 
+        CustomAudienceWithComponentAds customAudienceWithComponentAds =
+                CustomAudienceWithComponentAds.create(dbCustomAudience, List.of());
+
         BiddingAuctionServers.BuyerInput.CustomAudience customAudience =
-                mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(dbCustomAudience);
+                mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(
+                        customAudienceWithComponentAds);
 
         expect.that(customAudience.getName()).isEqualTo(dbCustomAudience.getName());
         expect.that(customAudience.getOwner()).isEqualTo(dbCustomAudience.getOwner());
@@ -104,6 +114,7 @@ public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMoc
                 .isEqualTo(dbCustomAudience.getTrustedBiddingData().getKeys().size());
         expect.that(customAudience.getAdRenderIdsCount())
                 .isEqualTo(2 /* from the DBCustomAudienceFixture */);
+        expect.that(customAudience.getComponentAdsCount()).isEqualTo(0);
     }
 
     @Test
@@ -111,15 +122,19 @@ public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMoc
         mCompressedBuyerInputCreatorHelper =
                 new CompressedBuyerInputCreatorHelper(
                         mAuctionServerPayloadMetricsStrategyMock,
-                        mPasExtendedMetricsEnabled, /* omitAdsEnabled */
-                        true);
+                        mPasExtendedMetricsEnabled,
+                        /* omitAdsEnabled */ true);
 
         DBCustomAudience dbCustomAudience =
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithOmitAdsEnabled(BUYER_1, "buyer1")
                         .build();
 
+        CustomAudienceWithComponentAds customAudienceWithComponentAds =
+                CustomAudienceWithComponentAds.create(dbCustomAudience, List.of());
+
         BiddingAuctionServers.BuyerInput.CustomAudience customAudience =
-                mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(dbCustomAudience);
+                mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(
+                        customAudienceWithComponentAds);
 
         expect.that(customAudience.getName()).isEqualTo(dbCustomAudience.getName());
         expect.that(customAudience.getOwner()).isEqualTo(dbCustomAudience.getOwner());
@@ -127,6 +142,95 @@ public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMoc
                 .isEqualTo(dbCustomAudience.getTrustedBiddingData().getKeys().size());
         expect.that(customAudience.getAdRenderIdsCount())
                 .isEqualTo(0 /* from the DBCustomAudienceFixture */);
+        expect.that(customAudience.getComponentAdsCount()).isEqualTo(0);
+    }
+
+    @Test
+    public void testBuildCustomAudienceProtoWithComponentAds() {
+        DBCustomAudience dbCustomAudience =
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(BUYER_1, "buyer1")
+                        .build();
+
+        List<String> componentAdRenderIds = List.of("renderId1", "renderId2", "renderId3");
+
+        CustomAudienceWithComponentAds customAudienceWithComponentAds =
+                CustomAudienceWithComponentAds.create(dbCustomAudience, componentAdRenderIds);
+
+        BiddingAuctionServers.BuyerInput.CustomAudience customAudience =
+                mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(
+                        customAudienceWithComponentAds);
+
+        expect.that(customAudience.getName()).isEqualTo(dbCustomAudience.getName());
+        expect.that(customAudience.getOwner()).isEqualTo(dbCustomAudience.getOwner());
+        expect.that(customAudience.getBiddingSignalsKeysCount())
+                .isEqualTo(dbCustomAudience.getTrustedBiddingData().getKeys().size());
+        expect.that(customAudience.getAdRenderIdsCount())
+                .isEqualTo(2 /* from the DBCustomAudienceFixture */);
+        expect.that(customAudience.getComponentAdsCount()).isEqualTo(3);
+        expect.that(customAudience.getComponentAdsList())
+                .containsExactlyElementsIn(componentAdRenderIds);
+    }
+
+    @Test
+    public void testBuildCustomAudienceProtoOmitAdsEnabledWithComponentAds_CADoesNotOmitsAds() {
+        mCompressedBuyerInputCreatorHelper =
+                new CompressedBuyerInputCreatorHelper(
+                        mAuctionServerPayloadMetricsStrategyMock,
+                        mPasExtendedMetricsEnabled,
+                        /* omitAdsEnabled= */ true);
+
+        DBCustomAudience dbCustomAudience =
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(BUYER_1, "buyer1")
+                        .build();
+
+        List<String> componentAdRenderIds = List.of("renderId1", "renderId2", "renderId3");
+
+        CustomAudienceWithComponentAds customAudienceWithComponentAds =
+                CustomAudienceWithComponentAds.create(dbCustomAudience, componentAdRenderIds);
+
+        BiddingAuctionServers.BuyerInput.CustomAudience customAudience =
+                mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(
+                        customAudienceWithComponentAds);
+
+        expect.that(customAudience.getName()).isEqualTo(dbCustomAudience.getName());
+        expect.that(customAudience.getOwner()).isEqualTo(dbCustomAudience.getOwner());
+        expect.that(customAudience.getBiddingSignalsKeysCount())
+                .isEqualTo(dbCustomAudience.getTrustedBiddingData().getKeys().size());
+        expect.that(customAudience.getAdRenderIdsCount())
+                .isEqualTo(2 /* from the DBCustomAudienceFixture */);
+        expect.that(customAudience.getComponentAdsCount()).isEqualTo(3);
+        expect.that(customAudience.getComponentAdsList())
+                .containsExactlyElementsIn(componentAdRenderIds);
+    }
+
+    @Test
+    public void testBuildCustomAudienceProtoOmitAdsEnabledWithComponentAds_CAOmitsAds() {
+        mCompressedBuyerInputCreatorHelper =
+                new CompressedBuyerInputCreatorHelper(
+                        mAuctionServerPayloadMetricsStrategyMock,
+                        mPasExtendedMetricsEnabled,
+                        /* omitAdsEnabled= */ true);
+
+        DBCustomAudience dbCustomAudience =
+                DBCustomAudienceFixture.getValidBuilderByBuyerWithOmitAdsEnabled(BUYER_1, "buyer1")
+                        .build();
+
+        List<String> componentAdRenderIds = List.of("renderId1", "renderId2", "renderId3");
+
+        CustomAudienceWithComponentAds customAudienceWithComponentAds =
+                CustomAudienceWithComponentAds.create(dbCustomAudience, componentAdRenderIds);
+
+        BiddingAuctionServers.BuyerInput.CustomAudience customAudience =
+                mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(
+                        customAudienceWithComponentAds);
+
+        expect.that(customAudience.getName()).isEqualTo(dbCustomAudience.getName());
+        expect.that(customAudience.getOwner()).isEqualTo(dbCustomAudience.getOwner());
+        expect.that(customAudience.getBiddingSignalsKeysCount())
+                .isEqualTo(dbCustomAudience.getTrustedBiddingData().getKeys().size());
+        expect.that(customAudience.getAdRenderIdsCount())
+                .isEqualTo(0 /* from the DBCustomAudienceFixture */);
+        expect.that(customAudience.getComponentAdsCount()).isEqualTo(0);
     }
 
     @Test
@@ -149,8 +253,14 @@ public class CompressedBuyerInputCreatorHelperTest extends AdServicesExtendedMoc
                 DBCustomAudienceFixture.getValidBuilderByBuyerWithAdRenderId(BUYER_1, "buyer1")
                         .build();
 
+        List<String> componentAdRenderIds = List.of("renderId1", "renderId2", "renderId3");
+
+        CustomAudienceWithComponentAds customAudienceWithComponentAds =
+                CustomAudienceWithComponentAds.create(dbCustomAudience, componentAdRenderIds);
+
         BiddingAuctionServers.BuyerInput.CustomAudience customAudience =
-                mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(dbCustomAudience);
+                mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(
+                        customAudienceWithComponentAds);
 
         mCompressedBuyerInputCreatorHelper.addToBuyerIntermediateStats(
                 ImmutableMap.of(),

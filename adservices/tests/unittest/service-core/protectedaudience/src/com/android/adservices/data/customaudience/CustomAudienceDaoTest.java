@@ -96,6 +96,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -198,6 +199,22 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
                     .setOwner(OWNER_1)
                     .setBuyer(BUYER_1)
                     .setName(NAME_1)
+                    .setActivationTime(ACTIVATION_TIME_1)
+                    .setCreationTime(CREATION_TIME_1)
+                    .setExpirationTime(EXPIRATION_TIME_1)
+                    .setLastAdsAndBiddingDataUpdatedTime(LAST_UPDATED_TIME_1)
+                    .setBiddingLogicUri(BIDDING_LOGIC_URI_1)
+                    .setUserBiddingSignals(USER_BIDDING_SIGNALS_1)
+                    .setAds(List.of(ADS_1))
+                    .setTrustedBiddingData(
+                            DBTrustedBiddingDataFixture.getValidBuilderByBuyer(BUYER_1).build())
+                    .build();
+
+    private static final DBCustomAudience CUSTOM_AUDIENCE_1_NAME_2 =
+            new DBCustomAudience.Builder()
+                    .setOwner(OWNER_1)
+                    .setBuyer(BUYER_1)
+                    .setName(NAME_2)
                     .setActivationTime(ACTIVATION_TIME_1)
                     .setCreationTime(CREATION_TIME_1)
                     .setExpirationTime(EXPIRATION_TIME_1)
@@ -3697,6 +3714,132 @@ public final class CustomAudienceDaoTest extends AdServicesExtendedMockitoTestCa
         assertThat(dbComponentAdDataList)
                 .containsExactlyElementsIn(expectedDBComponentAdDataList)
                 .inOrder();
+    }
+
+    @Test
+    public void testGetComponentAdsByBuyers_returnsOnlyRequestedBuyers() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_1,
+                DAILY_UPDATE_URI_1,
+                /* debuggable= */ false,
+                /* componentAds= */ List.of());
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_2,
+                DAILY_UPDATE_URI_2,
+                /* debuggable= */ false,
+                /* componentAds= */ List.of());
+
+        List<ComponentAdData> componentAdDataList1 =
+                ComponentAdDataFixture.getValidComponentAdsByBuyer(BUYER_1);
+        List<DBComponentAdData> expectedDBComponentAdDataList1 =
+                DBComponentAdDataFixture.getValidComponentAdsByBuyer(
+                        componentAdDataList1, OWNER_1, BUYER_1, NAME_1);
+        mCustomAudienceDao.insertAndOverwriteComponentAds(
+                componentAdDataList1, OWNER_1, BUYER_1, NAME_1);
+
+        List<ComponentAdData> componentAdDataList2 =
+                ComponentAdDataFixture.getValidComponentAdsByBuyer(BUYER_2);
+        mCustomAudienceDao.insertAndOverwriteComponentAds(
+                componentAdDataList2, OWNER_2, BUYER_2, NAME_2);
+
+        List<DBComponentAdData> componentAdsByBuyers =
+                mCustomAudienceDao.getComponentAdsByBuyers(Set.of(BUYER_1));
+
+        List<DBComponentAdData> buyer1Ads =
+                componentAdsByBuyers.stream()
+                        .filter(ad -> BUYER_1.equals(ad.getBuyer()))
+                        .collect(Collectors.toList());
+
+        assertThat(buyer1Ads).containsExactlyElementsIn(expectedDBComponentAdDataList1).inOrder();
+
+        assertThat(componentAdsByBuyers)
+                .containsExactlyElementsIn(expectedDBComponentAdDataList1)
+                .inOrder();
+
+        List<DBComponentAdData> buyer2Ads =
+                componentAdsByBuyers.stream()
+                        .filter(ad -> BUYER_2.equals(ad.getBuyer()))
+                        .collect(Collectors.toList());
+        assertThat(buyer2Ads).isEmpty();
+    }
+
+    @Test
+    public void testGetComponentAdsByBuyersAreReturnedInOrderOfInsertion() {
+        doReturn(TEST_FLAGS).when(FlagsFactory::getFlags);
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_1,
+                DAILY_UPDATE_URI_1,
+                /* debuggable= */ false,
+                /* componentAds= */ List.of());
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_2,
+                DAILY_UPDATE_URI_2,
+                /* debuggable= */ false,
+                /* componentAds= */ List.of());
+
+        mCustomAudienceDao.insertOrOverwriteCustomAudience(
+                CUSTOM_AUDIENCE_1_NAME_2,
+                DAILY_UPDATE_URI_1,
+                /* debuggable= */ false,
+                /* componentAds= */ List.of());
+
+        List<ComponentAdData> componentAdDataList1 =
+                ComponentAdDataFixture.getValidComponentAdsByBuyerAndRenderId(
+                        BUYER_1, List.of("render1", "render2"));
+
+        List<ComponentAdData> componentAdDataList2 =
+                ComponentAdDataFixture.getValidComponentAdsByBuyerAndRenderId(
+                        BUYER_1, List.of("render2", "render3"));
+
+        List<DBComponentAdData> expectedDBComponentAdDataList1 =
+                DBComponentAdDataFixture.getValidComponentAdsByBuyer(
+                        componentAdDataList1, OWNER_1, BUYER_1, NAME_1);
+
+        List<DBComponentAdData> expectedDBComponentAdDataList2 =
+                DBComponentAdDataFixture.getValidComponentAdsByBuyer(
+                        componentAdDataList2, OWNER_2, BUYER_2, NAME_2);
+
+        List<DBComponentAdData> expectedDBComponentAdDataList3 =
+                DBComponentAdDataFixture.getValidComponentAdsByBuyer(
+                        componentAdDataList1, OWNER_1, BUYER_1, NAME_2);
+
+        mCustomAudienceDao.insertAndOverwriteComponentAds(
+                componentAdDataList1, OWNER_1, BUYER_1, NAME_1);
+
+        mCustomAudienceDao.insertAndOverwriteComponentAds(
+                componentAdDataList2, OWNER_2, BUYER_2, NAME_2);
+
+        mCustomAudienceDao.insertAndOverwriteComponentAds(
+                componentAdDataList1, OWNER_1, BUYER_1, NAME_2);
+
+        List<DBComponentAdData> componentAdsByBuyers =
+                mCustomAudienceDao.getComponentAdsByBuyers(Set.of(BUYER_1, BUYER_2));
+
+        List<DBComponentAdData> buyer1Ads =
+                componentAdsByBuyers.stream()
+                        .filter(ad -> BUYER_1.equals(ad.getBuyer()) && NAME_1.equals(ad.getName()))
+                        .collect(Collectors.toList());
+
+        List<DBComponentAdData> buyer2Ads =
+                componentAdsByBuyers.stream()
+                        .filter(ad -> BUYER_2.equals(ad.getBuyer()))
+                        .collect(Collectors.toList());
+
+        List<DBComponentAdData> buyer3Ads =
+                componentAdsByBuyers.stream()
+                        .filter(ad -> BUYER_1.equals(ad.getBuyer()) && NAME_2.equals(ad.getName()))
+                        .collect(Collectors.toList());
+
+        // Assert order is preserved
+        assertThat(buyer1Ads).containsExactlyElementsIn(expectedDBComponentAdDataList1).inOrder();
+
+        assertThat(buyer2Ads).containsExactlyElementsIn(expectedDBComponentAdDataList2).inOrder();
+
+        assertThat(buyer3Ads).containsExactlyElementsIn(expectedDBComponentAdDataList3).inOrder();
     }
 
     @Test

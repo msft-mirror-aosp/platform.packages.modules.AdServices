@@ -19,8 +19,8 @@ package com.android.adservices.service.adselection;
 import android.adservices.common.AdTechIdentifier;
 
 import com.android.adservices.LoggerFactory;
-import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.DBEncodedPayload;
+import com.android.adservices.service.customaudience.CustomAudienceWithComponentAds;
 import com.android.adservices.service.profiling.Tracing;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
@@ -69,7 +69,7 @@ public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
     @Override
     public Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData>
             generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                    List<DBCustomAudience> dbCustomAudiences,
+                    List<CustomAudienceWithComponentAds> dbCustomAudiencesWithComponentAds,
                     Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap) {
         int traceCookie = Tracing.beginAsyncSection(Tracing.GET_COMPRESSED_BUYERS_INPUTS);
         long startLatency = mClock.millis();
@@ -87,7 +87,10 @@ public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
         sLogger.v("Initial estimated size after PAS" + currentEstimatedTotalSize);
         int numRecalculations =
                 addCAsToBuyerInput(
-                        buyerInputs, dbCustomAudiences, perBuyerStats, currentEstimatedTotalSize);
+                        buyerInputs,
+                        dbCustomAudiencesWithComponentAds,
+                        perBuyerStats,
+                        currentEstimatedTotalSize);
 
         mCompressedBuyerInputCreatorHelper.logBuyerInputGeneratedStats(perBuyerStats);
 
@@ -202,7 +205,7 @@ public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
 
     private int addCAsToBuyerInput(
             Map<AdTechIdentifier, BiddingAuctionServers.BuyerInput.Builder> buyerInputs,
-            List<DBCustomAudience> dbCustomAudiences,
+            List<CustomAudienceWithComponentAds> dbCustomAudiencesWithComponentAds,
             Map<AdTechIdentifier, BuyerInputGeneratorIntermediateStats> perBuyerStats,
             int currentEstimatedTotalSize) {
         if (mSellerMaxSizeBytes <= 0) {
@@ -210,7 +213,8 @@ public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
             return 0;
         }
         int currentRecalculations = 0;
-        for (DBCustomAudience dBcustomAudience : dbCustomAudiences) {
+        for (CustomAudienceWithComponentAds customAudienceWithComponentAds :
+                dbCustomAudiencesWithComponentAds) {
             if (currentEstimatedTotalSize >= mStoppingPointBytes
                     && currentRecalculations >= mMaxNumRecalculations) {
                 sLogger.v(
@@ -220,13 +224,14 @@ public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
                         mStoppingPointBytes, currentEstimatedTotalSize, mMaxNumRecalculations);
                 break;
             }
-            final AdTechIdentifier buyerName = dBcustomAudience.getBuyer();
+            final AdTechIdentifier buyerName =
+                    customAudienceWithComponentAds.getDBCustomAudience().getBuyer();
             if (!buyerInputs.containsKey(buyerName)) {
                 buyerInputs.put(buyerName, BiddingAuctionServers.BuyerInput.newBuilder());
             }
             BiddingAuctionServers.BuyerInput.CustomAudience customAudience =
                     mCompressedBuyerInputCreatorHelper.buildCustomAudienceProtoFrom(
-                            dBcustomAudience);
+                            customAudienceWithComponentAds);
 
             int nextCustomAudienceCompressedSize = getCompressionSize(customAudience);
 
@@ -247,7 +252,9 @@ public class CompressedBuyerInputCreatorSellerPayloadMaxImpl
             buyerInputs.get(buyerName).addCustomAudiences(customAudience);
 
             mCompressedBuyerInputCreatorHelper.addToBuyerIntermediateStats(
-                    perBuyerStats, dBcustomAudience, customAudience);
+                    perBuyerStats,
+                    customAudienceWithComponentAds.getDBCustomAudience(),
+                    customAudience);
             currentEstimatedTotalSize += nextCustomAudienceCompressedSize;
         }
         return currentRecalculations;
