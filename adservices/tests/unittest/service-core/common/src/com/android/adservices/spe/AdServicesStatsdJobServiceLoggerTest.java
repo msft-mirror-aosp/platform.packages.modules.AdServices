@@ -16,27 +16,46 @@
 
 package com.android.adservices.spe;
 
+import static com.android.adservices.service.FlagsConstants.KEY_ENABLE_LOG_SAMPLING_INFRA;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED;
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME;
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_JOB_SCHEDULING_REPORTED;
 import static com.android.adservices.spe.AdServicesStatsdJobServiceLogger.MODULE_NAME_AD_SERVICES;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.doNothing;
+import static com.android.dx.mockito.inline.extended.ExtendedMockito.doReturn;
 import static com.android.dx.mockito.inline.extended.ExtendedMockito.verify;
 
 import static org.mockito.ArgumentMatchers.anyInt;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
+import com.android.adservices.metriclogger.BackgroundJobsExecutionMetricLogger;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.shared.spe.logging.ExecutionReportedStats;
 import com.android.adservices.shared.spe.logging.SchedulingReportedStats;
+import com.android.adservices.shared.testing.annotations.SetFlagDisabled;
+import com.android.adservices.shared.testing.annotations.SetFlagEnabled;
 import com.android.modules.utils.testing.ExtendedMockitoRule.SpyStatic;
 
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mock;
 
 /** Unit tests for {@link AdServicesStatsdJobServiceLogger}. */
 @SpyStatic(AdServicesStatsLog.class)
+@SpyStatic(FlagsFactory.class)
+@SpyStatic(BackgroundJobsExecutionMetricLogger.class)
+@SetFlagDisabled(KEY_ENABLE_LOG_SAMPLING_INFRA)
 public final class AdServicesStatsdJobServiceLoggerTest extends AdServicesExtendedMockitoTestCase {
     private final AdServicesStatsdJobServiceLogger mLogger = new AdServicesStatsdJobServiceLogger();
+
+    @Mock private BackgroundJobsExecutionMetricLogger mMockJobExecutionLogger;
+
+    @Before
+    public void setup() {
+        mocker.mockGetFlags(mFakeFlags);
+        doReturn(mMockJobExecutionLogger).when(BackgroundJobsExecutionMetricLogger::get);
+    }
 
     @Test
     public void testLogExecutionReportedStats() {
@@ -77,6 +96,32 @@ public final class AdServicesStatsdJobServiceLoggerTest extends AdServicesExtend
                                 executionResultCode,
                                 stopReason,
                                 MODULE_NAME_AD_SERVICES));
+    }
+
+    @Test
+    @SetFlagEnabled(KEY_ENABLE_LOG_SAMPLING_INFRA)
+    public void testLogExecutionReportedStats_logSamplingInfraFlagEnabled() {
+        int jobId = 1;
+        int executionLatencyMs = 2;
+        int executionPeriodMinute = 3;
+        int executionResultCode = 4;
+        int stopReason = 5;
+        int moduleName =
+                AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__UNKNOWN_MODULE_NAME;
+
+        ExecutionReportedStats stats =
+                ExecutionReportedStats.builder()
+                        .setJobId(jobId)
+                        .setExecutionLatencyMs(executionLatencyMs)
+                        .setExecutionPeriodMinute(executionPeriodMinute)
+                        .setExecutionResultCode(executionResultCode)
+                        .setStopReason(stopReason)
+                        .setModuleName(moduleName)
+                        .build();
+
+        mLogger.logExecutionReportedStats(stats);
+
+        verify(mMockJobExecutionLogger).log(stats);
     }
 
     @Test

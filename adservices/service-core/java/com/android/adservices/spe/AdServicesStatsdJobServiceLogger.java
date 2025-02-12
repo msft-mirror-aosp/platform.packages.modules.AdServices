@@ -20,6 +20,8 @@ import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICE
 import static com.android.adservices.service.stats.AdServicesStatsLog.AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED__MODULE_NAME__MODULE_NAME_ADSERVICES;
 import static com.android.adservices.service.stats.AdServicesStatsLog.BACKGROUND_JOB_SCHEDULING_REPORTED;
 
+import com.android.adservices.metriclogger.BackgroundJobsExecutionMetricLogger;
+import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.stats.AdServicesStatsLog;
 import com.android.adservices.service.stats.StatsdAdServicesLogger;
 import com.android.adservices.shared.spe.logging.ExecutionReportedStats;
@@ -36,6 +38,11 @@ public final class AdServicesStatsdJobServiceLogger implements StatsdJobServiceL
 
     @Override
     public void logExecutionReportedStats(ExecutionReportedStats stats) {
+        // Use the below flag only for Phase0 launch as part of the sampling infra launch.
+        if (FlagsFactory.getFlags().getEnableLogSamplingInfra()) {
+            BackgroundJobsExecutionMetricLogger.get().log(stats);
+            return;
+        }
         AdServicesStatsLog.write(
                 AD_SERVICES_BACKGROUND_JOBS_EXECUTION_REPORTED,
                 stats.getJobId(),
