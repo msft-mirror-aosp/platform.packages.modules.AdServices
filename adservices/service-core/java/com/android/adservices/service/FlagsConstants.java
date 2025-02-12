@@ -1776,4 +1776,8 @@ public final class FlagsConstants {
     /** Key for AdServices' Job Scheduling Sampling Config. */
     public static final String KEY_AD_SERVICES_JOB_SCHEDULING_SAMPLING_CONFIG =
             "Spe__ad_services_job_scheduling_sampling_config";
+
+    /** Key for AdServices' Client error logging sampling config. */
+    public static final String KEY_AD_SERVICES_CEL_SAMPLING_CONFIG =
+            "ClientErrorLogging__ad_services_cel_sampling_config";
 }
