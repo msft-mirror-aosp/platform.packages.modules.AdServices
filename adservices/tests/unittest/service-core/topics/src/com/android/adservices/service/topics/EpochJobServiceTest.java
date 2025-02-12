@@ -229,26 +229,35 @@ public class EpochJobServiceTest extends AdServicesJobServiceTestCase {
         verify(mSpyAdServicesLogger, times(2))
                 .logTopicsScheduleEpochJobSettingReportedStats(argumentCaptor.capture());
         List<TopicsScheduleEpochJobSettingReportedStats> stats = argumentCaptor.getAllValues();
+        assertThat(stats).hasSize(2);
 
-        TopicsScheduleEpochJobSettingReportedStats firstScheduledEpochJobStats = stats.get(0);
-        assertThat(firstScheduledEpochJobStats.getRescheduleEpochJobStatus())
-                .isEqualTo(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET);
-        assertThat(firstScheduledEpochJobStats.getPreviousEpochJobSetting())
-                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        assertThat(firstScheduledEpochJobStats.getCurrentEpochJobSetting())
-                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        assertThat(firstScheduledEpochJobStats.getScheduleIfNeededEpochJobStatus())
-                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_CHARGING);
+        List<TopicsScheduleEpochJobSettingReportedStats> actualStats =
+                argumentCaptor.getAllValues();
 
-        TopicsScheduleEpochJobSettingReportedStats secondScheduledEpochJobStats = stats.get(1);
-        assertThat(secondScheduledEpochJobStats.getRescheduleEpochJobStatus())
-                .isEqualTo(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET);
-        assertThat(secondScheduledEpochJobStats.getPreviousEpochJobSetting())
-                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        assertThat(secondScheduledEpochJobStats.getCurrentEpochJobSetting())
-                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING);
-        assertThat(secondScheduledEpochJobStats.getScheduleIfNeededEpochJobStatus())
-                .isEqualTo(TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW);
+        TopicsScheduleEpochJobSettingReportedStats expectedStat1 =
+                TopicsScheduleEpochJobSettingReportedStats.builder()
+                        .setCurrentEpochJobSetting(
+                                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING)
+                        .setRescheduleEpochJobStatus(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET)
+                        .setPreviousEpochJobSetting(
+                                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING)
+                        .setScheduleIfNeededEpochJobStatus(
+                                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_CHARGING)
+                        .build();
+        TopicsScheduleEpochJobSettingReportedStats expectedStat2 =
+                TopicsScheduleEpochJobSettingReportedStats.builder()
+                        .setCurrentEpochJobSetting(
+                                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING)
+                        .setRescheduleEpochJobStatus(TOPICS_RESCHEDULE_EPOCH_JOB_STATUS_UNSET)
+                        .setPreviousEpochJobSetting(
+                                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_UNKNOWN_SETTING)
+                        .setScheduleIfNeededEpochJobStatus(
+                                TOPICS_EPOCH_JOB_BATTERY_CONSTRAINT_REQUIRES_BATTERY_NOT_LOW)
+                        .build();
+
+        assertWithMessage("Calls to log scheduled battery constraint")
+                .that(actualStats)
+                .containsExactly(expectedStat1, expectedStat2);
     }
 
     @Test
