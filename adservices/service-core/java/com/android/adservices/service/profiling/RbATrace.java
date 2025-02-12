@@ -20,7 +20,8 @@ interface RbATrace {
     /**
      * Writes a trace message for the {@code metricName} to indicate that a given section of code
      * has begun. The trace name will be concatenated from the {@code featureName} and the {@code
-     * metricName}.
+     * metricName}. This call must be followed by a corresponding call to {$code endSection()} on
+     * the same thread.
      *
      * @param featureName Use the {@code FeatureNames} to specify the feature name.
      * @param metricName The metric name to appear in the trace.
@@ -30,7 +31,8 @@ interface RbATrace {
     /**
      * Writes a trace message for the {@code className} {@code methodName} to indicate that a given
      * section of code has begun. The trace name will be concatenated from the {@code featureName},
-     * {@code className} and the {@code methodName}.
+     * {@code className} and the {@code methodName}. This call must be followed by a corresponding
+     * call to {@code endSection()} on the same thread.
      *
      * @param featureName Use the {@code FeatureNames} to specify the feature name.
      * @param className The class name to appear in the trace.
@@ -38,6 +40,46 @@ interface RbATrace {
      */
     void beginSection(String featureName, String className, String methodName);
 
+    /**
+     * Writes a trace message for the {@code metricName} to indicate that a given section of code
+     * has begun. The trace name will be concatenated from the {@code featureName} and the {@code
+     * metricName}. Must be followed by a call to {@code endAsyncSection} with the same {@code
+     * featureName}, {@code metricName} and provided {@code cookie}. Asynchronous events do not need
+     * to be nested.
+     *
+     * @param featureName Use the {@code FeatureNames} to specify the feature name.
+     * @param metricName The metric name to appear in the trace.
+     * @return unique cookie for identifying trace.
+     */
+    int beginAsyncSection(String featureName, String metricName);
+
+    /**
+     * Writes a trace message for the {@code className} {@code methodName} to indicate that a given
+     * section of code has begun. The trace name will be concatenated from the {@code featureName},
+     * {@code className} and {@code methodName}. Must be followed by a call to {@code
+     * endAsyncSection} with the same {@code featureName}, {@code className}, {@code methodName} and
+     * provided {@code cookie}. Asynchronous events do not need to be nested.
+     *
+     * @param className The class name to appear in the trace.
+     * @param methodName The method name to appear in the trace.
+     * @return unique cookie for identifying trace.
+     */
+    int beginAsyncSection(String featureName, String className, String methodName);
+
     /** Writes a trace message to indicate that a given section of code has ended. */
     void endSection();
+
+    /**
+     * Writes a trace message to indicate that a given section of code has ended. Must be called
+     * exactly once for each call to {@code beginAsyncSection(java.lang.String, java.lang.String)}
+     * using the same parameters and provided {@code cookie}.
+     */
+    void endAsyncSection(String featureName, String metricName, int cookie);
+
+    /**
+     * Writes a trace message to indicate that a given section of code has ended. Must be called
+     * exactly once for each call to {@code beginAsyncSection(java.lang.String, java.lang.String,
+     * java.lang.String)} using the same parameters and provided {@code cookie}.
+     */
+    void endAsyncSection(String featureName, String className, String methodName, int cookie);
 }

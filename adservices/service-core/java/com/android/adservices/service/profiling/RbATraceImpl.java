@@ -16,16 +16,24 @@
 
 package com.android.adservices.service.profiling;
 
-import android.os.Trace;
-
 import com.android.adservices.LogUtil;
+import com.android.adservices.shared.util.Trace;
+import com.android.internal.annotations.VisibleForTesting;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 final class RbATraceImpl implements RbATrace {
-    RbATraceImpl() {}
+    private Trace mTrace;
+    private AtomicInteger mCookieGenerator;
+
+    RbATraceImpl(Trace trace, AtomicInteger cookieGenerator) {
+        mTrace = trace;
+        mCookieGenerator = cookieGenerator;
+    }
 
     @Override
     public void beginSection(String featureName, String metricName) {
-        if (!Trace.isEnabled()) {
+        if (!mTrace.isEnabled()) {
             return;
         }
         if (!RbATraceProvider.FeatureNames.isValidFeatureName(featureName)) {
@@ -35,12 +43,12 @@ final class RbATraceImpl implements RbATrace {
             // {@code endSection} and to track it anyway.
         }
 
-        Trace.beginSection(createMetricName(featureName, metricName));
+        mTrace.beginSection(createMetricName(featureName, metricName));
     }
 
     @Override
     public void beginSection(String featureName, String className, String methodName) {
-        if (!Trace.isEnabled()) {
+        if (!mTrace.isEnabled()) {
             return;
         }
         if (!RbATraceProvider.FeatureNames.isValidFeatureName(featureName)) {
@@ -50,20 +58,70 @@ final class RbATraceImpl implements RbATrace {
             // {@code endSection} and to track it anyway.
         }
 
-        Trace.beginSection(createMetricName(featureName, className, methodName));
+        mTrace.beginSection(createMetricName(featureName, className, methodName));
+    }
+
+    @Override
+    public int beginAsyncSection(String featureName, String metricName) {
+        if (!mTrace.isEnabled()) {
+            return -1;
+        }
+
+        if (!RbATraceProvider.FeatureNames.isValidFeatureName(featureName)) {
+            LogUtil.e("Attempt to add a Trace slice to the unknown feature name: " + featureName);
+
+            // Still need to begin the trace for consistency with the following
+            // {@code endAsyncSection} and to track it anyway.
+        }
+
+        int traceCookie = mCookieGenerator.getAndIncrement();
+
+        mTrace.beginAsyncSection(createMetricName(featureName, metricName), traceCookie);
+        return traceCookie;
+    }
+
+    @Override
+    public int beginAsyncSection(String featureName, String className, String methodName) {
+        if (!mTrace.isEnabled()) {
+            return -1;
+        }
+
+        if (!RbATraceProvider.FeatureNames.isValidFeatureName(featureName)) {
+            LogUtil.e("Attempt to add a Trace slice to the unknown feature name: " + featureName);
+
+            // Still need to begin the trace for consistency with the following
+            // {@code endAsyncSection} and to track it anyway.
+        }
+
+        int traceCookie = mCookieGenerator.getAndIncrement();
+
+        mTrace.beginAsyncSection(createMetricName(featureName, className, methodName), traceCookie);
+        return traceCookie;
     }
 
     @Override
     public void endSection() {
-        Trace.endSection();
+        mTrace.endSection();
     }
 
-    private static String createMetricName(String featureName, String metricName) {
+    @Override
+    public void endAsyncSection(String featureName, String metricName, int cookie) {
+        mTrace.endAsyncSection(createMetricName(featureName, metricName), cookie);
+    }
+
+    @Override
+    public void endAsyncSection(
+            String featureName, String className, String methodName, int cookie) {
+        mTrace.endAsyncSection(createMetricName(featureName, className, methodName), cookie);
+    }
+
+    @VisibleForTesting
+    static String createMetricName(String featureName, String metricName) {
         return featureName + "_" + metricName;
     }
 
-    private static String createMetricName(
-            String featureName, String className, String methodName) {
+    @VisibleForTesting
+    static String createMetricName(String featureName, String className, String methodName) {
         return featureName + "_" + className + "#" + methodName;
     }
 }
