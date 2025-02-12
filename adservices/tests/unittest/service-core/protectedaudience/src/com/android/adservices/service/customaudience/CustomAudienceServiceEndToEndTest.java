@@ -18,6 +18,8 @@ package com.android.adservices.service.customaudience;
 
 import static android.adservices.common.AdServicesStatusUtils.STATUS_SERVER_RATE_LIMIT_REACHED;
 import static android.adservices.common.CommonFixture.FIXED_NOW;
+import static android.adservices.common.CommonFixture.VALID_BUYER_1;
+import static android.adservices.common.ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER;
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_ACTIVATION_TIME;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME;
@@ -30,6 +32,7 @@ import static android.adservices.customaudience.CustomAudienceFixture.getValidBu
 
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponse;
 import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponseString;
+import static com.android.adservices.service.customaudience.FetchCustomAudienceFixture.getFullSuccessfulJsonResponseWithComponentAds;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.ACTIVATION_TIME;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.DB_PARTIAL_CUSTOM_AUDIENCE_1;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.DB_PARTIAL_CUSTOM_AUDIENCE_2;
@@ -45,6 +48,7 @@ import static com.android.adservices.service.customaudience.ScheduleCustomAudien
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.UPDATE_ID;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.VALID_BIDDING_SIGNALS;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayload;
+import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithComponentAds;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createJsonResponsePayloadWithScheduleRequests;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.createScheduleRequestWithUpdateUri;
 import static com.android.adservices.service.customaudience.ScheduleCustomAudienceUpdateTestUtils.extractCustomAudiencesToLeaveFromScheduleRequest;
@@ -84,6 +88,9 @@ import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.CallingAppUidSupplierFailureImpl;
 import android.adservices.common.CallingAppUidSupplierProcessImpl;
 import android.adservices.common.CommonFixture;
+import android.adservices.common.ComponentAdData;
+import android.adservices.common.ComponentAdDataFixture;
+import android.adservices.common.DBComponentAdDataFixture;
 import android.adservices.common.FledgeErrorResponse;
 import android.adservices.customaudience.CustomAudience;
 import android.adservices.customaudience.CustomAudienceFixture;
@@ -111,6 +118,7 @@ import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.AdDataConversionStrategyFactory;
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
+import com.android.adservices.data.customaudience.DBComponentAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.customaudience.DBCustomAudienceOverride;
 import com.android.adservices.data.customaudience.DBPartialCustomAudience;
@@ -199,6 +207,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_1 =
             getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1).build();
 
+    private static final List<ComponentAdData> COMPONENT_AD_DATA_LIST =
+            ComponentAdDataFixture.getValidComponentAdsByBuyer(VALID_BUYER_1);
+
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_2 =
             getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
                     .setActivationTime(CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
@@ -217,6 +228,13 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                             CommonFixture.VALID_BUYER_1, VALID_PRIORITY_1)
                     .setActivationTime(CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
                     .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
+                    .build();
+
+    private static final CustomAudience CUSTOM_AUDIENCE_PK1_2_COMPONENT_ADS =
+            getValidBuilderForBuyerFilters(CommonFixture.VALID_BUYER_1)
+                    .setActivationTime(CustomAudienceFixture.VALID_DELAYED_ACTIVATION_TIME)
+                    .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
+                    .setComponentAds(COMPONENT_AD_DATA_LIST)
                     .build();
 
     private static final CustomAudience CUSTOM_AUDIENCE_PK1_BEYOND_MAX_EXPIRATION_TIME =
@@ -247,9 +265,27 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                     .setExpirationTime(CustomAudienceFixture.VALID_DELAYED_EXPIRATION_TIME)
                     .build();
 
+    private static final List<DBComponentAdData> DB_COMPONENT_AD_DATA_LIST =
+            DBComponentAdDataFixture.getValidComponentAdsByBuyer(
+                    COMPONENT_AD_DATA_LIST,
+                    CustomAudienceFixture.VALID_OWNER,
+                    CommonFixture.VALID_BUYER_1,
+                    VALID_NAME);
+
     private static final String MY_APP_PACKAGE_NAME = CommonFixture.TEST_PACKAGE_NAME;
     private static final AdTechIdentifier LOCALHOST_BUYER =
             AdTechIdentifier.fromString("localhost");
+
+    private static final List<ComponentAdData> COMPONENT_AD_DATA_LIST_LOCALHOST_BUYER =
+            ComponentAdDataFixture.getValidComponentAdsByBuyer(LOCALHOST_BUYER);
+
+    private static final List<DBComponentAdData> DB_COMPONENT_AD_DATA_LIST_LOCALHOST_BUYER =
+            DBComponentAdDataFixture.getValidComponentAdsByBuyer(
+                    COMPONENT_AD_DATA_LIST_LOCALHOST_BUYER,
+                    CustomAudienceFixture.VALID_OWNER,
+                    LOCALHOST_BUYER,
+                    VALID_NAME);
+
     private static final AdTechIdentifier BUYER_1 = AdTechIdentifier.fromString("BUYER_1");
     private static final AdTechIdentifier BUYER_2 = AdTechIdentifier.fromString("BUYER_2");
     private static final String NAME_1 = "NAME_1";
@@ -340,7 +376,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                         .customAudienceDao();
 
         mComponentAdsStrategy =
-                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+                ComponentAdsStrategy.createInstance(
+                        /* componentAdsEnabled= */ false, TEST_COMPONENT_ADS_FILTERER);
 
         SharedStorageDatabase sharedDb =
                 Room.inMemoryDatabaseBuilder(mContext, SharedStorageDatabase.class).build();
@@ -499,7 +536,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         new FledgeAuthorizationFilter(
                                 mContext.getPackageManager(),
                                 EnrollmentDao.getInstance(),
@@ -717,6 +755,46 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         assertNoFCapFilters(result);
         verifyAppInstallFiltersNotNull(result);
         verify(() -> BackgroundFetchJob.schedule(any()));
+    }
+
+    @Test
+    public void testJoinCustomAudience_joinTwice_secondJoinOverrideValuesWithComponentAds() {
+        Flags flagsWithComponentAdsEnabled = getFlagsWithComponentAdsEnabled();
+
+        doReturn(flagsWithComponentAdsEnabled).when(FlagsFactory::getFlags);
+
+        reInitServiceWithFlags(flagsWithComponentAdsEnabled);
+
+        ResultCapturingCallback callback = new ResultCapturingCallback();
+        mService.joinCustomAudience(
+                CUSTOM_AUDIENCE_PK1_1, CustomAudienceFixture.VALID_OWNER, callback);
+        expect.that(callback.isSuccess()).isTrue();
+        expect.that(
+                        mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                                CustomAudienceFixture.VALID_OWNER,
+                                CommonFixture.VALID_BUYER_1,
+                                VALID_NAME))
+                .isEqualTo(DB_CUSTOM_AUDIENCE_PK1_1);
+
+        callback = new ResultCapturingCallback();
+        mService.joinCustomAudience(
+                CUSTOM_AUDIENCE_PK1_2_COMPONENT_ADS, CustomAudienceFixture.VALID_OWNER, callback);
+        expect.that(callback.isSuccess()).isTrue();
+        expect.that(
+                        mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                                CustomAudienceFixture.VALID_OWNER,
+                                CommonFixture.VALID_BUYER_1,
+                                VALID_NAME))
+                .isEqualTo(DB_CUSTOM_AUDIENCE_PK1_2);
+        expect.that(
+                        mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(
+                                CustomAudienceFixture.VALID_OWNER,
+                                CommonFixture.VALID_BUYER_1,
+                                VALID_NAME))
+                .containsExactlyElementsIn(DB_COMPONENT_AD_DATA_LIST)
+                .inOrder();
+
+        verify(() -> BackgroundFetchJob.schedule(any()), times(2));
     }
 
     @Test
@@ -1025,6 +1103,60 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         assertEquals(
                 FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS,
                 persistedCustomAudience.getAuctionServerRequestFlags());
+    }
+
+    @Test
+    public void testFetchAndJoinCustomAudience_overridesJoinCustomAudienceWithComponentAdsEnabled()
+            throws Exception {
+        Flags flagsWithComponentAdsEnabled = getFlagsWithComponentAdsEnabled();
+
+        doReturn(flagsWithComponentAdsEnabled).when(FlagsFactory::getFlags);
+
+        reInitServiceWithFlags(flagsWithComponentAdsEnabled);
+
+        // Join a custom audience using the joinCustomAudience API.
+        ResultCapturingCallback joinCallback = new ResultCapturingCallback();
+        mService.joinCustomAudience(
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).build(),
+                CustomAudienceFixture.VALID_OWNER,
+                joinCallback);
+        expect.that(joinCallback.mIsSuccess).isTrue();
+
+        // Fetch and join a custom audience with the same owner, buyer and name but a different
+        // value for one of fields. In this case, we'll use a different activation time.
+        MockWebServer mockWebServer =
+                mMockWebServerRule.startMockWebServer(
+                        List.of(
+                                new MockResponse()
+                                        .setBody(
+                                                getFullSuccessfulJsonResponseWithComponentAds(
+                                                                COMPONENT_AD_DATA_LIST_LOCALHOST_BUYER,
+                                                                LOCALHOST_BUYER)
+                                                        .toString())));
+        FetchAndJoinCustomAudienceInput input =
+                new FetchAndJoinCustomAudienceInput.Builder(mFetchUri, VALID_OWNER)
+                        .setName(VALID_NAME)
+                        .setActivationTime(VALID_DELAYED_ACTIVATION_TIME)
+                        .setExpirationTime(VALID_EXPIRATION_TIME)
+                        .setUserBiddingSignals(VALID_USER_BIDDING_SIGNALS)
+                        .build();
+        FetchCustomAudienceTestSyncCallback fetchAndJoinCallback =
+                new FetchCustomAudienceTestSyncCallback();
+        mService.fetchAndJoinCustomAudience(input, fetchAndJoinCallback);
+        fetchAndJoinCallback.assertResultReceived();
+        expect.that(mockWebServer.getRequestCount()).isEqualTo(1);
+
+        // Assert persisted custom audience's activation time is from the fetched custom audience.
+        DBCustomAudience persistedCustomAudience =
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, VALID_NAME);
+        expect.that(persistedCustomAudience.getActivationTime())
+                .isEqualTo(VALID_DELAYED_ACTIVATION_TIME);
+        expect.that(
+                        mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(
+                                CustomAudienceFixture.VALID_OWNER, LOCALHOST_BUYER, VALID_NAME))
+                .containsExactlyElementsIn(DB_COMPONENT_AD_DATA_LIST_LOCALHOST_BUYER)
+                .inOrder();
     }
 
     @Test
@@ -1390,7 +1522,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         new FledgeAuthorizationFilter(
                                 mContext.getPackageManager(),
                                 EnrollmentDao.getInstance(),
@@ -1796,7 +1929,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithAuctionServerRequestFlagsEnabled,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         mCustomAudienceQuantityChecker,
                         mStrategy,
                         mAdServicesLoggerMock,
@@ -1966,7 +2100,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithSellerConfigurationFlagEnabled,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         mCustomAudienceQuantityChecker,
                         mStrategy,
                         mAdServicesLoggerMock,
@@ -2080,6 +2215,182 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                 mCustomAudienceDao
                         .getCustomAudienceUpdatesScheduledBeforeTime(Instant.now())
                         .isEmpty());
+    }
+
+    @Test
+    public void
+            testScheduleCustomAudienceUpdate_JoinWithOverridesAndLeave_SuccessWithComponentAdsEnabled()
+                    throws Exception {
+        Flags flagsWithComponentAdsEnabled =
+                new CustomAudienceServiceE2ETestFlags() {
+                    @Override
+                    public boolean getEnableCustomAudienceComponentAds() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean getFledgeScheduleCustomAudienceUpdateEnabled() {
+                        return true;
+                    }
+
+                    @Override
+                    public int getFledgeScheduleCustomAudienceMinDelayMinsOverride() {
+                        // Lets the delay be set in past for easier testing
+                        return -100;
+                    }
+                };
+
+        doReturn(flagsWithComponentAdsEnabled).when(FlagsFactory::getFlags);
+
+        reInitServiceWithFlags(flagsWithComponentAdsEnabled);
+
+        mScheduledUpdatesHandler =
+                new ScheduledUpdatesHandler(
+                        mCustomAudienceDao,
+                        new AdServicesHttpsClient(
+                                AdServicesExecutors.getBlockingExecutor(),
+                                CacheProviderFactory.createNoOpCache()),
+                        flagsWithComponentAdsEnabled,
+                        Clock.systemUTC(),
+                        AdServicesExecutors.getBackgroundExecutor(),
+                        AdServicesExecutors.getLightWeightExecutor(),
+                        FREQUENCY_CAP_AD_DATA_VALIDATOR_NO_OP,
+                        RENDER_ID_VALIDATOR_NO_OP,
+                        AdDataConversionStrategyFactory.getAdDataConversionStrategy(
+                                true, true, true),
+                        new CustomAudienceImpl(
+                                mCustomAudienceDao,
+                                mCustomAudienceQuantityChecker,
+                                mCustomAudienceValidator,
+                                CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
+                                flagsWithComponentAdsEnabled,
+                                ComponentAdsStrategy.createInstance(
+                                        /* componentAdsEnabled= */ flagsWithComponentAdsEnabled
+                                                .getEnableCustomAudienceComponentAds(),
+                                        TEST_COMPONENT_ADS_FILTERER)),
+                        mCustomAudienceQuantityChecker,
+                        mStrategy,
+                        mAdServicesLoggerMock,
+                        ComponentAdsStrategy.createInstance(
+                                /* componentAdsEnabled= */ flagsWithComponentAdsEnabled
+                                        .getEnableCustomAudienceComponentAds(),
+                                TEST_COMPONENT_ADS_FILTERER));
+
+        // Wire the mock web server with 1 CA with component ads and 1 without
+        String responsePayload =
+                createJsonResponsePayloadWithComponentAds(
+                                LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                List.of(PARTIAL_CA_1, PARTIAL_CA_2),
+                                List.of(LEAVE_CA_1, LEAVE_CA_2),
+                                List.of(COMPONENT_AD_DATA_LIST_LOCALHOST_BUYER, List.of()))
+                        .toString();
+
+        Dispatcher dispatcher =
+                new Dispatcher() {
+                    @Override
+                    public MockResponse dispatch(RecordedRequest request)
+                            throws InterruptedException {
+                        // We can validate the request within server
+                        List<CustomAudienceBlob> caBlobs =
+                                extractPartialCustomAudiencesFromRequest(request.getBody());
+                        assertTrue(
+                                caBlobs.stream()
+                                        .map(b -> b.getName())
+                                        .collect(Collectors.toList())
+                                        .containsAll(List.of(PARTIAL_CA_1, PARTIAL_CA_2)));
+                        return new MockResponse().setBody(responsePayload);
+                    }
+                };
+        MockWebServer mockWebServer = mMockWebServerRule.startMockWebServer(dispatcher);
+
+        Uri updateUri = Uri.parse(mockWebServer.getUrl(UPDATE_URI_PATH).toString());
+
+        // Join a custom audience using the joinCustomAudience API which would be "left" by update
+        ResultCapturingCallback joinCallback = new ResultCapturingCallback();
+        mService.joinCustomAudience(
+                getValidBuilderForBuyerFilters(LOCALHOST_BUYER).setName(LEAVE_CA_1).build(),
+                CustomAudienceFixture.VALID_OWNER,
+                joinCallback);
+        assertTrue(joinCallback.mIsSuccess);
+
+        // Make a request to the API
+        ScheduleCustomAudienceUpdateInput input =
+                new ScheduleCustomAudienceUpdateInput.Builder(
+                                updateUri,
+                                VALID_OWNER,
+                                NEGATIVE_DELAY_FOR_TEST,
+                                List.of(
+                                        DBPartialCustomAudience.getPartialCustomAudience(
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_1),
+                                        DBPartialCustomAudience.getPartialCustomAudience(
+                                                DB_PARTIAL_CUSTOM_AUDIENCE_2)))
+                        .build();
+        CountDownLatch resultLatch = new CountDownLatch(1);
+        ScheduleUpdateTestCallback callback = new ScheduleUpdateTestCallback(resultLatch);
+        mService.scheduleCustomAudienceUpdate(input, callback);
+        resultLatch.await();
+
+        // Validate response of API is complete
+        assertTrue(callback.isSuccess());
+
+        // Ensure that job that maintains update-scheduled is itself scheduled
+        verify(
+                () ->
+                        ScheduleCustomAudienceUpdateJobService.scheduleIfNeeded(
+                                any(), any(), eq(false)),
+                times(1));
+
+        assertTrue(
+                mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()).size()
+                        > 0);
+
+        // Manually trigger handler as it would have been triggered by its job schedule
+        Void unused =
+                mScheduledUpdatesHandler
+                        .performScheduledUpdates(Instant.now())
+                        .get(10, TimeUnit.SECONDS);
+
+        // Check that the request for updates was made to server successfully
+        assertEquals(1, mockWebServer.getRequestCount());
+
+        // Check that updates processed successfully
+        // Join
+        DBCustomAudience persistedCustomAudience1 =
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_1);
+        expect.that(persistedCustomAudience1).isNotNull();
+        expect.that(
+                        mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(
+                                VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_1))
+                .containsExactlyElementsIn(
+                        DBComponentAdDataFixture.getValidComponentAdsByBuyer(
+                                COMPONENT_AD_DATA_LIST_LOCALHOST_BUYER,
+                                VALID_OWNER,
+                                LOCALHOST_BUYER,
+                                PARTIAL_CA_1))
+                .inOrder();
+        expect.that(persistedCustomAudience1.getUserBiddingSignals())
+                .isEqualTo(VALID_BIDDING_SIGNALS);
+
+        DBCustomAudience persistedCustomAudience2 =
+                mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                        VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_2);
+        expect.that(persistedCustomAudience2).isNotNull();
+        expect.that(
+                        mCustomAudienceDao.getComponentAdsByCustomAudienceInfo(
+                                VALID_OWNER, LOCALHOST_BUYER, PARTIAL_CA_2))
+                .isEmpty();
+
+        // Leave
+        expect.that(
+                        mCustomAudienceDao.getCustomAudienceByPrimaryKey(
+                                VALID_OWNER, LOCALHOST_BUYER, LEAVE_CA_1))
+                .isNull();
+
+        // Check handled updates are cleared
+        expect.that(mCustomAudienceDao.getCustomAudienceUpdatesScheduledBeforeTime(Instant.now()))
+                .isEmpty();
     }
 
     @Test
@@ -2368,7 +2679,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithCAQuantityCheckerFlags,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         new CustomAudienceQuantityChecker(
                                 mCustomAudienceDao, flagsWithCAQuantityCheckerFlags),
                         mStrategy,
@@ -2505,7 +2817,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flagsWithCAQuantityCheckerFlags,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         new CustomAudienceQuantityChecker(
                                 mCustomAudienceDao, flagsWithCAQuantityCheckerFlags),
                         mStrategy,
@@ -4818,7 +5131,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                         CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                         flagsWithLowRateLimit,
                                         ComponentAdsStrategy.createInstance(
-                                                /* componentAdsEnabled= */ false)),
+                                                /* componentAdsEnabled= */ false,
+                                                TEST_COMPONENT_ADS_FILTERER)),
                                 new FledgeAuthorizationFilter(
                                         mContext.getPackageManager(),
                                         EnrollmentDao.getInstance(),
@@ -5005,7 +5319,9 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flags,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ flags
+                                                .getEnableCustomAudienceComponentAds(),
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         mFledgeAuthorizationFilterSpy,
                         mConsentManagerMock,
                         mDevContextFilter,
@@ -5143,6 +5459,24 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
         };
     }
 
+    private Flags getFlagsWithComponentAdsEnabled() {
+        return new CustomAudienceServiceE2ETestFlags() {
+            @Override
+            public boolean getEnableCustomAudienceComponentAds() {
+                return true;
+            }
+        };
+    }
+
+    private Flags getFlagsWithComponentAdsDisabled() {
+        return new CustomAudienceServiceE2ETestFlags() {
+            @Override
+            public boolean getEnableCustomAudienceComponentAds() {
+                return false;
+            }
+        };
+    }
+
     private Flags getFlagsWithSellerConfigurationFlagEnabled() {
         return new CustomAudienceServiceE2ETestFlags() {
             @Override
@@ -5187,7 +5521,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 COMMON_FLAGS_WITH_FILTERS_ENABLED,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         mFledgeAuthorizationFilterSpy,
                         mConsentManagerMock,
                         mDevContextFilter,
@@ -5231,7 +5566,8 @@ public final class CustomAudienceServiceEndToEndTest extends AdServicesExtendedM
                                 CommonFixture.FIXED_CLOCK_TRUNCATED_TO_MILLI,
                                 flags,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false)),
+                                        /* componentAdsEnabled= */ false,
+                                        TEST_COMPONENT_ADS_FILTERER)),
                         mCustomAudienceQuantityChecker,
                         mStrategy,
                         mAdServicesLoggerMock,

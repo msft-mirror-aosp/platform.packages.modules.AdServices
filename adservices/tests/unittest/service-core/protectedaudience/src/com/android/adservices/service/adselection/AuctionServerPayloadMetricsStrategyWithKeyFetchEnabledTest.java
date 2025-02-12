@@ -16,6 +16,8 @@
 
 package com.android.adservices.service.adselection;
 
+import static android.adservices.common.ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER;
+
 import static com.android.adservices.service.stats.AdsRelevanceStatusUtils.SERVER_AUCTION_COORDINATOR_SOURCE_API;
 
 import static org.mockito.Mockito.verify;
@@ -44,7 +46,8 @@ public class AuctionServerPayloadMetricsStrategyWithKeyFetchEnabledTest {
                 new AuctionServerPayloadMetricsStrategyWithKeyFetchEnabled(
                         mAdServicesLoggerMock,
                         new SellerConfigurationMetricsStrategyDisabled(),
-                        ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false));
+                        ComponentAdsStrategy.createInstance(
+                                /* componentAdsEnabled= */ false, TEST_COMPONENT_ADS_FILTERER));
     }
 
     @Test

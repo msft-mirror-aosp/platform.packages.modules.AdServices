@@ -16,17 +16,30 @@
 
 package com.android.adservices.service.customaudience;
 
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.ComponentAdData;
 import android.net.Uri;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
+import com.android.adservices.data.customaudience.DBComponentAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class ComponentAdsStrategyEnabled implements ComponentAdsStrategy {
+    private final ComponentAdsListValidator mComponentAdsListValidator;
+
+    public ComponentAdsStrategyEnabled(ComponentAdsListValidator componentAdsListValidator) {
+        mComponentAdsListValidator = componentAdsListValidator;
+    }
 
     @Override
     public void persistCustomAudiencesWithComponentAds(
@@ -37,6 +50,38 @@ public class ComponentAdsStrategyEnabled implements ComponentAdsStrategy {
             List<ComponentAdData> componentAdDataList) {
         customAudienceDao.insertOrOverwriteCustomAudience(
                 customAudience, dailyUpdateUri, debuggable, componentAdDataList);
+    }
+
+    @Override
+    public List<ComponentAdData> extractValidComponentAds(
+            AdTechIdentifier buyer, List<ComponentAdData> componentAds) {
+        return mComponentAdsListValidator.extractValidComponentAds(buyer, componentAds);
+    }
+
+    @Override
+    public List<Uri> extractComponentAdsThatMatchOnDevice(
+            BiddingAuctionServers.AuctionResult auctionResult,
+            CustomAudienceDao customAudienceDao) {
+        List<Uri> result = new ArrayList<>();
+        AdTechIdentifier buyer = AdTechIdentifier.fromString(auctionResult.getBuyer());
+        String name = auctionResult.getCustomAudienceName();
+        String owner = auctionResult.getCustomAudienceOwner();
+
+        List<DBComponentAdData> onDeviceComponentAds =
+                customAudienceDao.getComponentAdsByCustomAudienceInfo(owner, buyer, name);
+
+        Set<Uri> componentAdUris =
+                onDeviceComponentAds.stream()
+                        .map(DBComponentAdData::getRenderUri)
+                        .collect(Collectors.toSet());
+
+        for (String componentAdUriString : auctionResult.getAdComponentRenderUrlsList()) {
+            Uri componentAdUri = Uri.parse(componentAdUriString);
+            if (componentAdUris.contains(componentAdUri)) {
+                result.add(componentAdUri);
+            }
+        }
+        return result;
     }
 
     @Override
@@ -54,5 +99,78 @@ public class ComponentAdsStrategyEnabled implements ComponentAdsStrategy {
     @Override
     public int getNumCustomAudiencesWithComponentAds(BuyerInputGeneratorIntermediateStats stats) {
         return stats.getNumCustomAudiencesWithComponentAds();
+    }
+
+    /**
+     * Retrieves custom audiences and their associated component ad render IDs.
+     *
+     * <p>This method optimizes database I/O by fetching component ads for all unique buyers in a
+     * single database query, rather than making individual queries for each {@link
+     * DBCustomAudience}.
+     *
+     * <p>The method performs the following steps:
+     *
+     * <ol>
+     *   <li>Extracts the set of unique {@link AdTechIdentifier} buyers from the input list.
+     *   <li>Queries the DAO to retrieve all component ads associated with all extracted buyers in a
+     *       single database call.
+     *   <li>Creates a map (owner_buyerIdentifier_name -> List of {@link DBComponentAdData}).
+     *   <li>Iterates through the input {@link DBCustomAudience} list:
+     *       <ul>
+     *         <li>Constructs the key (owner_buyerIdentifier_name).
+     *         <li>Retrieves matching component ads from the map (or an empty list if no match).
+     *         <li>Extracts the render IDs.
+     *         <li>Creates a {@link CustomAudienceWithComponentAds} object.
+     *         <li>Adds the combined object to the result list.
+     *       </ul>
+     *   <li>Returns the list of {@link CustomAudienceWithComponentAds} objects.
+     * </ol>
+     *
+     * @param customAudienceDao The DAO used to retrieve component ad data.
+     * @param dbCustomAudiences The list of {@link DBCustomAudience} objects.
+     * @return A list of {@link CustomAudienceWithComponentAds}, in the same order as the input.
+     */
+    @Override
+    public List<CustomAudienceWithComponentAds> getCustomAudiencesWithComponentAds(
+            CustomAudienceDao customAudienceDao, List<DBCustomAudience> dbCustomAudiences) {
+        Set<AdTechIdentifier> buyers =
+                dbCustomAudiences.stream()
+                        .map(DBCustomAudience::getBuyer)
+                        .collect(Collectors.toSet());
+
+        List<DBComponentAdData> componentAdDataList =
+                customAudienceDao.getComponentAdsByBuyers(buyers);
+
+        // Add component ads to a hash map keyed on owner_buyer_name
+        Map<String, List<DBComponentAdData>> componentAdDataMap = new HashMap<>();
+        for (DBComponentAdData componentAd : componentAdDataList) {
+            String key =
+                    componentAd.getOwner()
+                            + "_"
+                            + componentAd.getBuyer()
+                            + "_"
+                            + componentAd.getName();
+            componentAdDataMap.computeIfAbsent(key, k -> new ArrayList<>()).add(componentAd);
+        }
+
+        List<CustomAudienceWithComponentAds> result = new ArrayList<>();
+        for (DBCustomAudience customAudience : dbCustomAudiences) {
+            String owner = customAudience.getOwner();
+            AdTechIdentifier buyer = customAudience.getBuyer();
+            String name = customAudience.getName();
+
+            String key = owner + "_" + buyer + "_" + name;
+            List<String> adRenderIds = new ArrayList<>();
+
+            // Look up matching component ads and extract adRenderIds
+            List<DBComponentAdData> matchingComponentAds =
+                    componentAdDataMap.getOrDefault(key, List.of());
+            for (DBComponentAdData componentAdData : matchingComponentAds) {
+                adRenderIds.add(componentAdData.getRenderId());
+            }
+
+            result.add(CustomAudienceWithComponentAds.create(customAudience, adRenderIds));
+        }
+        return result;
     }
 }

@@ -43,11 +43,7 @@ public class ReportEventRequest {
     /** This is used to represent buyer as the destination for report event API. */
     public static final int FLAG_REPORTING_DESTINATION_BUYER = 1 << 1;
 
-    /**
-     * This is used to component seller as the destination for report event API
-     *
-     * @hide
-     */
+    /** This is used to component seller as the destination for report event API */
     @FlaggedApi(Flags.FLAG_FLEDGE_ENABLE_REPORT_EVENT_FOR_COMPONENT_SELLER)
     public static final int FLAG_REPORTING_DESTINATION_COMPONENT_SELLER = 1 << 2;
 

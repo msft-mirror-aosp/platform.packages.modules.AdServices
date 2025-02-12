@@ -405,10 +405,11 @@ public abstract class CustomAudienceUpdatableData {
             CustomAudienceUpdatableData.Builder dataBuilder) {
         try {
             List<ComponentAdData> componentAdDataList = reader.getComponentAdsFromJsonObject();
-            dataBuilder.setComponentAds(componentAdDataList);
             if (componentAdDataList == null) {
+                dataBuilder.setComponentAds(List.of());
                 return ReadStatus.STATUS_NOT_FOUND;
             } else {
+                dataBuilder.setComponentAds(componentAdDataList);
                 return ReadStatus.STATUS_FOUND_VALID;
             }
         } catch (JSONException | NullPointerException exception) {
@@ -417,7 +418,7 @@ public abstract class CustomAudienceUpdatableData {
                     INVALID_JSON_TYPE_ERROR_FORMAT,
                     responseHash,
                     CustomAudienceUpdatableDataReader.COMPONENT_ADS_KEY);
-            dataBuilder.setComponentAds(null);
+            dataBuilder.setComponentAds(List.of());
             return ReadStatus.STATUS_FOUND_INVALID;
         } catch (IllegalArgumentException exception) {
             sLogger.e(
@@ -425,7 +426,7 @@ public abstract class CustomAudienceUpdatableData {
                     VALIDATION_FAILED_ERROR_FORMAT,
                     responseHash,
                     CustomAudienceUpdatableDataReader.COMPONENT_ADS_KEY);
-            dataBuilder.setComponentAds(null);
+            dataBuilder.setComponentAds(List.of());
             return ReadStatus.STATUS_FOUND_INVALID;
         }
     }
@@ -440,7 +441,7 @@ public abstract class CustomAudienceUpdatableData {
         return new AutoValue_CustomAudienceUpdatableData.Builder()
                 .setAuctionServerRequestFlags(FLAG_AUCTION_SERVER_REQUEST_DEFAULT)
                 .setPriority(PRIORITY_DEFAULT)
-                .setComponentAds(null);
+                .setComponentAds(List.of());
     }
 
     /**
@@ -512,7 +513,7 @@ public abstract class CustomAudienceUpdatableData {
                             || (updatableData.getUserBiddingSignals() == null
                                     && updatableData.getTrustedBiddingData() == null
                                     && updatableData.getAds() == null
-                                    && updatableData.getComponentAds() == null),
+                                    && updatableData.getComponentAds().isEmpty()),
                     "CustomAudienceUpdatableData should not contain non-null updatable fields if"
                             + " the object does not represent a successful update");
 

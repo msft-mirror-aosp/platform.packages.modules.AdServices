@@ -24,9 +24,13 @@ import android.adservices.common.CommonFixture;
 import android.adservices.customaudience.CustomAudienceFixture;
 import android.net.Uri;
 
+import com.android.adservices.common.AdServicesUnitTestCase;
+
 import org.junit.Test;
 
-public class DBAdSelectionResultTest {
+import java.util.List;
+
+public class DBAdSelectionResultTest extends AdServicesUnitTestCase {
 
     private static final long AD_SELECTION_ID_1 = 1L;
     private static final double AD_WINNING_BID_1 = 2.23d;
@@ -53,6 +57,7 @@ public class DBAdSelectionResultTest {
         assertEquals(AD_WINNING_BID_1, result.getWinningAdBid(), 0.0);
         assertEquals(VALID_AD_RENDER_URI_1, result.getWinningAdRenderUri());
         assertEquals(CommonFixture.VALID_BUYER_1, result.getWinningBuyer());
+        expect.that(result.getComponentAdRenderUris()).isEmpty();
     }
 
     @Test
@@ -78,5 +83,28 @@ public class DBAdSelectionResultTest {
         assertEquals(VALID_AD_RENDER_URI_1, result.getWinningAdRenderUri());
         assertEquals(CommonFixture.VALID_BUYER_1, result.getWinningBuyer());
         assertEquals(winningCustomAudience, result.getWinningCustomAudience());
+        expect.that(result.getComponentAdRenderUris()).isEmpty();
+    }
+
+    @Test
+    public void testBuild_withWinningComponentAdRenderUris_success() {
+        List<Uri> componentAdRenderUris = List.of(Uri.parse("renderUri1"), Uri.parse("renderUri2"));
+
+        DBAdSelectionResult result =
+                DBAdSelectionResult.builder()
+                        .setAdSelectionId(AD_SELECTION_ID_1)
+                        .setWinningAdBid(AD_WINNING_BID_1)
+                        .setWinningAdRenderUri(VALID_AD_RENDER_URI_1)
+                        .setWinningBuyer(CommonFixture.VALID_BUYER_1)
+                        .setComponentAdRenderUris(componentAdRenderUris)
+                        .build();
+
+        expect.that(result.getAdSelectionId()).isEqualTo(AD_SELECTION_ID_1);
+        expect.that(result.getWinningAdBid()).isEqualTo(AD_WINNING_BID_1);
+        expect.that(result.getWinningAdRenderUri()).isEqualTo(VALID_AD_RENDER_URI_1);
+        expect.that(result.getWinningBuyer()).isEqualTo(CommonFixture.VALID_BUYER_1);
+        expect.that(result.getComponentAdRenderUris())
+                .containsExactlyElementsIn(componentAdRenderUris)
+                .inOrder();
     }
 }

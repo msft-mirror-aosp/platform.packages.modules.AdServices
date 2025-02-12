@@ -21,6 +21,8 @@ import android.net.Uri;
 
 import com.google.auto.value.AutoValue;
 
+import java.util.List;
+
 /** Data class representing the result of an ad selection run . */
 @AutoValue
 public abstract class AdSelectionResultBidAndUri {
@@ -34,12 +36,17 @@ public abstract class AdSelectionResultBidAndUri {
     @NonNull
     public abstract Uri getWinningAdRenderUri();
 
+    /** List of component ad render URIs associated with the winning ad. */
+    @NonNull
+    public abstract List<Uri> getComponentAdRenderUris();
+
     /**
      * @return generic builder
      */
     @NonNull
     public static Builder builder() {
-        return new AutoValue_AdSelectionResultBidAndUri.Builder();
+        return new AutoValue_AdSelectionResultBidAndUri.Builder()
+                .setComponentAdRenderUris(List.of());
     }
 
     /**
@@ -49,11 +56,15 @@ public abstract class AdSelectionResultBidAndUri {
      */
     @NonNull
     public static AdSelectionResultBidAndUri create(
-            long adSelectionId, double winningAdBid, @NonNull Uri winningAdRenderUri) {
+            long adSelectionId,
+            double winningAdBid,
+            @NonNull Uri winningAdRenderUri,
+            @NonNull List<Uri> componentAdRenderUris) {
         return builder()
                 .setAdSelectionId(adSelectionId)
                 .setWinningAdBid(winningAdBid)
                 .setWinningAdRenderUri(winningAdRenderUri)
+                .setComponentAdRenderUris(componentAdRenderUris)
                 .build();
     }
 
@@ -68,6 +79,9 @@ public abstract class AdSelectionResultBidAndUri {
 
         /** Sets the winning ad render url for this ad selection run. */
         public abstract Builder setWinningAdRenderUri(@NonNull Uri winningAdRenderUri);
+
+        /** Sets the list of component ad URIs. */
+        public abstract Builder setComponentAdRenderUris(@NonNull List<Uri> componentAdRenderUris);
 
         /** Builds a {@link AdSelectionResultBidAndUri} object. */
         @NonNull

@@ -23,6 +23,7 @@ import android.annotation.NonNull;
 
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.DBEncodedPayload;
+import com.android.adservices.service.customaudience.CustomAudienceWithComponentAds;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.GetAdSelectionDataApiCalledStats;
@@ -60,7 +61,8 @@ public class CompressedBuyerInputCreatorHelper {
      * Builds a bidding and auction server custom audience proto from a {@link DBCustomAudience}.
      */
     public BiddingAuctionServers.BuyerInput.CustomAudience buildCustomAudienceProtoFrom(
-            DBCustomAudience customAudience) {
+            CustomAudienceWithComponentAds customAudienceWithComponentAds) {
+        DBCustomAudience customAudience = customAudienceWithComponentAds.getDBCustomAudience();
         BiddingAuctionServers.BuyerInput.CustomAudience.Builder customAudienceBuilder =
                 BiddingAuctionServers.BuyerInput.CustomAudience.newBuilder();
 
@@ -72,6 +74,8 @@ public class CompressedBuyerInputCreatorHelper {
 
         if (shouldIncludeAds(customAudience)) {
             customAudienceBuilder.addAllAdRenderIds(getAdRenderIds(customAudience));
+            customAudienceBuilder.addAllComponentAds(
+                    customAudienceWithComponentAds.getComponentAdRenderIds());
         }
         return customAudienceBuilder.build();
     }

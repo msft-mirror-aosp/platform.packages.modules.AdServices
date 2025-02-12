@@ -1924,6 +1924,35 @@ public class AdSelectionEntryDaoTest {
     }
 
     @Test
+    public void test_persistAdSelectionResultForCustomAudienceAllFieldsWithComponentAds_success() {
+        // Insert DBAdSelectionInitialization to satisfy SQL FOREIGN KEY constraint.
+        mAdSelectionEntryDao.insertDBAdSelectionInitialization(
+                DataHandlersFixture.DB_AD_SELECTION_INITIALIZATION_3);
+
+        assertNull(mAdSelectionEntryDao.getDBAdSelectionResultForId(AD_SELECTION_ID_3));
+
+        List<Uri> componentAdUris = List.of(Uri.parse("renderUri1"), Uri.parse("renderUri2"));
+
+        mAdSelectionEntryDao.persistAdSelectionResultForCustomAudience(
+                AD_SELECTION_ID_3,
+                DataHandlersFixture.getAdSelectionResultBidAndUriWithComponentAds(
+                        AD_SELECTION_ID_3,
+                        DataHandlersFixture.AD_SELECTION_RESULT_3.getWinningAdBid(),
+                        DataHandlersFixture.AD_SELECTION_RESULT_3.getWinningAdRenderUri(),
+                        componentAdUris),
+                DataHandlersFixture.BUYER_1,
+                DataHandlersFixture.WINNING_CUSTOM_AUDIENCE_ALL_FIELDS_SET);
+
+        DBAdSelectionResult actualResult =
+                mAdSelectionEntryDao.getDBAdSelectionResultForId(AD_SELECTION_ID_3);
+
+        assertEquals(
+                DataHandlersFixture.getDBAdSelectionResultForCaAllFieldsWithIdAndComponentAds(
+                        AD_SELECTION_ID_3, componentAdUris),
+                actualResult);
+    }
+
+    @Test
     public void test_persistAdSelectionResultForCAOnlyName_success() {
         // Insert DBAdSelectionInitialization to satisfy SQL FOREIGN KEY constraint.
         mAdSelectionEntryDao.insertDBAdSelectionInitialization(
@@ -2549,12 +2578,14 @@ public class AdSelectionEntryDaoTest {
                 AdSelectionResultBidAndUri.create(
                         AD_SELECTION_ID_1,
                         result1.getWinningAdBid(),
-                        result1.getWinningAdRenderUri());
+                        result1.getWinningAdRenderUri(),
+                        List.of());
         AdSelectionResultBidAndUri resultBidAndUri2 =
                 AdSelectionResultBidAndUri.create(
                         AD_SELECTION_ID_2,
                         result2.getWinningAdBid(),
-                        result2.getWinningAdRenderUri());
+                        result2.getWinningAdRenderUri(),
+                        List.of());
 
         assertThat(bidAndUris).containsExactly(resultBidAndUri1, resultBidAndUri2);
     }
@@ -2577,7 +2608,8 @@ public class AdSelectionEntryDaoTest {
                 AdSelectionResultBidAndUri.create(
                         AD_SELECTION_ID_1,
                         result1.getWinningAdBid(),
-                        result1.getWinningAdRenderUri());
+                        result1.getWinningAdRenderUri(),
+                        List.of());
 
         assertThat(bidAndUris).containsExactly(resultBidAndUri1);
     }

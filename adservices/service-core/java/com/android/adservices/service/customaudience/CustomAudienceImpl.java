@@ -17,6 +17,7 @@
 package com.android.adservices.service.customaudience;
 
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.ComponentAdData;
 import android.adservices.customaudience.CustomAudience;
 import android.annotation.NonNull;
 
@@ -38,6 +39,7 @@ import com.android.internal.util.Preconditions;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -108,7 +110,10 @@ public final class CustomAudienceImpl {
                                 Clock.systemUTC(),
                                 flags,
                                 ComponentAdsStrategy.createInstance(
-                                        /* componentAdsEnabled= */ false));
+                                        flags.getEnableCustomAudienceComponentAds(),
+                                        new ComponentAdsListValidator(
+                                                flags.getComponentAdRenderIdMaxLengthBytes(),
+                                                flags.getMaxComponentAdsPerCustomAudience())));
             }
             return sSingleton;
         }
@@ -165,12 +170,16 @@ public final class CustomAudienceImpl {
                         mAuctionServerRequestFlagsEnabled,
                         mSellerConfigurationFlagEnabled);
 
+        List<ComponentAdData> filteredComponentAds =
+                mComponentAdsStrategy.extractValidComponentAds(
+                        customAudience.getBuyer(), customAudience.getComponentAds());
+
         mComponentAdsStrategy.persistCustomAudiencesWithComponentAds(
                 mCustomAudienceDao,
                 dbCustomAudience,
                 customAudience.getDailyUpdateUri(),
                 isDebuggableCustomAudience,
-                customAudience.getComponentAds());
+                filteredComponentAds);
     }
 
     /** Delete a custom audience with given key. No-op if not exist. */

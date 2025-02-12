@@ -16,13 +16,13 @@
 
 package com.android.adservices.service.customaudience;
 
-import static com.android.adservices.service.stats.AdServicesLoggerUtil.FIELD_UNSET;
-
+import android.adservices.common.AdTechIdentifier;
 import android.adservices.common.ComponentAdData;
 import android.net.Uri;
 
 import com.android.adservices.data.customaudience.CustomAudienceDao;
 import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 import com.android.adservices.service.stats.BuyerInputGeneratorIntermediateStats;
 import com.android.adservices.service.stats.pas.PersistAdSelectionResultCalledStats;
 
@@ -39,47 +39,17 @@ public interface ComponentAdsStrategy {
             boolean debuggable,
             List<ComponentAdData> componentAdDataList);
 
-    /**
-     * Returns an implementation for the {@link ComponentAdsStrategy} depending on whether the
-     * component ads feature is enabled.
-     */
-    static ComponentAdsStrategy createInstance(boolean componentAdsEnabled) {
-        if (componentAdsEnabled) {
-            return new ComponentAdsStrategyEnabled();
-        } else {
-            return new ComponentAdsStrategy() {
-                @Override
-                public void persistCustomAudiencesWithComponentAds(
-                        CustomAudienceDao customAudienceDao,
-                        DBCustomAudience customAudience,
-                        Uri dailyUpdateUri,
-                        boolean debuggable,
-                        List<ComponentAdData> componentAdDataList) {
-                    customAudienceDao.insertOrOverwriteCustomAudience(
-                            customAudience, dailyUpdateUri, debuggable, List.of());
-                }
+    /** Returns a list of valid component ads. */
+    List<ComponentAdData> extractValidComponentAds(
+            AdTechIdentifier buyer, List<ComponentAdData> componentAds);
 
-                @Override
-                public void incrementNumCustomAudiencesWithComponentAds(
-                        BuyerInputGeneratorIntermediateStats stats) {
-                    // Do nothing.
-                }
+    /** Extracts the component ad render uris that match ones on device. */
+    List<Uri> extractComponentAdsThatMatchOnDevice(
+            BiddingAuctionServers.AuctionResult auctionResult, CustomAudienceDao customAudienceDao);
 
-                @Override
-                public void setNumComponentAdsInPersistAdSelectionResultWinnerType(
-                        PersistAdSelectionResultCalledStats.Builder builder, int numComponentAds) {
-                    // Sets numComponentAds to FIELD_UNSET when component ads disabled.
-                    builder.setNumComponentAds(FIELD_UNSET);
-                }
-
-                @Override
-                public int getNumCustomAudiencesWithComponentAds(
-                        BuyerInputGeneratorIntermediateStats stats) {
-                    return FIELD_UNSET;
-                }
-            };
-        }
-    }
+    /** Returns a list of custom audiences with component ads attached. */
+    List<CustomAudienceWithComponentAds> getCustomAudiencesWithComponentAds(
+            CustomAudienceDao customAudienceDao, List<DBCustomAudience> dbCustomAudiences);
 
     /** Increments the number of custom audiences for this buyer sending component ads. */
     void incrementNumCustomAudiencesWithComponentAds(BuyerInputGeneratorIntermediateStats stats);
@@ -90,4 +60,17 @@ public interface ComponentAdsStrategy {
 
     /** Returns the number of custom audiences for this buyer sending component ads. */
     int getNumCustomAudiencesWithComponentAds(BuyerInputGeneratorIntermediateStats stats);
+
+    /**
+     * Returns an implementation for the {@link ComponentAdsStrategy} depending on whether the
+     * component ads feature is enabled.
+     */
+    static ComponentAdsStrategy createInstance(
+            boolean componentAdsEnabled, ComponentAdsListValidator componentAdsListValidator) {
+        if (componentAdsEnabled) {
+            return new ComponentAdsStrategyEnabled(componentAdsListValidator);
+        } else {
+            return new ComponentAdsStrategyDisabled();
+        }
+    }
 }

@@ -355,6 +355,9 @@ public class AdSelectionManager {
                                                                     resultParcel.getAdRenderUri())
                                                             .setWinningSeller(
                                                                     resultParcel.getWinningSeller())
+                                                            .setComponentAdUris(
+                                                                    resultParcel
+                                                                            .getComponentAdUris())
                                                             .build()));
                         }
 

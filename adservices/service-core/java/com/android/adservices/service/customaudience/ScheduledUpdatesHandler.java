@@ -293,7 +293,10 @@ public final class ScheduledUpdatesHandler {
                         AdServicesLoggerImpl.getInstance()),
                 AdServicesLoggerImpl.getInstance(),
                 ComponentAdsStrategy.createInstance(
-                        FlagsFactory.getFlags().getEnableCustomAudienceComponentAds()));
+                        FlagsFactory.getFlags().getEnableCustomAudienceComponentAds(),
+                        new ComponentAdsListValidator(
+                                FlagsFactory.getFlags().getComponentAdRenderIdMaxLengthBytes(),
+                                FlagsFactory.getFlags().getMaxComponentAdsPerCustomAudience())));
     }
 
     /** Performs Custom Audience Updates for delayed events in the schedule */

@@ -26,8 +26,6 @@ import android.util.Log;
 import com.android.adservices.concurrency.AdServicesExecutors;
 import com.android.adservices.data.adselection.AdSelectionDatabase;
 import com.android.adservices.data.adselection.AdSelectionEntryDao;
-import com.android.adservices.data.adselection.AdSelectionServerDatabase;
-import com.android.adservices.data.adselection.AuctionServerAdSelectionDao;
 import com.android.adservices.data.adselection.ConsentedDebugConfigurationDao;
 import com.android.adservices.data.adselection.SharedStorageDatabase;
 import com.android.adservices.data.customaudience.CustomAudienceDatabase;
@@ -45,6 +43,8 @@ import com.android.adservices.service.adselection.CompressedBuyerInputCreatorNoO
 import com.android.adservices.service.adselection.FrequencyCapAdFiltererNoOpImpl;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGenerator;
 import com.android.adservices.service.adselection.debug.ConsentedDebugConfigurationGeneratorFactory;
+import com.android.adservices.service.customaudience.ComponentAdsListValidator;
+import com.android.adservices.service.customaudience.ComponentAdsStrategy;
 import com.android.adservices.service.devapi.DevSessionDataStore;
 import com.android.adservices.service.devapi.DevSessionDataStoreFactory;
 import com.android.adservices.service.shell.AdServicesShellCommandHandler;
@@ -129,7 +129,12 @@ public class AdSelectionShellCommandFactory implements ShellCommandFactory {
                         CompressedBuyerInputCreatorNoOptimizations.VERSION,
                         flags.getFledgeGetAdSelectionDataMaxNumEntirePayloadCompressions(),
                         flags.getProtectedSignalsEncodedPayloadMaxSizeBytes(),
-                        Clock.systemUTC());
+                        Clock.systemUTC(),
+                        ComponentAdsStrategy.createInstance(
+                                flags.getEnableCustomAudienceComponentAds(),
+                                new ComponentAdsListValidator(
+                                        flags.getComponentAdRenderIdMaxLengthBytes(),
+                                        flags.getMaxComponentAdsPerCustomAudience())));
         BuyerInputGenerator buyerInputGenerator =
                 new BuyerInputGenerator(
                         new FrequencyCapAdFiltererNoOpImpl(),

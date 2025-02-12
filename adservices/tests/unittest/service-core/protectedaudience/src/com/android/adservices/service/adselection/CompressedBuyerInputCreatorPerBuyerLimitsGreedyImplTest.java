@@ -29,6 +29,7 @@ import android.adservices.adselection.PerBuyerConfiguration;
 import android.adservices.common.AdData;
 import android.adservices.common.AdDataFixture;
 import android.adservices.common.AdTechIdentifier;
+import android.adservices.common.ComponentAdDataFixture;
 import android.util.Pair;
 
 import com.android.adservices.common.AdServicesExtendedMockitoTestCase;
@@ -38,6 +39,7 @@ import com.android.adservices.data.common.DBAdData;
 import com.android.adservices.data.customaudience.DBCustomAudience;
 import com.android.adservices.data.signals.DBEncodedPayload;
 import com.android.adservices.data.signals.DBEncodedPayloadFixture;
+import com.android.adservices.service.customaudience.CustomAudienceWithComponentAds;
 import com.android.adservices.service.proto.bidding_auction_servers.BiddingAuctionServers;
 
 import com.google.common.collect.ImmutableList;
@@ -170,7 +172,9 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
                 mCompressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                        dbCustomAudienceList, encodedPayloadMap);
+                        ComponentAdDataFixture.getCustomAudiencesWithEmptyComponentAds(
+                                dbCustomAudienceList),
+                        encodedPayloadMap);
 
         expect.that(compressedDataMap).isNotNull();
 
@@ -206,6 +210,62 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
 
     @Test
     @SuppressWarnings("ReturnValueIgnored")
+    public void compressedBuyerInputsProportionalCAsReturnsCorrectlyWithComponentAds()
+            throws Exception {
+        List<AdTechIdentifier> buyersList = THREE_BUYERS_LIST;
+        Map<String, AdTechIdentifier> nameAndBuyersMap = THREE_BUYERS_EQUAL_CA_MAP;
+
+        Map<AdTechIdentifier, DBEncodedPayload> encodedPayloadMap =
+                generateExpectedEncodedPayloadForBuyers(buyersList);
+        Pair<List<CustomAudienceWithComponentAds>, Map<String, CustomAudienceWithComponentAds>>
+                resultPair = createCustomAudiencesWithComponentAds(nameAndBuyersMap);
+
+        List<CustomAudienceWithComponentAds> customAudienceWithComponentAds = resultPair.first;
+        Map<String, CustomAudienceWithComponentAds> namesToCustomAudience = resultPair.second;
+
+        Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
+                mCompressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
+                        customAudienceWithComponentAds, encodedPayloadMap);
+
+        expect.that(compressedDataMap).isNotNull();
+
+        int totalSize = getTotalSize(compressedDataMap);
+        expect.that(totalSize).isAtMost(SELLER_MAX_SIZE);
+
+        for (AdTechIdentifier buyer : buyersList) {
+            BiddingAuctionServers.BuyerInput buyerInput =
+                    BiddingAuctionServers.BuyerInput.parseFrom(
+                            mAuctionServerDataCompressor
+                                    .decompress(compressedDataMap.get(buyer))
+                                    .getData());
+
+            for (BiddingAuctionServers.BuyerInput.CustomAudience buyerInputsCA :
+                    buyerInput.getCustomAudiencesList()) {
+                String buyerInputsCAName = buyerInputsCA.getName();
+                expect.that(nameAndBuyersMap).containsKey(buyerInputsCAName);
+                DBCustomAudience deviceCA =
+                        namesToCustomAudience.get(buyerInputsCAName).getDBCustomAudience();
+                expect.that(deviceCA.getName()).isEqualTo(buyerInputsCAName);
+                assertCAsEqual(buyerInputsCA, deviceCA, /* compareAds= */ true);
+                expect.that(buyerInputsCA.getComponentAdsList())
+                        .isEqualTo(
+                                namesToCustomAudience
+                                        .get(buyerInputsCAName)
+                                        .getComponentAdRenderIds());
+            }
+
+            BiddingAuctionServers.ProtectedAppSignals appSignals =
+                    buyerInput.getProtectedAppSignals();
+            expect.that(appSignals.getEncodingVersion())
+                    .isEqualTo(encodedPayloadMap.get(buyer).getVersion());
+            expect.that(appSignals.getAppInstallSignals())
+                    .isEqualTo(
+                            ByteString.copyFrom(encodedPayloadMap.get(buyer).getEncodedPayload()));
+        }
+    }
+
+    @Test
+    @SuppressWarnings("ReturnValueIgnored")
     public void compressedBuyerInputsNonProportionalCAsReturnsCorrectly() throws Exception {
         List<AdTechIdentifier> buyersList = THREE_BUYERS_LIST;
         Map<String, AdTechIdentifier> nameAndBuyersMap = THREE_BUYERS_BUYER_ONE_MOST_CA_MAP;
@@ -220,7 +280,9 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
                 mCompressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                        dbCustomAudienceList, encodedPayloadMap);
+                        ComponentAdDataFixture.getCustomAudiencesWithEmptyComponentAds(
+                                dbCustomAudienceList),
+                        encodedPayloadMap);
 
         expect.that(compressedDataMap).isNotNull();
 
@@ -265,7 +327,9 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
                 mCompressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                        dbCustomAudiences, encodedPayloadMap);
+                        ComponentAdDataFixture.getCustomAudiencesWithEmptyComponentAds(
+                                dbCustomAudiences),
+                        encodedPayloadMap);
 
         for (int i = 0; i < buyerList.size(); i++) {
             int perBuyerSize = compressedDataMap.get(buyerList.get(i)).getData().length;
@@ -333,7 +397,9 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
                 compressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                        dbCustomAudienceList, encodedPayloadMap);
+                        ComponentAdDataFixture.getCustomAudiencesWithEmptyComponentAds(
+                                dbCustomAudienceList),
+                        encodedPayloadMap);
 
         int totalSize = getTotalSize(compressedDataMap);
         expect.that(sellerMaxSize).isEqualTo(totalSize);
@@ -382,7 +448,9 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
                 compressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                        dbCustomAudienceList, encodedPayloadMap);
+                        ComponentAdDataFixture.getCustomAudiencesWithEmptyComponentAds(
+                                dbCustomAudienceList),
+                        encodedPayloadMap);
 
         for (AdTechIdentifier buyer : buyerList) {
             BiddingAuctionServers.BuyerInput buyerInput =
@@ -452,7 +520,9 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
                 compressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                        dbCustomAudienceList, encodedPayloadMap);
+                        ComponentAdDataFixture.getCustomAudiencesWithEmptyComponentAds(
+                                dbCustomAudienceList),
+                        encodedPayloadMap);
 
         for (int i = 0; i < buyerList.size(); i++) {
             BiddingAuctionServers.BuyerInput buyerInput =
@@ -524,7 +594,9 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
                 compressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                        dbCustomAudienceList, encodedPayloadMap);
+                        ComponentAdDataFixture.getCustomAudiencesWithEmptyComponentAds(
+                                dbCustomAudienceList),
+                        encodedPayloadMap);
 
         expect.that(getTotalSize(compressedDataMap)).isAtMost(smallerMaxSize);
         expect.that(getTotalSize(compressedDataMap)).isGreaterThan((int) (smallerMaxSize * 0.8));
@@ -574,7 +646,9 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
                 mCompressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                        dbCustomAudienceList, ImmutableMap.of());
+                        ComponentAdDataFixture.getCustomAudiencesWithEmptyComponentAds(
+                                dbCustomAudienceList),
+                        ImmutableMap.of());
 
         int totalNumCAsInBuyerInput = 0;
 
@@ -633,7 +707,9 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
                 compressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                        dbCustomAudiences, encodedPayloadMap);
+                        ComponentAdDataFixture.getCustomAudiencesWithEmptyComponentAds(
+                                dbCustomAudiences),
+                        encodedPayloadMap);
 
         int totalSizeOfCompressedMap = getTotalSize(compressedDataMap);
         expect.that(totalSizeOfCompressedMap).isAtMost(sellerMaxSize);
@@ -668,7 +744,9 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
                 compressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                        dbCustomAudiences, encodedPayloadMap);
+                        ComponentAdDataFixture.getCustomAudiencesWithEmptyComponentAds(
+                                dbCustomAudiences),
+                        encodedPayloadMap);
 
         int totalSizeOfCompressedMap = getTotalSize(compressedDataMap);
 
@@ -704,7 +782,9 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
                 compressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                        dbCustomAudiences, encodedPayloadMap);
+                        ComponentAdDataFixture.getCustomAudiencesWithEmptyComponentAds(
+                                dbCustomAudiences),
+                        encodedPayloadMap);
 
         int totalSizeOfCompressedMap = getTotalSize(compressedDataMap);
         expect.that(totalSizeOfCompressedMap).isAtMost(sellerMaxSize);
@@ -738,7 +818,9 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
                 compressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                        dbCustomAudiences, encodedPayloadMap);
+                        ComponentAdDataFixture.getCustomAudiencesWithEmptyComponentAds(
+                                dbCustomAudiences),
+                        encodedPayloadMap);
 
         int totalSizeOfCompressedMap = getTotalSize(compressedDataMap);
         expect.that(totalSizeOfCompressedMap).isAtMost(sellerMaxSize);
@@ -780,7 +862,9 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
 
         Map<AdTechIdentifier, AuctionServerDataCompressor.CompressedData> compressedDataMap =
                 compressedBuyerInputCreator.generateCompressedBuyerInputFromDBCAsAndEncodedSignals(
-                        dbCustomAudiences, encodedPayloadMap);
+                        ComponentAdDataFixture.getCustomAudiencesWithEmptyComponentAds(
+                                dbCustomAudiences),
+                        encodedPayloadMap);
 
         for (AdTechIdentifier buyer : buyers) {
             BiddingAuctionServers.BuyerInput buyerInput =
@@ -921,6 +1005,24 @@ public class CompressedBuyerInputCreatorPerBuyerLimitsGreedyImplTest
                             .build());
         }
         return perBuyerConfigurations;
+    }
+
+    private Pair<List<CustomAudienceWithComponentAds>, Map<String, CustomAudienceWithComponentAds>>
+            createCustomAudiencesWithComponentAds(Map<String, AdTechIdentifier> nameAndBuyers) {
+        List<CustomAudienceWithComponentAds> customAudiences = new ArrayList<>();
+        Map<String, CustomAudienceWithComponentAds> namesToCustomAudiences = new HashMap<>();
+        for (Map.Entry<String, AdTechIdentifier> entry : nameAndBuyers.entrySet()) {
+            AdTechIdentifier buyer = entry.getValue();
+            String name = entry.getKey();
+            DBCustomAudience thisCustomAudience =
+                    DBCustomAudienceFixture.getValidBuilderByBuyer(buyer, name).build();
+            List<String> adRenderIds = List.of(name + "1", name + "2");
+            CustomAudienceWithComponentAds customAudienceWithComponentAds =
+                    CustomAudienceWithComponentAds.create(thisCustomAudience, adRenderIds);
+            namesToCustomAudiences.put(name, customAudienceWithComponentAds);
+            customAudiences.add(customAudienceWithComponentAds);
+        }
+        return Pair.create(customAudiences, namesToCustomAudiences);
     }
 
     /**

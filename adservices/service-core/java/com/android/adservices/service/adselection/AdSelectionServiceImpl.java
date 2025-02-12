@@ -109,6 +109,7 @@ import com.android.adservices.service.common.Throttler;
 import com.android.adservices.service.common.cache.CacheProviderFactory;
 import com.android.adservices.service.common.httpclient.AdServicesHttpsClient;
 import com.android.adservices.service.consent.ConsentManager;
+import com.android.adservices.service.customaudience.ComponentAdsListValidator;
 import com.android.adservices.service.customaudience.ComponentAdsStrategy;
 import com.android.adservices.service.devapi.AdSelectionOverrider;
 import com.android.adservices.service.devapi.DevContext;
@@ -719,13 +720,19 @@ public class AdSelectionServiceImpl extends AdSelectionService.Stub {
                         mAdServicesLogger,
                         sellerConfigurationMetricsStrategy,
                         ComponentAdsStrategy.createInstance(
-                                flags.getEnableCustomAudienceComponentAds()));
+                                flags.getEnableCustomAudienceComponentAds(),
+                                new ComponentAdsListValidator(
+                                        flags.getComponentAdRenderIdMaxLengthBytes(),
+                                        flags.getMaxComponentAdsPerCustomAudience())));
             }
             return new AuctionServerPayloadMetricsStrategyEnabled(
                     mAdServicesLogger,
                     sellerConfigurationMetricsStrategy,
                     ComponentAdsStrategy.createInstance(
-                            flags.getEnableCustomAudienceComponentAds()));
+                            flags.getEnableCustomAudienceComponentAds(),
+                            new ComponentAdsListValidator(
+                                    flags.getComponentAdRenderIdMaxLengthBytes(),
+                                    flags.getMaxComponentAdsPerCustomAudience())));
         }
         return new AuctionServerPayloadMetricsStrategyDisabled();
     }

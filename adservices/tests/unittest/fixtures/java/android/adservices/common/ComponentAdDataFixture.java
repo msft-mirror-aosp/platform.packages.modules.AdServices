@@ -16,14 +16,27 @@
 
 package android.adservices.common;
 
+import static com.android.adservices.service.Flags.COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES;
+import static com.android.adservices.service.Flags.MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE;
+
 import android.net.Uri;
+
+import com.android.adservices.data.customaudience.DBCustomAudience;
+import com.android.adservices.service.customaudience.ComponentAdsListValidator;
+import com.android.adservices.service.customaudience.CustomAudienceWithComponentAds;
 
 import com.google.common.collect.ImmutableList;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /** Utility class supporting ad services API unit tests */
 public final class ComponentAdDataFixture {
+    public static final ComponentAdsListValidator TEST_COMPONENT_ADS_FILTERER =
+            new ComponentAdsListValidator(
+                    COMPONENT_AD_RENDER_ID_MAX_LENGTH_BYTES, MAX_COMPONENT_ADS_PER_CUSTOM_AUDIENCE);
+
     private ComponentAdDataFixture() {}
 
     /**
@@ -45,12 +58,25 @@ public final class ComponentAdDataFixture {
     }
 
     /**
+     * @return a valid list of component ads with the specified ad render ids.
+     */
+    public static List<ComponentAdData> getValidComponentAdsByBuyerAndRenderId(
+            AdTechIdentifier buyer, List<String> adRenderIds) {
+        List<ComponentAdData> result = new ArrayList<>();
+        for (int i = 0; i < adRenderIds.size(); i++) {
+            result.add(getValidComponentAdDataWithAdRenderId(buyer, i, adRenderIds.get(i)));
+        }
+        return result;
+    }
+
+    /**
      * @return a component ad for a specified buyer.
      */
     public static ComponentAdData getValidComponentAdDataByBuyer(
             AdTechIdentifier buyer, int sequenceNumber) {
         return new ComponentAdData(
-                getValidRenderUriByBuyer(buyer, sequenceNumber), AdDataFixture.VALID_RENDER_ID);
+                getValidRenderUriByBuyer(buyer, sequenceNumber),
+                AdDataFixture.VALID_RENDER_ID + sequenceNumber);
     }
 
     /**
@@ -59,5 +85,15 @@ public final class ComponentAdDataFixture {
     public static ComponentAdData getValidComponentAdDataWithAdRenderId(
             AdTechIdentifier buyer, int sequenceNumber, String adRenderId) {
         return new ComponentAdData(getValidRenderUriByBuyer(buyer, sequenceNumber), adRenderId);
+    }
+
+    /** Creates a list of {@link CustomAudienceWithComponentAds} with empty component ads. */
+    public static List<CustomAudienceWithComponentAds> getCustomAudiencesWithEmptyComponentAds(
+            List<DBCustomAudience> dbCustomAudiences) {
+        return dbCustomAudiences.stream()
+                .map(
+                        dbCustomAudience ->
+                                CustomAudienceWithComponentAds.create(dbCustomAudience, List.of()))
+                .collect(Collectors.toList());
     }
 }

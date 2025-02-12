@@ -840,6 +840,7 @@ public abstract class AdSelectionEntryDao {
                         .setWinningAdRenderUri(adSelectionResult.getWinningAdRenderUri())
                         .setWinningBuyer(winningAdBuyer)
                         .setWinningCustomAudience(dbWinningCustomAudience)
+                        .setComponentAdRenderUris(adSelectionResult.getComponentAdRenderUris())
                         .build();
 
         insertDBAdSelectionResult(dbAdSelectionResult);
@@ -994,7 +995,9 @@ public abstract class AdSelectionEntryDao {
     /** Query to get winning ad data of ad selection run identified by adSelectionId. */
     @Query(
             "SELECT ad_selection_id AS adSelectionId, winning_ad_bid AS winningAdBid, "
-                    + "winning_ad_render_uri AS winningAdRenderUri FROM ad_selection_result "
+                    + "winning_ad_render_uri AS winningAdRenderUri, "
+                    + "component_ad_render_uris AS componentAdRenderUris "
+                    + "FROM ad_selection_result "
                     + "WHERE ad_selection_id = :adSelectionId")
     public abstract AdSelectionResultBidAndUri getWinningBidAndUriForId(long adSelectionId);
 
@@ -1002,12 +1005,14 @@ public abstract class AdSelectionEntryDao {
     @Query(
             "SELECT ad_selection_id AS adSelectionId, "
                     + "winning_ad_bid AS winningAdBid, "
-                    + "winning_ad_render_uri AS winningAdRenderUri "
+                    + "winning_ad_render_uri AS winningAdRenderUri, "
+                    + "component_ad_render_uris AS componentAdRenderUris "
                     + "FROM ad_selection_result WHERE ad_selection_id IN (:adSelectionIds) "
                     + "UNION "
                     + "SELECT ad_selection_id AS adSelectionId, "
                     + "winning_ad_bid AS winningAdBid, "
-                    + "winning_ad_render_uri AS winningAdRenderUri "
+                    + "winning_ad_render_uri AS winningAdRenderUri, "
+                    + " '' AS componentAdRenderUris "
                     + "FROM ad_selection WHERE ad_selection_id IN (:adSelectionIds)")
     public abstract List<AdSelectionResultBidAndUri> getWinningBidAndUriForIds(
             List<Long> adSelectionIds);
@@ -1019,7 +1024,8 @@ public abstract class AdSelectionEntryDao {
     @Query(
             "SELECT ad_selection_id AS adSelectionId, "
                     + "winning_ad_bid AS winningAdBid, "
-                    + "winning_ad_render_uri AS winningAdRenderUri "
+                    + "winning_ad_render_uri AS winningAdRenderUri, "
+                    + "component_ad_render_uris AS componentAdRenderUris "
                     + "FROM ad_selection_result WHERE ad_selection_id IN (:adSelectionIds)")
     public abstract List<AdSelectionResultBidAndUri> getWinningBidAndUriForIdsUnifiedTables(
             List<Long> adSelectionIds);

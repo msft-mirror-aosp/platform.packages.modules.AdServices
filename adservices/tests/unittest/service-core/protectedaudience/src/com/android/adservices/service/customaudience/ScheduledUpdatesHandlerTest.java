@@ -17,6 +17,7 @@
 package com.android.adservices.service.customaudience;
 
 import static android.adservices.common.CommonFixture.FIXED_NOW;
+import static android.adservices.common.ComponentAdDataFixture.TEST_COMPONENT_ADS_FILTERER;
 import static android.adservices.customaudience.CustomAudience.FLAG_AUCTION_SERVER_REQUEST_OMIT_ADS;
 import static android.adservices.customaudience.CustomAudience.PRIORITY_DEFAULT;
 import static android.adservices.customaudience.CustomAudienceFixture.VALID_PRIORITY_1;
@@ -567,7 +568,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 new CustomAudienceQuantityChecker(mCustomAudienceDao, mFakeFlags);
 
         ComponentAdsStrategy componentAdsStrategy =
-                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+                ComponentAdsStrategy.createInstance(
+                        /* componentAdsEnabled= */ false, TEST_COMPONENT_ADS_FILTERER);
 
         mHandler =
                 new ScheduledUpdatesHandler(
@@ -656,7 +658,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 new CustomAudienceQuantityChecker(mCustomAudienceDao, mFakeFlags);
 
         ComponentAdsStrategy componentAdsStrategy =
-                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+                ComponentAdsStrategy.createInstance(
+                        /* componentAdsEnabled= */ false, TEST_COMPONENT_ADS_FILTERER);
 
         mHandler =
                 new ScheduledUpdatesHandler(
@@ -2141,7 +2144,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
 
         ComponentAdsStrategy componentAdsStrategy =
-                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+                ComponentAdsStrategy.createInstance(
+                        /* componentAdsEnabled= */ false, TEST_COMPONENT_ADS_FILTERER);
 
         mHandler =
                 new ScheduledUpdatesHandler(
@@ -3485,7 +3489,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     @Test
     public void testPerformScheduledUpdates_IOException_logsCorrectly() throws Exception {
         ComponentAdsStrategy componentAdsStrategy =
-                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+                ComponentAdsStrategy.createInstance(
+                        /* componentAdsEnabled= */ false, TEST_COMPONENT_ADS_FILTERER);
 
         mHandler =
                 new ScheduledUpdatesHandler(
@@ -3539,7 +3544,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
     @Test
     public void testPerformScheduledUpdates_ContentSizeException_logsCorrectly() throws Exception {
         ComponentAdsStrategy componentAdsStrategy =
-                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+                ComponentAdsStrategy.createInstance(
+                        /* componentAdsEnabled= */ false, TEST_COMPONENT_ADS_FILTERER);
 
         mHandler =
                 new ScheduledUpdatesHandler(
@@ -3597,7 +3603,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
 
         ComponentAdsStrategy componentAdsStrategy =
-                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+                ComponentAdsStrategy.createInstance(
+                        /* componentAdsEnabled= */ false, TEST_COMPONENT_ADS_FILTERER);
 
         mHandler =
                 new ScheduledUpdatesHandler(
@@ -3852,7 +3859,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1, DB_PARTIAL_CUSTOM_AUDIENCE_2);
 
         ComponentAdsStrategy componentAdsStrategy =
-                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+                ComponentAdsStrategy.createInstance(
+                        /* componentAdsEnabled= */ false, TEST_COMPONENT_ADS_FILTERER);
 
         mHandler =
                 new ScheduledUpdatesHandler(
@@ -3966,7 +3974,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1);
 
         ComponentAdsStrategy componentAdsStrategy =
-                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+                ComponentAdsStrategy.createInstance(
+                        /* componentAdsEnabled= */ false, TEST_COMPONENT_ADS_FILTERER);
 
         mHandler =
                 new ScheduledUpdatesHandler(
@@ -4066,7 +4075,8 @@ public final class ScheduledUpdatesHandlerTest extends AdServicesExtendedMockito
                 List.of(DB_PARTIAL_CUSTOM_AUDIENCE_1);
 
         ComponentAdsStrategy componentAdsStrategy =
-                ComponentAdsStrategy.createInstance(/* componentAdsEnabled= */ false);
+                ComponentAdsStrategy.createInstance(
+                        /* componentAdsEnabled= */ false, TEST_COMPONENT_ADS_FILTERER);
 
         mHandler =
                 new ScheduledUpdatesHandler(

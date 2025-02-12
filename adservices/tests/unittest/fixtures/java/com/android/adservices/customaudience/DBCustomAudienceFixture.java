@@ -88,6 +88,26 @@ public class DBCustomAudienceFixture {
                 .setAds(DBAdDataFixture.getValidDbAdDataListByBuyerWithAdRenderId(buyer));
     }
 
+    /**
+     * Returns a builder with no filters for a buyer, name, owner.
+     */
+    public static DBCustomAudience.Builder getValidBuilderByBuyerNoFilters(
+            AdTechIdentifier buyer, String name, String owner) {
+        return new DBCustomAudience.Builder()
+                .setOwner(owner)
+                .setBuyer(buyer)
+                .setName(name)
+                .setActivationTime(CustomAudienceFixture.VALID_ACTIVATION_TIME)
+                .setExpirationTime(CustomAudienceFixture.VALID_EXPIRATION_TIME)
+                .setCreationTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setLastAdsAndBiddingDataUpdatedTime(CommonFixture.FIXED_NOW_TRUNCATED_TO_MILLI)
+                .setUserBiddingSignals(CustomAudienceFixture.VALID_USER_BIDDING_SIGNALS)
+                .setTrustedBiddingData(
+                        DBTrustedBiddingDataFixture.getValidBuilderByBuyer(buyer).build())
+                .setBiddingLogicUri(CustomAudienceFixture.getValidBiddingLogicUriByBuyer(buyer))
+                .setAds(DBAdDataFixture.getValidDbAdDataListByBuyerNoFilters(buyer));
+    }
+
     public static DBCustomAudience.Builder getValidBuilderByBuyerNoFilters(AdTechIdentifier buyer) {
         return new DBCustomAudience.Builder()
                 .setOwner(CustomAudienceFixture.VALID_OWNER)
