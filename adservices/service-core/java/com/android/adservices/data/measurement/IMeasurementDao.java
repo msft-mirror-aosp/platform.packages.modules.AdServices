@@ -25,6 +25,7 @@ import androidx.annotation.Nullable;
 
 import com.android.adservices.service.measurement.AggregatableNamedBudgets.BudgetAndContribution;
 import com.android.adservices.service.measurement.Attribution;
+import com.android.adservices.service.measurement.CountUniqueMetadata;
 import com.android.adservices.service.measurement.CountUniqueReport;
 import com.android.adservices.service.measurement.EventReport;
 import com.android.adservices.service.measurement.EventSurfaceType;
@@ -897,6 +898,35 @@ public interface IMeasurementDao {
      * @throws DatastoreException when SQLite issue occurs.
      */
     void insertCountUniqueReport(@NonNull CountUniqueReport report) throws DatastoreException;
+
+    /**
+     * Stores a Count Unique metadata into the Count Unique metadata table
+     *
+     * @param metadata metadata to store
+     * @param ignoreIfPresent if true, ignore record if already present
+     * @throws DatastoreException when SQLite issue occurs.
+     */
+    void insertCountUniqueMetadata(@NonNull CountUniqueMetadata metadata, boolean ignoreIfPresent)
+            throws DatastoreException;
+
+    /**
+     * Gets CountUniqueMetadata given a key and reportingOrigin
+     *
+     * @param key key for the metadata to be returned
+     * @param reportingOrigin reporting origin associated to the metadata
+     * @throws DatastoreException when SQLite issue occurs.
+     */
+    CountUniqueMetadata getCountUniqueMetadata(@NonNull String key, Uri reportingOrigin)
+            throws DatastoreException;
+
+    /**
+     * Delete count unique metadata
+     *
+     * @param key delete the specified key
+     * @param reportingOrigin reporting origin associated to the request
+     * @throws DatastoreException when SQLite issue occurs.
+     */
+    void deleteCountUniqueMetadata(String key, Uri reportingOrigin) throws DatastoreException;
 
     /**
      * Insert an entry of {@link AggregateDebugReportRecord} into the {@link

@@ -19,9 +19,12 @@ package com.android.adservices.service.measurement.countunique;
 import android.net.Uri;
 
 import com.android.adservices.LoggerFactory;
+import com.android.adservices.data.measurement.DatastoreException;
 import com.android.adservices.data.measurement.DatastoreManager;
+import com.android.adservices.data.measurement.IMeasurementDao;
 import com.android.adservices.service.FlagsFactory;
 import com.android.adservices.service.common.WebAddresses;
+import com.android.adservices.service.measurement.CountUniqueMetadata;
 import com.android.adservices.service.measurement.CountUniqueReport;
 import com.android.adservices.service.measurement.aggregation.AggregateHistogramContribution;
 import com.android.adservices.service.measurement.aggregation.AggregatePayloadGenerator;
@@ -35,9 +38,11 @@ import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 public class CountUniqueRegistrar implements ICountUniqueRegistrar {
 
+    private static final long METADATA_EXPIRY_WINDOW_MILLS = TimeUnit.DAYS.toMillis(30);
     private final DatastoreManager mDatastoreManager;
 
     public CountUniqueRegistrar(DatastoreManager datastoreManager) {
@@ -47,45 +52,13 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
     @Override
     public void registerCountUniqueEvent(
             AsyncRegistration asyncRegistration, List<String> eventHeader) {
-
-        try {
-            if (asyncRegistration == null || eventHeader == null) {
-                LoggerFactory.getMeasurementLogger()
-                        .d(
-                                "CountUniqueRegistrar: Count Unique Event registration failed."
-                                        + " Found null async registration or event header.");
-                return;
-            }
-            Optional<CountUniqueReport> report =
-                    createCountUniqueReport(eventHeader, asyncRegistration);
-
-            if (report.isPresent()) {
-                boolean transactionResult =
-                        mDatastoreManager.runInTransaction(
-                                (dao) -> {
-                                    dao.insertCountUniqueReport(report.get());
-                                });
-                if (!transactionResult) {
-                    LoggerFactory.getMeasurementLogger()
-                            .d(
-                                    "CountUniqueRegistrar: Count Unique Event registration failed."
-                                            + " Unable to store report.");
-                }
-            }
-        } catch (JSONException e) {
+        if (asyncRegistration == null || eventHeader == null) {
             LoggerFactory.getMeasurementLogger()
                     .d(
-                            "CountUniqueRegistrar: Json exception when parsing count unique event"
-                                    + " header",
-                            e);
-        } catch (IllegalArgumentException e) {
-            LoggerFactory.getMeasurementLogger()
-                    .d("CountUniqueRegistrar: Invalid count unique event header", e);
+                            "CountUniqueRegistrar: Count Unique Event registration failed."
+                                    + " Found null async registration or event header.");
+            return;
         }
-    }
-
-    private Optional<CountUniqueReport> createCountUniqueReport(
-            List<String> eventHeader, AsyncRegistration asyncRegistration) throws JSONException {
 
         int headerSize = eventHeader.size();
         if (headerSize != 1) {
@@ -93,25 +66,144 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
                     .d(
                             "CountUniqueRegistrar: Exactly one event header is expected. Found : "
                                     + headerSize);
-            return Optional.empty();
+            return;
         }
 
-        String eventHeaderStr = eventHeader.get(0);
+        final String eventHeaderStr = eventHeader.get(0);
         if (eventHeaderStr.isEmpty()) {
             LoggerFactory.getMeasurementLogger().d("CountUniqueRegistrar: Event header is empty");
+            return;
+        }
+
+        boolean transactionResult =
+                mDatastoreManager.runInTransaction(
+                        (dao) -> {
+                            try {
+                                Optional<CountUniqueReport> report =
+                                        createCountUniqueReport(
+                                                dao, eventHeaderStr, asyncRegistration);
+                                if (report.isPresent()) {
+                                    dao.insertCountUniqueReport(report.get());
+                                }
+                            } catch (JSONException e) {
+                                LoggerFactory.getMeasurementLogger()
+                                        .d(
+                                                "CountUniqueRegistrar: Json exception when "
+                                                        + "parsing count unique event"
+                                                        + " header",
+                                                e);
+                            } catch (IllegalArgumentException e) {
+                                LoggerFactory.getMeasurementLogger()
+                                        .d(
+                                                "CountUniqueRegistrar: Invalid count unique event "
+                                                        + "header",
+                                                e);
+                            }
+                        });
+        if (!transactionResult) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "CountUniqueRegistrar: Count Unique Event registration failed."
+                                    + " Unable to store report in db");
+        }
+    }
+
+    @Override
+    public void registerCountUniqueMetadata(
+            AsyncRegistration asyncRegistration, List<String> metadataHeader) {
+        if (asyncRegistration == null || metadataHeader == null) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "CountUniqueRegistrar: Count Unique Metadata registration failed."
+                                    + " Found null async registration or metadata header.");
+            return;
+        }
+        int headerSize = metadataHeader.size();
+        if (headerSize != 1) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "CountUniqueRegistrar: Exactly one metadata header is expected. Found"
+                                    + " : "
+                                    + headerSize);
+            return;
+        }
+        String metadataHeaderStr = metadataHeader.get(0);
+        if (metadataHeaderStr.isEmpty()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("CountUniqueRegistrar: Metadata header is empty");
+            return;
+        }
+
+        try {
+            List<MetadataOperation> operations =
+                    MetadataOperation.getOperationsFromHeader(metadataHeaderStr);
+
+            for (MetadataOperation operation : operations) {
+                Optional<CountUniqueMetadata> m =
+                        createCountUniqueMetadata(operation, asyncRegistration);
+                if (m.isPresent()) {
+                    CountUniqueMetadata metadata = m.get();
+                    boolean transactionResult =
+                            mDatastoreManager.runInTransaction(
+                                    (dao) -> {
+                                        if (operation.getType()
+                                                == MetadataOperation.OperationType.set) {
+                                            dao.insertCountUniqueMetadata(
+                                                    metadata, operation.isIgnoreIfPresent());
+                                        } else if (operation.getType()
+                                                == MetadataOperation.OperationType.delete) {
+                                            dao.deleteCountUniqueMetadata(
+                                                    metadata.getKey(),
+                                                    metadata.getReportingOrigin());
+                                        }
+                                    });
+                    if (!transactionResult) {
+                        LoggerFactory.getMeasurementLogger()
+                                .d(
+                                        "CountUniqueRegistrar: Count Unique Metadata registration"
+                                                + " failed. Unable to store metadata in db.");
+                    }
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            LoggerFactory.getMeasurementLogger()
+                    .d("CountUniqueRegistrar: Failure when parsing metadata header", e);
+        }
+    }
+
+    private Optional<CountUniqueMetadata> createCountUniqueMetadata(
+            MetadataOperation operation, AsyncRegistration asyncRegistration) {
+        CountUniqueMetadata.Builder builder = new CountUniqueMetadata.Builder();
+        builder.setKey(operation.getKey());
+
+        String value = operation.getValue();
+        if (value != null && !value.isEmpty()) {
+            builder.setValue(Integer.parseInt(operation.getValue()));
+        }
+
+        builder.setExpirationTime(
+                asyncRegistration.getRequestTime() + METADATA_EXPIRY_WINDOW_MILLS);
+
+        Optional<Uri> registrationUriOrigin =
+                WebAddresses.originAndScheme(asyncRegistration.getRegistrationUri());
+        if (registrationUriOrigin.isEmpty()) {
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "CountUniqueRegistrar: "
+                                    + "Invalid or empty registration uri - "
+                                    + asyncRegistration.getRegistrationUri());
             return Optional.empty();
         }
-        JSONObject eventHeaderJson = new JSONObject(eventHeaderStr);
+        builder.setReportingOrigin(registrationUriOrigin.get());
+        return Optional.of(builder.build());
+    }
 
+    private Optional<CountUniqueReport> createCountUniqueReport(
+            IMeasurementDao dao, String eventHeader, AsyncRegistration asyncRegistration)
+            throws JSONException, DatastoreException {
+
+        JSONObject eventHeaderJson = new JSONObject(eventHeader);
         CountUniqueReport.Builder builder = new CountUniqueReport.Builder();
-
-        BigInteger key = getKey(eventHeaderJson);
-        int value = getValue(eventHeaderJson);
-        builder.setPayload(
-                createHistogramContribution(key, value, getFilteringId(eventHeaderJson))
-                        .toJSONObject()
-                        .toString());
-        builder.setReportId(UUID.randomUUID().toString());
         Optional<Uri> registrationUriOrigin =
                 WebAddresses.originAndScheme(asyncRegistration.getRegistrationUri());
         if (registrationUriOrigin.isEmpty()) {
@@ -123,6 +215,13 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
             return Optional.empty();
         }
 
+        BigInteger key = getKey(dao, eventHeaderJson, registrationUriOrigin.get());
+        int value = getValue(eventHeaderJson);
+        builder.setPayload(
+                createHistogramContribution(key, value, getFilteringId(eventHeaderJson))
+                        .toJSONObject()
+                        .toString());
+        builder.setReportId(UUID.randomUUID().toString());
         builder.setReportingOrigin(registrationUriOrigin.get());
 
         if (!eventHeaderJson.isNull(CountUniqueHeaderContract.CONTEXT_ID)) {
@@ -149,15 +248,16 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
         return builder.build();
     }
 
-    private BigInteger getKey(JSONObject eventHeader) throws JSONException {
+    private BigInteger getKey(IMeasurementDao dao, JSONObject eventHeader, Uri registrationOrigin)
+            throws DatastoreException, JSONException {
         if (eventHeader.isNull(CountUniqueHeaderContract.KEY)) {
             LoggerFactory.getMeasurementLogger()
                     .d("CountUniqueRegistrar: " + "Key not present in event header");
             throw new IllegalArgumentException("Key not present in event header");
         }
         String keyInHeader = eventHeader.getString(CountUniqueHeaderContract.KEY);
-        // read key from metadata once implemented
-        return new BigInteger(keyInHeader);
+        CountUniqueMetadata metadata = dao.getCountUniqueMetadata(keyInHeader, registrationOrigin);
+        return BigInteger.valueOf(metadata.getValue());
     }
 
     private int getValue(JSONObject eventHeader) throws JSONException {
@@ -173,7 +273,7 @@ public class CountUniqueRegistrar implements ICountUniqueRegistrar {
         if (eventHeader.isNull(CountUniqueHeaderContract.FILTERING_ID)) {
             return Optional.empty();
         }
-        // compute filteringId using offset once metadata is implemented
+        // TODO(b/398412235): compute filteringId using offset once metadata is implemented
         return Optional.of(
                 new UnsignedLong(eventHeader.getLong(CountUniqueHeaderContract.FILTERING_ID)));
     }

@@ -1346,6 +1346,13 @@ public class AsyncSourceFetcher {
 
         try {
             if (isCountUniqueEnabled(asyncRegistration)) {
+                List<String> metadataHeader =
+                        headers.get(CountUniqueHeaderContract.HEADER_COUNT_UNIQUE_METADATA);
+                if (metadataHeader != null) {
+                    mCountUniqueRegistrar.registerCountUniqueMetadata(
+                            asyncRegistration, metadataHeader);
+                }
+
                 List<String> eventHeader =
                         headers.get(CountUniqueHeaderContract.HEADER_COUNT_UNIQUE_EVENT);
                 if (eventHeader != null) {
@@ -1495,5 +1502,6 @@ public class AsyncSourceFetcher {
 
     public interface CountUniqueHeaderContract {
         String HEADER_COUNT_UNIQUE_EVENT = "Count-Unique-Event";
+        String HEADER_COUNT_UNIQUE_METADATA = "Count-Unique-Metadata";
     }
 }
