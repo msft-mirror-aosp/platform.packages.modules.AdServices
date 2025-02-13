@@ -85,8 +85,7 @@ public final class BackgroundJobsExecutionMetricLoggerTest
                         .build();
 
         SamplingMetadata metadata =
-                new SamplingMetadata(
-                        /* perDeviceSamplingRate= */ 0.5, /* perEventSampleRate= */ 0.5);
+                new SamplingMetadata(/* perDeviceSampleRate= */ 0.5, /* perEventSampleRate= */ 0.5);
 
         BackgroundJobsExecutionMetricLogger.logStats(stats, metadata);
 
