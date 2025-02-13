@@ -917,6 +917,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTR
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_DUAL_DESTINATION_NAVIGATION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_EVENT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ATTRIBUTION_SCOPE_MAX_INFO_GAIN_NAVIGATION;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DATA_EXPIRY_WINDOW_MS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DB_SIZE_LIMIT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_DEBUG_JOIN_KEY_ENROLLMENT_ALLOWLIST;
@@ -948,6 +950,8 @@ import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENAB
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_ATTRIBUTION_SCOPE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_COARSE_EVENT_REPORT_DESTINATIONS;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB;
+import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_COUNT_UNIQUE_SERVICE;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DATASTORE_MANAGER_THROW_DATASTORE_EXCEPTION;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DEBUG_REPORT;
 import static com.android.adservices.service.FlagsConstants.KEY_MEASUREMENT_ENABLE_DELETE_REPORTS_ON_UNRECOVERABLE_EXCEPTION;
@@ -1950,6 +1954,38 @@ public class PhFlagsTest extends AdServicesExtendedMockitoTestCase {
                 KEY_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS,
                 Flags.DEFAULT_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS,
                 Flags::getMeasurementAdIdsPerDevicePerWindowPeriodMs);
+    }
+
+    @Test
+    public void testGetMeasurementEnableCountUniqueService() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_ENABLE_COUNT_UNIQUE_SERVICE,
+                Flags.DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_SERVICE,
+                Flags::getMeasurementEnableCountUniqueService);
+    }
+
+    @Test
+    public void testGetMeasurementEnableCountUniqueReportingJob() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB,
+                Flags.DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB,
+                Flags::getMeasurementEnableCountUniqueReportingJob);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueReportingJobPeriodMs() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS,
+                Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS,
+                Flags::getMeasurementCountUniqueReportingJobPeriodMs);
+    }
+
+    @Test
+    public void testGetMeasurementCountUniqueAppAllowlist() {
+        mFlagsTestHelper.testConfigFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST,
+                Flags.DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST,
+                Flags::getMeasurementCountUniqueAppAllowlist);
     }
 
     @Test

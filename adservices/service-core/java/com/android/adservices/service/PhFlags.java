@@ -3930,6 +3930,34 @@ public final class PhFlags implements Flags {
     }
 
     @Override
+    public boolean getMeasurementEnableCountUniqueService() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_COUNT_UNIQUE_SERVICE,
+                DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_SERVICE);
+    }
+
+    @Override
+    public boolean getMeasurementEnableCountUniqueReportingJob() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB,
+                DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB);
+    }
+
+    @Override
+    public long getMeasurementCountUniqueReportingJobPeriodMs() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS,
+                DEFAULT_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS);
+    }
+
+    @Override
+    public String getMeasurementCountUniqueAppAllowlist() {
+        return getDeviceConfigFlag(
+                FlagsConstants.KEY_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST,
+                DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST);
+    }
+
+    @Override
     public boolean getNotificationDismissedOnClick() {
         return getDeviceConfigFlag(
                 FlagsConstants.KEY_NOTIFICATION_DISMISSED_ON_CLICK,

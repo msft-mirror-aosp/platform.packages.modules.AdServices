@@ -3632,4 +3632,32 @@ abstract class RawFlags<FB extends FlagsBackend> implements Flags {
                 KEY_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS,
                 DEFAULT_MEASUREMENT_AD_IDS_PER_DEVICE_PER_WINDOW_PERIOD_MS);
     }
+
+    @Override
+    public boolean getMeasurementEnableCountUniqueService() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_ENABLE_COUNT_UNIQUE_SERVICE,
+                DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_SERVICE);
+    }
+
+    @Override
+    public boolean getMeasurementEnableCountUniqueReportingJob() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB,
+                DEFAULT_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB);
+    }
+
+    @Override
+    public long getMeasurementCountUniqueReportingJobPeriodMs() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS,
+                DEFAULT_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS);
+    }
+
+    @Override
+    public String getMeasurementCountUniqueAppAllowlist() {
+        return mBackend.getFlag(
+                KEY_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST,
+                DEFAULT_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST);
+    }
 }
