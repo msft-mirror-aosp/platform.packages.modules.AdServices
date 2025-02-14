@@ -74,18 +74,18 @@ public abstract class AbstractMetricLogger<L> implements MetricLogger<L> {
     private SamplingMetadata getMetadata() {
         // If per-device sampling config is null, perform no per-device sampling (i.e. all events
         // are logged).
-        double perDeviceSamplingRate =
+        double perDeviceSampleRate =
                 mConfig.getPerDeviceSamplingConfig() == null
                         ? 1.0
                         : mConfig.getPerDeviceSamplingConfig().getSamplingRate();
 
         // If per-event sampling config is null, perform no per-event sampling (i.e. all events are
         // logged).
-        double perEventSampling =
+        double perEventSampleRate =
                 mConfig.getPerEventSamplingConfig() == null
                         ? 1.0
                         : mConfig.getPerEventSamplingConfig().getSamplingRate();
 
-        return new SamplingMetadata(perDeviceSamplingRate, perEventSampling);
+        return new SamplingMetadata(perDeviceSampleRate, perEventSampleRate);
     }
 }

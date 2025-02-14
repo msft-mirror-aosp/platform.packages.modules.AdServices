@@ -25,8 +25,8 @@ public final class SamplingMetadata {
     private final double mPerDeviceSampleRate;
     private final double mPerEventSampleRate;
 
-    public SamplingMetadata(double perDeviceSamplingRate, double perEventSampleRate) {
-        mPerDeviceSampleRate = perDeviceSamplingRate;
+    public SamplingMetadata(double perDeviceSampleRate, double perEventSampleRate) {
+        mPerDeviceSampleRate = perDeviceSampleRate;
         mPerEventSampleRate = perEventSampleRate;
     }
 

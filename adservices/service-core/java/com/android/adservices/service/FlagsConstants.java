@@ -1473,6 +1473,18 @@ public final class FlagsConstants {
     public static final String KEY_MEASUREMENT_ENABLE_BOTH_SIDE_DEBUG_KEYS_IN_REPORTS =
             "Measurement__enable_both_side_debug_keys_in_reports";
 
+    public static final String KEY_MEASUREMENT_ENABLE_COUNT_UNIQUE_SERVICE =
+            "MeasurementCountUnique__enable_count_unique_service";
+
+    public static final String KEY_MEASUREMENT_ENABLE_COUNT_UNIQUE_REPORTING_JOB =
+            "MeasurementCountUnique__enable_count_unique_reporting_job";
+
+    public static final String KEY_MEASUREMENT_COUNT_UNIQUE_REPORTING_JOB_PERIOD_MS =
+            "MeasurementCountUnique__reporting_job_period_ms";
+
+    public static final String KEY_MEASUREMENT_COUNT_UNIQUE_APP_ALLOWLIST =
+            "MeasurementCountUnique__app_allowlist";
+
     // Database Schema Version Flags
     public static final String KEY_ENABLE_DATABASE_SCHEMA_VERSION_8 =
             "enable_database_schema_version_8";
