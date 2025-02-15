@@ -23,9 +23,12 @@ import static com.android.adservices.shared.proto.JobPolicy.BatteryType.BATTERY_
 import static com.android.adservices.shared.proto.JobPolicy.NetworkType.NETWORK_TYPE_NONE;
 import static com.android.adservices.shared.spe.JobErrorMessage.ERROR_MESSAGE_JOB_PROCESSOR_INVALID_JOB_POLICY_CHARGING_IDLE;
 import static com.android.adservices.shared.spe.JobErrorMessage.ERROR_MESSAGE_JOB_PROCESSOR_MISMATCHED_JOB_ID_WHEN_MERGING_JOB_POLICY;
+import static com.android.adservices.shared.spe.JobErrorMessage.ERROR_MESSAGE_POLICY_JOB_SCHEDULER_PERIODIC_JOB_INVALID_FLEX_INTERVAL;
+import static com.android.adservices.shared.spe.JobErrorMessage.ERROR_MESSAGE_POLICY_JOB_SCHEDULER_PERIODIC_JOB_INVALID_PERIODIC_INTERVAL;
 import static com.android.adservices.shared.spe.framework.TestJobServiceFactory.JOB_ID_1;
 import static com.android.adservices.shared.spe.scheduling.PolicyProcessor.applyPolicyToJobInfo;
 import static com.android.adservices.shared.spe.scheduling.PolicyProcessor.convertNetworkType;
+import static com.android.adservices.shared.spe.scheduling.PolicyProcessor.enforceJobPolicyValidity;
 
 import static com.google.common.truth.Truth.assertThat;
 
@@ -41,6 +44,7 @@ import com.android.adservices.shared.SharedUnitTestCase;
 import com.android.adservices.shared.proto.JobPolicy;
 import com.android.adservices.shared.proto.JobPolicy.BatteryType;
 import com.android.adservices.shared.proto.JobPolicy.NetworkType;
+import com.android.adservices.shared.proto.JobPolicy.PeriodicJobParams;
 import com.android.adservices.shared.proto.JobPolicy.TriggerContentJobParams;
 import com.android.adservices.shared.spe.framework.TestJobService;
 
@@ -219,7 +223,7 @@ public final class PolicyProcessorTest extends SharedUnitTestCase {
         JobPolicy jobPolicy =
                 JobPolicy.newBuilder()
                         .setPeriodicJobParams(
-                                JobPolicy.PeriodicJobParams.newBuilder()
+                                PeriodicJobParams.newBuilder()
                                         .setPeriodicIntervalMs(overridingValue)
                                         .build())
                         .build();
@@ -231,7 +235,7 @@ public final class PolicyProcessorTest extends SharedUnitTestCase {
         jobPolicy =
                 JobPolicy.newBuilder()
                         .setPeriodicJobParams(
-                                JobPolicy.PeriodicJobParams.newBuilder()
+                                PeriodicJobParams.newBuilder()
                                         .setPeriodicIntervalMs(overridingValue)
                                         .setFlexInternalMs(overridingFlexValue)
                                         .build())
@@ -293,7 +297,7 @@ public final class PolicyProcessorTest extends SharedUnitTestCase {
                         .setJobId(JOB_ID_1)
                         .setNetworkType(NETWORK_TYPE_NONE)
                         .setPeriodicJobParams(
-                                JobPolicy.PeriodicJobParams.newBuilder()
+                                PeriodicJobParams.newBuilder()
                                         .setPeriodicIntervalMs(period)
                                         .build())
                         .build();
@@ -382,8 +386,8 @@ public final class PolicyProcessorTest extends SharedUnitTestCase {
     }
 
     @Test
-    public void testMergeTwoJobPolicies_enforceValidity() {
-        JobPolicy jobPolicy1 =
+    public void testEnforceJobPolicyValidity_chargingAndDeviceIdle() {
+        JobPolicy jobPolicy =
                 JobPolicy.newBuilder()
                         .setJobId(JOB_ID_1)
                         .setRequireDeviceIdle(true)
@@ -393,7 +397,60 @@ public final class PolicyProcessorTest extends SharedUnitTestCase {
         assertThrows(
                 ERROR_MESSAGE_JOB_PROCESSOR_INVALID_JOB_POLICY_CHARGING_IDLE,
                 IllegalArgumentException.class,
-                () -> PolicyProcessor.mergeTwoJobPolicies(jobPolicy1, /* jobPolicy2= */ null));
+                () -> enforceJobPolicyValidity(jobPolicy));
+    }
+
+    @Test
+    public void testEnforceJobPolicyValidity_invalidPeriodicInterval_noPeriodicInterval() {
+        JobPolicy jobPolicy =
+                JobPolicy.newBuilder()
+                        .setJobId(JOB_ID_1)
+                        .setPeriodicJobParams(PeriodicJobParams.newBuilder().build())
+                        .build();
+
+        assertThrows(
+                ERROR_MESSAGE_POLICY_JOB_SCHEDULER_PERIODIC_JOB_INVALID_PERIODIC_INTERVAL,
+                IllegalArgumentException.class,
+                () -> enforceJobPolicyValidity(jobPolicy));
+    }
+
+    @Test
+    public void testEnforceJobPolicyValidity_invalidPeriodicInterval_tooSmall() {
+        long periodicIntervalMs = 10 * 60 * 1000L; // 10 minutes (less than 15)
+        long flexIntervalMs = 5 * 60 * 1000L; // 5 minutes
+
+        JobPolicy jobPolicy = createPeriodicJobPolicy(periodicIntervalMs, flexIntervalMs);
+
+        assertThrows(
+                ERROR_MESSAGE_POLICY_JOB_SCHEDULER_PERIODIC_JOB_INVALID_PERIODIC_INTERVAL,
+                IllegalArgumentException.class,
+                () -> enforceJobPolicyValidity(jobPolicy));
+    }
+
+    @Test
+    public void testEnforceJobPolicyValidity_invalidFlexInterval_tooSmall() {
+        long periodicIntervalMs = 15 * 60 * 1000L; // 15 minutes
+        long flexIntervalMs = 4 * 60 * 1000L; // 4 minutes (less than 5)
+
+        JobPolicy jobPolicy = createPeriodicJobPolicy(periodicIntervalMs, flexIntervalMs);
+
+        assertThrows(
+                ERROR_MESSAGE_POLICY_JOB_SCHEDULER_PERIODIC_JOB_INVALID_FLEX_INTERVAL,
+                IllegalArgumentException.class,
+                () -> enforceJobPolicyValidity(jobPolicy));
+    }
+
+    @Test
+    public void testEnforceJobPolicyValidity_invalidFlexInterval_lessThan5Percent() {
+        long periodicIntervalMs = 15 * 60 * 1000L; // 15 minutes
+        long flexIntervalMs = (long) (0.04 * periodicIntervalMs); // Less than 5%
+
+        JobPolicy jobPolicy = createPeriodicJobPolicy(periodicIntervalMs, flexIntervalMs);
+
+        assertThrows(
+                ERROR_MESSAGE_POLICY_JOB_SCHEDULER_PERIODIC_JOB_INVALID_FLEX_INTERVAL,
+                IllegalArgumentException.class,
+                () -> enforceJobPolicyValidity(jobPolicy));
     }
 
     @Test
@@ -425,5 +482,17 @@ public final class PolicyProcessorTest extends SharedUnitTestCase {
 
     private JobInfo.Builder getBaseJobInfoBuilder() {
         return new JobInfo.Builder(JOB_ID_1, new ComponentName(sContext, TestJobService.class));
+    }
+
+    // Helper function to create periodic job params.
+    private JobPolicy createPeriodicJobPolicy(long periodicIntervalMs, long flexIntervalMs) {
+        return JobPolicy.newBuilder()
+                .setJobId(JOB_ID_1)
+                .setPeriodicJobParams(
+                        PeriodicJobParams.newBuilder()
+                                .setPeriodicIntervalMs(periodicIntervalMs)
+                                .setFlexInternalMs(flexIntervalMs)
+                                .build())
+                .build();
     }
 }

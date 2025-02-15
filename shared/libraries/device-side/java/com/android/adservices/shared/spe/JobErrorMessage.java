@@ -40,4 +40,15 @@ public final class JobErrorMessage {
     /** The error message to throw when created {@link android.app.job.JobInfo} is invalid. */
     public static final String ERROR_MESSAGE_POLICY_JOB_SCHEDULER_INVALID_JOB_INFO =
             "Invalid Job Constraints configuration for Job %s!";
+
+    /** The error message to throw when periodic job is created without a periodic interval. */
+    public static final String
+            ERROR_MESSAGE_POLICY_JOB_SCHEDULER_PERIODIC_JOB_INVALID_PERIODIC_INTERVAL =
+                    "Periodic job must have a periodic interval and it should be larger than 15"
+                            + " minutes!";
+
+    public static final String
+            ERROR_MESSAGE_POLICY_JOB_SCHEDULER_PERIODIC_JOB_INVALID_FLEX_INTERVAL =
+                    "Flex interval must be at least 5 minutes and larger than 5% of the periodic"
+                            + " interval!";
 }
