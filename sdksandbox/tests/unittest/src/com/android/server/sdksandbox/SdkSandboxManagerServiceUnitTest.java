@@ -22,7 +22,6 @@ import static android.app.sdksandbox.ISharedPreferencesSyncCallback.PREFERENCES_
 import static android.app.sdksandbox.SdkSandboxManager.ACTION_START_SANDBOXED_ACTIVITY;
 import static android.app.sdksandbox.SdkSandboxManager.LOAD_SDK_INTERNAL_ERROR;
 
-import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_DUMP_EFFECTIVE_TARGET_SDK_VERSION;
 import static com.android.server.sdksandbox.SdkSandboxServiceProvider.SANDBOX_INSTR_PROCESS_NAME_SUFFIX;
 import static com.android.server.sdksandbox.testutils.FakeSdkSandboxProvider.FAKE_DUMP_OUTPUT;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
@@ -68,9 +67,6 @@ import android.os.Process;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.UserHandle;
-import android.platform.test.annotations.RequiresFlagsEnabled;
-import android.platform.test.flag.junit.CheckFlagsRule;
-import android.platform.test.flag.junit.DeviceFlagsValueProvider;
 import android.util.Log;
 
 import androidx.test.platform.app.InstrumentationRegistry;
@@ -93,7 +89,6 @@ import com.android.server.wm.ActivityInterceptorCallbackRegistry;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.ArgumentMatchers;
@@ -157,9 +152,6 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
     private CallingInfo mCallingInfo;
     private DeviceConfigUtil mDeviceConfigUtil;
     private SdkSandboxRestrictionManager mSdkSandboxRestrictionManager;
-
-    @Rule
-    public final CheckFlagsRule mCheckFlagsRule = DeviceFlagsValueProvider.createCheckFlagsRule();
 
     @Before
     public void setup() {
@@ -1629,7 +1621,6 @@ public class SdkSandboxManagerServiceUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
-    @RequiresFlagsEnabled(FLAG_SDKSANDBOX_DUMP_EFFECTIVE_TARGET_SDK_VERSION)
     public void testDump_ETSV() throws Exception {
         mockGrantedPermission(DUMP);
         int effectiveTargetSdkVersion =

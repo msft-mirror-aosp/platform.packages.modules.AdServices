@@ -27,7 +27,6 @@ import static android.app.sdksandbox.SdkSandboxManager.REQUEST_SURFACE_PACKAGE_S
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_PROCESS_NOT_AVAILABLE;
 import static android.app.sdksandbox.SdkSandboxManager.SDK_SANDBOX_SERVICE;
 
-import static com.android.adservices.flags.Flags.sdksandboxDumpEffectiveTargetSdkVersion;
 import static com.android.adservices.flags.Flags.sdksandboxInvalidateEffectiveTargetSdkVersionCache;
 import static com.android.adservices.flags.Flags.sdksandboxUseEffectiveTargetSdkVersionForRestrictions;
 import static com.android.sdksandbox.service.stats.SdkSandboxStatsLog.SANDBOX_ACTIVITY_EVENT_OCCURRED__CALL_RESULT__FAILURE_SECURITY_EXCEPTION;
@@ -1237,10 +1236,8 @@ public class SdkSandboxManagerService extends ISdkSandboxManager.Stub {
         mServiceProvider.dump(writer);
         writer.println();
 
-        if (sdksandboxDumpEffectiveTargetSdkVersion()) {
-            mSdkSandboxRestrictionManager.dump(writer);
-            writer.println();
-        }
+        mSdkSandboxRestrictionManager.dump(writer);
+        writer.println();
 
         dumpAdServices(fd, writer, args, /* quiet= */ true);
     }
