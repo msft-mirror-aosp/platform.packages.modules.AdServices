@@ -17,7 +17,6 @@
 package com.android.server.sdksandbox;
 
 import static com.android.adservices.flags.Flags.FLAG_SDKSANDBOX_USE_EFFECTIVE_TARGET_SDK_VERSION_FOR_RESTRICTIONS;
-import static com.android.sdksandbox.flags.Flags.FLAG_SERVICE_RESTRICTION_PACKAGE_NAME_LOGIC_UPDATED;
 import static com.android.server.wm.ActivityInterceptorCallback.MAINLINE_SDK_SANDBOX_ORDER_ID;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -36,7 +35,6 @@ import android.content.IntentFilter;
 import android.content.pm.ProviderInfo;
 import android.os.Build;
 import android.os.Process;
-import android.platform.test.annotations.RequiresFlagsDisabled;
 import android.platform.test.annotations.RequiresFlagsEnabled;
 import android.platform.test.flag.junit.CheckFlagsRule;
 import android.platform.test.flag.junit.DeviceFlagsValueProvider;
@@ -365,43 +363,6 @@ public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
-    @RequiresFlagsDisabled(FLAG_SERVICE_RESTRICTION_PACKAGE_NAME_LOGIC_UPDATED)
-    public void testServiceRestriction_actionNotSet() {
-        assertThrows(
-                SecurityException.class,
-                () ->
-                        testServiceRestriction(
-                                /* action= */ null,
-                                /* packageName= */ null,
-                                /* component= */ null));
-
-        assertThrows(
-                SecurityException.class,
-                () ->
-                        testServiceRestriction(
-                                /* action= */ null,
-                                /* packageName= */ PACKAGE_NAME,
-                                /* component= */ null));
-
-        assertThrows(
-                SecurityException.class,
-                () ->
-                        testServiceRestriction(
-                                /* action= */ null,
-                                /* packageName= */ null,
-                                /* component= */ COMPONENT));
-
-        assertThrows(
-                SecurityException.class,
-                () ->
-                        testServiceRestriction(
-                                /* action= */ null,
-                                /* packageName= */ PACKAGE_NAME,
-                                /* component= */ COMPONENT));
-    }
-
-    @Test
-    @RequiresFlagsEnabled(FLAG_SERVICE_RESTRICTION_PACKAGE_NAME_LOGIC_UPDATED)
     public void testServiceRestriction_packageNameNotSet() {
         ArrayMap<Integer, List<ArrayMap<String, String>>> allowedServices = new ArrayMap<>();
         List<ArrayMap<String, String>> services = new ArrayList<>();
@@ -429,7 +390,6 @@ public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
-    @RequiresFlagsEnabled(FLAG_SERVICE_RESTRICTION_PACKAGE_NAME_LOGIC_UPDATED)
     public void testServiceRestriction_componentNameNotSet() {
         ArrayMap<Integer, List<ArrayMap<String, String>>> allowedServices = new ArrayMap<>();
         List<ArrayMap<String, String>> services = new ArrayList<>();
@@ -576,7 +536,6 @@ public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
-    @RequiresFlagsEnabled(FLAG_SERVICE_RESTRICTION_PACKAGE_NAME_LOGIC_UPDATED)
     public void testServiceRestriction_multipleEntriesAllowlist() {
         /*
          * Service allowlist
@@ -725,7 +684,6 @@ public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
-    @RequiresFlagsEnabled(FLAG_SERVICE_RESTRICTION_PACKAGE_NAME_LOGIC_UPDATED)
     public void serviceRestrictionsDeviceConfig_setAllFieldsToWildcard_flagEnabled() {
         setServiceRestrictionsDeviceConfigSetAllFieldsToWildcard();
         testServiceRestriction(INTENT_ACTION, PACKAGE_NAME, COMPONENT);
@@ -742,37 +700,6 @@ public class SdkSandboxRestrictionsUnitTest extends DeviceSupportedBaseTest {
     }
 
     @Test
-    @RequiresFlagsDisabled(FLAG_SERVICE_RESTRICTION_PACKAGE_NAME_LOGIC_UPDATED)
-    public void serviceRestrictionsDeviceConfig_setAllFieldsToWildcard_flagDisabled() {
-        setServiceRestrictionsDeviceConfigSetAllFieldsToWildcard();
-        testServiceRestriction(INTENT_ACTION, PACKAGE_NAME, COMPONENT);
-
-        testServiceRestriction(INTENT_ACTION, PACKAGE_NAME, /* component= */ null);
-
-        testServiceRestriction(INTENT_ACTION, /* packageName= */ null, COMPONENT);
-
-        testServiceRestriction(INTENT_ACTION, /* packageName= */ null, /* component= */ null);
-    }
-
-    @Test
-    @RequiresFlagsDisabled(FLAG_SERVICE_RESTRICTION_PACKAGE_NAME_LOGIC_UPDATED)
-    public void testServiceRestrictions_AllFieldsSet_flagDisabled() {
-        setServiceRestrictionsDeviceConfigSetAllFields();
-        assertThrows(
-                SecurityException.class,
-                () -> {
-                    testServiceRestriction(INTENT_ACTION, /* packageName= */ null, COMPONENT);
-                });
-        assertThrows(
-                SecurityException.class,
-                () -> {
-                    testServiceRestriction(INTENT_ACTION, PACKAGE_NAME, /* component= */ null);
-                });
-        testServiceRestriction(INTENT_ACTION, PACKAGE_NAME, COMPONENT);
-    }
-
-    @Test
-    @RequiresFlagsEnabled(FLAG_SERVICE_RESTRICTION_PACKAGE_NAME_LOGIC_UPDATED)
     public void testServiceRestrictions_AllFieldsSet_flagEnabled() {
         setServiceRestrictionsDeviceConfigSetAllFields();
         testServiceRestriction(INTENT_ACTION, /* packageName= */ null, COMPONENT);
