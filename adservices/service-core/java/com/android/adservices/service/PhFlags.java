@@ -2809,13 +2809,6 @@ public final class PhFlags implements Flags {
     }
 
     @Override
-    public boolean getFledgeAuctionServerMultiCloudEnabled() {
-        return getDeviceConfigFlag(
-                FlagsConstants.KEY_FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED,
-                FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED);
-    }
-
-    @Override
     @SuppressWarnings("AvoidSystemPropertiesUsage")
     // TODO(b/300646389): call getFlagFromSystemPropertiesOrDeviceConfig() instead
     public boolean isDisableTopicsEnrollmentCheck() {

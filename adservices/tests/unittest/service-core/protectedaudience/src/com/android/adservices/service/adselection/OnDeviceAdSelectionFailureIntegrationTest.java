@@ -239,7 +239,6 @@ public final class OnDeviceAdSelectionFailureIntegrationTest
     private AdSelectionConfig mAdSelectionConfig;
     private Dispatcher mDispatcher;
     private AdFilteringFeatureFactory mAdFilteringFeatureFactory;
-    private MultiCloudSupportStrategy mMultiCloudSupportStrategy;
     private AdSelectionDebugReportDao mAdSelectionDebugReportDao;
     private AdIdFetcher mAdIdFetcher;
     private RetryStrategyFactory mRetryStrategyFactory;
@@ -291,8 +290,6 @@ public final class OnDeviceAdSelectionFailureIntegrationTest
                         mSpyContext.getPackageManager(), mEnrollmentDao, mAdServicesLogger);
         mAdFilteringFeatureFactory =
                 new AdFilteringFeatureFactory(mAppInstallDao, mFrequencyCapDao, mLegacyFakeFlags);
-        mMultiCloudSupportStrategy =
-                MultiCloudTestStrategyFactory.getDisabledTestStrategy(mMockObliviousHttpEncryptor);
 
         // Initialize dependencies for the AdSelectionService
         mLightweightExecutorService = AdServicesExecutors.getLightWeightExecutor();
@@ -447,7 +444,7 @@ public final class OnDeviceAdSelectionFailureIntegrationTest
                         mMockAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mMockConsentManager,
-                        mMultiCloudSupportStrategy,
+                        mMockObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mMockUnusedKAnonSignJoinFactory,
@@ -539,7 +536,7 @@ public final class OnDeviceAdSelectionFailureIntegrationTest
                         mMockAdSelectionServiceFilter,
                         mAdFilteringFeatureFactory,
                         mMockConsentManager,
-                        mMultiCloudSupportStrategy,
+                        mMockObliviousHttpEncryptor,
                         mAdSelectionDebugReportDao,
                         mAdIdFetcher,
                         mMockUnusedKAnonSignJoinFactory,

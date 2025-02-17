@@ -2032,16 +2032,11 @@ public interface Flags extends ModuleSharedFlags {
         return FLEDGE_AUCTION_SERVER_OMIT_ADS_ENABLED;
     }
 
-    boolean FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED = false;
-
-    default boolean getFledgeAuctionServerMultiCloudEnabled() {
-        return FLEDGE_AUCTION_SERVER_MULTI_CLOUD_ENABLED;
-    }
-
     String FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST =
-            "https://publickeyservice-v150"
-                    + ".coordinator-a.bas-gcp.pstest.dev/"
-                    + ".well-known/protected-auction/v1/public-keys";
+            "https://publickeyservice.pa.gcp.privacysandboxservices.com/.well-known/"
+                    + "protected-auction/v1/public-keys,"
+                    + "https://publickeyservice.pa.aws.privacysandboxservices.com/.well-known/"
+                    + "protected-auction/v1/public-keys";
 
     default String getFledgeAuctionServerCoordinatorUrlAllowlist() {
         return FLEDGE_AUCTION_SERVER_COORDINATOR_URL_ALLOWLIST;
