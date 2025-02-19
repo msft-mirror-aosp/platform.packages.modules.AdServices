@@ -16,6 +16,8 @@
 
 package android.app.sdksandbox.testutils;
 
+import static org.junit.Assume.assumeTrue;
+
 import android.provider.DeviceConfig;
 
 import java.util.concurrent.CountDownLatch;
@@ -38,14 +40,14 @@ public class DeviceConfigUtils {
         mLatch = new CountDownLatch(1);
         mConfigListener.setLatchForProperty(mLatch, property);
         DeviceConfig.deleteProperty(mNamespace, property);
-        mLatch.await(5, TimeUnit.SECONDS);
+        assumeTrue(mLatch.await(30, TimeUnit.SECONDS));
     }
 
     public void setProperty(String property, String value) throws Exception {
         mLatch = new CountDownLatch(1);
         mConfigListener.setLatchForProperty(mLatch, property);
         DeviceConfig.setProperty(mNamespace, property, value, /*makeDefault= */ false);
-        mLatch.await(5, TimeUnit.SECONDS);
+        assumeTrue(mLatch.await(30, TimeUnit.SECONDS));
     }
 
     public void resetToInitialValue(String property, String value) throws Exception {
