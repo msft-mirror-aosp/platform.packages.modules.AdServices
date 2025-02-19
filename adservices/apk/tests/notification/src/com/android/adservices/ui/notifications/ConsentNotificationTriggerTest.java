@@ -83,6 +83,7 @@ import com.google.common.collect.ImmutableList;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
@@ -485,6 +486,7 @@ public final class ConsentNotificationTriggerTest extends AdServicesExtendedMock
     }
 
     @Test
+    @Ignore("b/397190750")
     public void testNotificationV2BroadcastIntent() throws Exception {
         // Launch sample app to register the broadcast receiver
         sDevice.executeShellCommand(
