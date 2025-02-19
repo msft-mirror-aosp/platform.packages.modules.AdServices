@@ -63,6 +63,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class EventReportingJobHandler {
     private static final int MAX_HTTP_SUCCESS_CODE = 299;
+    private static final String LOGGING_NAME = "EventReportingJobHandler";
     private final DatastoreManager mDatastoreManager;
     private boolean mIsDebugInstance;
     private final Flags mFlags;
@@ -147,6 +148,7 @@ public class EventReportingJobHandler {
                         });
         if (!pendingEventReportsInWindowOpt.isPresent()) {
             // Failure during event report retrieval
+            ReportUtil.logReportingFailure(LOGGING_NAME, "Pending Event Reports not found");
             return true;
         }
 
@@ -157,10 +159,7 @@ public class EventReportingJobHandler {
             // service will interrupt this thread.  If the thread has been interrupted, it will exit
             // early.
             if (Thread.currentThread().isInterrupted()) {
-                LoggerFactory.getMeasurementLogger()
-                        .d(
-                                "EventReportingJobHandler performScheduledPendingReports "
-                                        + "thread interrupted, exiting early.");
+                ReportUtil.logReportingFailure(LOGGING_NAME, "Thread interrupted, exiting early");
                 return true;
             }
 
@@ -222,7 +221,7 @@ public class EventReportingJobHandler {
                 mDatastoreManager.runInTransactionWithResult((dao)
                         -> dao.getEventReport(eventReportId));
         if (eventReportOpt.isEmpty()) {
-            LoggerFactory.getMeasurementLogger().d("Event report not found");
+            ReportUtil.logReportingFailure(LOGGING_NAME, "Event report not found");
             setAndLogReportingStatus(
                     reportingStatus,
                     UploadStatus.FAILURE,
@@ -237,7 +236,12 @@ public class EventReportingJobHandler {
         reportingStatus.setSourceRegistrant(getAppPackageName(eventReport));
         if (mIsDebugInstance
                 && eventReport.getDebugReportStatus() != EventReport.DebugReportStatus.PENDING) {
-            LoggerFactory.getMeasurementLogger().d("debugging status is not pending");
+            ReportUtil.logReportingFailure(
+                    LOGGING_NAME,
+                    "Debugging status is not pending",
+                    eventReportId,
+                    enrollmentId,
+                    reportingStatus.getReportType().toString());
             setAndLogReportingStatus(
                     reportingStatus,
                     UploadStatus.FAILURE,
@@ -247,7 +251,12 @@ public class EventReportingJobHandler {
         }
 
         if (!mIsDebugInstance && eventReport.getStatus() != EventReport.Status.PENDING) {
-            LoggerFactory.getMeasurementLogger().d("event report status is not pending");
+            ReportUtil.logReportingFailure(
+                    LOGGING_NAME,
+                    "Event report status is not pending",
+                    eventReportId,
+                    enrollmentId,
+                    reportingStatus.getReportType().toString());
             setAndLogReportingStatus(
                     reportingStatus,
                     UploadStatus.FAILURE,
@@ -289,6 +298,14 @@ public class EventReportingJobHandler {
 
             // Code outside [200, 299] is a failure according to HTTP protocol.
             if (returnCode < HttpURLConnection.HTTP_OK || returnCode > MAX_HTTP_SUCCESS_CODE) {
+                ReportUtil.logReportingFailure(
+                        LOGGING_NAME,
+                        String.format(
+                                "Sending event report resulted in non-success HTTP status code %s",
+                                returnCode),
+                        eventReportId,
+                        enrollmentId,
+                        reportingStatus.getReportType().toString());
                 setAndLogReportingStatus(
                         reportingStatus,
                         UploadStatus.FAILURE,
@@ -296,6 +313,13 @@ public class EventReportingJobHandler {
                         enrollmentId);
                 return;
             }
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "EventReportingJobHandler (SUCCESS): Event report sent! Report ID:"
+                                    + " %s, Enrollment ID: %s, Type: %s",
+                            eventReportId,
+                            enrollmentId,
+                            reportingStatus.getReportType().toString());
 
             boolean success =
                     mDatastoreManager.runInTransaction(
@@ -311,6 +335,12 @@ public class EventReportingJobHandler {
                                 }
                             });
             if (!success) {
+                ReportUtil.logReportingFailure(
+                        LOGGING_NAME,
+                        "Event report update failed",
+                        eventReportId,
+                        enrollmentId,
+                        reportingStatus.getReportType().toString());
                 setAndLogReportingStatus(
                         reportingStatus,
                         UploadStatus.FAILURE,
@@ -319,12 +349,24 @@ public class EventReportingJobHandler {
                 return;
             }
 
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "EventReportingJobHandler (SUCCESS): Event report status updated!"
+                                    + " Report ID: %s, Enrollment ID: %s, Type: %s",
+                            eventReportId,
+                            enrollmentId,
+                            reportingStatus.getReportType().toString());
             setAndLogReportingStatus(
                     reportingStatus, UploadStatus.SUCCESS, FailureStatus.UNKNOWN, enrollmentId);
 
         } catch (IOException e) {
-            LoggerFactory.getMeasurementLogger()
-                    .d(e, "Network error occurred when attempting to deliver event report.");
+            ReportUtil.logReportingFailure(
+                    LOGGING_NAME,
+                    "Network error occurred when attempting to deliver event report",
+                    e,
+                    eventReportId,
+                    enrollmentId,
+                    reportingStatus.getReportType().toString());
             setAndLogReportingStatus(
                     reportingStatus, UploadStatus.FAILURE, FailureStatus.NETWORK, enrollmentId);
             ErrorLogUtil.e(
@@ -332,8 +374,13 @@ public class EventReportingJobHandler {
                     AD_SERVICES_ERROR_REPORTED__ERROR_CODE__MEASUREMENT_REPORTING_NETWORK_ERROR,
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
         } catch (JSONException e) {
-            LoggerFactory.getMeasurementLogger()
-                    .d(e, "Serialization error occurred at event report delivery.");
+            ReportUtil.logReportingFailure(
+                    LOGGING_NAME,
+                    "Serialization error occurred at event report delivery",
+                    e,
+                    eventReportId,
+                    enrollmentId,
+                    reportingStatus.getReportType().toString());
             setAndLogReportingStatus(
                     reportingStatus,
                     UploadStatus.FAILURE,
@@ -345,6 +392,12 @@ public class EventReportingJobHandler {
                     AD_SERVICES_ERROR_REPORTED__PPAPI_NAME__MEASUREMENT);
             if (mFlags.getMeasurementEnableReportDeletionOnUnrecoverableException()) {
                 // Unrecoverable state - delete the report.
+                ReportUtil.logReportingFailure(
+                        LOGGING_NAME,
+                        "Unrecoverable state, deleting the event report",
+                        eventReportId,
+                        enrollmentId,
+                        reportingStatus.getReportType().toString());
                 mDatastoreManager.runInTransaction(
                         dao ->
                                 dao.markEventReportStatus(
@@ -360,7 +413,14 @@ public class EventReportingJobHandler {
             }
         } catch (Exception e) {
             LoggerFactory.getMeasurementLogger()
-                    .e(e, "Unexpected exception occurred when attempting to deliver event report.");
+                    .e(e, "Exception occurred when attempting to deliver event report.");
+            LoggerFactory.getMeasurementLogger()
+                    .d(
+                            "%s Report ID: %s, Enrollment ID: %s, Type: %s",
+                            e.toString(),
+                            eventReportId,
+                            enrollmentId,
+                            reportingStatus.getReportType().toString());
             setAndLogReportingStatus(
                     reportingStatus, UploadStatus.FAILURE, FailureStatus.UNKNOWN, enrollmentId);
             ErrorLogUtil.e(
