@@ -74,6 +74,7 @@ public class PermissionsAppOptOutTest {
             overridePpapiAppAllowList();
             CompatAdServicesTestUtils.setFlags();
         }
+        setFledgeAdSelectionOffDeviceEnabled(false);
 
         // Kill AdServices process to force new flag reads
         AdservicesTestHelper.killAdservicesProcess(sContext);
@@ -93,6 +94,8 @@ public class PermissionsAppOptOutTest {
             setPpapiAppAllowList(mPreviousAppAllowList);
             CompatAdServicesTestUtils.resetFlagsToDefault();
         }
+        setFledgeAdSelectionOffDeviceEnabled(true);
+
         // TODO(b/266725238): Remove/modify once the API rate limit has been adjusted for FLEDGE
         CommonFixture.doSleep(PhFlagsFixture.DEFAULT_API_RATE_LIMIT_SLEEP_MS);
     }
@@ -106,6 +109,11 @@ public class PermissionsAppOptOutTest {
         mPreviousAppAllowList =
                 ShellUtils.runShellCommand("device_config get adservices ppapi_app_allow_list");
         setPpapiAppAllowList(mPreviousAppAllowList + "," + sContext.getPackageName());
+    }
+
+    private void setFledgeAdSelectionOffDeviceEnabled(boolean enabled) {
+        ShellUtils.runShellCommand(
+                "device_config put adservices fledge_ad_selection_off_device_enabled " + enabled);
     }
 
     @Test
